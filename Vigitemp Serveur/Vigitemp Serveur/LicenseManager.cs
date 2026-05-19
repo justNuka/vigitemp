@@ -23,20 +23,34 @@ namespace Vigitemp_Serveur
             "expert"
         };
 
-        private static readonly string DefaultLicensePath = Path.Combine(
+        private static readonly string AppDataRoot = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData),
-            "Vigitemp",
+            "VigiSensys");
+
+        private static readonly string LegacyAppDataRoot = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData),
+            "Vigitemp");
+
+        private static readonly string DefaultLicensePath = Path.Combine(
+            AppDataRoot,
+            "license.vtlic");
+
+        private static readonly string LegacyDefaultLicensePath = Path.Combine(
+            LegacyAppDataRoot,
             "license.vtlic");
 
         private static readonly string DefaultPublicKeyPath = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData),
-            "Vigitemp",
+            AppDataRoot,
+            "public_key.pem");
+
+        private static readonly string LegacyDefaultPublicKeyPath = Path.Combine(
+            LegacyAppDataRoot,
             "public_key.pem");
 
         public static LicenseValidationResult ValidateFromConfig()
         {
-            var licensePath = ExpandPath(GetSetting("Vigi.License.Path", DefaultLicensePath));
-            var publicKeyPath = ExpandPath(GetSetting("Vigi.License.PublicKeyPath", DefaultPublicKeyPath));
+            var licensePath = ResolveExistingPath(ExpandPath(GetSetting("VigiSensys.License.Path", GetSetting("Vigi.License.Path", DefaultLicensePath))), LegacyDefaultLicensePath);
+            var publicKeyPath = ResolveExistingPath(ExpandPath(GetSetting("VigiSensys.License.PublicKeyPath", GetSetting("Vigi.License.PublicKeyPath", DefaultPublicKeyPath))), LegacyDefaultPublicKeyPath);
             var instancePublicKey = GetSetting("Vigi.License.InstancePublicKey", string.Empty);
 
             if (!File.Exists(licensePath))
@@ -68,8 +82,8 @@ namespace Vigitemp_Serveur
 
         public static HotlineLicenseConfigResult GetHotlineConfigFromConfig()
         {
-            var licensePath = ExpandPath(GetSetting("Vigi.License.Path", DefaultLicensePath));
-            var publicKeyPath = ExpandPath(GetSetting("Vigi.License.PublicKeyPath", DefaultPublicKeyPath));
+            var licensePath = ResolveExistingPath(ExpandPath(GetSetting("VigiSensys.License.Path", GetSetting("Vigi.License.Path", DefaultLicensePath))), LegacyDefaultLicensePath);
+            var publicKeyPath = ResolveExistingPath(ExpandPath(GetSetting("VigiSensys.License.PublicKeyPath", GetSetting("Vigi.License.PublicKeyPath", DefaultPublicKeyPath))), LegacyDefaultPublicKeyPath);
             var instancePublicKey = GetSetting("Vigi.License.InstancePublicKey", string.Empty);
 
             if (!File.Exists(licensePath))
@@ -331,6 +345,13 @@ namespace Vigitemp_Serveur
         {
             if (string.IsNullOrWhiteSpace(value)) return value;
             return Environment.ExpandEnvironmentVariables(value);
+        }
+
+        private static string ResolveExistingPath(string preferredPath, string legacyPath)
+        {
+            if (!string.IsNullOrWhiteSpace(preferredPath) && File.Exists(preferredPath)) return preferredPath;
+            if (!string.IsNullOrWhiteSpace(legacyPath) && File.Exists(legacyPath)) return legacyPath;
+            return preferredPath;
         }
     }
 

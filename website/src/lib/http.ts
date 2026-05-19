@@ -1,4 +1,5 @@
 import { buildLocalizedPath, resolveLocaleFromPathname, stripLocalePrefix } from "@/i18n/pathnames"
+import { hasCompatHeader } from "@/lib/vigisensys-compat"
 
 export type HttpErrorPayload = {
   ok?: false
@@ -238,17 +239,20 @@ export async function fetchJson<TResponse>(input: RequestInfo | URL, init?: Requ
     const headers = new Headers(init?.headers)
 
     const clientTrace = getClientTraceTag()
-    if (clientTrace && !headers.has("x-vigitemp-client-trace")) {
+    if (clientTrace && !hasCompatHeader(headers, "x-vigisensys-client-trace", "x-vigitemp-client-trace")) {
+      headers.set("x-vigisensys-client-trace", clientTrace)
       headers.set("x-vigitemp-client-trace", clientTrace)
     }
 
     const queryClientId = getQueryClientId()
-    if (queryClientId && !headers.has("x-vigitemp-query-client-id")) {
+    if (queryClientId && !hasCompatHeader(headers, "x-vigisensys-query-client-id", "x-vigitemp-query-client-id")) {
+      headers.set("x-vigisensys-query-client-id", queryClientId)
       headers.set("x-vigitemp-query-client-id", queryClientId)
     }
 
     const bootId = getBootId()
-    if (bootId && !headers.has("x-vigitemp-boot-id")) {
+    if (bootId && !hasCompatHeader(headers, "x-vigisensys-boot-id", "x-vigitemp-boot-id")) {
+      headers.set("x-vigisensys-boot-id", bootId)
       headers.set("x-vigitemp-boot-id", bootId)
     }
 
@@ -296,7 +300,7 @@ export async function fetchJson<TResponse>(input: RequestInfo | URL, init?: Requ
 
   const contentType = res.headers.get("content-type") || ""
   const isJson = contentType.includes("application/json")
-  const errorId = res.headers.get("x-vigitemp-error-id") || undefined
+  const errorId = res.headers.get("x-vigisensys-error-id") || res.headers.get("x-vigitemp-error-id") || undefined
 
   if (!res.ok) {
     let message = `Request failed (${res.status})`

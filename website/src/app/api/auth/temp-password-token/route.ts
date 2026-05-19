@@ -4,6 +4,7 @@ import { getClientIp, getRequestContext, withLogging } from "@/lib/api-logger"
 import { checkRateLimit } from "@/lib/rate-limiter"
 import { apiError, apiOk } from "@/lib/api-response"
 import { log } from "@/lib/logger"
+import { shouldUseSecureCookies } from "@/lib/cookie-security"
 
 /**
  * Génère un token temporaire sécurisé pour le changement de mot de passe forcé.
@@ -38,17 +39,18 @@ export const POST = withLogging(async (req: NextRequest) => {
     )
 
     const response = apiOk({ success: true }, { status: 200 })
+    const secureCookies = shouldUseSecureCookies(req)
 
     response.cookies.set("force-password-token", tempToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure: secureCookies,
       sameSite: "lax",
       maxAge: 30 * 60,
       path: "/",
     })
 
     response.cookies.set("force-password-username", username, {
-      secure: process.env.NODE_ENV === "production",
+      secure: secureCookies,
       sameSite: "lax",
       maxAge: 30 * 60,
       path: "/",

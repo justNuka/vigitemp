@@ -63,12 +63,12 @@ namespace VigitempAgentInstaller
             var programFilesX86 = Environment.GetEnvironmentVariable("ProgramFiles(x86)");
             if (!string.IsNullOrWhiteSpace(programFilesX86))
             {
-                return Path.Combine(programFilesX86, "Vigitemp", "Agent");
+                return Path.Combine(programFilesX86, "VigiSensys", "Agent");
             }
 
             return Path.Combine(
                 Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles),
-                "Vigitemp",
+                "VigiSensys",
                 "Agent");
         }
 
@@ -798,7 +798,7 @@ namespace VigitempAgentInstaller
             var installedConfig = Path.Combine(_installDirectory, AgentExeName + ".config");
             if (File.Exists(installedConfig))
             {
-                var value = ReadAppSetting(installedConfig, "VigitempSiteWebUrl");
+                var value = ReadAppSetting(installedConfig, "VigiSensysSiteWebUrl") ?? ReadAppSetting(installedConfig, "VigitempSiteWebUrl");
                 if (!string.IsNullOrWhiteSpace(value))
                 {
                     return value;
@@ -810,7 +810,7 @@ namespace VigitempAgentInstaller
                 var extractedConfig = Path.Combine(_workingDirectory, "agent", AgentExeName + ".config");
                 if (File.Exists(extractedConfig))
                 {
-                    var value = ReadAppSetting(extractedConfig, "VigitempSiteWebUrl");
+                    var value = ReadAppSetting(extractedConfig, "VigiSensysSiteWebUrl") ?? ReadAppSetting(extractedConfig, "VigitempSiteWebUrl");
                     if (!string.IsNullOrWhiteSpace(value))
                     {
                         return value;
@@ -939,6 +939,7 @@ namespace VigitempAgentInstaller
                 throw new FileNotFoundException("Configuration agent introuvable apres copie.", configPath);
             }
 
+            WriteAppSetting(configPath, "VigiSensysSiteWebUrl", _portalUrl);
             WriteAppSetting(configPath, "VigitempSiteWebUrl", _portalUrl);
         }
 

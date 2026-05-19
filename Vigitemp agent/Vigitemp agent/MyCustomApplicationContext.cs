@@ -51,7 +51,9 @@ namespace VigitempAgent
         {
             try
             {
-                var env = Environment.GetEnvironmentVariable("VIGITEMP_SITEWEB_URL");
+                var env =
+                    Environment.GetEnvironmentVariable("VIGISENSYS_SITEWEB_URL") ??
+                    Environment.GetEnvironmentVariable("VIGITEMP_SITEWEB_URL");
                 if (!string.IsNullOrWhiteSpace(env))
                 {
                     return (env.Trim(), true);
@@ -65,6 +67,7 @@ namespace VigitempAgent
             try
             {
                 var cfg =
+                    ConfigurationManager.AppSettings["VigiSensysSiteWebUrl"] ??
                     ConfigurationManager.AppSettings["VigitempSiteWebUrl"] ??
                     ConfigurationManager.AppSettings["SITEWEB_URL"] ??
                     ConfigurationManager.AppSettings["SITE_WEB_URL"];
@@ -86,7 +89,9 @@ namespace VigitempAgent
         {
             try
             {
-                var env = Environment.GetEnvironmentVariable("VIGITEMP_AGENT_SECRET");
+                var env =
+                    Environment.GetEnvironmentVariable("VIGISENSYS_AGENT_SECRET") ??
+                    Environment.GetEnvironmentVariable("VIGITEMP_AGENT_SECRET");
                 if (!string.IsNullOrWhiteSpace(env)) return env.Trim();
             }
             catch
@@ -97,7 +102,9 @@ namespace VigitempAgent
             try
             {
                 var cfg =
+                    ConfigurationManager.AppSettings["VigiSensysAgentSecret"] ??
                     ConfigurationManager.AppSettings["VigitempAgentSecret"] ??
+                    ConfigurationManager.AppSettings["VIGISENSYS_AGENT_SECRET"] ??
                     ConfigurationManager.AppSettings["VIGITEMP_AGENT_SECRET"];
                 if (!string.IsNullOrWhiteSpace(cfg)) return cfg.Trim();
             }
@@ -135,7 +142,7 @@ namespace VigitempAgent
 
             trayIcon = new NotifyIcon
             {
-                Text = "Vigitemp Agent",
+                Text = "VigiSensys Agent",
                 Icon = Resources.AppIcon,
                 ContextMenuStrip = new ContextMenuStrip
                 {
@@ -339,7 +346,7 @@ namespace VigitempAgent
                 ? "Cliquez sur la notification pour vous rendre sur la page des alarmes."
                 : message + Environment.NewLine + "Cliquez sur la notification pour vous rendre sur la page des alarmes.";
 
-            var shown = ShowTrayTip(title ?? "Alarme Vigitemp", body, ToolTipIcon.Warning);
+            var shown = ShowTrayTip(title ?? "Alarme VigiSensys", body, ToolTipIcon.Warning);
             if (tracking != null)
             {
                 _ = SendNotificationEvent(tracking, shown ? "shown" : "error", shown ? null : "Affichage notification impossible");
@@ -443,6 +450,7 @@ namespace VigitempAgent
 
                 if (!string.IsNullOrWhiteSpace(AGENT_SECRET))
                 {
+                    request.Headers.Add("x-vigisensys-agent-secret", AGENT_SECRET);
                     request.Headers.Add("x-vigitemp-agent-secret", AGENT_SECRET);
                 }
 
@@ -483,6 +491,7 @@ namespace VigitempAgent
                 {
                     Content = new StringContent(payload, Encoding.UTF8, "application/json")
                 };
+                request.Headers.Add("x-vigisensys-agent-secret", AGENT_SECRET);
                 request.Headers.Add("x-vigitemp-agent-secret", AGENT_SECRET);
 
                 var response = await NotificationClient.SendAsync(request).ConfigureAwait(false);
@@ -505,7 +514,7 @@ namespace VigitempAgent
 
             if (!connected)
             {
-                trayIcon.Text = "Vigitemp Agent (déconnecté)";
+                trayIcon.Text = "VigiSensys Agent (déconnecté)";
                 if (sessionStatusMenuItem != null)
                 {
                     sessionStatusMenuItem.Text = "Statut: déconnecté";
@@ -516,7 +525,7 @@ namespace VigitempAgent
                     lastNoSessionTipUtc = DateTime.UtcNow;
                     ShowTrayTip(
                         "Connexion requise",
-                        "Connectez-vous sur le portail Vigitemp pour recevoir les alarmes sur ce poste.",
+                        "Connectez-vous sur le portail VigiSensys pour recevoir les alarmes sur ce poste.",
                         ToolTipIcon.Info
                     );
                 }
@@ -533,7 +542,7 @@ namespace VigitempAgent
                 return;
             }
 
-            trayIcon.Text = "Vigitemp Agent";
+            trayIcon.Text = "VigiSensys Agent";
             if (sessionStatusMenuItem != null)
             {
                 var who = !string.IsNullOrWhiteSpace(session?.Username)
@@ -554,7 +563,7 @@ namespace VigitempAgent
                         var days = Math.Max(1, (int)Math.Ceiling(remaining.TotalDays));
                         ShowTrayTip(
                             "Connexion bientôt expirée",
-                            "Votre connexion Vigitemp va expirer dans " + days + " jour(s). Pensez à vous reconnecter.",
+                            "Votre connexion VigiSensys va expirer dans " + days + " jour(s). Pensez à vous reconnecter.",
                             ToolTipIcon.Warning
                         );
                     }
@@ -648,16 +657,16 @@ namespace VigitempAgent
                     "Agent installe : " + (agentInstalled ? "OK" : "ECHEC") + Environment.NewLine +
                     "Reservation HTTP : " + (urlAclOk ? "OK" : "ECHEC") + Environment.NewLine +
                     "API locale : " + localApiStatus + Environment.NewLine + Environment.NewLine +
-                    "Si l'icone Vigitemp n'apparait pas dans la zone de notification, fermez puis rouvrez votre session Windows.";
+                    "Si l'icone VigiSensys n'apparait pas dans la zone de notification, fermez puis rouvrez votre session Windows.";
 
                 File.WriteAllText(marker, DateTime.UtcNow.ToString("o"));
 
                 if (trayIcon != null && trayIcon.Visible)
                 {
-                    trayIcon.ShowBalloonTip(8000, "Vigitemp Agent", summary, ToolTipIcon.Info);
+                    trayIcon.ShowBalloonTip(8000, "VigiSensys Agent", summary, ToolTipIcon.Info);
                 }
 
-                MessageBox.Show(summary, "Vigitemp Agent", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                MessageBox.Show(summary, "VigiSensys Agent", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             catch (Exception ex)
             {

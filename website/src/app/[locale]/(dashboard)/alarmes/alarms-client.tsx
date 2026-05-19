@@ -144,7 +144,7 @@ export function AlarmsClient({ alarms, statusFilter, initialLocationId = null, s
       });
 
     return () => { isActive = false; };
-  }, [selectedAlarm]);
+  }, [normalizeCommentOptions, selectedAlarm]);
 
   useEffect(() => {
     if (!selectedAlarm) return;
@@ -274,9 +274,10 @@ export function AlarmsClient({ alarms, statusFilter, initialLocationId = null, s
       accessorKey: "triggeredAt",
       header: t("table.columns.triggered_at"),
       cell: ({ row }) => {
-        const triggeredDate = parseDbDateTime(row.getValue("triggeredAt") as string | Date);
+        const rawTriggeredAt = row.getValue("triggeredAt") as string | Date;
+        const triggeredDate = parseDbDateTime(rawTriggeredAt);
         if (!triggeredDate) return "-";
-        return <div className="flex items-center gap-1.5 text-sm"><Clock className="h-3.5 w-3.5 text-muted-foreground" /><TooltipProvider><Tooltip><TooltipTrigger asChild><span className="cursor-help">{formatDistanceToNow(triggeredDate, { addSuffix: true, locale: fr })}</span></TooltipTrigger><TooltipContent><p className="text-xs">{formatTzDateTime(triggeredDate)}</p></TooltipContent></Tooltip></TooltipProvider></div>;
+        return <div className="flex items-center gap-1.5 text-sm"><Clock className="h-3.5 w-3.5 text-muted-foreground" /><TooltipProvider><Tooltip><TooltipTrigger asChild><span className="cursor-help">{formatDistanceToNow(triggeredDate, { addSuffix: true, locale: fr })}</span></TooltipTrigger><TooltipContent><p className="text-xs">{formatDbDateTime(rawTriggeredAt)}</p></TooltipContent></Tooltip></TooltipProvider></div>;
       },
     },
     { accessorKey: "status", header: t("table.columns.status"), cell: ({ row }) => <div className="flex justify-center"><AlarmStatusBadge status={row.getValue("status") as string} /></div> },
@@ -376,7 +377,7 @@ export function AlarmsClient({ alarms, statusFilter, initialLocationId = null, s
     if (!start || !end) return null;
     const padMs = 60 * 60 * 1000;
     return { from: new Date(start.getTime() - padMs), to: new Date(end.getTime() + padMs) };
-  }, [normalizeCommentOptions, selectedAlarm]);
+  }, [selectedAlarm]);
 
   const cardTitle = statusFilter === "active" ? t("titles.active") : statusFilter === "acknowledged" ? t("titles.acknowledged") : t("titles.resolved");
   const handleCloseDialog = useCallback(() => {

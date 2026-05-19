@@ -191,7 +191,7 @@ namespace Vigitemp_Serveur
         {
             return Path.Combine(
                 Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData),
-                "Vigitemp",
+                "VigiSensys",
                 "logs");
         }
 
@@ -387,7 +387,7 @@ namespace Vigitemp_Serveur
 
             EnsureGlobalExceptionHooks();
 
-            VigitempServeur.Log("Demarrage du service Vigitemp");
+            VigitempServeur.Log("Demarrage du service VigiSensys");
             AppContext.SetSwitch("Switch.System.Threading.UseNetCoreTimer", true);
 
             var licenseResult = LicenseManager.ValidateFromConfig();
@@ -468,7 +468,7 @@ namespace Vigitemp_Serveur
 
         protected override void OnStop()
         {
-            VigitempServeur.Log("Arrêt du service Vigitemp");
+            VigitempServeur.Log("Arret du service VigiSensys");
             try
             {
                 _timer?.Stop();

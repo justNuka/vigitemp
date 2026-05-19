@@ -96,7 +96,9 @@ namespace VigitempAgent
         {
             try
             {
-                var env = Environment.GetEnvironmentVariable("VIGITEMP_AGENT_SECRET");
+                var env =
+                    Environment.GetEnvironmentVariable("VIGISENSYS_AGENT_SECRET") ??
+                    Environment.GetEnvironmentVariable("VIGITEMP_AGENT_SECRET");
                 if (!string.IsNullOrWhiteSpace(env)) return env.Trim();
             }
             catch
@@ -107,7 +109,9 @@ namespace VigitempAgent
             try
             {
                 var cfg =
+                    ConfigurationManager.AppSettings["VigiSensysAgentSecret"] ??
                     ConfigurationManager.AppSettings["VigitempAgentSecret"] ??
+                    ConfigurationManager.AppSettings["VIGISENSYS_AGENT_SECRET"] ??
                     ConfigurationManager.AppSettings["VIGITEMP_AGENT_SECRET"];
                 if (!string.IsNullOrWhiteSpace(cfg)) return cfg.Trim();
             }
@@ -144,7 +148,9 @@ namespace VigitempAgent
             var expected = ResolveNotifySecret();
             if (string.IsNullOrWhiteSpace(expected)) return false;
 
-            var provided = req.Headers["x-vigitemp-agent-secret"];
+            var provided =
+                req.Headers["x-vigisensys-agent-secret"] ??
+                req.Headers["x-vigitemp-agent-secret"];
             return !string.IsNullOrWhiteSpace(provided) &&
                    string.Equals(provided.Trim(), expected, StringComparison.Ordinal);
         }
@@ -171,6 +177,7 @@ namespace VigitempAgent
         private static string ResolveAllowedCorsOrigin(HttpListenerRequest req)
         {
             var configuredOrigin =
+                System.Configuration.ConfigurationManager.AppSettings["VigiSensysSiteWebUrl"] ??
                 System.Configuration.ConfigurationManager.AppSettings["VigitempSiteWebUrl"] ??
                 "http://127.0.0.1:3000";
 
@@ -448,7 +455,7 @@ namespace VigitempAgent
                                     try { jPayload = JObject.Parse(payload); }
                                     catch { jPayload = new JObject(); }
 
-                                    var title        = jPayload.Value<string>("title") ?? "Alarme Vigitemp";
+                                    var title        = jPayload.Value<string>("title") ?? "Alarme VigiSensys";
                                     var message      = jPayload.Value<string>("message");
                                     var location     = jPayload.Value<string>("location");
                                     var date         = jPayload.Value<string>("date");
@@ -1053,10 +1060,10 @@ namespace VigitempAgent
                     try
                     {
                         MessageBox.Show(
-                            "Vigitemp Agent a rencontré une erreur.\n\n" +
+                            "VigiSensys Agent a rencontré une erreur.\n\n" +
                             "Un log a été écrit dans %LOCALAPPDATA%\\VigitempAgent\\logs\\agent.log\n\n" +
                             e.Exception.Message,
-                            "Vigitemp Agent",
+                            "VigiSensys Agent",
                             MessageBoxButtons.OK,
                             MessageBoxIcon.Error
                         );
@@ -1088,10 +1095,10 @@ namespace VigitempAgent
                 try
                 {
                     MessageBox.Show(
-                        "Vigitemp Agent a rencontré une erreur fatale.\n\n" +
+                        "VigiSensys Agent a rencontré une erreur fatale.\n\n" +
                         "Un log a été écrit dans %LOCALAPPDATA%\\VigitempAgent\\logs\\agent.log\n\n" +
                         ex.Message,
-                        "Vigitemp Agent",
+                        "VigiSensys Agent",
                         MessageBoxButtons.OK,
                         MessageBoxIcon.Error
                     );

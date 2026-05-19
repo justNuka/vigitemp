@@ -1,7 +1,8 @@
-import { NextRequest } from "next/server"
+import { NextRequest, NextResponse } from "next/server"
 import { z } from "zod"
 
 import { apiError, apiOk } from "@/lib/api-response"
+import { getCompatEnv } from "@/lib/vigisensys-compat"
 
 const gspSchema = z.object({
   syncConfiguration: z.boolean().optional(),
@@ -52,12 +53,51 @@ function buildServerBaseUrl(serverHost: string, serverPort: number) {
   return `http://${raw}:${serverPort}`
 }
 
+function normalizeResult(raw: Record<string, unknown>) {
+  const detectedSerials = raw.DetectedSerials ?? raw.detectedSerials
+  const exchanges = raw.Exchanges ?? raw.exchanges
+
+  return {
+    success: Boolean(raw.Success ?? raw.success ?? false),
+    error: raw.Error ?? raw.error ?? null,
+    sensorType: raw.SensorType ?? raw.sensorType ?? null,
+    serial: raw.Serial ?? raw.serial ?? null,
+    action: raw.Action ?? raw.action ?? null,
+    requestedCommand: raw.RequestedCommand ?? raw.requestedCommand ?? null,
+    port: raw.Port ?? raw.port ?? null,
+    address: raw.Address ?? raw.address ?? null,
+    module: raw.Module ?? raw.module ?? null,
+    detectedSerials: Array.isArray(detectedSerials)
+      ? detectedSerials.map((value: unknown) => String(value))
+      : [],
+    value: raw.Value ?? raw.value ?? null,
+    unit: raw.Unit ?? raw.unit ?? null,
+    rawValue: raw.RawValue ?? raw.rawValue ?? null,
+    exchanges: Array.isArray(exchanges)
+      ? exchanges.map((exchange: Record<string, unknown>) => ({
+          direction: String(exchange.Direction ?? exchange.direction ?? ""),
+          format: String(exchange.Format ?? exchange.format ?? ""),
+          content: String(exchange.Content ?? exchange.content ?? ""),
+        }))
+      : [],
+  }
+}
+
+function sensorTestFailure(message: string, details?: unknown) {
+  return NextResponse.json({
+    ok: false,
+    error: "sensor_test_failed",
+    message,
+    details,
+  })
+}
+
 export async function POST(req: NextRequest) {
   try {
     const json = await req.json()
     const parsed = bodySchema.safeParse(json)
     if (!parsed.success) {
-      return apiError(400, "validation_error", "Paramètres invalides", {
+      return apiError(400, "validation_error", "Parametres invalides", {
         issues: parsed.error.issues,
       })
     }
@@ -68,15 +108,32 @@ export async function POST(req: NextRequest) {
       "Content-Type": "application/json",
     }
 
-    const apiKey = process.env.VIGITEMP_HOTLINE_API_KEY?.trim()
+    const apiKey = getCompatEnv("VIGISENSYS_HOTLINE_API_KEY", "VIGITEMP_HOTLINE_API_KEY")
     if (apiKey) {
+      headers["x-vigisensys-hotline-key"] = apiKey
       headers["x-vigitemp-hotline-key"] = apiKey
     }
 
-    const response = await fetch(`${baseUrl}/api/hotline/sensor-test`, {
-      method: "POST",
-      headers,
-      cache: "no-store",
+    const timeoutMs = Math.min(
+      Math.max(
+        (payload.readTimeoutMs ?? 10_000) +
+          (payload.writeTimeoutMs ?? 10_000) +
+          (payload.gsp?.listenWindowMs ?? 0) +
+          15_000,
+        20_000,
+      ),
+      120_000,
+    )
+    const controller = new AbortController()
+    const timeout = setTimeout(() => controller.abort(), timeoutMs)
+    let response: Response
+
+    try {
+      response = await fetch(`${baseUrl}/api/hotline/sensor-test`, {
+        method: "POST",
+        headers,
+        cache: "no-store",
+        signal: controller.signal,
         body: JSON.stringify({
           serial: payload.serial,
           sensorType: payload.sensorType,
@@ -92,48 +149,33 @@ export async function POST(req: NextRequest) {
           writeTimeoutMs: payload.writeTimeoutMs,
           gsp: payload.gsp ?? undefined,
         }),
-    })
-
-    const data = await response.json().catch(() => null)
-    if (!response.ok || !data) {
-      return apiError(502, "sensor_test_failed", "Le serveur d'interrogation a renvoyé une erreur", {
-        details: data,
       })
+    } finally {
+      clearTimeout(timeout)
     }
 
-    if (data.ok === false) {
-      return apiError(400, "sensor_test_failed", data.data?.error || data.message || "Test sonde echoué", {
-        details: data.data ?? data,
-      })
+    const data = await response.json().catch(() => null)
+    if (!data) {
+      return sensorTestFailure("Le serveur d'interrogation a renvoye une reponse invalide")
     }
 
     const raw = data.data ?? data
-    return apiOk({
-      success: raw.Success ?? raw.success ?? false,
-      error: raw.Error ?? raw.error ?? null,
-      sensorType: raw.SensorType ?? raw.sensorType ?? null,
-      serial: raw.Serial ?? raw.serial ?? null,
-      action: raw.Action ?? raw.action ?? null,
-      requestedCommand: raw.RequestedCommand ?? raw.requestedCommand ?? null,
-      port: raw.Port ?? raw.port ?? null,
-      address: raw.Address ?? raw.address ?? null,
-      module: raw.Module ?? raw.module ?? null,
-      detectedSerials: Array.isArray(raw.DetectedSerials ?? raw.detectedSerials)
-        ? (raw.DetectedSerials ?? raw.detectedSerials).map((value: unknown) => String(value))
-        : [],
-      value: raw.Value ?? raw.value ?? null,
-      unit: raw.Unit ?? raw.unit ?? null,
-      rawValue: raw.RawValue ?? raw.rawValue ?? null,
-      exchanges: Array.isArray(raw.Exchanges ?? raw.exchanges)
-        ? (raw.Exchanges ?? raw.exchanges).map((exchange: Record<string, unknown>) => ({
-            direction: String(exchange.Direction ?? exchange.direction ?? ""),
-            format: String(exchange.Format ?? exchange.format ?? ""),
-            content: String(exchange.Content ?? exchange.content ?? ""),
-          }))
-        : [],
-    })
+    const normalized = normalizeResult(raw)
+    if (data.ok === false) {
+      return sensorTestFailure(String(normalized.error || data.message || "Test sonde echoue"), normalized)
+    }
+
+    if (!response.ok || !normalized.success) {
+      return sensorTestFailure(String(normalized.error || data.message || "Test sonde echoue"), normalized)
+    }
+
+    return apiOk(normalized)
   } catch (error) {
-    return apiError(500, "sensor_test_failed", "Impossible d'exécuter le test sonde", {
+    if (error instanceof Error && error.name === "AbortError") {
+      return sensorTestFailure("Le test sonde a depasse le delai d'attente cote web")
+    }
+
+    return apiError(500, "sensor_test_failed", "Impossible d'executer le test sonde", {
       details: error instanceof Error ? error.message : String(error),
     })
   }

@@ -5,21 +5,19 @@ import path from "path"
 import { withAdminLogging } from "@/lib/api-wrappers"
 import { apiError, apiOk } from "@/lib/api-response"
 import { log } from "@/lib/logger"
+import { getCompatEnv } from "@/lib/vigisensys-compat"
+import { appDataPath, firstExistingPath, legacyAppDataPath } from "@/lib/vigisensys-paths"
 import type { BackupsResponse, BackupRecord } from "@/components/data-table/backup-columns"
 
 const BACKUP_SLOT_NAMES = ["J", "J-1", "J-2", "J-3", "J-4", "J-5", "J-6", "J-7"]
 
-function resolveBackupRoot() {
-  const configured = process.env.VIGITEMP_BACKUP_ROOT?.trim()
+async function resolveBackupRoot() {
+  const configured = getCompatEnv("VIGISENSYS_BACKUP_ROOT", "VIGITEMP_BACKUP_ROOT")
   if (configured) return configured
 
-  const programData = process.env.ProgramData ?? process.env.PROGRAMDATA
-  if (programData) {
-    return path.join(programData, "Vigitemp", "Backup_BDD", "BACKUP")
-  }
-
-  // Runtime fallback for Windows service environments where ProgramData is not propagated.
-  return "C:\\ProgramData\\Vigitemp\\Backup_BDD\\BACKUP"
+  const nextPath = appDataPath("Backup_BDD", "BACKUP")
+  const legacyPath = legacyAppDataPath("Backup_BDD", "BACKUP")
+  return firstExistingPath([nextPath, legacyPath], nextPath)
 }
 
 function resolveBackupLogPath(backupRoot: string) {
@@ -164,7 +162,7 @@ async function readArchiveRecords(backupRoot: string): Promise<BackupRecord[]> {
 
 export const GET = withAdminLogging(async (_req: NextRequest) => {
   try {
-    const backupRoot = resolveBackupRoot()
+    const backupRoot = await resolveBackupRoot()
     const backupLogPath = resolveBackupLogPath(backupRoot)
     const [archiveRecords, parsedRuns] = await Promise.all([
       readArchiveRecords(backupRoot),

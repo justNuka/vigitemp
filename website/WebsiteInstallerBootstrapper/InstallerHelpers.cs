@@ -245,7 +245,7 @@ if (Test-Path $InstallDir) {{
     Remove-Item -LiteralPath $InstallDir -Recurse -Force
 }}
 
-try {{ Remove-Item -Path ""HKLM:\SOFTWARE\Vigitemp\Web"" -Recurse -Force -ErrorAction SilentlyContinue }} catch {{ }}
+try {{ Remove-Item -Path ""HKLM:\SOFTWARE\VigiSensys\Web"" -Recurse -Force -ErrorAction SilentlyContinue }} catch {{ }}
 try {{ Remove-Item -Path ""HKLM:\{UninstallRegistryKeyName}"" -Recurse -Force -ErrorAction SilentlyContinue }} catch {{ }}
 ";
         File.WriteAllText(scriptPath, script, new UTF8Encoding(false));
@@ -270,7 +270,7 @@ try {{ Remove-Item -Path ""HKLM:\{UninstallRegistryKeyName}"" -Recurse -Force -E
 
     public static void WriteRegistryInfo(string installPath, string version, string serviceName, string displayIconPath, string uninstallScriptPath)
     {
-        using var key = Registry.LocalMachine.CreateSubKey(@"SOFTWARE\Vigitemp\Web");
+        using var key = Registry.LocalMachine.CreateSubKey(@"SOFTWARE\VigiSensys\Web");
         key?.SetValue("InstallPath", installPath, RegistryValueKind.String);
         key?.SetValue("Version", version ?? string.Empty, RegistryValueKind.String);
         key?.SetValue("LastInstalledUtc", DateTime.UtcNow.ToString("o"), RegistryValueKind.String);

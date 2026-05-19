@@ -1,10 +1,10 @@
-﻿# Installateur serveur C# Vigitemp
+# Installateur serveur d'interrogation VigiSensys
 
-Ce script installe le service C#, met a jour le App.config et place la licence / cle publique dans ProgramData.
+Ce script installe le service d'interrogation, met a jour le App.config et place la licence / cle publique dans ProgramData.
 
 ## Prerequis
 - Lancer PowerShell en tant qu'administrateur.
-- Le dossier de build doit contenir `Vigitemp Serveur.exe` et son `.config`.
+- Le dossier de build doit contenir `VigiSensysServeur.exe` et son `.config`.
 
 ## Pre-requis offline (MySQL + VC redist)
 Si la machine client n'a pas Internet :
@@ -40,15 +40,15 @@ cd "Vigitemp Serveur\\installer"
 - Cap technique : `16` workers
 
 ## Fichiers
-- Licence : `C:\ProgramData\Vigitemp\licenses\<license>.vtlic`
-- Cle publique : `C:\ProgramData\Vigitemp\license_keys\public_key.pem`
-- Logs install : `C:\ProgramData\Vigitemp\install-logs\install-server-*.log`
+- Licence : `C:\ProgramData\VigiSensys\licenses\<license>.vtlic`
+- Cle publique : `C:\ProgramData\VigiSensys\license_keys\public_key.pem`
+- Logs install : `C:\ProgramData\VigiSensys\install-logs\install-server-*.log`
 
 ## Rollback
 - Arreter et supprimer le service :
 ```powershell
-sc.exe stop VigitempServeur
-sc.exe delete VigitempServeur
+sc.exe stop VigiSensysServeur
+sc.exe delete VigiSensysServeur
 ```
 - Supprimer le dossier d'installation et ProgramData si besoin.
 

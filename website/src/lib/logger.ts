@@ -4,12 +4,13 @@ import path from "path";
 import fs from "fs";
 import util from "util";
 import { writeAuditToDatabase } from "./audit-db";
+import { getCompatEnv } from "@/lib/vigisensys-compat";
 
 // Créer le dossier logs s'il n'existe pas
 // NOTE: In dev, writing logs inside the Next.js project folder can trigger file watchers (Fast Refresh)
 // and cause unexpected automatic page refreshes. Keep logs outside `website/` by default.
 const logsDir =
-  process.env.VIGITEMP_LOGS_DIR ||
+  getCompatEnv("VIGISENSYS_LOGS_DIR", "VIGITEMP_LOGS_DIR") ||
   (process.env.NODE_ENV === "production"
     ? path.join(process.cwd(), "logs")
     // default dev location: outside `website/` to avoid triggering Next dev watchers

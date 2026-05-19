@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma"
 import { getClientIp, withLogging } from "@/lib/api-logger"
 import { apiError, apiOk } from "@/lib/api-response"
 import { log } from "@/lib/logger"
+import { getCompatEnv, getCompatHeader } from "@/lib/vigisensys-compat"
 
 const eventSchema = z.object({
   deliveryId: z.number().int().positive().optional(),
@@ -18,9 +19,9 @@ const eventSchema = z.object({
 
 
 function isAuthorized(req: NextRequest) {
-  const secret = process.env.VIGITEMP_AGENT_SECRET
+  const secret = getCompatEnv("VIGISENSYS_AGENT_SECRET", "VIGITEMP_AGENT_SECRET")
   if (!secret) return false
-  return req.headers.get("x-vigitemp-agent-secret") === secret
+  return getCompatHeader(req, "x-vigisensys-agent-secret", "x-vigitemp-agent-secret") === secret
 }
 
 export const POST = withLogging(async (req: NextRequest) => {

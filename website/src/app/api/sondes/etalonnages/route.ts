@@ -6,6 +6,20 @@ import { prisma } from "@/lib/prisma"
 import { requireStandardOrExpertLicense } from "@/lib/license-guards"
 import { log } from "@/lib/logger"
 
+type CalibrationRow = {
+  Id_Etalonnage: number
+  Date_Heure_Etalonnage: Date | null
+  Sonde_Numero_Serie: string | null
+  Date_Validite: Date | null
+  Duree_Validite_Jours: number | null
+  Valide: Date | null
+  Operateur: string | null
+  Unite: string | null
+  Incertitude: number | null
+  Err_Justesse: number | null
+  Nom_Etalonnage: string | null
+}
+
 export const GET = withAuthLogging(async (req: NextRequest) => {
   try {
     const guard = await requireStandardOrExpertLicense()
@@ -18,22 +32,23 @@ export const GET = withAuthLogging(async (req: NextRequest) => {
       return apiError(400, "invalid_input", "Numero de serie requis")
     }
 
-    const etalonnages = await prisma.t_etalonnage.findMany({
-      where: { Sonde_Numero_Serie: serieNum },
-      select: {
-        Id_Etalonnage: true,
-        Date_Heure_Etalonnage: true,
-        Date_Validite: true,
-        Duree_Validite_Jours: true,
-        Valide: true,
-        Sonde_Numero_Serie: true,
-        Operateur: true,
-        Unite: true,
-        Incertitude: true,
-        Err_Justesse: true,
-      },
-      orderBy: { Date_Heure_Etalonnage: "desc" },
-    })
+    const etalonnages = await prisma.$queryRaw<CalibrationRow[]>`
+      SELECT
+        Id_Etalonnage,
+        Date_Heure_Etalonnage,
+        Sonde_Numero_Serie,
+        Date_Validite,
+        Duree_Validite_Jours,
+        Valide,
+        Operateur,
+        Unite,
+        Incertitude,
+        Err_Justesse,
+        Nom_Etalonnage
+      FROM t_etalonnage
+      WHERE Sonde_Numero_Serie = ${serieNum}
+      ORDER BY Date_Heure_Etalonnage DESC
+    `
 
     return apiOk(etalonnages)
   } catch (error) {

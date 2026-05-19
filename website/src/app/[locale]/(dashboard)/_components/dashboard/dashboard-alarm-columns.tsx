@@ -5,7 +5,7 @@ import type { Locale } from "date-fns"
 
 import { Button } from "@/components/ui/button"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import { parseDbDateTime } from "@/lib/date-display"
+import { formatDbDateTime, parseDbDateTime } from "@/lib/date-display"
 import { formatMeasureValue } from "@/lib/measurements"
 import { cn } from "@/lib/utils"
 import type { AlarmWithDetails } from "@/lib/api"
@@ -36,13 +36,11 @@ export function buildAlarmRows(alarms: AlarmWithDetails[]): AlarmRow[] {
 export function createDashboardAlarmColumns({
   t,
   dateLocale,
-  formatTzDateTime,
   canAcknowledgeAlarm,
   onSelectAlarm,
 }: {
   t: Translate
   dateLocale: Locale
-  formatTzDateTime: (value: string | Date) => string
   canAcknowledgeAlarm: boolean
   onSelectAlarm: (alarmId: string) => void
 }): ColumnDef<AlarmRow>[] {
@@ -114,7 +112,8 @@ export function createDashboardAlarmColumns({
       accessorKey: "triggeredAt",
       header: t("table.columns.triggered"),
       cell: ({ row }) => {
-        const triggeredDate = parseDbDateTime(row.getValue("triggeredAt") as string | Date)
+        const rawTriggeredAt = row.getValue("triggeredAt") as string | Date
+        const triggeredDate = parseDbDateTime(rawTriggeredAt)
         if (!triggeredDate) return "-"
         return (
           <div className="flex items-center gap-1.5 text-sm">
@@ -127,7 +126,7 @@ export function createDashboardAlarmColumns({
                   </span>
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p className="text-xs">{formatTzDateTime(triggeredDate)}</p>
+                  <p className="text-xs">{formatDbDateTime(rawTriggeredAt)}</p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>

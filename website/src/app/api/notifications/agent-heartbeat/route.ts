@@ -5,6 +5,7 @@ import { getClientIp, withLogging } from "@/lib/api-logger"
 import { apiError, apiOk } from "@/lib/api-response"
 import { log } from "@/lib/logger"
 import { prisma } from "@/lib/prisma"
+import { getCompatEnv, getCompatHeader } from "@/lib/vigisensys-compat"
 
 const heartbeatSchema = z.object({
   machineName: z.string().trim().min(1).max(255).optional(),
@@ -14,9 +15,9 @@ const heartbeatSchema = z.object({
 })
 
 function isAuthorized(req: NextRequest) {
-  const secret = process.env.VIGITEMP_AGENT_SECRET?.trim()
+  const secret = getCompatEnv("VIGISENSYS_AGENT_SECRET", "VIGITEMP_AGENT_SECRET")
   if (!secret) return false
-  return req.headers.get("x-vigitemp-agent-secret") === secret
+  return getCompatHeader(req, "x-vigisensys-agent-secret", "x-vigitemp-agent-secret") === secret
 }
 
 export const POST = withLogging(async (req: NextRequest) => {

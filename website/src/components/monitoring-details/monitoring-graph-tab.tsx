@@ -350,6 +350,8 @@ export function MonitoringGraphTab({
             scales: {
               x: {
                 display: true,
+                offset: false,
+                bounds: "ticks",
                 min: zoomBounds?.xMin,
                 max: zoomBounds?.xMax,
                 grid: { display: true, color: "rgba(0, 0, 0, 0.05)" },

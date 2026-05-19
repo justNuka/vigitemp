@@ -333,9 +333,7 @@ export function AlarmAcknowledgeDialog({
 
             {Number(resolvedAlarm.locationId) > 0 && alarmCount30 !== null && alarmCount30 > 1 ? (
               <div className="flex items-center justify-between gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-500/40 dark:bg-amber-500/10 dark:text-amber-100">
-                <span>
-                  Plusieurs alarmes existent pour ce lieu. Vous pouvez ouvrir la page des alarmes filtrees sur ce lieu.
-                </span>
+                <span>{t("dialog.location_alarms_notice")}</span>
                 <Button
                   type="button"
                   variant="outline"
@@ -345,7 +343,7 @@ export function AlarmAcknowledgeDialog({
                     window.location.href = `/${locale}/alarmes?status=active&locationId=${encodeURIComponent(resolvedAlarm.locationId)}`
                   }}
                 >
-                  Voir les alarmes du lieu
+                  {t("dialog.view_location_alarms")}
                 </Button>
               </div>
             ) : null}
@@ -440,7 +438,7 @@ export function AlarmAcknowledgeDialog({
         <MonitoringDetailsModal
           isOpen={showGraph}
           onClose={() => setShowGraph(false)}
-          idLieu={Number(alarm.locationId)}
+          idLieu={Number(resolvedAlarm.locationId)}
           nomLieu={resolvedAlarm.locationName}
           sondeNumeroSerie={resolvedAlarm.sensorName}
           consigneSup={resolvedAlarm.maxThreshold ?? null}

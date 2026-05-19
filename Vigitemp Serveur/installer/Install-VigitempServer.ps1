@@ -237,7 +237,7 @@ function Get-RecommendedWorkerCount([int]$sondeCount, [bool]$hasFastPolling, [in
 
 function Write-InstallRegistryInfo($installPath, $version) {
     try {
-        $baseKey = "HKLM:\\SOFTWARE\\Vigitemp"
+        $baseKey = "HKLM:\\SOFTWARE\\VigiSensys"
         $serverKey = Join-Path $baseKey "Server"
         New-Item -Path $baseKey -Force | Out-Null
         New-Item -Path $serverKey -Force | Out-Null
@@ -254,11 +254,11 @@ if (-not (Test-Admin)) {
 }
 
 $programData = [Environment]::GetFolderPath("CommonApplicationData")
-$defaultInstallDir = Join-Path $programData "Vigitemp\\server"
-$defaultServiceName = "VigitempServeur"
+$defaultInstallDir = Join-Path $programData "VigiSensys\\server"
+$defaultServiceName = "VigiSensysServeur"
 
 if ([string]::IsNullOrWhiteSpace($SourcePath)) {
-    $SourcePath = Read-InstallValue (T "Chemin du build serveur (dossier contenant Vigitemp Serveur.exe)" "Path to server build output (folder with Vigitemp Serveur.exe)") $defaultSource.Path
+    $SourcePath = Read-InstallValue (T "Chemin du build serveur (dossier contenant VigiSensysServeur.exe)" "Path to server build output (folder with VigiSensysServeur.exe)") $defaultSource.Path
 }
  $SourcePath = Resolve-PathInput $SourcePath
 if ([string]::IsNullOrWhiteSpace($InstallDir)) {
@@ -273,18 +273,18 @@ if (-not (Test-Path $SourcePath)) {
     Write-Error (T "SourcePath introuvable : $SourcePath" "SourcePath not found: $SourcePath")
 }
 
-$exeName = "Vigitemp Serveur.exe"
+$exeName = "VigiSensysServeur.exe"
 $exePath = Join-Path $SourcePath $exeName
 if (-not (Test-Path $exePath)) {
     Write-Error (T "Ex?cutable introuvable : $exePath" "Executable not found: $exePath")
 }
 
-$logDir = Join-Path $programData "Vigitemp\\install-logs"
+$logDir = Join-Path $programData "VigiSensys\\install-logs"
 New-Item -ItemType Directory -Force -Path $logDir | Out-Null
 $logPath = Join-Path $logDir "install-server-$(Get-Date -Format yyyyMMdd-HHmmss).log"
 Start-Transcript -Path $logPath | Out-Null
 
-Write-Log (T "Installation du serveur Vigitemp vers $InstallDir" "Installing Vigitemp server to $InstallDir")
+Write-Log (T "Installation du serveur VigiSensys vers $InstallDir" "Installing VigiSensys server to $InstallDir")
 New-Item -ItemType Directory -Force -Path $InstallDir | Out-Null
 Copy-Item -Path (Join-Path $SourcePath '*') -Destination $InstallDir -Recurse -Force
 
@@ -366,7 +366,7 @@ function Write-UninstallRegistryInfo($installPath, $serviceName, $version) {
         Set-ItemProperty -Path $uninstallKey -Name "DisplayVersion" -Value $displayVersion
         Set-ItemProperty -Path $uninstallKey -Name "Publisher" -Value "VigiSensys"
         Set-ItemProperty -Path $uninstallKey -Name "InstallLocation" -Value $installPath
-        Set-ItemProperty -Path $uninstallKey -Name "DisplayIcon" -Value (Join-Path $installPath "Vigitemp Serveur.exe")
+        Set-ItemProperty -Path $uninstallKey -Name "DisplayIcon" -Value (Join-Path $installPath "VigiSensysServeur.exe")
         Set-ItemProperty -Path $uninstallKey -Name "UninstallString" -Value $uninstallCommand
         Set-ItemProperty -Path $uninstallKey -Name "QuietUninstallString" -Value $quietUninstallCommand
         Set-ItemProperty -Path $uninstallKey -Name "NoModify" -Value 1 -Type DWord
@@ -448,8 +448,8 @@ if ($licensePayload -and $licensePayload.PSObject.Properties.Match("bind").Count
     }
 }
 
-$licenseDir = Join-Path $programData "Vigitemp\\licenses"
-$publicKeyDir = Join-Path $programData "Vigitemp\\license_keys"
+$licenseDir = Join-Path $programData "VigiSensys\\licenses"
+$publicKeyDir = Join-Path $programData "VigiSensys\\license_keys"
 New-Item -ItemType Directory -Force -Path $licenseDir | Out-Null
 New-Item -ItemType Directory -Force -Path $publicKeyDir | Out-Null
 
@@ -460,7 +460,9 @@ Copy-Item -Path $licenseSourcePath -Destination $licenseDestPath -Force
 Copy-Item -Path $publicKeySourcePath -Destination $publicKeyDestPath -Force
 
 Set-AppSetting $configPath "Vigi.WebsiteBaseUrl" $websiteBaseUrl
+Set-AppSetting $configPath "VigiSensys.WebsiteBaseUrl" $websiteBaseUrl
 Set-AppSetting $configPath "Vigi.AlarmDispatchSecret" $alarmSecret
+Set-AppSetting $configPath "VigiSensys.AlarmDispatchSecret" $alarmSecret
 Set-AppSetting $configPath "Vigi.Db.Provider" $dbProvider
 Set-AppSetting $configPath "Vigi.Db.Host" $dbHost
 Set-AppSetting $configPath "Vigi.Db.Port" $dbPort
@@ -482,7 +484,9 @@ Set-AppSetting $configPath "Vigitemp.Alarms.PollServerId" "1"
 Set-AppSetting $configPath "Vigitemp.LegacyAgentNotifications.Enabled" "false"
 Set-AppSetting $configPath "Vigitemp.LegacyAgentNotifications.MaxRecipients" "25"
 Set-AppSetting $configPath "Vigi.License.Path" $licenseDestPath
+Set-AppSetting $configPath "VigiSensys.License.Path" $licenseDestPath
 Set-AppSetting $configPath "Vigi.License.PublicKeyPath" $publicKeyDestPath
+Set-AppSetting $configPath "VigiSensys.License.PublicKeyPath" $publicKeyDestPath
 Set-AppSetting $configPath "Vigi.License.InstancePublicKey" $instancePublicKey
 
 $serviceExePath = Join-Path $InstallDir $exeName
@@ -506,7 +510,7 @@ if ($null -ne $existingService) {
 
 $binPath = '"' + $serviceExePath + '"'
 & sc.exe create $ServiceName binPath= $binPath start= auto | Out-Null
-& sc.exe description $ServiceName "Vigitemp C# server service" | Out-Null
+& sc.exe description $ServiceName "VigiSensys interrogation server service" | Out-Null
 & sc.exe failure $ServiceName reset= 86400 actions= restart/60000/restart/60000/restart/60000 | Out-Null
 & sc.exe failureflag $ServiceName 1 | Out-Null
 
@@ -522,7 +526,7 @@ try {
             Write-Log ($evt.Message)
         }
     } catch { }
-    $logPath = Join-Path $programData "Vigitemp\\logs\\vigitemp-serveur.log"
+    $logPath = Join-Path $programData "VigiSensys\\logs\\vigisensys-serveur.log"
     if (Test-Path $logPath) {
         Write-Log (T "Log serveur: $logPath" "Server log: $logPath")
     }
@@ -534,7 +538,7 @@ Write-InstallRegistryInfo -installPath $InstallDir -version $version
 Write-UninstallRegistryInfo -installPath $InstallDir -serviceName $ServiceName -version $version
 
 try {
-    $regServerRoot = "HKLM:\\SOFTWARE\\Vigitemp\\Server"
+    $regServerRoot = "HKLM:\\SOFTWARE\\VigiSensys\\Server"
     New-Item -Path $regServerRoot -Force | Out-Null
     if ($licenseDestPath) {
         Set-ItemProperty -Path $regServerRoot -Name "LicensePath" -Value $licenseDestPath -Type String
@@ -548,7 +552,7 @@ try {
     Write-Log (T "Echec ecriture registre licence." "Failed to write license registry.")
 }
 
-Write-Log (T "Registre: HKLM\\SOFTWARE\\Vigitemp\\Server" "Registry: HKLM\\SOFTWARE\\Vigitemp\\Server")
+Write-Log (T "Registre: HKLM\\SOFTWARE\\VigiSensys\\Server" "Registry: HKLM\\SOFTWARE\\VigiSensys\\Server")
 Write-Log (T "  InstallPath: $InstallDir" "  InstallPath: $InstallDir")
 if (-not [string]::IsNullOrWhiteSpace($version)) {
     Write-Log (T "  Version: $version" "  Version: $version")
@@ -586,7 +590,7 @@ function Test-ServerInstall {
         Write-Warning (T "Service $ServiceName introuvable." "Service $ServiceName not found.")
     }
     try {
-        $reg = Get-ItemProperty -Path "HKLM:\\SOFTWARE\\Vigitemp\\Server" -ErrorAction Stop
+        $reg = Get-ItemProperty -Path "HKLM:\\SOFTWARE\\VigiSensys\\Server" -ErrorAction Stop
         if ($reg.InstallPath) {
             Write-Log (T "Registre InstallPath: $($reg.InstallPath)" "Registry InstallPath: $($reg.InstallPath)")
         }

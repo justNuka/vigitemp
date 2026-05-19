@@ -1089,48 +1089,12 @@ namespace Vigitemp_Serveur
 
             var localLock = _portLocks.GetOrAdd(portKey, _ => new SemaphoreSlim(1, 1));
             await localLock.WaitAsync(m_cts);
-
-            Mutex namedMutex = null;
-            var mutexAcquired = false;
             try
             {
-                namedMutex = new Mutex(false, BuildPortMutexName(portKey));
-                try
-                {
-                    mutexAcquired = namedMutex.WaitOne(TimeSpan.FromMinutes(5));
-                }
-                catch (AbandonedMutexException)
-                {
-                    mutexAcquired = true;
-                }
-
-                if (!mutexAcquired)
-                {
-                    VigitempServeur.Log($"[SONDE][PORT-LOCK] port={portKey} serial={serial} status=timeout");
-                    return;
-                }
-
                 await action();
             }
             finally
             {
-                if (mutexAcquired && namedMutex != null)
-                {
-                    try
-                    {
-                        namedMutex.ReleaseMutex();
-                    }
-                    catch (ApplicationException)
-                    {
-                        // Mutex deja relache ou non acquis: rien a faire.
-                    }
-                }
-
-                if (namedMutex != null)
-                {
-                    namedMutex.Dispose();
-                }
-
                 localLock.Release();
             }
         }

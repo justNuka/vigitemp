@@ -2,20 +2,20 @@
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
      xmlns:util="http://wixtoolset.org/schemas/v4/wxs/util">
   <Package
-    Name="Vigitemp Agent"
-    Manufacturer="Vigitemp"
+    Name="VigiSensys Agent"
+    Manufacturer="VigiSensys"
     Version="$(var.ProductVersion)"
     UpgradeCode="c79acc5b-b54f-413b-b52a-7614910a0462"
     InstallerVersion="500"
     Compressed="yes"
     Scope="perMachine">
-    <MajorUpgrade DowngradeErrorMessage="Une version plus recente de Vigitemp Agent est deja installee." />
+    <MajorUpgrade DowngradeErrorMessage="Une version plus recente de VigiSensys Agent est deja installee." />
     <MediaTemplate EmbedCab="yes" />
 
     <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER" />
     <Property Id="VIGI_WEB_URL" Value="http://127.0.0.1:3000" />
 
-    <Feature Id="MainFeature" Title="Vigitemp Agent" Level="1">
+    <Feature Id="MainFeature" Title="VigiSensys Agent" Level="1">
       <ComponentGroupRef Id="AppFiles" />
       <ComponentRef Id="StartupRegistry" />
       <ComponentRef Id="ConfigUpdate" />
@@ -44,13 +44,19 @@
       <Component Id="ConfigUpdate" Guid="c7cccdc9-3896-4a10-934d-ff94bf27ba52">
         <RegistryValue
           Root="HKLM"
-          Key="Software\Vigitemp\Agent"
+          Key="Software\VigiSensys\Agent"
           Name="ConfigUpdated"
           Value="1"
           Type="integer"
           KeyPath="yes" />
         <util:XmlFile
           Id="SetWebUrl"
+          File="[INSTALLFOLDER]VigitempAgent.exe.config"
+          ElementPath="/configuration/appSettings/add[@key='VigiSensysSiteWebUrl']/@value"
+          Action="setValue"
+          Value="[VIGI_WEB_URL]" />
+        <util:XmlFile
+          Id="SetLegacyWebUrl"
           File="[INSTALLFOLDER]VigitempAgent.exe.config"
           ElementPath="/configuration/appSettings/add[@key='VigitempSiteWebUrl']/@value"
           Action="setValue"
@@ -61,7 +67,7 @@
 
   <Fragment>
     <UI>
-      <Dialog Id="InstallOverviewDlg" Width="370" Height="270" Title="Vigitemp Agent - Etapes d'installation">
+      <Dialog Id="InstallOverviewDlg" Width="370" Height="270" Title="VigiSensys Agent - Etapes d'installation">
         <Control Id="Title" Type="Text" X="15" Y="10" Width="340" Height="20" Transparent="yes" NoPrefix="yes"
                  Text="Etapes d'installation" />
         <Control Id="Description" Type="Text" X="15" Y="40" Width="340" Height="20" Transparent="yes" NoPrefix="yes"
@@ -83,11 +89,11 @@
         </Control>
       </Dialog>
 
-      <Dialog Id="ServerUrlDlg" Width="370" Height="270" Title="Vigitemp Agent - Configuration">
+      <Dialog Id="ServerUrlDlg" Width="370" Height="270" Title="VigiSensys Agent - Configuration">
         <Control Id="Title" Type="Text" X="15" Y="10" Width="340" Height="20" Transparent="yes" NoPrefix="yes"
                  Text="Configuration du serveur web" />
         <Control Id="Description" Type="Text" X="15" Y="40" Width="340" Height="30" Transparent="yes" NoPrefix="yes"
-                 Text="Indiquez l'URL du serveur web Vigitemp (ex: http://127.0.0.1:3000)" />
+                 Text="Indiquez l'URL du serveur web VigiSensys (ex: http://127.0.0.1:3000)" />
         <Control Id="ServerUrlLabel" Type="Text" X="15" Y="80" Width="80" Height="15" Text="URL:" />
         <Control Id="ServerUrlEdit" Type="Edit" X="15" Y="98" Width="340" Height="18" Property="VIGI_WEB_URL" />
         <Control Id="Back" Type="PushButton" X="180" Y="243" Width="56" Height="17" Text="&lt; Precedent">

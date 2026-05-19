@@ -44,8 +44,8 @@ cd "website\installer"
 .\Install-VigitempWeb.ps1 \
   -Silent \
   -SourcePath "C:\repo\vigitemp\website" \
-  -InstallDir "C:\ProgramData\Vigitemp\website" \
-  -ServiceName "VigitempWeb" \
+  -InstallDir "C:\ProgramData\VigiSensys\website" \
+  -ServiceName "VigiSensysWeb" \
   -Port 3000 \
   -EnvFileName ".env.production" \
   -NodePath "C:\Program Files\nodejs\node.exe" \
@@ -58,13 +58,13 @@ cd "website\installer"
 - Crée un service Windows qui lance le serveur
 
 ## Fichiers
-- Logs install : `C:\ProgramData\Vigitemp\install-logs\install-web-*.log`
-- Logs app : (demandé pendant l'install, défaut `C:\ProgramData\Vigitemp\web-logs`)
+- Logs install : `C:\ProgramData\VigiSensys\install-logs\install-web-*.log`
+- Logs app : (demandé pendant l'install, défaut `C:\ProgramData\VigiSensys\web-logs`)
 
 ## Rollback
 ```
-sc.exe stop VigitempWeb
-sc.exe delete VigitempWeb
+sc.exe stop VigiSensysWeb
+sc.exe delete VigiSensysWeb
 ```
 Supprimer le dossier d'installation si besoin.
 

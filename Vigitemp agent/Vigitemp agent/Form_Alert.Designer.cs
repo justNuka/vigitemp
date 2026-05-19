@@ -1,4 +1,4 @@
-﻿
+
 using System.Drawing;
 using System.Drawing.Text;
 using System.Runtime.InteropServices;
@@ -87,7 +87,7 @@ namespace VigitempAgent
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(490, 81);
             this.label2.TabIndex = 6;
-            this.label2.Text = "Une alarme Vigitemp est actuellement en cours";
+            this.label2.Text = "Une alarme VigiSensys est actuellement en cours";
             this.label2.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // pictureBox1

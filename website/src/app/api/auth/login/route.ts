@@ -14,6 +14,7 @@ import {
 import { log } from "@/lib/logger"
 import { prisma } from "@/lib/prisma"
 import { shouldUseSecureCookies } from "@/lib/cookie-security"
+import { getCompatHeader } from "@/lib/vigisensys-compat"
 
 const loginSchema = z.object({
   username: z.string().min(1, "Username required"),
@@ -167,8 +168,8 @@ export const POST = withLogging(async (req: NextRequest) => {
     })
 
     const headerMachineName =
-      req.headers.get("x-vigitemp-machine-name") ||
-      req.headers.get("x-vigitemp-machine") ||
+      getCompatHeader(req, "x-vigisensys-machine-name", "x-vigitemp-machine-name") ||
+      getCompatHeader(req, "x-vigisensys-machine", "x-vigitemp-machine") ||
       undefined
     const resolvedMachineName = machineName || headerMachineName || undefined
     const now = new Date()

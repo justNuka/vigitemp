@@ -239,10 +239,23 @@ export function UserSitesField<TFormValues extends UserFormFieldValues>({
       name={"siteIds" as FieldPath<TFormValues>}
       render={({ field }) => {
         const selectedIds = toNumberArray(field.value)
+        const siteIds = sites?.map((site) => site.id) ?? []
+        const allSelected = siteIds.length > 0 && siteIds.every((id) => selectedIds.includes(id))
 
         return (
           <FormItem>
-            <FormLabel>{t("fields.sites_label")}</FormLabel>
+            <div className="flex items-center justify-between gap-2">
+              <FormLabel>{t("fields.sites_label")}</FormLabel>
+              {siteIds.length > 0 ? (
+                <button
+                  type="button"
+                  className="text-xs font-medium text-primary hover:underline"
+                  onClick={() => field.onChange(allSelected ? [] : siteIds)}
+                >
+                  {allSelected ? t("actions.uncheck_all") : t("actions.check_all")}
+                </button>
+              ) : null}
+            </div>
             <div className="max-h-48 space-y-2 overflow-y-auto rounded-md border bg-background p-3">
               {isLoading ? (
                 <p className="text-sm text-muted-foreground">{t("actions.loading")}</p>
@@ -294,10 +307,23 @@ export function UserGroupsField<TFormValues extends UserFormFieldValues>({
       name={"groupeIds" as FieldPath<TFormValues>}
       render={({ field }) => {
         const selectedIds = toNumberArray(field.value)
+        const groupIds = groups?.map((group) => group.Id_Groupe) ?? []
+        const allSelected = groupIds.length > 0 && groupIds.every((id) => selectedIds.includes(id))
 
         return (
           <FormItem>
-            <FormLabel>{t("fields.groups_label")}</FormLabel>
+            <div className="flex items-center justify-between gap-2">
+              <FormLabel>{t("fields.groups_label")}</FormLabel>
+              {groupIds.length > 0 ? (
+                <button
+                  type="button"
+                  className="text-xs font-medium text-primary hover:underline"
+                  onClick={() => field.onChange(allSelected ? [] : groupIds)}
+                >
+                  {allSelected ? t("actions.uncheck_all") : t("actions.check_all")}
+                </button>
+              ) : null}
+            </div>
             <div className="max-h-48 space-y-2 overflow-y-auto rounded-md border bg-background p-3">
               {isLoading ? (
                 <p className="text-sm text-muted-foreground">{t("actions.loading")}</p>

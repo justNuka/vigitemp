@@ -103,14 +103,13 @@ export function DashboardClient({
       createDashboardAlarmColumns({
         t,
         dateLocale,
-        formatTzDateTime,
         canAcknowledgeAlarm,
         onSelectAlarm: (alarmId) => {
           const fullAlarm = displayedAlarms.find((item) => item.id === alarmId)
           if (fullAlarm && canAcknowledgeAlarm) setSelectedAlarm(fullAlarm)
         },
       }),
-    [t, dateLocale, formatTzDateTime, canAcknowledgeAlarm, displayedAlarms],
+    [t, dateLocale, canAcknowledgeAlarm, displayedAlarms],
   )
 
   return (

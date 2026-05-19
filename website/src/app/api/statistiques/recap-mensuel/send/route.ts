@@ -10,6 +10,7 @@ import {
   parseRecipients,
   setLastSentMonth,
 } from "@/lib/statistics/monthly-report-config"
+import { getCompatEnv, getCompatHeader } from "@/lib/vigisensys-compat"
 
 function getMonthToken(date: Date) {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`
@@ -42,10 +43,10 @@ export const POST = withAuthorizationLogging("GERER_PROFIL", async (_req: NextRe
 
 export async function GET(req: NextRequest) {
   try {
-    const headerSecret = req.headers.get("x-vigitemp-secret")?.trim() ?? ""
+    const headerSecret = getCompatHeader(req, "x-vigisensys-secret", "x-vigitemp-secret") ?? ""
     const allowedSecrets = [
-      process.env.VIGITEMP_STATS_REPORT_SECRET?.trim() ?? "",
-      process.env.VIGITEMP_ALARM_DISPATCH_SECRET?.trim() ?? "",
+      getCompatEnv("VIGISENSYS_STATS_REPORT_SECRET", "VIGITEMP_STATS_REPORT_SECRET") ?? "",
+      getCompatEnv("VIGISENSYS_ALARM_DISPATCH_SECRET", "VIGITEMP_ALARM_DISPATCH_SECRET") ?? "",
     ].filter((value) => value.length > 0)
 
     if (allowedSecrets.length === 0 || !allowedSecrets.includes(headerSecret)) {

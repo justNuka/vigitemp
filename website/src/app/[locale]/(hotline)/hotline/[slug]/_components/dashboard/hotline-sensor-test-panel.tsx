@@ -443,12 +443,12 @@ export function HotlineSensorTestPanel() {
         <CardHeader>
           <CardTitle>Test manuel de sonde</CardTitle>
           <p className="text-sm text-muted-foreground">
-            Interrogation directe via le serveur C# hotline. Si la sonde n'existe pas encore en base, utilisez un override manuel.
+            Interrogation directe via le serveur d'interrogation hotline. Si la sonde n'existe pas encore en base, utilisez un override manuel.
           </p>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="IP / hote du serveur C#">
+            <Field label="IP / hote du serveur d'interrogation">
               <Input value={serverHost} onChange={(e) => setServerHost(e.target.value)} placeholder="127.0.0.1" />
             </Field>
             <Field label="Port API hotline">
@@ -479,7 +479,7 @@ export function HotlineSensorTestPanel() {
                   setSerial(nextSerial)
                   setGsp((prev) => ({ ...prev, rawSerial: nextSerial }))
                 }}
-                placeholder="GSP0000001"
+                placeholder="SPPS-26000001"
               />
             </Field>
           </div>
@@ -487,7 +487,7 @@ export function HotlineSensorTestPanel() {
           <div className="rounded-md border border-border/60 bg-muted/20 p-4 dark:bg-muted/15">
             <div className="mb-3 text-sm font-medium">Override manuel de connexion</div>
             <div className="mb-3 text-xs text-muted-foreground">
-              Laissez vide pour utiliser la base du serveur C#. Renseignez au minimum le port COM pour tester une sonde non encore creee en base.
+              Laissez vide pour utiliser la base du serveur d'interrogation. Renseignez au minimum le port COM pour tester une sonde non encore créée en base.
             </div>
             <div className="grid gap-4 sm:grid-cols-1">
               <Field label="Port COM">
@@ -513,10 +513,10 @@ export function HotlineSensorTestPanel() {
                   </Field>
                 </div>
                 <div className="grid gap-3 sm:grid-cols-2">
-                  <HelpLine title="Adresse">Identifiant additionnel du device si le protocole ne se limite pas au numero de série.</HelpLine>
+                  <HelpLine title="Adresse">Identifiant additionnel du device si le protocole ne se limite pas au numéro de série.</HelpLine>
                   <HelpLine title="Module">Information libre pour certains protocoles historiques. Inutile pour un test GSP simple.</HelpLine>
                   <HelpLine title="Baudrate">Vitesse de communication du port série. 9600 est la valeur par defaut testée.</HelpLine>
-                  <HelpLine title="Parity">Controle d'erreur série. Laisser `None` sauf besoin constructeur explicite.</HelpLine>
+                  <HelpLine title="Parity">Contrôle d'erreur série. Laisser `None` sauf besoin explicite.</HelpLine>
                   <HelpLine title="Data bits">Taille des paquets série. En general `8`.</HelpLine>
                   <HelpLine title="Stop bits">Bits de fin de trame série. En general `One`.</HelpLine>
                   <HelpLine title="Read timeout">Temps d'attente maximal d'une réponse avant timeout.</HelpLine>
@@ -693,7 +693,7 @@ export function HotlineSensorTestPanel() {
                             setGsp((prev) => ({ ...prev, rawSerial: nextRawSerial }))
                             setSerial(nextRawSerial)
                           }}
-                          placeholder={serial || "N0000001"}
+                          placeholder={serial || "SPNB-26000001"}
                           className="font-mono"
                         />
                       </Field>
@@ -711,7 +711,7 @@ export function HotlineSensorTestPanel() {
                       <Input
                         value={gsp.rawExactCommand}
                         onChange={(e) => setGsp((prev) => ({ ...prev, rawExactCommand: e.target.value }))}
-                        placeholder="TEMPN0000002 "
+                        placeholder="TEMPSPNB-26000001 "
                         className="font-mono"
                       />
                     </Field>

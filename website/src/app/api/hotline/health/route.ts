@@ -5,6 +5,7 @@ import { prisma, prismaMesure } from "@/lib/prisma"
 import { getHotlineServerConfig } from "@/lib/hotline-config"
 import { getHotlineSession } from "@/lib/hotline-auth"
 import { WEB_APP_VERSION } from "@/lib/app-version"
+import { getCompatEnv } from "@/lib/vigisensys-compat"
 
 type HealthState = "ok" | "error" | "unknown"
 
@@ -36,8 +37,9 @@ async function fetchServerVersion(host: string, port: number, timeoutMs: number)
 
   try {
     const headers: Record<string, string> = {}
-    const apiKey = process.env.VIGITEMP_HOTLINE_API_KEY?.trim()
+    const apiKey = getCompatEnv("VIGISENSYS_HOTLINE_API_KEY", "VIGITEMP_HOTLINE_API_KEY")
     if (apiKey) {
+      headers["x-vigisensys-hotline-key"] = apiKey
       headers["x-vigitemp-hotline-key"] = apiKey
     }
 

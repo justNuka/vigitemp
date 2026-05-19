@@ -332,6 +332,7 @@ BEGIN
     [Id_Etalonnage] INT IDENTITY(1,1) NOT NULL,
     [Date_Heure_Etalonnage] DATETIME NULL,
     [Sonde_Numero_Serie] VARCHAR(50) NULL,
+    [Nom_Etalonnage] VARCHAR(255) NULL,
     [Date_Validite] DATE NULL,
     [Duree_Validite_Jours] INT NULL,
     [Valide] DATETIME NULL,
@@ -354,6 +355,7 @@ GO
 IF OBJECT_ID(N'dbo.t_etalonnage', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_etalonnage', N'Id_Etalonnage') IS NULL ALTER TABLE dbo.[t_etalonnage] ADD [Id_Etalonnage] INT NULL;
 IF OBJECT_ID(N'dbo.t_etalonnage', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_etalonnage', N'Date_Heure_Etalonnage') IS NULL ALTER TABLE dbo.[t_etalonnage] ADD [Date_Heure_Etalonnage] DATETIME NULL;
 IF OBJECT_ID(N'dbo.t_etalonnage', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_etalonnage', N'Sonde_Numero_Serie') IS NULL ALTER TABLE dbo.[t_etalonnage] ADD [Sonde_Numero_Serie] VARCHAR(50) NULL;
+IF OBJECT_ID(N'dbo.t_etalonnage', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_etalonnage', N'Nom_Etalonnage') IS NULL ALTER TABLE dbo.[t_etalonnage] ADD [Nom_Etalonnage] VARCHAR(255) NULL;
 IF OBJECT_ID(N'dbo.t_etalonnage', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_etalonnage', N'Date_Validite') IS NULL ALTER TABLE dbo.[t_etalonnage] ADD [Date_Validite] DATE NULL;
 IF OBJECT_ID(N'dbo.t_etalonnage', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_etalonnage', N'Duree_Validite_Jours') IS NULL ALTER TABLE dbo.[t_etalonnage] ADD [Duree_Validite_Jours] INT NULL;
 IF OBJECT_ID(N'dbo.t_etalonnage', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_etalonnage', N'Valide') IS NULL ALTER TABLE dbo.[t_etalonnage] ADD [Valide] DATETIME NULL;

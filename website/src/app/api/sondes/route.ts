@@ -6,7 +6,7 @@ import { apiError, apiOk } from "@/lib/api-response"
 import { prisma } from "@/lib/prisma"
 import { validateLicense } from "@/lib/license-server"
 import { log } from "@/lib/logger"
-import { buildSensorSerialsFromInput, extractProbeAddressFromSerial, getSensorFamilyFromSerial } from "@/lib/sensor-naming"
+import { buildSensorSerialsFromInput, extractProbeAddressFromSerial, getSensorFamilyFromTypeCode } from "@/lib/sensor-naming"
 import { z } from "zod"
 
 export const GET = withAuthLogging(async (_req: NextRequest) => {
@@ -80,7 +80,7 @@ export const GET = withAuthLogging(async (_req: NextRequest) => {
       Port_Serie: sonde.Port_Serie,
       // Sonde_Type may not be in the generated Prisma type for t_sonde; access via type assertion.
       Sonde_Type: (sonde as { Sonde_Type?: string | null }).Sonde_Type ?? null,
-      Famille_Sonde: getSensorFamilyFromSerial(sonde.Sonde_Numero_Serie),
+      Famille_Sonde: getSensorFamilyFromTypeCode((sonde as { Sonde_Type?: string | null }).Sonde_Type),
       Est_Sonde_GSO: sonde.Est_Sonde_GSO,
       Surveillance_Etat: sonde.Surveillance_Etat ?? sonde.t_sonde_etat?.Etat_Sonde ?? null,
       Surveillance_Etat_Libelle: sonde.t_sonde_etat?.Etat_Libelle ?? sonde.Surveillance_Etat ?? null,
@@ -209,7 +209,11 @@ export const POST = withAuthLogging(async (req: NextRequest, ctx: HandlerContext
       serialsToCreate.map((serial) =>
         prisma.t_sonde.create({
           data: {
-            Adresse_Sonde: usesLegacySeparateAddress ? normalizedProbeAddress : extractProbeAddressFromSerial(serial),
+            Adresse_Sonde: usesLegacySeparateAddress
+              ? normalizedProbeAddress
+              : isGsoFamily
+                ? serial
+                : extractProbeAddressFromSerial(serial),
             Sonde_Numero_Serie: serial,
             Sonde_Type: sensorType.Sonde_Type,
             Id_Module: data.moduleId ?? null,

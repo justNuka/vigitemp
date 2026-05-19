@@ -3,7 +3,7 @@ import { NextRequest } from "next/server"
 import { withAdminLogging } from "@/lib/api-wrappers"
 import { apiError, apiOk } from "@/lib/api-response"
 import { prisma } from "@/lib/prisma"
-import { getSensorFamilyFromSerial } from "@/lib/sensor-naming"
+import { getSensorFamilyFromTypeCode } from "@/lib/sensor-naming"
 import { log } from "@/lib/logger"
 
 /**
@@ -61,7 +61,7 @@ export const GET = withAdminLogging(async (req: NextRequest) => {
       Id_Module: sonde.Id_Module,
       Sonde_Offset: sonde.Sonde_Offset,
       Sonde_Type: sonde.Sonde_Type ?? null,
-      Famille_Sonde: getSensorFamilyFromSerial(sonde.Sonde_Numero_Serie),
+      Famille_Sonde: getSensorFamilyFromTypeCode(sonde.Sonde_Type),
       Est_Sonde_GSO: sonde.Est_Sonde_GSO ?? null,
       Lieu: null,
       Port_Serie: null,

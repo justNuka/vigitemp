@@ -1,4 +1,4 @@
-﻿import React from "react"
+import React from "react"
 import { endOfMonth, format, startOfMonth, subMonths } from "date-fns"
 
 import { sendEmail } from "@/lib/email"
@@ -102,7 +102,7 @@ export async function sendMonthlyStatsReport({
 
   const rows = await loadLocationStatisticsRows({ from, toExclusive })
   const periodLabel = `${format(from, "dd/MM/yyyy")} - ${format(toInclusive, "dd/MM/yyyy")}`
-  const subject = `[VIGITEMP] Recap mensuel statistiques - ${format(targetMonth, "MM/yyyy")}`
+  const subject = `[VIGISENSYS] Recap mensuel statistiques - ${format(targetMonth, "MM/yyyy")}`
 
   let sent = 0
   for (const recipient of recipients) {

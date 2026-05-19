@@ -199,12 +199,19 @@ function Update-AgentConfig {
     }
 
     [xml]$config = Get-Content $ConfigPath
-    $node = $config.SelectSingleNode("/configuration/appSettings/add[@key='VigitempSiteWebUrl']")
+    $node = $config.SelectSingleNode("/configuration/appSettings/add[@key='VigiSensysSiteWebUrl']")
     if ($node -eq $null) {
-        throw "Cle VigitempSiteWebUrl introuvable dans le fichier de config."
+        $node = $config.SelectSingleNode("/configuration/appSettings/add[@key='VigitempSiteWebUrl']")
+    }
+    if ($node -eq $null) {
+        throw "Cle VigiSensysSiteWebUrl/VigitempSiteWebUrl introuvable dans le fichier de config."
     }
 
     $node.SetAttribute("value", $Url)
+    $legacyNode = $config.SelectSingleNode("/configuration/appSettings/add[@key='VigitempSiteWebUrl']")
+    if ($legacyNode -ne $null) {
+        $legacyNode.SetAttribute("value", $Url)
+    }
     $config.Save($ConfigPath)
 }
 

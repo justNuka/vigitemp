@@ -70,6 +70,81 @@ export const extractProbeAddressFromSerial = (serial: string, knownTypeCodes?: I
 
 const stripGsoSuffix = (value: string) => value.replace(/-(T|H)$/i, "");
 
+const getGsoTypedParts = (value: string) => {
+  const normalized = normalizeSerial(value);
+  const match = normalized.match(/^(SOIT|SOIH|SOET|SOEH)-?(.+)$/i);
+  if (!match) return null;
+  return {
+    typeCode: normalizeType(match[1]),
+    address: match[2].trim().toUpperCase().replace(/^-+/, ""),
+  };
+};
+
+const inferGsoTypedSerialFromFileName = (rawSerial: string, fileName: string) => {
+  const serial = normalizeSerial(rawSerial);
+  if (!fileName.trim()) return null;
+
+  const escapedSerial = serial.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const escapedBase = stripGsoSuffix(serial).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const file = fileName.trim().toUpperCase();
+  const match = file.match(
+    new RegExp(
+      `(?:^|[^A-Z0-9])(SOIT|SOIH|SOET|SOEH)-?(${escapedSerial}|${escapedBase}(?:-[TH])?)(?:$|[^A-Z0-9])`,
+      "i",
+    ),
+  );
+
+  return match ? `${normalizeType(match[1])}-${match[2].toUpperCase()}` : null;
+};
+
+export type ImportedSensorIdentity = {
+  serial: string;
+  typeCode: string;
+  isGso: boolean;
+};
+
+export const resolveImportedSensorIdentity = (
+  rawSerial: string,
+  fileName = "",
+  knownTypeCodes?: Iterable<string> | null,
+): ImportedSensorIdentity => {
+  const serial = normalizeSerial(rawSerial);
+  const gsoParts = getGsoTypedParts(serial) ?? getGsoTypedParts(inferGsoTypedSerialFromFileName(serial, fileName) ?? "");
+
+  if (gsoParts && isGsoType(gsoParts.typeCode)) {
+    const address = gsoParts.address;
+    if (isDualGsoType(gsoParts.typeCode)) {
+      const suffix = address.match(/-(T|H)$/i)?.[1]?.toUpperCase() ?? "T";
+      return {
+        serial: `${stripGsoSuffix(address)}-${suffix}`,
+        typeCode: gsoParts.typeCode,
+        isGso: true,
+      };
+    }
+
+    if (SINGLE_TEMPERATURE_GSO_TYPES.has(gsoParts.typeCode)) {
+      return {
+        serial: stripGsoSuffix(address),
+        typeCode: gsoParts.typeCode,
+        isGso: true,
+      };
+    }
+
+    return {
+      serial: address,
+      typeCode: gsoParts.typeCode,
+      isGso: true,
+    };
+  }
+
+  const normalized = normalizeImportedGsoSerial(serial);
+  return {
+    serial: normalized,
+    typeCode: extractTypeCodeFromSerial(normalized, knownTypeCodes),
+    isGso: false,
+  };
+};
+
 export const normalizeImportedGsoSerial = (rawSerial: string) => {
   const serial = normalizeSerial(rawSerial);
   const match = serial.match(/^([A-Z0-9]+)-(.+)$/i);
@@ -96,11 +171,15 @@ export const normalizeImportedGsoSerial = (rawSerial: string) => {
 export const expandRelatedGsoSerials = (serial: string) => {
   const normalized = normalizeSerial(serial);
   const match = normalized.match(/^(SOIH|SOEH)-(.+)$/i);
-  if (!match) return [normalized];
+  if (!match) {
+    const untypedDualMatch = normalized.match(/^(.+)-(T|H)$/i);
+    if (!untypedDualMatch) return [normalized];
+    const address = stripGsoSuffix(normalized);
+    return [`${address}-T`, `${address}-H`];
+  }
 
-  const type = normalizeType(match[1]);
   const address = stripGsoSuffix(match[2].trim().toUpperCase());
-  return [`${type}-${address}-T`, `${type}-${address}-H`];
+  return [`${address}-T`, `${address}-H`];
 };
 
 export const buildSensorSerialsFromInput = (rawType: string, rawSerieNum: string) => {
@@ -115,10 +194,10 @@ export const buildSensorSerialsFromInput = (rawType: string, rawSerieNum: string
     };
   }
 
-  let address = serie;
+  let address = getGsoTypedParts(serie)?.address ?? serie;
   const prefixedSerie = `${type}-`;
-  if (serie.startsWith(prefixedSerie)) {
-    address = serie.slice(prefixedSerie.length);
+  if (address.startsWith(prefixedSerie)) {
+    address = address.slice(prefixedSerie.length);
   }
   address = address.replace(/^-+/, "").replace(/-+$/, "");
 
@@ -127,7 +206,7 @@ export const buildSensorSerialsFromInput = (rawType: string, rawSerieNum: string
     return {
       type,
       isGso: true,
-      serials: [`${type}-${baseAddress}-T`, `${type}-${baseAddress}-H`],
+      serials: [`${baseAddress}-T`, `${baseAddress}-H`],
     };
   }
 
@@ -135,14 +214,14 @@ export const buildSensorSerialsFromInput = (rawType: string, rawSerieNum: string
     return {
       type,
       isGso: true,
-      serials: [`${type}-${stripGsoSuffix(address)}`],
+      serials: [stripGsoSuffix(address)],
     };
   }
 
   return {
     type,
     isGso: true,
-    serials: [`${type}-${address}`],
+    serials: [address],
   };
 };
 

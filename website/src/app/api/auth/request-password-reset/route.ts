@@ -75,8 +75,8 @@ export const POST = withLogging(async (req: NextRequest) => {
       to: email,
       subject:
         mailLocale === "en"
-          ? "Reset your Vigitemp password"
-          : "Reinitialisation de votre mot de passe Vigitemp",
+          ? "Reset your VigiSensys password"
+          : "Reinitialisation de votre mot de passe VigiSensys",
       react: PasswordResetEmail({
         resetUrl,
         firstName: user.Prenom || undefined,

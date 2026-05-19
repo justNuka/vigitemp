@@ -1,4 +1,4 @@
-﻿import { prisma, prismaMesure } from "@/lib/prisma";
+import { prisma, prismaMesure } from "@/lib/prisma";
 import { getSystemEmailCcRecipients, isEmailEnabled, isSystemEmailFallbackEnabled, sendEmail, type EmailAttachment } from "@/lib/email";
 import { log } from "@/lib/logger";
 import AlarmEventNotificationEmail from "../../emails/alarm-event-notification";
@@ -553,16 +553,16 @@ function buildSubject(eventType: AlarmEmailEventType, lieu: string, locale: AppL
   switch (eventType) {
     case "triggered":
       return locale === "en"
-        ? `[VIGITEMP] ALARM TRIGGERED - ${lieu}`
-        : `[VIGITEMP] ALARME DECLENCHEE - ${lieu}`;
+        ? `[VIGISENSYS] ALARM TRIGGERED - ${lieu}`
+        : `[VIGISENSYS] ALARME DECLENCHEE - ${lieu}`;
     case "ended":
       return locale === "en"
-        ? `[VIGITEMP] ALARM ENDED - ${lieu}`
-        : `[VIGITEMP] ALARME TERMINEE - ${lieu}`;
+        ? `[VIGISENSYS] ALARM ENDED - ${lieu}`
+        : `[VIGISENSYS] ALARME TERMINEE - ${lieu}`;
     case "acknowledged":
       return locale === "en"
-        ? `[VIGITEMP] ALARM ACKNOWLEDGED - ${lieu}`
-        : `[VIGITEMP] ALARME ACQUITTEE - ${lieu}`;
+        ? `[VIGISENSYS] ALARM ACKNOWLEDGED - ${lieu}`
+        : `[VIGISENSYS] ALARME ACQUITTEE - ${lieu}`;
   }
 }
 

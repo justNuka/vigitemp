@@ -141,7 +141,7 @@ export function HotlineSensorTestTool() {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2">
-            <Field label="IP / hote du serveur C#">
+            <Field label="IP / hote du serveur d'interrogation">
               <Input value={serverHost} onChange={(e) => setServerHost(e.target.value)} placeholder="127.0.0.1" />
             </Field>
             <Field label="Port API">
@@ -165,7 +165,7 @@ export function HotlineSensorTestTool() {
               </Select>
             </Field>
             <Field label="Numero de serie">
-              <Input value={serial} onChange={(e) => setSerial(e.target.value)} placeholder="GSP0000001" />
+              <Input value={serial} onChange={(e) => setSerial(e.target.value)} placeholder="SPPS-26000001" />
             </Field>
           </div>
 

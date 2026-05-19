@@ -12,6 +12,7 @@ export interface Calibration {
   Incertitude: number | null;
   Err_Justesse: number | null;
   Unite: string | null;
+  Nom_Etalonnage: string | null;
 }
 
 async function fetchCalibrations(serieNum: string): Promise<Calibration[]> {

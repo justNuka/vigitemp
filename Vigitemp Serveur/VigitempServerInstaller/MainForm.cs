@@ -20,12 +20,12 @@ public sealed class MainForm : Form
     private readonly TabControl _tabs = new() { Dock = DockStyle.Fill };
     private readonly Label _step = new() { Left = 24, Top = 116, Width = 900, Height = 22, ForeColor = TextMuted };
     private readonly FlowLayoutPanel _progress = new() { Left = 24, Top = 142, Width = 920, Height = 36, Anchor = AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Top, WrapContents = false, BackColor = AppBackground };
-    private readonly Button _back = new() { Text = "Précédent", Width = 120, Height = 38, Left = 24, Top = 666, Anchor = AnchorStyles.Left | AnchorStyles.Bottom };
+    private readonly Button _back = new() { Text = "Prï¿½cï¿½dent", Width = 120, Height = 38, Left = 24, Top = 666, Anchor = AnchorStyles.Left | AnchorStyles.Bottom };
     private readonly Button _next = new() { Text = "Suivant", Width = 120, Height = 38, Left = 154, Top = 666, Anchor = AnchorStyles.Left | AnchorStyles.Bottom };
     private readonly Button _install = new() { Text = "Installer", Width = 140, Height = 38, Left = 734, Top = 666, Anchor = AnchorStyles.Right | AnchorStyles.Bottom };
     private readonly Button _close = new() { Text = "Fermer", Width = 120, Height = 38, Left = 884, Top = 666, Anchor = AnchorStyles.Right | AnchorStyles.Bottom };
     private readonly TextBox _summary = new() { Multiline = true, ReadOnly = true, ScrollBars = ScrollBars.Vertical, Dock = DockStyle.Top, Height = 190, Font = new Font("Consolas", 9F), BackColor = Color.FromArgb(248, 250, 252), ForeColor = TextPrimary, BorderStyle = BorderStyle.FixedSingle };
-    private readonly Label _status = new() { Text = "Etat : prêt", Dock = DockStyle.Top, Height = 30, Padding = new Padding(0, 8, 0, 0), ForeColor = Accent, Font = new Font("Segoe UI Semibold", 9F, FontStyle.Bold) };
+    private readonly Label _status = new() { Text = "Etat : prï¿½t", Dock = DockStyle.Top, Height = 30, Padding = new Padding(0, 8, 0, 0), ForeColor = Accent, Font = new Font("Segoe UI Semibold", 9F, FontStyle.Bold) };
     private readonly TextBox _log = new() { Multiline = true, ReadOnly = true, ScrollBars = ScrollBars.Both, WordWrap = false, Dock = DockStyle.Fill, Font = new Font("Consolas", 9F), BackColor = Color.FromArgb(15, 23, 42), ForeColor = Color.FromArgb(226, 232, 240), BorderStyle = BorderStyle.FixedSingle };
     private readonly Label[] _progressBadges = new Label[5];
     private bool _running;
@@ -70,7 +70,7 @@ public sealed class MainForm : Form
         {
             new Panel { Left = 0, Top = 0, Width = 980, Height = 100, Anchor = AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Top, BackColor = TextPrimary },
             new Label { AutoSize = true, Font = new Font("Segoe UI Semibold", 18F, FontStyle.Bold), ForeColor = Color.White, BackColor = TextPrimary, Text = "Installateur du serveur VigiSensys", Location = new Point(24, 20) },
-            new Label { Width = 900, Height = 44, Location = new Point(24, 56), ForeColor = Color.FromArgb(226, 232, 240), BackColor = TextPrimary, Text = "Renseignez les paramètres serveur, relisez le résumé, puis lancez l'installation. Vous pouvez revenir en arrière avant l'exécution." },
+            new Label { Width = 900, Height = 44, Location = new Point(24, 56), ForeColor = Color.FromArgb(226, 232, 240), BackColor = TextPrimary, Text = "Renseignez les paramï¿½tres serveur, relisez le rï¿½sumï¿½, puis lancez l'installation. Vous pouvez revenir en arriï¿½re avant l'exï¿½cution." },
             _step, _progress, _tabs, _back, _next, _install, _close
         });
 
@@ -156,7 +156,7 @@ public sealed class MainForm : Form
         installMode = new ComboBox { Dock = DockStyle.Fill, DropDownStyle = ComboBoxStyle.DropDownList, FlatStyle = FlatStyle.Flat, BackColor = Color.White, ForeColor = TextPrimary };
         installMode.Items.AddRange(new object[] { "Installation normale", "Mise ? jour Vigitemp -> VigiSensys" });
         installMode.SelectedItem = string.Equals(_s.InstallMode, "update", StringComparison.OrdinalIgnoreCase) ? "Mise ? jour Vigitemp -> VigiSensys" : "Installation normale";
-        serviceName = T(_s.ServiceName, placeholder: "VigitempServeur");
+        serviceName = T(_s.ServiceName, placeholder: "VigiSensysServeur");
         websiteBaseUrl = T(_s.WebsiteBaseUrl, placeholder: "http://127.0.0.1:3000");
         dbProvider = new ComboBox { Dock = DockStyle.Fill, DropDownStyle = ComboBoxStyle.DropDownList };
         dbProvider.Items.AddRange(new object[] { "mysql", "mssql" });
@@ -203,14 +203,14 @@ public sealed class MainForm : Form
         foreach (var c in new Control[]
                  {
                      Field("Type de BDD", dbProvider),
-                     Field("Hôte BDD", dbHost),
+                     Field("Hï¿½te BDD", dbHost),
                      Field("Port BDD", dbPort),
                      Field("Utilisateur BDD", dbUser),
                      Field("Mot de passe BDD", dbPassword),
                      Field("BDD principale", dbMain),
                      Field("BDD mesures", dbMeasure),
                      Field("Timeout connexion BDD (secondes)", dbConnectionTimeoutSeconds),
-                     Field("Timeout requête BDD (secondes)", dbCommandTimeoutSeconds),
+                     Field("Timeout requï¿½te BDD (secondes)", dbCommandTimeoutSeconds),
                      Field("SQL Server encrypt", sqlServerEncrypt),
                      Field("SQL Server trustServerCertificate", sqlServerTrustServerCertificate)
                  }) database.Controls.Add(c);
@@ -220,34 +220,34 @@ public sealed class MainForm : Form
                  {
                      Field("D?tection automatique", detectFilesButton),
                      Field("Fichier licence (.vtlic)", licensePath, BrowseFile(licensePath, "Licence (*.vtlic)|*.vtlic|Tous les fichiers (*.*)|*.*")),
-                     Field("Clé publique licence (.pem)", publicKeyPath, BrowseFile(publicKeyPath, "PEM (*.pem)|*.pem|Tous les fichiers (*.*)|*.*")),
-                     Field("Clé publique instance (optionnel)", instancePublicKey),
+                     Field("Clï¿½ publique licence (.pem)", publicKeyPath, BrowseFile(publicKeyPath, "PEM (*.pem)|*.pem|Tous les fichiers (*.*)|*.*")),
+                     Field("Clï¿½ publique instance (optionnel)", instancePublicKey),
                      Field("Secret dispatch alarmes", dispatchSecret)
                  }) security.Controls.Add(c);
 
         var advanced = StepPanel();
         foreach (var c in new Control[]
                  {
-                     Field("Delta hystérésis alarmes", licenseHysteresisDelta),
+                     Field("Delta hystï¿½rï¿½sis alarmes", licenseHysteresisDelta),
                      Field("Debounce alarmes (secondes)", licenseDebounceSeconds),
                      Field("Afficher alarmes pendant snooze", licenseShowWhileSnoozed),
-                     Field("Cache réglages alarmes (secondes)", settingsCacheSeconds),
-                     Field("Logs métrologie détaillés", metrologyLogDetailed)
+                     Field("Cache rï¿½glages alarmes (secondes)", settingsCacheSeconds),
+                     Field("Logs mï¿½trologie dï¿½taillï¿½s", metrologyLogDetailed)
                  }) advanced.Controls.Add(c);
 
         var installPanel = new Panel { Padding = new Padding(20), BackColor = CardBackground };
         installPanel.Controls.Add(_log);
         installPanel.Controls.Add(_status);
         installPanel.Controls.Add(_summary);
-        installPanel.Controls.Add(new Label { Text = "Résumé avant installation", Dock = DockStyle.Top, Height = 24, ForeColor = TextPrimary, Font = new Font("Segoe UI Semibold", 10F, FontStyle.Bold) });
+        installPanel.Controls.Add(new Label { Text = "Rï¿½sumï¿½ avant installation", Dock = DockStyle.Top, Height = 24, ForeColor = TextPrimary, Font = new Font("Segoe UI Semibold", 10F, FontStyle.Bold) });
 
         _tabs.TabPages.AddRange(new[]
         {
-            Page("Général", general),
-            Page("Base de données", database),
-            Page("Licence et sécurité", security),
-            Page("Paramètres avancés", advanced),
-            Page("Résumé et installation", installPanel)
+            Page("Gï¿½nï¿½ral", general),
+            Page("Base de donnï¿½es", database),
+            Page("Licence et sï¿½curitï¿½", security),
+            Page("Paramï¿½tres avancï¿½s", advanced),
+            Page("Rï¿½sumï¿½ et installation", installPanel)
         });
 
         for (var i = 0; i < _progressBadges.Length; i++)
@@ -350,7 +350,7 @@ public sealed class MainForm : Form
         }
         else if (idx == 1)
         {
-            if (string.IsNullOrWhiteSpace(_s.DbHost)) m = "L'hôte BDD est obligatoire.";
+            if (string.IsNullOrWhiteSpace(_s.DbHost)) m = "L'hï¿½te BDD est obligatoire.";
             else if (string.IsNullOrWhiteSpace(_s.DbPort)) m = "Le port BDD est obligatoire.";
             else if (string.IsNullOrWhiteSpace(_s.DbUser)) m = "L'utilisateur BDD est obligatoire.";
             else if (string.IsNullOrWhiteSpace(_s.DbMain) || string.IsNullOrWhiteSpace(_s.DbMeasure)) m = "Les noms de bases sont obligatoires.";
@@ -359,18 +359,18 @@ public sealed class MainForm : Form
         else if (idx == 2)
         {
             if (string.IsNullOrWhiteSpace(_s.LicensePath) || !File.Exists(_s.LicensePath)) m = "Le fichier licence est obligatoire.";
-            else if (string.IsNullOrWhiteSpace(_s.PublicKeyPath) || !File.Exists(_s.PublicKeyPath)) m = "La clé publique licence est obligatoire.";
+            else if (string.IsNullOrWhiteSpace(_s.PublicKeyPath) || !File.Exists(_s.PublicKeyPath)) m = "La clï¿½ publique licence est obligatoire.";
         }
         else if (idx == 3)
         {
-            if (string.IsNullOrWhiteSpace(_s.LicenseHysteresisDelta)) m = "Le delta d'hystérésis est obligatoire.";
+            if (string.IsNullOrWhiteSpace(_s.LicenseHysteresisDelta)) m = "Le delta d'hystï¿½rï¿½sis est obligatoire.";
             else if (string.IsNullOrWhiteSpace(_s.LicenseDebounceSeconds)) m = "Le debounce alarmes est obligatoire.";
-            else if (string.IsNullOrWhiteSpace(_s.SettingsCacheSeconds)) m = "Le cache réglages alarmes est obligatoire.";
+            else if (string.IsNullOrWhiteSpace(_s.SettingsCacheSeconds)) m = "Le cache rï¿½glages alarmes est obligatoire.";
         }
 
         if (m != null)
         {
-            MessageBox.Show(m, "Configuration incomplète", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            MessageBox.Show(m, "Configuration incomplï¿½te", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             return false;
         }
 
@@ -384,8 +384,8 @@ public sealed class MainForm : Form
         _tabs.SelectedIndex = idx;
         Persist();
         if (idx == 4) RefreshSummary();
-        var titles = new[] { "Général", "Base de données", "Licence et sécurité", "Paramètres avancés", "Résumé et installation" };
-        _step.Text = $"Étape {idx + 1} / {titles.Length} - {titles[idx]}";
+        var titles = new[] { "Gï¿½nï¿½ral", "Base de donnï¿½es", "Licence et sï¿½curitï¿½", "Paramï¿½tres avancï¿½s", "Rï¿½sumï¿½ et installation" };
+        _step.Text = $"ï¿½tape {idx + 1} / {titles.Length} - {titles[idx]}";
         _back.Enabled = idx > 0;
         _next.Enabled = idx < 4;
         _install.Enabled = idx == 4;
@@ -401,32 +401,32 @@ public sealed class MainForm : Form
     {
         Persist();
         var sb = new StringBuilder();
-        sb.AppendLine("Général");
+        sb.AppendLine("Gï¿½nï¿½ral");
         sb.AppendLine($"- Dossier d'installation : {_s.InstallDir}");
         sb.AppendLine($"- Mode : {(_s.InstallMode == "update" ? "Mise ? jour Vigitemp -> VigiSensys" : "Installation normale")}");
         sb.AppendLine($"- Service Windows : {_s.ServiceName}");
         sb.AppendLine($"- URL du site web : {_s.WebsiteBaseUrl}");
         sb.AppendLine();
-        sb.AppendLine("Base de données");
+        sb.AppendLine("Base de donnï¿½es");
         sb.AppendLine($"- Provider : {_s.DbProvider}");
-        sb.AppendLine($"- Hôte : {_s.DbHost}:{_s.DbPort}");
+        sb.AppendLine($"- Hï¿½te : {_s.DbHost}:{_s.DbPort}");
         sb.AppendLine($"- Utilisateur : {_s.DbUser}");
         sb.AppendLine($"- BDD principale : {_s.DbMain}");
         sb.AppendLine($"- BDD mesures : {_s.DbMeasure}");
-        sb.AppendLine($"- Timeouts : connexion {_s.DbConnectionTimeoutSeconds}s / requête {_s.DbCommandTimeoutSeconds}s");
+        sb.AppendLine($"- Timeouts : connexion {_s.DbConnectionTimeoutSeconds}s / requï¿½te {_s.DbCommandTimeoutSeconds}s");
         sb.AppendLine();
-        sb.AppendLine("Licence et sécurité");
+        sb.AppendLine("Licence et sï¿½curitï¿½");
         sb.AppendLine($"- Licence : {_s.LicensePath}");
-        sb.AppendLine($"- Clé publique : {_s.PublicKeyPath}");
-        sb.AppendLine($"- Clé publique instance : {(string.IsNullOrWhiteSpace(_s.InstancePublicKey) ? "vide" : "renseignée")}");
-        sb.AppendLine($"- Secret dispatch : {(string.IsNullOrWhiteSpace(_s.DispatchSecret) ? "généré / repris automatiquement" : "fourni manuellement")}");
+        sb.AppendLine($"- Clï¿½ publique : {_s.PublicKeyPath}");
+        sb.AppendLine($"- Clï¿½ publique instance : {(string.IsNullOrWhiteSpace(_s.InstancePublicKey) ? "vide" : "renseignï¿½e")}");
+        sb.AppendLine($"- Secret dispatch : {(string.IsNullOrWhiteSpace(_s.DispatchSecret) ? "gï¿½nï¿½rï¿½ / repris automatiquement" : "fourni manuellement")}");
         sb.AppendLine();
-        sb.AppendLine("Paramètres avancés");
-        sb.AppendLine($"- Hystérésis : {_s.LicenseHysteresisDelta}");
+        sb.AppendLine("Paramï¿½tres avancï¿½s");
+        sb.AppendLine($"- Hystï¿½rï¿½sis : {_s.LicenseHysteresisDelta}");
         sb.AppendLine($"- Debounce : {_s.LicenseDebounceSeconds} s");
         sb.AppendLine($"- Show while snoozed : {_s.LicenseShowWhileSnoozed}");
-        sb.AppendLine($"- Cache réglages alarmes : {_s.SettingsCacheSeconds} s");
-        sb.AppendLine($"- Logs métrologie détaillés : {_s.MetrologyLogDetailed}");
+        sb.AppendLine($"- Cache rï¿½glages alarmes : {_s.SettingsCacheSeconds} s");
+        sb.AppendLine($"- Logs mï¿½trologie dï¿½taillï¿½s : {_s.MetrologyLogDetailed}");
         _summary.Text = sb.ToString();
     }
 
@@ -435,7 +435,7 @@ public sealed class MainForm : Form
         if (_running || !Valid(4)) return;
 
         var startupDir = AppContext.BaseDirectory;
-        var sourceExe = Path.Combine(startupDir, "Vigitemp Serveur.exe");
+        var sourceExe = Path.Combine(startupDir, "VigiSensysServeur.exe");
         if (!File.Exists(sourceExe))
         {
             MessageBox.Show($"Executable serveur introuvable : {sourceExe}", "Installation impossible", MessageBoxButtons.OK, MessageBoxIcon.Error);
@@ -455,9 +455,9 @@ public sealed class MainForm : Form
         {
             Directory.CreateDirectory(_s.InstallDir);
             InstallerHelpers.CopyDirectory(startupDir, _s.InstallDir);
-            AppendLog("[OK] Fichiers copiés.");
+            AppendLog("[OK] Fichiers copiï¿½s.");
 
-            const string exeName = "Vigitemp Serveur.exe";
+            const string exeName = "VigiSensysServeur.exe";
             var configPath = Path.Combine(_s.InstallDir, exeName + ".config");
             if (!File.Exists(configPath)) throw new FileNotFoundException("Config introuvable", configPath);
 
@@ -469,8 +469,8 @@ public sealed class MainForm : Form
                 AppendLog("[INFO] Mode mise ? jour: aucune seed SQL n'est ex?cut?e, les bases existantes sont conserv?es.");
             }
 
-            var licenseDir = Path.Combine(programData, "Vigitemp", "licenses");
-            var publicKeyDir = Path.Combine(programData, "Vigitemp", "license_keys");
+            var licenseDir = Path.Combine(programData, "VigiSensys", "licenses");
+            var publicKeyDir = Path.Combine(programData, "VigiSensys", "license_keys");
             Directory.CreateDirectory(licenseDir);
             Directory.CreateDirectory(publicKeyDir);
             var licenseDestPath = Path.Combine(licenseDir, Path.GetFileName(_s.LicensePath));
@@ -478,25 +478,27 @@ public sealed class MainForm : Form
             if (!File.Exists(licenseDestPath))
             {
                 File.Copy(_s.LicensePath, licenseDestPath, false);
-                AppendLog("[OK] Licence copiée.");
+                AppendLog("[OK] Licence copiï¿½e.");
             }
             else
             {
-                AppendLog("[OK] Licence déjà présente, conservation du fichier existant.");
+                AppendLog("[OK] Licence dï¿½jï¿½ prï¿½sente, conservation du fichier existant.");
             }
 
             if (!File.Exists(publicKeyDestPath))
             {
                 File.Copy(_s.PublicKeyPath, publicKeyDestPath, false);
-                AppendLog("[OK] Clé publique copiée.");
+                AppendLog("[OK] Clï¿½ publique copiï¿½e.");
             }
             else
             {
-                AppendLog("[OK] Clé publique déjà présente, conservation du fichier existant.");
+                AppendLog("[OK] Clï¿½ publique dï¿½jï¿½ prï¿½sente, conservation du fichier existant.");
             }
 
             InstallerHelpers.SetAppSetting(configPath, "Vigi.WebsiteBaseUrl", _s.WebsiteBaseUrl);
+            InstallerHelpers.SetAppSetting(configPath, "VigiSensys.WebsiteBaseUrl", _s.WebsiteBaseUrl);
             InstallerHelpers.SetAppSetting(configPath, "Vigi.AlarmDispatchSecret", dispatchSecretValue);
+            InstallerHelpers.SetAppSetting(configPath, "VigiSensys.AlarmDispatchSecret", dispatchSecretValue);
             InstallerHelpers.SetAppSetting(configPath, "Vigi.Db.Provider", _s.DbProvider);
             InstallerHelpers.SetAppSetting(configPath, "Vigi.Db.Host", _s.DbHost);
             InstallerHelpers.SetAppSetting(configPath, "Vigi.Db.Port", _s.DbPort);
@@ -513,15 +515,17 @@ public sealed class MainForm : Form
             InstallerHelpers.SetAppSetting(configPath, "Vigi.License.ShowWhileSnoozed", _s.LicenseShowWhileSnoozed);
             InstallerHelpers.SetAppSetting(configPath, "Vigi.License.SettingsCacheSeconds", _s.SettingsCacheSeconds);
             InstallerHelpers.SetAppSetting(configPath, "Vigitemp.Metrology.LogDetailed", _s.MetrologyLogDetailed);
+            InstallerHelpers.SetAppSetting(configPath, "VigiSensys.License.Path", licenseDestPath);
             InstallerHelpers.SetAppSetting(configPath, "Vigi.License.Path", licenseDestPath);
+            InstallerHelpers.SetAppSetting(configPath, "VigiSensys.License.PublicKeyPath", publicKeyDestPath);
             InstallerHelpers.SetAppSetting(configPath, "Vigi.License.PublicKeyPath", publicKeyDestPath);
             InstallerHelpers.SetAppSetting(configPath, "Vigi.License.InstancePublicKey", _s.InstancePublicKey);
-            AppendLog("[OK] Configuration mise à jour.");
+            AppendLog("[OK] Configuration mise ï¿½ jour.");
 
             if (InstallerHelpers.ServiceExists(_s.ServiceName))
             {
-                var confirm = MessageBox.Show($"Le service {_s.ServiceName} existe déjà. Le réinstaller ?", "Service existant", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
-                if (confirm != DialogResult.Yes) throw new InvalidOperationException("Installation annulée.");
+                var confirm = MessageBox.Show($"Le service {_s.ServiceName} existe dï¿½jï¿½. Le rï¿½installer ?", "Service existant", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+                if (confirm != DialogResult.Yes) throw new InvalidOperationException("Installation annulï¿½e.");
                 InstallerHelpers.RemoveService(_s.ServiceName, AppendLog);
             }
 
@@ -532,8 +536,8 @@ public sealed class MainForm : Form
             var displayIconPath = InstallerHelpers.WriteInstalledDisplayIcon(_s.InstallDir, "VigiSensysServer", installedExe) ?? installedExe;
             InstallerHelpers.WriteRegistryInfo(_s.InstallDir, version, licenseDestPath, publicKeyDestPath, _s.ServiceName, displayIconPath, uninstallScriptPath);
 
-            SetStatus("Etat : installation terminée avec succès");
-            AppendLog("[OK] Installation terminée.");
+            SetStatus("Etat : installation terminï¿½e avec succï¿½s");
+            AppendLog("[OK] Installation terminï¿½e.");
         }
         catch (Exception ex)
         {
@@ -605,7 +609,7 @@ public sealed class MainForm : Form
             {
                 InstallDir = Path.Combine(pd, @"VigiSensys\server"),
                 InstallMode = "normal",
-                ServiceName = "VigitempServeur",
+                ServiceName = "VigiSensysServeur",
                 WebsiteBaseUrl = "http://127.0.0.1:3000",
                 DbProvider = "mysql",
                 DbHost = "127.0.0.1",

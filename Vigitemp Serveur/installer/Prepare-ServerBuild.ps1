@@ -1,4 +1,4 @@
-﻿Param(
+Param(
     [ValidateSet("Debug", "Release")]
     [string]$Configuration = "Release",
     [string]$BuildOutput,
@@ -67,10 +67,10 @@ if ([string]::IsNullOrWhiteSpace($BuildOutput)) {
     $BuildOutput = Join-Path $serverRoot "Vigitemp Serveur\bin\$Configuration"
 }
 
-$installerOutput = Join-Path $serverRoot "VigitempServerInstaller\bin\$Configuration\net8.0-windows\win-x64\publish\VigitempServerSetup.exe"
+$installerOutput = Join-Path $serverRoot "VigitempServerInstaller\bin\$Configuration\net8.0-windows\win-x64\publish\VigiSensysServerSetup.exe"
 $prereqInstallerOutput = Join-Path $serverRoot "VigitempPrereqInstaller\bin\$Configuration\net8.0-windows\win-x64\publish\VigitempPrereqsSetup.exe"
 
-$exePath = Join-Path $BuildOutput "Vigitemp Serveur.exe"
+$exePath = Join-Path $BuildOutput "VigiSensysServeur.exe"
 if (-not (Test-Path $exePath)) {
     Write-Error "Executable not found: $exePath"
 }
@@ -102,7 +102,7 @@ if ($rcCode -ge 8) {
 }
 
 if (Test-Path $installerOutput) {
-    Copy-Item -Path $installerOutput -Destination (Join-Path $OutputDir "VigitempServerSetup.exe") -Force
+    Copy-Item -Path $installerOutput -Destination (Join-Path $OutputDir "VigiSensysServerSetup.exe") -Force
     Write-Log "Bootstrapper serveur copie dans le package."
 }
 

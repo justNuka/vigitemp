@@ -4,6 +4,7 @@ import { z } from "zod"
 import { apiError, apiOk } from "@/lib/api-response"
 import { getRequestContext, withLogging } from "@/lib/api-logger"
 import { log } from "@/lib/logger"
+import { getCompatEnv, getCompatHeader } from "@/lib/vigisensys-compat"
 
 import { buildAlarmRealtimePayload } from "../_realtime"
 import { broadcastAlarmEvent, getAlarmClientCount } from "../_stream"
@@ -15,9 +16,9 @@ const dispatchRealtimeSchema = z.object({
 })
 
 function isAuthorized(req: NextRequest) {
-  const secret = process.env.VIGITEMP_ALARM_DISPATCH_SECRET
+  const secret = getCompatEnv("VIGISENSYS_ALARM_DISPATCH_SECRET", "VIGITEMP_ALARM_DISPATCH_SECRET")
   if (!secret) return false
-  return req.headers.get("x-vigitemp-secret") === secret
+  return getCompatHeader(req, "x-vigisensys-secret", "x-vigitemp-secret") === secret
 }
 
 export const POST = withLogging(async (req: NextRequest) => {

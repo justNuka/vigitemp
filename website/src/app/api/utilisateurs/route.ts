@@ -127,8 +127,8 @@ export const POST = withAdminLogging(async (req: NextRequest, ctx: HandlerContex
           to: data.email,
           subject:
             mailLocale === "en"
-              ? "Your Vigitemp account has been created"
-              : "Votre compte Vigitemp a ete cree",
+              ? "Your VigiSensys account has been created"
+              : "Votre compte VigiSensys a ete cree",
           react: AccountCreationEmail({
             username: data.username,
             temporaryPassword,

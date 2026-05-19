@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
@@ -208,7 +208,7 @@ internal static class InstallerHelpers
     {
         var binPath = '"' + exePath + '"';
         EnsureSuccess(RunProcess("sc.exe", $"create \"{serviceName}\" binPath= {binPath} start= auto", Environment.SystemDirectory, log), "sc create");
-        RunProcess("sc.exe", $"description \"{serviceName}\" \"VigiSensys C# server service\"", Environment.SystemDirectory, log);
+        RunProcess("sc.exe", $"description \"{serviceName}\" \"VigiSensys interrogation server service\"", Environment.SystemDirectory, log);
         RunProcess("sc.exe", $"failure \"{serviceName}\" reset= 86400 actions= restart/60000/restart/60000/restart/60000", Environment.SystemDirectory, log);
         RunProcess("sc.exe", $"failureflag \"{serviceName}\" 1", Environment.SystemDirectory, log);
         EnsureSuccess(RunProcess("sc.exe", $"start \"{serviceName}\"", Environment.SystemDirectory, log), "sc start");
@@ -248,7 +248,7 @@ if (Test-Path $InstallDir) {{
     Remove-Item -LiteralPath $InstallDir -Recurse -Force
 }}
 
-try {{ Remove-Item -Path ""HKLM:\SOFTWARE\Vigitemp\Server"" -Recurse -Force -ErrorAction SilentlyContinue }} catch {{ }}
+try {{ Remove-Item -Path ""HKLM:\SOFTWARE\VigiSensys\Server"" -Recurse -Force -ErrorAction SilentlyContinue }} catch {{ }}
 try {{ Remove-Item -Path ""HKLM:\{UninstallRegistryKeyName}"" -Recurse -Force -ErrorAction SilentlyContinue }} catch {{ }}
 ";
         File.WriteAllText(scriptPath, script, new UTF8Encoding(false));
@@ -273,7 +273,7 @@ try {{ Remove-Item -Path ""HKLM:\{UninstallRegistryKeyName}"" -Recurse -Force -E
 
     public static void WriteRegistryInfo(string installPath, string version, string licensePath, string publicKeyPath, string serviceName, string displayIconPath, string uninstallScriptPath)
     {
-        using var key = Registry.LocalMachine.CreateSubKey(@"SOFTWARE\Vigitemp\Server");
+        using var key = Registry.LocalMachine.CreateSubKey(@"SOFTWARE\VigiSensys\Server");
         key?.SetValue("InstallPath", installPath, RegistryValueKind.String);
         key?.SetValue("Version", version ?? string.Empty, RegistryValueKind.String);
         key?.SetValue("LastInstalledUtc", DateTime.UtcNow.ToString("o"), RegistryValueKind.String);

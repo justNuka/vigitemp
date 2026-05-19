@@ -11,17 +11,18 @@ import { revalidateTag } from "next/cache"
 import { sendAlarmEventEmails } from "@/lib/alarm-email"
 import { formatMeasureValue } from "@/lib/measurements"
 import { sendTeamsWorkflowAlarmNotification } from "@/lib/notifications/teams-workflow"
+import { getCompatEnv, getCompatHeader } from "@/lib/vigisensys-compat"
 
-const AGENT_PORT = Number.parseInt(process.env.VIGITEMP_AGENT_PORT ?? "8000", 10)
-const AGENT_TIMEOUT_MS = Number.parseInt(process.env.VIGITEMP_AGENT_TIMEOUT_MS ?? "5000", 10)
+const AGENT_PORT = Number.parseInt(getCompatEnv("VIGISENSYS_AGENT_PORT", "VIGITEMP_AGENT_PORT") ?? "8000", 10)
+const AGENT_TIMEOUT_MS = Number.parseInt(getCompatEnv("VIGISENSYS_AGENT_TIMEOUT_MS", "VIGITEMP_AGENT_TIMEOUT_MS") ?? "5000", 10)
 const AGENT_ACTIVE_WINDOW_MINUTES = Number.parseInt(
-  process.env.VIGITEMP_AGENT_ACTIVE_WINDOW_MINUTES ?? "15",
+  getCompatEnv("VIGISENSYS_AGENT_ACTIVE_WINDOW_MINUTES", "VIGITEMP_AGENT_ACTIVE_WINDOW_MINUTES") ?? "15",
   10,
 )
-const AGENT_SHARED_SECRET = process.env.VIGITEMP_AGENT_SECRET?.trim() ?? ""
+const AGENT_SHARED_SECRET = getCompatEnv("VIGISENSYS_AGENT_SECRET", "VIGITEMP_AGENT_SECRET") ?? ""
 const DEFAULT_TEMPERATURE_UNIT = "\u00B0C"
 const DISPLAY_TIMEZONE =
-  process.env.VIGITEMP_EMAIL_TIMEZONE?.trim() ||
+  getCompatEnv("VIGISENSYS_EMAIL_TIMEZONE", "VIGITEMP_EMAIL_TIMEZONE") ||
   process.env.TZ?.trim() ||
   "Europe/Paris"
 
@@ -64,6 +65,7 @@ async function dispatchAgentNotifications(
     try {
       const headers: Record<string, string> = { "content-type": "application/json" }
       if (AGENT_SHARED_SECRET) {
+        headers["x-vigisensys-agent-secret"] = AGENT_SHARED_SECRET
         headers["x-vigitemp-agent-secret"] = AGENT_SHARED_SECRET
       }
 
@@ -207,9 +209,9 @@ const dispatchSchema = z.object({
 })
 
 function isAuthorized(req: NextRequest) {
-  const secret = process.env.VIGITEMP_ALARM_DISPATCH_SECRET
+  const secret = getCompatEnv("VIGISENSYS_ALARM_DISPATCH_SECRET", "VIGITEMP_ALARM_DISPATCH_SECRET")
   if (!secret) return false
-  return req.headers.get("x-vigitemp-secret") === secret
+  return getCompatHeader(req, "x-vigisensys-secret", "x-vigitemp-secret") === secret
 }
 
 function normalizeUnit(unit?: string | null) {
@@ -365,7 +367,7 @@ export const POST = withLogging(async (req: NextRequest) => {
         .join(", ")
 
       locationLabel = [siteName, lieuName].filter(Boolean).join(" / ")
-      title ??= "Alarme Vigitemp"
+      title ??= "Alarme VigiSensys"
       const alarmType =
         alarm.Type === "H"
           ? "Alarme haute"

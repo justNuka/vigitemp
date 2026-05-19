@@ -3,6 +3,7 @@ import { verifyToken } from "@/lib/jwt";
 import { apiError } from "@/lib/api-response";
 import { log } from "@/lib/logger";
 import { recordRequestError } from "@/lib/request-error-store";
+import { getCompatHeader } from "@/lib/vigisensys-compat";
 
 const SENSITIVE_KEYS = new Set(["password", "token", "secret", "currentpassword", "newpassword", "confirmpassword", "accesstoken", "refreshtoken"])
 
@@ -33,7 +34,7 @@ export function getClientIp(req: NextRequest): string {
 
 /**
  * Middleware pour logger toutes les requetes API.
- * Ajoute un identifiant d'erreur (x-vigitemp-error-id) sur les reponses en erreur.
+ * Ajoute un identifiant d'erreur sur les reponses en erreur.
  */
 export function withLogging(
   handler: (req: NextRequest, ...args: any[]) => Promise<NextResponse>,
@@ -47,9 +48,9 @@ export function withLogging(
     const method = req.method;
     const path = req.nextUrl.pathname;
 
-    const clientTrace = req.headers.get("x-vigitemp-client-trace") || undefined;
-    const queryClientId = req.headers.get("x-vigitemp-query-client-id") || undefined;
-    const bootId = req.headers.get("x-vigitemp-boot-id") || undefined;
+    const clientTrace = getCompatHeader(req, "x-vigisensys-client-trace", "x-vigitemp-client-trace");
+    const queryClientId = getCompatHeader(req, "x-vigisensys-query-client-id", "x-vigitemp-query-client-id");
+    const bootId = getCompatHeader(req, "x-vigisensys-boot-id", "x-vigitemp-boot-id");
 
     // Extraire les infos utilisateur du token JWT si present
     let user: { username?: string; userId?: number } = {};
@@ -131,6 +132,7 @@ export function withLogging(
             bootId,
           });
           errorId = recorded.id;
+          response.headers.set("x-vigisensys-error-id", errorId);
           response.headers.set("x-vigitemp-error-id", errorId);
         } catch (storeError) {
           log.warn("API", "Unable to persist request error", {

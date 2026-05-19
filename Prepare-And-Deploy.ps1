@@ -7,15 +7,13 @@ Param(
     [string]$ServerPackageDir,
     [string]$WebPackageDir,
 
-    [string]$RemoteStagingDir = "C:\ProgramData\Vigitemp\deploy-staging",
-    [string]$RemoteServerInstallDir = "C:\ProgramData\Vigitemp\server",
-    [string]$RemoteWebInstallDir = "C:\ProgramData\Vigitemp\website",
+    [string]$RemoteStagingDir = "C:\ProgramData\VigiSensys\deploy-staging",
+    [string]$RemoteServerInstallDir = "C:\ProgramData\VigiSensys\server",
+    [string]$RemoteWebInstallDir = "C:\ProgramData\VigiSensys\website",
 
-    [string]$ServerServiceName = "VigitempServeur",
-    [string]$WebServiceName = "VigitempWeb",
-    [switch]$ServerNoService,
-    [string]$ServerProcessName = "Vigitemp Serveur",
-    [string]$ServerProcessArgs = "--console",
+    [string]$ServerServiceName = "VigiSensysServeur",
+    [string]$WebServiceName = "VigiSensysWeb",
+    [string]$ServerProcessName = "VigiSensysServeur",
 
     [switch]$WebAsZip = $true,
 
@@ -124,7 +122,7 @@ function Invoke-Prepare {
 
 function New-LocalDeployPayload {
     Resolve-LocalDefaultPackageDirs
-    $tmpRoot = Join-Path $env:TEMP ("vigitemp-deploy-" + (Get-Date -Format "yyyyMMdd-HHmmss"))
+    $tmpRoot = Join-Path $env:TEMP ("vigisensys-deploy-" + (Get-Date -Format "yyyyMMdd-HHmmss"))
     New-Item -ItemType Directory -Force -Path $tmpRoot | Out-Null
 
     if ($Target -eq "All" -or $Target -eq "Server") {
@@ -135,7 +133,7 @@ function New-LocalDeployPayload {
         Write-Step "Construction payload serveur (exclusions appliquees)..."
         Invoke-RobocopySafe -Source $ServerPackageDir -Destination $serverPayload -ExtraArgs @(
             "/XD", "installer",
-            "/XF", "*setupserver*.exe", "*serversetup*.exe", "VigitempServerSetup.exe", "setupserver.exe"
+            "/XF", "*setupserver*.exe", "*serversetup*.exe", "VigitempServerSetup.exe", "VigiSensysServerSetup.exe", "setupserver.exe"
         )
     }
 
@@ -234,9 +232,9 @@ function Invoke-RemoteDeploy {
 
     if ($Target -eq "All" -or $Target -eq "Server") {
         Write-Step "Deploiement serveur distant..."
-        Write-Step "Options serveur: ServerNoService=$([bool]$ServerNoService) ServiceName='$ServerServiceName' ProcessName='$ServerProcessName' Args='$ServerProcessArgs'"
+        Write-Step "Options serveur: ServiceName='$ServerServiceName' InstallDir='$RemoteServerInstallDir'"
         $serverLogs = Invoke-Command -Session $Session -ScriptBlock {
-            param($serviceName, $stagingDir, $installDir, $noService, $serverProcName, $serverProcArgs)
+            param($serviceName, $stagingDir, $installDir, $serverProcName)
 
             function Write-RemoteLog {
                 param([string]$message)
@@ -255,22 +253,28 @@ function Invoke-RemoteDeploy {
                 Write-RemoteLog "Robocopy serveur OK (code=$LASTEXITCODE) src='$src' dst='$dst'"
             }
 
-            function Stop-ServerProcessFallback {
+            function Stop-LegacyServerProcesses {
                 param([string]$procName, [string]$targetInstallDir)
                 $killedByName = 0
-                Get-Process -Name $procName -ErrorAction SilentlyContinue | ForEach-Object {
+                @($procName, "Vigitemp Serveur") | Select-Object -Unique | ForEach-Object {
+                    Get-Process -Name $_ -ErrorAction SilentlyContinue
+                } | ForEach-Object {
                     try {
                         Stop-Process -Id $_.Id -Force -ErrorAction Stop
                         $killedByName++
                     } catch { }
                 }
 
-                $targetExe = [System.IO.Path]::Combine($targetInstallDir, "Vigitemp Serveur.exe")
+                $targetExes = @(
+                    [System.IO.Path]::Combine($targetInstallDir, "VigiSensysServeur.exe"),
+                    [System.IO.Path]::Combine($targetInstallDir, "Vigitemp Serveur.exe")
+                )
                 $killedByPath = 0
                 Get-CimInstance Win32_Process -ErrorAction SilentlyContinue |
                     Where-Object {
-                        $_.ExecutablePath -and
-                        [string]::Equals($_.ExecutablePath, $targetExe, [System.StringComparison]::OrdinalIgnoreCase)
+                        $processPath = $_.ExecutablePath
+                        $processPath -and
+                        ($targetExes | Where-Object { [string]::Equals($_, $processPath, [System.StringComparison]::OrdinalIgnoreCase) })
                     } |
                     ForEach-Object {
                         try {
@@ -279,61 +283,7 @@ function Invoke-RemoteDeploy {
                         } catch { }
                     }
 
-                Write-RemoteLog "Process fallback stop: procName='$procName' killedByName=$killedByName killedByPath=$killedByPath"
-            }
-
-            function Start-ServerProcessFallback {
-                param([string]$targetInstallDir, [string]$procArgs)
-                $exePath = Join-Path $targetInstallDir "Vigitemp Serveur.exe"
-                if (-not (Test-Path $exePath)) {
-                    throw "Executable serveur introuvable pour demarrage process: $exePath"
-                }
-
-                # Demarrage detache (hors job WinRM) pour eviter l'arret quand la session remoting se ferme.
-                $commandLine = if ([string]::IsNullOrWhiteSpace($procArgs)) {
-                    "`"$exePath`""
-                } else {
-                    "`"$exePath`" $procArgs"
-                }
-                $create = Invoke-CimMethod -ClassName Win32_Process -MethodName Create -Arguments @{
-                    CommandLine      = $commandLine
-                    CurrentDirectory = $targetInstallDir
-                }
-                if ($create.ReturnValue -ne 0) {
-                    throw "Win32_Process.Create a echoue (code=$($create.ReturnValue)) commandLine=$commandLine"
-                }
-                $startedPid = [int]$create.ProcessId
-                Write-RemoteLog "Start process fallback (detache): '$commandLine' pid=$startedPid"
-
-                Start-Sleep -Milliseconds 500
-                $running = Get-CimInstance Win32_Process -ErrorAction SilentlyContinue |
-                    Where-Object {
-                        $_.ProcessId -eq $startedPid
-                    } |
-                    Select-Object -First 1
-                if ($running) {
-                    Write-RemoteLog "Process fallback started OK (pid=$startedPid)."
-                } else {
-                    Write-RemoteLog "WARN: process fallback start non confirme."
-                }
-
-                # Verification retardee: certains process meurent juste apres le bootstrap.
-                Start-Sleep -Seconds 5
-                $runningAfterDelay = Get-CimInstance Win32_Process -ErrorAction SilentlyContinue |
-                    Where-Object {
-                        $_.ProcessId -eq $startedPid
-                    } |
-                    Select-Object -First 1
-                if ($runningAfterDelay) {
-                    Write-RemoteLog "Process fallback still running after 5s (pid=$startedPid)."
-                } else {
-                    $serverLogPath = "C:\ProgramData\Vigitemp\logs\vigitemp-serveur.log"
-                    if (Test-Path $serverLogPath) {
-                        Write-RemoteLog "Dernieres lignes log serveur:"
-                        Get-Content -Path $serverLogPath -Tail 30 | ForEach-Object { Write-Output ("[REMOTE][SERVER][LOG] " + $_) }
-                    }
-                    throw "Le serveur demarre puis s'arrete rapidement (pid=$startedPid non present apres 5s)."
-                }
+                Write-RemoteLog "Process legacy stop: procName='$procName' killedByName=$killedByName killedByPath=$killedByPath"
             }
 
             $payload = Join-Path $stagingDir "server"
@@ -342,55 +292,59 @@ function Invoke-RemoteDeploy {
             }
             Write-RemoteLog "Payload serveur detecte: $payload"
 
-            $useServiceMode = $false
-            if (-not $noService) {
-                $svc = Get-Service -Name $serviceName -ErrorAction SilentlyContinue
-                if ($svc) {
-                    Write-RemoteLog "Service '$serviceName' detecte (status=$($svc.Status)). Tentative stop..."
-                    try {
-                        Stop-Service -Name $serviceName -Force -ErrorAction Stop
-                        Start-Sleep -Seconds 2
-                        $svcAfterStop = Get-Service -Name $serviceName -ErrorAction SilentlyContinue
-                        Write-RemoteLog "Service '$serviceName' stop demande (status=$($svcAfterStop.Status))."
-                        $useServiceMode = $true
-                    } catch {
-                        Write-RemoteLog "WARN: echec stop service '$serviceName'. Passage en fallback process."
-                        $useServiceMode = $false
-                    }
-                } else {
-                    Write-RemoteLog "Service '$serviceName' non trouve. Mode process fallback."
-                }
-            } else {
-                Write-RemoteLog "Option ServerNoService activee. Mode process fallback."
+            $svc = Get-Service -Name $serviceName -ErrorAction SilentlyContinue
+            if (-not $svc) {
+                throw "Service '$serviceName' introuvable. Creez le service avant de deployer."
             }
 
-            if (-not $useServiceMode) {
-                Stop-ServerProcessFallback -procName $serverProcName -targetInstallDir $installDir
-                Start-Sleep -Seconds 1
+            Write-RemoteLog "Service '$serviceName' detecte (status=$($svc.Status)). Tentative stop..."
+            Stop-Service -Name $serviceName -Force -ErrorAction Stop
+            Start-Sleep -Seconds 2
+            $svcAfterStop = Get-Service -Name $serviceName -ErrorAction SilentlyContinue
+            Write-RemoteLog "Service '$serviceName' stop demande (status=$($svcAfterStop.Status))."
+
+            Stop-LegacyServerProcesses -procName $serverProcName -targetInstallDir $installDir
+            Start-Sleep -Seconds 1
+
+            $oldConfig = Join-Path $installDir "Vigitemp Serveur.exe.config"
+            $newConfig = Join-Path $installDir "VigiSensysServeur.exe.config"
+            if ((Test-Path $oldConfig) -and -not (Test-Path $newConfig)) {
+                Copy-Item -Path $oldConfig -Destination $newConfig -Force
+                Write-RemoteLog "Config serveur migree: '$oldConfig' -> '$newConfig'"
             }
 
             # Ne pas supprimer le .config local (config environnement) pendant le miroir.
             Invoke-RobocopySafeRemote -src $payload -dst $installDir -extraArgs @(
-                "/XF", "Vigitemp Serveur.exe.config"
+                "/XF", "Vigitemp Serveur.exe.config", "VigiSensysServeur.exe.config"
             )
 
-            if ($useServiceMode) {
-                Write-RemoteLog "Tentative start service '$serviceName'..."
-                try {
-                    Start-Service -Name $serviceName -ErrorAction Stop
-                    Start-Sleep -Seconds 1
-                    $svcAfterStart = Get-Service -Name $serviceName -ErrorAction SilentlyContinue
-                    Write-RemoteLog "Service '$serviceName' start demande (status=$($svcAfterStart.Status))."
-                } catch {
-                    # Fallback automatique en mode process si le service ne demarre pas
-                    Write-RemoteLog "WARN: echec start service '$serviceName'. Fallback process."
-                    Stop-ServerProcessFallback -procName $serverProcName -targetInstallDir $installDir
-                    Start-ServerProcessFallback -targetInstallDir $installDir -procArgs $serverProcArgs
+            if (-not (Test-Path $newConfig)) {
+                $payloadConfig = Join-Path $payload "VigiSensysServeur.exe.config"
+                if (Test-Path $payloadConfig) {
+                    Copy-Item -Path $payloadConfig -Destination $newConfig -Force
+                    Write-RemoteLog "Config serveur creee depuis le payload: '$newConfig'"
                 }
-            } else {
-                Start-ServerProcessFallback -targetInstallDir $installDir -procArgs $serverProcArgs
             }
-        } -ArgumentList $ServerServiceName, $RemoteStagingDir, $RemoteServerInstallDir, [bool]$ServerNoService, $ServerProcessName, $ServerProcessArgs
+
+            $serverExe = Join-Path $installDir "VigiSensysServeur.exe"
+            if (-not (Test-Path $serverExe)) {
+                throw "Executable serveur introuvable apres deploy: $serverExe"
+            }
+            & sc.exe config $serviceName binPath= "`"$serverExe`"" | Out-Null
+            if ($LASTEXITCODE -ne 0) {
+                throw "sc config '$serviceName' a echoue (code=$LASTEXITCODE)."
+            }
+            Write-RemoteLog "Service '$serviceName' binPath mis a jour: $serverExe"
+
+            Write-RemoteLog "Tentative start service '$serviceName'..."
+            Start-Service -Name $serviceName -ErrorAction Stop
+            Start-Sleep -Seconds 2
+            $svcAfterStart = Get-Service -Name $serviceName -ErrorAction SilentlyContinue
+            Write-RemoteLog "Service '$serviceName' start demande (status=$($svcAfterStart.Status))."
+            if ($svcAfterStart.Status -ne "Running") {
+                throw "Service '$serviceName' non demarre apres deploy (status=$($svcAfterStart.Status))."
+            }
+        } -ArgumentList $ServerServiceName, $RemoteStagingDir, $RemoteServerInstallDir, $ServerProcessName
         if ($serverLogs) {
             $serverLogs | ForEach-Object { Write-Step $_ }
         }
@@ -446,7 +400,7 @@ function Invoke-RemoteDeploy {
                 $svcAfterStop = Get-Service -Name $serviceName -ErrorAction SilentlyContinue
                 Write-RemoteLog "Service '$serviceName' stop demande (status=$($svcAfterStop.Status))."
             } else {
-                Write-RemoteLog "Service '$serviceName' non trouve."
+                throw "Service '$serviceName' introuvable. Creez le service avant de deployer."
             }
 
             # Evite les melanges de chunks si un node residuel garde des fichiers verrouilles.

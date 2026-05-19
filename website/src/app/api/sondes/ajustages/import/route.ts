@@ -6,7 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { parseAdjustmentXml } from "@/lib/adjustment-import";
 import { log } from "@/lib/logger";
 import { decodeXmlBytes } from "@/lib/xml-decoding";
-import { extractProbeAddressFromSerial, extractTypeCodeFromSerial } from "@/lib/sensor-naming";
+import { extractProbeAddressFromSerial, resolveImportedSensorIdentity } from "@/lib/sensor-naming";
 
 const isXmlFile = (file: File) => {
   const name = file.name.toLowerCase();
@@ -69,18 +69,22 @@ export const POST = async (req: NextRequest) => {
       const knownTypeCodes = sensorTypes
         .map((row) => row.Sonde_Type)
         .filter((row): row is string => Boolean(row));
-      const typeCode = extractTypeCodeFromSerial(serial, knownTypeCodes);
+      const sensorIdentity = resolveImportedSensorIdentity(serial, file.name, knownTypeCodes);
+      const typeCode = sensorIdentity.typeCode;
       const sensorType = sensorTypes.find((row) => row.Sonde_Type === typeCode) ?? null;
       if (!sensorType?.Sonde_Type) {
         return apiError(400, "invalid_sensor_type", `Type de sonde introuvable pour ${serial}`);
       }
       const isGsoFamily = sensorType?.Famille_Sonde === "GSO";
+      const probeAddress = isGsoFamily
+        ? sensorIdentity.serial
+        : extractProbeAddressFromSerial(sensorIdentity.serial, knownTypeCodes);
 
       await prisma.t_sonde.createMany({
         data: [{
-          Sonde_Numero_Serie: serial,
+          Sonde_Numero_Serie: sensorIdentity.serial,
           Sonde_Type: sensorType.Sonde_Type,
-          Adresse_Sonde: extractProbeAddressFromSerial(serial, knownTypeCodes),
+          Adresse_Sonde: probeAddress,
           Est_Sonde_GSO: isGsoFamily,
           Surveillance_Etat: "D",
           Sonde_Offset: 0,
@@ -89,7 +93,7 @@ export const POST = async (req: NextRequest) => {
       });
 
       await prisma.t_sonde.updateMany({
-        where: { Sonde_Numero_Serie: serial },
+        where: { Sonde_Numero_Serie: sensorIdentity.serial },
         data: {
           Sonde_Type: sensorType.Sonde_Type,
           Est_Sonde_GSO: isGsoFamily,

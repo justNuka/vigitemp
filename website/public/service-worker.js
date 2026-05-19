@@ -15,7 +15,7 @@ activateEvent();
 self.addEventListener("push", (event) => {
   const data = event.data ? event.data.json() : {};
 
-  const title = data.title || "Alarme Vigitemp";
+  const title = data.title || "Alarme VigiSensys";
   const body = data.body || "Une alarme a été déclenchée.";
   const tag = data.tag || "alarm";
   const notificationData = data.data || {};

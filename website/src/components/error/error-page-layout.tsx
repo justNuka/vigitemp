@@ -156,7 +156,7 @@ export function ErrorPageLayout({
                   <div className="flex items-baseline justify-between">
                     <div>
                       <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">
-                        Vigitemp
+                        VigiSensys
                       </p>
                       <p className="text-4xl font-semibold text-primary">{code}</p>
                     </div>

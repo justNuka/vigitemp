@@ -1,7 +1,7 @@
 import { applyAccessFilter, buildLieuAccessFilter, getUserLocationScope } from "@/lib/location-access-scope"
 import { getServerAuthenticatedUserId } from "@/lib/server-auth"
 import { log } from "@/lib/logger"
-﻿import { unstable_noStore } from "next/cache"
+import { unstable_noStore } from "next/cache"
 
 export interface Site {
   id: number
@@ -39,6 +39,7 @@ export async function ServerFilterOptions() {
       prisma.t_lieu.findMany({
         select: {
           Id_Site: true,
+          t_site: { select: { Id_Site: true, Libelle_Site: true } },
           Est_Archive: true,
           t_lieu_groupe: { select: { Id_Groupe: true } },
         },
@@ -46,10 +47,19 @@ export async function ServerFilterOptions() {
       }),
     ])
 
-    const sites: Site[] = sitesData.map((s) => ({
-      id: s.Id_Site,
-      name: s.Libelle_Site || `Site ${s.Id_Site}`,
-    }))
+    const siteMap = new Map<number, string>()
+    for (const site of sitesData) {
+      siteMap.set(site.Id_Site, site.Libelle_Site || `Site ${site.Id_Site}`)
+    }
+    for (const lieu of lieuxData) {
+      const siteId = lieu.t_site?.Id_Site ?? lieu.Id_Site
+      if (!siteId || siteMap.has(siteId)) continue
+      siteMap.set(siteId, lieu.t_site?.Libelle_Site || `Site ${siteId}`)
+    }
+
+    const sites: Site[] = Array.from(siteMap, ([id, name]) => ({ id, name })).sort((a, b) =>
+      a.name.localeCompare(b.name, "fr"),
+    )
 
     const groupToSiteIds = new Map<number, Set<number>>()
     for (const lieu of lieuxData) {

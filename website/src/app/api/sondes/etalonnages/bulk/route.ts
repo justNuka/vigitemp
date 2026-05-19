@@ -163,6 +163,15 @@ export const POST = withAuthLogging(async (req: NextRequest, ctx) => {
           select: { Id_Etalonnage: true },
         });
 
+        const calibrationName = toNullableText(row.calibrationName);
+        if (calibrationName) {
+          await tx.$executeRaw`
+            UPDATE t_etalonnage
+            SET Nom_Etalonnage = ${calibrationName}
+            WHERE Id_Etalonnage = ${created.Id_Etalonnage}
+          `;
+        }
+
         const uniqueMeasures = new Map<number, { Mesure_Sonde: number | null; Mesure_Etalon: number | null }>();
         for (const m of data.Mesures) {
           uniqueMeasures.set(m.Numero_Ordre, {

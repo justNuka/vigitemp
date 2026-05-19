@@ -18,7 +18,7 @@ export function LicenseGateLoader() {
             transition={{ repeat: Infinity, duration: 1.2, ease: "linear" }}
           />
           <div className="text-center">
-            <p className="text-sm font-medium text-foreground">Vigitemp</p>
+            <p className="text-sm font-medium text-foreground">VigiSensys</p>
             <p className="text-xs text-muted-foreground">Vérification de la licence...</p>
           </div>
         </m.div>

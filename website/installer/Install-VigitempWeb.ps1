@@ -1,4 +1,4 @@
-﻿Param(
+Param(
     [string]$SourcePath,
     [string]$InstallDir,
     [string]$ServiceName,
@@ -177,7 +177,7 @@ function Resolve-DispatchSecret([string]$providedSecret, [string]$providedFilePa
 
 function Write-InstallRegistryInfo($installPath, $version) {
     try {
-        $baseKey = "HKLM:\\SOFTWARE\\Vigitemp"
+        $baseKey = "HKLM:\\SOFTWARE\\VigiSensys"
         $webKey = Join-Path $baseKey "Web"
         New-Item -Path $baseKey -Force | Out-Null
         New-Item -Path $webKey -Force | Out-Null
@@ -267,8 +267,8 @@ if (-not (Test-Admin)) {
 }
 
 $programData = [Environment]::GetFolderPath("CommonApplicationData")
-$defaultInstallDir = Join-Path $programData "Vigitemp\\website"
-$defaultServiceName = "VigitempWeb"
+$defaultInstallDir = Join-Path $programData "VigiSensys\\website"
+$defaultServiceName = "VigiSensysWeb"
 $defaultPort = 3000
 
 if ([string]::IsNullOrWhiteSpace($SourcePath)) {
@@ -304,12 +304,12 @@ if (-not $Standalone -and -not (Test-Path (Join-Path $SourcePath "package.json")
     Write-Error (T "package.json introuvable dans SourcePath : $SourcePath" "package.json not found in SourcePath: $SourcePath")
 }
 
-$logDir = Join-Path $programData "Vigitemp\\install-logs"
+$logDir = Join-Path $programData "VigiSensys\\install-logs"
 New-Item -ItemType Directory -Force -Path $logDir | Out-Null
 $logPath = Join-Path $logDir "install-web-$(Get-Date -Format yyyyMMdd-HHmmss).log"
 Start-Transcript -Path $logPath | Out-Null
 
-Write-Log (T "Installation du site Vigitemp vers $InstallDir" "Installing Vigitemp website to $InstallDir")
+Write-Log (T "Installation du site VigiSensys vers $InstallDir" "Installing VigiSensys website to $InstallDir")
 Ensure-ServiceStoppedAndRemoved -serviceName $ServiceName
 New-Item -ItemType Directory -Force -Path $InstallDir | Out-Null
 
@@ -494,6 +494,18 @@ DATABASE_PROVIDER="$dbProvider"
 NEXT_PUBLIC_API_BASE_URL="$websiteBaseUrl"
 NEXT_PUBLIC_APP_URL="$appBaseUrl"
 NEXT_PUBLIC_CACHE_TTL=$cacheTtl
+VIGISENSYS_LICENSE_PATH="$licensePath"
+VIGISENSYS_LICENSE_PUBLIC_KEY_PATH="$licensePublicKeyPath"
+VIGISENSYS_AGENT_SECRET_PRIVATE_KEY_PATH="$agentSecretPrivateKeyPath"
+VIGISENSYS_AGENT_PORT=$agentPort
+VIGISENSYS_AGENT_TIMEOUT_MS=$agentTimeoutMs
+VIGISENSYS_AGENT_ACTIVE_WINDOW_MINUTES=$agentActiveWindowMinutes
+VIGISENSYS_AGENT_SECRET="$agentSharedSecret"
+VIGISENSYS_ALARM_DISPATCH_SECRET="$dispatchSecret"
+VIGISENSYS_SURVEILLANCE_DISPATCH_SECRET="$dispatchSecret"
+VIGISENSYS_LOGS_DIR="$logsDir"
+VIGISENSYS_ALLOWED_DEV_ORIGINS="$allowedDevOrigins"
+VIGISENSYS_CSP_CONNECT_SRC="$cspConnectSrc"
 VIGITEMP_LICENSE_PATH="$licensePath"
 VIGITEMP_LICENSE_PUBLIC_KEY_PATH="$licensePublicKeyPath"
 VIGITEMP_AGENT_SECRET_PRIVATE_KEY_PATH="$agentSecretPrivateKeyPath"
@@ -586,7 +598,7 @@ $xml = @"
 <service>
   <id>$ServiceName</id>
   <name>$ServiceName</name>
-  <description>Vigitemp Next.js website</description>
+  <description>VigiSensys Next.js website</description>
   <executable>$nodePathResolved</executable>
   <arguments>$serviceArgs</arguments>
   <workingdirectory>$InstallDir</workingdirectory>
@@ -611,7 +623,7 @@ Write-Log (T "Création du service Windows (WinSW)..." "Creating Windows service
 
 Write-InstallRegistryInfo -installPath $InstallDir -version $version
 
-Write-Log (T "Registre: HKLM\\SOFTWARE\\Vigitemp\\Web" "Registry: HKLM\\SOFTWARE\\Vigitemp\\Web")
+Write-Log (T "Registre: HKLM\\SOFTWARE\\VigiSensys\\Web" "Registry: HKLM\\SOFTWARE\\VigiSensys\\Web")
 Write-Log (T "  InstallPath: $InstallDir" "  InstallPath: $InstallDir")
 if (-not [string]::IsNullOrWhiteSpace($version)) {
     Write-Log (T "  Version: $version" "  Version: $version")

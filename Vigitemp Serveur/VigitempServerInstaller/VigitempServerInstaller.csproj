@@ -5,7 +5,7 @@
     <UseWindowsForms>true</UseWindowsForms>
     <Nullable>disable</Nullable>
     <ImplicitUsings>disable</ImplicitUsings>
-    <AssemblyName>VigitempServerSetup</AssemblyName>
+    <AssemblyName>VigiSensysServerSetup</AssemblyName>
     <RootNamespace>VigitempServerInstaller</RootNamespace>
     <ApplicationIcon>resources\AppIcon.ico</ApplicationIcon>
     <ApplicationManifest>app.manifest</ApplicationManifest>

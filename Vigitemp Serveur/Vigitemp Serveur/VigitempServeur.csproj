@@ -7,7 +7,7 @@
     <ProjectGuid>{277B20BB-9928-49C4-8F4B-CE83EC822EEA}</ProjectGuid>
     <OutputType>WinExe</OutputType>
     <RootNamespace>Vigitemp_Serveur</RootNamespace>
-    <AssemblyName>Vigitemp Serveur</AssemblyName>
+    <AssemblyName>VigiSensysServeur</AssemblyName>
     <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>

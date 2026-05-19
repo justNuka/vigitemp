@@ -337,7 +337,9 @@
       "na": "-",
       "cancel": "Cancel",
       "confirm": "Acknowledge",
-      "confirming": "Acknowledging..."
+      "confirming": "Acknowledging...",
+      "location_alarms_notice": "Several alarms exist for this location. You can open the alarms page filtered on this location.",
+      "view_location_alarms": "View location alarms"
     },
     "status": {
       "active": "Active",
@@ -2144,6 +2146,7 @@
         "title": "Calibrations",
         "empty": "No calibrations",
         "columns": {
+          "name": "Name",
           "date": "Date",
           "operator": "Operator",
           "unit": "Unit",
@@ -2158,6 +2161,7 @@
         "title": "Verifications",
         "empty": "No verifications",
         "columns": {
+          "name": "Name",
           "date": "Date",
           "validity": "Validity",
           "operator": "Operator",
@@ -3576,7 +3580,7 @@
           "sublabel": "Temp, RH, CO2..."
         },
         "serveur": {
-          "label": "C# Server",
+          "label": "Interrogation Server",
           "sublabel": "Polling + Alarms"
         },
         "bdd": {
@@ -4339,7 +4343,7 @@
       "unknown": "Unknown"
     },
     "health": {
-      "server": "C# server",
+      "server": "Interrogation server",
       "db_main": "Main database",
       "db_mesure": "Measurements database",
       "db_chat": "Messaging database",
@@ -4427,7 +4431,9 @@
       "profile": "Select a profile"
     },
     "actions": {
-      "loading": "Loading..."
+      "loading": "Loading...",
+      "check_all": "Check all",
+      "uncheck_all": "Uncheck all"
     },
     "infos": {
       "default_visibility": "If no group or site is assigned, all locations will be shown on the monitoring page."

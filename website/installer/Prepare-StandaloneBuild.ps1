@@ -1,4 +1,4 @@
-﻿Param(
+Param(
     [string]$SourcePath,
     [string]$OutputDir,
     [switch]$SkipInstall,
@@ -274,7 +274,7 @@ if (-not (Test-Path $staticDir)) {
 
 Write-Log "Preparing output folder: $OutputDir"
 New-Item -ItemType Directory -Force -Path $OutputDir | Out-Null
-$installerBootstrapperExe = Join-Path $websiteRoot "WebsiteInstallerBootstrapper\bin\Release\net8.0-windows\win-x64\publish\VigitempWebSetup.exe"
+$installerBootstrapperExe = Join-Path $websiteRoot "WebsiteInstallerBootstrapper\bin\Release\net8.0-windows\win-x64\publish\VigiSensysWebSetup.exe"
 
 $targetNext = Join-Path $OutputDir ".next"
 New-Item -ItemType Directory -Force -Path $targetNext | Out-Null
@@ -337,7 +337,7 @@ if (Test-Path $standaloneEnv) {
 $installerSrc = Join-Path $SourcePath "installer"
 
 if (Test-Path $installerBootstrapperExe) {
-    Copy-Item -Path $installerBootstrapperExe -Destination (Join-Path $OutputDir "VigitempWebSetup.exe") -Force
+    Copy-Item -Path $installerBootstrapperExe -Destination (Join-Path $OutputDir "VigiSensysWebSetup.exe") -Force
     Write-Log "Copied web installer bootstrapper into package."
 }
 

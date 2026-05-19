@@ -59,7 +59,7 @@ export const POST = withAnyAuthorizationLogging(VIGILOG_ACCESS_CODES, async (req
     if (rawMessage.includes("status 401")) {
       userMessage = "Acces refuse par l'agent local (401). Verifiez la configuration de securite de l'agent."
     } else if (rawMessage.includes("Agent unavailable")) {
-      userMessage = "Agent local indisponible (port 8000). Verifiez que Vigitemp Agent est lance."
+      userMessage = "Agent local indisponible (port 8000). Verifiez que VigiSensys Agent est lance."
     } else if (rawMessage.trim().length > 0) {
       userMessage = rawMessage
     }

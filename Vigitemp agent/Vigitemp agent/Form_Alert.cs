@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Drawing;
 using System.Drawing.Text;
 using System.Linq;
@@ -12,12 +12,12 @@ namespace VigitempAgent
         PrivateFontCollection fonts = new PrivateFontCollection();
         private Font _alertFont;
         private string SITEWEB_URL;
-        private const string DefaultAlertText = "Une alarme Vigitemp est actuellement en cours";
+        private const string DefaultAlertText = "Une alarme VigiSensys est actuellement en cours";
         public Form_Alert(string p_SITEWEB_URL)
         {
             InitializeComponent();
             SITEWEB_URL = p_SITEWEB_URL;
-            // Load font once — prevents PrivateFontCollection leak on every showAlert()
+            // Load font once - prevents PrivateFontCollection leak on every showAlert()
             byte[] fontData = Properties.Resources.Poppins_SemiBold;
             IntPtr fontPtr = System.Runtime.InteropServices.Marshal.AllocCoTaskMem(fontData.Length);
             Marshal.Copy(fontData, 0, fontPtr, fontData.Length);

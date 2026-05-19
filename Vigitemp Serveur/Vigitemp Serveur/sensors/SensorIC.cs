@@ -20,6 +20,11 @@ namespace Vigitemp_Serveur.sensors
 
         public override async Task<bool> read()
         {
+            return await ExecuteWithPortLockAsync(ReadCoreAsync);
+        }
+
+        private async Task<bool> ReadCoreAsync()
+        {
             try
             {
                 BeginReadCycle();

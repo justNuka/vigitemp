@@ -673,7 +673,9 @@
       "cancel": "Annuler",
       "confirm": "Acquitter",
       "confirming": "Acquittement...",
-      "type_ended": "Alarme terminée"
+      "type_ended": "Alarme terminée",
+      "location_alarms_notice": "Plusieurs alarmes existent pour ce lieu. Vous pouvez ouvrir la page des alarmes filtrées sur ce lieu.",
+      "view_location_alarms": "Voir les alarmes du lieu"
     },
     "status": {
       "active": "En cours",
@@ -2157,6 +2159,7 @@
         "title": "Ajustages",
         "empty": "Aucun ajustage",
         "columns": {
+          "name": "Nom",
           "date": "Date",
           "operator": "Opérateur",
           "unit": "Unité",
@@ -2189,6 +2192,7 @@
           "invalid_days": "Veuillez entrer un nombre de jours valide."
         },
         "columns": {
+          "name": "Nom",
           "date": "Date",
           "validity": "Validité",
           "operator": "Opérateur",
@@ -2864,7 +2868,7 @@
       "count": "{count} alarme(s)",
       "details": "Détails",
       "statistics_title": "Statistiques par lieu",
-      "statistics_description": "Consultez les statistiques detaillees par lieu avec selection de periode.",
+      "statistics_description": "Consultez les statistiques détaillées par lieu avec sélection de période.",
       "open_statistics": "Ouvrir les statistiques"
     },
     "ack_dialog": {
@@ -3590,7 +3594,7 @@
           "sublabel": "Temp, HR, CO2..."
         },
         "serveur": {
-          "label": "Serveur C#",
+          "label": "Serveur d'interrogation",
           "sublabel": "Interrogation + Alarmes"
         },
         "bdd": {
@@ -4352,7 +4356,7 @@
       "unknown": "Inconnu"
     },
     "health": {
-      "server": "Serveur C#",
+      "server": "Serveur d'interrogation",
       "db_main": "Base principale",
       "db_mesure": "Base mesures",
       "db_chat": "Base messagerie",
@@ -4440,7 +4444,9 @@
       "profile": "Sélectionner un profil"
     },
     "actions": {
-      "loading": "Chargement..."
+      "loading": "Chargement...",
+      "check_all": "Tout cocher",
+      "uncheck_all": "Tout décocher"
     },
     "infos": {
       "default_visibility": "Si aucun groupe ou site n'est assigné, tous les lieux seront affichés sur la page de surveillance."

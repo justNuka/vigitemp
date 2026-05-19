@@ -1,6 +1,7 @@
 import { log } from "@/lib/logger"
 import { getHotlineServerConfig } from "@/lib/hotline-config"
 import { getSensorFamilyFromSerial } from "@/lib/sensor-naming"
+import { getCompatEnv } from "@/lib/vigisensys-compat"
 
 type GspConfigSyncInput = {
   serial?: string | null
@@ -43,8 +44,11 @@ export async function syncGspLocationConfiguration(input: GspConfigSyncInput) {
   if (!serverHost || !Number.isFinite(serverPort)) return { skipped: "no_hotline_server" as const }
 
   const headers: Record<string, string> = { "Content-Type": "application/json" }
-  const apiKey = process.env.VIGITEMP_HOTLINE_API_KEY?.trim()
-  if (apiKey) headers["x-vigitemp-hotline-key"] = apiKey
+  const apiKey = getCompatEnv("VIGISENSYS_HOTLINE_API_KEY", "VIGITEMP_HOTLINE_API_KEY")
+  if (apiKey) {
+    headers["x-vigisensys-hotline-key"] = apiKey
+    headers["x-vigitemp-hotline-key"] = apiKey
+  }
 
   const body = {
     sensorType: "GSP",

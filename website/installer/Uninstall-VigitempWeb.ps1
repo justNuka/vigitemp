@@ -1,4 +1,4 @@
-﻿Param(
+Param(
     [string]$ServiceName,
     [string]$InstallDir,
     [switch]$RemoveSharedData,
@@ -31,8 +31,8 @@ if (-not (Test-Admin)) {
 }
 
 $programData = [Environment]::GetFolderPath("CommonApplicationData")
-$defaultInstallDir = Join-Path $programData "Vigitemp\\website"
-$defaultServiceName = "VigitempWeb"
+$defaultInstallDir = Join-Path $programData "VigiSensys\\website"
+$defaultServiceName = "VigiSensysWeb"
 
 if ([string]::IsNullOrWhiteSpace($ServiceName)) {
     $ServiceName = $defaultServiceName
@@ -57,8 +57,8 @@ if (Test-Path $InstallDir) {
 }
 
 if ($RemoveSharedData -or $Force) {
-    $logsDir = Join-Path $programData "Vigitemp\\web-logs"
-    $installLogsDir = Join-Path $programData "Vigitemp\\install-logs"
+    $logsDir = Join-Path $programData "VigiSensys\\web-logs"
+    $installLogsDir = Join-Path $programData "VigiSensys\\install-logs"
     if (Test-Path $logsDir) {
         Write-Log "Suppression logs web: $logsDir"
         Remove-Item -Path $logsDir -Recurse -Force
@@ -70,7 +70,7 @@ if ($RemoveSharedData -or $Force) {
 }
 
 try {
-    $webKey = "HKLM:\\SOFTWARE\\Vigitemp\\Web"
+    $webKey = "HKLM:\\SOFTWARE\\VigiSensys\\Web"
     if (Test-Path $webKey) {
         Write-Log "Suppression registre: $webKey"
         Remove-Item -Path $webKey -Recurse -Force

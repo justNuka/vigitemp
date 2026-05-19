@@ -1,4 +1,4 @@
-﻿Param(
+Param(
     [string]$ServiceName,
     [string]$InstallDir,
     [switch]$RemoveSharedData,
@@ -31,8 +31,8 @@ if (-not (Test-Admin)) {
 }
 
 $programData = [Environment]::GetFolderPath("CommonApplicationData")
-$defaultInstallDir = Join-Path $programData "Vigitemp\\server"
-$defaultServiceName = "VigitempServeur"
+$defaultInstallDir = Join-Path $programData "VigiSensys\\server"
+$defaultServiceName = "VigiSensysServeur"
 
 if ([string]::IsNullOrWhiteSpace($ServiceName)) {
     $ServiceName = $defaultServiceName
@@ -57,10 +57,10 @@ if (Test-Path $InstallDir) {
 }
 
 if ($RemoveSharedData -or $Force) {
-    $logsDir = Join-Path $programData "Vigitemp\\logs"
-    $installLogsDir = Join-Path $programData "Vigitemp\\install-logs"
-    $licenseDir = Join-Path $programData "Vigitemp\\licenses"
-    $licenseKeyDir = Join-Path $programData "Vigitemp\\license_keys"
+    $logsDir = Join-Path $programData "VigiSensys\\logs"
+    $installLogsDir = Join-Path $programData "VigiSensys\\install-logs"
+    $licenseDir = Join-Path $programData "VigiSensys\\licenses"
+    $licenseKeyDir = Join-Path $programData "VigiSensys\\license_keys"
     foreach ($dir in @($logsDir, $installLogsDir, $licenseDir, $licenseKeyDir)) {
         if (Test-Path $dir) {
             Write-Log "Suppression dossier: $dir"
@@ -70,7 +70,7 @@ if ($RemoveSharedData -or $Force) {
 }
 
 try {
-    $serverKey = "HKLM:\\SOFTWARE\\Vigitemp\\Server"
+    $serverKey = "HKLM:\\SOFTWARE\\VigiSensys\\Server"
     if (Test-Path $serverKey) {
         Write-Log "Suppression registre: $serverKey"
         Remove-Item -Path $serverKey -Recurse -Force

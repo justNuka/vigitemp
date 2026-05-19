@@ -234,7 +234,7 @@ export function LocationSetpointsSection({ isGsoSensor, idLieu, onGoToPlanning }
 
         <div className="space-y-3 order-1">
           <div className="flex items-center gap-2">
-            <Checkbox checked={formData.Est_Consigne_Sup_Active || false} onCheckedChange={(checked) => setValue('Est_Consigne_Sup_Active', !!checked)} />
+            <Checkbox checked={formData.Est_Consigne_Sup_Active || false} onCheckedChange={(checked) => setValue('Est_Consigne_Sup_Active', !!checked, { shouldDirty: true, shouldTouch: true })} />
             <Label className="font-medium">{t('labels.upper_enable')}</Label>
           </div>
           {formData.Est_Consigne_Sup_Active && (
@@ -250,7 +250,7 @@ export function LocationSetpointsSection({ isGsoSensor, idLieu, onGoToPlanning }
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <Checkbox checked={formData.Est_Consigne_Sup_Pre_Alarme_Active || false} onCheckedChange={(checked) => setValue('Est_Consigne_Sup_Pre_Alarme_Active', !!checked)} />
+                <Checkbox checked={formData.Est_Consigne_Sup_Pre_Alarme_Active || false} onCheckedChange={(checked) => setValue('Est_Consigne_Sup_Pre_Alarme_Active', !!checked, { shouldDirty: true, shouldTouch: true })} />
                 <Label>{t('labels.upper_pre_enable')}</Label>
               </div>
               {formData.Est_Consigne_Sup_Pre_Alarme_Active && (
@@ -265,13 +265,13 @@ export function LocationSetpointsSection({ isGsoSensor, idLieu, onGoToPlanning }
 
         <div className="space-y-3 order-3">
           <div className="flex items-center gap-2">
-            <Checkbox checked={formData.Est_Consigne_Inf_Active || false} onCheckedChange={(checked) => setValue('Est_Consigne_Inf_Active', !!checked)} />
+            <Checkbox checked={formData.Est_Consigne_Inf_Active || false} onCheckedChange={(checked) => setValue('Est_Consigne_Inf_Active', !!checked, { shouldDirty: true, shouldTouch: true })} />
             <Label className="font-medium">{t('labels.lower_enable')}</Label>
           </div>
           {formData.Est_Consigne_Inf_Active && (
             <div className="space-y-3 pl-6">
               <div className="flex items-center gap-2">
-                <Checkbox checked={formData.Est_Consigne_Inf_Pre_Alarme_Active || false} onCheckedChange={(checked) => setValue('Est_Consigne_Inf_Pre_Alarme_Active', !!checked)} />
+                <Checkbox checked={formData.Est_Consigne_Inf_Pre_Alarme_Active || false} onCheckedChange={(checked) => setValue('Est_Consigne_Inf_Pre_Alarme_Active', !!checked, { shouldDirty: true, shouldTouch: true })} />
                 <Label>{t('labels.lower_pre_enable')}</Label>
               </div>
               {formData.Est_Consigne_Inf_Pre_Alarme_Active && (

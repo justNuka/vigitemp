@@ -5,11 +5,12 @@ import createMiddleware from "next-intl/middleware"
 import { routing } from "./i18n/routing"
 import { ACCESS_COOKIE_MAX_AGE_SECONDS } from "@/lib/jwt"
 import { shouldUseSecureCookies } from "@/lib/cookie-security"
+import { getCompatEnv } from "@/lib/vigisensys-compat"
 
 const intlMiddleware = createMiddleware(routing)
 
 const shouldLog =
-  process.env.VIGITEMP_PROXY_DEBUG === "1" && process.env.NODE_ENV !== "production"
+  getCompatEnv("VIGISENSYS_PROXY_DEBUG", "VIGITEMP_PROXY_DEBUG") === "1" && process.env.NODE_ENV !== "production"
 
 const protectedRoutes = [
   "/",

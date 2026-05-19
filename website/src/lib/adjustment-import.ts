@@ -1,5 +1,5 @@
-﻿import type { Prisma } from "@/generated/@prisma-db-main/client";
-import { normalizeImportedGsoSerial } from "@/lib/sensor-naming";
+import type { Prisma } from "@/generated/@prisma-db-main/client";
+import { resolveImportedSensorIdentity } from "@/lib/sensor-naming";
 
 export type AdjustmentImportSummary = {
   id?: number;
@@ -118,14 +118,13 @@ export function parseAdjustmentXml(xml: string, fileName = ""): ParsedAdjustment
 
   const calibrationBlock = getTagValueAny(xml, TAG_SETS.calibrationBlock);
   // For GSO imports, ADRESSE_SONDE from file must be ignored.
-  // We only trust NUM_SONDE and normalize it to the DB convention:
-  //   - SOIT/SOET => serial without -T suffix
-  //   - SOIH/SOEH => serial with explicit -T / -H suffix
-  // Address generation is handled later when creating the sensor row.
+  // We only trust NUM_SONDE and normalize it to the DB serial convention:
+  //   - SOIT/SOET => numeric address only
+  //   - SOIH/SOEH => numeric address with explicit -T / -H suffix
   const sensorNumberRaw = calibrationBlock
     ? getTagValue(calibrationBlock, "NUM_SONDE")
     : null;
-  const sensorNumber = sensorNumberRaw ? normalizeImportedGsoSerial(sensorNumberRaw) : null;
+  const sensorNumber = sensorNumberRaw ? resolveImportedSensorIdentity(sensorNumberRaw, fileName).serial : null;
 
   const coeffX = parseNumber(getTagValueAny(xml, ["COEFFX", "COEFF_X"]));
   const coeffConstant = parseNumber(getTagValueAny(xml, ["COEFFCONSTANT", "COEFF_CONSTANT"]));

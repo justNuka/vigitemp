@@ -351,6 +351,113 @@ Recommandation :
 
 ## Ordre de migration recommande
 
+### Avancement
+
+#### 2026-05-12 - Lot 1 demarre : branding visible sans changement de contrat technique
+
+Changements appliques :
+
+- Remplacement du nom visible dans les sujets d'emails web : alarmes, recap mensuel statistiques, test SMTP, reset mot de passe, creation de compte.
+- Remplacement du nom visible dans les notifications web/agent : service worker, dispatch d'alarme, messages d'erreur de configuration agent.
+- Remplacement du nom visible dans l'agent Windows : titre de l'agent, tray icon, popup d'alarme, messages de connexion et erreurs visibles.
+- Remplacement du nom visible dans les pages web de licence et d'erreur.
+
+Changements volontairement non faits dans ce lot :
+
+- Variables d'environnement `VIGITEMP_*`.
+- Headers HTTP `x-vigitemp-*`.
+- Dossiers d'installation `C:\ProgramData\Vigitemp`.
+- Noms d'executables, services Windows, namespaces C# et assembly names.
+- Cles localStorage/events navigateur `vigitemp:*`.
+- Noms de bases historiques ou valeurs par defaut techniques.
+
+Verification du lot :
+
+- `pnpm exec eslint` sur les fichiers web modifies : OK.
+- `dotnet build "Vigitemp agent\Vigitemp Agent.sln" -c Release --nologo` : OK.
+
+#### 2026-05-12 - Lot 2 : compatibilite technique `VIGISENSYS_*` / `x-vigisensys-*`
+
+Changements appliques :
+
+- Ajout d'un helper web `getCompatEnv` / `getCompatHeader` pour lire les nouveaux noms en priorite et garder les anciens en fallback.
+- Web : support des variables `VIGISENSYS_*` avec fallback `VIGITEMP_*` pour secrets dispatch, agent, hotline, logs, licence, uploads, backup, cookies, proxy debug, skip DB build.
+- Web : support des headers `x-vigisensys-*` avec fallback `x-vigitemp-*` pour dispatch alarme/surveillance/stats, agent heartbeat/event, traces client et machine name.
+- Web : envoi des deux headers pendant la transition pour les appels agent et hotline.
+- Agent : lecture de `VIGISENSYS_SITEWEB_URL` / `VIGISENSYS_AGENT_SECRET` en priorite, fallback anciens noms, et envoi des deux headers agent.
+- Serveur : envoi de `x-vigisensys-secret` et `x-vigitemp-secret` vers le web, lecture des nouvelles cles `VigiSensys.WebsiteBaseUrl` / `VigiSensys.AlarmDispatchSecret` en priorite.
+- Hotline serveur : acceptation de `x-vigisensys-hotline-key` avec fallback `x-vigitemp-hotline-key`.
+- Installateurs/config agent et serveur : ecriture des nouvelles cles de config en plus des anciennes.
+
+Verification du lot :
+
+- `pnpm exec eslint` sur les fichiers web modifies : OK.
+- `dotnet build "Vigitemp agent\Vigitemp Agent.sln" -c Release --nologo` : OK.
+- `dotnet build "Vigitemp Serveur\Vigitemp Serveur.sln" -c Release --nologo` : OK.
+- `git diff --check` : OK.
+
+#### 2026-05-12 - Lot 3 : chemins Windows `ProgramData\VigiSensys`
+
+Changements appliques :
+
+- Ajout d'un helper web `vigisensys-paths.ts` pour construire les chemins `C:\ProgramData\VigiSensys` et lire en fallback `C:\ProgramData\Vigitemp`.
+- Web : licence, cle publique, cle privee agent et backups privilegient `VigiSensys`, avec fallback sur les anciens fichiers `Vigitemp` s'ils existent.
+- Serveur C# : licence et cle publique privilegient `VigiSensys`, avec fallback sur les anciens chemins `Vigitemp`.
+- Serveur C# : logs runtime par defaut dans `C:\ProgramData\VigiSensys\logs`.
+- Installateur web PowerShell : chemins par defaut `VigiSensys\website`, `VigiSensys\web-logs`, `VigiSensys\install-logs`.
+- Installateur serveur PowerShell : chemins par defaut `VigiSensys\server`, `VigiSensys\logs`, `VigiSensys\licenses`, `VigiSensys\license_keys`, `VigiSensys\install-logs`.
+- Bootstrapper web et installateur serveur C# : ecriture des nouveaux chemins `VigiSensys` et des nouvelles variables `VIGISENSYS_*`, tout en conservant les anciennes variables `VIGITEMP_*`.
+- Desinstalleurs web/serveur : ciblage des nouveaux chemins `VigiSensys`.
+- Documentation installateurs mise a jour pour les chemins `C:\ProgramData\VigiSensys`.
+
+Compatibilite conservee :
+
+- Les anciennes variables `VIGITEMP_*` sont encore ecrites et lues.
+- Les anciennes cles `Vigi.License.*` restent presentes dans `App.config`.
+- Les anciens fichiers sous `C:\ProgramData\Vigitemp` restent lus si les nouveaux chemins n'existent pas.
+
+Verification du lot :
+
+- `pnpm exec eslint` sur les fichiers web modifies : OK.
+- Parsing PowerShell des scripts install/desinstall modifies : OK.
+- `dotnet build "Vigitemp agent\Vigitemp Agent.sln" -c Release --nologo` : OK.
+- `dotnet build "Vigitemp Serveur\Vigitemp Serveur.sln" -c Release --nologo` : OK.
+- `dotnet build "website\WebsiteInstallerBootstrapper\WebsiteInstallerBootstrapper.csproj" -c Release --nologo` : OK.
+- `dotnet build "Vigitemp Serveur\VigitempServerInstaller\VigitempServerInstaller.csproj" -c Release --nologo` : OK.
+- `git diff --check` : OK.
+
+#### 2026-05-12 - Lot 4 : services, setups et agent
+
+Changements appliques :
+
+- Web : service par defaut `VigiSensysWeb`.
+- Web : setup genere `VigiSensysWebSetup.exe`.
+- Web : documentation installateur mise a jour sur le nouveau nom de service.
+- Serveur C# : service par defaut `VigiSensysServeur`.
+- Serveur C# : setup genere `VigiSensysServerSetup.exe`.
+- Serveur C# : documentation installateur mise a jour sur le nouveau nom de service.
+- Script racine `Prepare-And-Deploy.ps1` : chemins distants par defaut `C:\ProgramData\VigiSensys`, services `VigiSensysWeb` / `VigiSensysServeur`.
+- Script racine `Prepare-And-Deploy.ps1` : suppression du fallback de demarrage serveur en process console ; le service serveur doit exister et demarrer.
+- Agent : setup genere `VigiSensysAgentSetup.exe`.
+- Agent : dossier d'installation par defaut `C:\Program Files (x86)\VigiSensys\Agent`.
+- Agent : textes visibles WiX passes a `VigiSensys Agent`.
+
+Compatibilite conservee :
+
+- Les services existants `VigitempWeb` et `VigitempServeur` ne sont pas supprimes automatiquement par le code.
+- Les executables runtime serveur/agent gardent leurs noms historiques dans ce lot.
+- Les scripts gardent les anciens noms de fichiers (`Install-VigitempWeb.ps1`, `Install-VigitempServer.ps1`) pour eviter une cascade de changements de packaging.
+- L'executable agent et son autostart restent `VigitempAgent.exe` / `VigitempAgent` pour eviter de casser le demarrage automatique Windows.
+- Les namespaces C# et noms de projets restent historiques.
+
+Verification du lot :
+
+- Parsing PowerShell des scripts install/desinstall/prepare modifies : OK.
+- `dotnet build "website\WebsiteInstallerBootstrapper\WebsiteInstallerBootstrapper.csproj" -c Release --nologo` : OK.
+- `dotnet build "Vigitemp Serveur\VigitempServerInstaller\VigitempServerInstaller.csproj" -c Release --nologo` : OK.
+- `dotnet build "Vigitemp Serveur\Vigitemp Serveur.sln" -c Release --nologo` : OK.
+- `dotnet build "Vigitemp agent\VigitempAgentInstaller\VigitempAgentInstaller.csproj" -c Release --nologo` : OK.
+
 ### Etape 0 - Preparation
 
 - Creer une branche dediee.

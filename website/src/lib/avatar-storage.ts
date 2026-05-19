@@ -1,9 +1,10 @@
 import path from "node:path"
+import { getCompatEnv } from "@/lib/vigisensys-compat"
 
 const DEFAULT_UPLOADS_ROOT = path.join(/* turbopackIgnore: true */ process.cwd(), "uploads")
 
 export function getAvatarUploadsDir() {
-  const uploadsRoot = process.env.VIGITEMP_UPLOADS_DIR?.trim() || DEFAULT_UPLOADS_ROOT
+  const uploadsRoot = getCompatEnv("VIGISENSYS_UPLOADS_DIR", "VIGITEMP_UPLOADS_DIR") || DEFAULT_UPLOADS_ROOT
   return path.join(uploadsRoot, "avatars")
 }
 

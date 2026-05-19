@@ -21,7 +21,7 @@ namespace VigitempAgent
         {
             _getSiteWebUrl = getSiteWebUrl;
 
-            Text = "Vigitemp Agent";
+            Text = "VigiSensys Agent";
             Icon = Resources.AppIcon;
             StartPosition = FormStartPosition.CenterScreen;
             FormBorderStyle = FormBorderStyle.FixedDialog;

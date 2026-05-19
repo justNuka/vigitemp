@@ -346,7 +346,7 @@ namespace Vigitemp_License_Generator
                 publicKeyTable,
                 "Clé publique (PEM)",
                 _txtPublicKey,
-                "Clé publique à communiquer au serveur C# pour vérifier les licences.\nFormat PEM."
+                "Clé publique à communiquer au serveur d'interrogation pour vérifier les licences.\nFormat PEM."
             );
 
             var btnCopyPublicKey = new Button { Text = "Copier clé publique", AutoSize = true, Enabled = false };

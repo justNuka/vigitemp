@@ -450,6 +450,7 @@ CREATE TABLE `t_etalonnage` (
   `Id_Etalonnage` int NOT NULL AUTO_INCREMENT,
   `Date_Heure_Etalonnage` datetime DEFAULT NULL,
   `Sonde_Numero_Serie` varchar(50) DEFAULT NULL,
+  `Nom_Etalonnage` varchar(255) DEFAULT NULL,
   `Date_Validite` date DEFAULT NULL,
   `Operateur` varchar(255) DEFAULT NULL,
   `Etalon_Numero_Serie` varchar(50) DEFAULT NULL,
@@ -1150,6 +1151,11 @@ SET @has_tbl := (SELECT COUNT(*) FROM information_schema.tables WHERE table_sche
 SET @has_col := (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 't_etalonnage' AND column_name = 'Duree_Validite_Jours');
 SET @sql := IF(@has_tbl = 1 AND @has_col = 0,
   'ALTER TABLE `t_etalonnage` ADD COLUMN `Duree_Validite_Jours` INT NULL AFTER `Date_Validite`',
+  'SELECT 1');
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+SET @has_col := (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 't_etalonnage' AND column_name = 'Nom_Etalonnage');
+SET @sql := IF(@has_tbl = 1 AND @has_col = 0,
+  'ALTER TABLE `t_etalonnage` ADD COLUMN `Nom_Etalonnage` VARCHAR(255) NULL AFTER `Sonde_Numero_Serie`',
   'SELECT 1');
 PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 SET @sql := IF(@has_tbl = 1,

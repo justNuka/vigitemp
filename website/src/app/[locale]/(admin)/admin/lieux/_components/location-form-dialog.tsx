@@ -53,6 +53,17 @@ import { LocationFormTabMetrology } from './location-form-tab-metrology';
 import { LocationFormTabTelephony } from './location-form-tab-telephony';
 import { LocationFormTabPlanning } from './location-form-tab-planning';
 
+function cleanupStaleModalLocks() {
+  if (typeof document === 'undefined') return;
+
+  window.setTimeout(() => {
+    const hasActiveModal = document.querySelector('[role="dialog"][data-state="open"], [data-radix-alert-dialog-content][data-state="open"]');
+    if (hasActiveModal) return;
+
+    document.body.style.removeProperty('pointer-events');
+  }, 0);
+}
+
 type LocationFormDialogProps = {
   open: boolean;
   mode: LocationFormMode;
@@ -217,6 +228,11 @@ export function LocationFormDialog({
     setFormData(internalFormValues as LocationFormData);
   }, [open, form, internalFormValues, setFormData]);
 
+  useEffect(() => {
+    if (open) return;
+    cleanupStaleModalLocks();
+  }, [open]);
+
 
   const emtParamsForPlanning: LieuEmtParams = {
     mode: ((resolvedForm.watch('EMT_Mode') ?? 'sans-objet') as EmtMode),
@@ -228,10 +244,6 @@ export function LocationFormDialog({
     correctAccuracyError: resolvedForm.watch('Corriger_Erreur_Justesse') ?? false,
     isConsigneSupActive: resolvedForm.watch('Est_Consigne_Sup_Active') ?? false,
     isConsigneInfActive: resolvedForm.watch('Est_Consigne_Inf_Active') ?? false,
-  }
-
-  if (!open) {
-    return null;
   }
 
   const selectedTemplate = locationTemplates.find((template) => String(template.Id_Lieu_Template) === selectedTemplateId) ?? null;

@@ -15,6 +15,14 @@ namespace Vigitemp_Serveur.sensors
         public int? Rssi { get; set; }
     }
 
+    internal sealed class GspConfigurationResponse
+    {
+        public string Serial { get; set; }
+        public double? HighLimit { get; set; }
+        public double? LowLimit { get; set; }
+        public int? FrequencyMinutes { get; set; }
+        public int? AlarmDelayMinutes { get; set; }
+    }
 
     internal sealed class GspMemoMeasurement
     {
@@ -51,7 +59,7 @@ namespace Vigitemp_Serveur.sensors
                 metrology,
                 alarmSettings?.ConsigneSup,
                 alarmSettings?.ConsigneInf,
-                alarmSettings == null ? 0 : Math.Max(0, Math.Max(alarmSettings.RetardAlarmeBasMinutes, alarmSettings.RetardAlarmeHautMinutes)),
+                alarmSettings == null ? 0 : Math.Min(Math.Max(0, alarmSettings.RetardAlarmeBasMinutes), Math.Max(0, alarmSettings.RetardAlarmeHautMinutes)),
                 frequencySeconds);
         }
 
@@ -99,7 +107,7 @@ namespace Vigitemp_Serveur.sensors
 
                 if (alarmDelayMinutes > 0)
                 {
-                    payload += string.Format(CultureInfo.InvariantCulture, "{0}d", Math.Max(0, alarmDelayMinutes));
+                    payload += string.Format(CultureInfo.InvariantCulture, "{0}r", Math.Max(0, alarmDelayMinutes));
                 }
 
                 commands.Add(new KeyValuePair<string, string>(
@@ -123,12 +131,17 @@ namespace Vigitemp_Serveur.sensors
             }
 
             var trimmed = serialNumber.Trim().ToUpperInvariant();
-            foreach (var prefix in GspTypePrefixes.OrderByDescending(item => item.Length))
+
+            // New GSP serials are the protocol target as-is, for example SPPS-26000001
+            // and SPNB-26000001. Only keep the old generic GSPxxxx compatibility path.
+            if (Regex.IsMatch(trimmed, @"^SP[A-Z0-9]{2}-\d+$", RegexOptions.IgnoreCase))
             {
-                if (trimmed.StartsWith(prefix, StringComparison.OrdinalIgnoreCase) && trimmed.Length > prefix.Length)
-                {
-                    return trimmed.Substring(prefix.Length);
-                }
+                return trimmed;
+            }
+
+            if (trimmed.StartsWith("GSP", StringComparison.OrdinalIgnoreCase) && trimmed.Length > 3)
+            {
+                return trimmed.Substring(3);
             }
 
             return trimmed;
@@ -313,6 +326,57 @@ namespace Vigitemp_Serveur.sensors
             return true;
         }
 
+        internal static bool TryParseConfigurationResponse(string response, string target, out GspConfigurationResponse parsed)
+        {
+            parsed = null;
+            if (string.IsNullOrWhiteSpace(response) || string.IsNullOrWhiteSpace(target))
+            {
+                return false;
+            }
+
+            var normalizedTarget = target.Trim().ToUpperInvariant();
+            var extractedSerial = TryExtractLineValue(response, "Serial");
+            if (!string.IsNullOrWhiteSpace(extractedSerial)
+                && !string.Equals(extractedSerial.Trim(), normalizedTarget, StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+
+            var result = new GspConfigurationResponse
+            {
+                Serial = !string.IsNullOrWhiteSpace(extractedSerial)
+                    ? extractedSerial.Trim().ToUpperInvariant()
+                    : ExtractDetectedSerials(response).FirstOrDefault(),
+                HighLimit = TryExtractDoubleLineValue(response, "LimiteHaute")
+                    ?? TryExtractDoubleLineValue(response, "ConsigneSup")
+                    ?? TryExtractDoubleLineValue(response, "High")
+                    ?? TryExtractCompactNumeric(response, 'h'),
+                LowLimit = TryExtractDoubleLineValue(response, "LimiteBasse")
+                    ?? TryExtractDoubleLineValue(response, "ConsigneInf")
+                    ?? TryExtractDoubleLineValue(response, "Low")
+                    ?? TryExtractCompactNumeric(response, 'l'),
+                FrequencyMinutes = TryExtractRoundedIntLineValue(response, "Frequence")
+                    ?? TryExtractRoundedIntLineValue(response, "FrequenceMinutes")
+                    ?? TryExtractCompactInt(response, 'f'),
+                AlarmDelayMinutes = TryExtractRoundedIntLineValue(response, "Retard")
+                    ?? TryExtractRoundedIntLineValue(response, "RetardAlarme")
+                    ?? TryExtractRoundedIntLineValue(response, "RetardAlarmeMinutes")
+                    ?? TryExtractCompactInt(response, 'r')
+                    ?? TryExtractCompactInt(response, 'd'),
+            };
+
+            if (!result.HighLimit.HasValue &&
+                !result.LowLimit.HasValue &&
+                !result.FrequencyMinutes.HasValue &&
+                !result.AlarmDelayMinutes.HasValue)
+            {
+                return false;
+            }
+
+            parsed = result;
+            return true;
+        }
+
         internal static List<string> ExtractDetectedSerials(string response)
         {
             if (string.IsNullOrWhiteSpace(response))
@@ -320,7 +384,7 @@ namespace Vigitemp_Serveur.sensors
                 return new List<string>();
             }
 
-            return Regex.Matches(response, @"(?:R?TEMP|R?FTEM|FTEM|DCAL|DETA|DCON|ECAL|EETA|ECON|ED-H|MEMO|DD-H)(N\d+)", RegexOptions.IgnoreCase)
+            return Regex.Matches(response, @"(?:R?TEMP|R?FTEM|FTEM|DCAL|DETA|DCON|ECAL|EETA|ECON|ED-H|MEMO|DD-H)((?:SP[A-Z0-9]{2}-\d+)|[PN]\d+)", RegexOptions.IgnoreCase)
                 .Cast<Match>()
                 .Where(match => match.Success && match.Groups.Count >= 2)
                 .Select(match => (match.Groups[1].Value ?? string.Empty).Trim().ToUpperInvariant())
@@ -332,6 +396,39 @@ namespace Vigitemp_Serveur.sensors
                 .Where(serial => !string.IsNullOrWhiteSpace(serial))
                 .Distinct()
                 .ToList();
+        }
+
+        internal static bool IsAcknowledgementForTarget(string response, string commandPrefix, string target)
+        {
+            if (string.IsNullOrWhiteSpace(response) ||
+                string.IsNullOrWhiteSpace(commandPrefix) ||
+                string.IsNullOrWhiteSpace(target))
+            {
+                return false;
+            }
+
+            var normalizedPrefix = commandPrefix.Trim().ToUpperInvariant();
+            var normalizedTarget = target.Trim().ToUpperInvariant();
+            if (!Regex.IsMatch(response, @"(?:^|\r?\n)\s*ACK\s*=\s*" + Regex.Escape(normalizedPrefix) + @"\b", RegexOptions.IgnoreCase))
+            {
+                return false;
+            }
+
+            var detectedSerials = ExtractDetectedSerials(response);
+            return detectedSerials.Any(serial => string.Equals(serial, normalizedTarget, StringComparison.OrdinalIgnoreCase));
+        }
+
+        internal static bool ContainsForeignSerial(string response, string target)
+        {
+            if (string.IsNullOrWhiteSpace(response) || string.IsNullOrWhiteSpace(target))
+            {
+                return false;
+            }
+
+            var normalizedTarget = target.Trim().ToUpperInvariant();
+            var detectedSerials = ExtractDetectedSerials(response);
+            return detectedSerials.Count > 0 &&
+                !detectedSerials.Any(serial => string.Equals(serial, normalizedTarget, StringComparison.OrdinalIgnoreCase));
         }
 
         internal static string FormatNumericPayload(double value)
@@ -395,6 +492,60 @@ namespace Vigitemp_Serveur.sensors
 
             return int.TryParse(raw.Trim(), NumberStyles.Integer, CultureInfo.InvariantCulture, out var parsed)
                 ? (int?)parsed
+                : null;
+        }
+
+        private static int? TryExtractRoundedIntLineValue(string response, string key)
+        {
+            var value = TryExtractDoubleLineValue(response, key);
+            return value.HasValue
+                ? (int?)Math.Max(0, (int)Math.Round(value.Value, MidpointRounding.AwayFromZero))
+                : null;
+        }
+
+        private static double? TryExtractDoubleLineValue(string response, string key)
+        {
+            var raw = TryExtractLineValue(response, key);
+            if (string.IsNullOrWhiteSpace(raw))
+            {
+                return null;
+            }
+
+            return double.TryParse(
+                raw.Trim().Replace(',', '.'),
+                NumberStyles.Float | NumberStyles.AllowLeadingSign,
+                CultureInfo.InvariantCulture,
+                out var parsed)
+                ? (double?)parsed
+                : null;
+        }
+
+        private static double? TryExtractCompactNumeric(string response, char suffix)
+        {
+            if (string.IsNullOrWhiteSpace(response))
+            {
+                return null;
+            }
+
+            var pattern = @"(-?\d+(?:[.,]\d+)?)" + Regex.Escape(suffix.ToString());
+            var matches = Regex.Matches(response, pattern, RegexOptions.IgnoreCase);
+            for (var i = matches.Count - 1; i >= 0; i--)
+            {
+                var candidate = matches[i].Groups[1].Value.Replace(',', '.');
+                if (double.TryParse(candidate, NumberStyles.Float | NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture, out var parsed))
+                {
+                    return parsed;
+                }
+            }
+
+            return null;
+        }
+
+        private static int? TryExtractCompactInt(string response, char suffix)
+        {
+            var value = TryExtractCompactNumeric(response, suffix);
+            return value.HasValue
+                ? (int?)Math.Max(0, (int)Math.Round(value.Value, MidpointRounding.AwayFromZero))
                 : null;
         }
 

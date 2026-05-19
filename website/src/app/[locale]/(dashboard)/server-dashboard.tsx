@@ -24,12 +24,13 @@ import {
 
 
 import { getServerAuthenticatedUserId } from "@/lib/server-auth"
+import { getCompatEnv } from "@/lib/vigisensys-compat"
 
 
 
 
 
-const shouldSkipDbOnBuild = process.env.VIGITEMP_SKIP_DB_ON_BUILD === "1";
+const shouldSkipDbOnBuild = getCompatEnv("VIGISENSYS_SKIP_DB_ON_BUILD", "VIGITEMP_SKIP_DB_ON_BUILD") === "1";
 
 
 

@@ -1,6 +1,7 @@
 import fs from "fs/promises"
 import path from "path"
 import { randomUUID } from "crypto"
+import { getCompatEnv } from "@/lib/vigisensys-compat"
 
 export type RequestErrorEntry = {
   id: string
@@ -18,13 +19,14 @@ export type RequestErrorEntry = {
 }
 
 function getLogsDir() {
-  if (process.env.VIGITEMP_LOGS_DIR) return process.env.VIGITEMP_LOGS_DIR
+  const configured = getCompatEnv("VIGISENSYS_LOGS_DIR", "VIGITEMP_LOGS_DIR")
+  if (configured) return configured
   if (process.env.NODE_ENV === "production") return path.join(process.cwd(), "logs")
   return path.join(process.cwd(), "..", "logs")
 }
 
 function getStorePath() {
-  return process.env.VIGITEMP_REQUEST_ERRORS_PATH || path.join(getLogsDir(), "request-errors.jsonl")
+  return getCompatEnv("VIGISENSYS_REQUEST_ERRORS_PATH", "VIGITEMP_REQUEST_ERRORS_PATH") || path.join(getLogsDir(), "request-errors.jsonl")
 }
 
 async function ensureStoreDirectory() {

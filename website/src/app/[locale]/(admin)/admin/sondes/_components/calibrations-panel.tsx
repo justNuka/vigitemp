@@ -24,6 +24,7 @@ export type CalibrationRow = {
   Valide: Date | null;
   Operateur: string | null;
   Incertitude: string | null;
+  Nom_Etalonnage?: string | null;
 };
 
 type CalibrationsPanelProps = {
@@ -147,6 +148,11 @@ export function CalibrationsPanel({
   };
 
   const columns: ColumnDef<CalibrationRow>[] = [
+    {
+      accessorKey: 'Nom_Etalonnage',
+      header: t('panels.calibrations.columns.name'),
+      cell: ({ row }) => row.original.Nom_Etalonnage || '-',
+    },
     {
       accessorKey: 'Date_Heure_Etalonnage',
       header: t('panels.calibrations.columns.date'),

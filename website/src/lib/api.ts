@@ -1,5 +1,5 @@
 /**
- * API Client for Vigitemp
+ * API Client for VigiSensys
  *
  * Centralized API calls using fetch for Next.js API Routes.
  *

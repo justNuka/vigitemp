@@ -215,7 +215,9 @@ namespace Vigitemp_Serveur
             var payload = ReadJson(request);
             var testRequest = ParseSensorTestRequest(payload);
             var result = ExecuteSensorTest(testRequest);
-            WriteJson(response, result.Success ? 200 : 400, new { ok = result.Success, data = result, message = result.Error });
+            // A sensor test can fail normally (busy COM port, no response, echo only).
+            // Keep these as payload-level failures so the web hotline can always clear its pending state.
+            WriteJson(response, 200, new { ok = result.Success, data = result, message = result.Error });
         }
 
 
@@ -312,7 +314,7 @@ namespace Vigitemp_Serveur
                         var idLieu = database.getIDLieuBySerialNumber(request.Serial);
                         if (idLieu <= 0)
                         {
-                            result.Error = "Sonde introuvable dans la base et aucun port manuel n'a ete fourni.";
+                            result.Error = "Sonde introuvable dans la base et aucun port manuel n'a été fourni.";
                             result.Success = false;
                             LogSensorTestResult(result);
                             return result;
@@ -327,7 +329,7 @@ namespace Vigitemp_Serveur
 
                 if (string.IsNullOrWhiteSpace(result.Port))
                 {
-                    result.Error = "Port serie introuvable pour cette sonde.";
+                    result.Error = "Port série introuvable pour cette sonde.";
                 }
                 else if (!string.Equals(request.SensorType, "GSP", StringComparison.OrdinalIgnoreCase))
                 {
@@ -374,22 +376,28 @@ namespace Vigitemp_Serveur
             var mutexAcquired = false;
             try
             {
-                namedMutex = new Mutex(false, BuildPortMutexName(portName));
+                var mutexName = BuildPortMutexName(portName);
+                namedMutex = new Mutex(false, mutexName);
+                VigitempServeur.Log($"Hotline sensor-test port-lock waiting: port={portName}; mutex={mutexName}; serial={request.Serial}; action={request.Action}");
                 try
                 {
-                    mutexAcquired = namedMutex.WaitOne(TimeSpan.FromMinutes(5));
+                    var lockTimeoutMs = GetIntSetting("VigiSensys.Hotline.PortLockTimeoutMs", GetIntSetting("Vigitemp.Hotline.PortLockTimeoutMs", 5000));
+                    mutexAcquired = namedMutex.WaitOne(TimeSpan.FromMilliseconds(Math.Max(1000, lockTimeoutMs)));
                 }
                 catch (AbandonedMutexException)
                 {
                     mutexAcquired = true;
+                    VigitempServeur.Log($"Hotline sensor-test port-lock abandoned-acquired: port={portName}; serial={request.Serial}; action={request.Action}");
                 }
 
                 if (!mutexAcquired)
                 {
-                    result.Error = "Port serie occupe, impossible d'obtenir le verrou dans le delai imparti.";
+                    VigitempServeur.Log($"Hotline sensor-test port-lock timeout: port={portName}; serial={request.Serial}; action={request.Action}");
+                    result.Error = "Port série occupé, impossible d'obtenir le verrou dans le délai imparti.";
                     return;
                 }
 
+                VigitempServeur.Log($"Hotline sensor-test port-lock acquired: port={portName}; serial={request.Serial}; action={request.Action}");
                 using (var port = CreatePort(portName, request))
                 {
                     port.Open();
@@ -481,11 +489,11 @@ namespace Vigitemp_Serveur
                         }
                         else if (IsCommandEchoOnly(response, gsp.RawCommand))
                         {
-                            result.Error = "Reponse recue mais elle correspond uniquement a un echo de la commande.";
+                            result.Error = "Réponse reçue mais elle correspond uniquement à un écho de la commande.";
                         }
                         else if (!string.IsNullOrWhiteSpace(response))
                         {
-                            result.Error = "Reponse recue mais aucune valeur exploitable pour la sonde demandee n'a ete detectee.";
+                            result.Error = "Réponse reçue mais aucune valeur exploitable pour la sonde demandee n'a été detectée.";
                         }
                         return;
                     }
@@ -521,6 +529,7 @@ namespace Vigitemp_Serveur
                     try
                     {
                         namedMutex.ReleaseMutex();
+                        VigitempServeur.Log($"Hotline sensor-test port-lock released: port={portName}; serial={request.Serial}; action={request.Action}");
                     }
                     catch (ApplicationException)
                     {
@@ -813,11 +822,19 @@ namespace Vigitemp_Serveur
             catch { return defaultValue; }
         }
 
+        private static int GetIntSetting(string key, int defaultValue)
+        {
+            var rawValue = GetSetting(key, string.Empty);
+            return int.TryParse(rawValue, out var value) ? value : defaultValue;
+        }
+
         private static bool ValidateApiKey(HttpListenerRequest request)
         {
-            var expected = GetSetting("Vigitemp.Hotline.ApiKey", string.Empty);
+            var expected = GetSetting("VigiSensys.Hotline.ApiKey", GetSetting("Vigitemp.Hotline.ApiKey", string.Empty));
             if (string.IsNullOrWhiteSpace(expected)) return true;
-            var provided = request.Headers["x-vigitemp-hotline-key"];
+            var provided =
+                request.Headers["x-vigisensys-hotline-key"] ??
+                request.Headers["x-vigitemp-hotline-key"];
             return string.Equals(expected, provided, StringComparison.Ordinal);
         }
 

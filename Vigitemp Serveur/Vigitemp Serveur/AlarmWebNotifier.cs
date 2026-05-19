@@ -13,17 +13,21 @@ namespace Vigitemp_Serveur
         private static readonly HttpClient _http = new HttpClient { Timeout = TimeSpan.FromSeconds(10) };
         private static DateTime _monthlyStatsPauseUntilUtc = DateTime.MinValue;
 
-        private static string BaseUrl => ConfigurationManager.AppSettings["Vigi.WebsiteBaseUrl"];
-        private static string Secret => ConfigurationManager.AppSettings["Vigi.AlarmDispatchSecret"];
+        private static string BaseUrl =>
+            ConfigurationManager.AppSettings["VigiSensys.WebsiteBaseUrl"] ??
+            ConfigurationManager.AppSettings["Vigi.WebsiteBaseUrl"];
+        private static string Secret =>
+            ConfigurationManager.AppSettings["VigiSensys.AlarmDispatchSecret"] ??
+            ConfigurationManager.AppSettings["Vigi.AlarmDispatchSecret"];
 
         public static void ValidateConfig()
         {
-            var baseUrl = ConfigurationManager.AppSettings["Vigi.WebsiteBaseUrl"];
-            var secret = ConfigurationManager.AppSettings["Vigi.AlarmDispatchSecret"];
+            var baseUrl = BaseUrl;
+            var secret = Secret;
 
             if (string.IsNullOrWhiteSpace(baseUrl))
             {
-                VigitempServeur.Log("WARNING AlarmWebNotifier: Vigi.WebsiteBaseUrl non configuré dans App.config. Aucune notification d'alarme ne sera envoyée aux agents.");
+                VigitempServeur.Log("WARNING AlarmWebNotifier: Vigi.WebsiteBaseUrl non configurÃ© dans App.config. Aucune notification d'alarme ne sera envoyÃ©e aux agents.");
             }
             else
             {
@@ -32,11 +36,11 @@ namespace Vigitemp_Serveur
 
             if (string.IsNullOrWhiteSpace(secret))
             {
-                VigitempServeur.Log("WARNING AlarmWebNotifier: Vigi.AlarmDispatchSecret non configuré dans App.config. Les requêtes seront rejetées avec 401.");
+                VigitempServeur.Log("WARNING AlarmWebNotifier: Vigi.AlarmDispatchSecret non configurÃ© dans App.config. Les requÃªtes seront rejetÃ©es avec 401.");
             }
             else
             {
-                VigitempServeur.Log("AlarmWebNotifier: AlarmDispatchSecret configuré.");
+                VigitempServeur.Log("AlarmWebNotifier: AlarmDispatchSecret configurÃ©.");
             }
         }
 
@@ -76,7 +80,7 @@ namespace Vigitemp_Serveur
                                 "}";
 
                             var req = new HttpRequestMessage(HttpMethod.Post, url);
-                            req.Headers.Add("x-vigitemp-secret", Secret);
+                            AddDispatchSecretHeaders(req);
                             req.Content = new StringContent(payload, Encoding.UTF8, "application/json");
 
                             VigitempServeur.Log(
@@ -152,7 +156,7 @@ namespace Vigitemp_Serveur
                                 "}";
 
                             var req = new HttpRequestMessage(HttpMethod.Post, url);
-                            req.Headers.Add("x-vigitemp-secret", Secret);
+                            AddDispatchSecretHeaders(req);
                             req.Content = new StringContent(payload, Encoding.UTF8, "application/json");
 
                             var response = await _http.SendAsync(req);
@@ -220,7 +224,7 @@ namespace Vigitemp_Serveur
                 payloadBuilder.Append("}");
 
                 var req = new HttpRequestMessage(HttpMethod.Post, url);
-                req.Headers.Add("x-vigitemp-secret", Secret);
+                AddDispatchSecretHeaders(req);
                 req.Content = new StringContent(payloadBuilder.ToString(), Encoding.UTF8, "application/json");
 
                 VigitempServeur.Log(
@@ -285,7 +289,7 @@ namespace Vigitemp_Serveur
                     "}";
 
                 var req = new HttpRequestMessage(HttpMethod.Post, url);
-                req.Headers.Add("x-vigitemp-secret", Secret);
+                AddDispatchSecretHeaders(req);
                 req.Content = new StringContent(payload, Encoding.UTF8, "application/json");
 
                 VigitempServeur.Log(
@@ -329,7 +333,7 @@ namespace Vigitemp_Serveur
 
                 var url = Combine(BaseUrl, "/api/statistiques/recap-mensuel/send");
                 var req = new HttpRequestMessage(HttpMethod.Get, url);
-                req.Headers.Add("x-vigitemp-secret", Secret);
+                AddDispatchSecretHeaders(req);
                 VigitempServeur.Log("AlarmWebNotifier: trigger recap mensuel stats url=" + url);
 
                 using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(8)))
@@ -370,6 +374,12 @@ namespace Vigitemp_Serveur
                 .Replace("\"", "\\\"")
                 .Replace("\r", "\\r")
                 .Replace("\n", "\\n");
+        }
+
+        private static void AddDispatchSecretHeaders(HttpRequestMessage req)
+        {
+            req.Headers.Add("x-vigisensys-secret", Secret);
+            req.Headers.Add("x-vigitemp-secret", Secret);
         }
 
         private static string Combine(string baseUrl, string path)

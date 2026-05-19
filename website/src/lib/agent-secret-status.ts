@@ -1,6 +1,8 @@
 import fs from "fs/promises"
 import path from "path"
 import crypto from "crypto"
+import { getCompatEnv } from "@/lib/vigisensys-compat"
+import { appDataPath, firstExistingPath, legacyAppDataPath } from "@/lib/vigisensys-paths"
 
 export type AgentSecretStatus = {
   status:
@@ -18,17 +20,16 @@ export type AgentSecretStatus = {
   message: string
 }
 
-const PROGRAM_DATA = process.env.ProgramData || "C:\\ProgramData"
-const LICENSE_DIR = path.join(PROGRAM_DATA, "Vigitemp", "licenses")
-const DEFAULT_LICENSE_PATH = path.join(PROGRAM_DATA, "Vigitemp", "license.vtlic")
-const DEFAULT_PUBLIC_KEY_PATH = path.join(
-  PROGRAM_DATA,
-  "Vigitemp",
-  "license_keys",
-  "public_key.pem"
-)
-const FALLBACK_PUBLIC_KEY_PATH = path.join(PROGRAM_DATA, "Vigitemp", "public_key.pem")
-const DEFAULT_PRIVATE_KEY_PATH = path.join(PROGRAM_DATA, "Vigitemp", "agent_secret_private.pem")
+const LICENSE_DIR = appDataPath("licenses")
+const LEGACY_LICENSE_DIR = legacyAppDataPath("licenses")
+const DEFAULT_LICENSE_PATH = appDataPath("license.vtlic")
+const LEGACY_DEFAULT_LICENSE_PATH = legacyAppDataPath("license.vtlic")
+const DEFAULT_PUBLIC_KEY_PATH = appDataPath("license_keys", "public_key.pem")
+const LEGACY_DEFAULT_PUBLIC_KEY_PATH = legacyAppDataPath("license_keys", "public_key.pem")
+const FALLBACK_PUBLIC_KEY_PATH = appDataPath("public_key.pem")
+const LEGACY_FALLBACK_PUBLIC_KEY_PATH = legacyAppDataPath("public_key.pem")
+const DEFAULT_PRIVATE_KEY_PATH = appDataPath("agent_secret_private.pem")
+const LEGACY_DEFAULT_PRIVATE_KEY_PATH = legacyAppDataPath("agent_secret_private.pem")
 
 function base64UrlToBuffer(input: string) {
   let base64 = input.replace(/-/g, "+").replace(/_/g, "/")
@@ -46,9 +47,8 @@ function base64UrlToBuffer(input: string) {
 }
 
 async function resolveLicensePath() {
-  if (process.env.VIGITEMP_LICENSE_PATH) {
-    return process.env.VIGITEMP_LICENSE_PATH
-  }
+  const configured = getCompatEnv("VIGISENSYS_LICENSE_PATH", "VIGITEMP_LICENSE_PATH")
+  if (configured) return configured
 
   try {
     const entries = await fs.readdir(LICENSE_DIR, { withFileTypes: true })
@@ -60,27 +60,33 @@ async function resolveLicensePath() {
     // ignore
   }
 
-  return DEFAULT_LICENSE_PATH
+  try {
+    const entries = await fs.readdir(LEGACY_LICENSE_DIR, { withFileTypes: true })
+    const found = entries.find((entry) => entry.isFile() && entry.name.toLowerCase().endsWith(".vtlic"))
+    if (found) {
+      return path.join(LEGACY_LICENSE_DIR, found.name)
+    }
+  } catch {
+    // ignore
+  }
+
+  return firstExistingPath([DEFAULT_LICENSE_PATH, LEGACY_DEFAULT_LICENSE_PATH], DEFAULT_LICENSE_PATH)
 }
 
 async function resolvePublicKeyPath() {
-  if (process.env.VIGITEMP_LICENSE_PUBLIC_KEY_PATH) {
-    return process.env.VIGITEMP_LICENSE_PUBLIC_KEY_PATH
-  }
+  const configured = getCompatEnv("VIGISENSYS_LICENSE_PUBLIC_KEY_PATH", "VIGITEMP_LICENSE_PUBLIC_KEY_PATH")
+  if (configured) return configured
 
-  try {
-    await fs.access(DEFAULT_PUBLIC_KEY_PATH)
-    return DEFAULT_PUBLIC_KEY_PATH
-  } catch {
-    return FALLBACK_PUBLIC_KEY_PATH
-  }
+  return firstExistingPath(
+    [DEFAULT_PUBLIC_KEY_PATH, LEGACY_DEFAULT_PUBLIC_KEY_PATH, FALLBACK_PUBLIC_KEY_PATH, LEGACY_FALLBACK_PUBLIC_KEY_PATH],
+    DEFAULT_PUBLIC_KEY_PATH
+  )
 }
 
 async function resolvePrivateKeyPath() {
-  if (process.env.VIGITEMP_AGENT_SECRET_PRIVATE_KEY_PATH) {
-    return process.env.VIGITEMP_AGENT_SECRET_PRIVATE_KEY_PATH
-  }
-  return DEFAULT_PRIVATE_KEY_PATH
+  const configured = getCompatEnv("VIGISENSYS_AGENT_SECRET_PRIVATE_KEY_PATH", "VIGITEMP_AGENT_SECRET_PRIVATE_KEY_PATH")
+  if (configured) return configured
+  return firstExistingPath([DEFAULT_PRIVATE_KEY_PATH, LEGACY_DEFAULT_PRIVATE_KEY_PATH], DEFAULT_PRIVATE_KEY_PATH)
 }
 
 export async function getAgentSecretStatus(): Promise<AgentSecretStatus> {
