@@ -154,11 +154,11 @@ export const GET = withAuthLogging(async (request: NextRequest, ctx) => {
         })
       : []
 
-    const alarmTypeByLieu = new Map<number, "H" | "B" | "N" | "S">()
+    const alarmTypeByLieu = new Map<number, "H" | "B" | "N" | "S" | "M">()
     const alarmIdByLieu = new Map<number, number>()
     for (const alarm of activeAlarms) {
       if (!alarm.Id_Lieu) continue
-      const type = alarm.Type as "H" | "B" | "N" | "S" | null
+      const type = alarm.Type as "H" | "B" | "N" | "S" | "M" | null
       if (!type) continue
       if (!alarmTypeByLieu.has(alarm.Id_Lieu)) {
         alarmTypeByLieu.set(alarm.Id_Lieu, type)
@@ -258,7 +258,7 @@ export const GET = withAuthLogging(async (request: NextRequest, ctx) => {
           alarmTypeByLieu.get(location.Id_Lieu) ?? (hasEndedFlag ? ("T" as const) : null)
         const alarmId = alarmIdByLieu.get(location.Id_Lieu) ?? null
         const isCriticalByType = alarmType === "H" || alarmType === "B"
-        const isTechnical = alarmType === "N" || alarmType === "S"
+        const isTechnical = alarmType === "N" || alarmType === "S" || alarmType === "M"
         const isCritical = isCriticalByType || location.Est_Lieu_En_Alarme === 1
         const isEnded = !isCritical && !isTechnical && hasEndedFlag
         const isWarning = !isCritical && !isTechnical && !isEnded && location.Est_Lieu_En_Pre_Alarme === 1

@@ -227,6 +227,7 @@
       "type_high": "High threshold",
       "type_low": "Low threshold",
       "type_no_response": "No response",
+      "type_module": "Module issue",
       "type_ended": "Ended alarm",
       "type_other": "Other",
       "resolved": "Alarms to acknowledge",
@@ -253,6 +254,7 @@
       "low": "Low",
       "no_response": "No response",
       "sector": "Power / mains",
+      "module": "Module issue",
       "ended": "Ended",
       "site": "Site",
       "type": "Type",
@@ -311,6 +313,7 @@
       "type_low": "Low threshold",
       "type_no_response": "No response",
       "type_sector": "Power / mains",
+      "type_module": "Module issue",
       "type_ended": "Ended alarm",
       "type_other": "Other",
       "last_value_label": "Last value",
@@ -354,6 +357,7 @@
     "messages": {
       "no_response": "No-response alarm",
       "sector": "Power outage alarm",
+      "module": "Module issue",
       "high": "High alarm - {value} C",
       "low": "Low alarm - {value} C",
       "temperature": "Temperature alarm - {value} C"
@@ -407,7 +411,8 @@
         "high": "High threshold",
         "low": "Low threshold",
         "no_response": "No response",
-        "sector": "Power / mains"
+        "sector": "Power / mains",
+        "module": "Module issue"
       }
     }
   },
@@ -3889,6 +3894,7 @@
       "low": "Low alarm",
       "no_response": "No response",
       "sector": "Power / mains",
+      "module": "Module issue",
       "ended": "Alarm ended"
     },
     "surveillance": {
@@ -4187,6 +4193,7 @@
       "low": "Low",
       "no_response": "No response",
       "sector": "Power / mains",
+      "module": "Module issue",
       "all_sites": "All sites",
       "all_locations": "All locations",
       "site_placeholder": "Filter by site",
@@ -4250,6 +4257,7 @@
         "high": "High alarm",
         "low": "Low alarm",
         "sector": "Power / mains",
+        "module": "Module issue",
         "default": "Alarm"
       },
       "value": {

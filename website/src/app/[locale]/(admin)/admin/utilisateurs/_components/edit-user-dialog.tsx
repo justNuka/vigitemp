@@ -102,16 +102,20 @@ export function EditUserDialog({
   const hasEditExpiryDate = useWatch({ control: editForm.control, name: "hasExpiryDate" });
   const didInitRef = useRef(false);
 
-  const { data: assignedSites, isLoading: assignedSitesLoading } = useQuery({
+  const { data: assignedSites, isLoading: assignedSitesLoading, isFetching: assignedSitesFetching } = useQuery({
     queryKey: ["user-sites", userId],
     queryFn: () => getJson<any[]>(`/api/utilisateurs/${userId}/sites`),
     enabled: Boolean(open && userId),
+    refetchOnMount: "always",
+    staleTime: 0,
   });
 
-  const { data: assignedGroups, isLoading: assignedGroupsLoading } = useQuery({
+  const { data: assignedGroups, isLoading: assignedGroupsLoading, isFetching: assignedGroupsFetching } = useQuery({
     queryKey: ["user-groups", userId],
     queryFn: () => getJson<any[]>(`/api/utilisateurs/${userId}/groupes`),
     enabled: Boolean(open && userId),
+    refetchOnMount: "always",
+    staleTime: 0,
   });
 
   const assignedSiteIds = useMemo(
@@ -139,7 +143,7 @@ export function EditUserDialog({
   useEffect(() => {
     if (!open || !user) return;
     if (didInitRef.current) return;
-    if (assignedSitesLoading || assignedGroupsLoading) return;
+    if (assignedSitesLoading || assignedGroupsLoading || assignedSitesFetching || assignedGroupsFetching) return;
 
     editForm.reset({
       ...getEditUserDefaults(user),
@@ -150,8 +154,10 @@ export function EditUserDialog({
   }, [
     assignedGroupIds,
     assignedGroupsLoading,
+    assignedGroupsFetching,
     assignedSiteIds,
     assignedSitesLoading,
+    assignedSitesFetching,
     editForm,
     open,
     user,

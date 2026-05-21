@@ -375,6 +375,8 @@ export const POST = withLogging(async (req: NextRequest) => {
             ? "Alarme basse"
             : alarm.Type === "N"
               ? "Non reponse"
+              : alarm.Type === "M"
+                ? "Probleme module"
               : isPowerAlarmType(alarm.Type)
                 ? "Coupure secteur"
                 : "Alarme"

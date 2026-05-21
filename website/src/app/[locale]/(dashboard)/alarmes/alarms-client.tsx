@@ -228,7 +228,7 @@ export function AlarmsClient({ alarms, statusFilter, initialLocationId = null, s
       size: 60,
       cell: ({ row }) => {
         const type = row.getValue("type") as AlarmRowType;
-        if (type === "no-response") {
+        if (type === "no-response" || type === "module") {
           return <div className="p-1.5 rounded-md w-fit bg-black/10"><WifiOff className="h-4 w-4 text-black" /></div>;
         }
         if (type === "sector") {
@@ -252,7 +252,7 @@ export function AlarmsClient({ alarms, statusFilter, initialLocationId = null, s
       header: () => <div className="text-right">{t("table.columns.triggered_value")}</div>,
       cell: ({ row }) => {
         const alarm = row.original;
-        const value = alarm.type === "no-response" || alarm.type === "sector" ? null : (alarm.value ?? alarm.sensor.currentValue ?? null);
+        const value = alarm.type === "no-response" || alarm.type === "sector" || alarm.type === "module" ? null : (alarm.value ?? alarm.sensor.currentValue ?? null);
         return <div className="text-right font-mono font-medium">{value !== null ? `${formatMeasureValue(value)} ${alarm.sensor.unit}` : "-"}</div>;
       },
     },
@@ -355,6 +355,7 @@ export function AlarmsClient({ alarms, statusFilter, initialLocationId = null, s
     if (selectedAlarm.type === "low") return t("dialog.type_low");
     if (selectedAlarm.type === "no-response") return t("dialog.type_no_response");
     if (selectedAlarm.type === "sector") return t("dialog.type_sector");
+    if (selectedAlarm.type === "module") return t("dialog.type_module");
     return t("dialog.type_other");
   }, [selectedAlarm, t]);
 

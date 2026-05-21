@@ -15,6 +15,8 @@ function mapAlarmType(type: string | null | undefined) {
       return "low" as const
     case "N":
       return "no-response" as const
+    case "M":
+      return "module" as const
     case "A":
     case "S":
       return "sector" as const
@@ -78,7 +80,9 @@ export const GET = withAuthLogging(
         locationName: alarm.t_lieu?.Nom_Lieu || null,
         sensorName: alarm.t_lieu?.Sonde_Numero_Serie || alarm.t_lieu?.Nom_Lieu || null,
         type: mapAlarmType(alarm.Type),
-        currentValue: alarm.t_lieu?.Derniere_Valeur ?? alarm.Valeur ?? null,
+        currentValue: alarm.Type === "N" || alarm.Type === "M" || alarm.Type === "A" || alarm.Type === "S"
+          ? null
+          : alarm.t_lieu?.Derniere_Valeur ?? alarm.Valeur ?? null,
         value: alarm.Valeur ?? null,
         unit: alarm.Unite ?? alarm.t_lieu?.Derniere_Unite ?? null,
         minThreshold: hasConfiguredThresholds

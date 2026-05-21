@@ -39,7 +39,7 @@ interface MonitoringCardProps {
   siteName: string
   groupName: string
   status: SensorStatus
-  alarmType?: 'H' | 'B' | 'N' | 'S' | 'T' | null
+  alarmType?: 'H' | 'B' | 'N' | 'S' | 'M' | 'T' | null
   alarmDisabled: boolean
   alarmDisabledUntil: Date | string | null
   alarmDelayMinutes: number | null
@@ -125,6 +125,7 @@ export default function MonitoringCard({
   const { data, isLoading, reload, meta } = useLieuMeasurements(idLieu, {
     enabled: shouldLoadCardMeasurements,
     includeMeta: true,
+    source: "mesures",
     includeNullNonResponse: showNullNonResponse,
   })
 
@@ -137,7 +138,7 @@ export default function MonitoringCard({
   }, [lastMeasurement])
 
   const previewData = useMemo(() => {
-    if (currentValue === null || !liveMeasurementDate) return orderedData
+    if (!liveMeasurementDate) return orderedData
     const lastPoint = orderedData[orderedData.length - 1]
     const lastPointDate = lastPoint?.DateHeureMesureIso ? parseDbDateTime(lastPoint.DateHeureMesureIso) : null
 
@@ -152,6 +153,11 @@ export default function MonitoringCard({
     }).format(liveMeasurementDate)
 
     const dateLabel = formatDbDateTime(liveMeasurementDate, { withSeconds: false })
+    const isLiveNullNonResponse = currentValue === null && (alarmType === "N" || alarmType === "M" || status === "technical")
+
+    if (currentValue === null && !isLiveNullNonResponse) {
+      return orderedData
+    }
 
     return [
       ...orderedData,
@@ -168,11 +174,11 @@ export default function MonitoringCard({
         Consigne_Inf: template?.Consigne_Inf ?? null,
         SondeNumeroSerie: template?.SondeNumeroSerie ?? sondeNumeroSerie,
         Frequence: template?.Frequence ?? 15,
-        Est_Valeur_Null: false,
+        Est_Valeur_Null: isLiveNullNonResponse,
         Etat_Alarme: template?.Etat_Alarme ?? 0,
       },
     ]
-  }, [currentValue, idLieu, liveMeasurementDate, localeTag, orderedData, sondeNumeroSerie])
+  }, [alarmType, currentValue, idLieu, liveMeasurementDate, localeTag, orderedData, sondeNumeroSerie, status])
 
   const summary = useMemo(() => getMeasureSummary(previewData), [previewData])
   const { consigneSup, consigneInf, consigne, unite, frequence, lastMeasureText, lastDateTime, decimals, lastValue } = summary
@@ -438,6 +444,8 @@ export default function MonitoringCard({
                 ? 'no-response'
                 : effectiveAlarmType === 'S'
                   ? 'sector'
+                  : effectiveAlarmType === 'M'
+                    ? 'module'
                 : effectiveStatus === 'ended' || effectiveAlarmType === 'T'
                   ? 'ended'
                   : undefined,

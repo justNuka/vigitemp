@@ -2,7 +2,7 @@ import type { AlarmWithDetails } from "@/lib/api"
 
 export interface AlarmRow {
   id: string
-  type: "high" | "low" | "no-response" | "sector" | "ended"
+  type: "high" | "low" | "no-response" | "sector" | "module" | "ended"
   location: AlarmWithDetails["location"]
   sensor: AlarmWithDetails["sensor"]
   value: number | null

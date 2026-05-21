@@ -41,6 +41,8 @@ function normalizeAlarmType(type: string | null | undefined) {
     case "N":
     case "T":
       return "NO_RESPONSE"
+    case "M":
+      return "MODULE"
     default:
       return type?.trim() || null
   }

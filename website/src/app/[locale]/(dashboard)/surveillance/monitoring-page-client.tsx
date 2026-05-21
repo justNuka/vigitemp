@@ -246,6 +246,7 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
   const performRefresh = useCallback(
     async (silent = false) => {
       await Promise.all([forceRefreshActive(), forceRefreshDisabled()]);
+      window.dispatchEvent(new CustomEvent("vigitemp:measurements-refresh"));
       if (!silent) {
         toast.success(t("refresh.refreshed"));
       }

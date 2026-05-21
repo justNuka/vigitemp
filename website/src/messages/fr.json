@@ -589,6 +589,7 @@
       "low": "Bas",
       "no_response": "Non réponse",
       "sector": "Secteur / alimentation",
+      "module": "Problème module",
       "ended": "Terminée",
       "site": "Site",
       "type": "Type",
@@ -647,6 +648,7 @@
       "type_low": "Dépassement bas",
       "type_no_response": "Non réponse",
       "type_sector": "Secteur / alimentation",
+      "type_module": "Problème module",
       "type_other": "Autre",
       "last_value_label": "Dernière valeur",
       "start_label": "Début alarme",
@@ -690,6 +692,7 @@
     "messages": {
       "no_response": "Alarme non réponse",
       "sector": "Alarme coupure secteur",
+      "module": "Problème module",
       "high": "Alarme haute - {value} C",
       "low": "Alarme basse - {value} C",
       "temperature": "Alarme température - {value} C"
@@ -743,7 +746,8 @@
         "high": "Dépassement haut",
         "low": "Dépassement bas",
         "no_response": "Non réponse",
-        "sector": "Secteur / alimentation"
+        "sector": "Secteur / alimentation",
+        "module": "Problème module"
       }
     }
   },
@@ -3903,6 +3907,7 @@
       "low": "Alarme basse",
       "no_response": "Non réponse",
       "sector": "Secteur / alimentation",
+      "module": "Problème module",
       "ended": "Alarme terminée"
     },
     "surveillance": {
@@ -4200,6 +4205,7 @@
       "low": "Bas",
       "no_response": "Non réponse",
       "sector": "Secteur / alimentation",
+      "module": "Problème module",
       "all_sites": "Tous les sites",
       "all_locations": "Tous les lieux",
       "site_placeholder": "Filtrer par site",
@@ -4263,6 +4269,7 @@
         "high": "Alarme haute",
         "low": "Alarme basse",
         "sector": "Secteur / alimentation",
+        "module": "Problème module",
         "default": "Alarme"
       },
       "value": {

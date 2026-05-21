@@ -28,6 +28,7 @@ namespace Vigitemp_Serveur
         bool setLieuInfosModifiees(int idLieu, bool value);
         bool setNonResponseAlarm(int idLieu, string sondeNumeroSerie, bool isActive);
         bool setPowerAlarm(int idLieu, string sondeNumeroSerie, bool isActive);
+        bool setModuleAlarm(int idLieu, string sondeNumeroSerie, bool isActive);
         string getParameterValue(string section, string motCle);
         AlarmSummary getActiveAlarmSummary(int idLieu);
         bool hasActiveAcknowledgedAlarm(int idLieu, string type);

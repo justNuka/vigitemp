@@ -94,8 +94,16 @@ export function useLieuMeasurements(
       load(true)
     }
 
+    const handleRefreshAll = () => {
+      load(true)
+    }
+
     window.addEventListener("vigitemp:lieu-updated", handleUpdate)
-    return () => window.removeEventListener("vigitemp:lieu-updated", handleUpdate)
+    window.addEventListener("vigitemp:measurements-refresh", handleRefreshAll)
+    return () => {
+      window.removeEventListener("vigitemp:lieu-updated", handleUpdate)
+      window.removeEventListener("vigitemp:measurements-refresh", handleRefreshAll)
+    }
   }, [idLieu, listenForUpdates, load])
 
   return { data, isLoading, reload: load, meta }

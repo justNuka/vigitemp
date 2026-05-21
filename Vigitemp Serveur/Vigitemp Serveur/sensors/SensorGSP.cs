@@ -34,6 +34,8 @@ namespace Vigitemp_Serveur.sensors
             new ConcurrentDictionary<string, DrainState>(StringComparer.OrdinalIgnoreCase);
         private static readonly ConcurrentDictionary<string, DateTime> LastClockSyncAttemptUtcBySerial =
             new ConcurrentDictionary<string, DateTime>(StringComparer.OrdinalIgnoreCase);
+        private static readonly ConcurrentDictionary<string, DateTime> LastSuccessfulProbeDateTimeBySerial =
+            new ConcurrentDictionary<string, DateTime>(StringComparer.OrdinalIgnoreCase);
 
         private const int MemoBatchReadTimeoutMsShort = 10000;
         private const int MemoBatchReadTimeoutMsMedium = 30000;
@@ -48,7 +50,6 @@ namespace Vigitemp_Serveur.sensors
         private readonly bool _synchronizeConfiguration;
         private readonly string _commandTarget;
 
-        private DateTime? _lastSuccessfulProbeDateTime;
         private int? _lastBatteryPercent;
         private int? _lastRssi;
         private DateTime? _lastDateTimeCheckUtc;
@@ -87,6 +88,40 @@ namespace Vigitemp_Serveur.sensors
             return await ExecuteWithPortLockAsync(ReadCoreAsync);
         }
 
+        public async Task<bool> SynchronizeConfigurationOnlyAsync(bool fullConfiguration)
+        {
+            return await ExecuteWithPortLockAsync(async () =>
+            {
+                try
+                {
+                    pendingResults = true;
+                    await OpenPortWithRetryAsync();
+                    m_port.DiscardInBuffer();
+                    m_port.DiscardOutBuffer();
+                    VigitempServeur.Log($"[SONDE][CFG-JOB] type=GSP serial={m_sondeSerialNumber} port={m_comPort} status=port-open full={fullConfiguration}");
+
+                    return fullConfiguration
+                        ? await TrySynchronizeConfigurationAsync()
+                        : await TryVerifyAndSynchronizeRuntimeConfigurationAsync();
+                }
+                finally
+                {
+                    pendingResults = false;
+                    try
+                    {
+                        if (m_port != null && m_port.IsOpen)
+                        {
+                            m_port.Close();
+                        }
+                    }
+                    catch
+                    {
+                        // The port may already be disposed after a low-level serial recovery.
+                    }
+                }
+            });
+        }
+
         private async Task<bool> ReadCoreAsync()
         {
             try
@@ -109,7 +144,7 @@ namespace Vigitemp_Serveur.sensors
                 {
                     _consecutiveTimeouts++;
                     VigitempServeur.Log($"[SONDE][DONE] type=GSP serial={m_sondeSerialNumber} port={m_comPort} status=timeout consecutiveTimeouts={_consecutiveTimeouts}");
-                    HandleNoResponseAlarm(false, "timeout");
+                    HandleNoResponseAlarm(false, "timeout", insertNullMeasureImmediately: true);
                     return false;
                 }
 
@@ -120,7 +155,7 @@ namespace Vigitemp_Serveur.sensors
                 {
                     _consecutiveTimeouts++;
                     VigitempServeur.Log($"[SONDE][ERR] type=GSP serial={m_sondeSerialNumber} port={m_comPort} parse=temperature rawResponse={response}");
-                    HandleNoResponseAlarm(false, "parse");
+                    HandleNoResponseAlarm(false, "parse", insertNullMeasureImmediately: true);
                     return false;
                 }
 
@@ -130,7 +165,7 @@ namespace Vigitemp_Serveur.sensors
                     VigitempServeur.Log(
                         $"[SONDE][ERR] type=GSP serial={m_sondeSerialNumber} port={m_comPort} status=invalid-payload reason=zero-temperature temp={parsed.Temperature.Value.ToString(CultureInfo.InvariantCulture)} battery={(parsed.BatteryPercent.HasValue ? parsed.BatteryPercent.Value.ToString(CultureInfo.InvariantCulture) : "null")} rssi={(parsed.Rssi.HasValue ? parsed.Rssi.Value.ToString(CultureInfo.InvariantCulture) : "null")} rawResponse={TrimForLog(response)}");
                     VigitempServeur.Log($"[SONDE][DONE] type=GSP serial={m_sondeSerialNumber} port={m_comPort} status=invalid-payload consecutiveTimeouts={_consecutiveTimeouts}");
-                    HandleNoResponseAlarm(false, "invalid-payload");
+                    HandleNoResponseAlarm(false, "invalid-payload", insertNullMeasureImmediately: true);
                     return false;
                 }
 
@@ -165,14 +200,14 @@ namespace Vigitemp_Serveur.sensors
                 _consecutiveTimeouts++;
                 VigitempServeur.Log($"[SONDE][PORT-RECOVER] type=GSP serial={m_sondeSerialNumber} port={m_comPort} reason=semaphore-timeout action=dispose-port error={ex.Message}");
                 DisposePort();
-                HandleNoResponseAlarm(false, "serial-semaphore-timeout");
+                HandleNoResponseAlarm(false, "serial-semaphore-timeout", insertNullMeasureImmediately: true);
                 return false;
             }
             catch (Exception ex)
             {
                 _consecutiveTimeouts++;
                 VigitempServeur.Log($"[SONDE][ERR] type=GSP serial={m_sondeSerialNumber} port={m_comPort} error={ex}");
-                HandleNoResponseAlarm(false, "exception");
+                HandleNoResponseAlarm(false, "exception", insertNullMeasureImmediately: true);
                 return false;
             }
             finally
@@ -245,6 +280,7 @@ namespace Vigitemp_Serveur.sensors
                     return false;
                 }
 
+                var successCount = 0;
                 foreach (var command in commands)
                 {
                     var response = await SendRequestAndReadWithTimeoutAsync(command.Key, command.Value, allowEmptyResponse: true, ConfigurationResponseSilenceMs, ConfigurationReadTimeoutMs);
@@ -252,14 +288,18 @@ namespace Vigitemp_Serveur.sensors
                     {
                         VigitempServeur.Log(
                             $"[SONDE][CFG] type=GSP serial={m_sondeSerialNumber} command={command.Key} status=ack-mismatch response={(string.IsNullOrWhiteSpace(response) ? "<empty>" : TrimForLog(response))}");
-                        return false;
+                        await PurgePortUntilQuietAsync("post-config-command-failed");
+                        continue;
                     }
 
+                    successCount++;
                     await PurgePortUntilQuietAsync("post-config-command");
                 }
 
-                VigitempServeur.Log($"[SONDE][CFG] type=GSP serial={m_sondeSerialNumber} status=sent commands={commands.Count}");
-                return true;
+                var allCommandsSucceeded = successCount == commands.Count;
+                VigitempServeur.Log(
+                    $"[SONDE][CFG] type=GSP serial={m_sondeSerialNumber} status={(allCommandsSucceeded ? "sent" : "partial")} commands={commands.Count} success={successCount}");
+                return allCommandsSucceeded;
             }
             catch (Exception ex)
             {
@@ -429,7 +469,7 @@ namespace Vigitemp_Serveur.sensors
 
                 if (!GspProtocol.TryParseMemoResponse(response, _commandTarget, out var parsed))
                 {
-                    VigitempServeur.Log($"[SONDE][MEMO] type=GSP serial={m_sondeSerialNumber} port={m_comPort} status=parse-error count={safeCount} offset={safeOffset} raw={response}");
+                    VigitempServeur.Log($"[SONDE][MEMO] type=GSP serial={m_sondeSerialNumber} port={m_comPort} status=parse-error count={safeCount} offset={safeOffset} raw={TrimForLog(response)}");
                     return null;
                 }
 
@@ -730,15 +770,19 @@ namespace Vigitemp_Serveur.sensors
                 return;
             }
 
-            var previousProbeDateTime = _lastSuccessfulProbeDateTime;
-            _lastSuccessfulProbeDateTime = parsed.ProbeDateTime;
+            var serialKey = string.IsNullOrWhiteSpace(m_sondeSerialNumber)
+                ? _commandTarget
+                : m_sondeSerialNumber.Trim().ToUpperInvariant();
+            var currentProbeDateTime = parsed.ProbeDateTime.Value;
+            var hasPreviousProbeDateTime = LastSuccessfulProbeDateTimeBySerial.TryGetValue(serialKey, out var previousProbeDateTime);
+            LastSuccessfulProbeDateTimeBySerial[serialKey] = currentProbeDateTime;
 
-            if (!previousProbeDateTime.HasValue || _frequencySeconds <= 0)
+            if (!hasPreviousProbeDateTime || _frequencySeconds <= 0)
             {
                 return;
             }
 
-            var gapSeconds = (parsed.ProbeDateTime.Value - previousProbeDateTime.Value).TotalSeconds;
+            var gapSeconds = (currentProbeDateTime - previousProbeDateTime).TotalSeconds;
             if (gapSeconds <= 0)
             {
                 return;
@@ -749,8 +793,8 @@ namespace Vigitemp_Serveur.sensors
             {
                 var missingCount = Math.Max(1, (int)Math.Floor(gapSeconds / _frequencySeconds) - 1);
                 VigitempServeur.Log(
-                    $"[SONDE][GAP] type=GSP serial={m_sondeSerialNumber} previous={previousProbeDateTime.Value:O} current={parsed.ProbeDateTime.Value:O} expectedSec={_frequencySeconds} actualSec={Math.Round(gapSeconds, 0, MidpointRounding.AwayFromZero)} status=anomaly missingCount={missingCount}");
-                ths.EnqueueGspRecovery(m_sondeSerialNumber, previousProbeDateTime.Value, parsed.ProbeDateTime.Value, missingCount);
+                    $"[SONDE][GAP] type=GSP serial={m_sondeSerialNumber} previous={previousProbeDateTime:O} current={currentProbeDateTime:O} expectedSec={_frequencySeconds} actualSec={Math.Round(gapSeconds, 0, MidpointRounding.AwayFromZero)} status=anomaly missingCount={missingCount}");
+                ths.EnqueueGspRecovery(m_sondeSerialNumber, previousProbeDateTime, currentProbeDateTime, missingCount);
             }
         }
 

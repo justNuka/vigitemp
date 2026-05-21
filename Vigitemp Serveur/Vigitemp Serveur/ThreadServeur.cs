@@ -25,6 +25,10 @@ namespace Vigitemp_Serveur
             new ConcurrentDictionary<string, SemaphoreSlim>(StringComparer.OrdinalIgnoreCase);
         private readonly ConcurrentDictionary<string, GspMemoJob> _gspMemoJobs =
             new ConcurrentDictionary<string, GspMemoJob>(StringComparer.OrdinalIgnoreCase);
+        private readonly ConcurrentDictionary<string, DateTime> _nextProbeDueBySerial =
+            new ConcurrentDictionary<string, DateTime>(StringComparer.OrdinalIgnoreCase);
+        private readonly ConcurrentDictionary<string, ModuleFailureState> _moduleFailures =
+            new ConcurrentDictionary<string, ModuleFailureState>(StringComparer.OrdinalIgnoreCase);
         private List<SerialPort> list_SerialPort_open = new List<SerialPort>();
 
         private System.Timers.Timer _schedulerTimer;
@@ -39,6 +43,9 @@ namespace Vigitemp_Serveur
         private readonly bool _logSettingsCache = GetSettingBool("Vigitemp.Alarms.LogSettingsCache", true);
         private readonly int _schedulerTickMs = GetSettingInt("Vigitemp.Scheduler.TickMs", 5000);
         private readonly bool _logScheduler = GetSettingBool("Vigitemp.Scheduler.Log", true);
+        private readonly int _gspConfigFreeSlotMinSeconds = GetSettingInt("Vigitemp.Gsp.ConfigFreeSlotMinSeconds", 20);
+        private readonly int _gspMemoFreeSlotMinSeconds = GetSettingInt("Vigitemp.Gsp.MemoFreeSlotMinSeconds", 45);
+        private readonly int _gspMemoMaxBatchSize = GetSettingInt("Vigitemp.Gsp.MemoMaxBatchSize", 100);
         private readonly bool _logMetrologyDetailed = GetSettingBool("Vigitemp.Metrology.LogDetailed", false);
         private readonly bool _offsetDisabledForPack;
         private readonly int _alarmPollSeconds = GetSettingInt("Vigitemp.Alarms.PollSeconds", 15);
@@ -116,6 +123,15 @@ namespace Vigitemp_Serveur
             public bool InProgress { get; set; }
         }
 
+        private sealed class ModuleFailureState
+        {
+            public DateTime FirstFailureAt { get; set; }
+            public DateTime LastFailureAt { get; set; }
+            public int ConsecutiveFailures { get; set; }
+            public bool AlarmRaised { get; set; }
+            public HashSet<int> RaisedLieuIds { get; } = new HashSet<int>();
+        }
+
         private sealed class GspMemoJob
         {
             public string Serial { get; set; }
@@ -173,7 +189,7 @@ namespace Vigitemp_Serveur
             }
 
             var requestedCount = Math.Max(1, totalCount);
-            var safeBatchSize = Math.Max(1, batchSize);
+            var safeBatchSize = ClampGspMemoBatchSize(batchSize);
             var safeOffset = Math.Max(0, startOffset ?? 0);
 
             _gspMemoJobs.AddOrUpdate(
@@ -236,7 +252,7 @@ namespace Vigitemp_Serveur
             }
 
             var requestedCount = Math.Max(1, expectedMissingCount);
-            var batchSize = Math.Min(100, Math.Max(20, requestedCount));
+            var batchSize = ClampGspMemoBatchSize(Math.Max(20, requestedCount));
             _gspMemoJobs.AddOrUpdate(
                 serial,
                 _ => new GspMemoJob
@@ -893,20 +909,32 @@ namespace Vigitemp_Serveur
                     schedule.InProgress = true;
                     try
                     {
+                        if (IsModulePortUnavailable(schedule))
+                        {
+                            HandleModuleProbeFailure(schedule, "port-missing");
+                            continue;
+                        }
+
                         await RunWithPortLockAsync(schedule.Port, schedule.Serial, () => InterrogateSchedule(schedule));
+                        ClearModuleFailure(schedule);
                     }
                     catch (Exception ex)
                     {
+                        if (IsPortOpenFailure(ex))
+                        {
+                            HandleModuleProbeFailure(schedule, ex.GetType().Name);
+                        }
                         VigitempServeur.Log("ThreadServeur.Scheduler error: " + ex);
                     }
                     finally
                     {
                         schedule.LastMeasure = DateTime.Now;
-                        schedule.NextDue = schedule.LastMeasure.Value.AddSeconds(schedule.FrequencySeconds);
+                        SetScheduleNextDue(schedule, schedule.LastMeasure.Value.AddSeconds(schedule.FrequencySeconds));
                         schedule.InProgress = false;
                     }
                 }
 
+                await ProcessPendingGspConfigurationAsync();
                 await ProcessPendingGspMemoBatchAsync();
                 await PollNewAlarmsAsync();
                 PollEndedAlarms();
@@ -917,6 +945,67 @@ namespace Vigitemp_Serveur
                 {
                     semaphore.Release();
                 }
+            }
+        }
+
+        private async Task ProcessPendingGspConfigurationAsync()
+        {
+            var now = DateTime.Now;
+            var schedule = _schedules.Values
+                .Where(s => s != null &&
+                            s.ConfigDirty &&
+                            !s.InProgress &&
+                            IsGspSchedule(s) &&
+                            !IsScheduleDue(s, now))
+                .OrderBy(s => s.NextDue)
+                .FirstOrDefault(s => HasFreePortWindow(s.Port, _gspConfigFreeSlotMinSeconds, now, out _));
+
+            if (schedule == null)
+            {
+                return;
+            }
+
+            if (!HasFreePortWindow(schedule.Port, _gspConfigFreeSlotMinSeconds, now, out var nextDue))
+            {
+                if (_logScheduler)
+                {
+                    VigitempServeur.Log(
+                        $"[SONDE][CFG-JOB] serial={schedule.Serial} status=deferred reason=no-free-slot nextDue={FormatDateForLog(nextDue)}");
+                }
+                return;
+            }
+
+            schedule.InProgress = true;
+            try
+            {
+                VigitempServeur.Log(
+                    $"[SONDE][CFG-JOB] serial={schedule.Serial} status=start port={schedule.Port} minWindowSec={_gspConfigFreeSlotMinSeconds} nextDue={FormatDateForLog(nextDue)}");
+
+                var synchronized = false;
+                await RunWithPortLockAsync(schedule.Port, schedule.Serial, async () =>
+                {
+                    var sensor = new SensorGSP(this, schedule.Port, schedule.Serial, schedule.Adresse, schedule.FrequencySeconds, true);
+                    synchronized = await sensor.SynchronizeConfigurationOnlyAsync(fullConfiguration: true);
+                });
+
+                if (synchronized)
+                {
+                    schedule.ConfigDirty = false;
+                    GetDatabase().setLieuInfosModifiees(schedule.IdLieu, false);
+                    VigitempServeur.Log($"[SONDE][CFG-JOB] serial={schedule.Serial} status=sent");
+                }
+                else
+                {
+                    VigitempServeur.Log($"[SONDE][CFG-JOB] serial={schedule.Serial} status=failed");
+                }
+            }
+            catch (Exception ex)
+            {
+                VigitempServeur.Log($"[SONDE][CFG-JOB] serial={schedule.Serial} status=error error={ex.Message}");
+            }
+            finally
+            {
+                schedule.InProgress = false;
             }
         }
 
@@ -959,6 +1048,20 @@ namespace Vigitemp_Serveur
             var count = job.RecoverUntilProbeDateTime.HasValue
                 ? job.BatchSize
                 : Math.Min(job.BatchSize, remaining);
+            count = ClampGspMemoBatchSize(count);
+
+            var minWindowSeconds = EstimateGspMemoFreeSlotSeconds(count);
+            if (!HasFreePortWindow(schedule.Port, minWindowSeconds, DateTime.Now, out var nextDue))
+            {
+                job.LastChunkAtUtc = DateTime.UtcNow;
+                if (_logScheduler)
+                {
+                    VigitempServeur.Log(
+                        $"[SONDE][MEMO-JOB] serial={job.Serial} status=deferred reason=no-free-slot count={count} minWindowSec={minWindowSeconds} nextDue={FormatDateForLog(nextDue)}");
+                }
+                return;
+            }
+
             job.InProgress = true;
             try
             {
@@ -1071,6 +1174,162 @@ namespace Vigitemp_Serveur
             {
                 job.InProgress = false;
             }
+        }
+
+        private bool IsModulePortUnavailable(SensorSchedule schedule)
+        {
+            var port = NormalizePortLockKey(schedule?.Port);
+            if (string.IsNullOrWhiteSpace(port))
+            {
+                return true;
+            }
+
+            try
+            {
+                return !SerialPort.GetPortNames()
+                    .Any(p => string.Equals(NormalizePortLockKey(p), port, StringComparison.OrdinalIgnoreCase));
+            }
+            catch (Exception ex)
+            {
+                VigitempServeur.Log($"[MODULE][PORT-CHECK] module={BuildModuleKey(schedule)} port={port} status=error error={ex.Message}");
+                return false;
+            }
+        }
+
+        private static bool IsPortOpenFailure(Exception ex)
+        {
+            if (ex == null)
+            {
+                return false;
+            }
+
+            if (ex is UnauthorizedAccessException || ex is System.IO.IOException || ex is InvalidOperationException)
+            {
+                return true;
+            }
+
+            return IsPortOpenFailure(ex.InnerException);
+        }
+
+        private string BuildModuleKey(SensorSchedule schedule)
+        {
+            var module = (schedule?.Module ?? string.Empty).Trim();
+            if (!string.IsNullOrWhiteSpace(module))
+            {
+                return "module:" + module.ToUpperInvariant();
+            }
+
+            var port = NormalizePortLockKey(schedule?.Port);
+            return string.IsNullOrWhiteSpace(port) ? "module:unknown" : "port:" + port;
+        }
+
+        private void HandleModuleProbeFailure(SensorSchedule schedule, string reason)
+        {
+            if (schedule == null)
+            {
+                return;
+            }
+
+            var moduleKey = BuildModuleKey(schedule);
+            var now = DateTime.Now;
+            var state = _moduleFailures.AddOrUpdate(
+                moduleKey,
+                _ => new ModuleFailureState
+                {
+                    FirstFailureAt = now,
+                    LastFailureAt = now,
+                    ConsecutiveFailures = 1,
+                },
+                (_, existing) =>
+                {
+                    existing.LastFailureAt = now;
+                    existing.ConsecutiveFailures++;
+                    return existing;
+                });
+
+            VigitempServeur.Log(
+                $"[MODULE][FAIL] key={moduleKey} serial={schedule.Serial} port={schedule.Port} reason={reason} count={state.ConsecutiveFailures} first={state.FirstFailureAt:O}");
+
+            if (state.ConsecutiveFailures < 2)
+            {
+                return;
+            }
+
+            var moduleSchedules = GetModuleSchedules(schedule).ToList();
+            var dueForAnyLocation = moduleSchedules.Any(s =>
+            {
+                if (state.RaisedLieuIds.Contains(s.IdLieu))
+                {
+                    return false;
+                }
+
+                var settings = GetLieuAlarmSettingsCached(s.IdLieu);
+                var delayMinutes = Math.Max(0, settings?.RetardNonReponseMinutes ?? 60);
+                return (now - state.FirstFailureAt).TotalMinutes >= delayMinutes;
+            });
+
+            if (!dueForAnyLocation)
+            {
+                return;
+            }
+
+            foreach (var moduleSchedule in moduleSchedules)
+            {
+                if (state.RaisedLieuIds.Contains(moduleSchedule.IdLieu))
+                {
+                    continue;
+                }
+
+                var settings = GetLieuAlarmSettingsCached(moduleSchedule.IdLieu);
+                var delayMinutes = Math.Max(0, settings?.RetardNonReponseMinutes ?? 60);
+                if ((now - state.FirstFailureAt).TotalMinutes < delayMinutes)
+                {
+                    continue;
+                }
+
+                GetDatabase().AddMesureNoResponse(moduleSchedule.Serial, null);
+                GetDatabase().setModuleAlarm(moduleSchedule.IdLieu, moduleSchedule.Serial, true);
+                state.RaisedLieuIds.Add(moduleSchedule.IdLieu);
+                VigitempServeur.Log(
+                    $"[MODULE][ALARM] key={moduleKey} idLieu={moduleSchedule.IdLieu} serial={moduleSchedule.Serial} status=active delayMin={delayMinutes}");
+            }
+
+            state.AlarmRaised = state.RaisedLieuIds.Count > 0;
+        }
+
+        private void ClearModuleFailure(SensorSchedule schedule)
+        {
+            if (schedule == null)
+            {
+                return;
+            }
+
+            var moduleKey = BuildModuleKey(schedule);
+            if (!_moduleFailures.TryRemove(moduleKey, out var state))
+            {
+                return;
+            }
+
+            foreach (var moduleSchedule in GetModuleSchedules(schedule))
+            {
+                GetDatabase().setModuleAlarm(moduleSchedule.IdLieu, moduleSchedule.Serial, false);
+            }
+
+            VigitempServeur.Log(
+                $"[MODULE][RECOVER] key={moduleKey} serial={schedule.Serial} port={schedule.Port} previousCount={state.ConsecutiveFailures}");
+        }
+
+        private IEnumerable<SensorSchedule> GetModuleSchedules(SensorSchedule schedule)
+        {
+            var module = (schedule?.Module ?? string.Empty).Trim();
+            var port = NormalizePortLockKey(schedule?.Port);
+            return _schedules.Values.Where(s =>
+                s != null &&
+                !string.IsNullOrWhiteSpace(s.Serial) &&
+                ((!string.IsNullOrWhiteSpace(module) &&
+                  string.Equals((s.Module ?? string.Empty).Trim(), module, StringComparison.OrdinalIgnoreCase)) ||
+                 (string.IsNullOrWhiteSpace(module) &&
+                  string.Equals(NormalizePortLockKey(s.Port), port, StringComparison.OrdinalIgnoreCase))));
         }
 
         private async Task RunWithPortLockAsync(string port, string serial, Func<Task> action)
@@ -1460,6 +1719,7 @@ namespace Vigitemp_Serveur
                 {
                     schedule = BuildSchedule(row, now);
                     _schedules[row.IdLieu] = schedule;
+                    RememberNextProbeDue(schedule);
                     SetSondeMetrologyFromSchedule(row);
                     if (_logScheduler)
                     {
@@ -1485,6 +1745,7 @@ namespace Vigitemp_Serveur
 
                 if (hasChanges)
                 {
+                    var previousSerial = schedule.Serial;
                     SetSondeMetrologyFromSchedule(row);
                     schedule.Serial = row.SondeNumeroSerie;
                     schedule.SondeType = row.SondeType;
@@ -1496,7 +1757,12 @@ namespace Vigitemp_Serveur
                     schedule.ConfigDirty = row.InfosModifiees || schedule.ConfigDirty;
                     schedule.FrequencySeconds = row.FrequenceSecondes;
                     schedule.LastMeasure = row.DerniereDateHeure ?? schedule.LastMeasure;
-                    schedule.NextDue = ComputeNextDue(now, schedule.LastMeasure, schedule.FrequencySeconds);
+                    if (!string.Equals(previousSerial, schedule.Serial, StringComparison.OrdinalIgnoreCase) &&
+                        !string.IsNullOrWhiteSpace(previousSerial))
+                    {
+                        _nextProbeDueBySerial.TryRemove(previousSerial, out _);
+                    }
+                    SetScheduleNextDue(schedule, ComputeNextDue(now, schedule.LastMeasure, schedule.FrequencySeconds));
 
                     if (_logScheduler)
                     {
@@ -1516,6 +1782,7 @@ namespace Vigitemp_Serveur
                 if (_schedules.TryRemove(idLieu, out var removed) && removed != null && !string.IsNullOrWhiteSpace(removed.Serial))
                 {
                     _sondeMetrologyCache.TryRemove(removed.Serial, out _);
+                    _nextProbeDueBySerial.TryRemove(removed.Serial, out _);
                     Sensor.ClearAlarmState(idLieu);
                     InvalidateRetriggerFlagCache(idLieu);
                 }
@@ -1649,6 +1916,85 @@ namespace Vigitemp_Serveur
             }
 
             return workerIds[0];
+        }
+
+        private void SetScheduleNextDue(SensorSchedule schedule, DateTime nextDue)
+        {
+            if (schedule == null)
+            {
+                return;
+            }
+
+            schedule.NextDue = nextDue;
+            RememberNextProbeDue(schedule);
+        }
+
+        private void RememberNextProbeDue(SensorSchedule schedule)
+        {
+            if (schedule == null || string.IsNullOrWhiteSpace(schedule.Serial))
+            {
+                return;
+            }
+
+            _nextProbeDueBySerial[schedule.Serial] = schedule.NextDue;
+        }
+
+        private bool HasFreePortWindow(string port, int minWindowSeconds, DateTime now, out DateTime? nextDue)
+        {
+            nextDue = null;
+            var portKey = NormalizePortLockKey(port);
+            if (string.IsNullOrWhiteSpace(portKey))
+            {
+                return false;
+            }
+
+            var dueOnPort = _schedules.Values
+                .Where(s => s != null &&
+                            !s.InProgress &&
+                            string.Equals(NormalizePortLockKey(s.Port), portKey, StringComparison.OrdinalIgnoreCase))
+                .Select(s => s.NextDue)
+                .OrderBy(d => d)
+                .ToList();
+
+            if (dueOnPort.Count == 0)
+            {
+                return true;
+            }
+
+            nextDue = dueOnPort[0];
+            return (nextDue.Value - now).TotalSeconds >= Math.Max(1, minWindowSeconds);
+        }
+
+        private bool IsGspSchedule(SensorSchedule schedule)
+        {
+            if (schedule == null)
+            {
+                return false;
+            }
+
+            return string.Equals(schedule.FamilleSonde, "GSP", StringComparison.OrdinalIgnoreCase) ||
+                   string.Equals(schedule.SondeType, "GSP", StringComparison.OrdinalIgnoreCase) ||
+                   ((schedule.SondeType ?? string.Empty).Trim().StartsWith("SP", StringComparison.OrdinalIgnoreCase));
+        }
+
+        private int ClampGspMemoBatchSize(int requestedBatchSize)
+        {
+            var maxBatch = Math.Max(1, _gspMemoMaxBatchSize);
+            return Math.Min(maxBatch, Math.Max(1, requestedBatchSize));
+        }
+
+        private int EstimateGspMemoFreeSlotSeconds(int count)
+        {
+            var safeCount = Math.Max(1, count);
+            var recommended = safeCount <= 20 ? 20 : _gspMemoFreeSlotMinSeconds;
+            return Math.Max(5, recommended);
+        }
+
+        private static string FormatDateForLog(DateTime? value)
+        {
+            return value.HasValue
+                ? value.Value.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture)
+                : "none";
         }
 
         private static SensorSchedule BuildSchedule(SondeScheduleInfo info, DateTime now)

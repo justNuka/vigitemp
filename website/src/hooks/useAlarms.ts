@@ -7,7 +7,7 @@ type AlarmListItem = {
   locationName?: string;
   siteId?: number | null;
   siteName?: string | null;
-  type: "high" | "low" | "no-response" | "sector" | "temperature";
+  type: "high" | "low" | "no-response" | "sector" | "module" | "temperature";
   status: "active" | "acknowledged" | "resolved";
   timestamp: string;
   resolvedAt?: string | null;

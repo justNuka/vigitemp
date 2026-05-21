@@ -110,6 +110,8 @@ export function GlobalAppEffects() {
               ? t("alarm.type.low")
               : data.type === "A" || data.type === "S"
                 ? t("alarm.type.sector")
+                : data.type === "M"
+                  ? t("alarm.type.module")
                 : t("alarm.type.default")
         const value =
           data.valeur === null

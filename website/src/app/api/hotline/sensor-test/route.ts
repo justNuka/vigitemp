@@ -92,6 +92,25 @@ function sensorTestFailure(message: string, details?: unknown) {
   })
 }
 
+function getSensorTestTimeoutMs(payload: z.infer<typeof bodySchema>) {
+  const readTimeout = payload.readTimeoutMs ?? 10_000
+  const writeTimeout = payload.writeTimeoutMs ?? 10_000
+  const listenWindow = payload.gsp?.listenWindowMs ?? 0
+  const sensorType = payload.sensorType.trim().toUpperCase()
+  const action = payload.action.trim().toLowerCase()
+
+  let commandBudget = 1
+  if (sensorType === "GSP") {
+    if (action === "read-config") commandBudget = 4
+    else if (action === "sync-config") commandBudget = 4
+    else if (action === "read-memory") commandBudget = 2
+  }
+
+  const perCommandBudget = readTimeout + writeTimeout + listenWindow
+  const overhead = 20_000 + commandBudget * 5_000
+  return Math.min(Math.max(perCommandBudget * commandBudget + overhead, 20_000), 180_000)
+}
+
 export async function POST(req: NextRequest) {
   try {
     const json = await req.json()
@@ -114,16 +133,7 @@ export async function POST(req: NextRequest) {
       headers["x-vigitemp-hotline-key"] = apiKey
     }
 
-    const timeoutMs = Math.min(
-      Math.max(
-        (payload.readTimeoutMs ?? 10_000) +
-          (payload.writeTimeoutMs ?? 10_000) +
-          (payload.gsp?.listenWindowMs ?? 0) +
-          15_000,
-        20_000,
-      ),
-      120_000,
-    )
+    const timeoutMs = getSensorTestTimeoutMs(payload)
     const controller = new AbortController()
     const timeout = setTimeout(() => controller.abort(), timeoutMs)
     let response: Response
@@ -156,23 +166,23 @@ export async function POST(req: NextRequest) {
 
     const data = await response.json().catch(() => null)
     if (!data) {
-      return sensorTestFailure("Le serveur d'interrogation a renvoye une reponse invalide")
+      return sensorTestFailure("Le serveur d'interrogation a renvoyé une réponse invalide")
     }
 
     const raw = data.data ?? data
     const normalized = normalizeResult(raw)
     if (data.ok === false) {
-      return sensorTestFailure(String(normalized.error || data.message || "Test sonde echoue"), normalized)
+      return sensorTestFailure(String(normalized.error || data.message || "Test sonde echoué"), normalized)
     }
 
     if (!response.ok || !normalized.success) {
-      return sensorTestFailure(String(normalized.error || data.message || "Test sonde echoue"), normalized)
+      return sensorTestFailure(String(normalized.error || data.message || "Test sonde echoué"), normalized)
     }
 
     return apiOk(normalized)
   } catch (error) {
     if (error instanceof Error && error.name === "AbortError") {
-      return sensorTestFailure("Le test sonde a depasse le delai d'attente cote web")
+      return sensorTestFailure("Le test sonde a depassé le délai d'attente côté web")
     }
 
     return apiError(500, "sensor_test_failed", "Impossible d'executer le test sonde", {

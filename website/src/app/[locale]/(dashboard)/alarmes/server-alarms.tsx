@@ -40,6 +40,7 @@ export async function ServerAlarms() {
 
   return alarms.map((alarm) => {
     const isPowerAlarm = alarm.Type === "A" || alarm.Type === "S"
+    const isModuleAlarm = alarm.Type === "M"
     const hasConfiguredThresholds =
       alarm.t_lieu?.Consigne_Sup !== null || alarm.t_lieu?.Consigne_Inf !== null
 
@@ -63,8 +64,10 @@ export async function ServerAlarms() {
           ? "low"
           : alarm.Type === "N"
             ? "no-response"
+            : isModuleAlarm
+              ? "module"
             : "sector"
-    ) as "high" | "low" | "no-response" | "sector"
+    ) as "high" | "low" | "no-response" | "sector" | "module"
 
     const thresholdValue =
       alarmType === "high" ? (consigneSup ?? 0) : alarmType === "low" ? (consigneInf ?? 0) : 0
@@ -76,7 +79,7 @@ export async function ServerAlarms() {
       sensorId: alarm.Id_Lieu?.toString() || "0",
       locationId: alarm.Id_Lieu?.toString() || "0",
       type: alarmType,
-      value: alarm.Type === "N" || isPowerAlarm ? null : (alarm.Valeur ?? null),
+      value: alarm.Type === "N" || isModuleAlarm || isPowerAlarm ? null : (alarm.Valeur ?? null),
       threshold: thresholdValue,
       status: statusValue,
       triggeredAt: alarm.Date_Heure_Debut!,

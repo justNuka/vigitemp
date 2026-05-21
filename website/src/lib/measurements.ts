@@ -13,6 +13,7 @@ export type MeasureData = {
   Consigne_Inf: number | null
   SondeNumeroSerie: string
   Frequence: number
+  Est_Valeur_Null?: boolean | number | null
   Etat_Alarme: number
 }
 
@@ -86,9 +87,12 @@ export function getMeasureSummary(
   const frequence = last?.Frequence || first?.Frequence || fallback?.frequence || 15
   const decimals = last?.Nb_Decimal ?? first?.Nb_Decimal ?? null
 
-  const lastWithValue = [...measures].reverse().find((item) => item.Valeur !== null)
+  const isLastNullMeasurement = Boolean(
+    last && (typeof last.Est_Valeur_Null === "number" ? last.Est_Valeur_Null !== 0 : last.Est_Valeur_Null),
+  )
+  const lastWithValue = isLastNullMeasurement ? null : [...measures].reverse().find((item) => item.Valeur !== null)
   const formattedValue = lastWithValue ? formatMeasureValue(lastWithValue.Valeur, decimals) : ""
-  const lastMeasureText = lastWithValue ? `${formattedValue}${normalizeUnitLabel(lastWithValue.Unite || unite)}` : ""
+  const lastMeasureText = lastWithValue ? `${formattedValue}${normalizeUnitLabel(lastWithValue.Unite || unite)}` : "N/A"
   const lastDateTime = last?.DateHeureMesure || ""
 
   return {

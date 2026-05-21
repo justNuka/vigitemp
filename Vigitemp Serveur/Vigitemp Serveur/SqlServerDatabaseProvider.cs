@@ -628,7 +628,8 @@ namespace Vigitemp_Serveur
                         "Derniere_Date_Heure = @dateheuremesure, " +
                         "Date_Heure_Derniere_Reponse_Recue_OK = @dateheuremesure, " +
                         "Derniere_Valeur = @valeur, " +
-                        "Derniere_Unite = @unite " +
+                        "Derniere_Unite = @unite, " +
+                        "Derniere_Valeur_Null = 0 " +
                         "WHERE Id_Lieu = @idlieu;"))
                     {
                         cmdUpdateLieu.Parameters.AddWithValue("@dateheuremesure", now);
@@ -733,9 +734,9 @@ namespace Vigitemp_Serveur
                     using (var cmdMeasure = CreateCommand(
                         _connectionMeasure,
                         "INSERT INTO tm_mesures " +
-                        "(Id_Serveur_BDD, Date_Heure_Mesure, Valeur, Valeur_Brute, Consigne, Consigne_Sup, Consigne_Inf, Unite, Frequence, Sonde_Numero_Serie, Id_Lieu, Est_Etat_Alarme) " +
+                        "(Id_Serveur_BDD, Date_Heure_Mesure, Valeur, Valeur_Brute, Est_Valeur_Memoire, Consigne, Consigne_Sup, Consigne_Inf, Unite, Frequence, Sonde_Numero_Serie, Id_Lieu, Est_Etat_Alarme) " +
                         "VALUES " +
-                        "(@idserveurbdd, @dateheuremesure, @valeur, @resistance, @consigne, @consignesup, @consigneinf, @unite, @frequence, @sondenumeroserie, @idlieu, @estEtatAlarme)"))
+                        "(@idserveurbdd, @dateheuremesure, @valeur, @resistance, 1, @consigne, @consignesup, @consigneinf, @unite, @frequence, @sondenumeroserie, @idlieu, @estEtatAlarme)"))
                     {
                         cmdMeasure.Parameters.AddWithValue("@idserveurbdd", idServeurBdd);
                         cmdMeasure.Parameters.AddWithValue("@dateheuremesure", measureDateTime);
@@ -904,6 +905,22 @@ namespace Vigitemp_Serveur
                         frequence,
                         estEtatAlarme,
                         1);
+
+                    using (var cmdUpdateLieu = CreateCommand(
+                        _connectionMain,
+                        "UPDATE t_lieu SET " +
+                        "Derniere_Date_Heure = @dateheuremesure, " +
+                        "Date_Heure_Derniere_Reponse = @dateheuremesure, " +
+                        "Derniere_Valeur = NULL, " +
+                        "Derniere_Unite = @unite, " +
+                        "Derniere_Valeur_Null = 1 " +
+                        "WHERE Id_Lieu = @idlieu;"))
+                    {
+                        cmdUpdateLieu.Parameters.AddWithValue("@dateheuremesure", now);
+                        cmdUpdateLieu.Parameters.AddWithValue("@unite", unit);
+                        cmdUpdateLieu.Parameters.AddWithValue("@idlieu", idLieu);
+                        cmdUpdateLieu.ExecuteNonQuery();
+                    }
 
                     VigitempServeur.Log($"(AddMesureNoResponse MSSQL) Mesure null inseree pour non-reponse sonde={p_numeroSerie} lieu={idLieu}");
                     return true;
@@ -1537,6 +1554,11 @@ namespace Vigitemp_Serveur
         public bool setPowerAlarm(int idLieu, string sondeNumeroSerie, bool isActive)
         {
             return setTechnicalAlarm(idLieu, sondeNumeroSerie, "A", isActive, "setPowerAlarm MSSQL");
+        }
+
+        public bool setModuleAlarm(int idLieu, string sondeNumeroSerie, bool isActive)
+        {
+            return setTechnicalAlarm(idLieu, sondeNumeroSerie, "M", isActive, "setModuleAlarm MSSQL");
         }
 
         private bool setTechnicalAlarm(int idLieu, string sondeNumeroSerie, string alarmType, bool isActive, string logContext)

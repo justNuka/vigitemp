@@ -225,6 +225,7 @@ export default function MonitoringDetailsModal({
   const shouldLoadBase = isOpen && isSurveillanceActive && !hasLocalMeasurements;
   const { data: fetchedData, isLoading } = useLieuMeasurements(idLieu, {
     enabled: shouldLoadBase,
+    source: "mesures",
     includeNullNonResponse: showNullNonResponse,
   });
 

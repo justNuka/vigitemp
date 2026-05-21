@@ -63,6 +63,8 @@ function formatAlarmType(t: ReturnType<typeof useTranslations>, type: string | n
       return t("table.type.no_response")
     case "SECTOR":
       return t("table.type.sector")
+    case "MODULE":
+      return t("table.type.module")
     default:
       return type || "-"
   }
@@ -195,7 +197,7 @@ export function AlarmAcknowledgmentHistoryClient() {
         header: t("table.columns.comment"),
         meta: { exportLabel: t("table.columns.comment") },
         cell: ({ row }) => (
-          <div className="max-w-[22rem] whitespace-pre-wrap break-words text-sm">
+          <div className="max-w-88 whitespace-pre-wrap wrap-break-word text-sm">
             {row.original.comment || "-"}
           </div>
         ),
@@ -275,7 +277,7 @@ export function AlarmAcknowledgmentHistoryClient() {
                       setAppliedFilters((prev) => ({ ...prev, lieuId: value }));
                     }}
                   >
-                    <SelectTrigger className="w-[14rem]">
+                    <SelectTrigger className="w-56">
                       <SelectValue placeholder={t("filters.location")} />
                     </SelectTrigger>
                     <SelectContent>
@@ -296,7 +298,7 @@ export function AlarmAcknowledgmentHistoryClient() {
                       setAppliedFilters((prev) => ({ ...prev, type: value }));
                     }}
                   >
-                    <SelectTrigger className="w-[12rem]">
+                    <SelectTrigger className="w-48">
                       <SelectValue placeholder={t("filters.type")} />
                     </SelectTrigger>
                     <SelectContent>
@@ -305,6 +307,7 @@ export function AlarmAcknowledgmentHistoryClient() {
                       <SelectItem value="LOW">{t("table.type.low")}</SelectItem>
                       <SelectItem value="NO_RESPONSE">{t("table.type.no_response")}</SelectItem>
                       <SelectItem value="SECTOR">{t("table.type.sector")}</SelectItem>
+                      <SelectItem value="MODULE">{t("table.type.module")}</SelectItem>
                     </SelectContent>
                   </Select>
 
@@ -317,7 +320,7 @@ export function AlarmAcknowledgmentHistoryClient() {
                       setDraftFilters((prev) => ({ ...prev, dateFrom: value }));
                       setAppliedFilters((prev) => ({ ...prev, dateFrom: value }));
                     }}
-                    className="w-[11rem]"
+                    className="w-44"
                     aria-label={t("filters.dateFrom")}
                   />
 
@@ -330,7 +333,7 @@ export function AlarmAcknowledgmentHistoryClient() {
                       setDraftFilters((prev) => ({ ...prev, dateTo: value }));
                       setAppliedFilters((prev) => ({ ...prev, dateTo: value }));
                     }}
-                    className="w-[11rem]"
+                    className="w-44"
                     aria-label={t("filters.dateTo")}
                   />
 

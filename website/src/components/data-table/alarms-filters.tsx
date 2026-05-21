@@ -12,7 +12,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-type AlarmType = "high" | "low" | "no-response" | "sector" | "temperature";
+type AlarmType = "high" | "low" | "no-response" | "sector" | "module" | "temperature";
 
 type AlarmsFiltersProps = {
   typeFilters: AlarmType[];
@@ -79,6 +79,13 @@ export function AlarmsFilters({
           onCheckedChange={(checked) => onToggleTypeFilter("sector", checked === true)}
         >
           {t("filters.sector")}
+        </DropdownMenuCheckboxItem>
+        <DropdownMenuCheckboxItem
+          checked={typeFilters.includes("module")}
+          onSelect={(e) => e.preventDefault()}
+          onCheckedChange={(checked) => onToggleTypeFilter("module", checked === true)}
+        >
+          {t("filters.module")}
         </DropdownMenuCheckboxItem>
       </DropdownMenuContent>
     </DropdownMenu>

@@ -515,6 +515,8 @@ namespace Vigitemp_Serveur
                     }
                     else
                     {
+                        ths.GetDatabase().setLieuImmediateRetriggerFlag(m_idLieu, false);
+                        ths.InvalidateRetriggerFlagCache(m_idLieu);
                         _retriggerLowWaitCountByLieu[m_idLieu] = 0;
                         _retriggerHighWaitCountByLieu[m_idLieu] = 0;
                     }
@@ -662,7 +664,7 @@ namespace Vigitemp_Serveur
             }
         }
 
-        protected void HandleNoResponseAlarm(bool ok, string reason = null)
+        protected void HandleNoResponseAlarm(bool ok, string reason = null, bool insertNullMeasureImmediately = false)
         {
             try
             {
@@ -715,7 +717,7 @@ namespace Vigitemp_Serveur
                     ignorePolicyDebounce: forceImmediate,
                     nowUtc: nowUtc);
 
-                if (!ok && eval.IsActive)
+                if (!ok && (insertNullMeasureImmediately || eval.IsActive))
                 {
                     var noResponseUnit = ths.GetDatabase().getLieuUnite(m_idLieu);
                     var insertedNoResponse = ths.GetDatabase().AddMesureNoResponse(m_sondeSerialNumber, noResponseUnit);

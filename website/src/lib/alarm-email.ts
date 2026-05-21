@@ -215,6 +215,8 @@ export function mapAlarmTypeLabel(type: string | null | undefined, locale: AppLa
       return locale === "en" ? "LOW ALARM" : "ALARME BASSE";
     case "N":
       return locale === "en" ? "NO RESPONSE" : "NON REPONSE";
+    case "M":
+      return locale === "en" ? "MODULE ISSUE" : "PROBLEME MODULE";
     case "A":
     case "S":
       return locale === "en" ? "POWER / MAINS" : "SECTEUR / ALIMENTATION";

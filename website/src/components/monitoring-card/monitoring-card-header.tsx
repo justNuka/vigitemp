@@ -21,7 +21,7 @@ const HEADER_GRADIENT_MAP: Record<string, string> = {
 
 interface MonitoringCardHeaderProps {
   status: SensorStatus
-  effectiveAlarmType: 'H' | 'B' | 'N' | 'S' | 'T' | null
+  effectiveAlarmType: 'H' | 'B' | 'N' | 'S' | 'M' | 'T' | null
   isSurveillanceActive: boolean
   lieuEtat: string
   siteName: string
@@ -75,6 +75,8 @@ export function MonitoringCardHeader({
           ? { label: t('alarmTypes.no_response'), headerBgClassName: 'bg-black', headerBorderClassName: 'border-black', headerTextClassName: 'text-white' }
           : effectiveAlarmType === 'S'
             ? { label: t('alarmTypes.sector'), headerBgClassName: 'bg-black', headerBorderClassName: 'border-black', headerTextClassName: 'text-white' }
+            : effectiveAlarmType === 'M'
+              ? { label: t('alarmTypes.module'), headerBgClassName: 'bg-black', headerBorderClassName: 'border-black', headerTextClassName: 'text-white' }
           : { label: t('alarmTypes.ended'), headerBgClassName: 'bg-violet-600', headerBorderClassName: 'border-violet-700', headerTextClassName: 'text-white' }
 
   const headerBgClassName = alarmTypeTheme?.headerBgClassName ?? headerTheme.headerBgClassName
@@ -165,7 +167,7 @@ export function MonitoringCardHeader({
                   </span>
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p className="text-xs">{hasActiveAlarmCode ? (effectiveAlarmType === 'H' ? t('alarmTypes.high') : effectiveAlarmType === 'B' ? t('alarmTypes.low') : effectiveAlarmType === 'S' ? t('alarmTypes.sector') : effectiveAlarmType === 'T' ? t('alarmTypes.ended') : t('alarmTypes.no_response')) : t('status.ok')}</p>
+                  <p className="text-xs">{hasActiveAlarmCode ? (effectiveAlarmType === 'H' ? t('alarmTypes.high') : effectiveAlarmType === 'B' ? t('alarmTypes.low') : effectiveAlarmType === 'S' ? t('alarmTypes.sector') : effectiveAlarmType === 'M' ? t('alarmTypes.module') : effectiveAlarmType === 'T' ? t('alarmTypes.ended') : t('alarmTypes.no_response')) : t('status.ok')}</p>
                 </TooltipContent>
               </UITooltip>
             </div>

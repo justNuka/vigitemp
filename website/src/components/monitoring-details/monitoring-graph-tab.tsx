@@ -361,8 +361,9 @@ export function MonitoringGraphTab({
                   maxRotation: 0,
                   minRotation: 0,
                   font: { size: 11 },
-                  callback: (_value, index) => {
-                    const rawValue = xAxisLabels[index]
+                  callback: (value, index) => {
+                    const dataIndex = typeof value === "number" ? value : Number(value)
+                    const rawValue = xAxisLabels[Number.isFinite(dataIndex) ? Math.round(dataIndex) : index]
                     return rawValue ? formatTimeAxisLabel(rawValue, localeTag, timeAxisSpanMs) : ""
                   },
                 },

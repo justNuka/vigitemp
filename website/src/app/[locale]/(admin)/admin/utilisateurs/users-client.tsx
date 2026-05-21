@@ -184,6 +184,8 @@ export function UsersClient({ users }: Props) {
               error
             );
           } finally {
+            queryClient.invalidateQueries({ queryKey: ["user-sites", selectedUser.id] });
+            queryClient.invalidateQueries({ queryKey: ["user-groups", selectedUser.id] });
             queryClient.invalidateQueries({ queryKey: ["users"] });
             router.refresh();
           }

@@ -256,9 +256,13 @@ export const GET = withAuthLogging(async (req: NextRequest, ctx) => {
 
               ? "no-response"
 
-              : isPowerAlarmType(alarm.Type)
+              : alarm.Type === "M"
 
-                ? "sector"
+                ? "module"
+
+                : isPowerAlarmType(alarm.Type)
+
+                  ? "sector"
 
                 : "temperature"
 
@@ -268,21 +272,25 @@ export const GET = withAuthLogging(async (req: NextRequest, ctx) => {
 
         alarm.Type === "N"
 
-          ? "Alarme non réponse"
+          ? "Alarme non reponse"
 
-          : isPowerAlarmType(alarm.Type)
+          : alarm.Type === "M"
 
-            ? "Alarme coupure secteur"
+            ? "Probleme module"
 
-            : alarm.Type === "H"
+            : isPowerAlarmType(alarm.Type)
 
-              ? `Alarme haute - ${alarm.Valeur} C`
+              ? "Alarme coupure secteur"
 
-              : alarm.Type === "B"
+              : alarm.Type === "H"
 
-                ? `Alarme basse - ${alarm.Valeur} C`
+                ? `Alarme haute - ${alarm.Valeur} C`
 
-                : `Alarme température - ${alarm.Valeur} C`
+                : alarm.Type === "B"
+
+                  ? `Alarme basse - ${alarm.Valeur} C`
+
+                  : `Alarme temperature - ${alarm.Valeur} C`
 
 
 
@@ -326,7 +334,7 @@ export const GET = withAuthLogging(async (req: NextRequest, ctx) => {
 
         severity:
 
-          alarm.Type === "N" || isPowerAlarmType(alarm.Type)
+          alarm.Type === "N" || alarm.Type === "M" || isPowerAlarmType(alarm.Type)
 
             ? "technical"
 
@@ -366,7 +374,7 @@ export const GET = withAuthLogging(async (req: NextRequest, ctx) => {
 
         unit,
 
-        currentValue: alarm.Type === "N" || isPowerAlarmType(alarm.Type) ? null : (alarm.Valeur ?? alarm.t_lieu?.Derniere_Valeur ?? null),
+        currentValue: alarm.Type === "N" || alarm.Type === "M" || isPowerAlarmType(alarm.Type) ? null : (alarm.Valeur ?? alarm.t_lieu?.Derniere_Valeur ?? null),
 
         count30Days: countsByLieu.get(alarm.t_lieu?.Id_Lieu ?? 0) ?? 0,
 

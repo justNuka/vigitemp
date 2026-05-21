@@ -255,6 +255,7 @@ namespace Vigitemp_Serveur.sensors
                 return false;
             }
 
+            var hasMemoAck = Regex.IsMatch(response, @"(?:^|\r?\n)\s*ACK\s*=\s*MEMO\s*(?:\r?\n|$)", RegexOptions.IgnoreCase);
             var normalizedTarget = target.Trim().ToUpperInvariant();
             var extractedSerial = TryExtractLineValue(response, "Serial");
             if (!string.IsNullOrWhiteSpace(extractedSerial)
@@ -313,6 +314,11 @@ namespace Vigitemp_Serveur.sensors
                     ProbeDateTime = probeDateTime,
                     Temperature = temperature,
                 });
+            }
+
+            if (!hasMemoAck && result.Measurements.Count == 0)
+            {
+                return false;
             }
 
             if (!result.ReturnedCount.HasValue)

@@ -38,7 +38,7 @@ import { formatMeasureValue } from "@/lib/measurements";
 type SelectedAlarm = {
   id: string;
   locationId: string;
-  type: "high" | "low" | "no-response" | "sector" | "ended" | undefined;
+  type: "high" | "low" | "no-response" | "sector" | "module" | "ended" | undefined;
   value: number | null;
   threshold: number | null;
   status: "active" | "acknowledged" | "resolved";
@@ -53,7 +53,7 @@ type SelectedAlarm = {
 
 interface AlarmRow {
   Id_Alarme: number;
-  Type: "high" | "low" | "no-response" | "sector" | "temperature";
+  Type: "high" | "low" | "no-response" | "sector" | "module" | "temperature";
   Libelle_Lieu: string;
   Date_Heure_Debut: string;
   Date_Heure_Fin: string | null;
@@ -318,7 +318,7 @@ export function AlarmsClientTanStack() {
         header: t("columns.type"),
         cell: ({ row }) => {
           const type = row.getValue("Type") as AlarmRow["Type"];
-          if (type === "no-response") {
+          if (type === "no-response" || type === "module") {
             return (
               <div className="p-1.5 rounded-md w-fit bg-black/10">
                 <WifiOff className="h-4 w-4 text-black" />
@@ -664,7 +664,7 @@ export function AlarmsClientTanStack() {
         acknowledgePending={acknowledgeMutation.isPending || isDetailLoading}
         isSubmitting={isSubmitting}
         t={tDialog}
-        alarmTypeLabel={selectedAlarm?.type === "high" ? tDialog("dialog.type_high") : selectedAlarm?.type === "low" ? tDialog("dialog.type_low") : selectedAlarm?.type === "no-response" ? tDialog("dialog.type_no_response") : selectedAlarm?.type === "sector" ? tDialog("dialog.type_sector") : tDialog("dialog.type_other")}
+        alarmTypeLabel={selectedAlarm?.type === "high" ? tDialog("dialog.type_high") : selectedAlarm?.type === "low" ? tDialog("dialog.type_low") : selectedAlarm?.type === "no-response" ? tDialog("dialog.type_no_response") : selectedAlarm?.type === "sector" ? tDialog("dialog.type_sector") : selectedAlarm?.type === "module" ? tDialog("dialog.type_module") : tDialog("dialog.type_other")}
         formattedStart={selectedAlarm?.triggeredAt ? formatDbDateTime(selectedAlarm.triggeredAt) : tDialog("dialog.na")}
         formattedEnd={selectedAlarm?.resolvedAt ? formatDbDateTime(selectedAlarm.resolvedAt) : tDialog("dialog.end_in_progress")}
         formattedDuration={selectedAlarm?.triggeredAt ? (() => { const s = parseDbDateTime(selectedAlarm.triggeredAt); const e = selectedAlarm.resolvedAt ? parseDbDateTime(selectedAlarm.resolvedAt) : new Date(); if (!s || !e) return tDialog("dialog.na"); const m = Math.max(Math.floor((e.getTime()-s.getTime())/60000),0); const h = Math.floor(m/60); const mm=m%60; return h>0 ? `${h}h ${mm}min` : `${mm}min`; })() : tDialog("dialog.na")}

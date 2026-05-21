@@ -90,7 +90,7 @@ export function auditRouteCreate(req: NextRequest, user: JWTPayload, options: {
     userId: user.userId,
     userProfile: user.profile,
     ip: getClientIp(req),
-    resource: `${options.resource} (Cr?ation)`,
+    resource: `${options.resource} (Création)`,
     resourceId: options.resourceId,
     changes: { action: "create", ...(options.data ?? {}) },
     reason: options.reason,

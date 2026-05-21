@@ -53,7 +53,7 @@ export const GET = withAuthLogging(
         const cached = getCachedMeasurements(idLieuInt)
         if (cached) {
           const response = apiOk(cached)
-          response.headers.set("Cache-Control", "public, s-maxage=30, stale-while-revalidate=900")
+          response.headers.set("Cache-Control", "private, max-age=0, must-revalidate")
           response.headers.set("X-Cache", "HIT")
           return response
         }
@@ -71,7 +71,7 @@ export const GET = withAuthLogging(
             lieuType: lieuMeta?.Type_Lieu ?? null,
             graphMeasureCount: cached.length,
           })
-          response.headers.set("Cache-Control", "public, s-maxage=30, stale-while-revalidate=900")
+          response.headers.set("Cache-Control", "private, max-age=0, must-revalidate")
           response.headers.set("X-Cache", "HIT")
           return response
         }
@@ -262,7 +262,10 @@ export const GET = withAuthLogging(
             }
             : formattedMeasurements,
       )
-      response.headers.set("Cache-Control", "public, s-maxage=900, stale-while-revalidate=900")
+      response.headers.set(
+        "Cache-Control",
+        forceFresh ? "no-store, no-cache, must-revalidate, proxy-revalidate" : "private, max-age=0, must-revalidate",
+      )
       response.headers.set("X-Cache", "MISS")
       return response
     } catch (error) {

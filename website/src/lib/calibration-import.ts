@@ -32,7 +32,7 @@ const TAG_SETS = {
   date: ["DATE_ETALONNAGE", "DATE_ETALONAGE", "DATE_CALIBRAGE"],
   time: ["HEURE_ETALONNAGE", "HEURE_ETALONAGE", "HEURE_CALIBRAGE"],
   dateValidity: ["DATE_VALIDITE", "DATE_VALIDITY"],
-  sensor: ["NUM_SONDE", "SONDE_NUMERO_SERIE", "SONDE", "ADRESSE_SONDE"],
+  sensor: ["NUM_SONDE", "SONDE_NUMERO_SERIE", "SONDE"],
   block: ["ETALONNAGE_SONDE", "CALIBRAGE_SONDE", "AJUSTAGE_SONDE"],
   calibrationName: ["NOM_ETALONNAGE", "NOM_ETALONAGE", "NOM_CALIBRAGE", "NOM_AJUSTAGE", "LIBELLE_ETALONNAGE"],
 };
@@ -166,6 +166,8 @@ export function parseCalibrationXml(xml: string, fileName = ""): ParsedCalibrati
   const calibrationBlock = getTagValueAny(xml, TAG_SETS.block);
   const uncertaintyRaw = (calibrationBlock ? getTagValue(calibrationBlock, "INCERTITUDE") : null) ?? (etalonBlock ? getTagValue(etalonBlock, "INCERTITUDE") : null) ?? getTagValue(xml, "INCERTITUDE");
   const uncertainty = parseNumber(uncertaintyRaw);
+  // Do not trust ADRESSE_SONDE from metrology XML files: imports are keyed by the
+  // serial field, then normalized to the database serial convention.
   const sensorNumberRaw = calibrationBlock
     ? getTagValueAny(calibrationBlock, TAG_SETS.sensor)
     : getTagValueAny(xml, TAG_SETS.sensor);
