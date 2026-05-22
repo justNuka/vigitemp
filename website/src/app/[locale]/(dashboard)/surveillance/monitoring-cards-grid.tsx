@@ -5,7 +5,7 @@ import { useLocale, useTranslations } from "next-intl"
 
 import { MonitoringCardSkeleton } from "@/components/monitoring-card-skeleton"
 import { useAppTimezone } from "@/components/timezone-provider"
-import type { SensorWithLocation } from "@/lib/api"
+import type { SensorWithLocation, SurveillanceTreeSiteCounter } from "@/lib/api"
 
 import { SurveillanceEmptyState } from "./_components/monitoring-empty-state"
 import { MonitoringSiteSection } from "./_components/monitoring-site-section"
@@ -19,6 +19,8 @@ interface MonitoringCardsGridProps {
   disabledSensors: SensorWithLocation[]
   activeTotalCount?: number
   disabledTotalCount?: number
+  activeTreeCounters?: SurveillanceTreeSiteCounter[]
+  disabledTreeCounters?: SurveillanceTreeSiteCounter[]
   disabledFirst?: boolean
   isLoading?: boolean
   onSurveillanceToggle?: (
@@ -66,6 +68,8 @@ export function MonitoringCardsGrid({
   disabledSensors,
   activeTotalCount,
   disabledTotalCount,
+  activeTreeCounters = [],
+  disabledTreeCounters = [],
   disabledFirst = false,
   isLoading = false,
   onSurveillanceToggle,
@@ -112,8 +116,8 @@ export function MonitoringCardsGrid({
     noSite: t("grid.no_site"),
   }
 
-  const groupedActive = groupSensorsBySiteAndGroup(activeSensors, groupingLabels, sortMode)
-  const groupedDisabled = groupSensorsBySiteAndGroup(disabledSensors, groupingLabels, sortMode)
+  const groupedActive = groupSensorsBySiteAndGroup(activeSensors, groupingLabels, sortMode, activeTreeCounters)
+  const groupedDisabled = groupSensorsBySiteAndGroup(disabledSensors, groupingLabels, sortMode, disabledTreeCounters)
 
   const countLocations = (items: SensorWithLocation[], fallback?: number) =>
     fallback ?? new Set(items.map((sensor) => Number(sensor.location.id ?? sensor.id)).filter((id) => Number.isFinite(id))).size

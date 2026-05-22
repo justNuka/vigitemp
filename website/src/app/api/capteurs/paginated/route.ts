@@ -14,6 +14,52 @@ const NO_STORE_HEADERS = {
   Expires: "0",
 } as const
 
+type TreeCounterStats = {
+  total: number
+  ok: number
+  warning: number
+  critical: number
+  inactive: number
+}
+
+type TreeCounterGroup = {
+  groupKey: string
+  groupId: number | null
+  groupName: string
+  sensorsCount: number
+  stats: TreeCounterStats
+}
+
+type TreeCounterSite = {
+  siteId: string
+  siteName: string
+  sensorsCount: number
+  groupsCount: number
+  stats: TreeCounterStats
+  groups: TreeCounterGroup[]
+}
+
+function emptyTreeStats(): TreeCounterStats {
+  return { total: 0, ok: 0, warning: 0, critical: 0, inactive: 0 }
+}
+
+function bumpTreeStats(stats: TreeCounterStats, location: {
+  Est_Archive?: boolean | number | null
+  Est_Lieu_En_Alarme?: number | null
+  Est_Lieu_En_Pre_Alarme?: number | null
+}) {
+  stats.total++
+  if (location.Est_Archive) {
+    stats.inactive++
+  } else if (location.Est_Lieu_En_Alarme === 1) {
+    stats.critical++
+  } else if (location.Est_Lieu_En_Pre_Alarme === 1) {
+    stats.warning++
+  } else {
+    stats.ok++
+  }
+}
+
 export const GET = withAuthLogging(async (request: NextRequest, ctx) => {
   try {
     const searchParams = request.nextUrl.searchParams
@@ -102,6 +148,106 @@ export const GET = withAuthLogging(async (request: NextRequest, ctx) => {
 
     const total = await prisma.t_lieu.count({ where })
 
+    const counterLocations = await prisma.t_lieu.findMany({
+      where,
+      select: {
+        Id_Lieu: true,
+        Id_Site: true,
+        Nom_Lieu: true,
+        Est_Archive: true,
+        Est_Lieu_En_Alarme: true,
+        Est_Lieu_En_Pre_Alarme: true,
+        t_site: { select: { Libelle_Site: true } },
+        t_lieu_groupe: { include: { t_groupe: { select: { Id_Groupe: true, Nom_Groupe: true } } } },
+      },
+    })
+
+    const siteCountersMap = new Map<string, {
+      siteId: string
+      siteName: string
+      locationIds: Set<number>
+      stats: TreeCounterStats
+      groups: Map<string, {
+        groupKey: string
+        groupId: number | null
+        groupName: string
+        locationIds: Set<number>
+        stats: TreeCounterStats
+      }>
+    }>()
+
+    for (const location of counterLocations) {
+      const siteId = String(location.Id_Site ?? "no-site")
+      const siteName = location.t_site?.Libelle_Site?.trim() || (location.Id_Site ? `Site ${location.Id_Site}` : "Sans site")
+      let siteCounter = siteCountersMap.get(siteId)
+      if (!siteCounter) {
+        siteCounter = {
+          siteId,
+          siteName,
+          locationIds: new Set<number>(),
+          stats: emptyTreeStats(),
+          groups: new Map(),
+        }
+        siteCountersMap.set(siteId, siteCounter)
+      }
+
+      if (!siteCounter.locationIds.has(location.Id_Lieu)) {
+        siteCounter.locationIds.add(location.Id_Lieu)
+        bumpTreeStats(siteCounter.stats, location)
+      }
+
+      const groups = location.t_lieu_groupe?.length
+        ? location.t_lieu_groupe
+            .map((link) => link.t_groupe)
+            .filter((group): group is NonNullable<typeof group> => Boolean(group))
+        : []
+      const effectiveGroups = groups.length > 0
+        ? groups.map((group) => ({
+            groupId: group.Id_Groupe,
+            groupName: group.Nom_Groupe?.trim() || `Groupe ${group.Id_Groupe}`,
+          }))
+        : [{ groupId: null, groupName: "Sans groupe" }]
+
+      for (const group of effectiveGroups) {
+        const groupKey = `${group.groupId ?? "none"}:${group.groupName}`
+        let groupCounter = siteCounter.groups.get(groupKey)
+        if (!groupCounter) {
+          groupCounter = {
+            groupKey: `${siteId}-${groupKey}`,
+            groupId: group.groupId,
+            groupName: group.groupName,
+            locationIds: new Set<number>(),
+            stats: emptyTreeStats(),
+          }
+          siteCounter.groups.set(groupKey, groupCounter)
+        }
+
+        if (!groupCounter.locationIds.has(location.Id_Lieu)) {
+          groupCounter.locationIds.add(location.Id_Lieu)
+          bumpTreeStats(groupCounter.stats, location)
+        }
+      }
+    }
+
+    const treeCounters: TreeCounterSite[] = Array.from(siteCountersMap.values())
+      .map((site) => ({
+        siteId: site.siteId,
+        siteName: site.siteName,
+        sensorsCount: site.locationIds.size,
+        groupsCount: site.groups.size,
+        stats: site.stats,
+        groups: Array.from(site.groups.values())
+          .map((group) => ({
+            groupKey: group.groupKey,
+            groupId: group.groupId,
+            groupName: group.groupName,
+            sensorsCount: group.locationIds.size,
+            stats: group.stats,
+          }))
+          .sort((a, b) => a.groupName.localeCompare(b.groupName, "fr", { sensitivity: "base", numeric: true })),
+      }))
+      .sort((a, b) => a.siteName.localeCompare(b.siteName, "fr", { sensitivity: "base", numeric: true }))
+
     const locations = await prisma.t_lieu.findMany({
       where,
       include: {
@@ -112,10 +258,12 @@ export const GET = withAuthLogging(async (request: NextRequest, ctx) => {
       skip,
       take: limit,
       // Priorité aux alarmes / pré-alarmes pour charger l’UI rapidement.
+      // Les lieux nouvellement créés n'ont pas encore de Derniere_Date_Heure :
+      // les remonter évite d'attendre la première interrogation pour les voir.
       orderBy: [
         { Est_Lieu_En_Alarme: "desc" },
         { Est_Lieu_En_Pre_Alarme: "desc" },
-        { Derniere_Date_Heure: "desc" },
+        { Derniere_Date_Heure: { sort: "desc", nulls: "first" } },
         { Id_Lieu: "desc" },
       ],
     })
@@ -355,6 +503,7 @@ export const GET = withAuthLogging(async (request: NextRequest, ctx) => {
       page,
       limit,
       totalPages: Math.ceil(total / limit),
+      treeCounters,
       sensors: sensorsWithMeasurements,
     }, { headers: NO_STORE_HEADERS })
   } catch (error) {

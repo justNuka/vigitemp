@@ -1,4 +1,4 @@
-import { Building2, ChevronDown, Users } from "lucide-react"
+import { Building2, ChevronDown, Info, Users } from "lucide-react"
 import { LazyMotion, domAnimation, m } from "motion/react"
 
 import MonitoringCard from "@/components/monitoring-card"
@@ -75,6 +75,19 @@ function getLatestDisabledUntil(sensors: SensorWithLocation[]) {
     }, null)
 }
 
+function countLoadedLocations(sensors: SensorWithLocation[]) {
+  return new Set(sensors.map((sensor) => String(sensor.location.id || sensor.id))).size
+}
+
+function PartialLoadNotice({ message }: { message: string }) {
+  return (
+    <div className="mx-2 flex items-start gap-2 rounded-md border border-sky-200 bg-sky-50 px-3 py-2 text-xs font-medium text-sky-800 shadow-sm dark:border-sky-500/30 dark:bg-sky-500/10 dark:text-sky-100">
+      <Info className="mt-0.5 h-4 w-4 shrink-0" />
+      <span>{message}</span>
+    </div>
+  )
+}
+
 export function MonitoringSiteSection({
   site,
   siteKey,
@@ -99,7 +112,9 @@ export function MonitoringSiteSection({
     onSurveillanceToggle ??
     ((_: number, __: "surveillance" | "alarms", ___: boolean, ____?: number | null, _____?: string | null) => {})
   const siteSensors = site.groups.flatMap((group) => group.sensors)
-  const siteStats = countStatus(siteSensors)
+  const siteStats = site.globalStats ?? countStatus(siteSensors)
+  const siteSensorsCount = site.sensorsCountGlobal ?? site.sensorsCount
+  const siteGroupsCount = site.groupsCountGlobal ?? site.groups.length
 
   return (
     <LazyMotion features={domAnimation}>
@@ -121,7 +136,7 @@ export function MonitoringSiteSection({
             : "ml-auto flex items-center gap-3 text-base font-semibold text-gray-600 dark:text-slate-300"}
         >
           <span>
-            {formatSondes(site.sensorsCount)} - {formatGroupes(site.groups.length)}
+            {formatSondes(siteSensorsCount)} - {formatGroupes(siteGroupsCount)}
             {!disabledView && siteStats.critical > 0 ? ` - ${formatAlarmes(siteStats.critical)}` : ""}
             {!disabledView && siteStats.warning > 0 ? ` - ${formatPreAlarmes(siteStats.warning)}` : ""}
           </span>
@@ -132,9 +147,12 @@ export function MonitoringSiteSection({
       {isSiteExpanded ? (
         <div className="space-y-3">
           {site.groups.map((group) => {
-            const groupStats = countStatus(group.sensors)
+            const groupStats = group.globalStats ?? countStatus(group.sensors)
             const sortedGroupSensors = sortSensors(group.sensors, sortMode)
             const isGroupExpanded = disabledView ? true : expandedGroups.has(group.groupKey)
+            const loadedGroupLocations = countLoadedLocations(group.sensors)
+            const totalGroupLocations = group.sensorsCountGlobal ?? loadedGroupLocations
+            const isPartiallyLoaded = totalGroupLocations > loadedGroupLocations
             const groupDisabled =
               group.groupId !== null &&
               group.sensors.length > 0 &&
@@ -162,7 +180,7 @@ export function MonitoringSiteSection({
                     <h3 className="text-xl font-semibold">{group.groupName}</h3>
                     <span className="ml-auto flex items-center gap-3 text-xs text-gray-500">
                       <span>
-                        {formatSondes(group.sensors.length)}
+                        {formatSondes(group.sensorsCountGlobal ?? group.sensors.length)}
                         {groupStats.critical > 0 ? ` - ${formatAlarmes(groupStats.critical)}` : ""}
                         {groupStats.warning > 0 ? ` - ${formatPreAlarmes(groupStats.warning)}` : ""}
                       </span>
@@ -180,33 +198,43 @@ export function MonitoringSiteSection({
                 )}
 
                 {isGroupExpanded ? (
-                  <m.div
-                    className={`grid gap-4 justify-start ${
-                      disabledView
-                        ? "grid-cols-[repeat(auto-fill,minmax(250px,1fr))]"
-                        : "grid-cols-[repeat(auto-fill,minmax(260px,1fr))]"
-                    }`}
-                    variants={staggerContainer}
-                    initial="hidden"
-                    animate="visible"
-                  >
-                    {sortedGroupSensors.map((sensor) => (
-                      <MonitoringCard
-                        key={sensor.id}
-                        {...buildMonitoringCardProps(
-                          sensor,
-                          site.siteName ?? "",
-                          group.groupName ?? "",
-                          handleSurveillanceToggle,
-                          requireActionComment,
-                          onEditLocation,
-                          onDetailsModalStateChange,
-                          backgroundPaused,
-                          showNullNonResponse,
-                        )}
+                  <>
+                    {isPartiallyLoaded ? (
+                      <PartialLoadNotice
+                        message={t("grid.partial_group_loaded", {
+                          loaded: String(loadedGroupLocations),
+                          total: String(totalGroupLocations),
+                        })}
                       />
-                    ))}
-                  </m.div>
+                    ) : null}
+                    <m.div
+                      className={`grid gap-4 justify-start ${
+                        disabledView
+                          ? "grid-cols-[repeat(auto-fill,minmax(250px,1fr))]"
+                          : "grid-cols-[repeat(auto-fill,minmax(260px,1fr))]"
+                      }`}
+                      variants={staggerContainer}
+                      initial="hidden"
+                      animate="visible"
+                    >
+                      {sortedGroupSensors.map((sensor) => (
+                        <MonitoringCard
+                          key={sensor.id}
+                          {...buildMonitoringCardProps(
+                            sensor,
+                            site.siteName ?? "",
+                            group.groupName ?? "",
+                            handleSurveillanceToggle,
+                            requireActionComment,
+                            onEditLocation,
+                            onDetailsModalStateChange,
+                            backgroundPaused,
+                            showNullNonResponse,
+                          )}
+                        />
+                      ))}
+                    </m.div>
+                  </>
                 ) : null}
               </div>
             )

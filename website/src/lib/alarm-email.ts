@@ -184,7 +184,7 @@ function sanitizeAlarmText(value: string | null | undefined): string | undefined
     .replace(/Â°/g, "°")
     .replace(/â°C/g, "°C")
     .replace(/Â°C/g, "°C")
-    .replace(/Ã©/g, "é")
+    .replace(/e/g, "é")
     .replace(/Ã¨/g, "è")
     .replace(/Ãª/g, "ê")
     .replace(/Ã /g, "à")

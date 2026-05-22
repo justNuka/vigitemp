@@ -7,6 +7,7 @@ import { prisma } from "@/lib/prisma"
 import { requireStandardOrExpertLicense } from "@/lib/license-guards"
 import { log } from "@/lib/logger"
 import { buildMetrologyLookupSerials } from "@/lib/sensor-naming"
+import { hasMainDbColumn } from "@/lib/db-schema"
 
 type CalibrationRow = {
   Id_Etalonnage: number
@@ -39,6 +40,7 @@ export const GET = withAuthLogging(async (req: NextRequest) => {
       return apiOk([])
     }
 
+    const hasCalibrationNameColumn = await hasMainDbColumn("t_etalonnage", "Nom_Etalonnage")
     const etalonnages = await prisma.$queryRaw<CalibrationRow[]>(Prisma.sql`
       SELECT
         Id_Etalonnage,
@@ -51,7 +53,7 @@ export const GET = withAuthLogging(async (req: NextRequest) => {
         Unite,
         Incertitude,
         Err_Justesse,
-        Nom_Etalonnage
+        ${hasCalibrationNameColumn ? Prisma.raw("Nom_Etalonnage") : Prisma.raw("NULL AS Nom_Etalonnage")}
       FROM t_etalonnage
       WHERE Sonde_Numero_Serie IN (${Prisma.join(serials)})
       ORDER BY Date_Heure_Etalonnage DESC

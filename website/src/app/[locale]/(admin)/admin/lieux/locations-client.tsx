@@ -105,6 +105,7 @@ export function LocationsClient() {
     mutationFn: async (data: Partial<LocationRow>) => postJson('/api/lieux', data),
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['locations'] })
+      queryClient.invalidateQueries({ queryKey: ['available-sensors'] })
       router.refresh()
       toast.success(t('toast.create_success'))
       if (!variables?.Sonde_Numero_Serie) {
@@ -125,6 +126,7 @@ export function LocationsClient() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['locations'] })
+      queryClient.invalidateQueries({ queryKey: ['available-sensors'] })
       router.refresh()
       toast.success(t('toast.update_success'))
       if (selectedDisplayedLocation?.Id_Lieu) {
@@ -149,6 +151,7 @@ export function LocationsClient() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['locations'] })
+      queryClient.invalidateQueries({ queryKey: ['available-sensors'] })
       router.refresh()
       toast.success(t('toast.archive_success'))
       setIsArchiveOpen(false)
@@ -263,7 +266,7 @@ export function LocationsClient() {
             setIsCreateNoSondeOpen(true)
             return
           }
-          createMutation.mutate(normalizePayload(values, true))
+          createMutation.mutate(normalizePayload(values))
         }}
       />
 

@@ -82,6 +82,9 @@ namespace Vigitemp_Serveur.sensors
         protected override bool ShouldApplyMetrology => false;
 
         public bool ConfigurationSynchronized { get; private set; }
+        public string LastFailureReason { get; private set; }
+        public bool LastFailureLooksLikeModuleUnavailable =>
+            string.Equals(LastFailureReason, "serial-semaphore-timeout", StringComparison.OrdinalIgnoreCase);
 
         public override async Task<bool> read()
         {
@@ -126,6 +129,7 @@ namespace Vigitemp_Serveur.sensors
         {
             try
             {
+                LastFailureReason = null;
                 pendingResults = true;
                 await OpenPortWithRetryAsync();
                 m_port.DiscardInBuffer();
@@ -143,6 +147,7 @@ namespace Vigitemp_Serveur.sensors
                 if (string.IsNullOrWhiteSpace(response))
                 {
                     _consecutiveTimeouts++;
+                    LastFailureReason = "timeout";
                     VigitempServeur.Log($"[SONDE][DONE] type=GSP serial={m_sondeSerialNumber} port={m_comPort} status=timeout consecutiveTimeouts={_consecutiveTimeouts}");
                     HandleNoResponseAlarm(false, "timeout", insertNullMeasureImmediately: true);
                     return false;
@@ -154,6 +159,7 @@ namespace Vigitemp_Serveur.sensors
                 if (!GspProtocol.TryParseTemperatureResponse(response, _commandTarget, out var parsed) || !parsed.Temperature.HasValue)
                 {
                     _consecutiveTimeouts++;
+                    LastFailureReason = "parse";
                     VigitempServeur.Log($"[SONDE][ERR] type=GSP serial={m_sondeSerialNumber} port={m_comPort} parse=temperature rawResponse={response}");
                     HandleNoResponseAlarm(false, "parse", insertNullMeasureImmediately: true);
                     return false;
@@ -162,6 +168,7 @@ namespace Vigitemp_Serveur.sensors
                 if (IsInvalidMeasurementPayload(parsed))
                 {
                     _consecutiveTimeouts++;
+                    LastFailureReason = "invalid-payload";
                     VigitempServeur.Log(
                         $"[SONDE][ERR] type=GSP serial={m_sondeSerialNumber} port={m_comPort} status=invalid-payload reason=zero-temperature temp={parsed.Temperature.Value.ToString(CultureInfo.InvariantCulture)} battery={(parsed.BatteryPercent.HasValue ? parsed.BatteryPercent.Value.ToString(CultureInfo.InvariantCulture) : "null")} rssi={(parsed.Rssi.HasValue ? parsed.Rssi.Value.ToString(CultureInfo.InvariantCulture) : "null")} rawResponse={TrimForLog(response)}");
                     VigitempServeur.Log($"[SONDE][DONE] type=GSP serial={m_sondeSerialNumber} port={m_comPort} status=invalid-payload consecutiveTimeouts={_consecutiveTimeouts}");
@@ -171,6 +178,7 @@ namespace Vigitemp_Serveur.sensors
 
                 var hadTimeoutBeforeSuccess = _consecutiveTimeouts > 0;
                 _consecutiveTimeouts = 0;
+                LastFailureReason = null;
 
                 await CheckAndSynchronizeClockAsync(parsed, hadTimeoutBeforeSuccess);
                 LogMeasurementGap(parsed);
@@ -198,6 +206,7 @@ namespace Vigitemp_Serveur.sensors
             catch (IOException ex) when (IsSerialSemaphoreTimeout(ex))
             {
                 _consecutiveTimeouts++;
+                LastFailureReason = "serial-semaphore-timeout";
                 VigitempServeur.Log($"[SONDE][PORT-RECOVER] type=GSP serial={m_sondeSerialNumber} port={m_comPort} reason=semaphore-timeout action=dispose-port error={ex.Message}");
                 DisposePort();
                 HandleNoResponseAlarm(false, "serial-semaphore-timeout", insertNullMeasureImmediately: true);
@@ -206,6 +215,7 @@ namespace Vigitemp_Serveur.sensors
             catch (Exception ex)
             {
                 _consecutiveTimeouts++;
+                LastFailureReason = "exception";
                 VigitempServeur.Log($"[SONDE][ERR] type=GSP serial={m_sondeSerialNumber} port={m_comPort} error={ex}");
                 HandleNoResponseAlarm(false, "exception", insertNullMeasureImmediately: true);
                 return false;

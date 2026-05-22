@@ -409,9 +409,10 @@ export function UserExpiryFields<TFormValues extends UserFormFieldValues>({
                       </Button>
                     </FormControl>
                   </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
+                  <PopoverContent className="w-[280px] p-0" align="start">
                     <Calendar
                       mode="single"
+                      locale={dateLocale}
                       selected={selectedDate}
                       onSelect={field.onChange}
                       disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}

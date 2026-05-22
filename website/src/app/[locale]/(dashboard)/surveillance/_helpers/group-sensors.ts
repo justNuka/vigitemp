@@ -1,4 +1,4 @@
-import type { SensorWithLocation } from "@/lib/api"
+import type { SensorWithLocation, SurveillanceTreeSiteCounter, SurveillanceTreeCounterStats } from "@/lib/api"
 import type { SurveillanceSortMode } from "./monitoring-derived"
 
 export type GroupSection = {
@@ -9,6 +9,8 @@ export type GroupSection = {
   criticalCount: number
   warningCount: number
   alarmCount: number
+  sensorsCountGlobal?: number
+  globalStats?: SurveillanceTreeCounterStats
 }
 
 export type SiteSection = {
@@ -18,6 +20,9 @@ export type SiteSection = {
   criticalCount: number
   warningCount: number
   alarmCount: number
+  sensorsCountGlobal?: number
+  groupsCountGlobal?: number
+  globalStats?: SurveillanceTreeCounterStats
   groups: GroupSection[]
 }
 
@@ -42,6 +47,7 @@ export function groupSensorsBySiteAndGroup(
   sensors: SensorWithLocation[],
   labels: GroupingLabels = { noGroup: "Sans groupe", noSite: "Sans site" },
   sortMode: SurveillanceSortMode = "status",
+  counters: SurveillanceTreeSiteCounter[] = [],
 ): SiteSection[] {
   const bySite = new Map<
     string,
@@ -100,18 +106,26 @@ export function groupSensorsBySiteAndGroup(
     }
   }
 
+  const countersBySite = new Map(counters.map((counter) => [counter.siteId, counter]))
+
   const siteSections: SiteSection[] = Array.from(bySite.entries()).map(([siteId, site]) => {
+    const siteCounter = countersBySite.get(siteId)
+    const groupCountersByKey = new Map((siteCounter?.groups ?? []).map((counter) => [counter.groupKey, counter]))
     const groupSections: GroupSection[] = Array.from(site.groups.entries()).map(([groupKey, group]) => {
       const criticalCount = countCritical(group.sensors)
       const warningCount = countWarning(group.sensors)
+      const effectiveGroupKey = `${siteId}-${groupKey}`
+      const groupCounter = groupCountersByKey.get(effectiveGroupKey)
       return {
-        groupKey: `${siteId}-${groupKey}`,
+        groupKey: effectiveGroupKey,
         groupId: group.groupId,
         groupName: group.groupName,
         sensors: group.sensors,
         criticalCount,
         warningCount,
         alarmCount: criticalCount + warningCount,
+        sensorsCountGlobal: groupCounter?.sensorsCount,
+        globalStats: groupCounter?.stats,
       }
     })
 
@@ -140,6 +154,9 @@ export function groupSensorsBySiteAndGroup(
       criticalCount,
       warningCount,
       alarmCount: criticalCount + warningCount,
+      sensorsCountGlobal: siteCounter?.sensorsCount,
+      groupsCountGlobal: siteCounter?.groupsCount,
+      globalStats: siteCounter?.stats,
       groups: groupSections,
     }
   })

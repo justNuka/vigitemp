@@ -153,7 +153,7 @@ function addConsigneGuards(data: Record<string, unknown>, ctx: z.RefinementCtx) 
 }
 
 const createLieuSchema = z.object({
-  Nom_Lieu: z.string().min(1, "Nom du lieu requis").max(50),
+  Nom_Lieu: z.string().min(1, "Nom du lieu requis").max(30, "Le nom du lieu ne peut pas depasser 30 caracteres."),
   Lieu_Etat: z.string().max(1).nullable().optional(),
   Commentaire: z.string().nullable().optional(),
   Observations_Info: z.string().nullable().optional(),

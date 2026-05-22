@@ -4,6 +4,7 @@ import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query"
 import { useCallback, useRef } from "react"
 
 import type { SensorWithLocation } from "@/lib/api"
+import type { SurveillanceTreeSiteCounter } from "@/lib/api"
 import { getJson } from "@/lib/http"
 
 export type PaginatedResponse = {
@@ -12,6 +13,7 @@ export type PaginatedResponse = {
   limit: number
   totalPages: number
   sensors: SensorWithLocation[]
+  treeCounters?: SurveillanceTreeSiteCounter[]
 }
 
 type Filters = {

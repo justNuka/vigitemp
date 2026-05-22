@@ -27,7 +27,7 @@ namespace Vigitemp_Serveur
 
             if (string.IsNullOrWhiteSpace(baseUrl))
             {
-                VigitempServeur.Log("WARNING AlarmWebNotifier: Vigi.WebsiteBaseUrl non configurÃ© dans App.config. Aucune notification d'alarme ne sera envoyÃ©e aux agents.");
+                VigitempServeur.Log("WARNING AlarmWebNotifier: Vigi.WebsiteBaseUrl non configure dans App.config. Aucune notification d'alarme ne sera envoyee aux agents.");
             }
             else
             {
@@ -36,11 +36,11 @@ namespace Vigitemp_Serveur
 
             if (string.IsNullOrWhiteSpace(secret))
             {
-                VigitempServeur.Log("WARNING AlarmWebNotifier: Vigi.AlarmDispatchSecret non configurÃ© dans App.config. Les requÃªtes seront rejetÃ©es avec 401.");
+                VigitempServeur.Log("WARNING AlarmWebNotifier: Vigi.AlarmDispatchSecret non configure dans App.config. Les requÃªtes seront rejetees avec 401.");
             }
             else
             {
-                VigitempServeur.Log("AlarmWebNotifier: AlarmDispatchSecret configurÃ©.");
+                VigitempServeur.Log("AlarmWebNotifier: AlarmDispatchSecret configure.");
             }
         }
 

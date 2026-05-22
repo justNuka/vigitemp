@@ -517,6 +517,7 @@
       "toggle_active_first": "Show monitoring locations first",
       "disabled_badge": "Monitoring disabled",
       "disabled_until": "Monitoring disabled until {date}",
+      "partial_group_loaded": "Partial view: {loaded} of {total} locations loaded. Click \"Load more\" to display the rest.",
       "empty_title": "No sensors",
       "unknown_site": "Unknown site",
       "no_group": "No group",

@@ -33,6 +33,7 @@ import { useLocationTemplates } from "@/hooks/useLocationTemplates";
 import { prefetchNextSensorsPage, updateSurveillanceStateInCache, type PaginatedSensorsData } from "./_components/page-client/surveillance-page-helpers";
 import { useSurveillanceLocationEditor } from "./_components/page-client/use-surveillance-location-editor";
 import { parseDbDateTime } from "@/lib/date-display";
+import type { SurveillanceTreeSiteCounter } from "@/lib/api";
 
 type ViewMode = "tree" | "graphs";
 
@@ -51,6 +52,18 @@ interface Props {
   refreshIntervalSeconds: number;
   showNullNonResponse: boolean;
   requireActionComment: boolean;
+}
+
+function aggregateTreeCounterStats(counters: SurveillanceTreeSiteCounter[]) {
+  return counters.reduce(
+    (acc, site) => {
+      acc.ok += site.stats.ok;
+      acc.warning += site.stats.warning;
+      acc.critical += site.stats.critical;
+      return acc;
+    },
+    { ok: 0, warning: 0, critical: 0 },
+  );
 }
 
 const getInitialDisabledFirst = (): boolean => {
@@ -155,6 +168,7 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
       page: last?.page ?? 1,
       limit: last?.limit ?? 100,
       totalPages: last?.totalPages ?? 1,
+      treeCounters: pages[0]?.treeCounters ?? [],
       sensors,
     };
   }, [activeData?.pages]);
@@ -168,6 +182,7 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
       page: last?.page ?? 1,
       limit: last?.limit ?? 100,
       totalPages: last?.totalPages ?? 1,
+      treeCounters: pages[0]?.treeCounters ?? [],
       sensors,
     };
   }, [disabledData?.pages]);
@@ -214,11 +229,35 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
     [activePaginatedData.total, disabledPaginatedData.total, filters.searchTerm, visibleLocationCount],
   );
 
-  const visibleStats = computeSurveillanceStats({
-    sensors: visibleSensors,
-    total: totalVisibleLocationCount,
-    activeAlarms: activeAlarmsCount,
-  });
+  const visibleStats = useMemo(() => {
+    if (filters.searchTerm.trim().length > 0) {
+      return computeSurveillanceStats({
+        sensors: visibleSensors,
+        total: totalVisibleLocationCount,
+        activeAlarms: activeAlarmsCount,
+      });
+    }
+
+    const treeStats = aggregateTreeCounterStats([
+      ...activePaginatedData.treeCounters,
+      ...disabledPaginatedData.treeCounters,
+    ]);
+
+    return {
+      total: totalVisibleLocationCount,
+      ok: treeStats.ok,
+      warning: treeStats.warning,
+      critical: treeStats.critical,
+      activeAlarms: activeAlarmsCount,
+    };
+  }, [
+    activeAlarmsCount,
+    activePaginatedData.treeCounters,
+    disabledPaginatedData.treeCounters,
+    filters.searchTerm,
+    totalVisibleLocationCount,
+    visibleSensors,
+  ]);
 
   const overlayLocations = useMemo(() => {
     const map = new Map<number, { id: number; name: string; site?: string | null }>();
@@ -539,6 +578,8 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
                 disabledSensors={disabledVisibleSensors}
                 activeTotalCount={activeSectionCount}
                 disabledTotalCount={disabledSectionCount}
+                activeTreeCounters={filters.searchTerm.trim() ? [] : activePaginatedData.treeCounters}
+                disabledTreeCounters={filters.searchTerm.trim() ? [] : disabledPaginatedData.treeCounters}
                 disabledFirst={disabledFirst}
                 onSurveillanceToggle={handleSurveillanceToggle}
                 requireActionComment={requireActionComment}

@@ -15,7 +15,7 @@ export const GET = withAdminLogging(async (req: NextRequest) => {
     const searchParams = req.nextUrl.searchParams
     const page = Math.max(parseInt(searchParams.get("page") || "1", 10), 1)
     const rawLimit = parseInt(searchParams.get("limit") || "20", 10)
-    const limit = Math.min(Math.max(rawLimit, 1), 50)
+    const limit = Math.min(Math.max(rawLimit, 1), 1000)
     const skip = (page - 1) * limit
 
     const where = {

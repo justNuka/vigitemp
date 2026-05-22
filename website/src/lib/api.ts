@@ -208,6 +208,31 @@ export type SensorWithLocation = {
   alarmType?: "H" | "B" | "N" | "S" | "M" | "T" | null;
 };
 
+export type SurveillanceTreeCounterStats = {
+  total: number;
+  ok: number;
+  warning: number;
+  critical: number;
+  inactive: number;
+};
+
+export type SurveillanceTreeGroupCounter = {
+  groupKey: string;
+  groupId: number | null;
+  groupName: string;
+  sensorsCount: number;
+  stats: SurveillanceTreeCounterStats;
+};
+
+export type SurveillanceTreeSiteCounter = {
+  siteId: string;
+  siteName: string;
+  sensorsCount: number;
+  groupsCount: number;
+  stats: SurveillanceTreeCounterStats;
+  groups: SurveillanceTreeGroupCounter[];
+};
+
 export type AlarmWithDetails = {
   id: string;
   sensorId: string;

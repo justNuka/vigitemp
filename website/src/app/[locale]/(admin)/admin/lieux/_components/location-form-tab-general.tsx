@@ -90,8 +90,8 @@ export function LocationFormTabGeneral({ sites, groups, availableSensors, module
     }
 
     if (autoDisabledMonitoringRef.current && formData.Lieu_Etat === 'D') {
-      if (!Object.is(getValues('Lieu_Etat'), null)) {
-        setValue('Lieu_Etat', null, { shouldDirty: true })
+      if (!Object.is(getValues('Lieu_Etat'), 'S')) {
+        setValue('Lieu_Etat', 'S', { shouldDirty: true, shouldValidate: true })
       }
       autoDisabledMonitoringRef.current = false
     }
@@ -105,6 +105,7 @@ export function LocationFormTabGeneral({ sites, groups, availableSensors, module
           <Input
             {...register('Nom_Lieu')}
             placeholder={t('placeholders.name')}
+            maxLength={30}
             aria-invalid={!!errors.Nom_Lieu}
             aria-describedby={errors.Nom_Lieu ? 'nom-lieu-error' : undefined}
           />

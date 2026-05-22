@@ -97,8 +97,8 @@ export function UsersClient({ users }: Props) {
       toast.success(t("toast.create_success"));
       setIsCreateDialogOpen(false);
     },
-    onError: () => {
-      toast.error(t("toast.create_error"));
+    onError: (error) => {
+      toast.error(error instanceof Error ? error.message : t("toast.create_error"));
     },
   });
 

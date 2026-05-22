@@ -6,6 +6,7 @@ import { getRequestContext } from "@/lib/api-logger";
 import { withAuthLogging } from "@/lib/api-wrappers";
 import { log } from "@/lib/logger";
 import { requireStandardOrExpertLicense } from "@/lib/license-guards";
+import { hasMainDbColumn } from "@/lib/db-schema";
 
 const measureSchema = z.object({
   Numero_Ordre: z.number().int().min(1).max(10),
@@ -102,6 +103,7 @@ export const POST = withAuthLogging(async (req: NextRequest, ctx) => {
 
     const insertedIds: string[] = [];
     const skippedIds: string[] = [];
+    const hasCalibrationNameColumn = await hasMainDbColumn("t_etalonnage", "Nom_Etalonnage");
 
     const serials = Array.from(
       new Set(
@@ -164,7 +166,7 @@ export const POST = withAuthLogging(async (req: NextRequest, ctx) => {
         });
 
         const calibrationName = toNullableText(row.calibrationName);
-        if (calibrationName) {
+        if (calibrationName && hasCalibrationNameColumn) {
           await tx.$executeRaw`
             UPDATE t_etalonnage
             SET Nom_Etalonnage = ${calibrationName}
