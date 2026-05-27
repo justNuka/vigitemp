@@ -12,6 +12,8 @@ namespace Vigitemp_Serveur.sensors
     {
         private const int ReadTimeoutMs = 2000;
         private const int BufferDrainMs = 400;
+        private const int PostInterrogationDrainMs = 1000;
+        private const int PostInterrogationQuietMs = 200;
         private const int ExtendedBufferDrainMs = 3000;
         private const int ExtendedBufferQuietMs = 750;
         private const int RepeatedDrainThreshold = 3;
@@ -227,6 +229,7 @@ namespace Vigitemp_Serveur.sensors
                 {
                     if (m_port != null && m_port.IsOpen)
                     {
+                        await ClearPortAfterInterrogationAsync();
                         m_port.Close();
                     }
                 }
@@ -603,17 +606,22 @@ namespace Vigitemp_Serveur.sensors
 
         private async Task<string> DrainBufferedDataAsync()
         {
+            return await DrainBufferedDataAsync(BufferDrainMs, 100);
+        }
+
+        private async Task<string> DrainBufferedDataAsync(int maxDrainMs, int quietMs)
+        {
             var startedAt = DateTime.UtcNow;
             var buffer = string.Empty;
             DateTime? lastDataAt = null;
 
-            while ((DateTime.UtcNow - startedAt).TotalMilliseconds < BufferDrainMs)
+            while ((DateTime.UtcNow - startedAt).TotalMilliseconds < maxDrainMs)
             {
                 await Task.Delay(25);
                 var chunk = m_port.ReadExisting();
                 if (string.IsNullOrEmpty(chunk))
                 {
-                    if (lastDataAt.HasValue && (DateTime.UtcNow - lastDataAt.Value).TotalMilliseconds >= 100)
+                    if (lastDataAt.HasValue && (DateTime.UtcNow - lastDataAt.Value).TotalMilliseconds >= quietMs)
                     {
                         break;
                     }
@@ -625,6 +633,28 @@ namespace Vigitemp_Serveur.sensors
             }
 
             return buffer.Trim();
+        }
+
+        private async Task ClearPortAfterInterrogationAsync()
+        {
+            if (m_port == null || !m_port.IsOpen)
+            {
+                return;
+            }
+
+            var startedAt = DateTime.UtcNow;
+            var drained = await DrainBufferedDataAsync(PostInterrogationDrainMs, PostInterrogationQuietMs);
+
+            m_port.DiscardInBuffer();
+            m_port.DiscardOutBuffer();
+
+            VigitempServeur.Log(
+                $"[SONDE][PORT-PURGE] type=GSP port={m_comPort} reason=post-interrogation durationMs={(DateTime.UtcNow - startedAt).TotalMilliseconds:0} extraBytes={drained.Length} extraRaw={TrimForLog(drained)}");
+
+            if (!string.IsNullOrWhiteSpace(drained) && ShouldRunExtendedPurge(drained))
+            {
+                await PurgePortUntilQuietAsync("post-interrogation-repeated-drain");
+            }
         }
 
         private bool ShouldRunExtendedPurge(string drained)

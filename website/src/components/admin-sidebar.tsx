@@ -34,6 +34,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import Image from "next/image";
 import { useLicense } from "@/components/license/license-provider";
 import { isStandardOrExpert } from "@/lib/license-access";
 import { getInitialsForAvatar, resolveAvatarSrc } from "@/lib/avatar-library";
@@ -270,6 +271,16 @@ export function AdminSidebar({ currentUser, onLogout, activeAlarms = 0 }: AdminS
       <SidebarSeparator />
 
       <SidebarFooter className="p-2 space-y-2">
+        <div className="flex justify-center px-2 pt-1">
+          <Image
+            src="/logos/Icone-MC2.svg"
+            alt="MC2 logo"
+            width={78}
+            height={32}
+            className="h-8 w-auto object-contain opacity-90"
+            unoptimized
+          />
+        </div>
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton

@@ -16,13 +16,15 @@ export function Logo({ className, size = "xs", showText = false, textClassName }
     lg: 40,
   };
 
+  const iconSize = heights[size] * 3.5;
+
   return (
     <div className={cn("flex items-center gap-2", className)}>
       <Image
         src="/logos/Icone-VigiSensys.png"
         alt="VigiSensys Logo"
-        height={heights[size] * 3.5}
-        width={heights[size] * 3.5}
+        height={iconSize}
+        width={iconSize}
         className="object-contain"
         priority
         unoptimized

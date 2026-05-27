@@ -167,12 +167,7 @@ namespace Vigitemp_Serveur.sensors
                 yield break;
             }
 
-            yield return baseCommand;
-
-            if (!baseCommand.EndsWith(" ", StringComparison.Ordinal))
-            {
-                yield return baseCommand + " ";
-            }
+            yield return EnsureCommandTerminator(baseCommand);
         }
 
         internal static string BuildCommand(string prefix, string target, string payload)
@@ -181,9 +176,23 @@ namespace Vigitemp_Serveur.sensors
             var normalizedTarget = target ?? string.Empty;
             var normalizedPayload = payload ?? string.Empty;
 
-            return string.IsNullOrWhiteSpace(normalizedPayload)
+            var command = string.IsNullOrWhiteSpace(normalizedPayload)
                 ? normalizedPrefix + normalizedTarget
                 : normalizedPrefix + normalizedTarget + " " + normalizedPayload.Trim();
+
+            return EnsureCommandTerminator(command);
+        }
+
+        private static string EnsureCommandTerminator(string command)
+        {
+            if (string.IsNullOrEmpty(command))
+            {
+                return command;
+            }
+
+            return command.EndsWith(" ", StringComparison.Ordinal)
+                ? command
+                : command + " ";
         }
 
         internal static string BuildDateTimePayload(DateTime value)

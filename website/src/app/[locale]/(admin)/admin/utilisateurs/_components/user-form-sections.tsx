@@ -409,7 +409,7 @@ export function UserExpiryFields<TFormValues extends UserFormFieldValues>({
                       </Button>
                     </FormControl>
                   </PopoverTrigger>
-                  <PopoverContent className="w-[280px] p-0" align="start">
+                  <PopoverContent className="w-70 p-0" align="start">
                     <Calendar
                       mode="single"
                       locale={dateLocale}

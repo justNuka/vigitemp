@@ -36,6 +36,7 @@ import {
 import { cn } from "@/lib/utils";
 import { ALARM_AUDIO_STATE_EVENT, getAlarmAudioMuted, setAlarmAudioMuted } from "@/lib/alarm-audio";
 import { Button } from "@/components/ui/button";
+import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 import { useLocale } from "next-intl";
 import { getLocalizedPathname, stripLocalePrefix } from "@/i18n/pathnames";
@@ -288,6 +289,16 @@ export function AppSidebar({ activeAlarms = 0, currentUser, onLogout }: AppSideb
       <SidebarSeparator />
 
       <SidebarFooter className="p-2 space-y-2">
+        <div className="flex justify-center px-2 pt-1">
+          <Image
+            src="/logos/Icone-MC2.svg"
+            alt="MC2 logo"
+            width={78}
+            height={32}
+            className="h-8 w-auto object-contain opacity-90"
+            unoptimized
+          />
+        </div>
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton
