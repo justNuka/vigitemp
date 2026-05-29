@@ -1293,8 +1293,11 @@
       "title": "Options avancées",
       "address_ip_label": "Adresse IP",
       "address_ip_placeholder": "ex: 192.168.1.100",
-      "server_id_label": "ID Serveur",
+      "server_id_label": "ID Worker",
       "server_id_placeholder": "ex: 1",
+      "worker_info": "Si vous devez assigner manuellement un module a un worker, renseignez cet ID ici. Laissez vide pour conserver la repartition automatique par port COM.",
+      "worker_warning": "Attention : un mauvais assignement de worker peut nuire aux interrogations, notamment si plusieurs modules se retrouvent mal repartis sur les ports COM.",
+      "workers_configured": "Workers configures : {workers}",
       "network_delay_label": "Délai réseau (ms)",
       "network_delay_placeholder": "ex: 50",
       "network_delay_help": "Délai de réponse réseau en millisecondes"
@@ -1320,7 +1323,7 @@
       "location": "Emplacement",
       "port": "Port",
       "sensors_count": "Nombre de sondes",
-      "server": "Serveur"
+      "server": "Worker"
     },
     "sensors_count_value": "{count, plural, one {{count} sonde} other {{count} sondes}}",
     "search_placeholder": "Numéro de série, emplacement...",

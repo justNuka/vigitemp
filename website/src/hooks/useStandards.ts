@@ -6,7 +6,7 @@ export interface Standard {
   Etalon_Numero_Serie: string | null;
   Etat_Etalon: string | null;
   Port_Serie: string | null;
-  Id_Serveur: number | null;
+  Id_Worker: number | null;
   Id_Module: number | null;
   Resolution: string | null;
   Incertitude: string | null;
@@ -29,3 +29,4 @@ export function useStandards() {
     refetchInterval: (query) => (isUnauthorizedError(query.state.error) ? false : 60000),
   });
 }
+

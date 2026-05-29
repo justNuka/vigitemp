@@ -623,6 +623,7 @@ namespace Vigitemp_Serveur
         {
             var count = 1;
             var ports = new List<string>();
+            var manualWorkerIds = new List<int>();
             try
             {
                 using (var db = DatabaseFactory.Create())
@@ -633,6 +634,12 @@ namespace Vigitemp_Serveur
                         .Select(r => r.PortSerie.Trim().ToUpperInvariant())
                         .Distinct(StringComparer.Ordinal)
                         .OrderBy(p => p, StringComparer.Ordinal)
+                        .ToList();
+                    manualWorkerIds = rows
+                        .Where(r => r != null && r.ManualWorkerId.HasValue && r.ManualWorkerId.Value > 0)
+                        .Select(r => r.ManualWorkerId.Value)
+                        .Distinct()
+                        .OrderBy(id => id)
                         .ToList();
                 }
 
@@ -647,13 +654,23 @@ namespace Vigitemp_Serveur
             if (count < MinWorkerCount) count = MinWorkerCount;
             if (count > MaxWorkerCount) count = MaxWorkerCount;
 
-            var ids = Enumerable.Range(1, count).ToList();
+            var ids = Enumerable.Range(1, count)
+                .Concat(manualWorkerIds)
+                .Where(id => id > 0 && id <= MaxWorkerCount)
+                .Distinct()
+                .OrderBy(id => id)
+                .ToList();
+            if (ids.Count == 0)
+            {
+                ids.Add(1);
+            }
             var portsText = ports.Count == 0 ? "none" : string.Join(",", ports.Take(12));
-            var signature = $"count={count}|ports={portsText}|ids={string.Join(",", ids)}";
+            var manualText = manualWorkerIds.Count == 0 ? "none" : string.Join(",", manualWorkerIds);
+            var signature = $"count={count}|ports={portsText}|manual={manualText}|ids={string.Join(",", ids)}";
             if (!string.Equals(_lastLoggedWorkerConfigSignature, signature, StringComparison.Ordinal))
             {
                 _lastLoggedWorkerConfigSignature = signature;
-                Log("Worker auto-config: ports=" + ports.Count + " [" + portsText + "] => workers=[" + string.Join(",", ids) + "]");
+                Log("Worker auto-config: ports=" + ports.Count + " [" + portsText + "] manualWorkers=[" + manualText + "] => workers=[" + string.Join(",", ids) + "]");
             }
             return ids;
         }

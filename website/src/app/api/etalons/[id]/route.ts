@@ -16,7 +16,7 @@ const updateEtalonSchema = z.object({
   Incertitude: z.string().optional(),
   Nb_Decimale: z.number().optional(),
   Reserve_MC2: z.string().optional(),
-  Id_Serveur: z.number().optional(),
+  Id_Worker: z.number().optional(),
   Id_Module: z.number().optional(),
   Numero: z.string().optional(),
   Organisme: z.string().optional(),
@@ -66,7 +66,7 @@ export const PATCH = withAuthLogging(
           Incertitude: data.Incertitude,
           Nb_Decimale: data.Nb_Decimale,
           Reserve_MC2: data.Reserve_MC2,
-          Id_Serveur: data.Id_Serveur,
+          Id_Worker: data.Id_Worker,
           Id_Module: data.Id_Module,
         },
       })
@@ -81,7 +81,7 @@ export const PATCH = withAuthLogging(
           Incertitude: existingEtalon.Incertitude,
           Nb_Decimale: existingEtalon.Nb_Decimale,
           Reserve_MC2: existingEtalon.Reserve_MC2,
-          Id_Serveur: existingEtalon.Id_Serveur,
+          Id_Worker: existingEtalon.Id_Worker,
           Id_Module: existingEtalon.Id_Module,
         },
         after: {
@@ -91,7 +91,7 @@ export const PATCH = withAuthLogging(
           Incertitude: updatedEtalon.Incertitude,
           Nb_Decimale: updatedEtalon.Nb_Decimale,
           Reserve_MC2: updatedEtalon.Reserve_MC2,
-          Id_Serveur: updatedEtalon.Id_Serveur,
+          Id_Worker: updatedEtalon.Id_Worker,
           Id_Module: updatedEtalon.Id_Module,
           Certificat_Numero: data.Numero,
           Certificat_Organisme: data.Organisme,
@@ -215,3 +215,4 @@ export const DELETE = withAuthLogging(
     }
   },
 )
+

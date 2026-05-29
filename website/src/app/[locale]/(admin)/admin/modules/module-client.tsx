@@ -77,7 +77,7 @@ export function ModulesClient() {
     Emplacement: m.Emplacement,
     Port_Serie: m.Port_Serie,
     sondes_count: m.sondes_count,
-    Id_Serveur: m.Id_Serveur,
+    Id_Worker: m.Id_Worker,
   }));
 
   const sondesTableData: SensorRow[] = (sondes || []).map((s) => ({
@@ -313,6 +313,7 @@ export function ModulesClient() {
     </LazyMotion>
   );
 }
+
 
 
 

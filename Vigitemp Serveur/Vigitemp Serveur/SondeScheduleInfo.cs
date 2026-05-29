@@ -10,6 +10,7 @@ namespace Vigitemp_Serveur
         public string PortSerie { get; set; }
         public string ModuleNumeroSerie { get; set; }
         public int? ModuleType { get; set; }
+        public int? ManualWorkerId { get; set; }
         public string SondeNumeroSerie { get; set; }
         public string SondeType { get; set; }
         public string FamilleSonde { get; set; }

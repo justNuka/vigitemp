@@ -958,8 +958,11 @@
       "title": "Advanced options",
       "address_ip_label": "IP address",
       "address_ip_placeholder": "e.g. 192.168.1.100",
-      "server_id_label": "Server ID",
+      "server_id_label": "Worker ID",
       "server_id_placeholder": "e.g. 1",
+      "worker_info": "If you need to manually assign a module to a worker, enter its ID here. Leave empty to keep automatic distribution by COM port.",
+      "worker_warning": "Warning: an incorrect worker assignment can degrade polling, especially if modules are not distributed correctly across COM ports.",
+      "workers_configured": "Configured workers: {workers}",
       "network_delay_label": "Network delay (ms)",
       "network_delay_placeholder": "e.g. 50",
       "network_delay_help": "Network response delay in milliseconds"
@@ -985,7 +988,7 @@
       "location": "Location",
       "port": "Port",
       "sensors_count": "Sensors count",
-      "server": "Server"
+      "server": "Worker"
     },
     "sensors_count_value": "{count, plural, one {{count} sensor} other {{count} sensors}}",
     "search_placeholder": "Serial number, location...",

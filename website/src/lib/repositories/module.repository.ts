@@ -7,10 +7,16 @@ export type ModuleWithDetails = {
   Libelle_Type_Module: string | null
   Port_Serie: string | null
   Emplacement: string | null
-  Id_Serveur: number | null
+  Id_Worker: number | null
   sondes_count: number
   Est_Module_GSO: boolean
   Archive: number | null
+}
+
+export type ModuleWorkerSummary = {
+  workerIds: number[]
+  automaticWorkerIds: number[]
+  manualWorkerIds: number[]
 }
 
 export const ModuleRepository = {
@@ -26,7 +32,7 @@ export const ModuleRepository = {
         Type_Module: true,
         Port_Serie: true,
         Emplacement: true,
-        Id_Serveur: true,
+        Id_Worker: true,
         Archive: true,
         Est_Module_GSO: true,
       } as any,
@@ -66,7 +72,7 @@ export const ModuleRepository = {
         : null,
       Port_Serie: module.Port_Serie,
       Emplacement: module.Emplacement,
-      Id_Serveur: module.Id_Serveur,
+      Id_Worker: module.Id_Worker,
       sondes_count: countByModule.get(module.Id_Module) ?? 0,
       Est_Module_GSO: module.Est_Module_GSO ?? false,
       Archive: module.Archive ?? 0,
@@ -80,13 +86,46 @@ export const ModuleRepository = {
     return !!existing
   },
 
+  async getWorkerSummary(): Promise<ModuleWorkerSummary> {
+    const modules = await prisma.t_module.findMany({
+      where: { Archive: { not: 1 } },
+      select: {
+        Port_Serie: true,
+        Id_Worker: true,
+      } as any,
+    })
+
+    const ports = Array.from(
+      new Set(
+        modules
+          .map((module: any) => String(module.Port_Serie ?? "").trim().toUpperCase())
+          .filter(Boolean),
+      ),
+    )
+    const automaticCount = Math.max(1, ports.length)
+    const automaticWorkerIds = Array.from({ length: automaticCount }, (_, index) => index + 1)
+    const manualWorkerIds = Array.from(
+      new Set(
+        modules
+          .map((module: any) => Number(module.Id_Worker))
+          .filter((workerId) => Number.isInteger(workerId) && workerId > 0),
+      ),
+    ).sort((a, b) => a - b)
+
+    return {
+      automaticWorkerIds,
+      manualWorkerIds,
+      workerIds: Array.from(new Set([...automaticWorkerIds, ...manualWorkerIds])).sort((a, b) => a - b),
+    }
+  },
+
   async create(data: {
     Module_Numero_Serie: string
     Type_Module: number
     Port_Serie: string
     Emplacement: string
     Adresse_IP?: string | null
-    Id_Serveur?: number | null
+    Id_Worker?: number | null
     Delai_Reseau?: number | null
     Est_Module_GSO?: boolean
   }) {
@@ -97,7 +136,7 @@ export const ModuleRepository = {
         Port_Serie: data.Port_Serie,
         Emplacement: data.Emplacement,
         Adresse_IP: data.Adresse_IP,
-        Id_Serveur: data.Id_Serveur,
+        Id_Worker: data.Id_Worker,
         Delai_Reseau: data.Delai_Reseau,
         Est_Module_GSO: data.Est_Module_GSO ?? false,
         Archive: 0,
@@ -105,3 +144,4 @@ export const ModuleRepository = {
     })
   },
 }
+

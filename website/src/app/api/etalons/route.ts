@@ -15,7 +15,7 @@ const createEtalonSchema = z.object({
   Incertitude: z.string().optional(),
   Nb_Decimale: z.number().optional(),
   Reserve_MC2: z.string().optional(),
-  Id_Serveur: z.number().optional(),
+  Id_Worker: z.number().optional(),
   Id_Module: z.number().optional(),
   Numero: z.string().optional(),
   Organisme: z.string().optional(),
@@ -49,7 +49,7 @@ export const GET = withLogging(async (req: NextRequest) => {
         Etalon_Numero_Serie: true,
         Etat_Etalon: true,
         Port_Serie: true,
-        Id_Serveur: true,
+        Id_Worker: true,
         Id_Module: true,
         Resolution: true,
         Incertitude: true,
@@ -128,7 +128,7 @@ export const POST = withLogging(async (req: NextRequest) => {
         Incertitude: data.Incertitude,
         Nb_Decimale: data.Nb_Decimale,
         Reserve_MC2: data.Reserve_MC2,
-        Id_Serveur: data.Id_Serveur,
+        Id_Worker: data.Id_Worker,
         Id_Module: data.Id_Module,
       },
     })
@@ -180,3 +180,4 @@ export const POST = withLogging(async (req: NextRequest) => {
     return apiError(500, "etalon_create_failed", "Erreur lors de la création de l'étalon")
   }
 })
+

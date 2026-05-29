@@ -35,7 +35,7 @@ import {
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-import { useModuleSondes, useModuleTypes } from "@/hooks/useModules";
+import { useModuleSondes, useModuleTypes, useModuleWorkers } from "@/hooks/useModules";
 import { ModuleAssociatedSensors } from "./_components/module-associated-sensors";
 import { moduleSchema, type ModuleFormData } from "./_components/module-schemas";
 import { useTranslations } from 'next-intl';
@@ -50,7 +50,7 @@ interface ModuleModalProps {
     Port_Serie: string | null;
     Emplacement: string | null;
     Adresse_IP?: string | null;
-    Id_Serveur?: number | null;
+    Id_Worker?: number | null;
     Delai_Reseau?: number | null;
     Est_Module_GSO?: boolean | null;
   } | null;
@@ -64,7 +64,7 @@ function getDefaultValues(module: ModuleModalProps["module"]): ModuleFormData {
     Port_Serie: module?.Port_Serie ? parseInt(module.Port_Serie) : 1,
     Emplacement: module?.Emplacement || "",
     Adresse_IP: module?.Adresse_IP || "",
-    Id_Serveur: module?.Id_Serveur ? String(module.Id_Serveur) : "",
+    Id_Worker: module?.Id_Worker ? String(module.Id_Worker) : "",
     Delai_Reseau: module?.Delai_Reseau || undefined,
     Est_Module_GSO: module?.Est_Module_GSO || false,
   };
@@ -76,6 +76,7 @@ export function ModuleModal({ open, onOpenChange, module, onSuccess }: ModuleMod
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isAdvancedOpen, setIsAdvancedOpen] = useState(false);
   const { data: moduleTypes, isLoading: typesLoading } = useModuleTypes(open);
+  const { data: workerSummary } = useModuleWorkers(open);
   const { data: sondes, isLoading: sondesLoading } = useModuleSondes(
     module?.Id_Module || null,
     open && Boolean(module),
@@ -112,7 +113,7 @@ export function ModuleModal({ open, onOpenChange, module, onSuccess }: ModuleMod
           Port_Serie: String(data.Port_Serie),
           Emplacement: data.Emplacement,
           Adresse_IP: data.Adresse_IP || null,
-          Id_Serveur: data.Id_Serveur ? parseInt(data.Id_Serveur) : null,
+          Id_Worker: data.Id_Worker ? parseInt(data.Id_Worker) : null,
           Delai_Reseau: data.Delai_Reseau || null,
           Est_Module_GSO: data.Est_Module_GSO ?? false,
         }),
@@ -251,6 +252,18 @@ export function ModuleModal({ open, onOpenChange, module, onSuccess }: ModuleMod
 
               {isAdvancedOpen && (
                 <CardContent className="space-y-4">
+                  <div className="rounded-md border border-sky-200 bg-sky-50 p-3 text-sm text-sky-900">
+                    {t('advanced.worker_info')}
+                    {workerSummary?.workerIds?.length ? (
+                      <div className="mt-1 font-medium">
+                        {t('advanced.workers_configured', { workers: workerSummary.workerIds.join(", ") })}
+                      </div>
+                    ) : null}
+                  </div>
+                  <div className="rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+                    {t('advanced.worker_warning')}
+                  </div>
+
                   <FormField
                     control={form.control}
                     name="Adresse_IP"
@@ -267,7 +280,7 @@ export function ModuleModal({ open, onOpenChange, module, onSuccess }: ModuleMod
 
                   <FormField
                     control={form.control}
-                    name="Id_Serveur"
+                    name="Id_Worker"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>{t('advanced.server_id_label')}</FormLabel>
@@ -333,4 +346,5 @@ export function ModuleModal({ open, onOpenChange, module, onSuccess }: ModuleMod
     </Dialog>
   );
 }
+
 

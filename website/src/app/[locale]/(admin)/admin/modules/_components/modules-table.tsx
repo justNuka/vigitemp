@@ -11,7 +11,7 @@ export type ModuleRow = {
   Emplacement: string | null;
   Port_Serie: string | null;
   sondes_count: number;
-  Id_Serveur: number | null;
+  Id_Worker: number | null;
 };
 
 type ModulesTableProps = {
@@ -61,9 +61,9 @@ export function ModulesTable({
       ),
     },
     {
-      accessorKey: 'Id_Serveur',
+      accessorKey: 'Id_Worker',
       header: t('columns.server'),
-      cell: ({ row }) => row.getValue('Id_Serveur') || '-',
+      cell: ({ row }) => row.getValue('Id_Worker') || '-',
     },
   ];
 
@@ -84,5 +84,6 @@ export function ModulesTable({
     />
   );
 }
+
 
 

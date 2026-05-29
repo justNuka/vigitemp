@@ -5935,7 +5935,7 @@ export namespace Prisma {
     Id_Plan: number | null
     Position_Plan_X: number | null
     Position_Plan_Y: number | null
-    Id_Serveur: number | null
+    Id_Worker: number | null
   }
 
   export type T_actionneurSumAggregateOutputType = {
@@ -5946,7 +5946,7 @@ export namespace Prisma {
     Id_Plan: number | null
     Position_Plan_X: bigint | null
     Position_Plan_Y: bigint | null
-    Id_Serveur: number | null
+    Id_Worker: number | null
   }
 
   export type T_actionneurMinAggregateOutputType = {
@@ -5968,7 +5968,7 @@ export namespace Prisma {
     Position_Plan_X: bigint | null
     Position_Plan_Y: bigint | null
     Est_Archive: boolean | null
-    Id_Serveur: number | null
+    Id_Worker: number | null
   }
 
   export type T_actionneurMaxAggregateOutputType = {
@@ -5990,7 +5990,7 @@ export namespace Prisma {
     Position_Plan_X: bigint | null
     Position_Plan_Y: bigint | null
     Est_Archive: boolean | null
-    Id_Serveur: number | null
+    Id_Worker: number | null
   }
 
   export type T_actionneurCountAggregateOutputType = {
@@ -6012,7 +6012,7 @@ export namespace Prisma {
     Position_Plan_X: number
     Position_Plan_Y: number
     Est_Archive: number
-    Id_Serveur: number
+    Id_Worker: number
     _all: number
   }
 
@@ -6025,7 +6025,7 @@ export namespace Prisma {
     Id_Plan?: true
     Position_Plan_X?: true
     Position_Plan_Y?: true
-    Id_Serveur?: true
+    Id_Worker?: true
   }
 
   export type T_actionneurSumAggregateInputType = {
@@ -6036,7 +6036,7 @@ export namespace Prisma {
     Id_Plan?: true
     Position_Plan_X?: true
     Position_Plan_Y?: true
-    Id_Serveur?: true
+    Id_Worker?: true
   }
 
   export type T_actionneurMinAggregateInputType = {
@@ -6058,7 +6058,7 @@ export namespace Prisma {
     Position_Plan_X?: true
     Position_Plan_Y?: true
     Est_Archive?: true
-    Id_Serveur?: true
+    Id_Worker?: true
   }
 
   export type T_actionneurMaxAggregateInputType = {
@@ -6080,7 +6080,7 @@ export namespace Prisma {
     Position_Plan_X?: true
     Position_Plan_Y?: true
     Est_Archive?: true
-    Id_Serveur?: true
+    Id_Worker?: true
   }
 
   export type T_actionneurCountAggregateInputType = {
@@ -6102,7 +6102,7 @@ export namespace Prisma {
     Position_Plan_X?: true
     Position_Plan_Y?: true
     Est_Archive?: true
-    Id_Serveur?: true
+    Id_Worker?: true
     _all?: true
   }
 
@@ -6211,7 +6211,7 @@ export namespace Prisma {
     Position_Plan_X: bigint | null
     Position_Plan_Y: bigint | null
     Est_Archive: boolean | null
-    Id_Serveur: number | null
+    Id_Worker: number | null
     _count: T_actionneurCountAggregateOutputType | null
     _avg: T_actionneurAvgAggregateOutputType | null
     _sum: T_actionneurSumAggregateOutputType | null
@@ -6252,7 +6252,7 @@ export namespace Prisma {
     Position_Plan_X?: boolean
     Position_Plan_Y?: boolean
     Est_Archive?: boolean
-    Id_Serveur?: boolean
+    Id_Worker?: boolean
     t_plan?: boolean | t_actionneur$t_planArgs<ExtArgs>
     t_actionneurtype?: boolean | t_actionneur$t_actionneurtypeArgs<ExtArgs>
   }, ExtArgs["result"]["t_actionneur"]>
@@ -6278,10 +6278,10 @@ export namespace Prisma {
     Position_Plan_X?: boolean
     Position_Plan_Y?: boolean
     Est_Archive?: boolean
-    Id_Serveur?: boolean
+    Id_Worker?: boolean
   }
 
-  export type t_actionneurOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"Id_Actionneur" | "Num_Serie" | "Type" | "Est_Etat" | "Est_Demande" | "Commentaire" | "Port_Serie" | "Id_Module" | "Relai_1" | "Relai_2" | "Relai_3" | "Relai_4" | "Est_Test" | "Libelle_Erreur" | "Id_Plan" | "Position_Plan_X" | "Position_Plan_Y" | "Est_Archive" | "Id_Serveur", ExtArgs["result"]["t_actionneur"]>
+  export type t_actionneurOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"Id_Actionneur" | "Num_Serie" | "Type" | "Est_Etat" | "Est_Demande" | "Commentaire" | "Port_Serie" | "Id_Module" | "Relai_1" | "Relai_2" | "Relai_3" | "Relai_4" | "Est_Test" | "Libelle_Erreur" | "Id_Plan" | "Position_Plan_X" | "Position_Plan_Y" | "Est_Archive" | "Id_Worker", ExtArgs["result"]["t_actionneur"]>
   export type t_actionneurInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     t_plan?: boolean | t_actionneur$t_planArgs<ExtArgs>
     t_actionneurtype?: boolean | t_actionneur$t_actionneurtypeArgs<ExtArgs>
@@ -6312,7 +6312,7 @@ export namespace Prisma {
       Position_Plan_X: bigint | null
       Position_Plan_Y: bigint | null
       Est_Archive: boolean | null
-      Id_Serveur: number | null
+      Id_Worker: number | null
     }, ExtArgs["result"]["t_actionneur"]>
     composites: {}
   }
@@ -6702,7 +6702,7 @@ export namespace Prisma {
     readonly Position_Plan_X: FieldRef<"t_actionneur", 'BigInt'>
     readonly Position_Plan_Y: FieldRef<"t_actionneur", 'BigInt'>
     readonly Est_Archive: FieldRef<"t_actionneur", 'Boolean'>
-    readonly Id_Serveur: FieldRef<"t_actionneur", 'Int'>
+    readonly Id_Worker: FieldRef<"t_actionneur", 'Int'>
   }
     
 
@@ -15250,14 +15250,14 @@ export namespace Prisma {
   export type T_etalonAvgAggregateOutputType = {
     Id_Etalon: number | null
     Nb_Decimale: number | null
-    Id_Serveur: number | null
+    Id_Worker: number | null
     Id_Module: number | null
   }
 
   export type T_etalonSumAggregateOutputType = {
     Id_Etalon: number | null
     Nb_Decimale: number | null
-    Id_Serveur: number | null
+    Id_Worker: number | null
     Id_Module: number | null
   }
 
@@ -15272,7 +15272,7 @@ export namespace Prisma {
     Incertitude: string | null
     Nb_Decimale: number | null
     Reserve_MC2: string | null
-    Id_Serveur: number | null
+    Id_Worker: number | null
     Id_Module: number | null
   }
 
@@ -15287,7 +15287,7 @@ export namespace Prisma {
     Incertitude: string | null
     Nb_Decimale: number | null
     Reserve_MC2: string | null
-    Id_Serveur: number | null
+    Id_Worker: number | null
     Id_Module: number | null
   }
 
@@ -15302,7 +15302,7 @@ export namespace Prisma {
     Incertitude: number
     Nb_Decimale: number
     Reserve_MC2: number
-    Id_Serveur: number
+    Id_Worker: number
     Id_Module: number
     _all: number
   }
@@ -15311,14 +15311,14 @@ export namespace Prisma {
   export type T_etalonAvgAggregateInputType = {
     Id_Etalon?: true
     Nb_Decimale?: true
-    Id_Serveur?: true
+    Id_Worker?: true
     Id_Module?: true
   }
 
   export type T_etalonSumAggregateInputType = {
     Id_Etalon?: true
     Nb_Decimale?: true
-    Id_Serveur?: true
+    Id_Worker?: true
     Id_Module?: true
   }
 
@@ -15333,7 +15333,7 @@ export namespace Prisma {
     Incertitude?: true
     Nb_Decimale?: true
     Reserve_MC2?: true
-    Id_Serveur?: true
+    Id_Worker?: true
     Id_Module?: true
   }
 
@@ -15348,7 +15348,7 @@ export namespace Prisma {
     Incertitude?: true
     Nb_Decimale?: true
     Reserve_MC2?: true
-    Id_Serveur?: true
+    Id_Worker?: true
     Id_Module?: true
   }
 
@@ -15363,7 +15363,7 @@ export namespace Prisma {
     Incertitude?: true
     Nb_Decimale?: true
     Reserve_MC2?: true
-    Id_Serveur?: true
+    Id_Worker?: true
     Id_Module?: true
     _all?: true
   }
@@ -15465,7 +15465,7 @@ export namespace Prisma {
     Incertitude: string | null
     Nb_Decimale: number | null
     Reserve_MC2: string | null
-    Id_Serveur: number | null
+    Id_Worker: number | null
     Id_Module: number | null
     _count: T_etalonCountAggregateOutputType | null
     _avg: T_etalonAvgAggregateOutputType | null
@@ -15499,7 +15499,7 @@ export namespace Prisma {
     Incertitude?: boolean
     Nb_Decimale?: boolean
     Reserve_MC2?: boolean
-    Id_Serveur?: boolean
+    Id_Worker?: boolean
     Id_Module?: boolean
   }, ExtArgs["result"]["t_etalon"]>
 
@@ -15516,11 +15516,11 @@ export namespace Prisma {
     Incertitude?: boolean
     Nb_Decimale?: boolean
     Reserve_MC2?: boolean
-    Id_Serveur?: boolean
+    Id_Worker?: boolean
     Id_Module?: boolean
   }
 
-  export type t_etalonOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"Id_Etalon" | "Etalon_Numero_Serie" | "Est_Archive" | "Etat_Etalon" | "Port_Serie" | "Est_Sonde_Externe" | "Resolution" | "Incertitude" | "Nb_Decimale" | "Reserve_MC2" | "Id_Serveur" | "Id_Module", ExtArgs["result"]["t_etalon"]>
+  export type t_etalonOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"Id_Etalon" | "Etalon_Numero_Serie" | "Est_Archive" | "Etat_Etalon" | "Port_Serie" | "Est_Sonde_Externe" | "Resolution" | "Incertitude" | "Nb_Decimale" | "Reserve_MC2" | "Id_Worker" | "Id_Module", ExtArgs["result"]["t_etalon"]>
 
   export type $t_etalonPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "t_etalon"
@@ -15536,7 +15536,7 @@ export namespace Prisma {
       Incertitude: string | null
       Nb_Decimale: number | null
       Reserve_MC2: string | null
-      Id_Serveur: number | null
+      Id_Worker: number | null
       Id_Module: number | null
     }, ExtArgs["result"]["t_etalon"]>
     composites: {}
@@ -15917,7 +15917,7 @@ export namespace Prisma {
     readonly Incertitude: FieldRef<"t_etalon", 'String'>
     readonly Nb_Decimale: FieldRef<"t_etalon", 'Int'>
     readonly Reserve_MC2: FieldRef<"t_etalon", 'String'>
-    readonly Id_Serveur: FieldRef<"t_etalon", 'Int'>
+    readonly Id_Worker: FieldRef<"t_etalon", 'Int'>
     readonly Id_Module: FieldRef<"t_etalon", 'Int'>
   }
     
@@ -26674,7 +26674,7 @@ export namespace Prisma {
     Id_Plan: number | null
     Delai_Reseau: number | null
     Archive: number | null
-    Id_Serveur: number | null
+    Id_Worker: number | null
   }
 
   export type T_moduleSumAggregateOutputType = {
@@ -26685,7 +26685,7 @@ export namespace Prisma {
     Id_Plan: number | null
     Delai_Reseau: number | null
     Archive: number | null
-    Id_Serveur: number | null
+    Id_Worker: number | null
   }
 
   export type T_moduleMinAggregateOutputType = {
@@ -26700,7 +26700,7 @@ export namespace Prisma {
     Delai_Reseau: number | null
     Emplacement: string | null
     Archive: number | null
-    Id_Serveur: number | null
+    Id_Worker: number | null
     Est_Module_GSO: boolean | null
     Port_Serie_Send_GSO: string | null
   }
@@ -26717,7 +26717,7 @@ export namespace Prisma {
     Delai_Reseau: number | null
     Emplacement: string | null
     Archive: number | null
-    Id_Serveur: number | null
+    Id_Worker: number | null
     Est_Module_GSO: boolean | null
     Port_Serie_Send_GSO: string | null
   }
@@ -26734,7 +26734,7 @@ export namespace Prisma {
     Delai_Reseau: number
     Emplacement: number
     Archive: number
-    Id_Serveur: number
+    Id_Worker: number
     Est_Module_GSO: number
     Port_Serie_Send_GSO: number
     _all: number
@@ -26749,7 +26749,7 @@ export namespace Prisma {
     Id_Plan?: true
     Delai_Reseau?: true
     Archive?: true
-    Id_Serveur?: true
+    Id_Worker?: true
   }
 
   export type T_moduleSumAggregateInputType = {
@@ -26760,7 +26760,7 @@ export namespace Prisma {
     Id_Plan?: true
     Delai_Reseau?: true
     Archive?: true
-    Id_Serveur?: true
+    Id_Worker?: true
   }
 
   export type T_moduleMinAggregateInputType = {
@@ -26775,7 +26775,7 @@ export namespace Prisma {
     Delai_Reseau?: true
     Emplacement?: true
     Archive?: true
-    Id_Serveur?: true
+    Id_Worker?: true
     Est_Module_GSO?: true
     Port_Serie_Send_GSO?: true
   }
@@ -26792,7 +26792,7 @@ export namespace Prisma {
     Delai_Reseau?: true
     Emplacement?: true
     Archive?: true
-    Id_Serveur?: true
+    Id_Worker?: true
     Est_Module_GSO?: true
     Port_Serie_Send_GSO?: true
   }
@@ -26809,7 +26809,7 @@ export namespace Prisma {
     Delai_Reseau?: true
     Emplacement?: true
     Archive?: true
-    Id_Serveur?: true
+    Id_Worker?: true
     Est_Module_GSO?: true
     Port_Serie_Send_GSO?: true
     _all?: true
@@ -26913,7 +26913,7 @@ export namespace Prisma {
     Delai_Reseau: number | null
     Emplacement: string | null
     Archive: number | null
-    Id_Serveur: number | null
+    Id_Worker: number | null
     Est_Module_GSO: boolean
     Port_Serie_Send_GSO: string | null
     _count: T_moduleCountAggregateOutputType | null
@@ -26949,7 +26949,7 @@ export namespace Prisma {
     Delai_Reseau?: boolean
     Emplacement?: boolean
     Archive?: boolean
-    Id_Serveur?: boolean
+    Id_Worker?: boolean
     Est_Module_GSO?: boolean
     Port_Serie_Send_GSO?: boolean
   }, ExtArgs["result"]["t_module"]>
@@ -26968,12 +26968,12 @@ export namespace Prisma {
     Delai_Reseau?: boolean
     Emplacement?: boolean
     Archive?: boolean
-    Id_Serveur?: boolean
+    Id_Worker?: boolean
     Est_Module_GSO?: boolean
     Port_Serie_Send_GSO?: boolean
   }
 
-  export type t_moduleOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"Id_Module" | "Module_Numero_Serie" | "Type_Module" | "Port_Serie" | "Position_Plan_X" | "Position_Plan_Y" | "Id_Plan" | "Adresse_IP" | "Delai_Reseau" | "Emplacement" | "Archive" | "Id_Serveur" | "Est_Module_GSO" | "Port_Serie_Send_GSO", ExtArgs["result"]["t_module"]>
+  export type t_moduleOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"Id_Module" | "Module_Numero_Serie" | "Type_Module" | "Port_Serie" | "Position_Plan_X" | "Position_Plan_Y" | "Id_Plan" | "Adresse_IP" | "Delai_Reseau" | "Emplacement" | "Archive" | "Id_Worker" | "Est_Module_GSO" | "Port_Serie_Send_GSO", ExtArgs["result"]["t_module"]>
 
   export type $t_modulePayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "t_module"
@@ -26990,7 +26990,7 @@ export namespace Prisma {
       Delai_Reseau: number | null
       Emplacement: string | null
       Archive: number | null
-      Id_Serveur: number | null
+      Id_Worker: number | null
       Est_Module_GSO: boolean
       Port_Serie_Send_GSO: string | null
     }, ExtArgs["result"]["t_module"]>
@@ -27373,7 +27373,7 @@ export namespace Prisma {
     readonly Delai_Reseau: FieldRef<"t_module", 'Int'>
     readonly Emplacement: FieldRef<"t_module", 'String'>
     readonly Archive: FieldRef<"t_module", 'Int'>
-    readonly Id_Serveur: FieldRef<"t_module", 'Int'>
+    readonly Id_Worker: FieldRef<"t_module", 'Int'>
     readonly Est_Module_GSO: FieldRef<"t_module", 'Boolean'>
     readonly Port_Serie_Send_GSO: FieldRef<"t_module", 'String'>
   }
@@ -34604,7 +34604,7 @@ export namespace Prisma {
     Id_Module: number | null
     Frequence_Mesure: number | null
     Frequence_Recup: number | null
-    Id_Serveur: number | null
+    Id_Worker: number | null
     Id_Sonde_Etat: number | null
     Sonde_Offset: number | null
   }
@@ -34614,7 +34614,7 @@ export namespace Prisma {
     Id_Module: number | null
     Frequence_Mesure: number | null
     Frequence_Recup: number | null
-    Id_Serveur: number | null
+    Id_Worker: number | null
     Id_Sonde_Etat: number | null
     Sonde_Offset: number | null
   }
@@ -34636,7 +34636,7 @@ export namespace Prisma {
     Frequence_Recup: number | null
     Est_Sonde_Reformee: boolean | null
     Etat_Sonde_N1: string | null
-    Id_Serveur: number | null
+    Id_Worker: number | null
     Id_Sonde_Etat: number | null
     Sonde_Offset: number | null
   }
@@ -34658,7 +34658,7 @@ export namespace Prisma {
     Frequence_Recup: number | null
     Est_Sonde_Reformee: boolean | null
     Etat_Sonde_N1: string | null
-    Id_Serveur: number | null
+    Id_Worker: number | null
     Id_Sonde_Etat: number | null
     Sonde_Offset: number | null
   }
@@ -34680,7 +34680,7 @@ export namespace Prisma {
     Frequence_Recup: number
     Est_Sonde_Reformee: number
     Etat_Sonde_N1: number
-    Id_Serveur: number
+    Id_Worker: number
     Id_Sonde_Etat: number
     Sonde_Offset: number
     _all: number
@@ -34692,7 +34692,7 @@ export namespace Prisma {
     Id_Module?: true
     Frequence_Mesure?: true
     Frequence_Recup?: true
-    Id_Serveur?: true
+    Id_Worker?: true
     Id_Sonde_Etat?: true
     Sonde_Offset?: true
   }
@@ -34702,7 +34702,7 @@ export namespace Prisma {
     Id_Module?: true
     Frequence_Mesure?: true
     Frequence_Recup?: true
-    Id_Serveur?: true
+    Id_Worker?: true
     Id_Sonde_Etat?: true
     Sonde_Offset?: true
   }
@@ -34724,7 +34724,7 @@ export namespace Prisma {
     Frequence_Recup?: true
     Est_Sonde_Reformee?: true
     Etat_Sonde_N1?: true
-    Id_Serveur?: true
+    Id_Worker?: true
     Id_Sonde_Etat?: true
     Sonde_Offset?: true
   }
@@ -34746,7 +34746,7 @@ export namespace Prisma {
     Frequence_Recup?: true
     Est_Sonde_Reformee?: true
     Etat_Sonde_N1?: true
-    Id_Serveur?: true
+    Id_Worker?: true
     Id_Sonde_Etat?: true
     Sonde_Offset?: true
   }
@@ -34768,7 +34768,7 @@ export namespace Prisma {
     Frequence_Recup?: true
     Est_Sonde_Reformee?: true
     Etat_Sonde_N1?: true
-    Id_Serveur?: true
+    Id_Worker?: true
     Id_Sonde_Etat?: true
     Sonde_Offset?: true
     _all?: true
@@ -34877,7 +34877,7 @@ export namespace Prisma {
     Frequence_Recup: number | null
     Est_Sonde_Reformee: boolean | null
     Etat_Sonde_N1: string | null
-    Id_Serveur: number | null
+    Id_Worker: number | null
     Id_Sonde_Etat: number | null
     Sonde_Offset: number
     _count: T_sondeCountAggregateOutputType | null
@@ -34918,7 +34918,7 @@ export namespace Prisma {
     Frequence_Recup?: boolean
     Est_Sonde_Reformee?: boolean
     Etat_Sonde_N1?: boolean
-    Id_Serveur?: boolean
+    Id_Worker?: boolean
     Id_Sonde_Etat?: boolean
     Sonde_Offset?: boolean
     t_lieu?: boolean | t_sonde$t_lieuArgs<ExtArgs>
@@ -34947,12 +34947,12 @@ export namespace Prisma {
     Frequence_Recup?: boolean
     Est_Sonde_Reformee?: boolean
     Etat_Sonde_N1?: boolean
-    Id_Serveur?: boolean
+    Id_Worker?: boolean
     Id_Sonde_Etat?: boolean
     Sonde_Offset?: boolean
   }
 
-  export type t_sondeOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"Id_Sonde" | "Adresse_Sonde" | "Sonde_Numero_Serie" | "Sonde_Type" | "Est_Sonde_GSO" | "Port_Serie" | "Surveillance_Etat" | "Id_Module" | "Relai_1" | "Relai_2" | "Relai_3" | "Relai_4" | "Frequence_Mesure" | "Frequence_Recup" | "Est_Sonde_Reformee" | "Etat_Sonde_N1" | "Id_Serveur" | "Id_Sonde_Etat" | "Sonde_Offset", ExtArgs["result"]["t_sonde"]>
+  export type t_sondeOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"Id_Sonde" | "Adresse_Sonde" | "Sonde_Numero_Serie" | "Sonde_Type" | "Est_Sonde_GSO" | "Port_Serie" | "Surveillance_Etat" | "Id_Module" | "Relai_1" | "Relai_2" | "Relai_3" | "Relai_4" | "Frequence_Mesure" | "Frequence_Recup" | "Est_Sonde_Reformee" | "Etat_Sonde_N1" | "Id_Worker" | "Id_Sonde_Etat" | "Sonde_Offset", ExtArgs["result"]["t_sonde"]>
   export type t_sondeInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     t_lieu?: boolean | t_sonde$t_lieuArgs<ExtArgs>
     t_sonde_etat?: boolean | t_sonde$t_sonde_etatArgs<ExtArgs>
@@ -34986,7 +34986,7 @@ export namespace Prisma {
       Frequence_Recup: number | null
       Est_Sonde_Reformee: boolean | null
       Etat_Sonde_N1: string | null
-      Id_Serveur: number | null
+      Id_Worker: number | null
       Id_Sonde_Etat: number | null
       Sonde_Offset: number
     }, ExtArgs["result"]["t_sonde"]>
@@ -35378,7 +35378,7 @@ export namespace Prisma {
     readonly Frequence_Recup: FieldRef<"t_sonde", 'Int'>
     readonly Est_Sonde_Reformee: FieldRef<"t_sonde", 'Boolean'>
     readonly Etat_Sonde_N1: FieldRef<"t_sonde", 'String'>
-    readonly Id_Serveur: FieldRef<"t_sonde", 'Int'>
+    readonly Id_Worker: FieldRef<"t_sonde", 'Int'>
     readonly Id_Sonde_Etat: FieldRef<"t_sonde", 'Int'>
     readonly Sonde_Offset: FieldRef<"t_sonde", 'Float'>
   }
@@ -60506,7 +60506,7 @@ export namespace Prisma {
     Position_Plan_X: 'Position_Plan_X',
     Position_Plan_Y: 'Position_Plan_Y',
     Est_Archive: 'Est_Archive',
-    Id_Serveur: 'Id_Serveur'
+    Id_Worker: 'Id_Worker'
   };
 
   export type T_actionneurScalarFieldEnum = (typeof T_actionneurScalarFieldEnum)[keyof typeof T_actionneurScalarFieldEnum]
@@ -60650,7 +60650,7 @@ export namespace Prisma {
     Incertitude: 'Incertitude',
     Nb_Decimale: 'Nb_Decimale',
     Reserve_MC2: 'Reserve_MC2',
-    Id_Serveur: 'Id_Serveur',
+    Id_Worker: 'Id_Worker',
     Id_Module: 'Id_Module'
   };
 
@@ -60874,7 +60874,7 @@ export namespace Prisma {
     Delai_Reseau: 'Delai_Reseau',
     Emplacement: 'Emplacement',
     Archive: 'Archive',
-    Id_Serveur: 'Id_Serveur',
+    Id_Worker: 'Id_Worker',
     Est_Module_GSO: 'Est_Module_GSO',
     Port_Serie_Send_GSO: 'Port_Serie_Send_GSO'
   };
@@ -60973,7 +60973,7 @@ export namespace Prisma {
     Frequence_Recup: 'Frequence_Recup',
     Est_Sonde_Reformee: 'Est_Sonde_Reformee',
     Etat_Sonde_N1: 'Etat_Sonde_N1',
-    Id_Serveur: 'Id_Serveur',
+    Id_Worker: 'Id_Worker',
     Id_Sonde_Etat: 'Id_Sonde_Etat',
     Sonde_Offset: 'Sonde_Offset'
   };
@@ -61908,7 +61908,7 @@ export namespace Prisma {
     Position_Plan_X?: BigIntNullableFilter<"t_actionneur"> | bigint | number | null
     Position_Plan_Y?: BigIntNullableFilter<"t_actionneur"> | bigint | number | null
     Est_Archive?: BoolNullableFilter<"t_actionneur"> | boolean | null
-    Id_Serveur?: IntNullableFilter<"t_actionneur"> | number | null
+    Id_Worker?: IntNullableFilter<"t_actionneur"> | number | null
     t_plan?: XOR<T_planNullableScalarRelationFilter, t_planWhereInput> | null
     t_actionneurtype?: XOR<T_actionneur_typeNullableScalarRelationFilter, t_actionneur_typeWhereInput> | null
   }
@@ -61932,7 +61932,7 @@ export namespace Prisma {
     Position_Plan_X?: SortOrderInput | SortOrder
     Position_Plan_Y?: SortOrderInput | SortOrder
     Est_Archive?: SortOrderInput | SortOrder
-    Id_Serveur?: SortOrderInput | SortOrder
+    Id_Worker?: SortOrderInput | SortOrder
     t_plan?: t_planOrderByWithRelationInput
     t_actionneurtype?: t_actionneur_typeOrderByWithRelationInput
     _relevance?: t_actionneurOrderByRelevanceInput
@@ -61960,7 +61960,7 @@ export namespace Prisma {
     Position_Plan_X?: BigIntNullableFilter<"t_actionneur"> | bigint | number | null
     Position_Plan_Y?: BigIntNullableFilter<"t_actionneur"> | bigint | number | null
     Est_Archive?: BoolNullableFilter<"t_actionneur"> | boolean | null
-    Id_Serveur?: IntNullableFilter<"t_actionneur"> | number | null
+    Id_Worker?: IntNullableFilter<"t_actionneur"> | number | null
     t_plan?: XOR<T_planNullableScalarRelationFilter, t_planWhereInput> | null
     t_actionneurtype?: XOR<T_actionneur_typeNullableScalarRelationFilter, t_actionneur_typeWhereInput> | null
   }, "Id_Actionneur">
@@ -61984,7 +61984,7 @@ export namespace Prisma {
     Position_Plan_X?: SortOrderInput | SortOrder
     Position_Plan_Y?: SortOrderInput | SortOrder
     Est_Archive?: SortOrderInput | SortOrder
-    Id_Serveur?: SortOrderInput | SortOrder
+    Id_Worker?: SortOrderInput | SortOrder
     _count?: t_actionneurCountOrderByAggregateInput
     _avg?: t_actionneurAvgOrderByAggregateInput
     _max?: t_actionneurMaxOrderByAggregateInput
@@ -62014,7 +62014,7 @@ export namespace Prisma {
     Position_Plan_X?: BigIntNullableWithAggregatesFilter<"t_actionneur"> | bigint | number | null
     Position_Plan_Y?: BigIntNullableWithAggregatesFilter<"t_actionneur"> | bigint | number | null
     Est_Archive?: BoolNullableWithAggregatesFilter<"t_actionneur"> | boolean | null
-    Id_Serveur?: IntNullableWithAggregatesFilter<"t_actionneur"> | number | null
+    Id_Worker?: IntNullableWithAggregatesFilter<"t_actionneur"> | number | null
   }
 
   export type t_alarmeWhereInput = {
@@ -62678,7 +62678,7 @@ export namespace Prisma {
     Incertitude?: StringNullableFilter<"t_etalon"> | string | null
     Nb_Decimale?: IntNullableFilter<"t_etalon"> | number | null
     Reserve_MC2?: StringNullableFilter<"t_etalon"> | string | null
-    Id_Serveur?: IntNullableFilter<"t_etalon"> | number | null
+    Id_Worker?: IntNullableFilter<"t_etalon"> | number | null
     Id_Module?: IntNullableFilter<"t_etalon"> | number | null
   }
 
@@ -62693,7 +62693,7 @@ export namespace Prisma {
     Incertitude?: SortOrderInput | SortOrder
     Nb_Decimale?: SortOrderInput | SortOrder
     Reserve_MC2?: SortOrderInput | SortOrder
-    Id_Serveur?: SortOrderInput | SortOrder
+    Id_Worker?: SortOrderInput | SortOrder
     Id_Module?: SortOrderInput | SortOrder
     _relevance?: t_etalonOrderByRelevanceInput
   }
@@ -62712,7 +62712,7 @@ export namespace Prisma {
     Incertitude?: StringNullableFilter<"t_etalon"> | string | null
     Nb_Decimale?: IntNullableFilter<"t_etalon"> | number | null
     Reserve_MC2?: StringNullableFilter<"t_etalon"> | string | null
-    Id_Serveur?: IntNullableFilter<"t_etalon"> | number | null
+    Id_Worker?: IntNullableFilter<"t_etalon"> | number | null
     Id_Module?: IntNullableFilter<"t_etalon"> | number | null
   }, "Id_Etalon" | "Etalon_Numero_Serie">
 
@@ -62727,7 +62727,7 @@ export namespace Prisma {
     Incertitude?: SortOrderInput | SortOrder
     Nb_Decimale?: SortOrderInput | SortOrder
     Reserve_MC2?: SortOrderInput | SortOrder
-    Id_Serveur?: SortOrderInput | SortOrder
+    Id_Worker?: SortOrderInput | SortOrder
     Id_Module?: SortOrderInput | SortOrder
     _count?: t_etalonCountOrderByAggregateInput
     _avg?: t_etalonAvgOrderByAggregateInput
@@ -62750,7 +62750,7 @@ export namespace Prisma {
     Incertitude?: StringNullableWithAggregatesFilter<"t_etalon"> | string | null
     Nb_Decimale?: IntNullableWithAggregatesFilter<"t_etalon"> | number | null
     Reserve_MC2?: StringNullableWithAggregatesFilter<"t_etalon"> | string | null
-    Id_Serveur?: IntNullableWithAggregatesFilter<"t_etalon"> | number | null
+    Id_Worker?: IntNullableWithAggregatesFilter<"t_etalon"> | number | null
     Id_Module?: IntNullableWithAggregatesFilter<"t_etalon"> | number | null
   }
 
@@ -63852,7 +63852,7 @@ export namespace Prisma {
     Delai_Reseau?: IntNullableFilter<"t_module"> | number | null
     Emplacement?: StringNullableFilter<"t_module"> | string | null
     Archive?: IntNullableFilter<"t_module"> | number | null
-    Id_Serveur?: IntNullableFilter<"t_module"> | number | null
+    Id_Worker?: IntNullableFilter<"t_module"> | number | null
     Est_Module_GSO?: BoolFilter<"t_module"> | boolean
     Port_Serie_Send_GSO?: StringNullableFilter<"t_module"> | string | null
   }
@@ -63869,7 +63869,7 @@ export namespace Prisma {
     Delai_Reseau?: SortOrderInput | SortOrder
     Emplacement?: SortOrderInput | SortOrder
     Archive?: SortOrderInput | SortOrder
-    Id_Serveur?: SortOrderInput | SortOrder
+    Id_Worker?: SortOrderInput | SortOrder
     Est_Module_GSO?: SortOrder
     Port_Serie_Send_GSO?: SortOrderInput | SortOrder
     _relevance?: t_moduleOrderByRelevanceInput
@@ -63891,7 +63891,7 @@ export namespace Prisma {
     Delai_Reseau?: IntNullableFilter<"t_module"> | number | null
     Emplacement?: StringNullableFilter<"t_module"> | string | null
     Archive?: IntNullableFilter<"t_module"> | number | null
-    Id_Serveur?: IntNullableFilter<"t_module"> | number | null
+    Id_Worker?: IntNullableFilter<"t_module"> | number | null
     Est_Module_GSO?: BoolFilter<"t_module"> | boolean
     Port_Serie_Send_GSO?: StringNullableFilter<"t_module"> | string | null
   }, "Id_Module" | "Type_Module_Module_Numero_Serie">
@@ -63908,7 +63908,7 @@ export namespace Prisma {
     Delai_Reseau?: SortOrderInput | SortOrder
     Emplacement?: SortOrderInput | SortOrder
     Archive?: SortOrderInput | SortOrder
-    Id_Serveur?: SortOrderInput | SortOrder
+    Id_Worker?: SortOrderInput | SortOrder
     Est_Module_GSO?: SortOrder
     Port_Serie_Send_GSO?: SortOrderInput | SortOrder
     _count?: t_moduleCountOrderByAggregateInput
@@ -63933,7 +63933,7 @@ export namespace Prisma {
     Delai_Reseau?: IntNullableWithAggregatesFilter<"t_module"> | number | null
     Emplacement?: StringNullableWithAggregatesFilter<"t_module"> | string | null
     Archive?: IntNullableWithAggregatesFilter<"t_module"> | number | null
-    Id_Serveur?: IntNullableWithAggregatesFilter<"t_module"> | number | null
+    Id_Worker?: IntNullableWithAggregatesFilter<"t_module"> | number | null
     Est_Module_GSO?: BoolWithAggregatesFilter<"t_module"> | boolean
     Port_Serie_Send_GSO?: StringNullableWithAggregatesFilter<"t_module"> | string | null
   }
@@ -64357,7 +64357,7 @@ export namespace Prisma {
     Frequence_Recup?: IntNullableFilter<"t_sonde"> | number | null
     Est_Sonde_Reformee?: BoolNullableFilter<"t_sonde"> | boolean | null
     Etat_Sonde_N1?: StringNullableFilter<"t_sonde"> | string | null
-    Id_Serveur?: IntNullableFilter<"t_sonde"> | number | null
+    Id_Worker?: IntNullableFilter<"t_sonde"> | number | null
     Id_Sonde_Etat?: IntNullableFilter<"t_sonde"> | number | null
     Sonde_Offset?: FloatFilter<"t_sonde"> | number
     t_lieu?: T_lieuListRelationFilter
@@ -64383,7 +64383,7 @@ export namespace Prisma {
     Frequence_Recup?: SortOrderInput | SortOrder
     Est_Sonde_Reformee?: SortOrderInput | SortOrder
     Etat_Sonde_N1?: SortOrderInput | SortOrder
-    Id_Serveur?: SortOrderInput | SortOrder
+    Id_Worker?: SortOrderInput | SortOrder
     Id_Sonde_Etat?: SortOrderInput | SortOrder
     Sonde_Offset?: SortOrder
     t_lieu?: t_lieuOrderByRelationAggregateInput
@@ -64413,7 +64413,7 @@ export namespace Prisma {
     Frequence_Recup?: IntNullableFilter<"t_sonde"> | number | null
     Est_Sonde_Reformee?: BoolNullableFilter<"t_sonde"> | boolean | null
     Etat_Sonde_N1?: StringNullableFilter<"t_sonde"> | string | null
-    Id_Serveur?: IntNullableFilter<"t_sonde"> | number | null
+    Id_Worker?: IntNullableFilter<"t_sonde"> | number | null
     Id_Sonde_Etat?: IntNullableFilter<"t_sonde"> | number | null
     Sonde_Offset?: FloatFilter<"t_sonde"> | number
     t_lieu?: T_lieuListRelationFilter
@@ -64439,7 +64439,7 @@ export namespace Prisma {
     Frequence_Recup?: SortOrderInput | SortOrder
     Est_Sonde_Reformee?: SortOrderInput | SortOrder
     Etat_Sonde_N1?: SortOrderInput | SortOrder
-    Id_Serveur?: SortOrderInput | SortOrder
+    Id_Worker?: SortOrderInput | SortOrder
     Id_Sonde_Etat?: SortOrderInput | SortOrder
     Sonde_Offset?: SortOrder
     _count?: t_sondeCountOrderByAggregateInput
@@ -64469,7 +64469,7 @@ export namespace Prisma {
     Frequence_Recup?: IntNullableWithAggregatesFilter<"t_sonde"> | number | null
     Est_Sonde_Reformee?: BoolNullableWithAggregatesFilter<"t_sonde"> | boolean | null
     Etat_Sonde_N1?: StringNullableWithAggregatesFilter<"t_sonde"> | string | null
-    Id_Serveur?: IntNullableWithAggregatesFilter<"t_sonde"> | number | null
+    Id_Worker?: IntNullableWithAggregatesFilter<"t_sonde"> | number | null
     Id_Sonde_Etat?: IntNullableWithAggregatesFilter<"t_sonde"> | number | null
     Sonde_Offset?: FloatWithAggregatesFilter<"t_sonde"> | number
   }
@@ -66508,7 +66508,7 @@ export namespace Prisma {
     Position_Plan_X?: bigint | number | null
     Position_Plan_Y?: bigint | number | null
     Est_Archive?: boolean | null
-    Id_Serveur?: number | null
+    Id_Worker?: number | null
     t_plan?: t_planCreateNestedOneWithoutT_actionneurInput
     t_actionneurtype?: t_actionneur_typeCreateNestedOneWithoutT_actionneurInput
   }
@@ -66532,7 +66532,7 @@ export namespace Prisma {
     Position_Plan_X?: bigint | number | null
     Position_Plan_Y?: bigint | number | null
     Est_Archive?: boolean | null
-    Id_Serveur?: number | null
+    Id_Worker?: number | null
   }
 
   export type t_actionneurUpdateInput = {
@@ -66551,7 +66551,7 @@ export namespace Prisma {
     Position_Plan_X?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
     Position_Plan_Y?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
     Est_Archive?: NullableBoolFieldUpdateOperationsInput | boolean | null
-    Id_Serveur?: NullableIntFieldUpdateOperationsInput | number | null
+    Id_Worker?: NullableIntFieldUpdateOperationsInput | number | null
     t_plan?: t_planUpdateOneWithoutT_actionneurNestedInput
     t_actionneurtype?: t_actionneur_typeUpdateOneWithoutT_actionneurNestedInput
   }
@@ -66575,7 +66575,7 @@ export namespace Prisma {
     Position_Plan_X?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
     Position_Plan_Y?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
     Est_Archive?: NullableBoolFieldUpdateOperationsInput | boolean | null
-    Id_Serveur?: NullableIntFieldUpdateOperationsInput | number | null
+    Id_Worker?: NullableIntFieldUpdateOperationsInput | number | null
   }
 
   export type t_actionneurCreateManyInput = {
@@ -66597,7 +66597,7 @@ export namespace Prisma {
     Position_Plan_X?: bigint | number | null
     Position_Plan_Y?: bigint | number | null
     Est_Archive?: boolean | null
-    Id_Serveur?: number | null
+    Id_Worker?: number | null
   }
 
   export type t_actionneurUpdateManyMutationInput = {
@@ -66616,7 +66616,7 @@ export namespace Prisma {
     Position_Plan_X?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
     Position_Plan_Y?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
     Est_Archive?: NullableBoolFieldUpdateOperationsInput | boolean | null
-    Id_Serveur?: NullableIntFieldUpdateOperationsInput | number | null
+    Id_Worker?: NullableIntFieldUpdateOperationsInput | number | null
   }
 
   export type t_actionneurUncheckedUpdateManyInput = {
@@ -66638,7 +66638,7 @@ export namespace Prisma {
     Position_Plan_X?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
     Position_Plan_Y?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
     Est_Archive?: NullableBoolFieldUpdateOperationsInput | boolean | null
-    Id_Serveur?: NullableIntFieldUpdateOperationsInput | number | null
+    Id_Worker?: NullableIntFieldUpdateOperationsInput | number | null
   }
 
   export type t_alarmeCreateInput = {
@@ -67354,7 +67354,7 @@ export namespace Prisma {
     Incertitude?: string | null
     Nb_Decimale?: number | null
     Reserve_MC2?: string | null
-    Id_Serveur?: number | null
+    Id_Worker?: number | null
     Id_Module?: number | null
   }
 
@@ -67369,7 +67369,7 @@ export namespace Prisma {
     Incertitude?: string | null
     Nb_Decimale?: number | null
     Reserve_MC2?: string | null
-    Id_Serveur?: number | null
+    Id_Worker?: number | null
     Id_Module?: number | null
   }
 
@@ -67383,7 +67383,7 @@ export namespace Prisma {
     Incertitude?: NullableStringFieldUpdateOperationsInput | string | null
     Nb_Decimale?: NullableIntFieldUpdateOperationsInput | number | null
     Reserve_MC2?: NullableStringFieldUpdateOperationsInput | string | null
-    Id_Serveur?: NullableIntFieldUpdateOperationsInput | number | null
+    Id_Worker?: NullableIntFieldUpdateOperationsInput | number | null
     Id_Module?: NullableIntFieldUpdateOperationsInput | number | null
   }
 
@@ -67398,7 +67398,7 @@ export namespace Prisma {
     Incertitude?: NullableStringFieldUpdateOperationsInput | string | null
     Nb_Decimale?: NullableIntFieldUpdateOperationsInput | number | null
     Reserve_MC2?: NullableStringFieldUpdateOperationsInput | string | null
-    Id_Serveur?: NullableIntFieldUpdateOperationsInput | number | null
+    Id_Worker?: NullableIntFieldUpdateOperationsInput | number | null
     Id_Module?: NullableIntFieldUpdateOperationsInput | number | null
   }
 
@@ -67413,7 +67413,7 @@ export namespace Prisma {
     Incertitude?: string | null
     Nb_Decimale?: number | null
     Reserve_MC2?: string | null
-    Id_Serveur?: number | null
+    Id_Worker?: number | null
     Id_Module?: number | null
   }
 
@@ -67427,7 +67427,7 @@ export namespace Prisma {
     Incertitude?: NullableStringFieldUpdateOperationsInput | string | null
     Nb_Decimale?: NullableIntFieldUpdateOperationsInput | number | null
     Reserve_MC2?: NullableStringFieldUpdateOperationsInput | string | null
-    Id_Serveur?: NullableIntFieldUpdateOperationsInput | number | null
+    Id_Worker?: NullableIntFieldUpdateOperationsInput | number | null
     Id_Module?: NullableIntFieldUpdateOperationsInput | number | null
   }
 
@@ -67442,7 +67442,7 @@ export namespace Prisma {
     Incertitude?: NullableStringFieldUpdateOperationsInput | string | null
     Nb_Decimale?: NullableIntFieldUpdateOperationsInput | number | null
     Reserve_MC2?: NullableStringFieldUpdateOperationsInput | string | null
-    Id_Serveur?: NullableIntFieldUpdateOperationsInput | number | null
+    Id_Worker?: NullableIntFieldUpdateOperationsInput | number | null
     Id_Module?: NullableIntFieldUpdateOperationsInput | number | null
   }
 
@@ -68700,7 +68700,7 @@ export namespace Prisma {
     Delai_Reseau?: number | null
     Emplacement?: string | null
     Archive?: number | null
-    Id_Serveur?: number | null
+    Id_Worker?: number | null
     Est_Module_GSO?: boolean
     Port_Serie_Send_GSO?: string | null
   }
@@ -68717,7 +68717,7 @@ export namespace Prisma {
     Delai_Reseau?: number | null
     Emplacement?: string | null
     Archive?: number | null
-    Id_Serveur?: number | null
+    Id_Worker?: number | null
     Est_Module_GSO?: boolean
     Port_Serie_Send_GSO?: string | null
   }
@@ -68733,7 +68733,7 @@ export namespace Prisma {
     Delai_Reseau?: NullableIntFieldUpdateOperationsInput | number | null
     Emplacement?: NullableStringFieldUpdateOperationsInput | string | null
     Archive?: NullableIntFieldUpdateOperationsInput | number | null
-    Id_Serveur?: NullableIntFieldUpdateOperationsInput | number | null
+    Id_Worker?: NullableIntFieldUpdateOperationsInput | number | null
     Est_Module_GSO?: BoolFieldUpdateOperationsInput | boolean
     Port_Serie_Send_GSO?: NullableStringFieldUpdateOperationsInput | string | null
   }
@@ -68750,7 +68750,7 @@ export namespace Prisma {
     Delai_Reseau?: NullableIntFieldUpdateOperationsInput | number | null
     Emplacement?: NullableStringFieldUpdateOperationsInput | string | null
     Archive?: NullableIntFieldUpdateOperationsInput | number | null
-    Id_Serveur?: NullableIntFieldUpdateOperationsInput | number | null
+    Id_Worker?: NullableIntFieldUpdateOperationsInput | number | null
     Est_Module_GSO?: BoolFieldUpdateOperationsInput | boolean
     Port_Serie_Send_GSO?: NullableStringFieldUpdateOperationsInput | string | null
   }
@@ -68767,7 +68767,7 @@ export namespace Prisma {
     Delai_Reseau?: number | null
     Emplacement?: string | null
     Archive?: number | null
-    Id_Serveur?: number | null
+    Id_Worker?: number | null
     Est_Module_GSO?: boolean
     Port_Serie_Send_GSO?: string | null
   }
@@ -68783,7 +68783,7 @@ export namespace Prisma {
     Delai_Reseau?: NullableIntFieldUpdateOperationsInput | number | null
     Emplacement?: NullableStringFieldUpdateOperationsInput | string | null
     Archive?: NullableIntFieldUpdateOperationsInput | number | null
-    Id_Serveur?: NullableIntFieldUpdateOperationsInput | number | null
+    Id_Worker?: NullableIntFieldUpdateOperationsInput | number | null
     Est_Module_GSO?: BoolFieldUpdateOperationsInput | boolean
     Port_Serie_Send_GSO?: NullableStringFieldUpdateOperationsInput | string | null
   }
@@ -68800,7 +68800,7 @@ export namespace Prisma {
     Delai_Reseau?: NullableIntFieldUpdateOperationsInput | number | null
     Emplacement?: NullableStringFieldUpdateOperationsInput | string | null
     Archive?: NullableIntFieldUpdateOperationsInput | number | null
-    Id_Serveur?: NullableIntFieldUpdateOperationsInput | number | null
+    Id_Worker?: NullableIntFieldUpdateOperationsInput | number | null
     Est_Module_GSO?: BoolFieldUpdateOperationsInput | boolean
     Port_Serie_Send_GSO?: NullableStringFieldUpdateOperationsInput | string | null
   }
@@ -69212,7 +69212,7 @@ export namespace Prisma {
     Frequence_Recup?: number | null
     Est_Sonde_Reformee?: boolean | null
     Etat_Sonde_N1?: string | null
-    Id_Serveur?: number | null
+    Id_Worker?: number | null
     Sonde_Offset?: number
     t_lieu?: t_lieuCreateNestedManyWithoutT_sondeInput
     t_sonde_etat?: t_sonde_etatCreateNestedOneWithoutT_sondeInput
@@ -69237,7 +69237,7 @@ export namespace Prisma {
     Frequence_Recup?: number | null
     Est_Sonde_Reformee?: boolean | null
     Etat_Sonde_N1?: string | null
-    Id_Serveur?: number | null
+    Id_Worker?: number | null
     Id_Sonde_Etat?: number | null
     Sonde_Offset?: number
     t_lieu?: t_lieuUncheckedCreateNestedManyWithoutT_sondeInput
@@ -69257,7 +69257,7 @@ export namespace Prisma {
     Frequence_Recup?: NullableIntFieldUpdateOperationsInput | number | null
     Est_Sonde_Reformee?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Etat_Sonde_N1?: NullableStringFieldUpdateOperationsInput | string | null
-    Id_Serveur?: NullableIntFieldUpdateOperationsInput | number | null
+    Id_Worker?: NullableIntFieldUpdateOperationsInput | number | null
     Sonde_Offset?: FloatFieldUpdateOperationsInput | number
     t_lieu?: t_lieuUpdateManyWithoutT_sondeNestedInput
     t_sonde_etat?: t_sonde_etatUpdateOneWithoutT_sondeNestedInput
@@ -69282,7 +69282,7 @@ export namespace Prisma {
     Frequence_Recup?: NullableIntFieldUpdateOperationsInput | number | null
     Est_Sonde_Reformee?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Etat_Sonde_N1?: NullableStringFieldUpdateOperationsInput | string | null
-    Id_Serveur?: NullableIntFieldUpdateOperationsInput | number | null
+    Id_Worker?: NullableIntFieldUpdateOperationsInput | number | null
     Id_Sonde_Etat?: NullableIntFieldUpdateOperationsInput | number | null
     Sonde_Offset?: FloatFieldUpdateOperationsInput | number
     t_lieu?: t_lieuUncheckedUpdateManyWithoutT_sondeNestedInput
@@ -69305,7 +69305,7 @@ export namespace Prisma {
     Frequence_Recup?: number | null
     Est_Sonde_Reformee?: boolean | null
     Etat_Sonde_N1?: string | null
-    Id_Serveur?: number | null
+    Id_Worker?: number | null
     Id_Sonde_Etat?: number | null
     Sonde_Offset?: number
   }
@@ -69324,7 +69324,7 @@ export namespace Prisma {
     Frequence_Recup?: NullableIntFieldUpdateOperationsInput | number | null
     Est_Sonde_Reformee?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Etat_Sonde_N1?: NullableStringFieldUpdateOperationsInput | string | null
-    Id_Serveur?: NullableIntFieldUpdateOperationsInput | number | null
+    Id_Worker?: NullableIntFieldUpdateOperationsInput | number | null
     Sonde_Offset?: FloatFieldUpdateOperationsInput | number
   }
 
@@ -69345,7 +69345,7 @@ export namespace Prisma {
     Frequence_Recup?: NullableIntFieldUpdateOperationsInput | number | null
     Est_Sonde_Reformee?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Etat_Sonde_N1?: NullableStringFieldUpdateOperationsInput | string | null
-    Id_Serveur?: NullableIntFieldUpdateOperationsInput | number | null
+    Id_Worker?: NullableIntFieldUpdateOperationsInput | number | null
     Id_Sonde_Etat?: NullableIntFieldUpdateOperationsInput | number | null
     Sonde_Offset?: FloatFieldUpdateOperationsInput | number
   }
@@ -71590,7 +71590,7 @@ export namespace Prisma {
     Position_Plan_X?: SortOrder
     Position_Plan_Y?: SortOrder
     Est_Archive?: SortOrder
-    Id_Serveur?: SortOrder
+    Id_Worker?: SortOrder
   }
 
   export type t_actionneurAvgOrderByAggregateInput = {
@@ -71601,7 +71601,7 @@ export namespace Prisma {
     Id_Plan?: SortOrder
     Position_Plan_X?: SortOrder
     Position_Plan_Y?: SortOrder
-    Id_Serveur?: SortOrder
+    Id_Worker?: SortOrder
   }
 
   export type t_actionneurMaxOrderByAggregateInput = {
@@ -71623,7 +71623,7 @@ export namespace Prisma {
     Position_Plan_X?: SortOrder
     Position_Plan_Y?: SortOrder
     Est_Archive?: SortOrder
-    Id_Serveur?: SortOrder
+    Id_Worker?: SortOrder
   }
 
   export type t_actionneurMinOrderByAggregateInput = {
@@ -71645,7 +71645,7 @@ export namespace Prisma {
     Position_Plan_X?: SortOrder
     Position_Plan_Y?: SortOrder
     Est_Archive?: SortOrder
-    Id_Serveur?: SortOrder
+    Id_Worker?: SortOrder
   }
 
   export type t_actionneurSumOrderByAggregateInput = {
@@ -71656,7 +71656,7 @@ export namespace Prisma {
     Id_Plan?: SortOrder
     Position_Plan_X?: SortOrder
     Position_Plan_Y?: SortOrder
-    Id_Serveur?: SortOrder
+    Id_Worker?: SortOrder
   }
 
   export type IntWithAggregatesFilter<$PrismaModel = never> = {
@@ -72296,14 +72296,14 @@ export namespace Prisma {
     Incertitude?: SortOrder
     Nb_Decimale?: SortOrder
     Reserve_MC2?: SortOrder
-    Id_Serveur?: SortOrder
+    Id_Worker?: SortOrder
     Id_Module?: SortOrder
   }
 
   export type t_etalonAvgOrderByAggregateInput = {
     Id_Etalon?: SortOrder
     Nb_Decimale?: SortOrder
-    Id_Serveur?: SortOrder
+    Id_Worker?: SortOrder
     Id_Module?: SortOrder
   }
 
@@ -72318,7 +72318,7 @@ export namespace Prisma {
     Incertitude?: SortOrder
     Nb_Decimale?: SortOrder
     Reserve_MC2?: SortOrder
-    Id_Serveur?: SortOrder
+    Id_Worker?: SortOrder
     Id_Module?: SortOrder
   }
 
@@ -72333,14 +72333,14 @@ export namespace Prisma {
     Incertitude?: SortOrder
     Nb_Decimale?: SortOrder
     Reserve_MC2?: SortOrder
-    Id_Serveur?: SortOrder
+    Id_Worker?: SortOrder
     Id_Module?: SortOrder
   }
 
   export type t_etalonSumOrderByAggregateInput = {
     Id_Etalon?: SortOrder
     Nb_Decimale?: SortOrder
-    Id_Serveur?: SortOrder
+    Id_Worker?: SortOrder
     Id_Module?: SortOrder
   }
 
@@ -73371,7 +73371,7 @@ export namespace Prisma {
     Delai_Reseau?: SortOrder
     Emplacement?: SortOrder
     Archive?: SortOrder
-    Id_Serveur?: SortOrder
+    Id_Worker?: SortOrder
     Est_Module_GSO?: SortOrder
     Port_Serie_Send_GSO?: SortOrder
   }
@@ -73384,7 +73384,7 @@ export namespace Prisma {
     Id_Plan?: SortOrder
     Delai_Reseau?: SortOrder
     Archive?: SortOrder
-    Id_Serveur?: SortOrder
+    Id_Worker?: SortOrder
   }
 
   export type t_moduleMaxOrderByAggregateInput = {
@@ -73399,7 +73399,7 @@ export namespace Prisma {
     Delai_Reseau?: SortOrder
     Emplacement?: SortOrder
     Archive?: SortOrder
-    Id_Serveur?: SortOrder
+    Id_Worker?: SortOrder
     Est_Module_GSO?: SortOrder
     Port_Serie_Send_GSO?: SortOrder
   }
@@ -73416,7 +73416,7 @@ export namespace Prisma {
     Delai_Reseau?: SortOrder
     Emplacement?: SortOrder
     Archive?: SortOrder
-    Id_Serveur?: SortOrder
+    Id_Worker?: SortOrder
     Est_Module_GSO?: SortOrder
     Port_Serie_Send_GSO?: SortOrder
   }
@@ -73429,7 +73429,7 @@ export namespace Prisma {
     Id_Plan?: SortOrder
     Delai_Reseau?: SortOrder
     Archive?: SortOrder
-    Id_Serveur?: SortOrder
+    Id_Worker?: SortOrder
   }
 
   export type t_module_typeOrderByRelevanceInput = {
@@ -73812,7 +73812,7 @@ export namespace Prisma {
     Frequence_Recup?: SortOrder
     Est_Sonde_Reformee?: SortOrder
     Etat_Sonde_N1?: SortOrder
-    Id_Serveur?: SortOrder
+    Id_Worker?: SortOrder
     Id_Sonde_Etat?: SortOrder
     Sonde_Offset?: SortOrder
   }
@@ -73822,7 +73822,7 @@ export namespace Prisma {
     Id_Module?: SortOrder
     Frequence_Mesure?: SortOrder
     Frequence_Recup?: SortOrder
-    Id_Serveur?: SortOrder
+    Id_Worker?: SortOrder
     Id_Sonde_Etat?: SortOrder
     Sonde_Offset?: SortOrder
   }
@@ -73844,7 +73844,7 @@ export namespace Prisma {
     Frequence_Recup?: SortOrder
     Est_Sonde_Reformee?: SortOrder
     Etat_Sonde_N1?: SortOrder
-    Id_Serveur?: SortOrder
+    Id_Worker?: SortOrder
     Id_Sonde_Etat?: SortOrder
     Sonde_Offset?: SortOrder
   }
@@ -73866,7 +73866,7 @@ export namespace Prisma {
     Frequence_Recup?: SortOrder
     Est_Sonde_Reformee?: SortOrder
     Etat_Sonde_N1?: SortOrder
-    Id_Serveur?: SortOrder
+    Id_Worker?: SortOrder
     Id_Sonde_Etat?: SortOrder
     Sonde_Offset?: SortOrder
   }
@@ -73876,7 +73876,7 @@ export namespace Prisma {
     Id_Module?: SortOrder
     Frequence_Mesure?: SortOrder
     Frequence_Recup?: SortOrder
-    Id_Serveur?: SortOrder
+    Id_Worker?: SortOrder
     Id_Sonde_Etat?: SortOrder
     Sonde_Offset?: SortOrder
   }
@@ -80591,7 +80591,7 @@ export namespace Prisma {
     Frequence_Recup?: number | null
     Est_Sonde_Reformee?: boolean | null
     Etat_Sonde_N1?: string | null
-    Id_Serveur?: number | null
+    Id_Worker?: number | null
     Sonde_Offset?: number
     t_sonde_etat?: t_sonde_etatCreateNestedOneWithoutT_sondeInput
     t_etat_surveillance?: t_etat_surveillanceCreateNestedOneWithoutT_sondeInput
@@ -80615,7 +80615,7 @@ export namespace Prisma {
     Frequence_Recup?: number | null
     Est_Sonde_Reformee?: boolean | null
     Etat_Sonde_N1?: string | null
-    Id_Serveur?: number | null
+    Id_Worker?: number | null
     Id_Sonde_Etat?: number | null
     Sonde_Offset?: number
   }
@@ -80914,7 +80914,7 @@ export namespace Prisma {
     Frequence_Recup?: NullableIntFieldUpdateOperationsInput | number | null
     Est_Sonde_Reformee?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Etat_Sonde_N1?: NullableStringFieldUpdateOperationsInput | string | null
-    Id_Serveur?: NullableIntFieldUpdateOperationsInput | number | null
+    Id_Worker?: NullableIntFieldUpdateOperationsInput | number | null
     Sonde_Offset?: FloatFieldUpdateOperationsInput | number
     t_sonde_etat?: t_sonde_etatUpdateOneWithoutT_sondeNestedInput
     t_etat_surveillance?: t_etat_surveillanceUpdateOneRequiredWithoutT_sondeNestedInput
@@ -80938,7 +80938,7 @@ export namespace Prisma {
     Frequence_Recup?: NullableIntFieldUpdateOperationsInput | number | null
     Est_Sonde_Reformee?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Etat_Sonde_N1?: NullableStringFieldUpdateOperationsInput | string | null
-    Id_Serveur?: NullableIntFieldUpdateOperationsInput | number | null
+    Id_Worker?: NullableIntFieldUpdateOperationsInput | number | null
     Id_Sonde_Etat?: NullableIntFieldUpdateOperationsInput | number | null
     Sonde_Offset?: FloatFieldUpdateOperationsInput | number
   }
@@ -81411,7 +81411,7 @@ export namespace Prisma {
     Position_Plan_X?: bigint | number | null
     Position_Plan_Y?: bigint | number | null
     Est_Archive?: boolean | null
-    Id_Serveur?: number | null
+    Id_Worker?: number | null
     t_actionneurtype?: t_actionneur_typeCreateNestedOneWithoutT_actionneurInput
   }
 
@@ -81433,7 +81433,7 @@ export namespace Prisma {
     Position_Plan_X?: bigint | number | null
     Position_Plan_Y?: bigint | number | null
     Est_Archive?: boolean | null
-    Id_Serveur?: number | null
+    Id_Worker?: number | null
   }
 
   export type t_actionneurCreateOrConnectWithoutT_planInput = {
@@ -81675,7 +81675,7 @@ export namespace Prisma {
     Position_Plan_X?: BigIntNullableFilter<"t_actionneur"> | bigint | number | null
     Position_Plan_Y?: BigIntNullableFilter<"t_actionneur"> | bigint | number | null
     Est_Archive?: BoolNullableFilter<"t_actionneur"> | boolean | null
-    Id_Serveur?: IntNullableFilter<"t_actionneur"> | number | null
+    Id_Worker?: IntNullableFilter<"t_actionneur"> | number | null
   }
 
   export type t_lieuUpsertWithWhereUniqueWithoutT_planInput = {
@@ -82856,7 +82856,7 @@ export namespace Prisma {
     Frequence_Recup?: number | null
     Est_Sonde_Reformee?: boolean | null
     Etat_Sonde_N1?: string | null
-    Id_Serveur?: number | null
+    Id_Worker?: number | null
     Sonde_Offset?: number
     t_lieu?: t_lieuCreateNestedManyWithoutT_sondeInput
     t_sonde_etat?: t_sonde_etatCreateNestedOneWithoutT_sondeInput
@@ -82879,7 +82879,7 @@ export namespace Prisma {
     Frequence_Recup?: number | null
     Est_Sonde_Reformee?: boolean | null
     Etat_Sonde_N1?: string | null
-    Id_Serveur?: number | null
+    Id_Worker?: number | null
     Id_Sonde_Etat?: number | null
     Sonde_Offset?: number
     t_lieu?: t_lieuUncheckedCreateNestedManyWithoutT_sondeInput
@@ -82947,7 +82947,7 @@ export namespace Prisma {
     Frequence_Recup?: IntNullableFilter<"t_sonde"> | number | null
     Est_Sonde_Reformee?: BoolNullableFilter<"t_sonde"> | boolean | null
     Etat_Sonde_N1?: StringNullableFilter<"t_sonde"> | string | null
-    Id_Serveur?: IntNullableFilter<"t_sonde"> | number | null
+    Id_Worker?: IntNullableFilter<"t_sonde"> | number | null
     Id_Sonde_Etat?: IntNullableFilter<"t_sonde"> | number | null
     Sonde_Offset?: FloatFilter<"t_sonde"> | number
   }
@@ -82966,7 +82966,7 @@ export namespace Prisma {
     Frequence_Recup?: number | null
     Est_Sonde_Reformee?: boolean | null
     Etat_Sonde_N1?: string | null
-    Id_Serveur?: number | null
+    Id_Worker?: number | null
     Sonde_Offset?: number
     t_lieu?: t_lieuCreateNestedManyWithoutT_sondeInput
     t_sonde_etat?: t_sonde_etatCreateNestedOneWithoutT_sondeInput
@@ -82989,7 +82989,7 @@ export namespace Prisma {
     Frequence_Recup?: number | null
     Est_Sonde_Reformee?: boolean | null
     Etat_Sonde_N1?: string | null
-    Id_Serveur?: number | null
+    Id_Worker?: number | null
     Id_Sonde_Etat?: number | null
     Sonde_Offset?: number
     t_lieu?: t_lieuUncheckedCreateNestedManyWithoutT_sondeInput
@@ -84420,7 +84420,7 @@ export namespace Prisma {
     Position_Plan_X?: bigint | number | null
     Position_Plan_Y?: bigint | number | null
     Est_Archive?: boolean | null
-    Id_Serveur?: number | null
+    Id_Worker?: number | null
     t_plan?: t_planCreateNestedOneWithoutT_actionneurInput
   }
 
@@ -84442,7 +84442,7 @@ export namespace Prisma {
     Position_Plan_X?: bigint | number | null
     Position_Plan_Y?: bigint | number | null
     Est_Archive?: boolean | null
-    Id_Serveur?: number | null
+    Id_Worker?: number | null
   }
 
   export type t_actionneurCreateOrConnectWithoutT_actionneurtypeInput = {
@@ -84639,7 +84639,7 @@ export namespace Prisma {
     Frequence_Recup?: number | null
     Est_Sonde_Reformee?: boolean | null
     Etat_Sonde_N1?: string | null
-    Id_Serveur?: number | null
+    Id_Worker?: number | null
     Sonde_Offset?: number
     t_lieu?: t_lieuCreateNestedManyWithoutT_sondeInput
     t_etat_surveillance?: t_etat_surveillanceCreateNestedOneWithoutT_sondeInput
@@ -84663,7 +84663,7 @@ export namespace Prisma {
     Frequence_Recup?: number | null
     Est_Sonde_Reformee?: boolean | null
     Etat_Sonde_N1?: string | null
-    Id_Serveur?: number | null
+    Id_Worker?: number | null
     Sonde_Offset?: number
     t_lieu?: t_lieuUncheckedCreateNestedManyWithoutT_sondeInput
   }
@@ -88551,7 +88551,7 @@ export namespace Prisma {
     Position_Plan_X?: bigint | number | null
     Position_Plan_Y?: bigint | number | null
     Est_Archive?: boolean | null
-    Id_Serveur?: number | null
+    Id_Worker?: number | null
   }
 
   export type t_lieuCreateManyT_planInput = {
@@ -88656,7 +88656,7 @@ export namespace Prisma {
     Position_Plan_X?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
     Position_Plan_Y?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
     Est_Archive?: NullableBoolFieldUpdateOperationsInput | boolean | null
-    Id_Serveur?: NullableIntFieldUpdateOperationsInput | number | null
+    Id_Worker?: NullableIntFieldUpdateOperationsInput | number | null
     t_actionneurtype?: t_actionneur_typeUpdateOneWithoutT_actionneurNestedInput
   }
 
@@ -88678,7 +88678,7 @@ export namespace Prisma {
     Position_Plan_X?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
     Position_Plan_Y?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
     Est_Archive?: NullableBoolFieldUpdateOperationsInput | boolean | null
-    Id_Serveur?: NullableIntFieldUpdateOperationsInput | number | null
+    Id_Worker?: NullableIntFieldUpdateOperationsInput | number | null
   }
 
   export type t_actionneurUncheckedUpdateManyWithoutT_planInput = {
@@ -88699,7 +88699,7 @@ export namespace Prisma {
     Position_Plan_X?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
     Position_Plan_Y?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
     Est_Archive?: NullableBoolFieldUpdateOperationsInput | boolean | null
-    Id_Serveur?: NullableIntFieldUpdateOperationsInput | number | null
+    Id_Worker?: NullableIntFieldUpdateOperationsInput | number | null
   }
 
   export type t_lieuUpdateWithoutT_planInput = {
@@ -90199,7 +90199,7 @@ export namespace Prisma {
     Frequence_Recup?: number | null
     Est_Sonde_Reformee?: boolean | null
     Etat_Sonde_N1?: string | null
-    Id_Serveur?: number | null
+    Id_Worker?: number | null
     Id_Sonde_Etat?: number | null
     Sonde_Offset?: number
   }
@@ -90485,7 +90485,7 @@ export namespace Prisma {
     Frequence_Recup?: NullableIntFieldUpdateOperationsInput | number | null
     Est_Sonde_Reformee?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Etat_Sonde_N1?: NullableStringFieldUpdateOperationsInput | string | null
-    Id_Serveur?: NullableIntFieldUpdateOperationsInput | number | null
+    Id_Worker?: NullableIntFieldUpdateOperationsInput | number | null
     Sonde_Offset?: FloatFieldUpdateOperationsInput | number
     t_lieu?: t_lieuUpdateManyWithoutT_sondeNestedInput
     t_sonde_etat?: t_sonde_etatUpdateOneWithoutT_sondeNestedInput
@@ -90508,7 +90508,7 @@ export namespace Prisma {
     Frequence_Recup?: NullableIntFieldUpdateOperationsInput | number | null
     Est_Sonde_Reformee?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Etat_Sonde_N1?: NullableStringFieldUpdateOperationsInput | string | null
-    Id_Serveur?: NullableIntFieldUpdateOperationsInput | number | null
+    Id_Worker?: NullableIntFieldUpdateOperationsInput | number | null
     Id_Sonde_Etat?: NullableIntFieldUpdateOperationsInput | number | null
     Sonde_Offset?: FloatFieldUpdateOperationsInput | number
     t_lieu?: t_lieuUncheckedUpdateManyWithoutT_sondeNestedInput
@@ -90530,7 +90530,7 @@ export namespace Prisma {
     Frequence_Recup?: NullableIntFieldUpdateOperationsInput | number | null
     Est_Sonde_Reformee?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Etat_Sonde_N1?: NullableStringFieldUpdateOperationsInput | string | null
-    Id_Serveur?: NullableIntFieldUpdateOperationsInput | number | null
+    Id_Worker?: NullableIntFieldUpdateOperationsInput | number | null
     Id_Sonde_Etat?: NullableIntFieldUpdateOperationsInput | number | null
     Sonde_Offset?: FloatFieldUpdateOperationsInput | number
   }
@@ -90551,7 +90551,7 @@ export namespace Prisma {
     Frequence_Recup?: number | null
     Est_Sonde_Reformee?: boolean | null
     Etat_Sonde_N1?: string | null
-    Id_Serveur?: number | null
+    Id_Worker?: number | null
     Id_Sonde_Etat?: number | null
     Sonde_Offset?: number
   }
@@ -90570,7 +90570,7 @@ export namespace Prisma {
     Frequence_Recup?: NullableIntFieldUpdateOperationsInput | number | null
     Est_Sonde_Reformee?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Etat_Sonde_N1?: NullableStringFieldUpdateOperationsInput | string | null
-    Id_Serveur?: NullableIntFieldUpdateOperationsInput | number | null
+    Id_Worker?: NullableIntFieldUpdateOperationsInput | number | null
     Sonde_Offset?: FloatFieldUpdateOperationsInput | number
     t_lieu?: t_lieuUpdateManyWithoutT_sondeNestedInput
     t_sonde_etat?: t_sonde_etatUpdateOneWithoutT_sondeNestedInput
@@ -90593,7 +90593,7 @@ export namespace Prisma {
     Frequence_Recup?: NullableIntFieldUpdateOperationsInput | number | null
     Est_Sonde_Reformee?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Etat_Sonde_N1?: NullableStringFieldUpdateOperationsInput | string | null
-    Id_Serveur?: NullableIntFieldUpdateOperationsInput | number | null
+    Id_Worker?: NullableIntFieldUpdateOperationsInput | number | null
     Id_Sonde_Etat?: NullableIntFieldUpdateOperationsInput | number | null
     Sonde_Offset?: FloatFieldUpdateOperationsInput | number
     t_lieu?: t_lieuUncheckedUpdateManyWithoutT_sondeNestedInput
@@ -90615,7 +90615,7 @@ export namespace Prisma {
     Frequence_Recup?: NullableIntFieldUpdateOperationsInput | number | null
     Est_Sonde_Reformee?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Etat_Sonde_N1?: NullableStringFieldUpdateOperationsInput | string | null
-    Id_Serveur?: NullableIntFieldUpdateOperationsInput | number | null
+    Id_Worker?: NullableIntFieldUpdateOperationsInput | number | null
     Id_Sonde_Etat?: NullableIntFieldUpdateOperationsInput | number | null
     Sonde_Offset?: FloatFieldUpdateOperationsInput | number
   }
@@ -91698,7 +91698,7 @@ export namespace Prisma {
     Position_Plan_X?: bigint | number | null
     Position_Plan_Y?: bigint | number | null
     Est_Archive?: boolean | null
-    Id_Serveur?: number | null
+    Id_Worker?: number | null
   }
 
   export type t_actionneurUpdateWithoutT_actionneurtypeInput = {
@@ -91717,7 +91717,7 @@ export namespace Prisma {
     Position_Plan_X?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
     Position_Plan_Y?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
     Est_Archive?: NullableBoolFieldUpdateOperationsInput | boolean | null
-    Id_Serveur?: NullableIntFieldUpdateOperationsInput | number | null
+    Id_Worker?: NullableIntFieldUpdateOperationsInput | number | null
     t_plan?: t_planUpdateOneWithoutT_actionneurNestedInput
   }
 
@@ -91739,7 +91739,7 @@ export namespace Prisma {
     Position_Plan_X?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
     Position_Plan_Y?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
     Est_Archive?: NullableBoolFieldUpdateOperationsInput | boolean | null
-    Id_Serveur?: NullableIntFieldUpdateOperationsInput | number | null
+    Id_Worker?: NullableIntFieldUpdateOperationsInput | number | null
   }
 
   export type t_actionneurUncheckedUpdateManyWithoutT_actionneurtypeInput = {
@@ -91760,7 +91760,7 @@ export namespace Prisma {
     Position_Plan_X?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
     Position_Plan_Y?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
     Est_Archive?: NullableBoolFieldUpdateOperationsInput | boolean | null
-    Id_Serveur?: NullableIntFieldUpdateOperationsInput | number | null
+    Id_Worker?: NullableIntFieldUpdateOperationsInput | number | null
   }
 
   export type t_sondeCreateManyT_sonde_etatInput = {
@@ -91780,7 +91780,7 @@ export namespace Prisma {
     Frequence_Recup?: number | null
     Est_Sonde_Reformee?: boolean | null
     Etat_Sonde_N1?: string | null
-    Id_Serveur?: number | null
+    Id_Worker?: number | null
     Sonde_Offset?: number
   }
 
@@ -91798,7 +91798,7 @@ export namespace Prisma {
     Frequence_Recup?: NullableIntFieldUpdateOperationsInput | number | null
     Est_Sonde_Reformee?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Etat_Sonde_N1?: NullableStringFieldUpdateOperationsInput | string | null
-    Id_Serveur?: NullableIntFieldUpdateOperationsInput | number | null
+    Id_Worker?: NullableIntFieldUpdateOperationsInput | number | null
     Sonde_Offset?: FloatFieldUpdateOperationsInput | number
     t_lieu?: t_lieuUpdateManyWithoutT_sondeNestedInput
     t_etat_surveillance?: t_etat_surveillanceUpdateOneRequiredWithoutT_sondeNestedInput
@@ -91822,7 +91822,7 @@ export namespace Prisma {
     Frequence_Recup?: NullableIntFieldUpdateOperationsInput | number | null
     Est_Sonde_Reformee?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Etat_Sonde_N1?: NullableStringFieldUpdateOperationsInput | string | null
-    Id_Serveur?: NullableIntFieldUpdateOperationsInput | number | null
+    Id_Worker?: NullableIntFieldUpdateOperationsInput | number | null
     Sonde_Offset?: FloatFieldUpdateOperationsInput | number
     t_lieu?: t_lieuUncheckedUpdateManyWithoutT_sondeNestedInput
   }
@@ -91844,7 +91844,7 @@ export namespace Prisma {
     Frequence_Recup?: NullableIntFieldUpdateOperationsInput | number | null
     Est_Sonde_Reformee?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Etat_Sonde_N1?: NullableStringFieldUpdateOperationsInput | string | null
-    Id_Serveur?: NullableIntFieldUpdateOperationsInput | number | null
+    Id_Worker?: NullableIntFieldUpdateOperationsInput | number | null
     Sonde_Offset?: FloatFieldUpdateOperationsInput | number
   }
 

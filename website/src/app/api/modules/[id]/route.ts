@@ -16,7 +16,7 @@ const updateModuleSchema = z.object({
   Port_Serie: z.string().max(10, "Le port ne peut pas dépasser 10 caractères").optional().nullable(),
   Emplacement: z.string().max(50, "L'emplacement ne peut pas dépasser 50 caractères").optional().nullable(),
   Adresse_IP: z.string().max(50, "L'adresse IP ne peut pas dépasser 50 caractères").optional().nullable(),
-  Id_Serveur: z.number().int().optional().nullable(),
+  Id_Worker: z.number().int().optional().nullable(),
   Delai_Reseau: z.number().int().optional().nullable(),
   Est_Module_GSO: z.boolean().optional(),
 })
@@ -38,6 +38,7 @@ export const PATCH = withLogging(
     try {
       const body = await req.json()
       const validatedData = updateModuleSchema.parse(body)
+      const idWorker = validatedData.Id_Worker ?? null
 
       const existingModule = await prisma.t_module.findUnique({
         where: { Id_Module: id },
@@ -67,11 +68,12 @@ export const PATCH = withLogging(
       const updatedModule = await prisma.t_module.update({
         where: { Id_Module: id },
         data: ({
-          ...validatedData,
+          Module_Numero_Serie: validatedData.Module_Numero_Serie,
+          Type_Module: validatedData.Type_Module,
           Port_Serie: validatedData.Port_Serie || null,
           Emplacement: validatedData.Emplacement || null,
           Adresse_IP: validatedData.Adresse_IP || null,
-          Id_Serveur: validatedData.Id_Serveur || null,
+          Id_Worker: idWorker || null,
           Delai_Reseau: validatedData.Delai_Reseau || null,
         }) as any,
       })
@@ -89,7 +91,7 @@ export const PATCH = withLogging(
           Port_Serie: existingModule.Port_Serie,
           Emplacement: existingModule.Emplacement,
           Adresse_IP: existingModule.Adresse_IP,
-          Id_Serveur: existingModule.Id_Serveur,
+          Id_Worker: existingModule.Id_Worker,
           Delai_Reseau: existingModule.Delai_Reseau,
           Est_Module_GSO: existingModule.Est_Module_GSO,
         },
@@ -99,7 +101,7 @@ export const PATCH = withLogging(
           Port_Serie: updatedModule.Port_Serie,
           Emplacement: updatedModule.Emplacement,
           Adresse_IP: updatedModule.Adresse_IP,
-          Id_Serveur: updatedModule.Id_Serveur,
+          Id_Worker: updatedModule.Id_Worker,
           Delai_Reseau: updatedModule.Delai_Reseau,
           Est_Module_GSO: updatedModule.Est_Module_GSO,
         },
@@ -180,3 +182,5 @@ export const DELETE = withLogging(
     }
   },
 )
+
+

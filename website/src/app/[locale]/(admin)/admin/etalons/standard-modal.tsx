@@ -79,7 +79,7 @@ export function StandardModal({ open, onOpenChange, standard, isEditing }: Props
       serie: isEditing && standard?.Etalon_Numero_Serie ? standard.Etalon_Numero_Serie : "",
       moduleId: standard?.Id_Module?.toString() || "",
       portSerie: standard?.Port_Serie || "",
-      idServeur: standard?.Id_Serveur?.toString() || "0",
+      idServeur: standard?.Id_Worker?.toString() || "0",
       valeurBase: "0",
       resolution: standard?.Resolution || "0",
       incertitude: standard?.Incertitude || "0",
@@ -243,4 +243,5 @@ export function StandardModal({ open, onOpenChange, standard, isEditing }: Props
     </>
   )
 }
+
 

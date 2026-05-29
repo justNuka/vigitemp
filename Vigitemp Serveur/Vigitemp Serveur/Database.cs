@@ -1,9 +1,10 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using MySql.Data.MySqlClient;
 using System.Configuration;
 using System.Diagnostics;
 using System.Globalization;
+using System.Linq;
 using System.Threading;
 
 namespace Vigitemp_Serveur
@@ -1082,7 +1083,7 @@ namespace Vigitemp_Serveur
                     var cmd = connection_vigitemp.CreateCommand();
                     cmd.CommandText = "SELECT t_lieu.Id_Lieu, t_lieu.Frequence, t_lieu.Derniere_Date_Heure, " +
                                       "t_lieu.Infos_Modifiees_Depuis_Derniere_Mesure, t_lieu.EMT_Choix_Mode, t_lieu.Est_Correction_Ej, " +
-                                      "t_module.Port_Serie, t_module.Module_Numero_Serie, t_module.Type_Module, " +
+                                      "t_module.Port_Serie, t_module.Module_Numero_Serie, t_module.Type_Module, t_module.Id_Worker AS Id_Worker, " +
                                       "t_sonde.Sonde_Numero_Serie, t_sonde.Sonde_Type, tt.Famille_Sonde, t_sonde.Adresse_Sonde, t_sonde.Sonde_Offset, " +
                                       "ta.Coeff_X, ta.Coeff_Constant, te.Err_Justesse, te.Incertitude, te.Date_Validite " +
                                       "FROM t_lieu " +
@@ -1148,6 +1149,7 @@ namespace Vigitemp_Serveur
                                 PortSerie = "COM" + reader["Port_Serie"].ToString(),
                                 ModuleNumeroSerie = reader["Module_Numero_Serie"].ToString(),
                                 ModuleType = GetNullableInt(reader, "Type_Module"),
+                                ManualWorkerId = GetNullableInt(reader, "Id_Worker"),
                                 SondeNumeroSerie = reader["Sonde_Numero_Serie"].ToString(),
                                 SondeType = reader["Sonde_Type"] == DBNull.Value ? string.Empty : reader["Sonde_Type"].ToString(),
                                 FamilleSonde = reader["Famille_Sonde"] == DBNull.Value ? string.Empty : reader["Famille_Sonde"].ToString(),
@@ -1235,9 +1237,42 @@ namespace Vigitemp_Serveur
 
         public List<int> getDistinctIdServeur()
         {
-            // Legacy API kept for backward compatibility.
-            // Worker orchestration no longer depends on t_sonde.Id_Serveur.
-            return new List<int> { 1 };
+            lock (_lock)
+            {
+                var workerIds = new List<int>();
+                try
+                {
+                    if (!EnsureConnected())
+                    {
+                        return workerIds;
+                    }
+
+                    using (var cmd = connection_vigitemp.CreateCommand())
+                    {
+                        cmd.CommandText =
+                            "SELECT DISTINCT Id_Worker AS Id_Worker " +
+                            "FROM t_module " +
+                            "WHERE Id_Worker IS NOT NULL AND Id_Worker > 0;";
+                        using (var reader = cmd.ExecuteReader())
+                        {
+                            while (reader.Read())
+                            {
+                                var workerId = GetNullableInt(reader, "Id_Worker");
+                                if (workerId > 0)
+                                {
+                                    workerIds.Add(workerId);
+                                }
+                            }
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    VigitempServeur.Log("(getDistinctIdServeur) SQL Erreur: " + ex);
+                }
+
+                return workerIds.Distinct().OrderBy(id => id).ToList();
+            }
         }
 
         public (List<int>, List<DateTime>) getLieuxAvecAlarmesEnSnooze()
@@ -2436,6 +2471,8 @@ namespace Vigitemp_Serveur
         }
     }
 }
+
+
 
 
 

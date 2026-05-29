@@ -280,8 +280,8 @@ export function HotlineSensorTestPanel() {
     if (gsp.rawExactMode) {
       return normalizedRawCommandValue
     }
-    return ensureTrailingSpace(normalizedRawCommandValue)
-  }, [gsp.rawExactMode, normalizedRawCommandValue])
+    return gsp.rawPayload.trim() ? normalizedRawCommandValue : ensureTrailingSpace(normalizedRawCommandValue)
+  }, [gsp.rawExactMode, gsp.rawPayload, normalizedRawCommandValue])
 
   const commandPreview = useMemo(() => {
     if (!showGspFields) return "Commande generee selon le protocole de la sonde selectionnee."

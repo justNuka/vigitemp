@@ -26,7 +26,7 @@ model t_actionneur {
   Position_Plan_X  BigInt?
   Position_Plan_Y  BigInt?
   Est_Archive      Boolean?           @default(false)
-  Id_Serveur       Int?               @default(1)
+  Id_Worker        Int?               @default(1)
   t_plan           t_plan?            @relation(fields: [Id_Plan], references: [Id_Plan], onDelete: NoAction, onUpdate: NoAction, map: "FK_PLAN_ACTIONNEUR")
   t_actionneurtype t_actionneur_type? @relation(fields: [Type], references: [Type], onDelete: NoAction, onUpdate: NoAction, map: "FK_TYPE_ACTIONNEUR")
 
@@ -199,7 +199,7 @@ model t_etalon {
   Incertitude         String?  @db.VarChar(50)
   Nb_Decimale         Int?
   Reserve_MC2         String?  @db.VarChar(50)
-  Id_Serveur          Int?
+  Id_Worker           Int?
   Id_Module           Int?
 }
 
@@ -466,7 +466,7 @@ model t_module {
   Delai_Reseau        Int?
   Emplacement         String? @db.VarChar(50)
   Archive             Int?    @default(0) @db.TinyInt
-  Id_Serveur          Int?
+  Id_Worker           Int?
   Est_Module_GSO      Boolean @default(false)
   Port_Serie_Send_GSO String? @db.VarChar(10)
 
@@ -563,7 +563,7 @@ model t_sonde {
   Frequence_Recup     Int?
   Est_Sonde_Reformee  Boolean?
   Etat_Sonde_N1       String?             @db.VarChar(1)
-  Id_Serveur          Int?
+  Id_Worker           Int?
   Id_Sonde_Etat       Int?
   Sonde_Offset        Float               @default(0) @db.Float
   t_lieu              t_lieu[]

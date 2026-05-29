@@ -36,7 +36,7 @@ namespace Vigitemp_Serveur
 
             if (string.IsNullOrWhiteSpace(secret))
             {
-                VigitempServeur.Log("WARNING AlarmWebNotifier: Vigi.AlarmDispatchSecret non configure dans App.config. Les requÃªtes seront rejetees avec 401.");
+                VigitempServeur.Log("WARNING AlarmWebNotifier: Vigi.AlarmDispatchSecret non configure dans App.config. Les requêtes seront rejetees avec 401.");
             }
             else
             {

@@ -1,4 +1,4 @@
-﻿-- =====================================================================
+-- =====================================================================
 -- BOOTSTRAP SQL SERVER VigiSensys
 -- Cree les 3 bases et les tables absentes avant le seed/alignement.
 -- Genere depuis les schemas Prisma, sans FK bloquantes pour rester idempotent.
@@ -10,6 +10,18 @@ BEGIN
 END;
 GO
 USE [vigi_main];
+GO
+
+-- Compatibilite schema legacy: Id_Serveur devient Id_Worker pour l'affectation des workers.
+-- Id_Serveur_BDD des tables mesures/journal reste volontairement inchange.
+IF OBJECT_ID(N'dbo.t_actionneur', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_actionneur', N'Id_Serveur') IS NOT NULL AND COL_LENGTH(N'dbo.t_actionneur', N'Id_Worker') IS NULL EXEC sp_rename N'dbo.t_actionneur.Id_Serveur', N'Id_Worker', N'COLUMN';
+IF OBJECT_ID(N'dbo.t_etalon', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_etalon', N'Id_Serveur') IS NOT NULL AND COL_LENGTH(N'dbo.t_etalon', N'Id_Worker') IS NULL EXEC sp_rename N'dbo.t_etalon.Id_Serveur', N'Id_Worker', N'COLUMN';
+IF OBJECT_ID(N'dbo.t_module', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_module', N'Id_Serveur') IS NOT NULL AND COL_LENGTH(N'dbo.t_module', N'Id_Worker') IS NULL EXEC sp_rename N'dbo.t_module.Id_Serveur', N'Id_Worker', N'COLUMN';
+IF OBJECT_ID(N'dbo.t_sonde', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_sonde', N'Id_Serveur') IS NOT NULL AND COL_LENGTH(N'dbo.t_sonde', N'Id_Worker') IS NULL EXEC sp_rename N'dbo.t_sonde.Id_Serveur', N'Id_Worker', N'COLUMN';
+IF OBJECT_ID(N'dbo.t_actionneur', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_actionneur', N'Id_Serveur') IS NOT NULL AND COL_LENGTH(N'dbo.t_actionneur', N'Id_Worker') IS NOT NULL EXEC(N'UPDATE dbo.[t_actionneur] SET [Id_Worker] = [Id_Serveur] WHERE [Id_Worker] IS NULL');
+IF OBJECT_ID(N'dbo.t_etalon', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_etalon', N'Id_Serveur') IS NOT NULL AND COL_LENGTH(N'dbo.t_etalon', N'Id_Worker') IS NOT NULL EXEC(N'UPDATE dbo.[t_etalon] SET [Id_Worker] = [Id_Serveur] WHERE [Id_Worker] IS NULL');
+IF OBJECT_ID(N'dbo.t_module', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_module', N'Id_Serveur') IS NOT NULL AND COL_LENGTH(N'dbo.t_module', N'Id_Worker') IS NOT NULL EXEC(N'UPDATE dbo.[t_module] SET [Id_Worker] = [Id_Serveur] WHERE [Id_Worker] IS NULL');
+IF OBJECT_ID(N'dbo.t_sonde', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_sonde', N'Id_Serveur') IS NOT NULL AND COL_LENGTH(N'dbo.t_sonde', N'Id_Worker') IS NOT NULL EXEC(N'UPDATE dbo.[t_sonde] SET [Id_Worker] = [Id_Serveur] WHERE [Id_Worker] IS NULL');
 GO
 
 IF OBJECT_ID(N'dbo.t_actionneur', N'U') IS NULL
@@ -33,7 +45,7 @@ BEGIN
     [Position_Plan_X] BIGINT NULL,
     [Position_Plan_Y] BIGINT NULL,
     [Est_Archive] BIT NULL DEFAULT(0),
-    [Id_Serveur] INT NULL DEFAULT(1),
+    [Id_Worker] INT NULL DEFAULT(1),
     CONSTRAINT [PK_t_actionneur] PRIMARY KEY ([Id_Actionneur])
   );
 END;
@@ -56,7 +68,7 @@ IF OBJECT_ID(N'dbo.t_actionneur', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_actio
 IF OBJECT_ID(N'dbo.t_actionneur', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_actionneur', N'Position_Plan_X') IS NULL ALTER TABLE dbo.[t_actionneur] ADD [Position_Plan_X] BIGINT NULL;
 IF OBJECT_ID(N'dbo.t_actionneur', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_actionneur', N'Position_Plan_Y') IS NULL ALTER TABLE dbo.[t_actionneur] ADD [Position_Plan_Y] BIGINT NULL;
 IF OBJECT_ID(N'dbo.t_actionneur', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_actionneur', N'Est_Archive') IS NULL ALTER TABLE dbo.[t_actionneur] ADD [Est_Archive] BIT NULL;
-IF OBJECT_ID(N'dbo.t_actionneur', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_actionneur', N'Id_Serveur') IS NULL ALTER TABLE dbo.[t_actionneur] ADD [Id_Serveur] INT NULL;
+IF OBJECT_ID(N'dbo.t_actionneur', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_actionneur', N'Id_Worker') IS NULL ALTER TABLE dbo.[t_actionneur] ADD [Id_Worker] INT NULL;
 GO
 
 IF OBJECT_ID(N'dbo.t_alarme', N'U') IS NULL
@@ -304,7 +316,7 @@ BEGIN
     [Incertitude] VARCHAR(50) NULL,
     [Nb_Decimale] INT NULL,
     [Reserve_MC2] VARCHAR(50) NULL,
-    [Id_Serveur] INT NULL,
+    [Id_Worker] INT NULL,
     [Id_Module] INT NULL,
     CONSTRAINT [PK_t_etalon] PRIMARY KEY ([Id_Etalon])
   );
@@ -320,7 +332,7 @@ IF OBJECT_ID(N'dbo.t_etalon', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_etalon', 
 IF OBJECT_ID(N'dbo.t_etalon', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_etalon', N'Incertitude') IS NULL ALTER TABLE dbo.[t_etalon] ADD [Incertitude] VARCHAR(50) NULL;
 IF OBJECT_ID(N'dbo.t_etalon', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_etalon', N'Nb_Decimale') IS NULL ALTER TABLE dbo.[t_etalon] ADD [Nb_Decimale] INT NULL;
 IF OBJECT_ID(N'dbo.t_etalon', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_etalon', N'Reserve_MC2') IS NULL ALTER TABLE dbo.[t_etalon] ADD [Reserve_MC2] VARCHAR(50) NULL;
-IF OBJECT_ID(N'dbo.t_etalon', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_etalon', N'Id_Serveur') IS NULL ALTER TABLE dbo.[t_etalon] ADD [Id_Serveur] INT NULL;
+IF OBJECT_ID(N'dbo.t_etalon', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_etalon', N'Id_Worker') IS NULL ALTER TABLE dbo.[t_etalon] ADD [Id_Worker] INT NULL;
 IF OBJECT_ID(N'dbo.t_etalon', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_etalon', N'Id_Module') IS NULL ALTER TABLE dbo.[t_etalon] ADD [Id_Module] INT NULL;
 GO
 IF OBJECT_ID(N'dbo.t_etalon', N'U') IS NOT NULL AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'UX_t_etalon_Etalon_Numero_Serie' AND object_id = OBJECT_ID(N'dbo.t_etalon')) CREATE UNIQUE INDEX [UX_t_etalon_Etalon_Numero_Serie] ON dbo.[t_etalon]([Etalon_Numero_Serie]) WHERE [Etalon_Numero_Serie] IS NOT NULL;
@@ -731,7 +743,7 @@ BEGIN
     [Delai_Reseau] INT NULL,
     [Emplacement] VARCHAR(50) NULL,
     [Archive] TINYINT NULL DEFAULT(0),
-    [Id_Serveur] INT NULL,
+    [Id_Worker] INT NULL,
     [Est_Module_GSO] BIT NOT NULL DEFAULT(0),
     [Port_Serie_Send_GSO] VARCHAR(10) NULL,
     CONSTRAINT [PK_t_module] PRIMARY KEY ([Id_Module])
@@ -749,7 +761,7 @@ IF OBJECT_ID(N'dbo.t_module', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_module', 
 IF OBJECT_ID(N'dbo.t_module', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_module', N'Delai_Reseau') IS NULL ALTER TABLE dbo.[t_module] ADD [Delai_Reseau] INT NULL;
 IF OBJECT_ID(N'dbo.t_module', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_module', N'Emplacement') IS NULL ALTER TABLE dbo.[t_module] ADD [Emplacement] VARCHAR(50) NULL;
 IF OBJECT_ID(N'dbo.t_module', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_module', N'Archive') IS NULL ALTER TABLE dbo.[t_module] ADD [Archive] TINYINT NULL;
-IF OBJECT_ID(N'dbo.t_module', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_module', N'Id_Serveur') IS NULL ALTER TABLE dbo.[t_module] ADD [Id_Serveur] INT NULL;
+IF OBJECT_ID(N'dbo.t_module', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_module', N'Id_Worker') IS NULL ALTER TABLE dbo.[t_module] ADD [Id_Worker] INT NULL;
 IF OBJECT_ID(N'dbo.t_module', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_module', N'Est_Module_GSO') IS NULL ALTER TABLE dbo.[t_module] ADD [Est_Module_GSO] BIT NULL DEFAULT(0);
 IF OBJECT_ID(N'dbo.t_module', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_module', N'Port_Serie_Send_GSO') IS NULL ALTER TABLE dbo.[t_module] ADD [Port_Serie_Send_GSO] VARCHAR(10) NULL;
 GO
@@ -908,7 +920,7 @@ BEGIN
     [Frequence_Recup] INT NULL,
     [Est_Sonde_Reformee] BIT NULL,
     [Etat_Sonde_N1] VARCHAR(1) NULL,
-    [Id_Serveur] INT NULL,
+    [Id_Worker] INT NULL,
     [Id_Sonde_Etat] INT NULL,
     [Sonde_Offset] FLOAT NOT NULL DEFAULT(0),
     CONSTRAINT [PK_t_sonde] PRIMARY KEY ([Id_Sonde])
@@ -931,7 +943,7 @@ IF OBJECT_ID(N'dbo.t_sonde', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_sonde', N'
 IF OBJECT_ID(N'dbo.t_sonde', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_sonde', N'Frequence_Recup') IS NULL ALTER TABLE dbo.[t_sonde] ADD [Frequence_Recup] INT NULL;
 IF OBJECT_ID(N'dbo.t_sonde', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_sonde', N'Est_Sonde_Reformee') IS NULL ALTER TABLE dbo.[t_sonde] ADD [Est_Sonde_Reformee] BIT NULL;
 IF OBJECT_ID(N'dbo.t_sonde', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_sonde', N'Etat_Sonde_N1') IS NULL ALTER TABLE dbo.[t_sonde] ADD [Etat_Sonde_N1] VARCHAR(1) NULL;
-IF OBJECT_ID(N'dbo.t_sonde', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_sonde', N'Id_Serveur') IS NULL ALTER TABLE dbo.[t_sonde] ADD [Id_Serveur] INT NULL;
+IF OBJECT_ID(N'dbo.t_sonde', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_sonde', N'Id_Worker') IS NULL ALTER TABLE dbo.[t_sonde] ADD [Id_Worker] INT NULL;
 IF OBJECT_ID(N'dbo.t_sonde', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_sonde', N'Id_Sonde_Etat') IS NULL ALTER TABLE dbo.[t_sonde] ADD [Id_Sonde_Etat] INT NULL;
 IF OBJECT_ID(N'dbo.t_sonde', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_sonde', N'Sonde_Offset') IS NULL ALTER TABLE dbo.[t_sonde] ADD [Sonde_Offset] FLOAT NULL DEFAULT(0);
 GO
@@ -2725,7 +2737,7 @@ IF NOT EXISTS (SELECT 1 FROM dbo.t_parametre WHERE Section='STATISTICS_MONTHLY_R
 IF NOT EXISTS (SELECT 1 FROM dbo.t_parametre WHERE Section='STATISTICS_MONTHLY_REPORT' AND Mot_Cle='RECIPIENTS')
   INSERT INTO dbo.t_parametre(Section, Mot_Cle, Valeur, Commentaire) VALUES ('STATISTICS_MONTHLY_REPORT','RECIPIENTS','','Destinataires separes par ; ou ,');
 IF NOT EXISTS (SELECT 1 FROM dbo.t_parametre WHERE Section='STATISTICS_MONTHLY_REPORT' AND Mot_Cle='DAY_OF_MONTH')
-  INSERT INTO dbo.t_parametre(Section, Mot_Cle, Valeur, Commentaire) VALUES ('STATISTICS_MONTHLY_REPORT','DAY_OF_MONTH','1','Jour du mois (1..28)');
+  INSERT INTO dbo.t_parametre(Section, Mot_Cle, Valeur, Commentaire) VALUES ('STATISTICS_MONTHLY_REPORT','DAY_OF_MONTH','1','Jour du mois (1..31, replie au dernier jour du mois si necessaire)');
 IF NOT EXISTS (SELECT 1 FROM dbo.t_parametre WHERE Section='STATISTICS_MONTHLY_REPORT' AND Mot_Cle='HOUR_LOCAL')
   INSERT INTO dbo.t_parametre(Section, Mot_Cle, Valeur, Commentaire) VALUES ('STATISTICS_MONTHLY_REPORT','HOUR_LOCAL','8','Heure locale (0..23)');
 IF NOT EXISTS (SELECT 1 FROM dbo.t_parametre WHERE Section='STATISTICS_MONTHLY_REPORT' AND Mot_Cle='INCLUDE_LOCATION_SUMMARY')
@@ -2858,4 +2870,6 @@ BEGIN
     ON c.code = a.Code_Autorisation;
 END;
 GO
+
+
 

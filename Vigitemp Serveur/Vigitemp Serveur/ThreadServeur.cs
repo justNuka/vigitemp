@@ -117,6 +117,7 @@ namespace Vigitemp_Serveur
             public string Port { get; set; }
             public string Module { get; set; }
             public int? ModuleType { get; set; }
+            public int? ManualWorkerId { get; set; }
             // NOTE: ConfigDirty est accede uniquement depuis les methodes qui tiennent
             // le SemaphoreSlim(1,1) — pas de volatile requis pour cette raison.
             public bool ConfigDirty { get; set; }
@@ -1828,6 +1829,7 @@ namespace Vigitemp_Serveur
                                  !string.Equals(schedule.Port, row.PortSerie, StringComparison.Ordinal) ||
                                  !string.Equals(schedule.Module, row.ModuleNumeroSerie, StringComparison.Ordinal) ||
                                  schedule.ModuleType != row.ModuleType ||
+                                 schedule.ManualWorkerId != NormalizeWorkerId(row.ManualWorkerId) ||
                                  schedule.FrequencySeconds != row.FrequenceSecondes;
 
                 if (hasChanges)
@@ -1841,6 +1843,7 @@ namespace Vigitemp_Serveur
                     schedule.Port = row.PortSerie;
                     schedule.Module = row.ModuleNumeroSerie;
                     schedule.ModuleType = row.ModuleType;
+                    schedule.ManualWorkerId = NormalizeWorkerId(row.ManualWorkerId);
                     schedule.ConfigDirty = row.InfosModifiees || schedule.ConfigDirty;
                     schedule.FrequencySeconds = row.FrequenceSecondes;
                     schedule.LastMeasure = row.DerniereDateHeure ?? schedule.LastMeasure;
@@ -1910,8 +1913,28 @@ namespace Vigitemp_Serveur
                 .ThenBy(r => r.SondeNumeroSerie ?? string.Empty, StringComparer.OrdinalIgnoreCase)
                 .ToList();
 
+            var manualRows = orderedRows
+                .Where(r => NormalizeWorkerId(r.ManualWorkerId).HasValue)
+                .ToList();
+            var autoRows = orderedRows
+                .Where(r => !NormalizeWorkerId(r.ManualWorkerId).HasValue)
+                .ToList();
+
+            var autoWorkerCount = Math.Max(1, autoRows
+                .Select(BuildAssignmentGroupKey)
+                .Where(IsPortGroupKey)
+                .Distinct(StringComparer.Ordinal)
+                .Count());
+            var autoWorkerIds = Enumerable.Range(1, autoWorkerCount)
+                .Where(workerIds.Contains)
+                .ToList();
+            if (autoWorkerIds.Count == 0)
+            {
+                autoWorkerIds.Add(workerIds[0]);
+            }
+
             var assignmentByKey = new Dictionary<string, int>(StringComparer.Ordinal);
-            var portKeys = orderedRows
+            var portKeys = autoRows
                 .Select(BuildAssignmentGroupKey)
                 .Where(IsPortGroupKey)
                 .Distinct(StringComparer.Ordinal)
@@ -1919,12 +1942,12 @@ namespace Vigitemp_Serveur
                 .ToList();
             for (var i = 0; i < portKeys.Count; i++)
             {
-                var ownerWorkerId = workerIds[i % workerIds.Count];
+                var ownerWorkerId = autoWorkerIds[i % autoWorkerIds.Count];
                 assignmentByKey[portKeys[i]] = ownerWorkerId;
             }
 
             // Fallback pour les lignes sans port: repartition deterministe et equilibree.
-            var sensorKeysWithoutPort = orderedRows
+            var sensorKeysWithoutPort = autoRows
                 .Select(BuildAssignmentGroupKey)
                 .Where(k => !IsPortGroupKey(k))
                 .Distinct(StringComparer.Ordinal)
@@ -1932,34 +1955,49 @@ namespace Vigitemp_Serveur
                 .ToList();
             for (var i = 0; i < sensorKeysWithoutPort.Count; i++)
             {
-                var ownerWorkerId = workerIds[(i + portKeys.Count) % workerIds.Count];
+                var ownerWorkerId = autoWorkerIds[(i + portKeys.Count) % autoWorkerIds.Count];
                 assignmentByKey[sensorKeysWithoutPort[i]] = ownerWorkerId;
             }
 
             var assignedRows = orderedRows
                 .Where(r =>
                 {
+                    var manualWorkerId = NormalizeWorkerId(r.ManualWorkerId);
+                    if (manualWorkerId.HasValue)
+                    {
+                        return manualWorkerId.Value == _idServer;
+                    }
+
                     var groupKey = BuildAssignmentGroupKey(r);
-                    var ownerWorkerId = ResolveWorkerOwnerForKey(groupKey, workerIds, assignmentByKey);
+                    var ownerWorkerId = ResolveWorkerOwnerForKey(groupKey, autoWorkerIds, assignmentByKey);
                     return ownerWorkerId == _idServer;
                 })
                 .ToList();
 
             if (_logScheduler)
             {
-                var assignmentSignature = string.Join("|", workerIds) + "#" + orderedRows.Count + "#" + assignedRows.Count;
+                var assignmentSignature =
+                    string.Join("|", workerIds) +
+                    "#auto=" + string.Join("|", autoWorkerIds) +
+                    "#manual=" + manualRows.Count +
+                    "#" + orderedRows.Count +
+                    "#" + assignedRows.Count;
                 if (!string.Equals(_lastAssignmentLogSignature, assignmentSignature, StringComparison.Ordinal))
                 {
                     _lastAssignmentLogSignature = assignmentSignature;
                     VigitempServeur.Log(
-                        $"[SCHED][ASSIGN] workerServer={_idServer} activeWorkers={string.Join(",", workerIds)} totalSensors={orderedRows.Count} assignedSensors={assignedRows.Count}");
+                        $"[SCHED][ASSIGN] worker={_idServer} activeWorkers={string.Join(",", workerIds)} autoWorkers={string.Join(",", autoWorkerIds)} totalSensors={orderedRows.Count} manualSensors={manualRows.Count} assignedSensors={assignedRows.Count}");
                 }
 
-                var ownership = orderedRows
+                var ownership = autoRows
                     .Select(r => BuildAssignmentGroupKey(r))
                     .Distinct(StringComparer.Ordinal)
                     .OrderBy(k => k, StringComparer.Ordinal)
-                    .Select(k => $"{k}->{ResolveWorkerOwnerForKey(k, workerIds, assignmentByKey)}")
+                    .Select(k => $"{k}->{ResolveWorkerOwnerForKey(k, autoWorkerIds, assignmentByKey)}")
+                    .Concat(manualRows
+                        .Select(r => $"{BuildAssignmentGroupKey(r)}=>manual:{NormalizeWorkerId(r.ManualWorkerId)}")
+                        .Distinct(StringComparer.Ordinal)
+                        .OrderBy(k => k, StringComparer.Ordinal))
                     .ToList();
                 var ownershipSignature = string.Join("|", ownership);
                 if (!string.Equals(_lastPortOwnershipSignature, ownershipSignature, StringComparison.Ordinal))
@@ -1983,6 +2021,11 @@ namespace Vigitemp_Serveur
 
             // Fallback deterministe si aucun port COM n'est renseigne.
             return "sensor:" + ((row?.SondeNumeroSerie ?? string.Empty).Trim().ToUpperInvariant());
+        }
+
+        private static int? NormalizeWorkerId(int? workerId)
+        {
+            return workerId.HasValue && workerId.Value > 0 ? workerId.Value : (int?)null;
         }
 
         private static bool IsPortGroupKey(string key)
@@ -2097,6 +2140,7 @@ namespace Vigitemp_Serveur
                 Port = info.PortSerie,
                 Module = info.ModuleNumeroSerie,
                 ModuleType = info.ModuleType,
+                ManualWorkerId = NormalizeWorkerId(info.ManualWorkerId),
                 ConfigDirty = info.InfosModifiees,
                 FrequencySeconds = info.FrequenceSecondes,
                 LastMeasure = lastMeasure,

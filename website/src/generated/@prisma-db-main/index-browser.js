@@ -139,7 +139,7 @@ exports.Prisma.T_actionneurScalarFieldEnum = {
   Position_Plan_X: 'Position_Plan_X',
   Position_Plan_Y: 'Position_Plan_Y',
   Est_Archive: 'Est_Archive',
-  Id_Serveur: 'Id_Serveur'
+  Id_Worker: 'Id_Worker'
 };
 
 exports.Prisma.T_alarmeScalarFieldEnum = {
@@ -256,7 +256,7 @@ exports.Prisma.T_etalonScalarFieldEnum = {
   Incertitude: 'Incertitude',
   Nb_Decimale: 'Nb_Decimale',
   Reserve_MC2: 'Reserve_MC2',
-  Id_Serveur: 'Id_Serveur',
+  Id_Worker: 'Id_Worker',
   Id_Module: 'Id_Module'
 };
 
@@ -450,7 +450,7 @@ exports.Prisma.T_moduleScalarFieldEnum = {
   Delai_Reseau: 'Delai_Reseau',
   Emplacement: 'Emplacement',
   Archive: 'Archive',
-  Id_Serveur: 'Id_Serveur',
+  Id_Worker: 'Id_Worker',
   Est_Module_GSO: 'Est_Module_GSO',
   Port_Serie_Send_GSO: 'Port_Serie_Send_GSO'
 };
@@ -525,7 +525,7 @@ exports.Prisma.T_sondeScalarFieldEnum = {
   Frequence_Recup: 'Frequence_Recup',
   Est_Sonde_Reformee: 'Est_Sonde_Reformee',
   Etat_Sonde_N1: 'Etat_Sonde_N1',
-  Id_Serveur: 'Id_Serveur',
+  Id_Worker: 'Id_Worker',
   Id_Sonde_Etat: 'Id_Sonde_Etat',
   Sonde_Offset: 'Sonde_Offset'
 };
