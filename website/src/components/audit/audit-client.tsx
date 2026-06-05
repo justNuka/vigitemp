@@ -378,7 +378,7 @@ export function AuditClient({ logs }: Props) {
           searchField={["action", "details", "userId"]}
           showSearch={false}
           showPagination
-          pageSize={20}
+          pageSize={200}
           toolbarRight={undefined}
           containerClassName="rounded-none border-x-0 border-b-0"
         />

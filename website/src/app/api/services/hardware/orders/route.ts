@@ -42,7 +42,7 @@ export const POST = withAuthLogging(async (req: NextRequest, ctx: HandlerContext
       reference,
     })
 
-    const { smtpReady } = await getHardwareOrderCapabilities()
+    const { smtpReady, emailLicenseSkipped } = await getHardwareOrderCapabilities()
     const modeTransmission = smtpReady ? "SMTP" : "MAILTO"
     const initialStatus = smtpReady ? "BROUILLON" : "PREPAREE"
     const pdfFileName = buildHardwarePdfFileName(
@@ -90,6 +90,14 @@ export const POST = withAuthLogging(async (req: NextRequest, ctx: HandlerContext
     })
 
     const { ip } = getRequestContext(req)
+
+    if (emailLicenseSkipped) {
+      log.info("services/hardware/orders", "hardware_order_email_blocked_by_license", {
+        orderId: persisted.orderId,
+        reference,
+        reason: emailLicenseSkipped,
+      })
+    }
 
     if (smtpReady) {
       const sendResult = await sendEmail({
@@ -174,6 +182,7 @@ export const POST = withAuthLogging(async (req: NextRequest, ctx: HandlerContext
         modeTransmission,
         emailStatus: smtpReady ? ("SENT" as const) : ("PREPARED" as const),
         emailError: null,
+        emailLicenseSkipped,
         commercialEmail,
         mailtoUrl: smtpReady ? null : mailtoUrl,
         pdfDownloadUrl: `/api/services/hardware/orders/${persisted.orderId}/pdf`,

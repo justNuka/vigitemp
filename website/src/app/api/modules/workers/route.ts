@@ -1,17 +1,15 @@
-﻿import { NextRequest } from "next/server"
-import { getAuthenticatedUser } from "@/lib/auth"
-import { withLogging } from "@/lib/api-logger"
-import { log } from "@/lib/logger"
+import { NextRequest } from "next/server"
+
 import { apiError, apiOk } from "@/lib/api-response"
+import { withOneOrHigherAnyAuthorizationLogging } from "@/lib/license-guards"
+import { log } from "@/lib/logger"
+import { getPermissionAliases } from "@/lib/permissions"
 import { ModuleRepository } from "@/lib/repositories/module.repository"
 
-export const GET = withLogging(async (req: NextRequest) => {
-  try {
-    const user = getAuthenticatedUser(req)
-    if (!user) {
-      return apiError(401, "unauthenticated", "Non authentifie")
-    }
+const MODULE_ACCESS_CODES = getPermissionAliases("HARDWARE_CONFIG_ACCESS")
 
+export const GET = withOneOrHigherAnyAuthorizationLogging(MODULE_ACCESS_CODES, async (_req: NextRequest) => {
+  try {
     const summary = await ModuleRepository.getWorkerSummary()
     return apiOk(summary)
   } catch (error) {

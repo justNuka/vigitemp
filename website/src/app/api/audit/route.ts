@@ -1,10 +1,11 @@
 import { NextRequest } from "next/server"
 import { prismaMesure } from "@/lib/prisma"
-import { withAuthLogging } from "@/lib/api-wrappers"
+import { withAuthorizationLogging } from "@/lib/api-wrappers"
 import { apiError, apiOk } from "@/lib/api-response"
 import { log } from "@/lib/logger"
+import { enrichAuditLogs } from "@/lib/audit/enrich-audit-logs"
 
-export const GET = withAuthLogging(async (req: NextRequest) => {
+export const GET = withAuthorizationLogging("PARAMETRES_GERER", async (req: NextRequest) => {
   try {
     const searchParams = req.nextUrl.searchParams
     const limit = parseInt(searchParams.get("limit") || "100")
@@ -41,16 +42,7 @@ export const GET = withAuthLogging(async (req: NextRequest) => {
       },
     })
 
-    const formatted = logs.map((entry) => ({
-      id: entry.Id_Journal,
-      timestamp: entry.Date_Heure_Journal?.toISOString() || new Date().toISOString(),
-      userId: entry.Nom_Utilisateur || null,
-      action: entry.Code_Journal || "unknown",
-      details: entry.Commentaire || "",
-      sensorId: entry.Id_Lieu || null,
-      commentaireUtilisateur: entry.Commentaire_Utilisateur || null,
-      profileUtilisateur: entry.Profil_Utilisateur || null,
-    }))
+    const formatted = await enrichAuditLogs(logs)
 
     return apiOk(formatted)
   } catch (error) {

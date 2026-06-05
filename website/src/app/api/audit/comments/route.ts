@@ -9,7 +9,7 @@ import { log } from "@/lib/logger"
  * GET /api/audit/comments
  * Recupere la liste des commentaires libres par type d'audit.
  */
-export const GET = withAuthorizationLogging("GERER_PROFIL", async (_req: NextRequest) => {
+export const GET = withAuthorizationLogging("PARAMETRES_GERER", async (_req: NextRequest) => {
   try {
     const comments = await prismaMesure.tm_journal_commentaire_libre.findMany({
       orderBy: [{ Date_Creation: "desc" }, { Id_Commentaire_Journal: "desc" }],
@@ -32,7 +32,7 @@ export const GET = withAuthorizationLogging("GERER_PROFIL", async (_req: NextReq
  * POST /api/audit/comments
  * Cree un nouveau commentaire libre pour un type d'audit.
  */
-export const POST = withAuthorizationLogging("GERER_PROFIL", async (req: NextRequest, ctx: HandlerContext) => {
+export const POST = withAuthorizationLogging("PARAMETRES_GERER", async (req: NextRequest, ctx: HandlerContext) => {
   const { ip } = getRequestContext(req)
   try {
     const { type, text } = await req.json()
@@ -93,7 +93,7 @@ export const POST = withAuthorizationLogging("GERER_PROFIL", async (req: NextReq
  * PATCH /api/audit/comments
  * Met a jour un commentaire libre existant.
  */
-export const PATCH = withAuthorizationLogging("GERER_PROFIL", async (req: NextRequest, ctx: HandlerContext) => {
+export const PATCH = withAuthorizationLogging("PARAMETRES_GERER", async (req: NextRequest, ctx: HandlerContext) => {
   const { ip } = getRequestContext(req)
   try {
     const { id, text } = await req.json()
@@ -155,7 +155,7 @@ export const PATCH = withAuthorizationLogging("GERER_PROFIL", async (req: NextRe
  * DELETE /api/audit/comments?id=123
  * Supprime un commentaire libre.
  */
-export const DELETE = withAuthorizationLogging("GERER_PROFIL", async (req: NextRequest, ctx: HandlerContext) => {
+export const DELETE = withAuthorizationLogging("PARAMETRES_GERER", async (req: NextRequest, ctx: HandlerContext) => {
   const { ip } = getRequestContext(req)
   try {
     const id = Number(req.nextUrl.searchParams.get("id"))

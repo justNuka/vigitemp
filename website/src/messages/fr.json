@@ -74,7 +74,7 @@
     "groupes": "Groupes",
     "utilisateurs": "Utilisateurs",
     "profils": "Profils",
-    "etalons": "Étalons",
+    "etalons": "Métrologie",
     "actionneurs": "Actionneurs",
     "outils": "Outils",
     "lieux_templates": "Templates lieux"
@@ -675,10 +675,17 @@
       "na": "-",
       "cancel": "Annuler",
       "confirm": "Acquitter",
+      "confirm_many": "Acquitter ({count})",
       "confirming": "Acquittement...",
       "type_ended": "Alarme terminée",
       "location_alarms_notice": "Plusieurs alarmes existent pour ce lieu. Vous pouvez ouvrir la page des alarmes filtrées sur ce lieu.",
-      "view_location_alarms": "Voir les alarmes du lieu"
+      "view_location_alarms": "Voir les alarmes du lieu",
+      "related_alarms_title": "Alarmes du lieu",
+      "selected_alarms_count": "{count} sélectionnée(s)",
+      "select_column": "Sélection",
+      "alarm_column": "Alarme",
+      "status_column": "Statut",
+      "select_alarm_aria": "Sélectionner l'alarme {id}"
     },
     "status": {
       "active": "En cours",
@@ -3918,7 +3925,11 @@
       "active": "En surveillance",
       "disabled": "Surveillance désactivée",
       "disabled_until": "Surveillance désactivée jusqu'au {date}",
-      "disabled_since": "Surveillance désactivée depuis le {date}"
+      "disabled_since": "Surveillance désactivée depuis le {date}",
+      "calibration": "Étalonnage",
+      "calibration_tooltip": "Lieu en cours d'étalonnage.",
+      "adjustment": "Ajustage",
+      "adjustment_tooltip": "Lieu en cours d'ajustage."
     },
     "alarms": {
       "disabled": "Alarmes désactivées",
@@ -4036,8 +4047,8 @@
         "description": "Gérer les modules et leurs paramètres."
       },
       "etalons": {
-        "title": "Etalons",
-        "description": "Administrer les etalons de ajustage."
+        "title": "Metrologie",
+        "description": "Administrer les etalons et les milieux d'inter-comparaison."
       },
       "actionneurs": {
         "title": "Actionneurs",
@@ -4083,15 +4094,16 @@
       }
     },
     "connected_users": {
-      "title": "Utilisateurs connectés",
-      "description": "Sessions actives ({total}, max {max})",
+      "title": "Connexions r?centes",
+      "description": "Sessions vues sur la derni?re heure ({total}, max {max})",
       "empty": "Aucun utilisateur connecté actuellement",
       "columns": {
         "login": "Login",
         "full_name": "Nom et Prénom",
         "station": "Poste",
         "ip": "Adresse IP"
-      }
+      },
+      "helper_window": "Fen?tre glissante : 1 heure"
     },
     "active_alarms": {
       "title": "Alarmes en cours",
@@ -4165,7 +4177,7 @@
         "systemLogs": "Journal d'audit",
         "backups": "Sauvegardes",
         "unassigned": "Sondes sans lieu",
-        "etalons": "Etalons"
+        "etalons": "Metrologie"
       }
     },
     "actions": {
@@ -4173,8 +4185,8 @@
     },
     "summary": {
       "alarms_title": "Alarmes",
-      "alarms_description": "En cours: {inProgress} - En attente d'acquittement: {pending}",
-      "alarms_helper": "Alarmes en attente d'acquittement: {pending}"
+      "alarms_description": "Alarmes en cours : {inProgress}",
+      "alarms_helper": "Alarmes termin?es en attente d'acquittement : {pending}"
     }
   },
   "cacheControls": {

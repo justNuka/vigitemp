@@ -42,6 +42,7 @@ import {
   UserNameFields,
   UserProfileField,
   UserSitesField,
+  UserUsernameField,
 } from "./user-form-sections";
 
 interface Props {
@@ -87,6 +88,7 @@ export function EditUserDialog({
   const editForm = useForm<EditUserFormValues>({
     resolver: zodResolver(editUserSchema),
     defaultValues: {
+      username: "",
       nom: "",
       prenom: "",
       email: "",
@@ -193,6 +195,7 @@ export function EditUserDialog({
             ) : null}
 
             <UserNameFields control={editForm.control} order="last-first" />
+            <UserUsernameField control={editForm.control} />
             <UserEmailField control={editForm.control} />
 
             <UserProfileField control={editForm.control} profiles={profiles} isLoading={profilesLoading} />

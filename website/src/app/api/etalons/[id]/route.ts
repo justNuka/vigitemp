@@ -1,205 +1,162 @@
 import { NextRequest } from "next/server"
-import { prisma } from "@/lib/prisma"
 import { z } from "zod"
-import { withAuthLogging, type HandlerContext } from "@/lib/api-wrappers"
-import { log } from "@/lib/logger"
-import { getRequestContext } from "@/lib/api-logger"
+
 import { apiError, apiOk } from "@/lib/api-response"
 import { auditRouteDelete, auditRouteUpdate } from "@/lib/audit-route"
-import { requireStandardOrExpertLicense } from "@/lib/license-guards"
+import { getPermissionAliases } from "@/lib/permissions"
+import { prisma } from "@/lib/prisma"
+import { log } from "@/lib/logger"
+import { withStandardOrExpertAnyAuthorizationLogging, type HandlerContext } from "@/lib/license-guards"
+import { updateEtalonExtendedFields, fetchEtalonById, updateEtalonBase, archiveEtalonById } from "@/lib/metrology-db"
 
-const updateEtalonSchema = z.object({
-  Etalon_Numero_Serie: z.string().min(1, "Numéro de série requis"),
-  Etat_Etalon: z.string().optional(),
-  Port_Serie: z.string().optional(),
-  Resolution: z.string().optional(),
-  Incertitude: z.string().optional(),
-  Nb_Decimale: z.number().optional(),
-  Reserve_MC2: z.string().optional(),
-  Id_Worker: z.number().optional(),
-  Id_Module: z.number().optional(),
-  Numero: z.string().optional(),
-  Organisme: z.string().optional(),
-  Date: z.string().optional(),
-  Unite: z.string().optional(),
-  mesures: z
-    .array(
-      z.object({
-        Numero_Ordre: z.number(),
-        Temperature_Reference: z.string(),
-        Temperature_Vraie: z.string(),
-        Incertitude: z.string(),
-      }),
-    )
-    .optional(),
+const ETALON_WRITE_CODES = getPermissionAliases("METROLOGY_OPERATION_ACCESS")
+
+const nullableNumberField = z.union([z.number(), z.string(), z.null(), z.undefined()]).transform((value) => {
+  if (value === null || value === undefined || value === "") return null
+  const parsed = typeof value === "number" ? value : Number(String(value).replace(",", "."))
+  return Number.isFinite(parsed) ? parsed : null
 })
 
-export const PATCH = withAuthLogging(
+const updateEtalonSchema = z.object({
+  Etalon_Numero_Serie: z.string().min(1, "Numero de serie requis"),
+  Etat_Etalon: z.string().optional(),
+  Id_Module: z.number().nullable().optional(),
+  Est_Sonde_Externe: z.boolean().optional(),
+  Coeff_A: nullableNumberField,
+  Coeff_B: nullableNumberField,
+  Coeff_C: nullableNumberField,
+  Incertitude_Max: nullableNumberField,
+  Pdf_Id: z.number().nullable().optional(),
+})
+
+export const PATCH = withStandardOrExpertAnyAuthorizationLogging(
+  ETALON_WRITE_CODES,
   async (req: NextRequest, ctx: HandlerContext, { params }: { params: Promise<{ id: string }> }) => {
     try {
-      const { ip } = getRequestContext(req)
-      const guard = await requireStandardOrExpertLicense()
-      if (guard) return guard
-
       const body = await req.json()
       const data = updateEtalonSchema.parse(body)
       const resolvedParams = await params
-      const etalonId = parseInt(resolvedParams.id, 10)
+      const etalonId = Number.parseInt(resolvedParams.id, 10)
 
       if (Number.isNaN(etalonId)) {
         return apiError(400, "invalid_id", "ID invalide")
       }
 
-      const existingEtalon = await prisma.t_etalon.findUnique({
-        where: { Id_Etalon: etalonId },
-      })
+      const existingEtalon = await fetchEtalonById(etalonId)
+
       if (!existingEtalon) {
-        return apiError(404, "not_found", "Étalon introuvable")
+        return apiError(404, "not_found", "Etalon introuvable")
       }
 
-      const updatedEtalon = await prisma.t_etalon.update({
-        where: { Id_Etalon: etalonId },
-        data: {
-          Etat_Etalon: data.Etat_Etalon,
-          Port_Serie: data.Port_Serie,
-          Resolution: data.Resolution,
-          Incertitude: data.Incertitude,
-          Nb_Decimale: data.Nb_Decimale,
-          Reserve_MC2: data.Reserve_MC2,
-          Id_Worker: data.Id_Worker,
-          Id_Module: data.Id_Module,
-        },
+      const module = data.Id_Module
+        ? await prisma.t_module.findUnique({
+            where: { Id_Module: data.Id_Module },
+            select: { Id_Module: true, Port_Serie: true, Id_Worker: true },
+          })
+        : null
+
+      await updateEtalonBase(etalonId, {
+        serial: data.Etalon_Numero_Serie,
+        state: data.Etat_Etalon || String(existingEtalon.Etat_Etalon ?? "1"),
+        portSerie: module?.Port_Serie ? String(module.Port_Serie) : null,
+        idWorker: module?.Id_Worker ?? null,
+        idModule: module?.Id_Module ?? null,
+        estSondeExterne: data.Est_Sonde_Externe ?? Boolean(Number(existingEtalon.Est_Sonde_Externe ?? 0)),
       })
+
+      await updateEtalonExtendedFields(etalonId, {
+        coeffA: data.Coeff_A,
+        coeffB: data.Coeff_B,
+        coeffC: data.Coeff_C,
+        uncertaintyMax: data.Incertitude_Max,
+      })
+
+      const updatedEtalon = await fetchEtalonById(etalonId)
+
+      const existingCertif = await prisma.t_certif.findFirst({
+        where: { Etalon_Numero_Serie: existingEtalon.Etalon_Numero_Serie == null ? null : String(existingEtalon.Etalon_Numero_Serie) },
+        orderBy: [{ Date: "desc" }, { Id_Certif: "desc" }],
+      })
+
+      if (existingCertif) {
+        await prisma.t_certif.update({
+          where: { Id_Certif: existingCertif.Id_Certif },
+          data: {
+            Etalon_Numero_Serie: data.Etalon_Numero_Serie,
+            Id_PDF: data.Pdf_Id ?? null,
+          },
+        })
+      } else if (data.Pdf_Id) {
+        await prisma.t_certif.create({
+          data: {
+            Etalon_Numero_Serie: data.Etalon_Numero_Serie,
+            Id_PDF: data.Pdf_Id,
+          },
+        })
+      }
 
       auditRouteUpdate(req, ctx.user, {
         resource: "Etalon",
         resourceId: etalonId,
         before: {
+          Etalon_Numero_Serie: existingEtalon.Etalon_Numero_Serie,
           Etat_Etalon: existingEtalon.Etat_Etalon,
-          Port_Serie: existingEtalon.Port_Serie,
-          Resolution: existingEtalon.Resolution,
-          Incertitude: existingEtalon.Incertitude,
-          Nb_Decimale: existingEtalon.Nb_Decimale,
-          Reserve_MC2: existingEtalon.Reserve_MC2,
-          Id_Worker: existingEtalon.Id_Worker,
           Id_Module: existingEtalon.Id_Module,
+          Port_Serie: existingEtalon.Port_Serie,
+          Id_Worker: existingEtalon.Id_Worker,
         },
         after: {
-          Etat_Etalon: updatedEtalon.Etat_Etalon,
-          Port_Serie: updatedEtalon.Port_Serie,
-          Resolution: updatedEtalon.Resolution,
-          Incertitude: updatedEtalon.Incertitude,
-          Nb_Decimale: updatedEtalon.Nb_Decimale,
-          Reserve_MC2: updatedEtalon.Reserve_MC2,
-          Id_Worker: updatedEtalon.Id_Worker,
-          Id_Module: updatedEtalon.Id_Module,
-          Certificat_Numero: data.Numero,
-          Certificat_Organisme: data.Organisme,
-          Certificat_Date: data.Date,
-          Certificat_Unite: data.Unite,
-          Certificat_Mesures: data.mesures?.length ?? 0,
+          Etalon_Numero_Serie: data.Etalon_Numero_Serie,
+          Etat_Etalon: updatedEtalon?.Etat_Etalon ?? data.Etat_Etalon ?? existingEtalon.Etat_Etalon,
+          Id_Module: updatedEtalon?.Id_Module ?? module?.Id_Module ?? null,
+          Port_Serie: updatedEtalon?.Port_Serie ?? (module?.Port_Serie ? String(module.Port_Serie) : null),
+          Id_Worker: updatedEtalon?.Id_Worker ?? module?.Id_Worker ?? null,
+          Coeff_A: data.Coeff_A,
+          Coeff_B: data.Coeff_B,
+          Coeff_C: data.Coeff_C,
+          Incertitude_Max: data.Incertitude_Max,
+          Pdf_Id: data.Pdf_Id ?? null,
         },
+        reason: `Modification etalon ${existingEtalon.Etalon_Numero_Serie}`,
       })
 
-      if (data.Numero || data.Organisme || data.Date || data.Unite) {
-        const certifDate = data.Date ? new Date(data.Date) : null
-
-        const existingCertif = await prisma.t_certif.findFirst({
-          where: { Etalon_Numero_Serie: data.Etalon_Numero_Serie },
-        })
-
-        if (existingCertif) {
-          await prisma.t_certif.update({
-            where: { Id_Certif: existingCertif.Id_Certif },
-            data: {
-              Numero: data.Numero,
-              Organisme: data.Organisme,
-              Date: certifDate,
-              Unite: data.Unite,
-            },
-          })
-
-          await prisma.t_certif_mesure.deleteMany({
-            where: { Id_Certif: existingCertif.Id_Certif },
-          })
-
-          if (data.mesures?.length) {
-            await prisma.t_certif_mesure.createMany({
-              data: data.mesures.map((m) => ({
-                Id_Certif: existingCertif.Id_Certif,
-                Numero_Ordre: m.Numero_Ordre,
-                Temperature_Reference: m.Temperature_Reference,
-                Temperature_Vraie: m.Temperature_Vraie,
-                Incertitude: parseFloat(m.Incertitude) || null,
-              })),
-            })
-          }
-        } else {
-          const newCertif = await prisma.t_certif.create({
-            data: {
-              Numero: data.Numero,
-              Organisme: data.Organisme,
-              Date: certifDate,
-              Etalon_Numero_Serie: data.Etalon_Numero_Serie,
-              Unite: data.Unite,
-            },
-          })
-
-          if (data.mesures?.length) {
-            await prisma.t_certif_mesure.createMany({
-              data: data.mesures.map((m) => ({
-                Id_Certif: newCertif.Id_Certif,
-                Numero_Ordre: m.Numero_Ordre,
-                Temperature_Reference: m.Temperature_Reference,
-                Temperature_Vraie: m.Temperature_Vraie,
-                Incertitude: parseFloat(m.Incertitude) || null,
-              })),
-            })
-          }
-        }
-      }
-
       return apiOk({
-        message: "Étalon mis à jour avec succès",
+        message: "Etalon mis a jour avec succes",
         etalon: updatedEtalon,
       })
     } catch (error) {
       if (error instanceof z.ZodError) {
-        return apiError(400, "validation_error", "Données invalides", { details: error.issues })
+        return apiError(400, "validation_error", "Donnees invalides", { details: error.issues })
       }
 
-      log.error("etalons", "etalon_update_error", { error: error });
-      return apiError(500, "etalon_update_failed", "Erreur lors de la mise à jour de l'étalon")
+      if (error instanceof Error && /Unknown column 'Coeff_|Unknown column 'Incertitude_Max'/.test(error.message)) {
+        return apiError(500, "metrology_sql_missing", "La base de donnees doit etre mise a jour pour gerer les coefficients et l'incertitude max des etalons")
+      }
+
+      log.error("etalons", "etalon_update_error", { error })
+      return apiError(500, "etalon_update_failed", "Erreur lors de la mise a jour de l'etalon")
     }
   },
 )
 
-export const DELETE = withAuthLogging(
+export const DELETE = withStandardOrExpertAnyAuthorizationLogging(
+  ETALON_WRITE_CODES,
   async (req: NextRequest, ctx: HandlerContext, { params }: { params: Promise<{ id: string }> }) => {
     try {
-      const { ip } = getRequestContext(req)
-      const guard = await requireStandardOrExpertLicense()
-      if (guard) return guard
-
       const resolvedParams = await params
-      const etalonId = parseInt(resolvedParams.id, 10)
+      const etalonId = Number.parseInt(resolvedParams.id, 10)
 
       if (Number.isNaN(etalonId)) {
         return apiError(400, "invalid_id", "ID invalide")
       }
 
-      const existingEtalon = await prisma.t_etalon.findUnique({
-        where: { Id_Etalon: etalonId },
-      })
+      const existingEtalon = await fetchEtalonById(etalonId)
 
       if (!existingEtalon) {
-        return apiError(404, "not_found", "Étalon introuvable")
+        return apiError(404, "not_found", "Etalon introuvable")
       }
 
-      const updated = await prisma.t_etalon.update({
-        where: { Id_Etalon: etalonId },
-        data: { Est_Archive: true },
-      })
+      await archiveEtalonById(etalonId)
 
       auditRouteDelete(req, ctx.user, {
         resource: "Etalon",
@@ -208,11 +165,10 @@ export const DELETE = withAuthLogging(
         data: { Etalon_Numero_Serie: existingEtalon.Etalon_Numero_Serie },
       })
 
-      return apiOk({ Id_Etalon: updated.Id_Etalon, Est_Archive: updated.Est_Archive })
+      return apiOk({ Id_Etalon: etalonId, Est_Archive: true })
     } catch (error) {
-      log.error("etalons", "etalon_archive_error", { error: error });
-      return apiError(500, "etalon_archive_failed", "Erreur lors de l'archivage de l'étalon")
+      log.error("etalons", "etalon_archive_error", { error })
+      return apiError(500, "etalon_archive_failed", "Erreur lors de l'archivage de l'etalon")
     }
   },
 )
-

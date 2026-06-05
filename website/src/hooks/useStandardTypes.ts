@@ -6,6 +6,8 @@ export interface StandardType {
   Nom: string | null;
   Descriptif: string | null;
   Resolution: number | null;
+  Est_Saisie_Module?: boolean | null;
+  Est_Sonde_Externe?: boolean | null;
 }
 
 async function fetchStandardTypes(): Promise<StandardType[]> {

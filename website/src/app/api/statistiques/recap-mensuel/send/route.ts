@@ -1,8 +1,10 @@
 ﻿import { NextRequest } from "next/server"
 
-import { withAuthorizationLogging } from "@/lib/api-wrappers"
 import { apiError, apiOk } from "@/lib/api-response"
+import { requireStandardOrExpertLicense, withStandardOrExpertAuthorizationLogging } from "@/lib/license-guards"
+import { getRequestContext } from "@/lib/api-logger"
 import { log } from "@/lib/logger"
+import type { HandlerContext } from "@/lib/api-wrappers"
 import { sendMonthlyStatsReport } from "@/lib/statistics/monthly-report-email"
 import {
   getMonthlyStatsReportConfig,
@@ -16,7 +18,7 @@ function getMonthToken(date: Date) {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`
 }
 
-export const POST = withAuthorizationLogging("GERER_PROFIL", async (_req: NextRequest) => {
+export const POST = withStandardOrExpertAuthorizationLogging("PARAMETRES_GERER", async (req: NextRequest, ctx: HandlerContext) => {
   try {
     const config = await getMonthlyStatsReportConfig()
     if (!config.enabled) {
@@ -30,6 +32,20 @@ export const POST = withAuthorizationLogging("GERER_PROFIL", async (_req: NextRe
 
     const result = await sendMonthlyStatsReport({ recipients, config, date: new Date() })
     await setLastSentMonth(result.periodMonth)
+    const { ip } = getRequestContext(req)
+    log.audit("CC", {
+      user: ctx.user.username,
+      userId: ctx.user.userId,
+      userProfile: ctx.user.profile,
+      ip,
+      resource: "Recap mensuel",
+      resourceId: result.periodMonth,
+      changes: {
+        action: "manual_send",
+        recipientsCount: recipients.length,
+        periodMonth: result.periodMonth,
+      },
+    })
 
     return apiOk({
       message: "Recap mensuel envoye",
@@ -43,6 +59,9 @@ export const POST = withAuthorizationLogging("GERER_PROFIL", async (_req: NextRe
 
 export async function GET(req: NextRequest) {
   try {
+    const licenseError = await requireStandardOrExpertLicense()
+    if (licenseError) return licenseError
+
     const headerSecret = getCompatHeader(req, "x-vigisensys-secret", "x-vigitemp-secret") ?? ""
     const allowedSecrets = [
       getCompatEnv("VIGISENSYS_STATS_REPORT_SECRET", "VIGITEMP_STATS_REPORT_SECRET") ?? "",

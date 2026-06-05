@@ -17,13 +17,15 @@ export const GET = withAuthLogging(async (_req: NextRequest) => {
       },
     })
 
-    return apiOk(
-      comments.map((comment) => ({
+    const payload = comments
+      .map((comment) => ({
         id: comment.Id_Commentaire,
         type: comment.Type_Commentaire ?? null,
-        text: comment.Texte ?? "",
+        text: comment.Texte?.trim() ?? "",
       }))
-    )
+      .filter((comment) => comment.text.length > 0)
+
+    return apiOk(payload)
   } catch (error) {
     log.error("alarmes/commentaires-acquittement", "get_alarm_acknowledgment_comments_error", { error: error });
     return apiError(500, "comments_fetch_failed", "Failed to fetch comments")

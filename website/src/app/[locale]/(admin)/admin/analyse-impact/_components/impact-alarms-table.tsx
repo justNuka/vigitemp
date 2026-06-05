@@ -139,7 +139,7 @@ export function ImpactAlarmsTable({
           <TanStackTable
             columns={simColumns}
             data={simRows}
-            pageSize={10}
+            pageSize={200}
             maxHeight="20rem"
             emptyMessage={t("table.noSimAlarms")}
             showSearch={false}
@@ -160,7 +160,7 @@ export function ImpactAlarmsTable({
           <TanStackTable
             columns={realColumns}
             data={realRows}
-            pageSize={10}
+            pageSize={200}
             maxHeight="20rem"
             emptyMessage={t("table.noRealAlarms")}
             showSearch={false}

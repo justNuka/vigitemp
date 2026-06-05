@@ -1,8 +1,8 @@
-import { NextRequest } from "next/server"
+﻿import { NextRequest } from "next/server"
 
 import { apiError, apiOk } from "@/lib/api-response"
 import { getClientIp } from "@/lib/api-logger"
-import { withAnyAuthorizationLogging, type HandlerContext } from "@/lib/api-wrappers"
+import { withStandardOrExpertAnyAuthorizationLogging, type HandlerContext } from "@/lib/license-guards"
 import { auditRouteCreate } from "@/lib/audit-route"
 import { log } from "@/lib/logger"
 import { prisma } from "@/lib/prisma"
@@ -23,7 +23,7 @@ function formatUserLabel(user: {
   return fullName || user.Login || null
 }
 
-export const GET = withAnyAuthorizationLogging(VIGILOG_ACCESS_CODES, async () => {
+export const GET = withStandardOrExpertAnyAuthorizationLogging(VIGILOG_ACCESS_CODES, async () => {
   try {
     const configurations = await prisma.t_vigilog_configuration.findMany({
       orderBy: [{ Actif: "desc" }, { Nom_Configuration: "asc" }],
@@ -93,7 +93,7 @@ export const GET = withAnyAuthorizationLogging(VIGILOG_ACCESS_CODES, async () =>
   }
 })
 
-export const POST = withAnyAuthorizationLogging(
+export const POST = withStandardOrExpertAnyAuthorizationLogging(
   VIGILOG_CONFIG_MANAGE_CODES,
   async (req: NextRequest, ctx: HandlerContext) => {
     try {
@@ -172,3 +172,4 @@ export const POST = withAnyAuthorizationLogging(
     }
   },
 )
+

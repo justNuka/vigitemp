@@ -56,6 +56,10 @@ export const routing = defineRouting({
       fr: '/admin/etalons',
       en: '/admin/standards',
     },
+    '/admin/metrologie': {
+      fr: '/admin/metrologie',
+      en: '/admin/metrology',
+    },
     '/admin/groupes': {
       fr: '/admin/groupes',
       en: '/admin/groups',
@@ -155,6 +159,10 @@ export const routing = defineRouting({
     '/messages': {
       fr: '/messages',
       en: '/messages',
+    },
+    '/metrologie': {
+      fr: '/metrologie',
+      en: '/metrology',
     },
   }
 });

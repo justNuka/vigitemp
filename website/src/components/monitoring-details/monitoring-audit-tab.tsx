@@ -141,7 +141,7 @@ export function MonitoringAuditTab({ logs, isLoading, error, t }: MonitoringAudi
         data={data}
         searchField={["code", "label", "user", "details"]}
         searchPlaceholder={t("audit.search_placeholder")}
-        pageSize={20}
+        pageSize={200}
         emptyMessage={t("audit.empty")}
         isLoading={isLoading}
         headerClassName="!bg-sidebar !text-sidebar-foreground"

@@ -15,6 +15,7 @@ import { log } from "@/lib/logger"
 import { prisma } from "@/lib/prisma"
 import { shouldUseSecureCookies } from "@/lib/cookie-security"
 import { getCompatHeader } from "@/lib/vigisensys-compat"
+import { checkUserLicenseCapacity } from "@/lib/license-user-limit"
 
 const loginSchema = z.object({
   username: z.string().min(1, "Username required"),
@@ -119,6 +120,21 @@ export const POST = withLogging(async (req: NextRequest) => {
         {
         requirePasswordChange: true,
         userId: user.Id_Utilisateur,
+        },
+      )
+    }
+
+    const sessionCapacity = await checkUserLicenseCapacity(1, user.Id_Utilisateur)
+    if (!sessionCapacity.allowed) {
+      return apiError(
+        403,
+        sessionCapacity.reason,
+        sessionCapacity.message,
+        {
+          connectedUsers: sessionCapacity.connectedUsers,
+          licensedMaxUsers: sessionCapacity.licensedMaxUsers,
+          effectiveMaxUsers: sessionCapacity.effectiveMaxUsers,
+          unlimited: sessionCapacity.unlimited,
         },
       )
     }

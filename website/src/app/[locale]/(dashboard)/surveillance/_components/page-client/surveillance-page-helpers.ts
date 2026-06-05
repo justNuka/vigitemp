@@ -20,7 +20,10 @@ export function updateSurveillanceStateInCache(
     ...data,
     pages: data.pages.map((page) => ({
       ...page,
-      sensors: (page.sensors ?? []).map((sensor) => (idSet.has(sensor.id) ? updater(sensor) : sensor)),
+      sensors: (page.sensors ?? []).map((sensor) => {
+        const locationId = String(sensor.location.id ?? sensor.id)
+        return idSet.has(locationId) ? updater(sensor) : sensor
+      }),
     })),
   }
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -51,6 +51,7 @@ export function UsersClient({ users }: Props) {
   const queryClient = useQueryClient();
   const didPrefetchRef = useRef(false);
   const t = useTranslations("usersPage");
+  const [localUsers, setLocalUsers] = useState<User[]>(users);
 
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -58,8 +59,12 @@ export function UsersClient({ users }: Props) {
   const [archiveCandidate, setArchiveCandidate] = useState<User | null>(null);
   const [statusTab, setStatusTab] = useState<"active" | "archived">("active");
 
-  const activeUsers = users.filter((user) => user.isActive);
-  const archivedUsers = users.filter((user) => !user.isActive);
+  useEffect(() => {
+    setLocalUsers(users);
+  }, [users]);
+
+  const activeUsers = useMemo(() => localUsers.filter((user) => user.isActive), [localUsers]);
+  const archivedUsers = useMemo(() => localUsers.filter((user) => !user.isActive), [localUsers]);
   const displayedUsers = statusTab === "active" ? activeUsers : archivedUsers;
 
   const shouldLoadFormData = isCreateDialogOpen || isEditDialogOpen;
@@ -117,7 +122,10 @@ export function UsersClient({ users }: Props) {
 
   const archiveMutation = useMutation({
     mutationFn: (id: string) => usersApi.delete(id),
-    onSuccess: () => {
+    onSuccess: (_data, id) => {
+      setLocalUsers((current) =>
+        current.map((user) => (user.id === id ? { ...user, isActive: false } : user)),
+      );
       queryClient.invalidateQueries({ queryKey: ["users"] });
       router.refresh();
       toast.success(t("toast.archive_success"));
@@ -131,7 +139,10 @@ export function UsersClient({ users }: Props) {
 
   const reactivateMutation = useMutation({
     mutationFn: (id: string) => usersApi.reactivate(id),
-    onSuccess: () => {
+    onSuccess: (_data, id) => {
+      setLocalUsers((current) =>
+        current.map((user) => (user.id === id ? { ...user, isActive: true } : user)),
+      );
       queryClient.invalidateQueries({ queryKey: ["users"] });
       router.refresh();
       toast.success(t("toast.reactivate_success"));
@@ -154,6 +165,21 @@ export function UsersClient({ users }: Props) {
         } catch (error) {
           console.error("Erreur lors de l'assignation sites/groupes:", error);
         } finally {
+          setLocalUsers((current) => [
+            {
+              id: createdUser.id,
+              username: createdUser.username,
+              displayName: createdUser.displayName,
+              nom: payload.userData.nom,
+              prenom: payload.userData.prenom,
+              email: payload.userData.email,
+              role: payload.userData.profileId,
+              isActive: true,
+              createdAt: new Date(),
+              avatar: payload.userData.avatar ?? null,
+            },
+            ...current,
+          ]);
           queryClient.invalidateQueries({ queryKey: ["users"] });
           router.refresh();
         }
@@ -184,6 +210,25 @@ export function UsersClient({ users }: Props) {
               error
             );
           } finally {
+            setLocalUsers((current) =>
+              current.map((user) =>
+                user.id === selectedUser.id
+                  ? {
+                      ...user,
+                      username: typeof payload.updateData.username === "string" ? payload.updateData.username : user.username,
+                      nom: typeof payload.updateData.nom === "string" ? payload.updateData.nom : user.nom,
+                      prenom: typeof payload.updateData.prenom === "string" ? payload.updateData.prenom : user.prenom,
+                      email: typeof payload.updateData.email === "string" ? payload.updateData.email : user.email,
+                      role: typeof payload.updateData.profileId === "string" ? payload.updateData.profileId : user.role,
+                      avatar:
+                        Object.prototype.hasOwnProperty.call(payload.updateData, "avatar")
+                          ? ((payload.updateData.avatar as string | null | undefined) ?? null)
+                          : user.avatar,
+                      displayName: `${typeof payload.updateData.prenom === "string" ? payload.updateData.prenom : user.prenom} ${typeof payload.updateData.nom === "string" ? payload.updateData.nom : user.nom}`.trim() || user.username,
+                    }
+                  : user,
+              ),
+            );
             queryClient.invalidateQueries({ queryKey: ["user-sites", selectedUser.id] });
             queryClient.invalidateQueries({ queryKey: ["user-groups", selectedUser.id] });
             queryClient.invalidateQueries({ queryKey: ["users"] });

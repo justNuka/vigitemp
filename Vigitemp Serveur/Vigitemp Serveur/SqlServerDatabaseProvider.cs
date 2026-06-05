@@ -398,7 +398,7 @@ namespace Vigitemp_Serveur
                 "Tolerance_Surveillance_Inf as Consigne_Inf, Est_Consigne_Inf_Active, Retard_Alarme_Bas, Consigne_Inf_Pre_Alarme, Est_Consigne_Inf_Pre_Alarme_Active, " +
                 "Tolerance_Surveillance_Sup as Consigne_Sup, Est_Consigne_Sup_Active, Retard_Alarme_Haut, Consigne_Sup_Pre_Alarme, Est_Consigne_Sup_Pre_Alarme_Active, " +
                 "Retard_Non_Reponse, Retard_Alarme_Changement_Consigne, Nb_Mesures_Temporisation_Redeclenchement, Planning_Derniere_Maj, " +
-                "Notification_Active, Date_Heure_Reactivation_Alarme " +
+                "Notification_Active, Date_Heure_Reactivation_Alarme, Date_Heure_Derniere_Reponse, Date_Heure_Derniere_Reponse_Recue_OK " +
                 "FROM t_lieu WHERE Id_Lieu = @idLieu;");
             cmd.Parameters.AddWithValue("@idLieu", idLieu);
 
@@ -424,7 +424,8 @@ namespace Vigitemp_Serveur
                         nbMesuresTemporisationRedeclenchement: 0,
                         notificationActive: false,
                         dateHeureReactivationAlarme: default(DateTime),
-                        planningDerniereMaj: default(DateTime));
+                        planningDerniereMaj: default(DateTime),
+                        dateHeureDerniereReponse: default(DateTime));
                 }
 
                 return new LieuAlarmSettings(
@@ -444,7 +445,9 @@ namespace Vigitemp_Serveur
                     nbMesuresTemporisationRedeclenchement: Math.Max(0, GetNullableInt(reader, "Nb_Mesures_Temporisation_Redeclenchement", 0)),
                     notificationActive: GetNullableBool(reader, "Notification_Active", true),
                     dateHeureReactivationAlarme: GetNullableDateTime(reader, "Date_Heure_Reactivation_Alarme"),
-                    planningDerniereMaj: GetNullableDateTime(reader, "Planning_Derniere_Maj"));
+                    planningDerniereMaj: GetNullableDateTime(reader, "Planning_Derniere_Maj"),
+                    dateHeureDerniereReponse: GetNullableDateTime(reader, "Date_Heure_Derniere_Reponse"),
+                    dateHeureDerniereReponseRecueOk: GetNullableDateTime(reader, "Date_Heure_Derniere_Reponse_Recue_OK"));
             }
         }
 
@@ -458,7 +461,8 @@ namespace Vigitemp_Serveur
                 "Retard_Alarme_Bas, Retard_Alarme_Haut, Retard_Non_Reponse, " +
                 "Est_Consigne_Inf_Active, Est_Consigne_Sup_Active, " +
                 "Consigne_Inf_Pre_Alarme, Est_Consigne_Inf_Pre_Alarme_Active, " +
-                "Consigne_Sup_Pre_Alarme, Est_Consigne_Sup_Pre_Alarme_Active " +
+                "Consigne_Sup_Pre_Alarme, Est_Consigne_Sup_Pre_Alarme_Active, " +
+                "Date_Heure_Derniere_Reponse, Date_Heure_Derniere_Reponse_Recue_OK " +
                 "FROM t_lieu WHERE IdLieu = @idLieu;");
             cmd.Parameters.AddWithValue("@idLieu", idLieu);
 
@@ -484,7 +488,8 @@ namespace Vigitemp_Serveur
                         nbMesuresTemporisationRedeclenchement: 0,
                         notificationActive: false,
                         dateHeureReactivationAlarme: default(DateTime),
-                        planningDerniereMaj: default(DateTime));
+                        planningDerniereMaj: default(DateTime),
+                        dateHeureDerniereReponse: default(DateTime));
                 }
 
                 var notificationActive = GetNullableBool(reader, "Notification_Active", false);
@@ -507,7 +512,9 @@ namespace Vigitemp_Serveur
                     nbMesuresTemporisationRedeclenchement: 0,
                     notificationActive: notificationActive,
                     dateHeureReactivationAlarme: reactivationAt,
-                    planningDerniereMaj: default(DateTime));
+                    planningDerniereMaj: default(DateTime),
+                    dateHeureDerniereReponse: GetNullableDateTime(reader, "Date_Heure_Derniere_Reponse"),
+                    dateHeureDerniereReponseRecueOk: GetNullableDateTime(reader, "Date_Heure_Derniere_Reponse_Recue_OK"));
             }
         }
 
@@ -557,6 +564,8 @@ namespace Vigitemp_Serveur
                     float consigne;
                     float consigneSup;
                     float consigneInf;
+                    bool consigneSupActive;
+                    bool consigneInfActive;
                     int frequence;
                     const int idServeurBdd = 1;
                     int estEtatAlarme;
@@ -566,6 +575,7 @@ namespace Vigitemp_Serveur
                         "SELECT Frequence, Consigne, " +
                         "Tolerance_Surveillance_Sup as Consigne_Sup, " +
                         "Tolerance_Surveillance_Inf as Consigne_Inf, " +
+                        "Est_Consigne_Sup_Active, Est_Consigne_Inf_Active, " +
                         "Nom_Lieu, Id_Lieu, t_lieu.Est_Lieu_En_Alarme, t_lieu.Sonde_Numero_Serie, t_sonde.Id_Sonde FROM t_lieu " +
                             "INNER JOIN t_sonde ON t_lieu.Sonde_Numero_Serie = t_sonde.Sonde_Numero_Serie " +
                             "INNER JOIN t_module ON t_sonde.Id_Module = t_module.Id_Module " +
@@ -588,6 +598,8 @@ namespace Vigitemp_Serveur
                             consigne = GetFloatOrDefault(reader["Consigne"]);
                             consigneSup = GetFloatOrDefault(reader["Consigne_Sup"]);
                             consigneInf = GetFloatOrDefault(reader["Consigne_Inf"]);
+                            consigneSupActive = GetNullableBool(reader, "Est_Consigne_Sup_Active", false);
+                            consigneInfActive = GetNullableBool(reader, "Est_Consigne_Inf_Active", false);
                             frequence = (int)reader["Frequence"];
                             estEtatAlarme = Convert.ToInt32(reader["Est_Lieu_En_Alarme"]);
                         }
@@ -623,11 +635,15 @@ namespace Vigitemp_Serveur
                         cmdMeasure.ExecuteNonQuery();
                     }
 
+                    var isInActiveThresholds =
+                        (!consigneSupActive || p_valeur <= consigneSup) &&
+                        (!consigneInfActive || p_valeur >= consigneInf);
                     using (var cmdUpdateLieu = CreateCommand(
                         _connectionMain,
                         "UPDATE t_lieu SET " +
                         "Derniere_Date_Heure = @dateheuremesure, " +
-                        "Date_Heure_Derniere_Reponse_Recue_OK = @dateheuremesure, " +
+                        "Date_Heure_Derniere_Reponse = @dateheuremesure, " +
+                        "Date_Heure_Derniere_Reponse_Recue_OK = CASE WHEN @isok = 1 THEN @dateheuremesure ELSE Date_Heure_Derniere_Reponse_Recue_OK END, " +
                         "Derniere_Valeur = @valeur, " +
                         "Derniere_Unite = @unite, " +
                         "Derniere_Valeur_Null = 0 " +
@@ -636,6 +652,7 @@ namespace Vigitemp_Serveur
                         cmdUpdateLieu.Parameters.AddWithValue("@dateheuremesure", now);
                         cmdUpdateLieu.Parameters.AddWithValue("@valeur", p_valeur);
                         cmdUpdateLieu.Parameters.AddWithValue("@unite", p_unite);
+                        cmdUpdateLieu.Parameters.AddWithValue("@isok", isInActiveThresholds ? 1 : 0);
                         cmdUpdateLieu.Parameters.AddWithValue("@idlieu", idLieu);
                         cmdUpdateLieu.ExecuteNonQuery();
                     }
@@ -685,6 +702,8 @@ namespace Vigitemp_Serveur
                     float consigne;
                     float consigneSup;
                     float consigneInf;
+                    bool consigneSupActive;
+                    bool consigneInfActive;
                     int frequence;
                     const int idServeurBdd = 1;
                     int estEtatAlarme;
@@ -694,6 +713,7 @@ namespace Vigitemp_Serveur
                         "SELECT Frequence, Consigne, " +
                         "Tolerance_Surveillance_Sup as Consigne_Sup, " +
                         "Tolerance_Surveillance_Inf as Consigne_Inf, " +
+                        "Est_Consigne_Sup_Active, Est_Consigne_Inf_Active, " +
                         "Id_Lieu, t_lieu.Est_Lieu_En_Alarme FROM t_lieu " +
                         "INNER JOIN t_sonde ON t_lieu.Sonde_Numero_Serie = t_sonde.Sonde_Numero_Serie " +
                         "INNER JOIN t_module ON t_sonde.Id_Module = t_module.Id_Module " +
@@ -714,6 +734,8 @@ namespace Vigitemp_Serveur
                             consigne = GetFloatOrDefault(reader["Consigne"]);
                             consigneSup = GetFloatOrDefault(reader["Consigne_Sup"]);
                             consigneInf = GetFloatOrDefault(reader["Consigne_Inf"]);
+                            consigneSupActive = GetNullableBool(reader, "Est_Consigne_Sup_Active", false);
+                            consigneInfActive = GetNullableBool(reader, "Est_Consigne_Inf_Active", false);
                             frequence = (int)reader["Frequence"];
                             estEtatAlarme = Convert.ToInt32(reader["Est_Lieu_En_Alarme"]);
                         }
@@ -754,11 +776,15 @@ namespace Vigitemp_Serveur
                         cmdMeasure.ExecuteNonQuery();
                     }
 
+                    var isInActiveThresholds =
+                        (!consigneSupActive || p_valeur <= consigneSup) &&
+                        (!consigneInfActive || p_valeur >= consigneInf);
                     using (var cmdUpdateLieu = CreateCommand(
                         _connectionMain,
                         "UPDATE t_lieu SET " +
                         "Derniere_Date_Heure = CASE WHEN Derniere_Date_Heure IS NULL OR Derniere_Date_Heure < @dateheuremesure THEN @dateheuremesure ELSE Derniere_Date_Heure END, " +
-                        "Date_Heure_Derniere_Reponse_Recue_OK = CASE WHEN Date_Heure_Derniere_Reponse_Recue_OK IS NULL OR Date_Heure_Derniere_Reponse_Recue_OK < @dateheuremesure THEN @dateheuremesure ELSE Date_Heure_Derniere_Reponse_Recue_OK END, " +
+                        "Date_Heure_Derniere_Reponse = CASE WHEN Date_Heure_Derniere_Reponse IS NULL OR Date_Heure_Derniere_Reponse < @dateheuremesure THEN @dateheuremesure ELSE Date_Heure_Derniere_Reponse END, " +
+                        "Date_Heure_Derniere_Reponse_Recue_OK = CASE WHEN @isok = 1 AND (Date_Heure_Derniere_Reponse_Recue_OK IS NULL OR Date_Heure_Derniere_Reponse_Recue_OK < @dateheuremesure) THEN @dateheuremesure ELSE Date_Heure_Derniere_Reponse_Recue_OK END, " +
                         "Derniere_Valeur = CASE WHEN Derniere_Date_Heure IS NULL OR Derniere_Date_Heure < @dateheuremesure THEN @valeur ELSE Derniere_Valeur END, " +
                         "Derniere_Unite = CASE WHEN Derniere_Date_Heure IS NULL OR Derniere_Date_Heure < @dateheuremesure THEN @unite ELSE Derniere_Unite END " +
                         "WHERE Id_Lieu = @idlieu;"))
@@ -766,6 +792,7 @@ namespace Vigitemp_Serveur
                         cmdUpdateLieu.Parameters.AddWithValue("@dateheuremesure", measureDateTime);
                         cmdUpdateLieu.Parameters.AddWithValue("@valeur", p_valeur);
                         cmdUpdateLieu.Parameters.AddWithValue("@unite", p_unite);
+                        cmdUpdateLieu.Parameters.AddWithValue("@isok", isInActiveThresholds ? 1 : 0);
                         cmdUpdateLieu.Parameters.AddWithValue("@idlieu", idLieu);
                         cmdUpdateLieu.ExecuteNonQuery();
                     }
@@ -911,7 +938,6 @@ namespace Vigitemp_Serveur
                         _connectionMain,
                         "UPDATE t_lieu SET " +
                         "Derniere_Date_Heure = @dateheuremesure, " +
-                        "Date_Heure_Derniere_Reponse = @dateheuremesure, " +
                         "Derniere_Valeur = NULL, " +
                         "Derniere_Unite = @unite, " +
                         "Derniere_Valeur_Null = 1 " +

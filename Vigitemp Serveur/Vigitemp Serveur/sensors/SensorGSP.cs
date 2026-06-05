@@ -187,22 +187,20 @@ namespace Vigitemp_Serveur.sensors
                 LogBatteryHealth(parsed);
                 LogSignalHealth(parsed);
 
+                ConfigurationSynchronized = false;
                 if (_synchronizeConfiguration)
                 {
                     ConfigurationSynchronized = await TrySynchronizeConfigurationAsync();
                 }
-                else
-                {
-                    ConfigurationSynchronized = await TryVerifyAndSynchronizeRuntimeConfigurationAsync();
-                }
 
                 var rawValue = parsed.Temperature.Value;
                 var measuredValue = RoundMeasure(ApplyMetrology(rawValue));
+                var unit = string.IsNullOrWhiteSpace(parsed.Unit) ? "C" : parsed.Unit;
                 HandleNoResponseAlarm(true);
-                compareMeasuresAndLimits(measuredValue, "C");
-                ths.GetDatabase().AddMesure(m_sondeSerialNumber, measuredValue, "C", ToInvariantRaw(rawValue), FormatRssi(parsed.Rssi));
+                compareMeasuresAndLimits(measuredValue, unit);
+                ths.GetDatabase().AddMesure(m_sondeSerialNumber, measuredValue, unit, ToInvariantRaw(rawValue), FormatRssi(parsed.Rssi));
                 ths.GetDatabase().UpdateLieuWirelessMetrics(m_sondeSerialNumber, parsed.BatteryPercent, parsed.Rssi);
-                VigitempServeur.Log($"[SONDE][DONE] type=GSP serial={m_sondeSerialNumber} port={m_comPort} status=success value={measuredValue.ToString(CultureInfo.InvariantCulture)} unit=C raw={ToInvariantRaw(rawValue)}");
+                VigitempServeur.Log($"[SONDE][DONE] type=GSP serial={m_sondeSerialNumber} port={m_comPort} status=success value={measuredValue.ToString(CultureInfo.InvariantCulture)} unit={unit} raw={ToInvariantRaw(rawValue)}");
                 return true;
             }
             catch (IOException ex) when (IsSerialSemaphoreTimeout(ex))
@@ -371,7 +369,7 @@ namespace Vigitemp_Serveur.sensors
                     VigitempServeur.Log(
                         $"[SONDE][CFG-CHECK] type=GSP serial={m_sondeSerialNumber} status=ok high={(current.HighLimit.HasValue ? current.HighLimit.Value.ToString(CultureInfo.InvariantCulture) : "unknown")} low={(current.LowLimit.HasValue ? current.LowLimit.Value.ToString(CultureInfo.InvariantCulture) : "unknown")} freqMin={(current.FrequencyMinutes.HasValue ? current.FrequencyMinutes.Value.ToString(CultureInfo.InvariantCulture) : "unknown")} delayMin={(current.AlarmDelayMinutes.HasValue ? current.AlarmDelayMinutes.Value.ToString(CultureInfo.InvariantCulture) : "unknown")}");
 
-                    return false;
+                    return true;
                 }
 
                 VigitempServeur.Log(

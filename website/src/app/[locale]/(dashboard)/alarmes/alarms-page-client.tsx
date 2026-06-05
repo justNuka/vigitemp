@@ -37,7 +37,7 @@ export function AlarmsPageClient({ alarms, stats, initialStatus, initialLocation
   const searchParams = useSearchParams();
   const [statusFilter, setStatusFilter] = useState<AlarmStatus>(initialStatus);
   const [localStats, setLocalStats] = useState(stats);
-  const canViewAckHistory = hasPermission("METROLOGY_WORK_ACCESS");
+  const canViewAckHistory = hasPermission("ALARM_ACK_ACCESS");
 
   useEffect(() => {
     setLocalStats(stats);

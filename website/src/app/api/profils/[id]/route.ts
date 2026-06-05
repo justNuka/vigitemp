@@ -216,6 +216,7 @@ export const PATCH = withAuthorizationLogging(
           authorizations: updatedProfile!.t_liaison_profil_autorisation.map((item) => item.Id_Autorisation),
           assignedUserIds: data.assignedUserIds !== undefined ? usersAfterUpdate.map((user) => user.Id_Utilisateur) : undefined,
         },
+        reason: `Modification profil ${existing.Profil_Utilisateur}`,
       })
 
       return apiOk({

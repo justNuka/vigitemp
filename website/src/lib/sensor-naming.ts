@@ -31,6 +31,11 @@ export const isGsoType = (type: string) => {
   return normalized === "GSO" || GSO_SENSOR_TYPE_CODE_SET.has(normalized);
 };
 
+export const isGspType = (type: string) => {
+  const normalized = normalizeType(type);
+  return normalized === "GSP" || GSP_SENSOR_TYPE_CODE_SET.has(normalized);
+};
+
 export const extractAddressFromSerial = (serial: string) => {
   const normalized = normalizeSerial(serial);
   const firstDash = normalized.indexOf("-");
@@ -231,6 +236,26 @@ export const buildMetrologyLookupSerials = (serial: string | null | undefined) =
 export const buildSensorSerialsFromInput = (rawType: string, rawSerieNum: string) => {
   const type = normalizeType(rawType);
   const serie = normalizeSerial(rawSerieNum);
+
+  if (isGspType(type)) {
+    const prefixedSerie = `${type}-`;
+    const compactPrefixedSerie = type;
+    let address = serie;
+
+    if (address.startsWith(prefixedSerie)) {
+      address = address.slice(prefixedSerie.length);
+    } else if (address.startsWith(compactPrefixedSerie) && address.length > compactPrefixedSerie.length) {
+      address = address.slice(compactPrefixedSerie.length);
+    }
+
+    address = address.replace(/^-+/, "").replace(/-+$/, "");
+
+    return {
+      type,
+      isGso: false,
+      serials: [`${type}-${address}`],
+    };
+  }
 
   if (!isGsoType(type)) {
     return {

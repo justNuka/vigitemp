@@ -14,6 +14,7 @@ import { useMessagingEnabled } from "@/hooks/useMessagingEnabled";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { BellButton } from "@/components/messaging/bell-button";
 import { LazyMotion, domAnimation, m, AnimatePresence } from "motion/react";
+import { useAppAccess } from "@/components/access/app-access-provider";
 
 interface PageHeaderProps {
   title: string;
@@ -37,6 +38,8 @@ export function PageHeaderBase({
   const isOnAlarmsPage = normalizedPath === "/alarmes";
   const messagingEnabled = useMessagingEnabled();
   const { data: currentUser } = useCurrentUser();
+  const { hasPermission } = useAppAccess();
+  const canAccessMessaging = messagingEnabled && hasPermission("CONVERSATION_ACCESS");
 
   return (
     <LazyMotion features={domAnimation}>
@@ -118,7 +121,7 @@ export function PageHeaderBase({
               )}
             </AnimatePresence>
             <LanguageSwitcher />
-            {messagingEnabled && (
+            {canAccessMessaging && (
               <BellButton currentUserId={currentUser?.id} />
             )}
             <ThemeToggle />

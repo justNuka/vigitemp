@@ -1,7 +1,7 @@
-import { NextRequest } from "next/server"
+﻿import { NextRequest } from "next/server"
 
 import { apiError, apiOk } from "@/lib/api-response"
-import { withAnyAuthorizationLogging } from "@/lib/api-wrappers"
+import { withStandardOrExpertAnyAuthorizationLogging } from "@/lib/license-guards"
 import { log } from "@/lib/logger"
 import { prisma, prismaMesure } from "@/lib/prisma"
 import { VIGILOG_ACCESS_CODES } from "../../_shared"
@@ -21,7 +21,7 @@ function formatUserLabel(user: {
   return fullName || user.Login || null
 }
 
-export const GET = withAnyAuthorizationLogging(
+export const GET = withStandardOrExpertAnyAuthorizationLogging(
   VIGILOG_ACCESS_CODES,
   async (_req: NextRequest, _ctx, routeContext: { params: Promise<{ id: string }> }) => {
     try {
@@ -172,3 +172,4 @@ export const GET = withAnyAuthorizationLogging(
     }
   },
 )
+

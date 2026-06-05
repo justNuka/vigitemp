@@ -2,8 +2,9 @@ import { NextRequest } from "next/server"
 import { z } from "zod"
 import { log } from "@/lib/logger"
 import { getRequestContext } from "@/lib/api-logger"
-import { withAnyAuthorizationLogging, type HandlerContext } from "@/lib/api-wrappers"
+import { type HandlerContext } from "@/lib/api-wrappers"
 import { apiError, apiOk } from "@/lib/api-response"
+import { withStandardOrExpertAnyAuthorizationLogging } from "@/lib/license-guards"
 import { getPermissionAliases } from "@/lib/permissions"
 
 const saveSchema = z.object({
@@ -18,7 +19,7 @@ const saveSchema = z.object({
   commentaireUtilisateur: z.string().min(1).max(2000),
 })
 
-export const POST = withAnyAuthorizationLogging(
+export const POST = withStandardOrExpertAnyAuthorizationLogging(
   getPermissionAliases("METROLOGY_WORK_ACCESS"),
   async (req: NextRequest, ctx: HandlerContext) => {
     try {

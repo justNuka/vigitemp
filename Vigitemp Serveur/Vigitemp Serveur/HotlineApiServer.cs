@@ -478,10 +478,10 @@ namespace Vigitemp_Serveur
                         var rawReadsTemperature = rawCommand.StartsWith("TEMP", StringComparison.OrdinalIgnoreCase)
                             || rawCommand.StartsWith("FTEM", StringComparison.OrdinalIgnoreCase)
                             || rawCommand.StartsWith("RTEMP", StringComparison.OrdinalIgnoreCase);
-                        if (rawReadsTemperature && GspProtocol.TryExtractTemperature(response, target, out var targetedRawValue))
+                        if (rawReadsTemperature && GspProtocol.TryExtractTemperature(response, target, out var targetedRawValue, out var targetedUnit))
                         {
                             result.Value = targetedRawValue;
-                            result.Unit = "°C";
+                            result.Unit = FormatGspUnitForHotline(targetedUnit);
                         }
                         else if (!rawReadsTemperature && TryExtractGspValue(response, gsp.RawCommand, out var rawValue))
                         {
@@ -510,7 +510,7 @@ namespace Vigitemp_Serveur
 
                     result.RawValue = readResponse;
                     result.DetectedSerials = GspProtocol.ExtractDetectedSerials(readResponse);
-                    if (!GspProtocol.TryExtractTemperature(readResponse, target, out var value))
+                    if (!GspProtocol.TryExtractTemperature(readResponse, target, out var value, out var unit))
                     {
                         result.Error = IsCommandEchoOnly(readResponse, result.RequestedCommand)
                             ? "Reponse recue mais elle correspond uniquement a un echo de la commande."
@@ -519,7 +519,7 @@ namespace Vigitemp_Serveur
                     }
 
                     result.Value = value;
-                    result.Unit = "°C";
+                    result.Unit = FormatGspUnitForHotline(unit);
                 }
             }
             finally
@@ -850,6 +850,11 @@ namespace Vigitemp_Serveur
             }
 
             return escaped.TrimEnd(' ') + new string(' ', trailingSpaces).Replace(" ", "<space>");
+        }
+
+        private static string FormatGspUnitForHotline(string unit)
+        {
+            return string.Equals(unit, "C", StringComparison.OrdinalIgnoreCase) ? "°C" : unit;
         }
     }
 }

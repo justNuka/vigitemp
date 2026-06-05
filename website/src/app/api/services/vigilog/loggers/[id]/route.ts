@@ -1,12 +1,12 @@
-import { NextRequest } from "next/server"
+﻿import { NextRequest } from "next/server"
 
 import { apiError, apiOk } from "@/lib/api-response"
 import { getClientIp } from "@/lib/api-logger"
-import { withAuthorizationLogging, type HandlerContext } from "@/lib/api-wrappers"
+import { withStandardOrExpertAnyAuthorizationLogging, type HandlerContext } from "@/lib/license-guards"
 import { auditRouteUpdate } from "@/lib/audit-route"
 import { log } from "@/lib/logger"
 import { prisma } from "@/lib/prisma"
-import { normalizeOptionalText, vigilogLoggerSchema } from "../../_shared"
+import { normalizeOptionalText, vigilogLoggerSchema, VIGILOG_CONFIG_MANAGE_CODES } from "../../_shared"
 
 function serializeLogger(logger: {
   Id_VigiLog: number
@@ -38,8 +38,8 @@ function serializeLogger(logger: {
   }
 }
 
-export const PATCH = withAuthorizationLogging(
-  "ACCES_METROLOGIE",
+export const PATCH = withStandardOrExpertAnyAuthorizationLogging(
+  VIGILOG_CONFIG_MANAGE_CODES,
   async (req: NextRequest, ctx: HandlerContext, routeContext: { params: Promise<{ id: string }> }) => {
     try {
       const { id } = await routeContext.params
@@ -152,3 +152,4 @@ export const PATCH = withAuthorizationLogging(
     }
   },
 )
+

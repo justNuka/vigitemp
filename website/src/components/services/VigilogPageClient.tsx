@@ -185,10 +185,16 @@ export function VigilogPageClient() {
   const locale = useLocale()
   const queryClient = useQueryClient()
   const { toast } = useToast()
-  const { hasAuthorizationCode, loading: accessLoading } = useAppAccess()
+  const { hasAuthorizationCode, isExpert, isStandard, loading: accessLoading } = useAppAccess()
 
-  const canAccess = hasAuthorizationCode("ACCES_VIGILOG", "ACCES_METROLOGIE")
-  const canManageConfigurations = hasAuthorizationCode("ACCES_METROLOGIE")
+  const hasVigilogLicense = isStandard || isExpert
+  const canAccess = hasVigilogLicense && hasAuthorizationCode("ACCES_VIGILOG")
+  const canManageConfigurations = hasAuthorizationCode(
+    "PARAMETRAGE_MATERIEL",
+    "ACCES_PARAMETRAGE_MATERIEL",
+    "MATERIEL_MESURE_GERER",
+    "MATERIEL_METROLOGIE_GERER",
+  )
 
   const [activeTab, setActiveTab] = useState("movements")
   const [configurationDialogOpen, setConfigurationDialogOpen] = useState(false)
@@ -2337,7 +2343,7 @@ export function VigilogPageClient() {
                     enableExport={false}
                     enablePrint={false}
                     emptyMessage={t("history.empty")}
-                    pageSize={8}
+                    pageSize={200}
                     showPagination={filteredHistory.length > 8}
                     maxHeight="36rem"
                     containerClassName="border-border/60 bg-white dark:bg-card/95"

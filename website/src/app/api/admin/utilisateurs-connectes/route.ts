@@ -4,6 +4,7 @@ import { withAdminLogging } from "@/lib/api-wrappers"
 import { apiError, apiOk } from "@/lib/api-response"
 import { prisma } from "@/lib/prisma"
 import { log } from "@/lib/logger"
+import { getActiveUserSessionThreshold } from "@/lib/license-user-limit"
 
 /**
  * GET /api/admin/utilisateurs-connectes?page=1&limit=10
@@ -17,10 +18,10 @@ export const GET = withAdminLogging(async (req: NextRequest) => {
     const limit = Math.min(Math.max(rawLimit, 1), 10)
     const skip = (page - 1) * limit
 
-    const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000)
+    const activeSince = getActiveUserSessionThreshold()
     const where = {
       Est_Archive: false,
-      Date_Heure_Derniere_Connexion: { gte: oneDayAgo },
+      Date_Heure_Derniere_Connexion: { gte: activeSince },
     }
 
     const totalCount = await prisma.t_utilisateur.count({ where })

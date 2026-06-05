@@ -1,17 +1,15 @@
 import { NextRequest } from "next/server"
-import { prisma } from "@/lib/prisma"
-import { getAuthenticatedUser } from "@/lib/auth"
-import { withLogging } from "@/lib/api-logger"
+
 import { apiError, apiOk } from "@/lib/api-response"
+import { withOneOrHigherAnyAuthorizationLogging } from "@/lib/license-guards"
 import { log } from "@/lib/logger"
+import { getPermissionAliases } from "@/lib/permissions"
+import { prisma } from "@/lib/prisma"
 
-export const GET = withLogging(async (req: NextRequest) => {
+const ACTIONNEUR_ACCESS_CODES = getPermissionAliases("HARDWARE_CONFIG_ACCESS")
+
+export const GET = withOneOrHigherAnyAuthorizationLogging(ACTIONNEUR_ACCESS_CODES, async (_req: NextRequest) => {
   try {
-    const user = getAuthenticatedUser(req)
-    if (!user) {
-      return apiError(401, "unauthenticated", "Non authentifié")
-    }
-
     const types = await prisma.t_actionneur_type.findMany({
       select: {
         Type: true,
@@ -25,11 +23,7 @@ export const GET = withLogging(async (req: NextRequest) => {
 
     return apiOk(types)
   } catch (error) {
-    log.error("actionneurs/types", "actionneur_types_fetch_error", { error: error });
-    return apiError(
-      500,
-      "actionneur_types_fetch_failed",
-      "Erreur lors de la récupération des types d'actionneurs",
-    )
+    log.error("actionneurs/types", "actionneur_types_fetch_error", { error })
+    return apiError(500, "actionneur_types_fetch_failed", "Erreur lors de la recuperation des types d'actionneurs")
   }
 })

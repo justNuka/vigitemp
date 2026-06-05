@@ -1,10 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
 import type { AcknowledgmentRecord } from "@/components/data-table/acknowledgment-columns";
 import type { ActiveAlarm } from "@/components/data-table/active-alarms-columns";
-import type { BackupsResponse } from "@/components/data-table/backup-columns";
 import type { ConnectedUser } from "@/components/data-table/connected-users-columns";
 import type { SystemLog } from "@/components/data-table/system-logs-columns";
 import { getJson, isUnauthorizedError } from "@/lib/http";
+import type { BackupsResponse } from "@/types/backup-types";
+import type { AuditLog } from "@/lib/api";
 
 type Paginated<T> = {
   data: T[];
@@ -48,19 +49,43 @@ export function useAcknowledgments(page: number = 1) {
   return useQuery({
     queryKey: ["admin", "acquittements", page],
     queryFn: async () => {
-      return getJson<Paginated<AcknowledgmentRecord>>(`/api/admin/acquittements?page=${page}&limit=10`);
+      const response = await getJson<any>(`/api/alarmes/acquittements?page=${page}&limit=10`);
+      return {
+        data: (response?.data ?? []).map((item: any) => ({
+          id: String(item.id),
+          dateHeure: item.acknowledgedAt ?? "-",
+          utilisateur: item.acknowledgedBy ?? "-",
+          action: item.alarmType ?? "-",
+          sonde: item.sensorSerial ?? "-",
+          alarme: item.locationName ?? "-",
+        })) as AcknowledgmentRecord[],
+        pagination: response?.pagination ?? { page, limit: 10, total: 0, pages: 1 },
+      } satisfies Paginated<AcknowledgmentRecord>;
     },
     refetchInterval: (query) => (isUnauthorizedError(query.state.error) ? false : 15 * 60_000), // 15 minutes
     staleTime: 10 * 60_000, // 10 minutes
   });
 }
 
-export function useSystemLogs() {
+export function useAuditLogs() {
   return useQuery({
-    // UI = journal d'audit (audit trail), pas du logging technique.
-    queryKey: ["admin", "journaux-systeme", "latest-50"],
+    queryKey: ["admin", "audit", "latest-50"],
     queryFn: async () => {
-      return getJson<Paginated<SystemLog>>(`/api/admin/journaux-systeme?page=1&limit=50`);
+      const response = await getJson<AuditLog[]>(`/api/audit?limit=50`);
+      const rows: SystemLog[] = (response ?? []).map((item) => ({
+        id: item.id,
+        dateHeure:
+          item.timestamp instanceof Date
+            ? item.timestamp.toISOString()
+            : new Date(item.timestamp).toISOString(),
+        utilisateur: item.userDisplayName || item.userId || "-",
+        action: item.action,
+        details: item.details || item.locationName || "",
+      }));
+      return {
+        data: rows,
+        pagination: { page: 1, limit: 50, total: rows.length, pages: 1 },
+      } satisfies Paginated<SystemLog>;
     },
     refetchInterval: (query) => (isUnauthorizedError(query.state.error) ? false : 60_000), // 1 minute (pas besoin de plus rapide)
     staleTime: 30_000, // 30 seconds

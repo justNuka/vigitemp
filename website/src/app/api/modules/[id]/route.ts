@@ -1,37 +1,34 @@
 import { NextRequest } from "next/server"
-import { prisma } from "@/lib/prisma"
-import { getAuthenticatedUser } from "@/lib/auth"
-import { getClientIp, withLogging } from "@/lib/api-logger"
 import { z } from "zod"
-import { auditRouteDelete, auditRouteUpdate } from "@/lib/audit-route"
-import { log } from "@/lib/logger"
+
+import { getClientIp } from "@/lib/api-logger"
 import { apiError, apiOk } from "@/lib/api-response"
+import { auditRouteDelete, auditRouteUpdate } from "@/lib/audit-route"
+import { withOneOrHigherAnyAuthorizationLogging } from "@/lib/license-guards"
+import { log } from "@/lib/logger"
+import { getPermissionAliases } from "@/lib/permissions"
+import { prisma } from "@/lib/prisma"
+
+const MODULE_ACCESS_CODES = getPermissionAliases("HARDWARE_CONFIG_ACCESS")
 
 const updateModuleSchema = z.object({
-  Module_Numero_Serie: z
-    .string()
-    .min(1, "Le numéro de série est requis")
-    .max(50, "Le numéro de série ne peut pas dépasser 50 caractères"),
-  Type_Module: z.number().int("Le type doit être un nombre entier").min(1, "Le type est requis"),
-  Port_Serie: z.string().max(10, "Le port ne peut pas dépasser 10 caractères").optional().nullable(),
-  Emplacement: z.string().max(50, "L'emplacement ne peut pas dépasser 50 caractères").optional().nullable(),
-  Adresse_IP: z.string().max(50, "L'adresse IP ne peut pas dépasser 50 caractères").optional().nullable(),
+  Module_Numero_Serie: z.string().min(1, "Le numero de serie est requis").max(50, "Le numero de serie ne peut pas depasser 50 caracteres"),
+  Type_Module: z.number().int("Le type doit etre un nombre entier").min(1, "Le type est requis"),
+  Port_Serie: z.string().max(10, "Le port ne peut pas depasser 10 caracteres").optional().nullable(),
+  Emplacement: z.string().max(50, "L'emplacement ne peut pas depasser 50 caracteres").optional().nullable(),
+  Adresse_IP: z.string().max(50, "L'adresse IP ne peut pas depasser 50 caracteres").optional().nullable(),
   Id_Worker: z.number().int().optional().nullable(),
   Delai_Reseau: z.number().int().optional().nullable(),
   Est_Module_GSO: z.boolean().optional(),
 })
 
-export const PATCH = withLogging(
-  async (req: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
-    const user = getAuthenticatedUser(req)
-    if (!user) {
-      return apiError(401, "unauthenticated", "Non authentifié")
-    }
-
+export const PATCH = withOneOrHigherAnyAuthorizationLogging(
+  MODULE_ACCESS_CODES,
+  async (req: NextRequest, ctx, { params }: { params: Promise<{ id: string }> }) => {
     const { id: idParam } = await params
-    const id = parseInt(idParam)
+    const id = parseInt(idParam, 10)
 
-    if (isNaN(id)) {
+    if (Number.isNaN(id)) {
       return apiError(400, "invalid_id", "ID invalide")
     }
 
@@ -45,7 +42,7 @@ export const PATCH = withLogging(
       })
 
       if (!existingModule) {
-        return apiError(404, "not_found", "Module non trouvé")
+        return apiError(404, "not_found", "Module non trouve")
       }
 
       if (
@@ -61,30 +58,31 @@ export const PATCH = withLogging(
         })
 
         if (duplicate) {
-          return apiError(400, "duplicate", "Un module avec ce type et ce numéro de série existe déjà")
+          return apiError(400, "duplicate", "Un module avec ce type et ce numero de serie existe deja")
         }
       }
 
       const updatedModule = await prisma.t_module.update({
         where: { Id_Module: id },
-        data: ({
+        data: {
           Module_Numero_Serie: validatedData.Module_Numero_Serie,
           Type_Module: validatedData.Type_Module,
           Port_Serie: validatedData.Port_Serie || null,
           Emplacement: validatedData.Emplacement || null,
           Adresse_IP: validatedData.Adresse_IP || null,
-          Id_Worker: idWorker || null,
+          Id_Worker: idWorker,
           Delai_Reseau: validatedData.Delai_Reseau || null,
-        }) as any,
+          Est_Module_GSO: validatedData.Est_Module_GSO ?? existingModule.Est_Module_GSO,
+        },
       })
 
       const sondesCount = await prisma.t_sonde.count({
         where: { Id_Module: id },
       })
 
-      auditRouteUpdate(req, user, {
+      auditRouteUpdate(req, ctx.user, {
         resource: "Module",
-        resourceId: id.toString(),
+        resourceId: id,
         before: {
           Module_Numero_Serie: existingModule.Module_Numero_Serie,
           Type_Module: existingModule.Type_Module,
@@ -105,6 +103,7 @@ export const PATCH = withLogging(
           Delai_Reseau: updatedModule.Delai_Reseau,
           Est_Module_GSO: updatedModule.Est_Module_GSO,
         },
+        reason: `Modification module ${existingModule.Module_Numero_Serie}`,
       })
 
       const moduleType = await prisma.t_module_type.findUnique({
@@ -121,26 +120,22 @@ export const PATCH = withLogging(
       )
     } catch (error) {
       if (error instanceof z.ZodError) {
-        return apiError(400, "validation_error", "Données invalides", { issues: error.issues })
+        return apiError(400, "validation_error", "Donnees invalides", { issues: error.issues })
       }
 
-      log.error("modules", "module_update_error", { error: error });
+      log.error("modules", "module_update_error", { error })
       return apiError(500, "module_update_failed", "Erreur lors de la modification du module")
     }
   },
 )
 
-export const DELETE = withLogging(
-  async (req: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
-    const user = getAuthenticatedUser(req)
-    if (!user) {
-      return apiError(401, "unauthenticated", "Non authentifié")
-    }
-
+export const DELETE = withOneOrHigherAnyAuthorizationLogging(
+  MODULE_ACCESS_CODES,
+  async (req: NextRequest, ctx, { params }: { params: Promise<{ id: string }> }) => {
     const { id: idParam } = await params
-    const id = parseInt(idParam)
+    const id = parseInt(idParam, 10)
 
-    if (isNaN(id)) {
+    if (Number.isNaN(id)) {
       return apiError(400, "invalid_id", "ID invalide")
     }
 
@@ -150,7 +145,7 @@ export const DELETE = withLogging(
       })
 
       if (!existingModule) {
-        return apiError(404, "not_found", "Module non trouvé")
+        return apiError(404, "not_found", "Module non trouve")
       }
 
       const sondesCount = await prisma.t_sonde.count({
@@ -158,7 +153,7 @@ export const DELETE = withLogging(
       })
 
       if (sondesCount > 0) {
-        return apiError(400, "has_dependencies", "Impossible de supprimer un module avec du matériel associé")
+        return apiError(400, "has_dependencies", "Impossible de supprimer un module avec du materiel associe")
       }
 
       await prisma.t_module.update({
@@ -166,21 +161,19 @@ export const DELETE = withLogging(
         data: { Archive: 1 },
       })
 
-      log.data.delete(
-        "Module",
-        id.toString(),
-        user.username,
-        user.userId,
-        getClientIp(req),
-        `Module supprimé: ${existingModule.Module_Numero_Serie}`,
-      )
+      log.data.delete("Module", id.toString(), ctx.user.username, ctx.user.userId, getClientIp(req), `Module supprime: ${existingModule.Module_Numero_Serie}`)
 
-      return apiOk({ success: true, message: "Module supprimé avec succès" }, { status: 200 })
+      auditRouteDelete(req, ctx.user, {
+        resource: "Module",
+        resourceId: id,
+        reason: `Archivage module ${existingModule.Module_Numero_Serie}`,
+        data: { Module_Numero_Serie: existingModule.Module_Numero_Serie },
+      })
+
+      return apiOk({ success: true, message: "Module supprime avec succes" }, { status: 200 })
     } catch (error) {
-      log.error("modules", "module_delete_error", { error: error });
+      log.error("modules", "module_delete_error", { error })
       return apiError(500, "module_delete_failed", "Erreur lors de la suppression du module")
     }
   },
 )
-
-

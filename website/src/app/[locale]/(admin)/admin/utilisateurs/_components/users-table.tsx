@@ -122,7 +122,7 @@ export function UsersTable({
       data={users}
       searchField={["displayName", "username"]}
       searchPlaceholder={t("search_placeholder")}
-      pageSize={20}
+      pageSize={200}
       maxHeight="calc(100dvh - 25rem)"
       emptyMessage={t("empty")}
       selectedRowId={selectedUserId}

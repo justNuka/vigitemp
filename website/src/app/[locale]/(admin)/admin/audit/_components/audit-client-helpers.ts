@@ -11,7 +11,9 @@ export interface AuditLogRow {
   timestamp: string | Date
   action: string
   userId: string | null
+  userDisplayName: string | null
   details: string | null
+  locationName: string | null
 }
 
 type ParsedDetails = {
@@ -135,7 +137,9 @@ export function filterAuditLogs(logs: AuditLog[], codeFilter: string, searchQuer
     return (
       log.action.toLowerCase().includes(query) ||
       log.details?.toLowerCase().includes(query) ||
-      log.userId?.toLowerCase().includes(query)
+      log.userId?.toLowerCase().includes(query) ||
+      log.userDisplayName?.toLowerCase().includes(query) ||
+      log.locationName?.toLowerCase().includes(query)
     )
   })
 }
@@ -146,7 +150,9 @@ export function toAuditTableData(logs: AuditLog[]): AuditLogRow[] {
     timestamp: log.timestamp,
     action: log.action,
     userId: log.userId,
+    userDisplayName: log.userDisplayName ?? null,
     details: log.details,
+    locationName: log.locationName ?? null,
   }))
 }
 

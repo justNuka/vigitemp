@@ -5,6 +5,7 @@ import AlarmEventNotificationEmail from "../../emails/alarm-event-notification";
 import { PNG } from "pngjs";
 import { getGlobalAppLanguage, type AppLanguage } from "@/lib/app-language";
 import { formatMeasureValue, normalizeUnitLabel } from "@/lib/measurements";
+import { canUseApplicationEmail } from "@/lib/license-email";
 
 export type AlarmEmailEventType = "triggered" | "ended" | "acknowledged";
 
@@ -180,17 +181,25 @@ function formatChartDateTime(value: Date): string {
 function sanitizeAlarmText(value: string | null | undefined): string | undefined {
   if (!value) return undefined;
   return value
-    .replace(/Ã‚Â°/g, "°")
-    .replace(/Â°/g, "°")
-    .replace(/â°C/g, "°C")
-    .replace(/Â°C/g, "°C")
-    .replace(/e/g, "é")
-    .replace(/Ã¨/g, "è")
-    .replace(/Ãª/g, "ê")
-    .replace(/Ã /g, "à")
-    .replace(/Ã§/g, "ç")
-    .replace(/Ã´/g, "ô")
-    .replace(/Ã®/g, "î");
+    .replace(/ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â°/g, "\u00B0")
+    .replace(/Ãƒâ€šÃ‚Â°/g, "\u00B0")
+    .replace(/ÃƒÂ¢Ã‚Â°C/g, "\u00B0C")
+    .replace(/Ãƒâ€šÃ‚Â°C/g, "\u00B0C")
+    .replace(/ÃƒÂ©/g, "\u00E9")
+    .replace(/ÃƒÂ¨/g, "\u00E8")
+    .replace(/ÃƒÂª/g, "\u00EA")
+    .replace(/Ãƒ /g, "\u00E0")
+    .replace(/ÃƒÂ§/g, "\u00E7")
+    .replace(/ÃƒÂ´/g, "\u00F4")
+    .replace(/ÃƒÂ®/g, "\u00EE")
+    .replace(/ÃƒÂ»/g, "\u00FB")
+    .replace(/ÃƒÂ¹/g, "\u00F9")
+    .replace(/ÃƒÂ«/g, "\u00EB")
+    .replace(/ÃƒÂ¯/g, "\u00EF")
+    .replace(/Ã¢â‚¬â„¢/g, "'")
+    .replace(/Ã¢â‚¬â€œ/g, "-")
+    .replace(/Ã¢â‚¬â€/g, "-")
+    .replace(/Ã‚ /g, " ");
 }
 
 function formatLastValue(value: string | null | undefined, unit: string | null | undefined, locale: AppLanguage): string | undefined {
@@ -569,6 +578,19 @@ function buildSubject(eventType: AlarmEmailEventType, lieu: string, locale: AppL
 }
 
 export async function sendAlarmEventEmails(input: SendAlarmEventEmailInput) {
+  const emailLicense = await canUseApplicationEmail();
+  if (!emailLicense.allowed) {
+    log.info("ALARM_EMAIL", "Alarm email blocked by license", {
+      eventType: input.eventType,
+      alarmId: input.alarmId,
+      idLieu: input.idLieu,
+      reason: emailLicense.reason,
+      edition: emailLicense.license?.edition,
+      licenseReason: emailLicense.license?.reason,
+    });
+    return { attempted: 0, sent: 0, skipped: emailLicense.reason };
+  }
+
   const alarmEmailEnabled = await isAlarmEmailNotificationEnabled();
   if (!alarmEmailEnabled) {
     return { attempted: 0, sent: 0, skipped: "notifications_disabled" as const };

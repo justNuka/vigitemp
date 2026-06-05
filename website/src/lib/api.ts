@@ -336,6 +336,7 @@ export type User = {
 export type AuditLog = {
   id: string;
   userId: string | null;
+  userDisplayName?: string | null;
   action: string;
   details: string | null;
   targetType: string | null;
@@ -344,6 +345,7 @@ export type AuditLog = {
   ipAddress: string | null;
   commentaireUtilisateur?: string | null;
   profileUtilisateur?: string | null;
+  locationName?: string | null;
 };
 
 export type Setting = {

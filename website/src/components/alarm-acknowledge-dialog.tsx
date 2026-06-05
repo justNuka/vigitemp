@@ -10,6 +10,7 @@ import { fr } from "date-fns/locale";
 import { AlertTriangle } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -23,6 +24,7 @@ import { Textarea } from "@/components/ui/textarea";
 import MonitoringDetailsModal from "@/components/monitoring-details-modal";
 import { formatDbDateTime, parseDbDateTime } from "@/lib/date-display";
 import { formatMeasureValue } from "@/lib/measurements";
+import { cn } from "@/lib/utils";
 
 export type AcknowledgeDialogAlarm = {
   id: string;
@@ -58,9 +60,19 @@ type Props = {
   open: boolean;
   alarm: AcknowledgeDialogAlarm | null;
   onOpenChange: (open: boolean) => void;
-  onConfirm: (alarmId: string, comment?: string) => Promise<void>;
+  onConfirm: (alarmIds: string[], comment?: string) => Promise<void>;
   isConfirming?: boolean;
 };
+
+type RelatedAlarmRow = {
+  id: number
+  type?: AcknowledgeDialogAlarm["type"] | "temperature"
+  status?: "active" | "acknowledged" | "resolved"
+  timestamp?: string | null
+  resolvedAt?: string | null
+  currentValue?: number | null
+  unit?: string | null
+}
 
 export function AlarmAcknowledgeDialog({
   open,
@@ -89,6 +101,12 @@ export function AlarmAcknowledgeDialog({
   const [isStatsLoading, setIsStatsLoading] = useState(false);
   const [alarmDetails, setAlarmDetails] = useState<AlarmDetailPayload | null>(null);
   const [isDetailLoading, setIsDetailLoading] = useState(false);
+  const [relatedAlarms, setRelatedAlarms] = useState<RelatedAlarmRow[]>([]);
+  const [isRelatedAlarmsLoading, setIsRelatedAlarmsLoading] = useState(false);
+  const [selectedAlarmIds, setSelectedAlarmIds] = useState<string[]>([]);
+  const [focusedAlarmId, setFocusedAlarmId] = useState<string | null>(null);
+  const alarmId = alarm?.id ?? null;
+  const alarmLocationId = alarm?.locationId ?? null;
 
   const commentSchema = z.object({
     comment: z.string().max(200, t("validation.comment_max", { max: 200 })).optional(),
@@ -111,6 +129,16 @@ export function AlarmAcknowledgeDialog({
   const comment = useWatch({ control, name: "comment" }) ?? "";
 
   useEffect(() => {
+    if (!open) return;
+
+    window.dispatchEvent(new CustomEvent("vigitemp:alarm-acknowledge-dialog", { detail: { open } }));
+
+    return () => {
+      window.dispatchEvent(new CustomEvent("vigitemp:alarm-acknowledge-dialog", { detail: { open: false } }));
+    };
+  }, [open]);
+
+  useEffect(() => {
     if (!open || !alarm) return;
     let isActive = true;
     const initId = window.setTimeout(() => {
@@ -118,9 +146,12 @@ export function AlarmAcknowledgeDialog({
       setAlarmCount30(null);
       setShowGraph(false);
       setAlarmDetails(null);
+      setRelatedAlarms([]);
+      setSelectedAlarmIds([alarm.id]);
+      setFocusedAlarmId(alarm.id);
       setIsCommentsLoading(true);
       setIsStatsLoading(true);
-      setIsDetailLoading(true);
+      setIsRelatedAlarmsLoading(true);
     }, 0);
 
     fetch("/api/alarmes/commentaires-acquittement")
@@ -156,7 +187,60 @@ export function AlarmAcknowledgeDialog({
         setIsStatsLoading(false);
       });
 
-    fetch(`/api/alarmes/${alarm.id}`)
+    const rawLocationId = Number(alarm.locationId);
+    if (Number.isFinite(rawLocationId) && rawLocationId > 0) {
+      fetch(`/api/alarmes?locationId=${encodeURIComponent(String(rawLocationId))}&limit=200`)
+        .then((res) => (res.ok ? res.json() : null))
+        .then((payload) => {
+          if (!isActive) return;
+          const rows = Array.isArray(payload?.data?.data) ? payload.data.data : [];
+          const nextRows: RelatedAlarmRow[] = rows
+            .map((row: any) => ({
+              id: Number(row.id),
+              type: row.type,
+              status: row.status,
+              timestamp: row.timestamp ?? null,
+              resolvedAt: row.resolvedAt ?? null,
+              currentValue: row.currentValue ?? null,
+              unit: row.unit ?? null,
+            }))
+            .filter((row: RelatedAlarmRow) => Number.isFinite(row.id) && row.status !== "acknowledged");
+          setRelatedAlarms(nextRows);
+          const firstSelectableId = nextRows[0]?.id ? String(nextRows[0].id) : alarm.id;
+          const currentId = nextRows.some((row) => String(row.id) === alarm.id) ? alarm.id : firstSelectableId;
+          setSelectedAlarmIds([currentId]);
+          setFocusedAlarmId(currentId);
+        })
+        .catch(() => {
+          if (!isActive) return;
+          setRelatedAlarms([]);
+          setSelectedAlarmIds([alarm.id]);
+          setFocusedAlarmId(alarm.id);
+        })
+        .finally(() => {
+          if (!isActive) return;
+          setIsRelatedAlarmsLoading(false);
+        });
+    } else {
+      setRelatedAlarms([]);
+      setSelectedAlarmIds([alarm.id]);
+      setFocusedAlarmId(alarm.id);
+      setIsRelatedAlarmsLoading(false);
+    }
+
+    return () => {
+      isActive = false;
+      window.clearTimeout(initId);
+    };
+  }, [open, alarmId, alarmLocationId]);
+
+  useEffect(() => {
+    if (!open || !focusedAlarmId) return;
+
+    let isActive = true;
+    setIsDetailLoading(true);
+
+    fetch(`/api/alarmes/${focusedAlarmId}`)
       .then((res) => (res.ok ? res.json() : null))
       .then((payload) => {
         if (!isActive) return;
@@ -173,9 +257,8 @@ export function AlarmAcknowledgeDialog({
 
     return () => {
       isActive = false;
-      window.clearTimeout(initId);
     };
-  }, [open, alarm]);
+  }, [focusedAlarmId, open]);
 
   const resolvedAlarm = useMemo<AcknowledgeDialogAlarm>(() => ({
     ...baseAlarm,
@@ -259,6 +342,48 @@ export function AlarmAcknowledgeDialog({
     }
   }, [resolvedAlarm.type, t]);
 
+  const getTypeLabel = (type: RelatedAlarmRow["type"]) => {
+    switch (type) {
+      case "high":
+        return t("dialog.type_high");
+      case "low":
+        return t("dialog.type_low");
+      case "no-response":
+        return t("dialog.type_no_response");
+      case "sector":
+        return t("dialog.type_sector");
+      case "module":
+        return t("dialog.type_module");
+      case "ended":
+        return t("dialog.type_ended");
+      default:
+        return t("dialog.type_other");
+    }
+  };
+
+  const getStatusLabel = (status: RelatedAlarmRow["status"]) => {
+    switch (status) {
+      case "active":
+        return t("status.active");
+      case "resolved":
+        return t("status.resolved");
+      case "acknowledged":
+        return t("status.acknowledged");
+      default:
+        return t("dialog.na");
+    }
+  };
+
+  const toggleSelectedAlarm = (alarmId: string, checked: boolean) => {
+    setSelectedAlarmIds((current) => {
+      if (checked) {
+        return current.includes(alarmId) ? current : [...current, alarmId];
+      }
+      const next = current.filter((id) => id !== alarmId);
+      return next.length > 0 ? next : current;
+    });
+  };
+
   if (!alarm) return null;
 
   return (
@@ -289,6 +414,67 @@ export function AlarmAcknowledgeDialog({
           </DialogHeader>
 
           <div className="space-y-4">
+            <div className="rounded-xl border border-border/60 bg-background">
+              <div className="flex items-center justify-between gap-3 border-b border-border/60 px-4 py-3">
+                <div>
+                  <p className="text-sm font-semibold">{t("dialog.related_alarms_title")}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {t("dialog.selected_alarms_count", { count: selectedAlarmIds.length })}
+                  </p>
+                </div>
+                {isRelatedAlarmsLoading ? (
+                  <span className="text-xs text-muted-foreground">{t("dialog.loading")}</span>
+                ) : null}
+              </div>
+              <div className="max-h-56 overflow-auto">
+                <table className="w-full text-sm">
+                  <thead className="sticky top-0 bg-muted/80 text-xs uppercase text-muted-foreground">
+                    <tr>
+                      <th className="w-10 px-3 py-2 text-left">{t("dialog.select_column")}</th>
+                      <th className="px-3 py-2 text-left">{t("dialog.alarm_column")}</th>
+                      <th className="px-3 py-2 text-left">{t("dialog.status_column")}</th>
+                      <th className="px-3 py-2 text-left">{t("dialog.start_label")}</th>
+                      <th className="px-3 py-2 text-left">{t("dialog.last_value_label")}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(relatedAlarms.length > 0 ? relatedAlarms : [{ id: Number(alarm.id), type: resolvedAlarm.type, status: "active" as const, timestamp: resolvedAlarm.triggeredAt ? String(resolvedAlarm.triggeredAt) : null, currentValue: resolvedAlarm.currentValue ?? resolvedAlarm.value ?? null, unit: resolvedAlarm.unit ?? null }]).map((row) => {
+                      const rowId = String(row.id);
+                      const checked = selectedAlarmIds.includes(rowId);
+                      const isFocused = rowId === (focusedAlarmId ?? alarm.id);
+                      const value =
+                        row.currentValue === null || row.currentValue === undefined
+                          ? t("dialog.na")
+                          : `${formatMeasureValue(row.currentValue, null, locale)} ${row.unit ?? ""}`.trim();
+                      return (
+                        <tr
+                          key={row.id}
+                          className={cn(
+                            "cursor-pointer border-t border-border/50 transition-colors",
+                            isFocused && "bg-primary/10",
+                          )}
+                          onClick={() => setFocusedAlarmId(rowId)}
+                        >
+                          <td className="px-3 py-2 align-middle">
+                            <Checkbox
+                              checked={checked}
+                              onCheckedChange={(next) => toggleSelectedAlarm(rowId, next === true)}
+                              onClick={(event) => event.stopPropagation()}
+                              aria-label={t("dialog.select_alarm_aria", { id: row.id })}
+                            />
+                          </td>
+                          <td className="px-3 py-2 font-medium">#{row.id} - {getTypeLabel(row.type)}</td>
+                          <td className="px-3 py-2 text-muted-foreground">{getStatusLabel(row.status)}</td>
+                          <td className="px-3 py-2 text-muted-foreground">{row.timestamp ? formatDbDateTime(row.timestamp) : "-"}</td>
+                          <td className="px-3 py-2 font-mono">{value}</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
             <div className="grid gap-3 rounded-xl border border-border/50 bg-muted/40 p-4 md:grid-cols-2">
               <div>
                 <p className="text-xs uppercase tracking-wide text-muted-foreground mb-0.5">{t("dialog.type_label")}</p>
@@ -425,12 +611,16 @@ export function AlarmAcknowledgeDialog({
             </Button>
             <Button
               onClick={handleSubmit(async ({ comment: commentValue }) => {
-                await onConfirm(alarm.id, commentValue);
+                await onConfirm(selectedAlarmIds.length > 0 ? selectedAlarmIds : [alarm.id], commentValue);
               })}
-              disabled={isConfirming || isSubmitting}
+              disabled={isConfirming || isSubmitting || selectedAlarmIds.length === 0}
               data-testid="button-confirm-acknowledge"
             >
-              {isConfirming ? t("dialog.confirming") : t("dialog.confirm")}
+              {isConfirming
+                ? t("dialog.confirming")
+                : selectedAlarmIds.length > 1
+                  ? t("dialog.confirm_many", { count: selectedAlarmIds.length })
+                  : t("dialog.confirm")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -445,9 +635,9 @@ export function AlarmAcknowledgeDialog({
           sondeNumeroSerie={resolvedAlarm.sensorName}
           consigneSup={resolvedAlarm.maxThreshold ?? null}
           consigneInf={resolvedAlarm.minThreshold ?? null}
-          consigne={resolvedAlarm.maxThreshold ?? null}
+          consigne={null}
           unite={resolvedAlarm.unit ?? ""}
-          isSurveillanceActive={false}
+          isSurveillanceActive={true}
         />
       ) : null}
     </>

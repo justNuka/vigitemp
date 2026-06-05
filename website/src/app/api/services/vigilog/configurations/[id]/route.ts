@@ -1,8 +1,8 @@
-import { NextRequest } from "next/server"
+﻿import { NextRequest } from "next/server"
 
 import { apiError, apiOk } from "@/lib/api-response"
 import { getClientIp } from "@/lib/api-logger"
-import { withAnyAuthorizationLogging, type HandlerContext } from "@/lib/api-wrappers"
+import { withStandardOrExpertAnyAuthorizationLogging, type HandlerContext } from "@/lib/license-guards"
 import { auditRouteUpdate } from "@/lib/audit-route"
 import { log } from "@/lib/logger"
 import { prisma } from "@/lib/prisma"
@@ -12,7 +12,7 @@ import {
   VIGILOG_CONFIG_MANAGE_CODES,
 } from "../../_shared"
 
-export const PATCH = withAnyAuthorizationLogging(
+export const PATCH = withStandardOrExpertAnyAuthorizationLogging(
   VIGILOG_CONFIG_MANAGE_CODES,
   async (req: NextRequest, ctx: HandlerContext, routeContext: { params: Promise<{ id: string }> }) => {
     try {
@@ -120,3 +120,4 @@ export const PATCH = withAnyAuthorizationLogging(
     }
   },
 )
+

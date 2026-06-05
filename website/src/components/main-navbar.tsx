@@ -19,12 +19,12 @@ import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useTranslations } from "next-intl";
 import { useLicense } from "@/components/license/license-provider";
-import { isOneOrPack } from "@/lib/license-access";
+import { isOneOrPack, isPack } from "@/lib/license-access";
 
 const menuItems = [
   { key: "sondes", labelKey: "sondes", href: "/admin/sondes", icon: Antenna },
   { key: "modules", labelKey: "modules", href: "/admin/modules", icon: Cpu },
-  { key: "etalons", labelKey: "etalons", href: "/admin/etalons", icon: Wrench },
+  { key: "etalons", labelKey: "etalons", href: "/admin/metrologie", icon: Wrench },
   { key: "actionneurs", labelKey: "actionneurs", href: "/admin/actionneurs", icon: Zap },
   { key: "groupes", labelKey: "groupes", href: "/admin/groupes", icon: Users },
   { key: "lieux", labelKey: "lieux", href: "/admin/lieux", icon: MapPin },
@@ -41,10 +41,16 @@ export function MainNavbar() {
   const { license } = useLicense();
 
   const hideStandards = isOneOrPack(license);
+  const hideOnePlus = isPack(license);
 
   const visibleMenuItems = useMemo(
-    () => (hideStandards ? menuItems.filter((item) => item.key !== "etalons") : menuItems),
-    [hideStandards],
+    () =>
+      menuItems.filter((item) => {
+        if (hideStandards && item.key === "etalons") return false;
+        if (hideOnePlus && (item.key === "sites" || item.key === "groupes")) return false;
+        return true;
+      }),
+    [hideOnePlus, hideStandards],
   );
 
   const isActive = (href: string) => {

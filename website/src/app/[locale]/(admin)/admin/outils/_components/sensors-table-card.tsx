@@ -52,7 +52,7 @@ export function SensorsTableCard({
           <TanStackTable
             columns={columns}
             data={sensors}
-            pageSize={10}
+            pageSize={200}
             maxHeight="calc(100dvh - 25rem)"
             isLoading={isLoading}
             emptyMessage={t('empty')}

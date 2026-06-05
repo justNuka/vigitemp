@@ -204,7 +204,22 @@ export function AuditClient({ logs: initialLogs }: Props) {
     {
       accessorKey: "userId",
       header: t("table.columns.user"),
-      cell: ({ row }) => <span className="text-sm">{(row.getValue("userId") as string | null) || t("table.empty_value")}</span>,
+      cell: ({ row }) => {
+        const login = row.original.userId
+        const displayName = row.original.userDisplayName
+        if (!login && !displayName) {
+          return <span className="text-sm">{t("table.empty_value")}</span>
+        }
+
+        return (
+          <div className="flex flex-col">
+            <span className="text-sm font-medium">{login || displayName}</span>
+            {login && displayName && displayName !== login ? (
+              <span className="text-xs text-muted-foreground">{displayName}</span>
+            ) : null}
+          </div>
+        )
+      },
     },
     {
       accessorKey: "details",
@@ -214,11 +229,18 @@ export function AuditClient({ logs: initialLogs }: Props) {
         const details = row.getValue("details") as string | null;
         const parsed = parseAuditDetails(details, t, localeTag, timezone);
         const content = getRowExpandableContent(row.original.id);
+        const locationName = row.original.locationName;
 
         // Le titre est "du bruit" quand c'est directement un blob JSON ou une IP
         const titleIsJunk = parsed.title.startsWith('{') || parsed.title.toLowerCase().startsWith('ip:')
         const mainText = titleIsJunk ? (parsed.subtitle || parsed.raw || t("table.empty_value")) : parsed.title
-        const subText = titleIsJunk ? null : (parsed.subtitle || parsed.raw || null)
+        const rawSubText = titleIsJunk ? null : (parsed.subtitle || parsed.raw || null)
+        const normalizedLocationName = locationName?.trim().toLowerCase() || ""
+        const hasLocationAlready =
+          !!normalizedLocationName &&
+          [parsed.title, parsed.subtitle, parsed.raw].some((value) => value?.toLowerCase().includes(normalizedLocationName))
+        const contextLocation = locationName && !hasLocationAlready ? locationName : null
+        const subText = [contextLocation, rawSubText].filter(Boolean).join(" • ") || null
 
         return (
           <div className="flex flex-col gap-1 max-w-90">
@@ -334,7 +356,7 @@ export function AuditClient({ logs: initialLogs }: Props) {
             columns={columns}
             data={tableData}
             searchPlaceholder={t("search_placeholder")}
-            pageSize={20}
+            pageSize={200}
             isLoading={isServerFiltering}
             emptyMessage={t("empty")}
             showSearch={false}

@@ -230,6 +230,11 @@ export default function MonitoringCard({
 
   useEffect(() => {
     onDetailsModalStateChange?.(idLieu, isModalOpen)
+    return () => {
+      if (isModalOpen) {
+        onDetailsModalStateChange?.(idLieu, false)
+      }
+    }
   }, [idLieu, isModalOpen, onDetailsModalStateChange])
 
   const handleAcknowledgeOpen = useCallback(() => {
@@ -760,21 +765,23 @@ export default function MonitoringCard({
           setShowAcknowledgeModal(open)
           if (!open) setAckComment('')
         }}
-        onConfirm={async (ackAlarmId, commentValue) => {
+        onConfirm={async (ackAlarmIds, commentValue) => {
           try {
-            const response = await fetch(`/api/alarmes/${ackAlarmId}/acknowledge`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ comment: commentValue || ackComment || undefined }),
-            })
-            if (!response.ok) {
-              console.error('Acknowledge alarm error', await response.text())
-              return
-            }
-            const acknowledgedId = Number(ackAlarmId)
-            if (Number.isFinite(acknowledgedId)) {
-              setLocallyAcknowledgedAlarmId(acknowledgedId)
-              markAlarmAcknowledgedInPaginatedSensorsCache(queryClient, acknowledgedId)
+            for (const ackAlarmId of ackAlarmIds) {
+              const response = await fetch(`/api/alarmes/${ackAlarmId}/acknowledge`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ comment: commentValue || ackComment || undefined }),
+              })
+              if (!response.ok) {
+                console.error('Acknowledge alarm error', await response.text())
+                return
+              }
+              const acknowledgedId = Number(ackAlarmId)
+              if (Number.isFinite(acknowledgedId)) {
+                setLocallyAcknowledgedAlarmId(acknowledgedId)
+                markAlarmAcknowledgedInPaginatedSensorsCache(queryClient, acknowledgedId)
+              }
             }
             setShowAcknowledgeModal(false)
             setAckComment('')

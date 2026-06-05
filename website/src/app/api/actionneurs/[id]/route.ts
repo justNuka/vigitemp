@@ -1,21 +1,21 @@
 import { NextRequest } from "next/server"
-import { getAuthenticatedUser } from "@/lib/auth"
-import { prisma } from "@/lib/prisma"
-import { withLogging, getRequestContext } from "@/lib/api-logger"
+
+import { getRequestContext } from "@/lib/api-logger"
 import { apiError, apiOk } from "@/lib/api-response"
 import { auditRouteDelete, auditRouteUpdate } from "@/lib/audit-route"
+import { withOneOrHigherAnyAuthorizationLogging } from "@/lib/license-guards"
 import { log } from "@/lib/logger"
+import { getPermissionAliases } from "@/lib/permissions"
+import { prisma } from "@/lib/prisma"
 
-export const PATCH = withLogging(
-  async (req: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
+const ACTIONNEUR_ACCESS_CODES = getPermissionAliases("HARDWARE_CONFIG_ACCESS")
+
+export const PATCH = withOneOrHigherAnyAuthorizationLogging(
+  ACTIONNEUR_ACCESS_CODES,
+  async (req: NextRequest, ctx, { params }: { params: Promise<{ id: string }> }) => {
     try {
-      const user = getAuthenticatedUser(req)
-      if (!user) {
-        return apiError(401, "unauthenticated", "Non authentifié")
-      }
-
       const { id: idParam } = await params
-      const id = parseInt(idParam)
+      const id = parseInt(idParam, 10)
 
       if (!id) {
         return apiError(400, "invalid_id", "ID actionneur invalide")
@@ -30,20 +30,20 @@ export const PATCH = withLogging(
       })
 
       if (!actionneur) {
-        return apiError(404, "not_found", "Actionneur non trouvé")
+        return apiError(404, "not_found", "Actionneur non trouve")
       }
 
       const updated = await prisma.t_actionneur.update({
         where: { Id_Actionneur: id },
         data: {
-          Type: type ? parseInt(type) : actionneur.Type,
+          Type: type ? parseInt(type, 10) : actionneur.Type,
           Num_Serie: serie || actionneur.Num_Serie,
           Commentaire: commentaire || actionneur.Commentaire,
         },
       })
 
       if (lieuId) {
-        const newLieuId = parseInt(lieuId)
+        const newLieuId = parseInt(lieuId, 10)
 
         const oldLieu = await prisma.t_lieu.findFirst({
           where: { Id_Actionneur: id },
@@ -78,7 +78,7 @@ export const PATCH = withLogging(
         select: { Id_Lieu: true },
       })
 
-      auditRouteUpdate(req, user, {
+      auditRouteUpdate(req, ctx.user, {
         resource: "Actionneur",
         resourceId: id,
         before: {
@@ -92,6 +92,7 @@ export const PATCH = withLogging(
           Commentaire: updated.Commentaire,
           Id_Lieu: lieu?.Id_Lieu || null,
         },
+        reason: `Modification actionneur ${actionneur.Num_Serie || id}`,
       })
 
       return apiOk({
@@ -99,23 +100,18 @@ export const PATCH = withLogging(
         Id_Lieu: lieu?.Id_Lieu || null,
       })
     } catch (error) {
-      log.error("actionneurs", "actionneur_update_error", { error: error });
-      return apiError(500, "actionneur_update_failed", "Erreur lors de la mise à jour de l'actionneur")
+      log.error("actionneurs", "actionneur_update_error", { error })
+      return apiError(500, "actionneur_update_failed", "Erreur lors de la mise a jour de l'actionneur")
     }
   },
 )
 
-export const DELETE = withLogging(
-  async (req: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
+export const DELETE = withOneOrHigherAnyAuthorizationLogging(
+  ACTIONNEUR_ACCESS_CODES,
+  async (req: NextRequest, ctx, { params }: { params: Promise<{ id: string }> }) => {
     try {
-      const user = getAuthenticatedUser(req)
-      if (!user) {
-        return apiError(401, "unauthenticated", "Non authentifié")
-      }
-
       const { id: idParam } = await params
       const id = parseInt(idParam, 10)
-      const { ip } = getRequestContext(req)
 
       if (!id) {
         return apiError(400, "invalid_id", "ID actionneur invalide")
@@ -126,7 +122,7 @@ export const DELETE = withLogging(
       })
 
       if (!actionneur) {
-        return apiError(404, "not_found", "Actionneur non trouvé")
+        return apiError(404, "not_found", "Actionneur non trouve")
       }
 
       await prisma.t_lieu.updateMany({
@@ -139,16 +135,16 @@ export const DELETE = withLogging(
         data: { Est_Archive: true },
       })
 
-      auditRouteDelete(req, user, {
+      auditRouteDelete(req, ctx.user, {
         resource: "Actionneur",
         resourceId: id,
-        reason: "Archivage actionneur",
+        reason: `Archivage actionneur ${actionneur.Num_Serie || id}`,
         data: { Num_Serie: actionneur.Num_Serie },
       })
 
       return apiOk({ Id_Actionneur: updated.Id_Actionneur, Est_Archive: updated.Est_Archive })
     } catch (error) {
-      log.error("actionneurs", "actionneur_archive_error", { error: error });
+      log.error("actionneurs", "actionneur_archive_error", { error })
       return apiError(500, "actionneur_archive_failed", "Erreur lors de l'archivage de l'actionneur")
     }
   },

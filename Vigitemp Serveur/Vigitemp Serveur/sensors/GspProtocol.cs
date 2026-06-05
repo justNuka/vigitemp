@@ -11,6 +11,7 @@ namespace Vigitemp_Serveur.sensors
         public string Serial { get; set; }
         public DateTime? ProbeDateTime { get; set; }
         public double? Temperature { get; set; }
+        public string Unit { get; set; }
         public int? BatteryPercent { get; set; }
         public int? Rssi { get; set; }
     }
@@ -80,13 +81,16 @@ namespace Vigitemp_Serveur.sensors
 
             if (metrology != null)
             {
+                // For GSP probes, metrology is pushed into the probe itself.
+                // The local sensor offset is an additive correction, so it is folded into ECAL's B coefficient.
+                var effectiveCoeffConstant = metrology.CoeffConstant + (metrology.Offset ?? 0d);
                 commands.Add(new KeyValuePair<string, string>(
                     "ECAL",
                     string.Format(
                         CultureInfo.InvariantCulture,
                         "{0}a{1}b",
                         FormatNumericPayload(metrology.CoeffX),
-                        FormatNumericPayload(metrology.CoeffConstant))));
+                        FormatNumericPayload(effectiveCoeffConstant))));
 
                 if (metrology.ErrJustesse.HasValue)
                 {
@@ -211,13 +215,20 @@ namespace Vigitemp_Serveur.sensors
 
         internal static bool TryExtractTemperature(string response, string target, out double temperature)
         {
+            return TryExtractTemperature(response, target, out temperature, out _);
+        }
+
+        internal static bool TryExtractTemperature(string response, string target, out double temperature, out string unit)
+        {
             temperature = 0d;
+            unit = "C";
             if (!TryParseTemperatureResponse(response, target, out var parsed) || !parsed.Temperature.HasValue)
             {
                 return false;
             }
 
             temperature = parsed.Temperature.Value;
+            unit = string.IsNullOrWhiteSpace(parsed.Unit) ? "C" : parsed.Unit;
             return true;
         }
 
@@ -237,13 +248,15 @@ namespace Vigitemp_Serveur.sensors
                 return false;
             }
 
+            var measuredValue = TryExtractTemperatureValue(response, normalizedTarget, out var measuredUnit);
             var result = new GspTemperatureResponse
             {
                 Serial = !string.IsNullOrWhiteSpace(extractedSerial)
                     ? extractedSerial.Trim().ToUpperInvariant()
                     : ExtractDetectedSerials(response).FirstOrDefault(),
                 ProbeDateTime = TryExtractProbeDateTime(response),
-                Temperature = TryExtractTemperatureValue(response, normalizedTarget),
+                Temperature = measuredValue,
+                Unit = measuredUnit,
                 BatteryPercent = TryExtractIntLineValue(response, "Batterie"),
                 Rssi = TryExtractIntLineValue(response, "RSSI"),
             };
@@ -455,22 +468,28 @@ namespace Vigitemp_Serveur.sensors
             return value.ToString("0.######", CultureInfo.InvariantCulture);
         }
 
-        private static double? TryExtractTemperatureValue(string response, string normalizedTarget)
+        private static double? TryExtractTemperatureValue(string response, string normalizedTarget, out string unit)
         {
-            foreach (var pattern in new[]
+            unit = "C";
+            foreach (var definition in new[]
             {
-                @"R?TEMP" + Regex.Escape(normalizedTarget) + @"\s*:\s*(-?\d+(?:[.,]\d+)?)",
-                @"R?FTEM" + Regex.Escape(normalizedTarget) + @"\s*:\s*(-?\d+(?:[.,]\d+)?)",
-                @"ACK\s*:\s*R?FTEM" + Regex.Escape(normalizedTarget) + @"\s*:\s*(-?\d+(?:[.,]\d+)?)",
-                @"(?:^|\r?\n)\s*Temperature\s*=\s*(-?\d+(?:[.,]\d+)?)"
+                new { Pattern = @"R?TEMP" + Regex.Escape(normalizedTarget) + @"\s*:\s*(-?\d+(?:[.,]\d+)?)", Unit = "C" },
+                new { Pattern = @"R?FTEM" + Regex.Escape(normalizedTarget) + @"\s*:\s*(-?\d+(?:[.,]\d+)?)", Unit = "C" },
+                new { Pattern = @"ACK\s*:\s*R?FTEM" + Regex.Escape(normalizedTarget) + @"\s*:\s*(-?\d+(?:[.,]\d+)?)", Unit = "C" },
+                new { Pattern = @"(?:^|\r?\n)\s*Temperature\s*=\s*(-?\d+(?:[.,]\d+)?)", Unit = "C" },
+                new { Pattern = @"(?:^|\r?\n)\s*Mesure\s*=\s*(-?\d+(?:[.,]\d+)?)", Unit = "C" },
+                new { Pattern = @"(?:^|\r?\n)\s*Humidite\s*=\s*(-?\d+(?:[.,]\d+)?)", Unit = "%" },
+                new { Pattern = @"(?:^|\r?\n)\s*Humidité\s*=\s*(-?\d+(?:[.,]\d+)?)", Unit = "%" },
+                new { Pattern = @"(?:^|\r?\n)\s*Humidity\s*=\s*(-?\d+(?:[.,]\d+)?)", Unit = "%" }
             })
             {
-                var matches = Regex.Matches(response, pattern, RegexOptions.IgnoreCase);
+                var matches = Regex.Matches(response, definition.Pattern, RegexOptions.IgnoreCase);
                 for (var i = matches.Count - 1; i >= 0; i--)
                 {
                     var candidate = matches[i].Groups[1].Value.Replace(',', '.');
                     if (double.TryParse(candidate, NumberStyles.Float | NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture, out var parsed))
                     {
+                        unit = definition.Unit;
                         return parsed;
                     }
                 }

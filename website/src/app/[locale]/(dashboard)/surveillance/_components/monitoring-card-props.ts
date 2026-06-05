@@ -24,8 +24,10 @@ export function buildMonitoringCardProps(
   backgroundPaused: boolean,
   showNullNonResponse: boolean,
 ): MonitoringCardProps {
+  const locationId = Number(sensor.location.id ?? sensor.id)
+
   return {
-    idLieu: Number(sensor.id),
+    idLieu: Number.isFinite(locationId) ? locationId : Number(sensor.id),
     nomLieu: sensor.name ?? "",
     currentValue: sensor.currentValue ?? null,
     lastMeasurement: sensor.lastMeasurement ?? null,

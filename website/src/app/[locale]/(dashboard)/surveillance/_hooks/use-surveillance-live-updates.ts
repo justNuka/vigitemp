@@ -49,7 +49,7 @@ export function useSurveillanceLiveUpdates({
         const nextPages = data.pages.map((page) => {
           const sensors = page.sensors ?? []
           const nextSensors = sensors.map((s) => {
-            if (!s || s.id !== id) return s
+            if (!s || String(s.location?.id ?? s.id) !== id) return s
             changed = true
             return {
               ...s,

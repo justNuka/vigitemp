@@ -5,18 +5,24 @@ import PasswordResetEmail from "../../../../../emails/password-reset"
 import { apiError, apiOk } from "@/lib/api-response"
 import { getGlobalAppLanguage } from "@/lib/app-language"
 import { log } from "@/lib/logger"
+import { canUseApplicationEmail } from "@/lib/license-email"
 
 /**
  * POST /api/email/test
  * Envoie un email de test pour valider la configuration SMTP.
  */
-export const POST = withAuthorizationLogging("GERER_PROFIL", async (req: NextRequest) => {
+export const POST = withAuthorizationLogging("PARAMETRES_GERER", async (req: NextRequest) => {
   try {
     const body = await req.json()
     const toEmail = body?.toEmail as string | undefined
 
     if (!toEmail) {
       return apiError(400, "missing_fields", "Email destinataire requis")
+    }
+
+    const emailLicense = await canUseApplicationEmail()
+    if (!emailLicense.allowed) {
+      return apiError(403, emailLicense.reason, "L'envoi d'emails n'est pas autorise par la licence")
     }
 
     const emailEnabled = await isEmailEnabled()

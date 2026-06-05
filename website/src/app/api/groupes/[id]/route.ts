@@ -1,21 +1,19 @@
-import { NextRequest } from "next/server"
-import { getAuthenticatedUser } from "@/lib/auth"
-import { prisma } from "@/lib/prisma"
-import { getClientIp, withLogging } from "@/lib/api-logger"
+﻿import { NextRequest } from "next/server"
+
 import { apiError, apiOk } from "@/lib/api-response"
 import { auditRouteDelete, auditRouteUpdate } from "@/lib/audit-route"
+import { withOneOrHigherAnyAuthorizationLogging, type HandlerContext } from "@/lib/license-guards"
 import { log } from "@/lib/logger"
+import { prisma } from "@/lib/prisma"
 
-export const PATCH = withLogging(
-  async (req: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
+const GROUP_ACCESS_CODES = ["PARAMETRES_GERER"] as const
+
+export const PATCH = withOneOrHigherAnyAuthorizationLogging(
+  GROUP_ACCESS_CODES,
+  async (req: NextRequest, ctx: HandlerContext, { params }: { params: Promise<{ id: string }> }) => {
     try {
-      const user = getAuthenticatedUser(req)
-      if (!user) {
-        return apiError(401, "unauthenticated", "Non authentifié")
-      }
-
       const { id: idParam } = await params
-      const id = parseInt(idParam)
+      const id = parseInt(idParam, 10)
 
       if (!id) {
         return apiError(400, "invalid_id", "ID groupe invalide")
@@ -29,7 +27,7 @@ export const PATCH = withLogging(
       })
 
       if (!groupe) {
-        return apiError(404, "not_found", "Groupe non trouvé")
+        return apiError(404, "not_found", "Groupe non trouve")
       }
 
       const updated = await prisma.t_groupe.update({
@@ -40,11 +38,12 @@ export const PATCH = withLogging(
         },
       })
 
-      auditRouteUpdate(req, user, {
+      auditRouteUpdate(req, ctx.user, {
         resource: "Groupe",
         resourceId: id,
         before: { Nom_Groupe: groupe.Nom_Groupe, Numero_Regroupement: groupe.Numero_Regroupement },
         after: { Nom_Groupe: updated.Nom_Groupe, Numero_Regroupement: updated.Numero_Regroupement },
+        reason: `Modification groupe ${groupe.Nom_Groupe}`,
       })
 
       const nombre_lieux = await prisma.t_lieu.count({
@@ -62,20 +61,16 @@ export const PATCH = withLogging(
         nombre_lieux,
       })
     } catch (error) {
-      log.error("groupes", "groupe_update_error", { error: error });
-      return apiError(500, "groupe_update_failed", "Erreur lors de la mise à jour du groupe")
+      log.error("groupes", "groupe_update_error", { error })
+      return apiError(500, "groupe_update_failed", "Erreur lors de la mise a jour du groupe")
     }
   },
 )
 
-export const DELETE = withLogging(
-  async (req: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
+export const DELETE = withOneOrHigherAnyAuthorizationLogging(
+  GROUP_ACCESS_CODES,
+  async (req: NextRequest, ctx: HandlerContext, { params }: { params: Promise<{ id: string }> }) => {
     try {
-      const user = getAuthenticatedUser(req)
-      if (!user) {
-        return apiError(401, "unauthenticated", "Non authentifié")
-      }
-
       const { id: idParam } = await params
       const id = parseInt(idParam, 10)
 
@@ -85,15 +80,13 @@ export const DELETE = withLogging(
 
       const groupe = await prisma.t_groupe.findUnique({ where: { Id_Groupe: id } })
       if (!groupe) {
-        return apiError(404, "not_found", "Groupe non trouvé")
+        return apiError(404, "not_found", "Groupe non trouve")
       }
 
       const linkedLieuxCount = await prisma.t_lieu.count({
         where: {
           Est_Archive: false,
-          OR: [
-                        { t_lieu_groupe: { some: { Id_Groupe: id } } },
-          ],
+          t_lieu_groupe: { some: { Id_Groupe: id } },
         },
       })
 
@@ -102,7 +95,7 @@ export const DELETE = withLogging(
       })
 
       if (linkedLieuxCount > 0 || linkedUsersCount > 0) {
-        return apiError(409, "has_dependencies", "Impossible d'archiver un groupe avec des éléments associés", {
+        return apiError(409, "has_dependencies", "Impossible d'archiver un groupe avec des elements associes", {
           linkedLieuxCount,
           linkedUsersCount,
         })
@@ -113,7 +106,7 @@ export const DELETE = withLogging(
         data: { Est_Archive: true },
       })
 
-      auditRouteDelete(req, user, {
+      auditRouteDelete(req, ctx.user, {
         resource: "Groupe",
         resourceId: id,
         reason: `Archivage groupe ${updated.Nom_Groupe}`,
@@ -127,7 +120,7 @@ export const DELETE = withLogging(
         Est_Archive: updated.Est_Archive,
       })
     } catch (error) {
-      log.error("groupes", "groupe_archive_error", { error: error });
+      log.error("groupes", "groupe_archive_error", { error })
       return apiError(500, "groupe_archive_failed", "Erreur lors de l'archivage du groupe")
     }
   },

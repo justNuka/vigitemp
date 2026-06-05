@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma"
 
 const columnExistsCache = new Map<string, boolean>()
+const tableExistsCache = new Map<string, boolean>()
 
 function asNumber(value: unknown) {
   if (typeof value === "number") return value
@@ -42,6 +43,35 @@ export async function hasMainDbColumn(tableName: string, columnName: string) {
     return exists
   } catch {
     columnExistsCache.set(cacheKey, false)
+    return false
+  }
+}
+
+export async function hasMainDbTable(tableName: string) {
+  const cacheKey = tableName.toLowerCase()
+  const cached = tableExistsCache.get(cacheKey)
+  if (cached !== undefined) return cached
+
+  try {
+    const rows = isMssqlProvider()
+      ? await prisma.$queryRaw<Array<{ cnt: number | bigint | string }>>`
+          SELECT COUNT(*) AS cnt
+          FROM INFORMATION_SCHEMA.TABLES
+          WHERE TABLE_SCHEMA = 'dbo'
+            AND TABLE_NAME = ${tableName}
+        `
+      : await prisma.$queryRaw<Array<{ cnt: number | bigint | string }>>`
+          SELECT COUNT(*) AS cnt
+          FROM INFORMATION_SCHEMA.TABLES
+          WHERE TABLE_SCHEMA = DATABASE()
+            AND TABLE_NAME = ${tableName}
+        `
+
+    const exists = asNumber(rows?.[0]?.cnt ?? 0) > 0
+    tableExistsCache.set(cacheKey, exists)
+    return exists
+  } catch {
+    tableExistsCache.set(cacheKey, false)
     return false
   }
 }

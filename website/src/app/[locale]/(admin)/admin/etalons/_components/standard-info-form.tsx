@@ -1,33 +1,34 @@
-'use client';
+'use client'
 
-import { useFormContext, useWatch } from 'react-hook-form';
-import { useTranslations } from 'next-intl';
-import { Input } from '@/components/ui/input';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Combobox } from '@/components/ui/combobox';
-import type { StandardType } from '@/hooks/useStandardTypes';
-import type { Module } from '@/hooks/useModules';
+import { useMemo } from 'react'
+import { useFormContext, useWatch } from 'react-hook-form'
+
+import { Combobox } from '@/components/ui/combobox'
 import {
   FormControl,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/components/ui/form';
+} from '@/components/ui/form'
+import { Input } from '@/components/ui/input'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import type { Module } from '@/hooks/useModules'
+import type { StandardType } from '@/hooks/useStandardTypes'
 
 type StandardInfoFormProps = {
-  isEditing: boolean;
-  types: StandardType[] | undefined;
-  typesLoading: boolean;
-  modules: Module[] | undefined;
-  modulesLoading: boolean;
-};
+  isEditing: boolean
+  types: StandardType[] | undefined
+  typesLoading: boolean
+  modules: Module[] | undefined
+  modulesLoading: boolean
+}
 
 export function StandardInfoForm({
   isEditing,
@@ -36,31 +37,38 @@ export function StandardInfoForm({
   modules,
   modulesLoading,
 }: StandardInfoFormProps) {
-  const { control, getValues } = useFormContext();
-  const portSerie = useWatch({ control, name: 'portSerie' }) ?? getValues('portSerie') ?? '';
-  const idServeur = useWatch({ control, name: 'idServeur' }) ?? getValues('idServeur') ?? '0';
-  const t = useTranslations('standardsDialog');
+  const { control, getValues } = useFormContext()
+  const typeCode = useWatch({ control, name: 'type' }) ?? ''
+  const portSerie = useWatch({ control, name: 'portSerie' }) ?? getValues('portSerie') ?? ''
+  const idWorker = useWatch({ control, name: 'idWorker' }) ?? getValues('idWorker') ?? ''
+
+  const selectedType = useMemo(
+    () => types?.find((type) => (type.Type_Etalon ?? '').toUpperCase() === String(typeCode).toUpperCase()) ?? null,
+    [typeCode, types],
+  )
 
   return (
-    <div className="space-y-4">
-      <h3 className="font-semibold text-lg">{t('sections.info')}</h3>
+    <div className="grid gap-4 lg:grid-cols-2">
+      <div className="space-y-4 lg:col-span-2">
+        <h3 className="text-lg font-semibold">Sonde etalon</h3>
+      </div>
 
       <FormField
         control={control}
         name="type"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>{t('fields.type_label')}</FormLabel>
+            <FormLabel>Type de sonde etalon</FormLabel>
             <Select value={field.value || ''} onValueChange={field.onChange} disabled={isEditing}>
               <FormControl>
-                <SelectTrigger id="type" disabled={typesLoading || isEditing}>
-                  <SelectValue placeholder={t('fields.type_placeholder')} />
+                <SelectTrigger disabled={typesLoading || isEditing}>
+                  <SelectValue placeholder="Selectionner un type" />
                 </SelectTrigger>
               </FormControl>
               <SelectContent>
-                {types?.map((t) => (
-                  <SelectItem key={t.Type_Etalon} value={t.Type_Etalon || ''}>
-                    {t.Type_Etalon} - {t.Nom || '-'}
+                {types?.map((type) => (
+                  <SelectItem key={type.Type_Etalon} value={type.Type_Etalon || ''}>
+                    {type.Type_Etalon} - {type.Nom || '-'}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -75,13 +83,12 @@ export function StandardInfoForm({
         name="serie"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>{t('fields.serial_label')}</FormLabel>
+            <FormLabel>Numero de serie</FormLabel>
             <FormControl>
               <Input
-                id="serie"
-                placeholder={t('fields.serial_placeholder')}
+                placeholder="Ex: SPET-26000001"
                 value={field.value}
-                onChange={(e) => field.onChange(e.target.value.replace(/\D/g, ''))}
+                onChange={(event) => field.onChange(event.target.value.toUpperCase())}
                 readOnly={isEditing}
                 className={isEditing ? 'bg-muted opacity-50' : ''}
               />
@@ -95,25 +102,21 @@ export function StandardInfoForm({
         control={control}
         name="moduleId"
         render={({ field }) => (
-          <FormItem>
-            <FormLabel>{t('fields.module_label')}</FormLabel>
+          <FormItem className="lg:col-span-2">
+            <FormLabel>Module</FormLabel>
             <FormControl>
               <Combobox
                 triggerId="module"
                 value={field.value || ''}
                 onValueChange={field.onChange}
                 disabled={modulesLoading}
-                placeholder={t('fields.module_placeholder')}
-                searchPlaceholder={t('fields.module_search_placeholder')}
-                emptyMessage={t('fields.module_empty')}
-                options={(modules ?? []).map((mod) => ({
-                  value: mod.Id_Module.toString(),
-                  label: `${mod.Module_Numero_Serie || mod.Libelle_Type_Module || mod.Id_Module} sur port ${
-                    mod.Port_Serie || 'N/A'
-                  } (${mod.Emplacement || '-'})`,
-                  searchText: `${mod.Module_Numero_Serie || ''} ${mod.Libelle_Type_Module || ''} ${
-                    mod.Port_Serie || ''
-                  } ${mod.Emplacement || ''} ${mod.Id_Module}`,
+                placeholder="Selectionner un module"
+                searchPlaceholder="Rechercher un module"
+                emptyMessage="Aucun module"
+                options={(modules ?? []).map((module) => ({
+                  value: String(module.Id_Module),
+                  label: `${module.Module_Numero_Serie || module.Libelle_Type_Module || module.Id_Module} - port ${module.Port_Serie || 'N/A'} (${module.Emplacement || '-'})`,
+                  searchText: `${module.Module_Numero_Serie || ''} ${module.Libelle_Type_Module || ''} ${module.Port_Serie || ''} ${module.Emplacement || ''}`,
                 }))}
               />
             </FormControl>
@@ -123,27 +126,37 @@ export function StandardInfoForm({
       />
 
       <FormItem>
-        <FormLabel>{t('fields.port_label')}</FormLabel>
+        <FormLabel>Port serie</FormLabel>
         <FormControl>
-          <Input id="port" placeholder={t('fields.port_placeholder')} value={portSerie} readOnly className="bg-muted opacity-50" />
+          <Input value={portSerie} readOnly className="bg-muted opacity-50" />
         </FormControl>
       </FormItem>
 
       <FormItem>
-        <FormLabel>{t('fields.server_id_label')}</FormLabel>
+        <FormLabel>Id worker</FormLabel>
         <FormControl>
-          <Input id="server" placeholder={t('fields.server_id_placeholder')} value={idServeur} readOnly className="bg-muted opacity-50" />
+          <Input value={idWorker} readOnly className="bg-muted opacity-50" />
         </FormControl>
       </FormItem>
 
+      <div className="rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 lg:col-span-2">
+        Les coefficients <strong>a</strong>, <strong>b</strong>, <strong>c</strong> et l&apos;incertitude max sont disponibles sur le certificat fourni avec la sonde etalon. Verifiez ces valeurs avant validation.
+      </div>
+
+      {selectedType?.Est_Sonde_Externe ? (
+        <div className="rounded-md border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-900 lg:col-span-2">
+          Cette sonde est de type externe. Les modules d&apos;ajustage et d&apos;etalonnage ne seront pas disponibles pour ce type de sonde.
+        </div>
+      ) : null}
+
       <FormField
         control={control}
-        name="valeurBase"
+        name="coeffA"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>{t('fields.base_value_label')}</FormLabel>
+            <FormLabel>Coefficient a</FormLabel>
             <FormControl>
-              <Input id="base-value" type="number" placeholder={t('fields.number_placeholder')} {...field} />
+              <Input placeholder="Ex: 0.0001" {...field} />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -152,12 +165,12 @@ export function StandardInfoForm({
 
       <FormField
         control={control}
-        name="resolution"
+        name="coeffB"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>{t('fields.resolution_label')}</FormLabel>
+            <FormLabel>Coefficient b</FormLabel>
             <FormControl>
-              <Input id="resolution" type="number" placeholder={t('fields.number_placeholder')} {...field} />
+              <Input placeholder="Ex: 1.002" {...field} />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -166,17 +179,31 @@ export function StandardInfoForm({
 
       <FormField
         control={control}
-        name="incertitude"
+        name="coeffC"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>{t('fields.incertitude_label')}</FormLabel>
+            <FormLabel>Coefficient c</FormLabel>
             <FormControl>
-              <Input id="incertitude" type="number" placeholder={t('fields.number_placeholder')} {...field} />
+              <Input placeholder="Ex: -0.02" {...field} />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
+      <FormField
+        control={control}
+        name="incertitudeMax"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Incertitude max</FormLabel>
+            <FormControl>
+              <Input placeholder="Ex: 0.05" {...field} />
             </FormControl>
             <FormMessage />
           </FormItem>
         )}
       />
     </div>
-  );
+  )
 }

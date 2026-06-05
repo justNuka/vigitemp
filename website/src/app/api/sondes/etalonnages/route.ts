@@ -1,13 +1,13 @@
 import { NextRequest } from "next/server"
 import { Prisma } from "../../../../generated/@prisma-db-main"
 
-import { withAuthLogging } from "@/lib/api-wrappers"
+import { withStandardOrExpertAnyAuthorizationLogging } from "@/lib/license-guards"
 import { apiError, apiOk } from "@/lib/api-response"
 import { prisma } from "@/lib/prisma"
-import { requireStandardOrExpertLicense } from "@/lib/license-guards"
 import { log } from "@/lib/logger"
 import { buildMetrologyLookupSerials } from "@/lib/sensor-naming"
 import { hasMainDbColumn } from "@/lib/db-schema"
+import { getPermissionAliases } from "@/lib/permissions"
 
 type CalibrationRow = {
   Id_Etalonnage: number
@@ -23,11 +23,10 @@ type CalibrationRow = {
   Nom_Etalonnage: string | null
 }
 
-export const GET = withAuthLogging(async (req: NextRequest) => {
-  try {
-    const guard = await requireStandardOrExpertLicense()
-    if (guard) return guard
+const METROLOGY_ACCESS_CODES = getPermissionAliases("METROLOGY_ACCESS")
 
+export const GET = withStandardOrExpertAnyAuthorizationLogging(METROLOGY_ACCESS_CODES, async (req: NextRequest) => {
+  try {
     const { searchParams } = new URL(req.url)
     const serieNum = searchParams.get("serie")
 

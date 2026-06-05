@@ -1,9 +1,12 @@
 import { NextRequest } from "next/server"
 import { z } from "zod"
 
-import { withAuthorizationLogging } from "@/lib/api-wrappers"
 import { apiError, apiOk } from "@/lib/api-response"
+import { withStandardOrExpertAuthorizationLogging } from "@/lib/license-guards"
+import { buildAuditChanges } from "@/lib/audit-route"
+import { getRequestContext } from "@/lib/api-logger"
 import { log } from "@/lib/logger"
+import type { HandlerContext } from "@/lib/api-wrappers"
 import {
   getMonthlyStatsReportConfig,
   saveMonthlyStatsReportConfig,
@@ -27,7 +30,7 @@ const configSchema = z.object({
   includeOverLowNoAlarm: z.boolean(),
 })
 
-export const GET = withAuthorizationLogging("GERER_PROFIL", async (_req: NextRequest) => {
+export const GET = withStandardOrExpertAuthorizationLogging("PARAMETRES_GERER", async (_req: NextRequest) => {
   try {
     const config = await getMonthlyStatsReportConfig()
     return apiOk(config)
@@ -37,7 +40,7 @@ export const GET = withAuthorizationLogging("GERER_PROFIL", async (_req: NextReq
   }
 })
 
-export const PUT = withAuthorizationLogging("GERER_PROFIL", async (req: NextRequest) => {
+export const PUT = withStandardOrExpertAuthorizationLogging("PARAMETRES_GERER", async (req: NextRequest, ctx: HandlerContext) => {
   try {
     const body = await req.json()
     const parsed = configSchema.safeParse(body)
@@ -48,7 +51,36 @@ export const PUT = withAuthorizationLogging("GERER_PROFIL", async (req: NextRequ
     }
 
     const payload: MonthlyStatsReportConfig = parsed.data
+    const previousConfig = await getMonthlyStatsReportConfig()
     await saveMonthlyStatsReportConfig(payload)
+    const { ip } = getRequestContext(req)
+    log.audit("CC", {
+      user: ctx.user.username,
+      userId: ctx.user.userId,
+      userProfile: ctx.user.profile,
+      ip,
+      resource: "Configuration recap mensuel",
+      resourceId: "monthly-stats-report-config",
+      changes: {
+        action: "update",
+        ...buildAuditChanges(previousConfig, payload, [
+          "enabled",
+          "recipients",
+          "dayOfMonth",
+          "hourLocal",
+          "includeLocationSummary",
+          "includeSettingsSummary",
+          "includeMax",
+          "includeMin",
+          "includeAvg",
+          "includeAlarmCount",
+          "includeAlarmHighDuration",
+          "includeAlarmLowDuration",
+          "includeOverHighNoAlarm",
+          "includeOverLowNoAlarm",
+        ]),
+      },
+    })
     return apiOk({ message: "Configuration enregistrée", config: payload })
   } catch (error) {
     log.error("stats/monthly-config", "save_failed", { error })

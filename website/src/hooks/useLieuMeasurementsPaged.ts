@@ -55,7 +55,7 @@ export function useLieuMeasurementsPaged(
   {
     enabled = true,
     pageIndex = 0,
-    pageSize = 20,
+    pageSize = 200,
     startDate,
     endDate,
     includeNullNonResponse,

@@ -8,14 +8,21 @@ export interface Standard {
   Port_Serie: string | null;
   Id_Worker: number | null;
   Id_Module: number | null;
+  Est_Sonde_Externe: boolean | null;
   Resolution: string | null;
   Incertitude: string | null;
   Nb_Decimale: number | null;
   Est_Archive: boolean | null;
+  Coeff_A: number | null;
+  Coeff_B: number | null;
+  Coeff_C: number | null;
+  Incertitude_Max: number | null;
   Date_Certif: string | null;
   Organisme: string | null;
   Num_Certif: string | null;
   Unite: string | null;
+  Pdf_Id: number | null;
+  Pdf_Name: string | null;
 }
 
 async function fetchStandards(): Promise<Standard[]> {

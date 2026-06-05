@@ -22,6 +22,7 @@ export type Metrics = {
   latestConnectedLabel: string
   lastBackupLabel: string
   backupStoragePath: string
+  backupLogFilePath: string
   hideStandards: boolean
 }
 

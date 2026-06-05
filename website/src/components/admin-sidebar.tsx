@@ -28,8 +28,7 @@ import {
   Shield,
   FileText,
   FlaskConical,
-  MessageSquare,
-  TrendingUp,
+  MessageSquare
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -41,6 +40,7 @@ import { getInitialsForAvatar, resolveAvatarSrc } from "@/lib/avatar-library";
 import { useMessagingEnabled } from "@/hooks/useMessagingEnabled";
 import { useUnreadCount } from "@/hooks/useUnreadCount";
 import { WEB_APP_VERSION } from "@/lib/app-version";
+import { hasAuthorizationCode, hasPermission } from "@/lib/permissions";
 
 import { CurrentUser } from "@/lib/types";
 import { useLocale } from "next-intl";
@@ -69,6 +69,13 @@ export function AdminSidebar({ currentUser, onLogout, activeAlarms = 0 }: AdminS
   const { license } = useLicense();
   const messagingEnabled = useMessagingEnabled();
   const messagingUnread = useUnreadCount();
+  const canAccessAdminDashboard = hasPermission(currentUser, "DASHBOARD_ADMIN_ACCESS");
+  const canManageProfiles = hasAuthorizationCode(currentUser, ["GERER_PROFIL"]);
+  const canManageParameters = hasAuthorizationCode(currentUser, ["PARAMETRES_GERER"]);
+  const canAckAlarms = hasPermission(currentUser, "ALARM_ACK_ACCESS");
+  const canAccessMetrology =
+    isStandardOrExpert(license) &&
+    hasPermission(currentUser, "METROLOGY_WORK_ACCESS");
 
   const getLinkComponent = (href: string) => {
     if (href === "/" || href === "/admin") {
@@ -80,18 +87,24 @@ export function AdminSidebar({ currentUser, onLogout, activeAlarms = 0 }: AdminS
   const dashboardNavItems: NavItem[] = [
     { title: t("dashboards.user"), href: "/", icon: LayoutDashboard },
     { title: t("dashboards.admin"), href: "/admin", icon: Shield },
-  ];
+  ].filter((item) => item.href !== "/admin" || canAccessAdminDashboard);
 
   const managementNavItems: Array<NavItem & { badge?: number; badgeVariant?: "default" | "destructive" }> = [
-    { title: t("management.profiles"), href: "/admin/profils", icon: Lock },
-    { title: t("management.users"), href: "/admin/utilisateurs", icon: Users },
-    {
-      title: t("management.alarms"),
-      href: "/admin/alarmes",
-      icon: Bell,
-      badge: activeAlarms > 0 ? activeAlarms : undefined,
-      badgeVariant: "destructive",
-    },
+    ...(canManageProfiles
+      ? [
+          { title: t("management.profiles"), href: "/admin/profils", icon: Lock },
+          { title: t("management.users"), href: "/admin/utilisateurs", icon: Users },
+        ]
+      : []),
+    ...(canAckAlarms
+      ? [{
+          title: t("management.alarms"),
+          href: "/admin/alarmes",
+          icon: Bell,
+          badge: activeAlarms > 0 ? activeAlarms : undefined,
+          badgeVariant: "destructive" as const,
+        }]
+      : []),
     ...(messagingEnabled
       ? [
           {
@@ -103,19 +116,13 @@ export function AdminSidebar({ currentUser, onLogout, activeAlarms = 0 }: AdminS
           },
         ]
       : []),
-    { title: t("management.audit"), href: "/admin/audit", icon: FileText },
+    ...(canManageParameters ? [{ title: t("management.audit"), href: "/admin/audit", icon: FileText }] : []),
+    ...(canAccessMetrology ? [{ title: "Bains & etalons", href: "/admin/metrologie", icon: FlaskConical }] : []),
   ];
 
-  const metrologyNavItems: NavItem[] = isStandardOrExpert(license)
-    ? [
-        { title: t("metrology.calibration_import"), href: "/admin/sondes/etalonnage-import", icon: FlaskConical },
-        { title: t("metrology.impact_analysis"), href: "/admin/analyse-impact", icon: TrendingUp },
-      ]
+  const globalSettingsNavItems: NavItem[] = canManageParameters
+    ? [{ title: t("system.settings"), href: "/admin/parametres", icon: Settings }]
     : [];
-
-  const globalSettingsNavItems: NavItem[] = [
-    { title: t("system.settings"), href: "/admin/parametres", icon: Settings },
-  ];
 
   const isServicesActive =
     normalizedPathname === getLocalizedPathname("/services", locale as any);
@@ -135,6 +142,7 @@ export function AdminSidebar({ currentUser, onLogout, activeAlarms = 0 }: AdminS
       <SidebarSeparator />
 
       <SidebarContent className="custom-scrollbar">
+        {dashboardNavItems.length > 0 ? (
         <SidebarGroup>
           <SidebarGroupLabel>{t("groups.dashboards")}</SidebarGroupLabel>
           <SidebarGroupContent>
@@ -143,7 +151,7 @@ export function AdminSidebar({ currentUser, onLogout, activeAlarms = 0 }: AdminS
                 <SidebarMenuItem key={item.href}>
                   <SidebarMenuButton
                     asChild
-                    isActive={normalizedPathname === getLocalizedPathname(item.href, locale as any)}
+                    isActive={item.href === "/admin/metrologie" ? normalizedPathname.startsWith(getLocalizedPathname(item.href, locale as any)) : normalizedPathname === getLocalizedPathname(item.href, locale as any)}
                     tooltip={item.title}
                   >
                     {(() => {
@@ -172,7 +180,9 @@ export function AdminSidebar({ currentUser, onLogout, activeAlarms = 0 }: AdminS
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+        ) : null}
 
+        {managementNavItems.length > 0 ? (
         <SidebarGroup>
           <SidebarGroupLabel>{t("groups.management")}</SidebarGroupLabel>
           <SidebarGroupContent>
@@ -181,7 +191,7 @@ export function AdminSidebar({ currentUser, onLogout, activeAlarms = 0 }: AdminS
                 <SidebarMenuItem key={item.href}>
                   <SidebarMenuButton
                     asChild
-                    isActive={normalizedPathname === getLocalizedPathname(item.href, locale as any)}
+                    isActive={item.href === "/admin/metrologie" ? normalizedPathname.startsWith(getLocalizedPathname(item.href, locale as any)) : normalizedPathname === getLocalizedPathname(item.href, locale as any)}
                     tooltip={item.title}
                   >
                     {(() => {
@@ -210,36 +220,9 @@ export function AdminSidebar({ currentUser, onLogout, activeAlarms = 0 }: AdminS
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
-
-        {metrologyNavItems.length > 0 ? (
-          <SidebarGroup>
-            <SidebarGroupLabel>{t("groups.metrology")}</SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                {metrologyNavItems.map((item) => (
-                  <SidebarMenuItem key={item.href}>
-                    <SidebarMenuButton
-                      asChild
-                      isActive={normalizedPathname === getLocalizedPathname(item.href, locale as any)}
-                      tooltip={item.title}
-                    >
-                      {(() => {
-                        const LinkComponent = getLinkComponent(item.href);
-                        return (
-                          <LinkComponent href={item.href as any} data-testid={`nav-${item.href.replace("/", "")}`}>
-                            <item.icon className="h-4 w-4" />
-                            <span>{item.title}</span>
-                          </LinkComponent>
-                        );
-                      })()}
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
         ) : null}
 
+        {globalSettingsNavItems.length > 0 ? (
         <SidebarGroup>
           <SidebarGroupLabel>{t("groups.system")}</SidebarGroupLabel>
           <SidebarGroupContent>
@@ -266,6 +249,7 @@ export function AdminSidebar({ currentUser, onLogout, activeAlarms = 0 }: AdminS
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+        ) : null}
       </SidebarContent>
 
       <SidebarSeparator />

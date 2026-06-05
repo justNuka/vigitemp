@@ -1,14 +1,12 @@
 import { NextRequest } from "next/server"
-import { getAuthenticatedUser } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { apiError, apiOk } from "@/lib/api-response"
+import { withOneOrHigherAnyAuthorizationLogging } from "@/lib/license-guards"
 import { log } from "@/lib/logger"
 import { buildMetrologyLookupSerials } from "@/lib/sensor-naming"
+import { getPermissionAliases } from "@/lib/permissions"
 
-export const GET = async (req: NextRequest) => {
-  const user = getAuthenticatedUser(req)
-  if (!user) return apiError(401, "unauthenticated", "Non authentifie")
-
+export const GET = withOneOrHigherAnyAuthorizationLogging(getPermissionAliases("METROLOGY_ACCESS"), async (req: NextRequest) => {
   try {
     const searchParams = req.nextUrl.searchParams
     // Backward compatible: support both ?sonde= and legacy ?serie=
@@ -31,4 +29,4 @@ export const GET = async (req: NextRequest) => {
     log.error("sondes/calibrages", "calibrages_fetch_error", { error: error });
     return apiError(500, "ajustages_fetch_failed", "Erreur lors de la recuperation des ajustages")
   }
-}
+})

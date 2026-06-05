@@ -706,6 +706,11 @@ namespace Vigitemp_Serveur
                     _alarmStateByLieu[m_idLieu] = false;
                 }
 
+                if (!ok)
+                {
+                    SeedNoResponseDelayFromLastOk(settings, nowUtc);
+                }
+
                 var eval = AlarmStateEvaluator.Evaluate(
                     channel: "alarm-nr",
                     idLieu: m_idLieu,
@@ -917,6 +922,23 @@ namespace Vigitemp_Serveur
                 AlarmStateEvaluator.ForceActive("alarm-nr", idLieu);
                 if (!isAlarmActive) _alarmStateByLieu[idLieu] = true;
             }
+        }
+
+        private void SeedNoResponseDelayFromLastOk(LieuAlarmSettings settings, DateTime nowUtc)
+        {
+            if (settings == null) return;
+            var lastResponse = settings.DateHeureDerniereReponse != default(DateTime)
+                ? settings.DateHeureDerniereReponse
+                : settings.DateHeureDerniereReponseRecueOk;
+            if (lastResponse == default(DateTime)) return;
+
+            var lastResponseUtc = lastResponse.Kind == DateTimeKind.Utc
+                ? lastResponse
+                : DateTime.SpecifyKind(lastResponse, DateTimeKind.Local).ToUniversalTime();
+
+            if (lastResponseUtc > nowUtc) return;
+
+            AlarmStateEvaluator.SeedOutOfRangeSinceIfEmpty("alarm-nr", m_idLieu, lastResponseUtc);
         }
 
     }

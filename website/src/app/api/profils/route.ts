@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma"
 import { z } from "zod"
 import { log } from "@/lib/logger"
 import { getRequestContext } from "@/lib/api-logger"
+import { auditRouteCreate } from "@/lib/audit-route"
 import { withAuthorizationLogging, type HandlerContext } from "@/lib/api-wrappers"
 import { apiError, apiOk } from "@/lib/api-response"
 import {
@@ -131,6 +132,19 @@ export const POST = withAuthorizationLogging("GERER_PROFIL", async (req: NextReq
       authorizationCount: data.authorizations.length,
       assignedUserCount: data.assignedUserIds.length,
       mc2: data.mc2,
+    })
+
+    auditRouteCreate(req, ctx.user, {
+      resource: "Profil",
+      resourceId: profile.Id_Profil,
+      data: {
+        Profil_Utilisateur: data.name,
+        Commentaire: data.description || null,
+        authorizations: data.authorizations,
+        assignedUserIds: data.assignedUserIds,
+        Est_MC2: data.mc2,
+      },
+      reason: `Creation profil ${data.name}`,
     })
 
     return apiOk(

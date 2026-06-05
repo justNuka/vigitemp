@@ -1,8 +1,8 @@
-import { NextRequest } from "next/server"
+﻿import { NextRequest } from "next/server"
 import { z } from "zod"
 
 import { apiError, apiOk } from "@/lib/api-response"
-import { withAnyAuthorizationLogging } from "@/lib/api-wrappers"
+import { withStandardOrExpertAnyAuthorizationLogging } from "@/lib/license-guards"
 import { log } from "@/lib/logger"
 import { prisma } from "@/lib/prisma"
 import { configureVigilogAgent } from "@/lib/vigilog-agent"
@@ -12,7 +12,7 @@ const schema = z.object({
   configurationId: z.coerce.number().int().min(1),
 })
 
-export const POST = withAnyAuthorizationLogging(VIGILOG_ACCESS_CODES, async (req: NextRequest) => {
+export const POST = withStandardOrExpertAnyAuthorizationLogging(VIGILOG_ACCESS_CODES, async (req: NextRequest) => {
   try {
     const body = await req.json().catch(() => ({}))
     const parsed = schema.safeParse(body)
@@ -73,3 +73,4 @@ export const POST = withAnyAuthorizationLogging(VIGILOG_ACCESS_CODES, async (req
     return apiError(503, "vigilog_agent_configure_failed", userMessage)
   }
 })
+

@@ -3,10 +3,10 @@ import { z } from "zod";
 import { apiError, apiOk } from "@/lib/api-response";
 import { prisma } from "@/lib/prisma";
 import { getRequestContext } from "@/lib/api-logger";
-import { withAuthLogging } from "@/lib/api-wrappers";
+import { withStandardOrExpertAnyAuthorizationLogging } from "@/lib/license-guards";
 import { log } from "@/lib/logger";
-import { requireStandardOrExpertLicense } from "@/lib/license-guards";
 import { hasMainDbColumn } from "@/lib/db-schema";
+import { getPermissionAliases } from "@/lib/permissions";
 
 const measureSchema = z.object({
   Numero_Ordre: z.number().int().min(1).max(10),
@@ -69,13 +69,12 @@ const bodySchema = z.object({
   rows: z.array(rowSchema).min(1),
 });
 
-export const POST = withAuthLogging(async (req: NextRequest, ctx) => {
+const METROLOGY_ACCESS_CODES = getPermissionAliases("METROLOGY_OPERATION_ACCESS");
+
+export const POST = withStandardOrExpertAnyAuthorizationLogging(METROLOGY_ACCESS_CODES, async (req: NextRequest, ctx) => {
   const { ip } = getRequestContext(req);
 
   try {
-    const guard = await requireStandardOrExpertLicense();
-    if (guard) return guard;
-
     const body = await req.json();
     const validated = bodySchema.parse(body);
 

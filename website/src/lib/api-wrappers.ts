@@ -30,7 +30,7 @@ export type HandlerContext = {
  * modifying the 40+ existing route files.
  * The `any` is confined to this single type alias and does not appear in implementations.
  */
-type ApiHandler = (req: NextRequest, ctx: HandlerContext, ...args: any[]) => Promise<NextResponse>
+export type ApiHandler = (req: NextRequest, ctx: HandlerContext, ...args: any[]) => Promise<NextResponse>
 
 export function withAuthLogging(
   handler: ApiHandler,

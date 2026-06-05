@@ -7,7 +7,7 @@ import { apiError, apiOk } from "@/lib/api-response"
 import { log } from "@/lib/logger"
 import { getCompatEnv } from "@/lib/vigisensys-compat"
 import { appDataPath, firstExistingPath, legacyAppDataPath } from "@/lib/vigisensys-paths"
-import type { BackupsResponse, BackupRecord } from "@/components/data-table/backup-columns"
+import type { BackupRecord, BackupsResponse } from "@/types/backup-types"
 
 const BACKUP_SLOT_NAMES = ["J", "J-1", "J-2", "J-3", "J-4", "J-5", "J-6", "J-7"]
 

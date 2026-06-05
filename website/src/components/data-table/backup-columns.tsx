@@ -1,23 +1,5 @@
 ﻿import type { ColumnDef } from "@tanstack/react-table"
-
-export interface BackupRecord {
-  id: string
-  etat: "success" | "in_progress" | "failed"
-  dateHeure: string
-  details?: string
-}
-
-export interface BackupSummary {
-  storagePath: string
-  logFilePath: string
-  archiveCount: number
-  slotCount: number
-}
-
-export interface BackupsResponse {
-  data: BackupRecord[]
-  summary: BackupSummary
-}
+import type { BackupRecord } from "@/types/backup-types"
 
 type Translator = (key: string) => string
 

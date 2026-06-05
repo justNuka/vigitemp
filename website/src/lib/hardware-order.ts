@@ -2,6 +2,7 @@ import { jsPDF } from "jspdf"
 import autoTable from "jspdf-autotable"
 import { prisma } from "@/lib/prisma"
 import { isEmailEnabled } from "@/lib/email"
+import { canUseApplicationEmail } from "@/lib/license-email"
 
 export const HARDWARE_COMMERCIAL_EMAIL_FALLBACK = "contactsite@mc2lab.fr"
 export const HARDWARE_COMMERCIAL_EMAIL_SECTION = "SERVICES"
@@ -84,14 +85,16 @@ export async function getHardwareCommercialEmail() {
 }
 
 export async function getHardwareOrderCapabilities() {
-  const [commercialEmail, smtpReady] = await Promise.all([
+  const [commercialEmail, smtpReady, emailLicense] = await Promise.all([
     getHardwareCommercialEmail(),
     isEmailEnabled(),
+    canUseApplicationEmail(),
   ])
 
   return {
     commercialEmail,
-    smtpReady,
+    smtpReady: smtpReady && emailLicense.allowed,
+    emailLicenseSkipped: emailLicense.allowed ? null : emailLicense.reason,
   }
 }
 

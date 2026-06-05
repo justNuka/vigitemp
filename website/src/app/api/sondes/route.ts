@@ -1,15 +1,19 @@
 ﻿import { NextRequest } from "next/server"
 
-import { withAuthLogging, type HandlerContext } from "@/lib/api-wrappers"
+import { auditRouteCreate } from "@/lib/audit-route"
 import { getRequestContext } from "@/lib/api-logger"
 import { apiError, apiOk } from "@/lib/api-response"
+import { withOneOrHigherAnyAuthorizationLogging, type HandlerContext } from "@/lib/license-guards"
 import { prisma } from "@/lib/prisma"
 import { validateLicense } from "@/lib/license-server"
 import { log } from "@/lib/logger"
+import { getPermissionAliases } from "@/lib/permissions"
 import { buildSensorSerialsFromInput, extractProbeAddressFromSerial, getSensorFamilyFromTypeCode } from "@/lib/sensor-naming"
 import { z } from "zod"
 
-export const GET = withAuthLogging(async (_req: NextRequest) => {
+const SENSOR_ACCESS_CODES = getPermissionAliases("HARDWARE_CONFIG_ACCESS")
+
+export const GET = withOneOrHigherAnyAuthorizationLogging(SENSOR_ACCESS_CODES, async (_req: NextRequest) => {
   try {
     const sondes = await prisma.t_sonde.findMany({
       include: {
@@ -116,7 +120,7 @@ const createSensorSchema = z.object({
   sondeOffset: z.number().nullable().optional(),
 })
 
-export const POST = withAuthLogging(async (req: NextRequest, ctx: HandlerContext) => {
+export const POST = withOneOrHigherAnyAuthorizationLogging(SENSOR_ACCESS_CODES, async (req: NextRequest, ctx: HandlerContext) => {
   try {
     const body = await req.json()
     const data = createSensorSchema.parse(body)
@@ -235,6 +239,21 @@ export const POST = withAuthLogging(async (req: NextRequest, ctx: HandlerContext
         requestedOffset: data.sondeOffset ?? null,
         estGso: item.Est_Sonde_GSO,
         familleSonde: sensorType.Famille_Sonde,
+      })
+
+      auditRouteCreate(req, ctx.user, {
+        resource: "Sonde",
+        resourceId: item.Id_Sonde,
+        data: {
+          Sonde_Numero_Serie: item.Sonde_Numero_Serie,
+          Adresse_Sonde: item.Adresse_Sonde,
+          Sonde_Type: item.Sonde_Type,
+          Id_Module: item.Id_Module,
+          Port_Serie: item.Port_Serie,
+          Sonde_Offset: item.Sonde_Offset,
+          Est_Sonde_GSO: item.Est_Sonde_GSO,
+        },
+        reason: `Creation sonde ${item.Sonde_Numero_Serie}`,
       })
     }
 

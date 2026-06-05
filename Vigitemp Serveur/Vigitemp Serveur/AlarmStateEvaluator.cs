@@ -55,6 +55,21 @@ namespace Vigitemp_Serveur
             }
         }
 
+        public static void SeedOutOfRangeSinceIfEmpty(string channel, int idLieu, DateTime outOfRangeSinceUtc)
+        {
+            if (idLieu <= 0) return;
+            if (outOfRangeSinceUtc == default(DateTime)) return;
+            if (channel == null) channel = "alarm";
+
+            var key = channel + ":" + idLieu;
+            var state = _stateByKey.GetOrAdd(key, _ => new RuntimeState());
+            lock (state)
+            {
+                if (state.IsActive || state.OutOfRangeSinceUtc.HasValue) return;
+                state.OutOfRangeSinceUtc = outOfRangeSinceUtc;
+            }
+        }
+
         public static AlarmEvaluation Evaluate(
             string channel,
             int idLieu,

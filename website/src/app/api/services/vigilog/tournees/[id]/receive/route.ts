@@ -1,28 +1,28 @@
-import { NextRequest } from "next/server"
+﻿import { NextRequest } from "next/server"
 
 import { apiError, apiOk } from "@/lib/api-response"
 import { getClientIp } from "@/lib/api-logger"
-import { withAnyAuthorizationLogging, type HandlerContext } from "@/lib/api-wrappers"
+import { withStandardOrExpertAnyAuthorizationLogging, type HandlerContext } from "@/lib/license-guards"
 import { auditRouteUpdate } from "@/lib/audit-route"
 import { log } from "@/lib/logger"
 import { prisma } from "@/lib/prisma"
 import { vigilogReceiveSchema, VIGILOG_ACCESS_CODES } from "../../../_shared"
 import { persistVigilogReception } from "../../receive-helpers"
 
-export const POST = withAnyAuthorizationLogging(
+export const POST = withStandardOrExpertAnyAuthorizationLogging(
   VIGILOG_ACCESS_CODES,
   async (req: NextRequest, ctx: HandlerContext, routeContext: { params: Promise<{ id: string }> }) => {
     try {
       const { id } = await routeContext.params
       const tourneeId = Number(id)
       if (!Number.isInteger(tourneeId) || tourneeId <= 0) {
-        return apiError(400, "invalid_id", "Identifiant de tournée invalide")
+        return apiError(400, "invalid_id", "Identifiant de tournÃ©e invalide")
       }
 
       const body = await req.json().catch(() => ({}))
       const parsed = vigilogReceiveSchema.safeParse(body)
       if (!parsed.success) {
-        return apiError(400, "validation_error", "Réception VigiLog invalide", {
+        return apiError(400, "validation_error", "RÃ©ception VigiLog invalide", {
           issues: parsed.error.issues,
         })
       }
@@ -31,10 +31,10 @@ export const POST = withAnyAuthorizationLogging(
         where: { Id_VigiLog_Tournee: tourneeId },
       })
       if (!existing) {
-        return apiError(404, "not_found", "Tournée VigiLog introuvable")
+        return apiError(404, "not_found", "TournÃ©e VigiLog introuvable")
       }
       if (existing.Statut !== "EN_ATTENTE_RECEPTION") {
-        return apiError(409, "invalid_status", "Cette tournée n'est pas en attente de réception")
+        return apiError(409, "invalid_status", "Cette tournÃ©e n'est pas en attente de rÃ©ception")
       }
 
       const linkedLogger = existing.Id_VigiLog
@@ -115,7 +115,8 @@ export const POST = withAnyAuthorizationLogging(
       log.error("services/vigilog/tournees/[id]/receive", "vigilog_tournee_receive_failed", {
         error,
       })
-      return apiError(500, "vigilog_tournee_receive_failed", "Erreur lors de la réception de la tournée VigiLog")
+      return apiError(500, "vigilog_tournee_receive_failed", "Erreur lors de la rÃ©ception de la tournÃ©e VigiLog")
     }
   },
 )
+

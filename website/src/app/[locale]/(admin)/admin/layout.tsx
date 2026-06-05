@@ -15,6 +15,10 @@ import { stripLocalePrefix } from "@/i18n/pathnames";
 import { isOneOrPack } from "@/lib/license-access";
 import type { AppPermission } from "@/lib/permissions";
 
+function matchesAdminPath(pathname: string, candidates: readonly string[]) {
+  return candidates.some((candidate) => pathname === candidate || pathname.startsWith(`${candidate}/`));
+}
+
 export default function AdminLayout({
   children,
 }: {
@@ -25,19 +29,37 @@ export default function AdminLayout({
   const { license } = useLicense();
   const pathname = usePathname();
   const router = useRouter();
-  const { hasPermission, loading: accessLoading } = useAppAccess();
+  const { hasPermission, hasAuthorizationCode, loading: accessLoading } = useAppAccess();
 
   const normalizedPathname = stripLocalePrefix(pathname);
   const showDock = !(isOneOrPack(license) && normalizedPathname === "/admin");
 
-  const requiredPermission: AppPermission | null =
+  const hasRouteAccess =
     normalizedPathname === "/admin"
-      ? "DASHBOARD_ADMIN_ACCESS"
-      : normalizedPathname === "/admin/parametres"
-        ? "GENERAL_SETTINGS_ACCESS"
-        : null;
-
-  const hasRouteAccess = requiredPermission ? hasPermission(requiredPermission) : true;
+      ? hasPermission("DASHBOARD_ADMIN_ACCESS")
+      : matchesAdminPath(normalizedPathname, ["/admin/parametres", "/admin/sites", "/admin/groupes", "/admin/audit"])
+        ? hasAuthorizationCode("PARAMETRES_GERER")
+        : matchesAdminPath(normalizedPathname, ["/admin/profils", "/admin/utilisateurs"])
+          ? hasAuthorizationCode("GERER_PROFIL")
+          : matchesAdminPath(normalizedPathname, ["/admin/lieux", "/admin/lieux/templates"])
+            ? hasPermission("LOCATION_CONFIG_ACCESS")
+            : matchesAdminPath(normalizedPathname, ["/admin/sondes/etalonnage-import", "/admin/sondes/ajustage-import", "/admin/analyse-impact", "/admin/metrologie/realiser-ajustage", "/admin/metrologie/realiser-etalonnage"])
+              ? hasPermission("METROLOGY_OPERATION_ACCESS")
+            : matchesAdminPath(normalizedPathname, ["/admin/metrologie"])
+              ? hasPermission("METROLOGY_ACCESS")
+            : matchesAdminPath(normalizedPathname, ["/admin/etalons"])
+              ? hasPermission("METROLOGY_ACCESS")
+              : matchesAdminPath(normalizedPathname, ["/admin/modules", "/admin/actionneurs", "/admin/sondes"])
+                ? hasPermission("HARDWARE_CONFIG_ACCESS")
+              : matchesAdminPath(normalizedPathname, ["/admin/alarmes"])
+                ? hasPermission("ALARM_ACK_ACCESS")
+                : matchesAdminPath(normalizedPathname, ["/admin/outils"])
+                  ? hasAuthorizationCode("PARAMETRES_GERER") ||
+                    hasPermission("HARDWARE_CONFIG_ACCESS") ||
+                    hasPermission("METROLOGY_OPERATION_ACCESS")
+                  : matchesAdminPath(normalizedPathname, ["/admin/test"])
+                    ? hasPermission("DASHBOARD_ADMIN_ACCESS")
+                    : true;
 
   useEffect(() => {
     if (accessLoading) return;

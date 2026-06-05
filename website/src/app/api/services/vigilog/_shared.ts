@@ -1,7 +1,9 @@
 import { z } from "zod"
 
-export const VIGILOG_ACCESS_CODES = ["ACCES_VIGILOG", "ACCES_METROLOGIE"] as const
-export const VIGILOG_CONFIG_MANAGE_CODES = ["ACCES_METROLOGIE"] as const
+import { getPermissionAliases } from "@/lib/permissions"
+
+export const VIGILOG_ACCESS_CODES = ["ACCES_VIGILOG"] as const
+export const VIGILOG_CONFIG_MANAGE_CODES = getPermissionAliases("HARDWARE_CONFIG_ACCESS")
 
 export const VIGILOG_STATUSES = [
   "EN_ATTENTE_DEPART",

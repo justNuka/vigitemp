@@ -6,11 +6,12 @@ import { log } from "@/lib/logger"
 import { getRequestContext } from "@/lib/api-logger"
 import { withAuthorizationLogging, type HandlerContext } from "@/lib/api-wrappers"
 import { apiError, apiOk } from "@/lib/api-response"
+import { buildAuditChanges } from "@/lib/audit-route"
+import { requireParameterLicense } from "@/lib/parameter-license-guards"
 
 const updateSettingSchema = z.object({
   value: z.string(),
 })
-
 
 function getCaseCandidates(section: string, motCle: string) {
   const sectionLower = section.toLowerCase()
@@ -27,9 +28,8 @@ function getCaseCandidates(section: string, motCle: string) {
   ]
 }
 
-
 export const GET = withAuthorizationLogging(
-  "GERER_PROFIL",
+  "PARAMETRES_GERER",
   async (_req: NextRequest, _ctx: HandlerContext, { params }: { params: Promise<{ key: string }> }) => {
     try {
       const { key } = await params
@@ -37,6 +37,9 @@ export const GET = withAuthorizationLogging(
 
       const sectionVal = section || ""
       const motCleVal = motCle || key
+      const licenseError = await requireParameterLicense(sectionVal, motCleVal)
+      if (licenseError) return licenseError
+
       const candidates = getCaseCandidates(sectionVal, motCleVal)
 
       let setting = await prisma.t_parametre.findUnique({
@@ -68,14 +71,14 @@ export const GET = withAuthorizationLogging(
         description: setting.Commentaire || null,
       })
     } catch (error) {
-      log.error("parametres", "get_setting_error", { error: error });
+      log.error("parametres", "get_setting_error", { error })
       return apiError(500, "setting_fetch_failed", "Failed to fetch setting")
     }
   },
 )
 
 export const PATCH = withAuthorizationLogging(
-  "GERER_PROFIL",
+  "PARAMETRES_GERER",
   async (req: NextRequest, ctx: HandlerContext, { params }: { params: Promise<{ key: string }> }) => {
     try {
       const { ip } = getRequestContext(req)
@@ -87,6 +90,8 @@ export const PATCH = withAuthorizationLogging(
       const [section, motCle] = key.split(":")
       const sectionVal = section || ""
       const motCleVal = motCle || key
+      const licenseError = await requireParameterLicense(sectionVal, motCleVal)
+      if (licenseError) return licenseError
 
       const candidates = getCaseCandidates(sectionVal, motCleVal)
       const oldSetting = await prisma.t_parametre.findFirst({
@@ -114,8 +119,23 @@ export const PATCH = withAuthorizationLogging(
       })
 
       log.config.change(key, ctx.user.username, ctx.user.userId, ip, oldSetting?.Valeur || "N/A", value)
+      log.audit("CC", {
+        user: ctx.user.username,
+        userId: ctx.user.userId,
+        userProfile: ctx.user.profile,
+        ip,
+        resource: `Parametre: ${setting.Section}:${setting.Mot_Cle}`,
+        resourceId: `${setting.Section}:${setting.Mot_Cle}`,
+        changes: {
+          action: oldSetting ? "update" : "create",
+          ...buildAuditChanges(
+            { value: oldSetting?.Valeur ?? null },
+            { value },
+            ["value"],
+          ),
+        },
+      })
 
-      // Note: le tag utilisé par le cache applicatif peut varier selon l'implémentation.
       revalidateTag("parametres-data", "default")
 
       return apiOk({
@@ -130,7 +150,7 @@ export const PATCH = withAuthorizationLogging(
         return apiError(400, "validation_error", "Invalid input")
       }
 
-      log.error("parametres", "update_setting_error", { error: error });
+      log.error("parametres", "update_setting_error", { error })
       return apiError(500, "setting_update_failed", "Failed to update setting")
     }
   },

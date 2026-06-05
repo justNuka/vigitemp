@@ -78,14 +78,10 @@ export function EmtModeSection({
               checked={formData.EMT_Mode === 'uncertainties'}
               onChange={(e) => setUserValue('EMT_Mode', e.target.value)}
               className="mt-1"
-              disabled={!isExpertEdition}
             />
             <div>
               <div className="font-medium">{t('emt.option.uncertainties.title')}</div>
               <div className="text-sm text-muted-foreground">{t('emt.option.uncertainties.description')}</div>
-              {!isExpertEdition ? (
-                <div className="mt-1 text-xs text-amber-700 dark:text-amber-300">{t('emt.option.uncertainties.expert_only')}</div>
-              ) : null}
               <div className="mt-2 rounded-md border bg-muted/40 px-3 py-2 text-sm">
                 {!formData.Prendre_En_Compte_Derive && formData.Corriger_Erreur_Justesse ? (
                   <>

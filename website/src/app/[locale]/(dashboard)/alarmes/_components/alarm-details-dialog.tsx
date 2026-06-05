@@ -158,7 +158,7 @@ export function AlarmDetailsDialog({
           consigneInf={selectedAlarm.sensor.minThreshold ?? null}
           consigne={selectedAlarm.threshold ?? null}
           unite={selectedAlarm.sensor.unit}
-          isSurveillanceActive={false}
+          isSurveillanceActive={true}
           initialRange={focusRange ?? undefined}
         />
       ) : null}

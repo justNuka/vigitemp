@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma"
 import { validateLicense } from "@/lib/license-server"
+import { ACCESS_COOKIE_MAX_AGE_SECONDS } from "@/lib/jwt"
 
 const UNLIMITED_VALUES = new Set([
   "unlimited",
@@ -15,7 +16,7 @@ const UNLIMITED_VALUES = new Set([
 export type UserLicenseCapacity =
   | {
       allowed: true
-      activeUsers: number
+      connectedUsers: number
       licensedMaxUsers: number | null
       effectiveMaxUsers: number | null
       unlimited: boolean
@@ -24,7 +25,7 @@ export type UserLicenseCapacity =
       allowed: false
       reason: "license_invalid" | "user_limit_reached"
       message: string
-      activeUsers: number
+      connectedUsers: number
       licensedMaxUsers: number | null
       effectiveMaxUsers: number | null
       unlimited: boolean
@@ -49,18 +50,35 @@ export function computeEffectiveUserLimit(licensedMaxUsers: number | null): numb
   return Math.ceil(licensedMaxUsers * 1.25)
 }
 
-export async function checkUserLicenseCapacity(additionalActiveUsers = 1): Promise<UserLicenseCapacity> {
-  const license = await validateLicense()
-  const activeUsers = await prisma.t_utilisateur.count({
-    where: { Est_Archive: false },
+export function getActiveUserSessionThreshold(now = new Date()): Date {
+  return new Date(now.getTime() - ACCESS_COOKIE_MAX_AGE_SECONDS * 1000)
+}
+
+export async function countConnectedUsers(excludeUserId?: number, now = new Date()): Promise<number> {
+  const activeSince = getActiveUserSessionThreshold(now)
+
+  return prisma.t_utilisateur.count({
+    where: {
+      Est_Archive: false,
+      Date_Heure_Derniere_Connexion: { gte: activeSince },
+      ...(excludeUserId ? { Id_Utilisateur: { not: excludeUserId } } : {}),
+    },
   })
+}
+
+export async function checkUserLicenseCapacity(
+  additionalConnectedUsers = 1,
+  excludeUserId?: number,
+): Promise<UserLicenseCapacity> {
+  const license = await validateLicense()
+  const connectedUsers = await countConnectedUsers(excludeUserId)
 
   if (!license.ok) {
     return {
       allowed: false,
       reason: "license_invalid",
-      message: "Licence invalide, creation ou reactivation utilisateur refusee",
-      activeUsers,
+      message: "Licence invalide, connexion refusee",
+      connectedUsers,
       licensedMaxUsers: null,
       effectiveMaxUsers: null,
       unlimited: false,
@@ -73,20 +91,20 @@ export async function checkUserLicenseCapacity(additionalActiveUsers = 1): Promi
   if (!effectiveMaxUsers) {
     return {
       allowed: true,
-      activeUsers,
+      connectedUsers,
       licensedMaxUsers: null,
       effectiveMaxUsers: null,
       unlimited: true,
     }
   }
 
-  const nextActiveUsers = activeUsers + Math.max(0, additionalActiveUsers)
-  if (nextActiveUsers > effectiveMaxUsers) {
+  const nextConnectedUsers = connectedUsers + Math.max(0, additionalConnectedUsers)
+  if (nextConnectedUsers > effectiveMaxUsers) {
     return {
       allowed: false,
       reason: "user_limit_reached",
-      message: `Limite utilisateurs atteinte pour la licence (${activeUsers}/${effectiveMaxUsers}, licence ${licensedMaxUsers})`,
-      activeUsers,
+      message: `Limite utilisateurs connectes atteinte pour la licence (${connectedUsers}/${effectiveMaxUsers}, licence ${licensedMaxUsers})`,
+      connectedUsers,
       licensedMaxUsers,
       effectiveMaxUsers,
       unlimited: false,
@@ -95,7 +113,7 @@ export async function checkUserLicenseCapacity(additionalActiveUsers = 1): Promi
 
   return {
     allowed: true,
-    activeUsers,
+    connectedUsers,
     licensedMaxUsers,
     effectiveMaxUsers,
     unlimited: false,

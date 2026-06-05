@@ -1,6 +1,7 @@
 "use cache";
 
 import { cacheTag } from "next/cache";
+import { loadRecentAuditLogs } from "@/lib/audit/enrich-audit-logs";
 import { prismaMesure } from "@/lib/prisma";
 
 /**
@@ -11,34 +12,7 @@ export async function ServerAuditLogs(limit = 100, codeFilter?: string) {
   "use cache";
   cacheTag("audit-logs");
 
-  const whereClause = codeFilter
-    ? { Code_Journal: codeFilter }
-    : {};
-
-  const logs = await prismaMesure.tm_journal.findMany({
-    where: whereClause,
-    take: limit,
-    orderBy: { Date_Heure_Journal: "desc" },
-    select: {
-      Id_Journal: true,
-      Date_Heure_Journal: true,
-      Code_Journal: true,
-      Commentaire: true,
-      Nom_Utilisateur: true,
-      Id_Lieu: true,
-    },
-  });
-
-  return logs.map((log) => ({
-    id: log.Id_Journal.toString(),
-    userId: log.Nom_Utilisateur || null,
-    action: log.Code_Journal || "unknown",
-    details: log.Commentaire || null,
-    targetType: log.Id_Lieu ? "sensor" : null,
-    targetId: log.Id_Lieu?.toString() || null,
-    timestamp: log.Date_Heure_Journal || new Date(),
-    ipAddress: null,
-  }));
+  return loadRecentAuditLogs(limit, codeFilter);
 }
 
 /**

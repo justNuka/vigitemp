@@ -12,6 +12,7 @@ import { sendAlarmEventEmails } from "@/lib/alarm-email"
 import { formatMeasureValue } from "@/lib/measurements"
 import { sendTeamsWorkflowAlarmNotification } from "@/lib/notifications/teams-workflow"
 import { getCompatEnv, getCompatHeader } from "@/lib/vigisensys-compat"
+import { requireOneOrHigherLicense } from "@/lib/license-guards"
 
 const AGENT_PORT = Number.parseInt(getCompatEnv("VIGISENSYS_AGENT_PORT", "VIGITEMP_AGENT_PORT") ?? "8000", 10)
 const AGENT_TIMEOUT_MS = Number.parseInt(getCompatEnv("VIGISENSYS_AGENT_TIMEOUT_MS", "VIGITEMP_AGENT_TIMEOUT_MS") ?? "5000", 10)
@@ -499,48 +500,54 @@ export const POST = withLogging(async (req: NextRequest) => {
   })
 
   let agentResult = { attempted: 0, failed: 0 }
+  let agentSkipped: string | null = skipAgent ? "disabled_by_payload" : null
   if (!skipAgent && eventType !== "ended") {
-    const targets = await getActiveAgentTargets()
-    const deliveries = await Promise.all(
-      targets.map(async (target) => {
-        const correlationId = randomUUID()
-        const delivery = await prisma.t_notification_delivery.create({
-          data: {
-            Id_Notification: notification.Id_Notification,
-            Id_Poste: target.idPoste,
-            Id_Utilisateur: null,
-            Statut: "queued",
-            Nb_Tentatives: 0,
-            Date_Queue: new Date(),
-            Correlation_Id: correlationId,
-          },
-          select: { Id_Delivery: true },
-        })
+    const agentLicenseError = await requireOneOrHigherLicense()
+    if (agentLicenseError) {
+      agentSkipped = "license_forbidden"
+    } else {
+      const targets = await getActiveAgentTargets()
+      const deliveries = await Promise.all(
+        targets.map(async (target) => {
+          const correlationId = randomUUID()
+          const delivery = await prisma.t_notification_delivery.create({
+            data: {
+              Id_Notification: notification.Id_Notification,
+              Id_Poste: target.idPoste,
+              Id_Utilisateur: null,
+              Statut: "queued",
+              Nb_Tentatives: 0,
+              Date_Queue: new Date(),
+              Correlation_Id: correlationId,
+            },
+            select: { Id_Delivery: true },
+          })
 
-        return {
-          ...target,
-          deliveryId: delivery.Id_Delivery,
-          correlationId,
-        }
-      }),
-    )
+          return {
+            ...target,
+            deliveryId: delivery.Id_Delivery,
+            correlationId,
+          }
+        }),
+      )
 
-    agentResult = await dispatchAgentNotifications(
-      {
-        title: safeTitle,
-        messageBody: safeMessage,
-        locationLabel,
-        dateLabel,
-        alarmUrl,
-        alarmId,
-        lieuId,
-        alarmType: alarmTypeLabel,
-        triggeredAt: triggeredAtLabel,
-        lastValue: lastValueLabel,
-        lastMeasureAt: lastMeasureAtLabel,
-      },
-      deliveries,
-    )
+      agentResult = await dispatchAgentNotifications(
+        {
+          title: safeTitle,
+          messageBody: safeMessage,
+          locationLabel,
+          dateLabel,
+          alarmUrl,
+          alarmId,
+          lieuId,
+          alarmType: alarmTypeLabel,
+          triggeredAt: triggeredAtLabel,
+          lastValue: lastValueLabel,
+          lastMeasureAt: lastMeasureAtLabel,
+        },
+        deliveries,
+      )
+    }
   }
 
   log.info("ALARM_DISPATCH", "Alarm dispatched to agents", {
@@ -550,6 +557,7 @@ export const POST = withLogging(async (req: NextRequest) => {
     lieuId,
     alarmTypeCode,
     skipAgent,
+    agentSkipped,
     agentTargets: agentResult.attempted,
     agentFailed: agentResult.failed,
   })
@@ -621,6 +629,7 @@ export const POST = withLogging(async (req: NextRequest) => {
   return apiOk({
     agentTargets: agentResult.attempted,
     agentFailed: agentResult.failed,
+    agentSkipped,
     emailAttempted: emailResult.attempted,
     emailSent: emailResult.sent,
     emailSkipped: emailResult.skipped,

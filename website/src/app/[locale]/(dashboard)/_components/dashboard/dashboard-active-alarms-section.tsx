@@ -61,7 +61,7 @@ export function DashboardActiveAlarmsSection({
             columns={columns}
             data={data}
             searchPlaceholder={undefined}
-            pageSize={5}
+            pageSize={200}
             isLoading={false}
             emptyMessage={t("active_alarms.empty")}
             selectedRowId={selectedAlarmId}

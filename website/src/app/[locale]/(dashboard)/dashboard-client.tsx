@@ -96,7 +96,7 @@ export function DashboardClient({
     }
   }
 
-  const displayedAlarms = useMemo(() => localAlarms.slice(0, 5), [localAlarms])
+  const displayedAlarms = useMemo(() => localAlarms.slice(0, 10), [localAlarms])
   const tableData = useMemo(() => buildAlarmRows(displayedAlarms), [displayedAlarms])
   const columns = useMemo(
     () =>
@@ -164,8 +164,10 @@ export function DashboardClient({
           onOpenChange={(open) => {
             if (!open) setSelectedAlarm(null)
           }}
-          onConfirm={async (alarmId, commentValue) => {
-            await handleAcknowledge(alarmId, commentValue ?? "")
+          onConfirm={async (alarmIds, commentValue) => {
+            for (const alarmId of alarmIds) {
+              await handleAcknowledge(alarmId, commentValue ?? "")
+            }
             setSelectedAlarm(null)
           }}
           isConfirming={isAcknowledging}

@@ -120,7 +120,7 @@ export function TanStackTable<TData extends Record<string, any>>({
   columns,
   data,
   searchField,
-  pageSize = 10,
+  pageSize = 200,
   isLoading = false,
   searchPlaceholder,
   emptyMessage,

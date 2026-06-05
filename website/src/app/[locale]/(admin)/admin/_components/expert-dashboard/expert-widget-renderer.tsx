@@ -51,7 +51,7 @@ export function renderExpertWidget({
         description={t("acknowledgments.description", { total: metrics.acknowledgmentsTotal, max: 50 })}
         value={String(metrics.acknowledgmentsTotal)}
         helper={`${t("acknowledgments.columns.date_time")}: ${metrics.latestAck}`}
-        href="/alarmes/acquittements"
+        href="/admin/alarmes/acquittements"
         hrefLabel={accessLabel}
         icon={<Clock className="h-5 w-5 text-amber-600" />}
       />
@@ -64,7 +64,7 @@ export function renderExpertWidget({
         title={t("connected_users.title")}
         description={t("connected_users.description", { total: metrics.connectedUsersTotal, max: 50 })}
         value={String(metrics.connectedUsersTotal)}
-        helper={`${t("connected_users.columns.full_name")}: ${metrics.latestConnectedLabel}`}
+        helper={`${t("connected_users.helper_window")}\n${t("connected_users.columns.full_name")}: ${metrics.latestConnectedLabel}`}
         href="/admin/utilisateurs"
         hrefLabel={accessLabel}
         icon={<Users className="h-5 w-5 text-sky-600" />}
@@ -79,7 +79,7 @@ export function renderExpertWidget({
     return (
       <ExpertWidgetCard
         title={t("system_logs.title")}
-        description={t("system_logs.description", { count: 100, total: metrics.systemLogsTotal })}
+        description={t("system_logs.description", { count: 50, total: metrics.systemLogsTotal })}
         value={String(metrics.systemLogsTotal)}
         helper={`${t("system_logs.columns.action")}: ${metrics.latestAuditAction}`}
         href={auditHref}
@@ -95,7 +95,7 @@ export function renderExpertWidget({
         title={t("backup.title")}
         description={t("backup.description")}
         value={String(metrics.backupsTotal)}
-        helper={`${t("backup.last.label")}: ${metrics.lastBackupLabel}\n${metrics.backupStoragePath}`}
+        helper={`${t("backup.last.label")}: ${metrics.lastBackupLabel}\n${metrics.backupLogFilePath !== "-" ? metrics.backupLogFilePath : metrics.backupStoragePath}`}
         href="/admin/outils"
         hrefLabel={accessLabel}
         icon={<Database className="h-5 w-5 text-violet-600" />}
@@ -121,7 +121,7 @@ export function renderExpertWidget({
       title={t("links.etalons.title")}
       description={t("links.etalons.description")}
       value="-"
-      href="/admin/etalons"
+      href="/admin/metrologie"
       hrefLabel={accessLabel}
       icon={<Ruler className="h-5 w-5 text-cyan-600" />}
     />

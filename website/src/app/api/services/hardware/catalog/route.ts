@@ -14,6 +14,7 @@ export const GET = withAuthLogging(async () => {
       catalog,
       commercialEmail: capabilities.commercialEmail,
       smtpReady: capabilities.smtpReady,
+      emailLicenseSkipped: capabilities.emailLicenseSkipped,
     })
   } catch (error) {
     log.error("services/hardware/catalog", "catalog_fetch_failed", { error })

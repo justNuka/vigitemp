@@ -31,9 +31,9 @@ import {
   useAcknowledgments,
   useActiveAlarms,
   useAlarmCount,
+  useAuditLogs,
   useBackups,
   useConnectedUsers,
-  useSystemLogs,
 } from "@/hooks/useAdminData"
 import { useUnassignedSensors } from "@/hooks/useSensors"
 import { ExpertAdminDashboard } from "./_components/expert-admin-dashboard"
@@ -107,7 +107,7 @@ export default function AdminDashboard() {
   const alarmsActiveCountQuery = useAlarmCount("active")
   const alarmsResolvedCountQuery = useAlarmCount("resolved")
   const acknowledgmentsQuery = useAcknowledgments(1)
-  const systemLogsQuery = useSystemLogs()
+  const systemLogsQuery = useAuditLogs()
   const backupsQuery = useBackups()
   const unassignedSensorsQuery = useUnassignedSensors({ page: 1, limit: 20 })
 
@@ -122,19 +122,23 @@ export default function AdminDashboard() {
   const unassignedTotal = unassignedSensorsQuery.data?.pagination.total || 0
   const backupsTotal = backupsQuery.data?.summary.archiveCount ?? 0
   const backupStoragePath = backupsQuery.data?.summary.storagePath ?? "-"
+  const backupLogFilePath = backupsQuery.data?.summary.logFilePath ?? "-"
 
   const lastBackupDate = backupsQuery.data?.data?.[0]?.dateHeure
   const lastBackupLabel = lastBackupDate
     ? new Date(lastBackupDate).toLocaleString(locale, { timeZone: timezone })
     : t("backup.last.none")
-  const backupHelper = `${t("backup.last.label")}: ${lastBackupLabel}\n${backupStoragePath}`
+  const backupHelper = `${t("backup.last.label")}: ${lastBackupLabel}\n${backupLogFilePath !== "-" ? backupLogFilePath : backupStoragePath}`
 
   const latestAck = acknowledgmentsQuery.data?.data?.[0]?.dateHeure || "-"
   const latestAuditAction = systemLogsQuery.data?.data?.[0]?.action || "-"
-  const latestConnected = connectedUsersQuery.data?.data?.[0]
-  const latestConnectedLabel = latestConnected
-    ? `${latestConnected.prenom || ""} ${latestConnected.nom || ""}`.trim()
-    : "-"
+  const latestConnectedUsers = connectedUsersQuery.data?.data?.slice(0, 3) ?? []
+  const latestConnectedLabel =
+    latestConnectedUsers.length > 0
+      ? latestConnectedUsers
+          .map((user) => `${user.prenom || ""} ${user.nom || ""}`.trim() || user.login)
+          .join(", ")
+      : "-"
 
   const isInitialLoading = useMemo(() => {
     return (
@@ -241,6 +245,7 @@ export default function AdminDashboard() {
             latestConnectedLabel,
             lastBackupLabel,
             backupStoragePath,
+            backupLogFilePath,
             hideStandards,
           }}
         />
@@ -279,9 +284,7 @@ export default function AdminDashboard() {
               pending: alarmsPendingAckTotal,
             })}
             value={String(alarmsInProgressTotal)}
-            helper={
-              t("summary.alarms_helper", { pending: alarmsPendingAckTotal })
-            }
+            helper={t("summary.alarms_helper", { pending: alarmsPendingAckTotal })}
             href={`/admin/alarmes`}
             hrefLabel={accessLabel}
             icon={<AlertTriangle className="h-5 w-5 text-red-600" />}
@@ -297,7 +300,7 @@ export default function AdminDashboard() {
             description={t("acknowledgments.description", { total: acknowledgmentsTotal, max: 50 })}
             value={String(acknowledgmentsTotal)}
             helper={`${t("acknowledgments.columns.date_time")}: ${latestAck}`}
-            href={`/admin/alarmes`}
+            href={`/admin/alarmes/acquittements`}
             hrefLabel={accessLabel}
             icon={<Clock className="h-5 w-5 text-amber-600" />}
           />
@@ -306,7 +309,7 @@ export default function AdminDashboard() {
             title={t("connected_users.title")}
             description={t("connected_users.description", { total: connectedUsersTotal, max: 50 })}
             value={String(connectedUsersTotal)}
-            helper={`${t("connected_users.columns.full_name")}: ${latestConnectedLabel}`}
+            helper={`${t("connected_users.helper_window")}\n${t("connected_users.columns.full_name")}: ${latestConnectedLabel}`}
             href={`/admin/utilisateurs`}
             hrefLabel={accessLabel}
             icon={<Users className="h-5 w-5 text-sky-600" />}
@@ -346,7 +349,7 @@ export default function AdminDashboard() {
               title={t("links.etalons.title")}
               description={t("links.etalons.description")}
               value="-"
-              href={`/admin/etalons`}
+              href={`/admin/metrologie`}
               hrefLabel={accessLabel}
               icon={<Ruler className="h-5 w-5 text-cyan-600" />}
             />

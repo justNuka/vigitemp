@@ -3,6 +3,7 @@ import { z } from "zod"
 
 import { getClientIp, withLogging } from "@/lib/api-logger"
 import { apiError, apiOk } from "@/lib/api-response"
+import { requireOneOrHigherLicense } from "@/lib/license-guards"
 import { log } from "@/lib/logger"
 import { prisma } from "@/lib/prisma"
 import { getCompatEnv, getCompatHeader } from "@/lib/vigisensys-compat"
@@ -27,6 +28,9 @@ export const POST = withLogging(async (req: NextRequest) => {
     })
     return apiError(401, "unauthorized", "Non autoris?")
   }
+
+  const licenseError = await requireOneOrHigherLicense()
+  if (licenseError) return licenseError
 
   const body = await req.json().catch(() => null)
   const validated = heartbeatSchema.safeParse(body)

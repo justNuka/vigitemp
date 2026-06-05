@@ -23,6 +23,42 @@ function compareByLocationName(a: SensorWithLocation, b: SensorWithLocation) {
   return nameA.localeCompare(nameB, "fr", { sensitivity: "base", numeric: true })
 }
 
+const statusPriority: Record<SensorWithLocation["status"], number> = {
+  critical: 0,
+  technical: 1,
+  warning: 2,
+  ended: 3,
+  ok: 4,
+}
+
+export function dedupeSensorsByLocation(sensors: SensorWithLocation[]) {
+  const byLocation = new Map<number | string, SensorWithLocation>()
+
+  for (const sensor of sensors) {
+    const numericLocationId = Number(sensor.location.id ?? sensor.id)
+    const key = Number.isFinite(numericLocationId) ? numericLocationId : sensor.location.id ?? sensor.id
+    const current = byLocation.get(key)
+
+    if (!current) {
+      byLocation.set(key, sensor)
+      continue
+    }
+
+    const currentActive = !current.location.surveillanceDisabled
+    const nextActive = !sensor.location.surveillanceDisabled
+    if (currentActive !== nextActive) {
+      if (nextActive) byLocation.set(key, sensor)
+      continue
+    }
+
+    if (statusPriority[sensor.status] < statusPriority[current.status]) {
+      byLocation.set(key, sensor)
+    }
+  }
+
+  return Array.from(byLocation.values())
+}
+
 export function applySurveillanceFilters(sensors: SensorWithLocation[], filters: FilterState) {
   let result = sensors
 
@@ -70,13 +106,6 @@ export function computeSurveillanceStats({
   total: number
   activeAlarms: number
 }): Stats {
-  const priority: Record<SensorWithLocation["status"], number> = {
-    critical: 0,
-    technical: 1,
-    warning: 2,
-    ended: 3,
-    ok: 4,
-  }
   const locationStates = new Map<number, { isActive: boolean; status: SensorWithLocation["status"] }>()
 
   for (const sensor of sensors) {
@@ -101,7 +130,7 @@ export function computeSurveillanceStats({
       continue
     }
 
-    if (priority[nextState.status] < priority[current.status]) {
+    if (statusPriority[nextState.status] < statusPriority[current.status]) {
       locationStates.set(locationId, nextState)
     }
   }
@@ -109,20 +138,13 @@ export function computeSurveillanceStats({
   const locations = Array.from(locationStates.values())
   const activeLocations = locations.filter((location) => location.isActive)
   const ok = activeLocations.filter((location) => location.status === "ok").length
-  const warning = activeLocations.filter((location) => location.status === "warning" || location.status === "ended").length
+  const warning = activeLocations.filter((location) => location.status === "warning").length
   const critical = activeLocations.filter((location) => location.status === "critical" || location.status === "technical").length
 
   return { total, ok, warning, critical, activeAlarms }
 }
 
 export function sortSensorsByStatus(sensors: SensorWithLocation[]) {
-  const statusPriority: Record<SensorWithLocation["status"], number> = {
-    critical: 0,
-    technical: 1,
-    warning: 2,
-    ended: 3,
-    ok: 4,
-  }
   return [...sensors].sort((a, b) => statusPriority[a.status] - statusPriority[b.status])
 }
 

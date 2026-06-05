@@ -11,6 +11,7 @@ import { requireStandardOrExpertIfFieldsUsed } from "@/lib/license-guards"
 import { isSurveillanceActionCommentRequired } from "@/lib/action-comment-policy"
 import { withAnyAuthorizationLogging } from "@/lib/api-wrappers"
 import { getPermissionAliases } from "@/lib/permissions"
+import { findLocationNameConflict } from "@/lib/location-name-conflicts"
 
 const mailingContactSchema = z.object({
   Id_Tel_Num: z.number().optional(),
@@ -224,7 +225,7 @@ function addConsigneGuards(data: Record<string, unknown>, ctx: z.RefinementCtx) 
 }
 
 const updateLieuSchema = z.object({
-  Nom_Lieu: z.string().min(1, "Nom du lieu requis").max(30, "Le nom du lieu ne peut pas depasser 30 caracteres.").optional(),
+  Nom_Lieu: z.string().trim().min(1, "Nom du lieu requis").max(30, "Le nom du lieu ne peut pas depasser 30 caracteres.").optional(),
   Lieu_Etat: z.string().max(1).nullable().optional(),
   Commentaire: z.string().nullable().optional(),
   Observations_Info: z.string().nullable().optional(),
@@ -561,6 +562,13 @@ export const PATCH = withAnyAuthorizationLogging(
           Incertitude: current?.Derniere_Incertitude,
           Derive: current?.Derive,
           Derniere_Date_Etalonnage: current?.Derniere_Date_Etalonnage,
+        }
+
+        if (validated.Nom_Lieu !== undefined) {
+          const existingLocation = await findLocationNameConflict(tx, validated.Nom_Lieu, lieuId)
+          if (existingLocation) {
+            throw new Error("location_name_conflict")
+          }
         }
 
         let nextEstLieuGso: boolean | undefined
@@ -1061,6 +1069,9 @@ export const PATCH = withAnyAuthorizationLogging(
       clearLocationCache(lieuId)
       return apiOk(normalized)
     } catch (error) {
+      if (error instanceof Error && error.message === "location_name_conflict") {
+        return apiError(409, "location_name_conflict", "Un lieu avec le meme nom existe deja.")
+      }
       if (error instanceof Error && error.message === "invalid_module") {
         return apiError(400, "invalid_module", "Module introuvable")
       }

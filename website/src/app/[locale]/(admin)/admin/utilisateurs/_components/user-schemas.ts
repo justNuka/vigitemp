@@ -27,6 +27,7 @@ export const createUserSchema = z
 
 export const editUserSchema = z
   .object({
+    username: z.string().min(3, "Le login doit contenir au moins 3 caractères"),
     nom: z.string().min(1, "Le nom est requis"),
     prenom: z.string().min(1, "Le pr\u00E9nom est requis"),
     email: z.string().email("Email invalide").or(z.literal("")),

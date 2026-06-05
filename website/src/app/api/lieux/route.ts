@@ -4,11 +4,13 @@ import { prisma } from "@/lib/prisma"
 import { getClientIp, withLogging } from "@/lib/api-logger"
 import { z } from "zod"
 import { apiError, apiOk } from "@/lib/api-response"
+import { auditRouteCreate } from "@/lib/audit-route"
 import { log } from "@/lib/logger"
 import { extractAddressFromSerial, getSensorFamilyFromSerial, isGsoType } from "@/lib/sensor-naming"
 import { computeEmt, emtModeToDb, emtModeFromDb } from "@/lib/emt"
 import { requireStandardOrExpertIfFieldsUsed } from "@/lib/license-guards"
 import { applyAccessFilter, buildLieuAccessFilter, getUserLocationScope } from "@/lib/location-access-scope"
+import { findLocationNameConflict, normalizeLocationName } from "@/lib/location-name-conflicts"
 
 const mailingContactSchema = z.object({
   Id_Tel_Num: z.number().optional(),
@@ -153,7 +155,7 @@ function addConsigneGuards(data: Record<string, unknown>, ctx: z.RefinementCtx) 
 }
 
 const createLieuSchema = z.object({
-  Nom_Lieu: z.string().min(1, "Nom du lieu requis").max(30, "Le nom du lieu ne peut pas depasser 30 caracteres."),
+  Nom_Lieu: z.string().trim().min(1, "Nom du lieu requis").max(30, "Le nom du lieu ne peut pas depasser 30 caracteres."),
   Lieu_Etat: z.string().max(1).nullable().optional(),
   Commentaire: z.string().nullable().optional(),
   Observations_Info: z.string().nullable().optional(),
@@ -316,6 +318,12 @@ export const POST = withLogging(async (req: NextRequest) => {
     if (metrologyGuard) return metrologyGuard
 
     const validated = createLieuSchema.parse(body)
+    const normalizedLocationName = normalizeLocationName(validated.Nom_Lieu)
+    const existingLocation = await findLocationNameConflict(prisma, normalizedLocationName)
+    if (existingLocation) {
+      return apiError(409, "location_name_conflict", "Un lieu avec le meme nom existe deja.")
+    }
+
     const appliedCalibrationDate = parseAppliedCalibrationDate(validated.Derniere_Date_Etalonnage)
     const appliedCalibrationId = validated.Applied_Etalonnage_Id ?? null
     const groupIds = Array.from(
@@ -395,7 +403,7 @@ export const POST = withLogging(async (req: NextRequest) => {
 
     const lieu = await prisma.t_lieu.create({
       data: ({
-        Nom_Lieu: validated.Nom_Lieu,
+        Nom_Lieu: normalizedLocationName,
         Date_Creation: dateCreation,
         Commentaire: validated.Commentaire ?? validated.Observations_Info ?? null,
         Observations_Info: validated.Observations_Info ?? validated.Commentaire ?? null,
@@ -529,6 +537,22 @@ export const POST = withLogging(async (req: NextRequest) => {
       groupIds,
       idModule: validated.Id_Module ?? null,
       mailingContactsCount: mailingContacts.length,
+    })
+
+    auditRouteCreate(req, user, {
+      resource: "Lieu",
+      resourceId: lieu.Id_Lieu,
+      data: {
+        Nom_Lieu: validated.Nom_Lieu,
+        Id_Site: validated.Id_Site ?? null,
+        Sonde_Numero_Serie: sondeNumeroSerie,
+        Id_Module: validated.Id_Module ?? null,
+        GroupIds: groupIds,
+        Lieu_Etat: lieuEtat,
+        Frequence: frequencySeconds,
+      },
+      reason: `Creation lieu ${validated.Nom_Lieu}`,
+      lieuId: lieu.Id_Lieu,
     })
 
     if (appliedCalibrationId !== null) {

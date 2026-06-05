@@ -1,8 +1,8 @@
-import { NextRequest } from "next/server"
+﻿import { NextRequest } from "next/server"
 
 import { apiError, apiOk } from "@/lib/api-response"
 import { getClientIp } from "@/lib/api-logger"
-import { withAnyAuthorizationLogging, type HandlerContext } from "@/lib/api-wrappers"
+import { withStandardOrExpertAnyAuthorizationLogging, type HandlerContext } from "@/lib/license-guards"
 import { auditRouteCreate } from "@/lib/audit-route"
 import { log } from "@/lib/logger"
 import { prisma } from "@/lib/prisma"
@@ -29,7 +29,7 @@ function formatUserLabel(user: {
   return fullName || user.Login || null
 }
 
-export const GET = withAnyAuthorizationLogging(
+export const GET = withStandardOrExpertAnyAuthorizationLogging(
   VIGILOG_ACCESS_CODES,
   async (req: NextRequest) => {
     try {
@@ -173,14 +173,14 @@ export const GET = withAnyAuthorizationLogging(
   },
 )
 
-export const POST = withAnyAuthorizationLogging(
+export const POST = withStandardOrExpertAnyAuthorizationLogging(
   VIGILOG_ACCESS_CODES,
   async (req: NextRequest, ctx: HandlerContext) => {
     try {
       const body = await req.json()
       const parsed = vigilogDepartureSchema.safeParse(body)
       if (!parsed.success) {
-        return apiError(400, "validation_error", "Tournée VigiLog invalide", {
+        return apiError(400, "validation_error", "TournÃ©e VigiLog invalide", {
           issues: parsed.error.issues,
         })
       }
@@ -281,3 +281,4 @@ export const POST = withAnyAuthorizationLogging(
     }
   },
 )
+

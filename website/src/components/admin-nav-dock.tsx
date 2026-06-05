@@ -3,7 +3,7 @@
 import type { ReactNode } from "react";
 import Dock from "@/components/ui/dock";
 import { useLicense } from "@/components/license/license-provider";
-import { isOneOrPack } from "@/lib/license-access";
+import { isOneOrPack, isPack } from "@/lib/license-access";
 import { usePathname, useRouter } from "@/i18n/navigation";
 import { getLocalizedPathname, stripLocalePrefix } from "@/i18n/pathnames";
 import { useLocale, useTranslations } from "next-intl";
@@ -25,6 +25,7 @@ export function AdminNavDock() {
   const { license } = useLicense();
 
   const hideStandards = isOneOrPack(license);
+  const hideOnePlus = isPack(license);
   const normalizedPathname = stripLocalePrefix(pathname);
 
   const navItems: DockItem[] = [
@@ -43,11 +44,13 @@ export function AdminNavDock() {
       isActive: normalizedPathname === getLocalizedPathname("/admin/modules", locale as any),
     },
     {
-      key: "etalons",
+      key: "metrologie",
       icon: <Ruler size={20} />,
-      label: tDock("etalons"),
-      onClick: () => router.push("/admin/etalons"),
-      isActive: normalizedPathname === getLocalizedPathname("/admin/etalons", locale as any),
+      label: "Bains & etalons",
+      onClick: () => router.push("/admin/metrologie"),
+      isActive:
+        normalizedPathname.startsWith(getLocalizedPathname("/admin/metrologie", locale as any)) ||
+        normalizedPathname === getLocalizedPathname("/admin/etalons", locale as any),
     },
     {
       key: "actionneurs",
@@ -93,9 +96,11 @@ export function AdminNavDock() {
     },
   ];
 
-  const visibleNavItems = hideStandards
-    ? navItems.filter((item) => item.key !== "etalons")
-    : navItems;
+  const visibleNavItems = navItems.filter((item) => {
+    if (hideStandards && item.key === "metrologie") return false;
+    if (hideOnePlus && (item.key === "sites" || item.key === "groupes")) return false;
+    return true;
+  });
 
   return (
     <Dock

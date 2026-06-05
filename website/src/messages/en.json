@@ -74,7 +74,7 @@
     "groupes": "Groups",
     "utilisateurs": "Users",
     "profils": "Profiles",
-    "etalons": "Standards",
+    "etalons": "Metrology",
     "actionneurs": "Actuators",
     "outils": "Tools",
     "lieux_templates": "Location templates"
@@ -340,9 +340,16 @@
       "na": "-",
       "cancel": "Cancel",
       "confirm": "Acknowledge",
+      "confirm_many": "Acknowledge ({count})",
       "confirming": "Acknowledging...",
       "location_alarms_notice": "Several alarms exist for this location. You can open the alarms page filtered on this location.",
-      "view_location_alarms": "View location alarms"
+      "view_location_alarms": "View location alarms",
+      "related_alarms_title": "Location alarms",
+      "selected_alarms_count": "{count} selected",
+      "select_column": "Select",
+      "alarm_column": "Alarm",
+      "status_column": "Status",
+      "select_alarm_aria": "Select alarm {id}"
     },
     "status": {
       "active": "Active",
@@ -3906,6 +3913,10 @@
       "disabled": "Monitoring disabled",
       "disabled_until": "Monitoring disabled until {date}",
       "disabled_since": "Monitoring disabled since {date}",
+      "calibration": "Calibration",
+      "calibration_tooltip": "Location currently under calibration.",
+      "adjustment": "Adjustment",
+      "adjustment_tooltip": "Location currently under adjustment.",
       "disabled_since_by": "Monitoring disabled since {date} by {user}"
     },
     "alarms": {
@@ -4024,8 +4035,8 @@
         "description": "Manage modules and their settings."
       },
       "etalons": {
-        "title": "Standards",
-        "description": "Administer calibration standards."
+        "title": "Metrology",
+        "description": "Manage standards and intercomparison media."
       },
       "actionneurs": {
         "title": "Actuators",
@@ -4071,15 +4082,16 @@
       }
     },
     "connected_users": {
-      "title": "Connected users",
-      "description": "Active sessions ({total}, max {max})",
+      "title": "Recent connections",
+      "description": "Sessions seen during the last hour ({total}, max {max})",
       "empty": "No connected users at the moment",
       "columns": {
         "login": "Login",
         "full_name": "Full name",
         "station": "Station",
         "ip": "IP address"
-      }
+      },
+      "helper_window": "Rolling window: 1 hour"
     },
     "active_alarms": {
       "title": "Active alarms",
@@ -4153,7 +4165,7 @@
         "systemLogs": "Audit log",
         "backups": "Backups",
         "unassigned": "Sensors without location",
-        "etalons": "Standards"
+        "etalons": "Metrology"
       }
     },
     "actions": {
@@ -4161,8 +4173,8 @@
     },
     "summary": {
       "alarms_title": "Alarms",
-      "alarms_description": "In progress: {inProgress} - Pending acknowledgement: {pending}",
-      "alarms_helper": "Alarms pending acknowledgement: {pending}"
+      "alarms_description": "Alarms in progress: {inProgress}",
+      "alarms_helper": "Ended alarms awaiting acknowledgment: {pending}"
     }
   },
   "cacheControls": {
@@ -4903,7 +4915,7 @@
       "title": "Access denied",
       "description": "Your account cannot use the VigiLog module.",
       "alertTitle": "Authorization required",
-      "alertDescription": "Request ACCES_VIGILOG or ACCES_METROLOGIE to open this page."
+      "alertDescription": "Request ACCES_VIGILOG to open this page."
     },
     "common": {
       "loading": "Loading...",

@@ -1,12 +1,13 @@
-﻿import { NextRequest } from "next/server";
-import { getAuthenticatedUser } from "@/lib/auth";
+import { NextRequest } from "next/server";
 import { apiError, apiOk } from "@/lib/api-response";
 import { getRequestContext } from "@/lib/api-logger";
+import { withOneOrHigherAnyAuthorizationLogging } from "@/lib/license-guards";
 import { prisma } from "@/lib/prisma";
 import { parseAdjustmentXml } from "@/lib/adjustment-import";
 import { log } from "@/lib/logger";
 import { decodeXmlBytes } from "@/lib/xml-decoding";
 import { extractProbeAddressFromSerial, resolveImportedSensorIdentity } from "@/lib/sensor-naming";
+import { getPermissionAliases } from "@/lib/permissions";
 
 const isXmlFile = (file: File) => {
   const name = file.name.toLowerCase();
@@ -21,10 +22,8 @@ const decodeXmlFile = async (file: File) => {
   return decodeXmlBytes(bytes).text;
 };
 
-export const POST = async (req: NextRequest) => {
-  const user = getAuthenticatedUser(req);
-  if (!user) return apiError(401, "unauthenticated", "Non authentifie");
-
+export const POST = withOneOrHigherAnyAuthorizationLogging(getPermissionAliases("METROLOGY_OPERATION_ACCESS"), async (req: NextRequest, ctx) => {
+  const user = ctx.user;
   const { ip } = getRequestContext(req)
 
   try {
@@ -173,4 +172,4 @@ export const POST = async (req: NextRequest) => {
     })
     return apiError(500, "upload_failed", "Erreur lors de l'import");
   }
-};
+});

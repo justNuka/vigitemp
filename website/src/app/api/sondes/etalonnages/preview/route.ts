@@ -1,12 +1,12 @@
 import { randomUUID } from "crypto";
 import { NextRequest } from "next/server";
-import { getAuthenticatedUser } from "@/lib/auth";
 import { apiError, apiOk } from "@/lib/api-response";
 import { getRequestContext } from "@/lib/api-logger";
 import { parseCalibrationXml } from "@/lib/calibration-import";
 import { log } from "@/lib/logger";
 import { decodeXmlBytes } from "@/lib/xml-decoding";
-import { requireStandardOrExpertLicense } from "@/lib/license-guards";
+import { withStandardOrExpertAnyAuthorizationLogging } from "@/lib/license-guards";
+import { getPermissionAliases } from "@/lib/permissions";
 
 const isXmlFile = (file: File) => {
   const name = file.name.toLowerCase();
@@ -27,16 +27,13 @@ const toIso = (value: Date | string | null | undefined) => {
   return Number.isNaN(parsed.getTime()) ? null : parsed.toISOString();
 };
 
-export const POST = async (req: NextRequest) => {
-  const user = getAuthenticatedUser(req);
-  if (!user) return apiError(401, "unauthenticated", "Non authentifie");
+const METROLOGY_ACCESS_CODES = getPermissionAliases("METROLOGY_OPERATION_ACCESS");
 
+export const POST = withStandardOrExpertAnyAuthorizationLogging(METROLOGY_ACCESS_CODES, async (req: NextRequest, ctx) => {
+  const user = ctx.user;
   const { ip } = getRequestContext(req)
 
   try {
-    const guard = await requireStandardOrExpertLicense();
-    if (guard) return guard;
-
     const formData = await req.formData();
     const file = formData.get("file");
 
@@ -121,5 +118,5 @@ export const POST = async (req: NextRequest) => {
     })
     return apiError(500, "preview_failed", "Erreur lors de la preparation");
   }
-};
+});
 

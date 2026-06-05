@@ -63,7 +63,7 @@ export function CommentsTableCard({
         <TanStackTable
           columns={columns}
           data={comments}
-          pageSize={20}
+          pageSize={200}
           maxHeight="calc(100dvh - 25rem)"
           emptyMessage={t('empty')}
           showSearch={true}

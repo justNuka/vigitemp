@@ -44,7 +44,7 @@ export function SitesTable({ sites, isLoading, selectedSiteId, onSelectSite, onE
       data={sites}
       searchField={['Libelle_Site', 'Commentaire']}
       searchPlaceholder={t('search_placeholder')}
-      pageSize={10}
+      pageSize={200}
       isLoading={isLoading}
       maxHeight="calc(100dvh - 25rem)"
       emptyMessage={t('empty')}

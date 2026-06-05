@@ -4,10 +4,17 @@ import { withAuthLogging } from "@/lib/api-wrappers"
 import { apiOk } from "@/lib/api-response"
 import type { JWTPayload } from "@/lib/jwt"
 import { log } from "@/lib/logger"
+import { validateLicense } from "@/lib/license-server"
+import { isStandardOrExpert } from "@/lib/license-access"
 
 export const GET = withAuthLogging(
   async (_req: NextRequest, _ctx: { user: JWTPayload }) => {
     try {
+      const license = await validateLicense()
+      if (!license.ok || !isStandardOrExpert(license)) {
+        return apiOk({ enabled: false })
+      }
+
       const setting = await prisma.t_parametre.findFirst({
         where: { Section: "messaging", Mot_Cle: "enabled" },
         select: { Valeur: true },

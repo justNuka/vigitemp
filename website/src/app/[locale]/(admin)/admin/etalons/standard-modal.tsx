@@ -1,37 +1,26 @@
 "use client"
-import { showFormValidationToast } from "@/lib/form-toast"
 
 import { useEffect, useMemo, useState } from "react"
 import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { useFieldArray, useForm, useWatch } from "react-hook-form"
+import { useForm, useWatch } from "react-hook-form"
 import { useQueryClient } from "@tanstack/react-query"
 import { toast } from "sonner"
-import { useRouter } from '@/i18n/navigation'
-import { useTranslations } from 'next-intl'
 
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
-import { Button } from "@/components/ui/button"
-import { Separator } from "@/components/ui/separator"
-import { Form } from "@/components/ui/form"
-
+import { patchJson, postJson } from "@/lib/http"
+import { buildStandardSerial, inferStandardTypeCode } from "@/lib/standard-types"
+import { showFormValidationToast } from "@/lib/form-toast"
+import { useRouter } from "@/i18n/navigation"
+import type { Standard } from "@/hooks/useStandards"
 import { useModules } from "@/hooks/useModules"
 import { useStandardTypes } from "@/hooks/useStandardTypes"
-import type { Standard } from "@/hooks/useStandards"
+import { Button } from "@/components/ui/button"
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Form } from "@/components/ui/form"
+import { Separator } from "@/components/ui/separator"
 
 import { StandardCertificateForm } from "./_components/standard-certificate-form"
 import { StandardInfoForm } from "./_components/standard-info-form"
-import { StandardMeasurementsTable, type MeasurementPoint } from "./_components/standard-measurements-table"
-import { patchJson, postJson } from "@/lib/http"
 
 type Props = {
   open: boolean
@@ -40,59 +29,49 @@ type Props = {
   isEditing?: boolean
 }
 
-type Measurement = MeasurementPoint
-
-const measurementSchema = z.object({
-  reference: z.string().default(""),
-  value: z.string().default(""),
-  incertitude: z.string().default(""),
-})
-
-const buildStandardSchema = (serialRequired: string) => z.object({
+const standardSchema = z.object({
   type: z.string().optional(),
-  serie: z.string().min(1, serialRequired),
+  serie: z.string().min(1, "Numero de serie requis"),
   moduleId: z.string().optional(),
   portSerie: z.string().optional(),
-  idServeur: z.string().optional(),
-  valeurBase: z.string().optional(),
-  resolution: z.string().optional(),
-  incertitude: z.string().optional(),
-  organisme: z.string().optional(),
-  dateCertif: z.string().optional(),
-  unite: z.string().optional(),
-  numeroCertif: z.string().optional(),
-  mesures: z.array(measurementSchema).default([]),
+  idWorker: z.string().optional(),
+  coeffA: z.string().optional(),
+  coeffB: z.string().optional(),
+  coeffC: z.string().optional(),
+  incertitudeMax: z.string().optional(),
+  pdfId: z.number().nullable().optional(),
+  pdfName: z.string().optional(),
 })
 
-type StandardFormValues = z.input<ReturnType<typeof buildStandardSchema>>
+type StandardFormValues = z.input<typeof standardSchema>
+
+function asNullableNumber(value: string | undefined) {
+  if (!value?.trim()) return null
+  const parsed = Number(value.replace(",", "."))
+  return Number.isFinite(parsed) ? parsed : null
+}
 
 export function StandardModal({ open, onOpenChange, standard, isEditing }: Props) {
   const queryClient = useQueryClient()
   const router = useRouter()
-  const t = useTranslations('standardsDialog')
-  const tCommon = useTranslations('common')
   const [isLoading, setIsLoading] = useState(false)
 
   const defaultValues = useMemo<StandardFormValues>(
     () => ({
-      type: isEditing && standard?.Etalon_Numero_Serie ? standard.Etalon_Numero_Serie.substring(0, 2) : "",
-      serie: isEditing && standard?.Etalon_Numero_Serie ? standard.Etalon_Numero_Serie : "",
+      type: isEditing && standard?.Etalon_Numero_Serie ? inferStandardTypeCode(standard.Etalon_Numero_Serie, undefined) ?? "" : "",
+      serie: standard?.Etalon_Numero_Serie || "",
       moduleId: standard?.Id_Module?.toString() || "",
       portSerie: standard?.Port_Serie || "",
-      idServeur: standard?.Id_Worker?.toString() || "0",
-      valeurBase: "0",
-      resolution: standard?.Resolution || "0",
-      incertitude: standard?.Incertitude || "0",
-      organisme: standard?.Organisme || "",
-      dateCertif: standard?.Date_Certif ? standard.Date_Certif.substring(0, 10) : "",
-      unite: standard?.Unite || "",
-      numeroCertif: standard?.Num_Certif || "",
-      mesures: [],
+      idWorker: standard?.Id_Worker?.toString() || "",
+      coeffA: standard?.Coeff_A?.toString() || "",
+      coeffB: standard?.Coeff_B?.toString() || "",
+      coeffC: standard?.Coeff_C?.toString() || "",
+      incertitudeMax: standard?.Incertitude_Max?.toString() || "",
+      pdfId: standard?.Pdf_Id ?? null,
+      pdfName: standard?.Pdf_Name || "",
     }),
     [isEditing, standard],
   )
-
-  const standardSchema = useMemo(() => buildStandardSchema(t("validation.serial_required")), [t])
 
   const form = useForm<StandardFormValues>({
     resolver: zodResolver(standardSchema),
@@ -100,65 +79,38 @@ export function StandardModal({ open, onOpenChange, standard, isEditing }: Props
     mode: "onChange",
   })
 
-  const { append, update, remove } = useFieldArray({
-    control: form.control,
-    name: "mesures",
-  })
-
-  const mesures = (useWatch({ control: form.control, name: "mesures" }) ?? []).map((mesure) => ({
-    reference: mesure?.reference ?? "",
-    value: mesure?.value ?? "",
-    incertitude: mesure?.incertitude ?? "",
-  }))
-  const [selectedMesureIndex, setSelectedMesureIndex] = useState<number | null>(null)
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
-
   const { data: types, isLoading: typesLoading } = useStandardTypes(open)
   const { data: modules, isLoading: modulesLoading } = useModules(open)
+  const watchedModuleId = useWatch({ control: form.control, name: "moduleId" })
+  const watchedType = useWatch({ control: form.control, name: "type" })
 
   useEffect(() => {
     if (!open) return
     form.reset(defaultValues)
-    setSelectedMesureIndex(null)
-    setIsDeleteDialogOpen(false)
   }, [defaultValues, form, open])
 
-  const handleAddMesure = () => {
-    append({ reference: "", value: "", incertitude: "" })
-    setSelectedMesureIndex(mesures.length)
-  }
+  useEffect(() => {
+    const selectedModule = modules?.find((module) => String(module.Id_Module) === String(watchedModuleId))
+    form.setValue("portSerie", selectedModule?.Port_Serie || "", { shouldDirty: false })
+    form.setValue("idWorker", selectedModule?.Id_Worker?.toString() || "", { shouldDirty: false })
+  }, [form, modules, watchedModuleId])
 
-  const handleUpdateMesure = (index: number, field: keyof Measurement, value: string) => {
-    const current = mesures[index] || { reference: "", value: "", incertitude: "" }
-    update(index, { ...current, [field]: value })
-  }
-
-  const handleDeleteMesure = () => {
-    if (selectedMesureIndex !== null) {
-      remove(selectedMesureIndex)
-      setSelectedMesureIndex(null)
-      setIsDeleteDialogOpen(false)
-    }
-  }
-
-  const handleSubmit = async (values: StandardFormValues) => {
+  async function handleSubmit(values: StandardFormValues) {
     setIsLoading(true)
 
     try {
+      const serialToStore = buildStandardSerial(values.type, values.serie)
+      const selectedType = types?.find((type) => (type.Type_Etalon ?? "").toUpperCase() === String(watchedType ?? values.type ?? "").toUpperCase()) ?? null
       const payload = {
-        Etalon_Numero_Serie: values.serie,
-        Resolution: values.resolution,
-        Incertitude: values.incertitude,
-        Numero: values.numeroCertif,
-        Organisme: values.organisme,
-        Date: values.dateCertif,
-        Unite: values.unite,
-        mesures: values.mesures?.map((m, index) => ({
-          Numero_Ordre: index + 1,
-          Temperature_Reference: m.reference || "",
-          Temperature_Vraie: m.value || "",
-          Incertitude: m.incertitude || "",
-        })),
+        Etalon_Numero_Serie: serialToStore,
+        Etat_Etalon: "1",
+        Id_Module: values.moduleId ? Number(values.moduleId) : null,
+        Est_Sonde_Externe: Boolean(selectedType?.Est_Sonde_Externe),
+        Coeff_A: asNullableNumber(values.coeffA),
+        Coeff_B: asNullableNumber(values.coeffB),
+        Coeff_C: asNullableNumber(values.coeffC),
+        Incertitude_Max: asNullableNumber(values.incertitudeMax),
+        Pdf_Id: values.pdfId ?? null,
       }
 
       if (isEditing && standard) {
@@ -167,81 +119,49 @@ export function StandardModal({ open, onOpenChange, standard, isEditing }: Props
         await postJson("/api/etalons", payload)
       }
 
-      toast.success(isEditing ? t('toast.update_success') : t('toast.create_success'))
-
+      toast.success(isEditing ? "Etalon mis a jour." : "Etalon cree.")
       queryClient.invalidateQueries({ queryKey: ["etalons"] })
       router.refresh()
       onOpenChange(false)
     } catch (error) {
-      console.error("Submit error:", error)
-      toast.error(error instanceof Error ? error.message : t('toast.save_error'))
+      toast.error(error instanceof Error ? error.message : "Erreur lors de l'enregistrement de l'etalon")
     } finally {
       setIsLoading(false)
     }
   }
 
   return (
-    <>
-      <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-150 max-h-[90vh] overflow-y-auto bg-white dark:bg-popover dark:text-popover-foreground">
-          <DialogHeader>
-            <DialogTitle>{isEditing ? t('title_edit') : t('title_create')}</DialogTitle>
-          </DialogHeader>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-h-[90vh] overflow-y-auto bg-white sm:max-w-5xl dark:bg-popover dark:text-popover-foreground">
+        <DialogHeader>
+          <DialogTitle>{isEditing ? "Modifier l'etalon" : "Creer un etalon"}</DialogTitle>
+        </DialogHeader>
 
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(handleSubmit, (errors) => showFormValidationToast(errors))} className="space-y-6">
-              <StandardInfoForm
-                isEditing={!!isEditing}
-                types={types}
-                typesLoading={typesLoading}
-                modules={modules}
-                modulesLoading={modulesLoading}
-              />
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(handleSubmit, (errors) => showFormValidationToast(errors))} className="space-y-6">
+            <StandardInfoForm
+              isEditing={!!isEditing}
+              types={types}
+              typesLoading={typesLoading}
+              modules={modules}
+              modulesLoading={modulesLoading}
+            />
 
-              <Separator />
+            <Separator />
 
-              <StandardCertificateForm />
+            <StandardCertificateForm standardId={standard?.Id_Etalon ?? null} existingPdfName={standard?.Pdf_Name ?? null} />
 
-              <Separator />
-
-              <StandardMeasurementsTable
-                mesures={mesures}
-                selectedMesureIndex={selectedMesureIndex}
-                onSelectMesure={setSelectedMesureIndex}
-                onAdd={handleAddMesure}
-                onUpdate={handleUpdateMesure}
-                onRequestDelete={() => {
-                  if (selectedMesureIndex !== null) setIsDeleteDialogOpen(true)
-                }}
-              />
-
-              <DialogFooter>
-                <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isLoading}>
-                  {tCommon('cancel')}
-                </Button>
-                <Button type="submit" disabled={isLoading}>
-                  {isLoading ? t('submit_saving') : isEditing ? t('submit_update') : t('submit_create')}
-                </Button>
-              </DialogFooter>
-            </form>
-          </Form>
-        </DialogContent>
-      </Dialog>
-
-      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{t('measurements.delete_title')}</AlertDialogTitle>
-            <AlertDialogDescription>{t('measurements.delete_description')}</AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogCancel>{tCommon('cancel')}</AlertDialogCancel>
-          <AlertDialogAction onClick={handleDeleteMesure} className="bg-red-600">
-            {tCommon('delete')}
-          </AlertDialogAction>
-        </AlertDialogContent>
-      </AlertDialog>
-    </>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isLoading}>
+                Annuler
+              </Button>
+              <Button type="submit" disabled={isLoading}>
+                {isLoading ? "Enregistrement..." : isEditing ? "Mettre a jour" : "Creer"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </Form>
+      </DialogContent>
+    </Dialog>
   )
 }
-
-

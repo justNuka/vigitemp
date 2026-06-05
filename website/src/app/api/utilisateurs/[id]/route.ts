@@ -9,9 +9,9 @@ import { revalidateTag } from "next/cache"
 import { apiError, apiOk } from "@/lib/api-response"
 import { auditRouteDelete, auditRouteUpdate } from "@/lib/audit-route"
 import { getUserAvatarValue, setUserAvatarValue } from "@/lib/user-avatar-db"
-import { checkUserLicenseCapacity } from "@/lib/license-user-limit"
 
 const updateUserSchema = z.object({
+  username: z.string().min(3).optional(),
   nom: z.string().optional(),
   prenom: z.string().optional(),
   email: z.union([z.literal(""), z.string().email()]).optional().transform((value) => value || undefined),
@@ -72,26 +72,23 @@ export const PATCH = withAdminLogging(
         return apiError(404, "not_found", "User not found")
       }
 
-      if (data.reactivate && existingUser.Est_Archive) {
-        const capacity = await checkUserLicenseCapacity(1)
-        if (!capacity.allowed) {
-          return apiError(
-            403,
-            capacity.reason,
-            capacity.message,
-            {
-              activeUsers: capacity.activeUsers,
-              licensedMaxUsers: capacity.licensedMaxUsers,
-              effectiveMaxUsers: capacity.effectiveMaxUsers,
-              unlimited: capacity.unlimited,
-            },
-          )
-        }
-      }
-
       const existingAvatar = await getUserAvatarValue(userId)
 
       const updateData: Record<string, unknown> = {}
+
+      if (data.username && data.username !== existingUser.Login) {
+        const duplicateUser = await prisma.t_utilisateur.findFirst({
+          where: {
+            Login: data.username,
+            Id_Utilisateur: { not: userId },
+          },
+          select: { Id_Utilisateur: true },
+        })
+        if (duplicateUser) {
+          return apiError(409, "username_conflict", "Un utilisateur avec ce login existe deja")
+        }
+        updateData.Login = data.username
+      }
 
       if (data.password) {
         updateData.Mot_De_Passe = await bcrypt.hash(data.password, 10)
@@ -138,6 +135,7 @@ export const PATCH = withAdminLogging(
         resource: "Utilisateur",
         resourceId: userId,
         before: {
+          Login: existingUser.Login,
           Nom: existingUser.Nom,
           Prenom: existingUser.Prenom,
           Adresse_Email: existingUser.Adresse_Email,
@@ -148,6 +146,7 @@ export const PATCH = withAdminLogging(
           Avatar: existingAvatar,
         },
         after: {
+          Login: user.Login,
           Nom: user.Nom,
           Prenom: user.Prenom,
           Adresse_Email: user.Adresse_Email,
@@ -157,7 +156,8 @@ export const PATCH = withAdminLogging(
           Est_Archive: user.Est_Archive,
           Avatar: data.avatar !== undefined ? data.avatar || null : existingAvatar,
         },
-        trackedFields: ["Nom", "Prenom", "Adresse_Email", "Tel_Num_Mobile", "Profil_Utilisateur", "Date_Validite", "Est_Archive", "Avatar"],
+        trackedFields: ["Login", "Nom", "Prenom", "Adresse_Email", "Tel_Num_Mobile", "Profil_Utilisateur", "Date_Validite", "Est_Archive", "Avatar"],
+        reason: `Modification utilisateur ${existingUser.Login}`,
       })
 
       revalidateTag("users-data", "default")

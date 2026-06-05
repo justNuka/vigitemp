@@ -5,6 +5,7 @@ import { LazyMotion, domAnimation, m } from "motion/react";
 import { fadeInUp } from "@/lib/motion-variants";
 import { useQueryClient } from "@tanstack/react-query";
 import { PageHeader } from "@/components/page-header";
+import { useLicense } from "@/components/license/license-provider";
 import { MonitoringCardsGrid } from "./monitoring-cards-grid";
 import { SensorsCardsGrid } from "./sensors-cards-grid";
 import type { Site, Group } from "./server-filters";
@@ -15,7 +16,7 @@ import { useSurveillanceLiveUpdates } from "./_hooks/use-surveillance-live-updat
 import { SurveillanceHeaderControls } from "./_components/monitoring-header-controls";
 import { SurveillanceLoadMore } from "./_components/monitoring-load-more";
 import { CurvesOverlayModal } from "./_components/curves-overlay-modal";
-import { applySurveillanceFilters, computeSurveillanceStats, type FilterState } from "./_helpers/monitoring-derived";
+import { applySurveillanceFilters, computeSurveillanceStats, dedupeSensorsByLocation, type FilterState } from "./_helpers/monitoring-derived";
 import { toast } from "sonner";
 import { useForm, useWatch } from "react-hook-form";
 import { LocationFormDialog } from "@/app/[locale]/(admin)/admin/lieux/_components/location-form-dialog";
@@ -33,6 +34,7 @@ import { useLocationTemplates } from "@/hooks/useLocationTemplates";
 import { prefetchNextSensorsPage, updateSurveillanceStateInCache, type PaginatedSensorsData } from "./_components/page-client/surveillance-page-helpers";
 import { useSurveillanceLocationEditor } from "./_components/page-client/use-surveillance-location-editor";
 import { parseDbDateTime } from "@/lib/date-display";
+import { isStandardOrExpert } from "@/lib/license-access";
 import type { SurveillanceTreeSiteCounter } from "@/lib/api";
 
 type ViewMode = "tree" | "graphs";
@@ -83,16 +85,19 @@ const getInitialDisabledFirst = (): boolean => {
 
 export function SurveillancePageClient({ initialStats, sites, groups, refreshIntervalSeconds, showNullNonResponse: initialShowNullNonResponse, requireActionComment }: Props) {
   const t = useTranslations("surveillance");
+  const { license } = useLicense();
+  const canUseCurvesOverlay = isStandardOrExpert(license);
   const [viewMode, setViewMode] = useState<ViewMode>("graphs");
   const [filters, setFilters] = useState<FilterState>({ siteIds: [], groupIds: [], searchTerm: "", sortMode: "status" });
   const [disabledFirst, setDisabledFirst] = useState<boolean>(() => getInitialDisabledFirst());
   const [isOverlayOpen, setIsOverlayOpen] = useState(false);
   const [showNullNonResponse] = useState(initialShowNullNonResponse);
   const [isRangeSelectionActive, setIsRangeSelectionActive] = useState(false);
-  const [isModalRefreshPending, setIsModalRefreshPending] = useState(false);
   const [openDetailModalIds, setOpenDetailModalIds] = useState<number[]>([]);
+  const [isAcknowledgeDialogOpen, setIsAcknowledgeDialogOpen] = useState(false);
   const loadMoreRef = useRef<HTMLDivElement>(null);
-  const performRefreshRef = useRef<(silent?: boolean) => Promise<void>>(async () => undefined);
+  const nextAutoRefreshAtRef = useRef<number | null>(null);
+  const remainingAutoRefreshMsRef = useRef<number | null>(null);
   const queryClient = useQueryClient();
 
   const { data: locations = [] } = useLocations();
@@ -128,7 +133,7 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
   const { data: locationTemplates = [] } = useLocationTemplates(shouldLoadLocationFormData);
   const serverFilterSiteIds = filters.siteIds;
   const serverFilterGroupIds = filters.groupIds;
-  const isBackgroundPaused = isEditLocationOpen || isOverlayOpen || openDetailModalIds.length > 0;
+  const isBackgroundPaused = isEditLocationOpen || isOverlayOpen || isAcknowledgeDialogOpen || openDetailModalIds.length > 0;
 
   const {
     data: activeData,
@@ -191,7 +196,8 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
     () => [...activePaginatedData.sensors, ...disabledPaginatedData.sensors],
     [activePaginatedData.sensors, disabledPaginatedData.sensors],
   );
-  const visibleSensors = applySurveillanceFilters(allSensors, { ...filters, siteIds: [], groupIds: [] });
+  const uniqueSensors = useMemo(() => dedupeSensorsByLocation(allSensors), [allSensors]);
+  const visibleSensors = applySurveillanceFilters(uniqueSensors, { ...filters, siteIds: [], groupIds: [] });
   const activeVisibleSensors = useMemo(
     () => visibleSensors.filter((sensor) => !sensor.location.surveillanceDisabled),
     [visibleSensors],
@@ -209,19 +215,22 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
   const disabledSectionCount = filters.searchTerm.trim().length > 0 ? countVisibleLocations(disabledVisibleSensors) : disabledPaginatedData.total;
 
   const activeAlarmsCount = useMemo(() => {
-    if (allSensors.length === 0) {
+    if (uniqueSensors.length === 0) {
       return initialStats?.activeAlarms ?? 0;
     }
 
     const ids = new Set<number>();
-    for (const sensor of allSensors) {
+    for (const sensor of uniqueSensors) {
+      if (sensor.status !== "critical" && sensor.status !== "technical") {
+        continue;
+      }
       const rawId = sensor.alarmId ?? sensor.location.alarmId ?? null;
       if (typeof rawId === "number" && Number.isFinite(rawId)) {
         ids.add(rawId);
       }
     }
     return ids.size;
-  }, [allSensors, initialStats?.activeAlarms]);
+  }, [initialStats?.activeAlarms, uniqueSensors]);
 
   const visibleLocationCount = useMemo(() => new Set(visibleSensors.map((sensor) => Number(sensor.location.id ?? sensor.id)).filter((id) => Number.isFinite(id))).size, [visibleSensors]);
   const totalVisibleLocationCount = useMemo(
@@ -262,7 +271,7 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
   const overlayLocations = useMemo(() => {
     const map = new Map<number, { id: number; name: string; site?: string | null }>();
 
-    for (const sensor of allSensors) {
+    for (const sensor of uniqueSensors) {
       const idLieu = Number(sensor.location.id);
       if (!Number.isFinite(idLieu)) continue;
       if (map.has(idLieu)) continue;
@@ -275,7 +284,7 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
     }
 
     return Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name));
-  }, [allSensors]);
+  }, [uniqueSensors]);
 
 
   const handleFilterChange = useCallback((newFilters: FilterState) => {
@@ -298,11 +307,6 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
   }, [performRefresh]);
 
   useEffect(() => {
-    performRefreshRef.current = performRefresh;
-  }, [performRefresh]);
-
-
-  useEffect(() => {
     const handleRangeLock = (event: Event) => {
       const customEvent = event as CustomEvent<{ active?: boolean }>;
       setIsRangeSelectionActive(customEvent.detail?.active === true);
@@ -313,34 +317,64 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
   }, []);
 
   useEffect(() => {
-    const interval = Number.isFinite(refreshIntervalSeconds) ? refreshIntervalSeconds : 15;
-    if (interval <= 0 || isRangeSelectionActive || isBackgroundPaused) return;
+    const handleAcknowledgeDialogState = (event: Event) => {
+      const customEvent = event as CustomEvent<{ open?: boolean }>;
+      setIsAcknowledgeDialogOpen(customEvent.detail?.open === true);
+    };
 
-    const timer = window.setInterval(() => {
-      void performRefresh(true);
-    }, interval * 1000);
+    window.addEventListener("vigitemp:alarm-acknowledge-dialog", handleAcknowledgeDialogState as EventListener);
+    return () => window.removeEventListener("vigitemp:alarm-acknowledge-dialog", handleAcknowledgeDialogState as EventListener);
+  }, []);
 
-    return () => window.clearInterval(timer);
-  }, [isBackgroundPaused, isRangeSelectionActive, performRefresh, refreshIntervalSeconds]);
-
-  const previousBackgroundPaused = useRef(false);
   useEffect(() => {
+    const interval = Number.isFinite(refreshIntervalSeconds) ? refreshIntervalSeconds : 60;
+    const intervalMs = Math.max(interval, 1) * 1000;
     let refreshTimer: number | undefined;
-    if (previousBackgroundPaused.current && !isBackgroundPaused) {
-      refreshTimer = window.setTimeout(() => {
-        setIsModalRefreshPending(true);
-        void performRefreshRef.current(true).finally(() => {
-          setIsModalRefreshPending(false);
-        });
-      }, 0);
-    }
-    previousBackgroundPaused.current = isBackgroundPaused;
-    return () => {
+    let cancelled = false;
+
+    const clearTimer = () => {
       if (refreshTimer !== undefined) {
         window.clearTimeout(refreshTimer);
+        refreshTimer = undefined;
       }
     };
-  }, [isBackgroundPaused]);
+
+    if (interval <= 0 || isRangeSelectionActive) {
+      clearTimer();
+      nextAutoRefreshAtRef.current = null;
+      remainingAutoRefreshMsRef.current = null;
+      return clearTimer;
+    }
+
+    if (isBackgroundPaused) {
+      clearTimer();
+      const nextRefreshAt = nextAutoRefreshAtRef.current;
+      remainingAutoRefreshMsRef.current =
+        nextRefreshAt == null ? intervalMs : Math.max(nextRefreshAt - Date.now(), 1000);
+      return clearTimer;
+    }
+
+    const scheduleNextRefresh = (delayMs: number) => {
+      clearTimer();
+      nextAutoRefreshAtRef.current = Date.now() + delayMs;
+      refreshTimer = window.setTimeout(() => {
+        void performRefresh(true).finally(() => {
+          if (!cancelled) {
+            scheduleNextRefresh(intervalMs);
+          }
+        });
+      }, delayMs);
+    };
+
+    const initialDelay = remainingAutoRefreshMsRef.current ?? intervalMs;
+    remainingAutoRefreshMsRef.current = null;
+    scheduleNextRefresh(initialDelay);
+
+    return () => {
+      cancelled = true;
+      clearTimer();
+    };
+  }, [isBackgroundPaused, isRangeSelectionActive, performRefresh, refreshIntervalSeconds]);
 
   useEffect(() => {
     const pages = activeData?.pages ?? [];
@@ -378,7 +412,7 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
   }, []);
 
   const isFetching = isFetchingActive || isFetchingDisabled;
-  const showGridSkeleton = isModalRefreshPending || (isFetching && visibleSensors.length === 0);
+  const showGridSkeleton = isFetching && visibleSensors.length === 0;
 
   const handleToggleOrder = useCallback(() => {
     setDisabledFirst((current) => {
@@ -567,7 +601,7 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
               treeLabel={t("tabs.tree")}
               orderToggleLabel={disabledFirst ? t("grid.toggle_active_first") : t("grid.toggle_disabled_first")}
               onToggleOrder={handleToggleOrder}
-              onOpenOverlay={() => setIsOverlayOpen(true)}
+              onOpenOverlay={canUseCurvesOverlay ? () => setIsOverlayOpen(true) : undefined}
             />
           </div>
 
@@ -640,11 +674,13 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
         </m.div>
       </LazyMotion>
 
-      <CurvesOverlayModal
-        open={isOverlayOpen}
-        onOpenChange={setIsOverlayOpen}
-        locations={overlayLocations}
-      />
+      {canUseCurvesOverlay ? (
+        <CurvesOverlayModal
+          open={isOverlayOpen}
+          onOpenChange={setIsOverlayOpen}
+          locations={overlayLocations}
+        />
+      ) : null}
 
       <LocationFormDialog
         open={isEditLocationOpen}

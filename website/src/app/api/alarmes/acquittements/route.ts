@@ -49,7 +49,7 @@ function normalizeAlarmType(type: string | null | undefined) {
 }
 
 export const GET = withAnyAuthorizationLogging(
-  getPermissionAliases("METROLOGY_WORK_ACCESS"),
+  getPermissionAliases("ALARM_ACK_ACCESS"),
   async (req: NextRequest, ctx: HandlerContext) => {
     try {
       const searchParams = req.nextUrl.searchParams

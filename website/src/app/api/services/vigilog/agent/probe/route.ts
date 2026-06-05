@@ -1,13 +1,13 @@
-import { NextRequest } from "next/server"
+﻿import { NextRequest } from "next/server"
 
 import { apiError, apiOk } from "@/lib/api-response"
-import { withAnyAuthorizationLogging } from "@/lib/api-wrappers"
+import { withStandardOrExpertAnyAuthorizationLogging } from "@/lib/license-guards"
 import { log } from "@/lib/logger"
 import { prisma } from "@/lib/prisma"
 import { probeVigilogAgent } from "@/lib/vigilog-agent"
 import { VIGILOG_ACCESS_CODES } from "../../_shared"
 
-export const GET = withAnyAuthorizationLogging(VIGILOG_ACCESS_CODES, async (_req: NextRequest) => {
+export const GET = withStandardOrExpertAnyAuthorizationLogging(VIGILOG_ACCESS_CODES, async (_req: NextRequest) => {
   try {
     const response = await probeVigilogAgent()
     if (!response.res) {
@@ -70,3 +70,4 @@ export const GET = withAnyAuthorizationLogging(VIGILOG_ACCESS_CODES, async (_req
     return apiError(503, "vigilog_agent_probe_failed", "Impossible de communiquer avec la base VigiLog")
   }
 })
+

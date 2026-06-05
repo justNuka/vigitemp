@@ -116,7 +116,7 @@ export default function MonitoringDetailsModal({
   }, []);
 
   const [dateRange, setDateRange] = useState<DateRangeValue | null>(initialRange ?? null);
-  const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 20 });
+  const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 200 });
   const [guidePositions, setGuidePositions] = useState<GuidePositions>({
     sup: null,
     inf: null,

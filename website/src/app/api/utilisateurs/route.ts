@@ -6,12 +6,13 @@ import { sendEmail, isEmailEnabled } from "@/lib/email"
 import AccountCreationEmail from "../../../../emails/email-account-creation"
 import { log } from "@/lib/logger"
 import { getRequestContext } from "@/lib/api-logger"
+import { auditRouteCreate } from "@/lib/audit-route"
 import { withAdminLogging, type HandlerContext } from "@/lib/api-wrappers"
 import { revalidateTag } from "next/cache"
 import { apiError, apiOk } from "@/lib/api-response"
 import { getUserAvatarMap, setUserAvatarValue } from "@/lib/user-avatar-db"
 import { getGlobalAppLanguage } from "@/lib/app-language"
-import { checkUserLicenseCapacity } from "@/lib/license-user-limit"
+import { canUseApplicationEmail } from "@/lib/license-email"
 
 const createUserSchema = z.object({
   username: z.string().min(3, "Username must be at least 3 characters"),
@@ -62,21 +63,6 @@ export const POST = withAdminLogging(async (req: NextRequest, ctx: HandlerContex
     const body = await req.json()
     const data = createUserSchema.parse(body)
 
-    const capacity = await checkUserLicenseCapacity(1)
-    if (!capacity.allowed) {
-      return apiError(
-        403,
-        capacity.reason,
-        capacity.message,
-        {
-          activeUsers: capacity.activeUsers,
-          licensedMaxUsers: capacity.licensedMaxUsers,
-          effectiveMaxUsers: capacity.effectiveMaxUsers,
-          unlimited: capacity.unlimited,
-        },
-      )
-    }
-
     const existing = await prisma.t_utilisateur.findFirst({
       where: { Login: data.username, Est_Archive: false },
     })
@@ -118,7 +104,24 @@ export const POST = withAdminLogging(async (req: NextRequest, ctx: HandlerContex
       profile: user.Profil_Utilisateur,
       avatar: data.avatar ?? null,
     })
-    if (data.email && (await isEmailEnabled())) {
+
+    auditRouteCreate(req, ctx.user, {
+      resource: "Utilisateur",
+      resourceId: user.Id_Utilisateur,
+      data: {
+        Login: user.Login,
+        Nom: user.Nom,
+        Prenom: user.Prenom,
+        Adresse_Email: user.Adresse_Email,
+        Profil_Utilisateur: user.Profil_Utilisateur,
+        Date_Validite: user.Date_Validite,
+        Est_Mot_De_Passe_Temporaire: user.Est_Mot_De_Passe_Temporaire,
+        Avatar: data.avatar ?? null,
+      },
+      reason: `Creation utilisateur ${user.Login}`,
+    })
+    const emailLicense = data.email ? await canUseApplicationEmail() : null
+    if (data.email && emailLicense?.allowed && (await isEmailEnabled())) {
       const loginUrl = `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/login`
       const mailLocale = await getGlobalAppLanguage()
 
@@ -142,6 +145,12 @@ export const POST = withAdminLogging(async (req: NextRequest, ctx: HandlerContex
       } catch (emailError) {
         log.error("utilisateurs", "utilisateurs_api_failed_to_send_account_creation_email", { error: emailError });
       }
+    } else if (data.email && emailLicense && !emailLicense.allowed) {
+      log.info("UTILISATEURS", "account_creation_email_blocked_by_license", {
+        email: data.email,
+        reason: emailLicense.reason,
+        edition: emailLicense.license?.edition,
+      })
     }
 
     revalidateTag("users-data", "default")

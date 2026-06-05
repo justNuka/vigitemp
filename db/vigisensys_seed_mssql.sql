@@ -181,9 +181,14 @@ IF OBJECT_ID(N'dbo.t_autorisation', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_aut
 IF OBJECT_ID(N'dbo.t_autorisation', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_autorisation', N'Commentaire') IS NULL ALTER TABLE dbo.[t_autorisation] ADD [Commentaire] VARCHAR(200) NULL;
 GO
 
-IF OBJECT_ID(N'dbo.t_milieu', N'U') IS NULL
+IF OBJECT_ID(N'dbo.t_milieu_inter', N'U') IS NULL AND OBJECT_ID(N'dbo.t_milieu', N'U') IS NOT NULL
 BEGIN
-  CREATE TABLE dbo.[t_milieu] (
+  EXEC sp_rename N'dbo.t_milieu', N't_milieu_inter';
+END;
+GO
+IF OBJECT_ID(N'dbo.t_milieu_inter', N'U') IS NULL
+BEGIN
+  CREATE TABLE dbo.[t_milieu_inter] (
     [Id_Milieu] INT IDENTITY(1,1) NOT NULL,
     [Model] VARCHAR(50) NULL,
     [Reference] VARCHAR(50) NULL,
@@ -192,18 +197,18 @@ BEGIN
     [Contenu] VARCHAR(50) NULL,
     [Est_Reserve_MC2] BIT NULL DEFAULT(0),
     [Est_Archive] BIT NULL DEFAULT(0),
-    CONSTRAINT [PK_t_milieu] PRIMARY KEY ([Id_Milieu])
+    CONSTRAINT [PK_t_milieu_inter] PRIMARY KEY ([Id_Milieu])
   );
 END;
 GO
-IF OBJECT_ID(N'dbo.t_milieu', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_milieu', N'Id_Milieu') IS NULL ALTER TABLE dbo.[t_milieu] ADD [Id_Milieu] INT NULL;
-IF OBJECT_ID(N'dbo.t_milieu', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_milieu', N'Model') IS NULL ALTER TABLE dbo.[t_milieu] ADD [Model] VARCHAR(50) NULL;
-IF OBJECT_ID(N'dbo.t_milieu', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_milieu', N'Reference') IS NULL ALTER TABLE dbo.[t_milieu] ADD [Reference] VARCHAR(50) NULL;
-IF OBJECT_ID(N'dbo.t_milieu', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_milieu', N'Stabilite') IS NULL ALTER TABLE dbo.[t_milieu] ADD [Stabilite] FLOAT NULL;
-IF OBJECT_ID(N'dbo.t_milieu', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_milieu', N'Homogeneite') IS NULL ALTER TABLE dbo.[t_milieu] ADD [Homogeneite] FLOAT NULL;
-IF OBJECT_ID(N'dbo.t_milieu', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_milieu', N'Contenu') IS NULL ALTER TABLE dbo.[t_milieu] ADD [Contenu] VARCHAR(50) NULL;
-IF OBJECT_ID(N'dbo.t_milieu', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_milieu', N'Est_Reserve_MC2') IS NULL ALTER TABLE dbo.[t_milieu] ADD [Est_Reserve_MC2] BIT NULL;
-IF OBJECT_ID(N'dbo.t_milieu', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_milieu', N'Est_Archive') IS NULL ALTER TABLE dbo.[t_milieu] ADD [Est_Archive] BIT NULL;
+IF OBJECT_ID(N'dbo.t_milieu_inter', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_milieu_inter', N'Id_Milieu') IS NULL ALTER TABLE dbo.[t_milieu_inter] ADD [Id_Milieu] INT NULL;
+IF OBJECT_ID(N'dbo.t_milieu_inter', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_milieu_inter', N'Model') IS NULL ALTER TABLE dbo.[t_milieu_inter] ADD [Model] VARCHAR(50) NULL;
+IF OBJECT_ID(N'dbo.t_milieu_inter', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_milieu_inter', N'Reference') IS NULL ALTER TABLE dbo.[t_milieu_inter] ADD [Reference] VARCHAR(50) NULL;
+IF OBJECT_ID(N'dbo.t_milieu_inter', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_milieu_inter', N'Stabilite') IS NULL ALTER TABLE dbo.[t_milieu_inter] ADD [Stabilite] FLOAT NULL;
+IF OBJECT_ID(N'dbo.t_milieu_inter', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_milieu_inter', N'Homogeneite') IS NULL ALTER TABLE dbo.[t_milieu_inter] ADD [Homogeneite] FLOAT NULL;
+IF OBJECT_ID(N'dbo.t_milieu_inter', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_milieu_inter', N'Contenu') IS NULL ALTER TABLE dbo.[t_milieu_inter] ADD [Contenu] VARCHAR(50) NULL;
+IF OBJECT_ID(N'dbo.t_milieu_inter', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_milieu_inter', N'Est_Reserve_MC2') IS NULL ALTER TABLE dbo.[t_milieu_inter] ADD [Est_Reserve_MC2] BIT NULL;
+IF OBJECT_ID(N'dbo.t_milieu_inter', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_milieu_inter', N'Est_Archive') IS NULL ALTER TABLE dbo.[t_milieu_inter] ADD [Est_Archive] BIT NULL;
 GO
 
 IF OBJECT_ID(N'dbo.t_ajustage', N'U') IS NULL
@@ -315,6 +320,10 @@ BEGIN
     [Resolution] VARCHAR(50) NULL,
     [Incertitude] VARCHAR(50) NULL,
     [Nb_Decimale] INT NULL,
+    [Coeff_A] FLOAT NULL,
+    [Coeff_B] FLOAT NULL,
+    [Coeff_C] FLOAT NULL,
+    [Incertitude_Max] FLOAT NULL,
     [Reserve_MC2] VARCHAR(50) NULL,
     [Id_Worker] INT NULL,
     [Id_Module] INT NULL,
@@ -331,6 +340,10 @@ IF OBJECT_ID(N'dbo.t_etalon', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_etalon', 
 IF OBJECT_ID(N'dbo.t_etalon', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_etalon', N'Resolution') IS NULL ALTER TABLE dbo.[t_etalon] ADD [Resolution] VARCHAR(50) NULL;
 IF OBJECT_ID(N'dbo.t_etalon', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_etalon', N'Incertitude') IS NULL ALTER TABLE dbo.[t_etalon] ADD [Incertitude] VARCHAR(50) NULL;
 IF OBJECT_ID(N'dbo.t_etalon', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_etalon', N'Nb_Decimale') IS NULL ALTER TABLE dbo.[t_etalon] ADD [Nb_Decimale] INT NULL;
+IF OBJECT_ID(N'dbo.t_etalon', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_etalon', N'Coeff_A') IS NULL ALTER TABLE dbo.[t_etalon] ADD [Coeff_A] FLOAT NULL;
+IF OBJECT_ID(N'dbo.t_etalon', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_etalon', N'Coeff_B') IS NULL ALTER TABLE dbo.[t_etalon] ADD [Coeff_B] FLOAT NULL;
+IF OBJECT_ID(N'dbo.t_etalon', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_etalon', N'Coeff_C') IS NULL ALTER TABLE dbo.[t_etalon] ADD [Coeff_C] FLOAT NULL;
+IF OBJECT_ID(N'dbo.t_etalon', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_etalon', N'Incertitude_Max') IS NULL ALTER TABLE dbo.[t_etalon] ADD [Incertitude_Max] FLOAT NULL;
 IF OBJECT_ID(N'dbo.t_etalon', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_etalon', N'Reserve_MC2') IS NULL ALTER TABLE dbo.[t_etalon] ADD [Reserve_MC2] VARCHAR(50) NULL;
 IF OBJECT_ID(N'dbo.t_etalon', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_etalon', N'Id_Worker') IS NULL ALTER TABLE dbo.[t_etalon] ADD [Id_Worker] INT NULL;
 IF OBJECT_ID(N'dbo.t_etalon', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_etalon', N'Id_Module') IS NULL ALTER TABLE dbo.[t_etalon] ADD [Id_Module] INT NULL;
@@ -1215,6 +1228,11 @@ IF OBJECT_ID(N'dbo.t_etalon_type', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_etal
 IF OBJECT_ID(N'dbo.t_etalon_type', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_etalon_type', N'Est_Saisie_Module') IS NULL ALTER TABLE dbo.[t_etalon_type] ADD [Est_Saisie_Module] BIT NULL;
 IF OBJECT_ID(N'dbo.t_etalon_type', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_etalon_type', N'Est_Sonde_Externe') IS NULL ALTER TABLE dbo.[t_etalon_type] ADD [Est_Sonde_Externe] BIT NULL;
 IF OBJECT_ID(N'dbo.t_etalon_type', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_etalon_type', N'Resolution') IS NULL ALTER TABLE dbo.[t_etalon_type] ADD [Resolution] FLOAT NULL;
+GO
+IF NOT EXISTS (SELECT 1 FROM dbo.[t_etalon_type] WHERE [Type_Etalon] = N'ES') INSERT INTO dbo.[t_etalon_type] ([Type_Etalon], [Nom], [Descriptif], [Est_Saisie_Module], [Est_Sonde_Externe], [Resolution]) VALUES (N'ES', N'VigiTemp Type ES', N'Sonde talon radio type E', 1, 0, 0.05);
+IF NOT EXISTS (SELECT 1 FROM dbo.[t_etalon_type] WHERE [Type_Etalon] = N'EX') INSERT INTO dbo.[t_etalon_type] ([Type_Etalon], [Nom], [Descriptif], [Est_Saisie_Module], [Est_Sonde_Externe], [Resolution]) VALUES (N'EX', N'Externe', N'Sonde externe', 1, 1, 0);
+IF NOT EXISTS (SELECT 1 FROM dbo.[t_etalon_type] WHERE [Type_Etalon] = N'SEF') INSERT INTO dbo.[t_etalon_type] ([Type_Etalon], [Nom], [Descriptif], [Est_Saisie_Module], [Est_Sonde_Externe], [Resolution]) VALUES (N'SEF', N'VigiTemp Type SEF', N'Sonde talon filaire ou filaire/radio avec prise RJ45', 1, 0, 0.02);
+IF NOT EXISTS (SELECT 1 FROM dbo.[t_etalon_type] WHERE [Type_Etalon] = N'SPET') INSERT INTO dbo.[t_etalon_type] ([Type_Etalon], [Nom], [Descriptif], [Est_Saisie_Module], [Est_Sonde_Externe], [Resolution]) VALUES (N'SPET', N'Sonde etalon platine', N'Sonde etalon GSP platine', 1, 0, 0.02);
 GO
 
 IF OBJECT_ID(N'dbo.t_mem_gso', N'U') IS NULL
@@ -2423,15 +2441,20 @@ IF COL_LENGTH('dbo.t_lieu_mail_tel', 'Id_Utilisation') IS NOT NULL EXEC sp_renam
 IF COL_LENGTH('dbo.t_lieu_mail_tel', 'Est_Via_Mail') IS NOT NULL EXEC sp_rename 'dbo.t_lieu_mail_tel.Est_Via_Mail', 'Est_Via_Email', 'COLUMN';
 GO
 
--- t_ajustage / t_milieu
+-- t_ajustage / t_milieu_inter
 IF OBJECT_ID('dbo.t_ajustage', 'U') IS NULL AND OBJECT_ID('dbo.t_calibrage', 'U') IS NOT NULL
 BEGIN
   EXEC sp_rename 'dbo.t_calibrage', 't_ajustage';
 END;
 GO
-IF OBJECT_ID('dbo.t_milieu', 'U') IS NULL AND OBJECT_ID('dbo.t_bain', 'U') IS NOT NULL
+IF OBJECT_ID('dbo.t_milieu_inter', 'U') IS NULL AND OBJECT_ID('dbo.t_bain', 'U') IS NOT NULL
 BEGIN
-  EXEC sp_rename 'dbo.t_bain', 't_milieu';
+  EXEC sp_rename 'dbo.t_bain', 't_milieu_inter';
+END;
+GO
+IF OBJECT_ID('dbo.t_milieu_inter', 'U') IS NULL AND OBJECT_ID('dbo.t_milieu', 'U') IS NOT NULL
+BEGIN
+  EXEC sp_rename 'dbo.t_milieu', 't_milieu_inter';
 END;
 GO
 IF OBJECT_ID('dbo.t_ajustage', 'U') IS NULL
@@ -2462,9 +2485,9 @@ BEGIN
   );
 END;
 GO
-IF OBJECT_ID('dbo.t_milieu', 'U') IS NULL
+IF OBJECT_ID('dbo.t_milieu_inter', 'U') IS NULL
 BEGIN
-  CREATE TABLE dbo.t_milieu (
+  CREATE TABLE dbo.t_milieu_inter (
     Id_Milieu INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
     Model VARCHAR(50) NULL,
     Reference VARCHAR(50) NULL,

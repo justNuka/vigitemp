@@ -74,7 +74,7 @@ export async function ServerDashboardStats(): Promise<DashboardStats> {
 
 export async function ServerSurveillanceRefreshIntervalSeconds(): Promise<number> {
   unstable_noStore()
-  const DEFAULT_SECONDS = 15
+  const DEFAULT_SECONDS = 60
 
   try {
     const [{ prisma }, { validateLicense }, { isStandardOrExpert }] = await Promise.all([

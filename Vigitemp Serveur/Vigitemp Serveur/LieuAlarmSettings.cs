@@ -27,6 +27,8 @@ namespace Vigitemp_Serveur
         public bool NotificationActive { get; }
         public DateTime DateHeureReactivationAlarme { get; }
         public DateTime PlanningDerniereMaj { get; }
+        public DateTime DateHeureDerniereReponse { get; }
+        public DateTime DateHeureDerniereReponseRecueOk { get; }
 
         public LieuAlarmSettings(
             int idLieu,
@@ -45,7 +47,9 @@ namespace Vigitemp_Serveur
             int nbMesuresTemporisationRedeclenchement,
             bool notificationActive,
             DateTime dateHeureReactivationAlarme,
-            DateTime planningDerniereMaj)
+            DateTime planningDerniereMaj,
+            DateTime dateHeureDerniereReponse = default(DateTime),
+            DateTime dateHeureDerniereReponseRecueOk = default(DateTime))
         {
             IdLieu = idLieu;
             ConsigneInf = consigneInf;
@@ -64,6 +68,8 @@ namespace Vigitemp_Serveur
             NotificationActive = notificationActive;
             DateHeureReactivationAlarme = dateHeureReactivationAlarme;
             PlanningDerniereMaj = planningDerniereMaj;
+            DateHeureDerniereReponse = dateHeureDerniereReponse;
+            DateHeureDerniereReponseRecueOk = dateHeureDerniereReponseRecueOk;
         }
     }
 }

@@ -36,7 +36,7 @@ export function AppAccessProvider({ children }: { children: React.ReactNode }) {
   const { license, loading: licenseLoading } = useLicense();
   const { data: user, isLoading: userLoading } = useCurrentUser({ enabled: !isPublicRoute(pathname || "") });
 
-  const edition = getLicenseEdition(license, "standard");
+  const edition = getLicenseEdition(license, "one");
 
   const value = useMemo<AppAccessContextValue>(
     () => ({

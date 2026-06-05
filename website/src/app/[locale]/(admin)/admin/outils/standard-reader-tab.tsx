@@ -15,6 +15,7 @@ import { useStandardTypes } from "@/hooks/useStandardTypes"
 import { StandardModal } from "../etalons/standard-modal"
 import { Plus, RefreshCcw, TestTube2 } from "lucide-react"
 import { useTranslations } from "next-intl"
+import { inferStandardTypeCode } from "@/lib/standard-types"
 
 type SettingResponse = {
   key: string
@@ -22,11 +23,6 @@ type SettingResponse = {
 }
 
 const ASSIGNED_STANDARD_KEY = "tools:assigned_standard_serial"
-
-function getStandardTypeCode(standard: Standard) {
-  const serial = standard.Etalon_Numero_Serie ?? ""
-  return serial.slice(0, 4)
-}
 
 export function StandardReaderTab() {
   const t = useTranslations("toolsPage.standard_reader")
@@ -73,7 +69,7 @@ export function StandardReaderTab() {
 
   const assignedType = useMemo(() => {
     if (!assignedStandard) return null
-    const code = getStandardTypeCode(assignedStandard)
+    const code = inferStandardTypeCode(assignedStandard.Etalon_Numero_Serie, standardTypes)
     return standardTypes.find((type) => type.Type_Etalon === code) ?? null
   }, [assignedStandard, standardTypes])
 
@@ -188,7 +184,7 @@ export function StandardReaderTab() {
                   </div>
                   <div>
                     <p className="text-muted-foreground">{t("fields.type")}</p>
-                    <p className="font-medium">{assignedType?.Nom || getStandardTypeCode(assignedStandard) || "-"}</p>
+                    <p className="font-medium">{assignedType?.Nom || inferStandardTypeCode(assignedStandard.Etalon_Numero_Serie, standardTypes) || "-"}</p>
                   </div>
                   <div>
                     <p className="text-muted-foreground">{t("fields.certificate")}</p>

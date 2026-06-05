@@ -89,6 +89,20 @@ export function MonitoringCardHeader({
   const hasActiveAlarmCode = isSurveillanceActive && Boolean(effectiveAlarmType)
   const alarmCodeLabel = effectiveAlarmType ?? '—'
 
+  const operationalState = lieuEtat === 'E'
+    ? {
+        label: t('surveillance.calibration'),
+        tooltip: t('surveillance.calibration_tooltip'),
+        className: 'bg-amber-50 text-amber-900 ring-1 ring-amber-200',
+      }
+    : lieuEtat === 'A'
+      ? {
+          label: t('surveillance.adjustment'),
+          tooltip: t('surveillance.adjustment_tooltip'),
+          className: 'bg-sky-50 text-sky-900 ring-1 ring-sky-200',
+        }
+      : null
+
   const resolvedHeaderBg = HEADER_GRADIENT_MAP[headerBgClassName] ?? headerBgClassName
 
   return (
@@ -120,7 +134,13 @@ export function MonitoringCardHeader({
                 </div>
               </TooltipTrigger>
               <TooltipContent>
-                <p className="max-w-xs">{lieuEtat === 'S' ? t('surveillance.active') : lieuEtat === 'D' ? t('surveillance.disabled') : lieuEtat || ''}</p>
+                <p className="max-w-xs">
+                  {lieuEtat === 'S'
+                    ? t('surveillance.active')
+                    : lieuEtat === 'D'
+                      ? t('surveillance.disabled')
+                      : operationalState?.tooltip ?? lieuEtat ?? ''}
+                </p>
               </TooltipContent>
             </UITooltip>
           </TooltipProvider>
@@ -146,6 +166,19 @@ export function MonitoringCardHeader({
               </TooltipTrigger>
               <TooltipContent side="top" className="max-w-xs whitespace-pre-wrap wrap-break-word">
                 <p className="text-xs">{alarmDisabledLabel}</p>
+              </TooltipContent>
+            </UITooltip>
+          ) : null}
+          {operationalState ? (
+            <UITooltip>
+              <TooltipTrigger asChild>
+                <div className={`inline-flex max-w-full items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold ${operationalState.className}`}>
+                  <span className="h-1.5 w-1.5 rounded-full bg-current" aria-hidden="true" />
+                  <span className="truncate">{operationalState.label}</span>
+                </div>
+              </TooltipTrigger>
+              <TooltipContent side="top" className="max-w-xs whitespace-pre-wrap wrap-break-word">
+                <p className="text-xs">{operationalState.tooltip}</p>
               </TooltipContent>
             </UITooltip>
           ) : null}

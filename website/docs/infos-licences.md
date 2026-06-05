@@ -7,6 +7,8 @@
 * Retard d’alarme
 * Notification Mail
 * Nombre de sondes limité (limites à definir dans la licence) -> 5, 10, 15, 20, 25, manuel
+* Mail en option dans la licence uniquement (si pas dans la licence, pas de mail)
+* Pas de chat
 
 ---
 
@@ -29,9 +31,9 @@ Tout ce qui est dans **Pack et One**, plus :
 * EMT par lieu
 * Gestion des résultats d’étalonnage
 * Gestion de la dérive
-* Module de calibrage
-* Module d’étalonnage
-* Module de lecture de la sonde étalon
+* Module de calibrage -> à dev
+* Module d’étalonnage -> à dev
+* Module de lecture de la sonde étalon -> à dev
 * Superposition des courbes
 * Analyse d’impact
 * Dashboard administrateur

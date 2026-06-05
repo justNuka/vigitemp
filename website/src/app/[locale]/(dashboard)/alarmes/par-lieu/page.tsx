@@ -64,7 +64,7 @@ export default async function DashboardAlarmsByLocationPage({
     locationIds: allowedIds,
   })
 
-  const canManageReport = await hasUserAuthorizationCode(userId, "GERER_PROFIL")
+  const canManageReport = await hasUserAuthorizationCode(userId, "PARAMETRES_GERER")
 
   return (
     <AlarmsByLocationPageClient
@@ -75,4 +75,3 @@ export default async function DashboardAlarmsByLocationPage({
     />
   )
 }
-

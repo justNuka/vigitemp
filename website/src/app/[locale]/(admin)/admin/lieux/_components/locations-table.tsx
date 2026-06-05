@@ -181,7 +181,7 @@ export function LocationsTable({
       columns={columns}
       data={locations}
       searchPlaceholder={t('search_placeholder')}
-      pageSize={10}
+      pageSize={200}
       maxHeight="calc(100dvh - 25rem)"
       isLoading={isLoading}
       emptyMessage={t('empty')}

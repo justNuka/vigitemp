@@ -1,20 +1,24 @@
 import { NextRequest } from "next/server"
 import { z } from "zod"
 
-import { withAuthLogging, type HandlerContext } from "@/lib/api-wrappers"
+import { withOneOrHigherAnyAuthorizationLogging, type HandlerContext } from "@/lib/license-guards"
 import { getRequestContext } from "@/lib/api-logger"
 import { apiError, apiOk } from "@/lib/api-response"
 import { auditRouteUpdate } from "@/lib/audit-route"
 import { validateLicense } from "@/lib/license-server"
 import { prisma } from "@/lib/prisma"
 import { log } from "@/lib/logger"
+import { getPermissionAliases } from "@/lib/permissions"
 
 const updateSensorSchema = z.object({
   moduleId: z.number().int().positive().nullable().optional(),
   sondeOffset: z.number().nullable().optional(),
 })
 
-export const PATCH = withAuthLogging(
+const SENSOR_ACCESS_CODES = getPermissionAliases("HARDWARE_CONFIG_ACCESS")
+
+export const PATCH = withOneOrHigherAnyAuthorizationLogging(
+  SENSOR_ACCESS_CODES,
   async (req: NextRequest, ctx: HandlerContext, { params }: { params: Promise<{ idSonde: string }> }) => {
     const { ip } = getRequestContext(req)
 
@@ -142,6 +146,7 @@ export const PATCH = withAuthLogging(
           invalidatedEtalonnages: invalidatedEtalonnages || null,
           invalidatedEtalonnageMeasures: invalidatedEtalonnageMeasures || null,
         },
+        reason: `Modification sonde ${existing.Sonde_Numero_Serie || updated.Id_Sonde}`,
       })
 
       return apiOk({

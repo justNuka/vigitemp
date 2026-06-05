@@ -41,6 +41,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useLocale } from "next-intl";
 import { getLocalizedPathname, stripLocalePrefix } from "@/i18n/pathnames";
 import { useLicense } from "@/components/license/license-provider";
+import { isStandardOrExpert } from "@/lib/license-access";
 import { formatLicenseLabel } from "@/lib/license-label";
 import { getInitialsForAvatar, resolveAvatarSrc } from "@/lib/avatar-library";
 import { useMessagingEnabled } from "@/hooks/useMessagingEnabled";
@@ -95,7 +96,7 @@ export function AppSidebar({ activeAlarms = 0, currentUser, onLogout }: AppSideb
   const messagingUnread = useUnreadCount();
   const canAccessDashboard = hasPermission(currentUser, "DASHBOARD_USER_ACCESS");
   const canAccessSurveillance = hasPermission(currentUser, "SURVEILLANCE_VIEW_ACCESS") || hasAuthorizationCode(currentUser, ["ACCES_SURVEILLANCE"]);
-  const canAccessVigilog = hasAuthorizationCode(currentUser, ["ACCES_VIGILOG", "ACCES_METROLOGIE"]);
+  const canAccessVigilog = isStandardOrExpert(license) && hasAuthorizationCode(currentUser, ["ACCES_VIGILOG"]);
   const canAccessMessaging = messagingEnabled && hasPermission(currentUser, "CONVERSATION_ACCESS");
   const canAccessAdmin = hasPermission(currentUser, "DASHBOARD_ADMIN_ACCESS") || hasPermission(currentUser, "GENERAL_SETTINGS_ACCESS");
 

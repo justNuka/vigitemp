@@ -130,13 +130,10 @@ export function LocationFormTabMetrology({ isExpertEdition }: LocationFormTabMet
   useEffect(() => {
     if (isExpertEdition) return
 
-    if (formData.EMT_Mode === 'uncertainties') {
-      setIfChanged('EMT_Mode', 'quart')
-    }
     if (formData.Prendre_En_Compte_Derive) {
       setIfChanged('Prendre_En_Compte_Derive', false)
     }
-  }, [formData.EMT_Mode, formData.Prendre_En_Compte_Derive, isExpertEdition, setIfChanged])
+  }, [formData.Prendre_En_Compte_Derive, isExpertEdition, setIfChanged])
 
   useEffect(() => {
     const previousMode = previousModeRef.current

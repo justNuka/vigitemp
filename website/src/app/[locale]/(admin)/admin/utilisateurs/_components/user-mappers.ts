@@ -3,6 +3,7 @@ import type { EditUserFormValues } from "./user-schemas"
 
 export function getEditUserDefaults(user: User): EditUserFormValues {
   return {
+    username: user.username || "",
     nom: user.nom || "",
     prenom: user.prenom || "",
     email: user.email || "",

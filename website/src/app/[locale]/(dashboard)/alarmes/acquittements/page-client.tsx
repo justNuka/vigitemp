@@ -74,7 +74,7 @@ export function AlarmAcknowledgmentHistoryClient() {
   const t = useTranslations("alarmAckHistoryPage")
   const { hasPermission, loading } = useAppAccess()
   const router = useRouter()
-  const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 20 })
+  const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 200 })
   const [draftFilters, setDraftFilters] = useState({
     q: "",
     lieuId: "all",
@@ -90,7 +90,7 @@ export function AlarmAcknowledgmentHistoryClient() {
     type: "all",
   })
 
-  const canAccess = hasPermission("METROLOGY_WORK_ACCESS")
+  const canAccess = hasPermission("ALARM_ACK_ACCESS")
   const page = pagination.pageIndex + 1
   const limit = pagination.pageSize
   const queryParams = useMemo(() => {

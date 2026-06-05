@@ -89,7 +89,7 @@ export function AlarmsClientTanStack() {
   const { hasPermission } = useAppAccess();
   const canAcknowledgeAlarm = hasPermission("ALARM_ACK_ACCESS");
   const queryClient = useQueryClient();
-  const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 15 });
+  const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 200 });
   const [isRefreshing, startRefresh] = useTransition();
   const [typeFilters, setTypeFilters] = useState<AlarmRow["Type"][]>([]);
   const [selectedSiteId, setSelectedSiteId] = useState("all");
@@ -569,7 +569,7 @@ export function AlarmsClientTanStack() {
           data={tableData}
           searchField="Libelle_Lieu"
           searchPlaceholder={t("search_placeholder")}
-          pageSize={15}
+          pageSize={200}
           maxHeight="60vh"
           isLoading={isLoading || isFetching}
           emptyMessage={t("empty")}

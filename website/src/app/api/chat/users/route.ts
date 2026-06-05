@@ -6,11 +6,15 @@ import { prisma } from "@/lib/prisma"
 import { log } from "@/lib/logger"
 import { getPermissionAliases } from "@/lib/permissions"
 import { getUserAvatarMap } from "@/lib/user-avatar-db"
+import { checkChatAccess } from "@/lib/chat-guard"
 
 export const GET = withAnyAuthorizationLogging(
   getPermissionAliases("CONVERSATION_ACCESS"),
   async (_req: NextRequest) => {
     try {
+      const guard = await checkChatAccess()
+      if (!guard.ok) return guard.response
+
       const users = await prisma.t_utilisateur.findMany({
         where: { Est_Archive: false },
         orderBy: [{ Prenom: "asc" }, { Nom: "asc" }, { Login: "asc" }],

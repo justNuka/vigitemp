@@ -1,12 +1,14 @@
 import { NextRequest } from "next/server";
 import { z } from "zod";
 
-import { withAuthLogging, type HandlerContext } from "@/lib/api-wrappers";
+import { withStandardOrExpertAnyAuthorizationLogging, type HandlerContext } from "@/lib/license-guards";
 import { apiError, apiOk } from "@/lib/api-response";
 import { getRequestContext } from "@/lib/api-logger";
 import { prisma } from "@/lib/prisma";
 import { log } from "@/lib/logger";
-import { requireStandardOrExpertLicense } from "@/lib/license-guards";
+import { getPermissionAliases } from "@/lib/permissions";
+
+const METROLOGY_ACCESS_CODES = getPermissionAliases("METROLOGY_OPERATION_ACCESS");
 
 const patchSchema = z.object({
   dureeValiditeJours: z.number().int().positive().nullable(),
@@ -19,12 +21,10 @@ const computeDateValidite = (dateEtalonnage: Date | null, dureeValiditeJours: nu
   return computed;
 };
 
-export const PATCH = withAuthLogging(
+export const PATCH = withStandardOrExpertAnyAuthorizationLogging(
+  METROLOGY_ACCESS_CODES,
   async (req: NextRequest, ctx: HandlerContext, { params }: { params: Promise<{ id: string }> }) => {
     try {
-      const guard = await requireStandardOrExpertLicense();
-      if (guard) return guard;
-
       const { id } = await params;
       const idEtalonnage = Number.parseInt(id, 10);
       if (!Number.isFinite(idEtalonnage)) {

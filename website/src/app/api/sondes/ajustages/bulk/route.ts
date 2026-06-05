@@ -3,8 +3,9 @@ import { z } from "zod";
 import { apiError, apiOk } from "@/lib/api-response";
 import { prisma } from "@/lib/prisma";
 import { getRequestContext } from "@/lib/api-logger";
-import { withAuthLogging } from "@/lib/api-wrappers";
+import { withOneOrHigherAnyAuthorizationLogging } from "@/lib/license-guards";
 import { log } from "@/lib/logger";
+import { getPermissionAliases } from "@/lib/permissions";
 import {
   extractProbeAddressFromSerial,
   resolveImportedSensorIdentity,
@@ -46,7 +47,7 @@ const bodySchema = z.object({
 const isMeaningfulOffset = (value: number | null | undefined) =>
   value !== null && value !== undefined && Math.abs(value) > 0.0000001;
 
-export const POST = withAuthLogging(async (req: NextRequest, ctx) => {
+export const POST = withOneOrHigherAnyAuthorizationLogging(getPermissionAliases("METROLOGY_OPERATION_ACCESS"), async (req: NextRequest, ctx) => {
   const { ip } = getRequestContext(req);
 
   try {

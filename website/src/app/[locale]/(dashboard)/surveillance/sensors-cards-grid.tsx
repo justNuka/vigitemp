@@ -107,6 +107,7 @@ export function SensorsCardsGrid({
       ) : (
         <div className={`grid gap-4 justify-start ${isDisabledSection ? "grid-cols-[repeat(auto-fill,minmax(250px,1fr))]" : "grid-cols-[repeat(auto-fill,minmax(260px,1fr))]"}`}>
           {items.map((sensor) => {
+            const locationId = Number(sensor.location.id ?? sensor.id)
             const groupName =
               sensor.location.groupNames && sensor.location.groupNames.length > 0
                 ? sensor.location.groupNames.join(" / ")
@@ -115,7 +116,7 @@ export function SensorsCardsGrid({
             return (
               <MonitoringCard
                 key={sensor.id}
-                idLieu={Number(sensor.id)}
+                idLieu={Number.isFinite(locationId) ? locationId : Number(sensor.id)}
                 nomLieu={sensor.name ?? ""}
                 lieuType={sensor.lieuType ?? sensor.location.lieuType ?? null}
                 siteName={sensor.location.site ?? t("grid.unknown_site")}

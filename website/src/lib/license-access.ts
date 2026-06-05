@@ -31,6 +31,11 @@ export function isOneOrPack(input: LicenseLike): boolean {
   return edition === "one" || edition === "pack";
 }
 
+export function isOneOrHigher(input: LicenseLike): boolean {
+  const edition = getLicenseEdition(input);
+  return edition === "one" || edition === "standard" || edition === "expert";
+}
+
 export function isStandardOrExpert(input: LicenseLike): boolean {
   const edition = getLicenseEdition(input);
   return edition === "standard" || edition === "expert";

@@ -1,11 +1,12 @@
-﻿import { randomUUID } from "crypto";
+import { randomUUID } from "crypto";
 import { NextRequest } from "next/server";
-import { getAuthenticatedUser } from "@/lib/auth";
 import { apiError, apiOk } from "@/lib/api-response";
 import { getRequestContext } from "@/lib/api-logger";
+import { withOneOrHigherAnyAuthorizationLogging } from "@/lib/license-guards";
 import { parseAdjustmentXml } from "@/lib/adjustment-import";
 import { log } from "@/lib/logger";
 import { decodeXmlBytes } from "@/lib/xml-decoding";
+import { getPermissionAliases } from "@/lib/permissions";
 
 const isXmlFile = (file: File) => {
   const name = file.name.toLowerCase();
@@ -27,10 +28,8 @@ const toIso = (value: Date | string | null | undefined) => {
   return Number.isNaN(parsed.getTime()) ? null : parsed.toISOString();
 };
 
-export const POST = async (req: NextRequest) => {
-  const user = getAuthenticatedUser(req);
-  if (!user) return apiError(401, "unauthenticated", "Non authentifie");
-
+export const POST = withOneOrHigherAnyAuthorizationLogging(getPermissionAliases("METROLOGY_OPERATION_ACCESS"), async (req: NextRequest, ctx) => {
+  const user = ctx.user;
   const { ip } = getRequestContext(req)
 
   try {
@@ -123,4 +122,4 @@ export const POST = async (req: NextRequest) => {
     })
     return apiError(500, "preview_failed", "Erreur lors de la preparation");
   }
-};
+});

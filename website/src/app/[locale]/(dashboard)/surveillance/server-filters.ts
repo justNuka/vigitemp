@@ -27,8 +27,11 @@ export async function ServerFilterOptions() {
     const lieuAccessFilter = buildLieuAccessFilter(scope)
     const [sitesData, groupeData, lieuxData] = await Promise.all([
       prisma.t_site.findMany({
-        where: scope.siteIds.length > 0 ? { Id_Site: { in: scope.siteIds } } : undefined,
-        select: { Id_Site: true, Libelle_Site: true },
+        where:
+          scope.siteIds.length > 0
+            ? { Id_Site: { in: scope.siteIds }, Est_Archive: false }
+            : { Est_Archive: false },
+        select: { Id_Site: true, Libelle_Site: true, Est_Archive: true },
         orderBy: { Libelle_Site: "asc" },
       }),
       prisma.t_groupe.findMany({
@@ -39,7 +42,7 @@ export async function ServerFilterOptions() {
       prisma.t_lieu.findMany({
         select: {
           Id_Site: true,
-          t_site: { select: { Id_Site: true, Libelle_Site: true } },
+          t_site: { select: { Id_Site: true, Libelle_Site: true, Est_Archive: true } },
           Est_Archive: true,
           t_lieu_groupe: { select: { Id_Groupe: true } },
         },
@@ -49,11 +52,13 @@ export async function ServerFilterOptions() {
 
     const siteMap = new Map<number, string>()
     for (const site of sitesData) {
+      if (site.Est_Archive) continue
       siteMap.set(site.Id_Site, site.Libelle_Site || `Site ${site.Id_Site}`)
     }
     for (const lieu of lieuxData) {
       const siteId = lieu.t_site?.Id_Site ?? lieu.Id_Site
       if (!siteId || siteMap.has(siteId)) continue
+      if (lieu.t_site?.Est_Archive) continue
       siteMap.set(siteId, lieu.t_site?.Libelle_Site || `Site ${siteId}`)
     }
 

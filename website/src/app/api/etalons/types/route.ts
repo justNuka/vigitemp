@@ -1,27 +1,23 @@
 import { NextRequest } from "next/server"
-import { prisma } from "@/lib/prisma"
-import { getAuthenticatedUser } from "@/lib/auth"
-import { withLogging } from "@/lib/api-logger"
+
 import { apiError, apiOk } from "@/lib/api-response"
-import { requireStandardOrExpertLicense } from "@/lib/license-guards"
+import { withStandardOrExpertAnyAuthorizationLogging } from "@/lib/license-guards"
 import { log } from "@/lib/logger"
+import { getPermissionAliases } from "@/lib/permissions"
+import { prisma } from "@/lib/prisma"
 
-export const GET = withLogging(async (req: NextRequest) => {
+const ETALON_ACCESS_CODES = getPermissionAliases("METROLOGY_ACCESS")
+
+export const GET = withStandardOrExpertAnyAuthorizationLogging(ETALON_ACCESS_CODES, async (_req: NextRequest) => {
   try {
-    const user = getAuthenticatedUser(req)
-    if (!user) {
-      return apiError(401, "unauthenticated", "Non authentifié")
-    }
-
-    const guard = await requireStandardOrExpertLicense()
-    if (guard) return guard
-
     const types = await prisma.t_etalon_type.findMany({
       select: {
         Type_Etalon: true,
         Nom: true,
         Descriptif: true,
         Resolution: true,
+        Est_Saisie_Module: true,
+        Est_Sonde_Externe: true,
       },
       orderBy: {
         Type_Etalon: "asc",
@@ -30,7 +26,7 @@ export const GET = withLogging(async (req: NextRequest) => {
 
     return apiOk(types)
   } catch (error) {
-    log.error("etalons/types", "etalon_types_fetch_error", { error: error });
-    return apiError(500, "etalon_types_fetch_failed", "Erreur lors de la récupération des types d'étalons")
+    log.error("etalons/types", "etalon_types_fetch_error", { error })
+    return apiError(500, "etalon_types_fetch_failed", "Erreur lors de la recuperation des types d'etalons")
   }
 })

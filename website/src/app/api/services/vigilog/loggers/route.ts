@@ -1,8 +1,8 @@
-import { NextRequest } from "next/server"
+﻿import { NextRequest } from "next/server"
 
 import { apiError, apiOk } from "@/lib/api-response"
 import { getClientIp } from "@/lib/api-logger"
-import { withAnyAuthorizationLogging, withAuthorizationLogging, type HandlerContext } from "@/lib/api-wrappers"
+import { withStandardOrExpertAnyAuthorizationLogging, type HandlerContext } from "@/lib/license-guards"
 import { auditRouteCreate } from "@/lib/audit-route"
 import { log } from "@/lib/logger"
 import { prisma } from "@/lib/prisma"
@@ -10,6 +10,7 @@ import {
   normalizeOptionalText,
   vigilogLoggerSchema,
   VIGILOG_ACCESS_CODES,
+  VIGILOG_CONFIG_MANAGE_CODES,
 } from "../_shared"
 
 function serializeLogger(logger: {
@@ -42,7 +43,7 @@ function serializeLogger(logger: {
   }
 }
 
-export const GET = withAnyAuthorizationLogging(VIGILOG_ACCESS_CODES, async () => {
+export const GET = withStandardOrExpertAnyAuthorizationLogging(VIGILOG_ACCESS_CODES, async () => {
   try {
     const loggers = await prisma.t_vigilog.findMany({
       orderBy: [{ Actif: "desc" }, { Numero_Serie: "asc" }],
@@ -55,8 +56,8 @@ export const GET = withAnyAuthorizationLogging(VIGILOG_ACCESS_CODES, async () =>
   }
 })
 
-export const POST = withAuthorizationLogging(
-  "ACCES_METROLOGIE",
+export const POST = withStandardOrExpertAnyAuthorizationLogging(
+  VIGILOG_CONFIG_MANAGE_CODES,
   async (req: NextRequest, ctx: HandlerContext) => {
     try {
       const body = await req.json().catch(() => ({}))
@@ -132,3 +133,4 @@ export const POST = withAuthorizationLogging(
     }
   },
 )
+
