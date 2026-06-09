@@ -8,6 +8,19 @@ import { prisma } from "@/lib/prisma"
 
 const ETALON_ACCESS_CODES = getPermissionAliases("METROLOGY_ACCESS")
 
+function formatDecimalValue(value: unknown): string | null {
+  if (value == null) return null
+  const numeric = typeof value === "number" ? value : Number(String(value).replace(",", "."))
+  if (!Number.isFinite(numeric)) {
+    const raw = String(value).trim()
+    return raw.length > 0 ? raw : null
+  }
+
+  return numeric
+    .toFixed(12)
+    .replace(/\.?0+$/, "")
+}
+
 export const GET = withStandardOrExpertAnyAuthorizationLogging(ETALON_ACCESS_CODES, async (_req: NextRequest) => {
   try {
     const types = await prisma.t_etalon_type.findMany({
@@ -24,7 +37,12 @@ export const GET = withStandardOrExpertAnyAuthorizationLogging(ETALON_ACCESS_COD
       },
     })
 
-    return apiOk(types)
+    return apiOk(
+      types.map((item) => ({
+        ...item,
+        Resolution: formatDecimalValue(item.Resolution),
+      })),
+    )
   } catch (error) {
     log.error("etalons/types", "etalon_types_fetch_error", { error })
     return apiError(500, "etalon_types_fetch_failed", "Erreur lors de la recuperation des types d'etalons")

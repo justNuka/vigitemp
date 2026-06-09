@@ -197,7 +197,7 @@ export function ProfileDialog({
         if (!nextOpen) onCancel();
       }}
     >
-      <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto bg-background">
+      <DialogContent className="max-h-[90vh] max-w-4xl overflow-y-auto bg-background">
         <DialogHeader>
           <DialogTitle>{isEdit ? t('title_edit') : t('title_create')}</DialogTitle>
           <DialogDescription>

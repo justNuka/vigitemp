@@ -558,7 +558,7 @@ export function TanStackTable<TData extends Record<string, any>>({
       {/* Tableau */}
       <div
         className={cn(
-          "isolate border rounded-lg overflow-hidden bg-background",
+          "isolate border rounded-lg overflow-auto max-w-full bg-background",
           "[&>div]:max-h-(--vt-table-max-height)",
           "[&>div]:overflow-auto",
           containerClassName

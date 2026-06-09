@@ -97,19 +97,19 @@ export function StandardsClient() {
   const columns: ColumnDef<StandardRow>[] = [
     {
       accessorKey: "Etalon_Numero_Serie",
-      header: "Numero de serie",
+      header: t('table.columns.serial'),
     },
     {
       id: "pdf_name",
-      header: "Certificat PDF",
+      header: t('table.columns.pdf'),
       cell: ({ row }) => standards?.find((item) => item.Id_Etalon === row.original.Id_Etalon)?.Pdf_Name || "-",
     },
     {
       accessorKey: "Etat_Etalon",
-      header: "Etat actuel",
+      header: t('table.columns.state'),
       cell: ({ row }) => (
         <Badge variant={row.getValue("Etat_Etalon") === "1" ? "default" : "outline"}>
-          {row.getValue("Etat_Etalon") === "1" ? "Actif" : "Inactif"}
+          {row.getValue("Etat_Etalon") === "1" ? t('state.active') : t('state.inactive')}
         </Badge>
       ),
     },
@@ -152,7 +152,7 @@ export function StandardsClient() {
               </Button>
               <Button onClick={handleTestClick} disabled={!selectedStandard} variant="outline" size="sm" className="gap-2">
                 <TestTube2 className="h-4 w-4" />
-                Tester
+                {t('actions.test')}
               </Button>
             </div>
           </CardHeader>

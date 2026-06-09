@@ -130,6 +130,7 @@ namespace Vigitemp_Serveur
             public int FrequencySeconds { get; set; }
             public DateTime? LastMeasure { get; set; }
             public DateTime NextDue { get; set; }
+            public DateTime? CurrentCycleSchedulingAnchor { get; set; }
             public bool InProgress { get; set; }
         }
 
@@ -928,6 +929,7 @@ namespace Vigitemp_Serveur
                 foreach (var schedule in due)
                 {
                     schedule.InProgress = true;
+                    schedule.CurrentCycleSchedulingAnchor = null;
                     try
                     {
                         if (IsModulePortUnavailable(schedule))
@@ -957,8 +959,10 @@ namespace Vigitemp_Serveur
                     }
                     finally
                     {
-                        schedule.LastMeasure = DateTime.Now;
+                        var schedulingAnchor = schedule.CurrentCycleSchedulingAnchor ?? DateTime.Now;
+                        schedule.LastMeasure = schedulingAnchor;
                         SetScheduleNextDue(schedule, schedule.LastMeasure.Value.AddSeconds(schedule.FrequencySeconds));
+                        schedule.CurrentCycleSchedulingAnchor = null;
                         schedule.InProgress = false;
                     }
                 }
@@ -1565,6 +1569,7 @@ namespace Vigitemp_Serveur
                     }
                     if (gspSuccess)
                     {
+                        schedule.CurrentCycleSchedulingAnchor = gspSensor.LastResponseReceivedAtLocal;
                         RegisterGspSuccessfulProbe(schedule);
                     }
                     return gspSuccess;
@@ -1681,7 +1686,7 @@ namespace Vigitemp_Serveur
 
                 RefreshSchedule();
 
-                //cherche les lieux avec une dateReactivationAlarme pass� pour r�activer les alarmes
+                //cherche les lieux avec une dateReactivationAlarme passe pour reactiver les alarmes
                 //VigitempServeur.Log("process 1 minute");
                 (List<int> arr_lieuxAvecAlarmeSnooze, _) = GetDatabase().getLieuxAvecAlarmesEnSnooze();
                 for (int i = 0; i < arr_lieuxAvecAlarmeSnooze.Count(); i++)
@@ -1689,7 +1694,7 @@ namespace Vigitemp_Serveur
                     var idLieu = arr_lieuxAvecAlarmeSnooze[i];
                     try
                     {
-                        VigitempServeur.Log("Le lieu " + idLieu + " doit etre reactiv�.");
+                        VigitempServeur.Log("Le lieu " + idLieu + " doit etre reactive.");
 
                         GetDatabase().setAlarmeByIdLieu(idLieu, true);
 
@@ -1770,18 +1775,18 @@ namespace Vigitemp_Serveur
                     }
                 }
 
-                // R�activation automatique de la surveillance (Lieu_Etat)
+                // Reactivation automatique de la surveillance (Lieu_Etat)
                 (List<int> arr_lieuxSurveillanceSnooze, _) = GetDatabase().getLieuxAvecSurveillanceEnSnooze();
                 for (int i = 0; i < arr_lieuxSurveillanceSnooze.Count(); i++)
                 {
-                    VigitempServeur.Log("Surveillance r�activ�e pour le lieu " + arr_lieuxSurveillanceSnooze[i] + ".");
+                    VigitempServeur.Log("Surveillance reactivee pour le lieu " + arr_lieuxSurveillanceSnooze[i] + ".");
                     GetDatabase().setSurveillanceByIdLieu(arr_lieuxSurveillanceSnooze[i], true);
                     GetDatabase().writeAuditJournal(
                         "ACT",
                         "SERVEUR",
                         "SYSTEME",
                         arr_lieuxSurveillanceSnooze[i],
-                        "R�activation automatique de la surveillance",
+                        "Reactivation automatique de la surveillance",
                         null);
                 }
 
@@ -2235,9 +2240,6 @@ namespace Vigitemp_Serveur
         }
     }
 }
-
-
-
 
 
 

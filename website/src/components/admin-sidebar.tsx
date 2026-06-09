@@ -28,7 +28,8 @@ import {
   Shield,
   FileText,
   FlaskConical,
-  MessageSquare
+  MessageSquare,
+  TrendingUp,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -117,8 +118,14 @@ export function AdminSidebar({ currentUser, onLogout, activeAlarms = 0 }: AdminS
         ]
       : []),
     ...(canManageParameters ? [{ title: t("management.audit"), href: "/admin/audit", icon: FileText }] : []),
-    ...(canAccessMetrology ? [{ title: "Bains & etalons", href: "/admin/metrologie", icon: FlaskConical }] : []),
+    ...(canAccessMetrology ? [{ title: t("management.metrology"), href: "/admin/metrologie", icon: FlaskConical }] : []),
   ];
+
+  const metrologyNavItems: NavItem[] = canAccessMetrology
+    ? [
+        { title: t("metrology.calibration_import"), href: "/admin/sondes/etalonnage-import", icon: FlaskConical },
+      ]
+    : [];
 
   const globalSettingsNavItems: NavItem[] = canManageParameters
     ? [{ title: t("system.settings"), href: "/admin/parametres", icon: Settings }]
@@ -211,6 +218,35 @@ export function AdminSidebar({ currentUser, onLogout, activeAlarms = 0 }: AdminS
                               {item.badge}
                             </Badge>
                           )}
+                        </LinkComponent>
+                      );
+                    })()}
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+        ) : null}
+
+        {metrologyNavItems.length > 0 ? (
+        <SidebarGroup>
+          <SidebarGroupLabel>{t("groups.metrology")}</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {metrologyNavItems.map((item) => (
+                <SidebarMenuItem key={item.href}>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={normalizedPathname === getLocalizedPathname(item.href, locale as any)}
+                    tooltip={item.title}
+                  >
+                    {(() => {
+                      const LinkComponent = getLinkComponent(item.href);
+                      return (
+                        <LinkComponent href={item.href as any} data-testid={`nav-${item.href.replace("/", "")}`}>
+                          <item.icon className="h-4 w-4" />
+                          <span>{item.title}</span>
                         </LinkComponent>
                       );
                     })()}

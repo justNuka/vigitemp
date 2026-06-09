@@ -65,7 +65,7 @@ export function AlarmDetailsDialog({
   return (
     <>
       <Dialog open={open} onOpenChange={onClose}>
-        <DialogContent className="sm:max-w-3xl max-h-[92dvh] overflow-y-auto border-border bg-white shadow-2xl dark:bg-popover dark:text-popover-foreground">
+        <DialogContent className="sm:max-w-4xl max-h-[92dvh] overflow-y-auto border-border bg-white shadow-2xl dark:bg-popover dark:text-popover-foreground">
           <DialogHeader className="pb-3 border-b border-border/50">
             <DialogTitle className="flex items-center gap-3">
               <span className="inline-flex items-center justify-center h-9 w-9 rounded-lg bg-destructive/10 text-destructive shrink-0">

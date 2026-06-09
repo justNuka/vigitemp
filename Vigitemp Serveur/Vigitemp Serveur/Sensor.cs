@@ -52,6 +52,7 @@ namespace Vigitemp_Serveur
         }
 
         public ThreadServeur ths;
+        public DateTime? LastResponseReceivedAtLocal { get; protected set; }
 
         protected string tmp_resistance = "";
         protected string tmp_valeur = "";
@@ -834,7 +835,7 @@ namespace Vigitemp_Serveur
 
             if (!prevAlarm && alarmActive)
             {
-                // Notifications dispatch�es via le poll d'alarme (�vite les doublons et couvre les sondes GSO).
+                // Notifications dispatchees via le poll d'alarme (evite les doublons et couvre les sondes GSO).
             }
             else if (prevAlarm && !alarmActive)
             {

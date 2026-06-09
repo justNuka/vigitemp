@@ -1,20 +1,26 @@
+"use client"
+
 import { PageHeader } from "@/components/page-header"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { useTranslations } from "next-intl"
+import { MetrologySubpagesCards } from "../_components/metrology-subpages-cards"
 
 export default function RealiserEtalonnagePage() {
+  const t = useTranslations("metrologyAdmin.calibrationPage")
   return (
     <>
-      <PageHeader title="Réaliser un étalonnage" description="Cette page accueillera le workflow d'étalonnage." />
-      <div className="p-6">
+      <PageHeader title={t("header.title")} description={t("header.description")} />
+      <div className="space-y-6 p-6">
         <Card>
           <CardHeader>
-            <CardTitle>Étalonnage</CardTitle>
-            <CardDescription>Écran préparatoire en attente du workflow métier complet.</CardDescription>
+            <CardTitle>{t("card.title")}</CardTitle>
+            <CardDescription>{t("card.description")}</CardDescription>
           </CardHeader>
           <CardContent className="text-sm text-muted-foreground">
-            Le module d'étalonnage sera branché ici avec la sélection du lieu, de la sonde étalon, du milieu d'inter-comparaison et des documents associés.
+            {t("card.content")}
           </CardContent>
         </Card>
+        <MetrologySubpagesCards current="calibration" />
       </div>
     </>
   )

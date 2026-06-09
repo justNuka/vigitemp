@@ -2,6 +2,7 @@
 
 import type { ColumnDef } from "@tanstack/react-table"
 import { FlaskConical, GaugeCircle, TestTubeDiagonal } from "lucide-react"
+import { useLocale, useTranslations } from "next-intl"
 
 import { Link } from "@/i18n/navigation"
 import { PageHeader } from "@/components/page-header"
@@ -11,122 +12,124 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { useMetrologyDashboard, type MetrologyDashboardRow } from "@/hooks/useMetrologyDashboard"
 
-function formatNumber(value: number | null) {
-  if (value == null) return "-"
-  return new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 2 }).format(value)
-}
-
-function formatDate(value: string | null) {
-  if (!value) return "-"
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return "-"
-  return new Intl.DateTimeFormat("fr-FR", { dateStyle: "short" }).format(date)
-}
-
-function yesNoBadge(active: boolean) {
-  return <Badge variant={active ? "default" : "outline"}>{active ? "Oui" : "Non"}</Badge>
-}
-
-function conformityBadge(value: MetrologyDashboardRow["conformity"]) {
-  if (value === "ok") return <Badge className="bg-emerald-600 hover:bg-emerald-600">Conforme</Badge>
-  if (value === "alert") return <Badge variant="destructive">Alerte</Badge>
-  return <Badge variant="outline">Non applicable</Badge>
-}
-
 export function MetrologyDashboardClient() {
+  const t = useTranslations("metrologyAdmin.dashboard")
+  const locale = useLocale()
   const { data, isLoading } = useMetrologyDashboard()
 
+  function formatNumber(value: number | null) {
+    if (value == null) return "-"
+    return new Intl.NumberFormat(locale === "fr" ? "fr-FR" : "en-US", { maximumFractionDigits: 2 }).format(value)
+  }
+
+  function formatDate(value: string | null) {
+    if (!value) return "-"
+    const date = new Date(value)
+    if (Number.isNaN(date.getTime())) return "-"
+    return new Intl.DateTimeFormat(locale === "fr" ? "fr-FR" : "en-US", { dateStyle: "short" }).format(date)
+  }
+
+  function yesNoBadge(active: boolean) {
+    return <Badge variant={active ? "default" : "outline"}>{active ? t("badges.yes") : t("badges.no")}</Badge>
+  }
+
+  function conformityBadge(value: MetrologyDashboardRow["conformity"]) {
+    if (value === "ok") return <Badge className="bg-emerald-600 hover:bg-emerald-600">{t("badges.conformity.ok")}</Badge>
+    if (value === "alert") return <Badge variant="destructive">{t("badges.conformity.alert")}</Badge>
+    return <Badge variant="outline">{t("badges.conformity.na")}</Badge>
+  }
+
   const columns: ColumnDef<MetrologyDashboardRow>[] = [
-    { accessorKey: "nomLieu", header: "Nom du lieu" },
-    { accessorKey: "sondeAssociee", header: "Sonde associée" },
-    { accessorKey: "conformity", header: "Conformité", cell: ({ row }) => conformityBadge(row.original.conformity) },
-    { accessorKey: "toleranceInf", header: "Tolérance inf", cell: ({ row }) => formatNumber(row.original.toleranceInf) },
-    { accessorKey: "consigne", header: "Consigne", cell: ({ row }) => formatNumber(row.original.consigne) },
-    { accessorKey: "toleranceSup", header: "Tolérance sup", cell: ({ row }) => formatNumber(row.original.toleranceSup) },
-    { accessorKey: "dateEtalonnage", header: "Date d'étalonnage", cell: ({ row }) => formatDate(row.original.dateEtalonnage) },
-    { accessorKey: "erreurJustesse", header: "Erreur de justesse", cell: ({ row }) => formatNumber(row.original.erreurJustesse) },
-    { accessorKey: "incertitudeEtalonnage", header: "Incertitude d'étalonnage", cell: ({ row }) => formatNumber(row.original.incertitudeEtalonnage) },
-    { accessorKey: "correctionErreurJustesseActive", header: "EJ active", cell: ({ row }) => yesNoBadge(row.original.correctionErreurJustesseActive) },
-    { accessorKey: "correctionDeriveActive", header: "Dérive active", cell: ({ row }) => yesNoBadge(row.original.correctionDeriveActive) },
-    { accessorKey: "derive", header: "Dérive", cell: ({ row }) => formatNumber(row.original.derive) },
-    { accessorKey: "incertitudeMesure", header: "Incertitude de mesure", cell: ({ row }) => formatNumber(row.original.incertitudeMesure) },
-    { accessorKey: "dateProchainEtalonnage", header: "Date prochain étalonnage", cell: ({ row }) => formatDate(row.original.dateProchainEtalonnage) },
+    { accessorKey: "nomLieu", header: t("table.columns.location") },
+    { accessorKey: "sondeAssociee", header: t("table.columns.sensor") },
+    { accessorKey: "conformity", header: t("table.columns.conformity"), cell: ({ row }) => conformityBadge(row.original.conformity) },
+    { accessorKey: "toleranceInf", header: t("table.columns.toleranceInf"), cell: ({ row }) => formatNumber(row.original.toleranceInf) },
+    { accessorKey: "consigne", header: t("table.columns.setpoint"), cell: ({ row }) => formatNumber(row.original.consigne) },
+    { accessorKey: "toleranceSup", header: t("table.columns.toleranceSup"), cell: ({ row }) => formatNumber(row.original.toleranceSup) },
+    { accessorKey: "dateEtalonnage", header: t("table.columns.calibrationDate"), cell: ({ row }) => formatDate(row.original.dateEtalonnage) },
+    { accessorKey: "erreurJustesse", header: t("table.columns.accuracyError"), cell: ({ row }) => formatNumber(row.original.erreurJustesse) },
+    { accessorKey: "incertitudeEtalonnage", header: t("table.columns.calibrationUncertainty"), cell: ({ row }) => formatNumber(row.original.incertitudeEtalonnage) },
+    { accessorKey: "correctionErreurJustesseActive", header: t("table.columns.ejActive"), cell: ({ row }) => yesNoBadge(row.original.correctionErreurJustesseActive) },
+    { accessorKey: "correctionDeriveActive", header: t("table.columns.driftActive"), cell: ({ row }) => yesNoBadge(row.original.correctionDeriveActive) },
+    { accessorKey: "derive", header: t("table.columns.drift"), cell: ({ row }) => formatNumber(row.original.derive) },
+    { accessorKey: "incertitudeMesure", header: t("table.columns.measurementUncertainty"), cell: ({ row }) => formatNumber(row.original.incertitudeMesure) },
+    { accessorKey: "dateProchainEtalonnage", header: t("table.columns.nextCalibrationDate"), cell: ({ row }) => formatDate(row.original.dateProchainEtalonnage) },
   ]
 
   return (
     <>
-      <PageHeader title="Bains & étalons" description="Vue d'ensemble métrologie et accès rapide aux opérations." />
-      <div className="space-y-6 p-6">
-        <Card>
+      <PageHeader title={t("header.title")} description={t("header.description")} />
+      <div className="space-y-6 p-6 min-w-0 overflow-x-hidden">
+        <Card className="min-w-0">
           <CardHeader>
-            <CardTitle>Suivi métrologique des lieux</CardTitle>
-            <CardDescription>Tableau de synthèse des lieux instrumentés et de leur état métrologique.</CardDescription>
+            <CardTitle>{t("section.title")}</CardTitle>
+            <CardDescription>{t("section.description")}</CardDescription>
           </CardHeader>
-          <CardContent className="p-2 md:p-4 xl:p-4">
+          <CardContent className="min-w-0 p-2 md:p-4 xl:p-4">
             <TanStackTable
               columns={columns}
               data={data || []}
               searchField={["nomLieu", "sondeAssociee"]}
-              searchPlaceholder="Rechercher un lieu ou une sonde"
+              searchPlaceholder={t("table.searchPlaceholder")}
               isLoading={isLoading}
-              emptyMessage="Aucun lieu trouvé"
+              emptyMessage={t("table.empty")}
               maxHeight="60vh"
               headerClassName="!bg-sidebar !text-sidebar-foreground"
               headerCellClassName="!bg-sidebar !text-sidebar-foreground !border-r !border-white/25 hover:!bg-sidebar-accent/80"
               tableClassName="border-separate border-spacing-0 [&_thead_th]:!border-r [&_thead_th]:!border-white/25 [&_thead_th:last-child]:!border-r-0"
-              exportFileName="tableau-metrologie"
+              exportFileName={t("table.exportFileName")}
             />
           </CardContent>
         </Card>
 
-        <div className="grid gap-4 md:grid-cols-3">
-          <Card>
+        <div className="grid min-w-0 gap-4 md:grid-cols-3">
+          <Card className="min-w-0">
             <CardHeader>
               <div className="flex items-center gap-3">
                 <div className="rounded-lg bg-primary/10 p-3 text-primary"><FlaskConical className="h-5 w-5" /></div>
                 <div>
-                  <CardTitle className="text-xl">Bains & sondes étalons</CardTitle>
-                  <CardDescription>Gérer les sondes étalons et les milieux d'inter-comparaison.</CardDescription>
+                  <CardTitle className="text-xl">{t("cards.baths.title")}</CardTitle>
+                  <CardDescription>{t("cards.baths.description")}</CardDescription>
                 </div>
               </div>
             </CardHeader>
             <CardContent>
               <Button asChild className="w-full">
-                <Link href="/admin/metrologie/bains-etalons">Ouvrir la gestion</Link>
+                <Link href="/admin/metrologie/bains-etalons">{t("cards.baths.cta")}</Link>
               </Button>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="min-w-0">
             <CardHeader>
               <div className="flex items-center gap-3">
                 <div className="rounded-lg bg-primary/10 p-3 text-primary"><GaugeCircle className="h-5 w-5" /></div>
                 <div>
-                  <CardTitle className="text-xl">Réaliser un ajustage</CardTitle>
-                  <CardDescription>Préparer et exécuter un ajustage/calibrage sur une sonde.</CardDescription>
+                  <CardTitle className="text-xl">{t("cards.adjustment.title")}</CardTitle>
+                  <CardDescription>{t("cards.adjustment.description")}</CardDescription>
                 </div>
               </div>
             </CardHeader>
             <CardContent>
               <Button asChild className="w-full">
-                <Link href="/admin/metrologie/realiser-ajustage">Accéder à l'ajustage</Link>
+                <Link href="/admin/metrologie/realiser-ajustage">{t("cards.adjustment.cta")}</Link>
               </Button>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="min-w-0">
             <CardHeader>
               <div className="flex items-center gap-3">
                 <div className="rounded-lg bg-primary/10 p-3 text-primary"><TestTubeDiagonal className="h-5 w-5" /></div>
                 <div>
-                  <CardTitle className="text-xl">Réaliser un étalonnage</CardTitle>
-                  <CardDescription>Lancer un étalonnage et consulter les opérations à venir.</CardDescription>
+                  <CardTitle className="text-xl">{t("cards.calibration.title")}</CardTitle>
+                  <CardDescription>{t("cards.calibration.description")}</CardDescription>
                 </div>
               </div>
             </CardHeader>
             <CardContent>
               <Button asChild className="w-full">
-                <Link href="/admin/metrologie/realiser-etalonnage">Accéder à l'étalonnage</Link>
+                <Link href="/admin/metrologie/realiser-etalonnage">{t("cards.calibration.cta")}</Link>
               </Button>
             </CardContent>
           </Card>

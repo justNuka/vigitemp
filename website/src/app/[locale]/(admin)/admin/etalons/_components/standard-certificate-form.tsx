@@ -2,6 +2,7 @@
 
 import { useRef, useState } from 'react'
 import { useFormContext } from 'react-hook-form'
+import { useTranslations } from 'next-intl'
 
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
@@ -14,6 +15,7 @@ type Props = {
 }
 
 export function StandardCertificateForm({ standardId, existingPdfName }: Props) {
+  const t = useTranslations('standardsPage.certificate')
   const inputRef = useRef<HTMLInputElement | null>(null)
   const { control, setValue, watch } = useFormContext()
   const pdfId = watch('pdfId') as number | null | undefined
@@ -34,7 +36,7 @@ export function StandardCertificateForm({ standardId, existingPdfName }: Props) 
       })
       const payload = await response.json().catch(() => null)
       if (!response.ok) {
-        throw new Error(payload?.message || "Erreur lors de l'envoi du PDF")
+        throw new Error(payload?.message || t('uploadError'))
       }
 
       setValue('pdfId', payload.data?.id ?? payload.id ?? null, { shouldDirty: true })
@@ -60,10 +62,10 @@ export function StandardCertificateForm({ standardId, existingPdfName }: Props) 
   return (
     <>
       <div className="space-y-4">
-        <h3 className="text-lg font-semibold">Certificat</h3>
+        <h3 className="text-lg font-semibold">{t('section')}</h3>
 
         <div className="rounded-md border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-900">
-          Le certificat PDF sera stocke sur le serveur et restera accessible depuis cette fiche pour consultation et controle documentaire.
+          {t('hint')}
         </div>
 
         <FormField
@@ -71,7 +73,7 @@ export function StandardCertificateForm({ standardId, existingPdfName }: Props) 
           name="pdfId"
           render={() => (
             <FormItem>
-              <FormLabel>Certificat PDF</FormLabel>
+              <FormLabel>{t('label')}</FormLabel>
               <div className="flex flex-wrap items-center gap-3 rounded-md border p-3">
                 <input
                   ref={inputRef}
@@ -87,14 +89,14 @@ export function StandardCertificateForm({ standardId, existingPdfName }: Props) 
                 />
                 <Button type="button" variant="outline" onClick={() => inputRef.current?.click()} disabled={isUploading}>
                   {isUploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
-                  {isUploading ? 'Envoi...' : 'Charger un PDF'}
+                  {isUploading ? t('uploading') : t('upload')}
                 </Button>
                 <span className="text-sm text-muted-foreground">
-                  {pdfName || 'Aucun certificat charge'}
+                  {pdfName || t('none')}
                 </span>
                 <div className="flex gap-2">
                   <Button type="button" variant="secondary" onClick={handlePreview} disabled={!previewUrl && !standardId && !pdfId}>
-                    Apercu
+                    {t('preview')}
                   </Button>
                   <Button
                     type="button"
@@ -106,7 +108,7 @@ export function StandardCertificateForm({ standardId, existingPdfName }: Props) 
                     }}
                     disabled={!pdfId && !pdfName}
                   >
-                    Retirer
+                    {t('remove')}
                   </Button>
                 </div>
               </div>
@@ -119,12 +121,12 @@ export function StandardCertificateForm({ standardId, existingPdfName }: Props) 
       <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
         <DialogContent className="max-w-6xl">
           <DialogHeader>
-            <DialogTitle>Apercu du certificat</DialogTitle>
+            <DialogTitle>{t('previewTitle')}</DialogTitle>
           </DialogHeader>
           {previewUrl ? (
-            <iframe src={previewUrl} className="h-[75vh] w-full rounded-md border" title="Apercu certificat PDF" />
+            <iframe src={previewUrl} className="h-[75vh] w-full rounded-md border" title={t('previewTitle')} />
           ) : (
-            <div className="rounded-md border p-4 text-sm text-muted-foreground">Aucun PDF a afficher.</div>
+            <div className="rounded-md border p-4 text-sm text-muted-foreground">{t('previewEmpty')}</div>
           )}
         </DialogContent>
       </Dialog>

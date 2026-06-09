@@ -15,10 +15,9 @@ export function useMonitoringAuditLogs(
   const [logs, setLogs] = useState<AuditLog[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [isLoaded, setIsLoaded] = useState(false)
 
   useEffect(() => {
-    if (!enabled || isLoaded) return
+    if (!enabled) return
 
     const controller = new AbortController()
 
@@ -46,7 +45,6 @@ export function useMonitoringAuditLogs(
 
         const nextLogs = Array.isArray(payload?.data?.logs) ? (payload.data.logs as AuditLog[]) : []
         setLogs(nextLogs)
-        setIsLoaded(true)
       } catch (nextError) {
         if ((nextError as Error)?.name === "AbortError") return
         setError(errorMessage)
@@ -57,13 +55,12 @@ export function useMonitoringAuditLogs(
 
     void loadAudit()
     return () => controller.abort()
-  }, [enabled, errorMessage, idLieu, isLoaded, rangeEnd, rangeStart])
+  }, [enabled, errorMessage, idLieu, rangeEnd, rangeStart])
 
   const reset = useCallback(() => {
     setLogs([])
     setError(null)
-    setIsLoaded(false)
   }, [])
 
-  return { logs, isLoading, error, isLoaded, reset }
+  return { logs, isLoading, error, isLoaded: logs.length > 0 || !isLoading, reset }
 }

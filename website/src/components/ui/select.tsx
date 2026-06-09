@@ -147,6 +147,20 @@ const SelectSeparator = React.forwardRef<
 ))
 SelectSeparator.displayName = SelectPrimitive.Separator.displayName
 
+function SelectEmpty({
+  children,
+  className,
+}: React.HTMLAttributes<HTMLDivElement>) {
+  return (
+    <div
+      className={cn("px-2 py-3 text-sm text-muted-foreground", className)}
+      aria-live="polite"
+    >
+      {children}
+    </div>
+  )
+}
+
 export {
   Select,
   SelectGroup,
@@ -156,6 +170,7 @@ export {
   SelectLabel,
   SelectItem,
   SelectSeparator,
+  SelectEmpty,
   SelectScrollUpButton,
   SelectScrollDownButton,
 }

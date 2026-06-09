@@ -132,6 +132,7 @@ namespace Vigitemp_Serveur.sensors
             try
             {
                 LastFailureReason = null;
+                LastResponseReceivedAtLocal = null;
                 pendingResults = true;
                 await OpenPortWithRetryAsync();
                 m_port.DiscardInBuffer();
@@ -178,6 +179,7 @@ namespace Vigitemp_Serveur.sensors
                     return false;
                 }
 
+                var probeResponseReceivedAtLocal = LastResponseReceivedAtLocal;
                 var hadTimeoutBeforeSuccess = _consecutiveTimeouts > 0;
                 _consecutiveTimeouts = 0;
                 LastFailureReason = null;
@@ -200,6 +202,7 @@ namespace Vigitemp_Serveur.sensors
                 compareMeasuresAndLimits(measuredValue, unit);
                 ths.GetDatabase().AddMesure(m_sondeSerialNumber, measuredValue, unit, ToInvariantRaw(rawValue), FormatRssi(parsed.Rssi));
                 ths.GetDatabase().UpdateLieuWirelessMetrics(m_sondeSerialNumber, parsed.BatteryPercent, parsed.Rssi);
+                LastResponseReceivedAtLocal = probeResponseReceivedAtLocal;
                 VigitempServeur.Log($"[SONDE][DONE] type=GSP serial={m_sondeSerialNumber} port={m_comPort} status=success value={measuredValue.ToString(CultureInfo.InvariantCulture)} unit={unit} raw={ToInvariantRaw(rawValue)}");
                 return true;
             }
@@ -597,6 +600,11 @@ namespace Vigitemp_Serveur.sensors
 
                 buffer += chunk;
                 lastDataAt = DateTime.UtcNow;
+            }
+
+            if (!string.IsNullOrWhiteSpace(buffer) && lastDataAt.HasValue)
+            {
+                LastResponseReceivedAtLocal = lastDataAt.Value.ToLocalTime();
             }
 
             return buffer.Trim();

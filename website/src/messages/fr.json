@@ -74,7 +74,7 @@
     "groupes": "Groupes",
     "utilisateurs": "Utilisateurs",
     "profils": "Profils",
-    "etalons": "Métrologie",
+    "metrologie": "Métrologie",
     "actionneurs": "Actionneurs",
     "outils": "Outils",
     "lieux_templates": "Templates lieux"
@@ -350,7 +350,7 @@
       "pre_alarm_threshold": "Seuil pré-alarme"
     },
     "load_more_active": "Charger plus de lieux en surveillance",
-    "load_more_disabled": "Charger plus de lieux d?sactiv?s"
+    "load_more_disabled": "Charger plus de lieux désactivés"
   },
   "surveillanceStatus": {
     "inactive": "Désactivée",
@@ -1783,7 +1783,8 @@
       "alarms": "Alarmes",
       "messaging": "Messagerie",
       "archived_measures": "Mesures archivées",
-      "audit": "Journal d'audit"
+      "audit": "Journal d'audit",
+      "metrology": "Métrologie"
     },
     "system": {
       "settings": "Paramètres",
@@ -1791,7 +1792,7 @@
       "backups": "Sauvegardes"
     },
     "metrology": {
-      "calibration_import": "Import étalonnage",
+      "calibration_import": "Importer un étalonnage",
       "impact_analysis": "Analyse d'impact"
     }
   },
@@ -2587,7 +2588,8 @@
       "columns": {
         "serial": "Numéro de série",
         "certificate_date": "Date certificat",
-        "state": "État actuel"
+        "state": "État actuel",
+        "pdf": "Certificat PDF"
       },
       "search_placeholder": "N° série, état...",
       "empty": "Aucun étalon trouvé"
@@ -2610,6 +2612,80 @@
     "blocked": {
       "title": "Gestion des étalons indisponible",
       "description": "Cette page n'est pas disponible avec votre licence actuelle."
+    },
+    "form": {
+      "dialog": {
+        "createTitle": "Créer un étalon",
+        "editTitle": "Modifier l'étalon"
+      },
+      "actions": {
+        "cancel": "Annuler",
+        "create": "Créer",
+        "update": "Mettre à jour",
+        "saving": "Enregistrement..."
+      },
+      "toast": {
+        "created": "Étalon créé.",
+        "updated": "Étalon mis à jour.",
+        "error": "Erreur lors de l'enregistrement de l'étalon"
+      },
+      "sensorSection": "Sonde étalon",
+      "coefficientsHint": "Les coefficients <strong>a</strong>, <strong>b</strong>, <strong>c</strong> et l'incertitude max sont disponibles sur le certificat fourni avec la sonde étalon. Vérifiez ces valeurs avant validation.",
+      "externalHint": "Cette sonde est de type externe. Les modules d'ajustage et d'?talonnage ne seront pas disponibles pour ce type de sonde.",
+      "fields": {
+        "type": {
+          "label": "Type de sonde étalon",
+          "placeholder": "Sélectionner un type"
+        },
+        "serial": {
+          "label": "Numéro de série",
+          "placeholder": "Ex : SPET-26000001"
+        },
+        "module": {
+          "label": "Module",
+          "placeholder": "Sélectionner un module",
+          "searchPlaceholder": "Rechercher un module",
+          "empty": "Aucun module"
+        },
+        "port": {
+          "label": "Port série"
+        },
+        "worker": {
+          "label": "Id worker"
+        },
+        "coeffA": {
+          "label": "Coefficient a",
+          "placeholder": "Ex : 0.0001"
+        },
+        "coeffB": {
+          "label": "Coefficient b",
+          "placeholder": "Ex : 1.002"
+        },
+        "coeffC": {
+          "label": "Coefficient c",
+          "placeholder": "Ex : -0.02"
+        },
+        "maxUncertainty": {
+          "label": "Incertitude max",
+          "placeholder": "Ex : 0.05"
+        }
+      },
+      "validation": {
+        "serialRequired": "Numéro de série requis"
+      }
+    },
+    "certificate": {
+      "section": "Certificat",
+      "hint": "Le certificat PDF sera stocké sur le serveur et restera accessible depuis cette fiche pour consultation et contrôle documentaire.",
+      "label": "Certificat PDF",
+      "upload": "Charger un PDF",
+      "uploading": "Envoi...",
+      "none": "Aucun certificat chargé",
+      "preview": "Aperçu",
+      "remove": "Retirer",
+      "previewTitle": "Aperçu du certificat",
+      "previewEmpty": "Aucun PDF à afficher.",
+      "uploadError": "Erreur lors de l'envoi du PDF"
     }
   },
   "sitesPage": {
@@ -4094,8 +4170,8 @@
       }
     },
     "connected_users": {
-      "title": "Connexions r?centes",
-      "description": "Sessions vues sur la derni?re heure ({total}, max {max})",
+      "title": "Connexions récentes",
+      "description": "Sessions vues sur la dernière heure ({total}, max {max})",
       "empty": "Aucun utilisateur connecté actuellement",
       "columns": {
         "login": "Login",
@@ -4103,7 +4179,7 @@
         "station": "Poste",
         "ip": "Adresse IP"
       },
-      "helper_window": "Fen?tre glissante : 1 heure"
+      "helper_window": "Fenêtre glissante : 1 heure"
     },
     "active_alarms": {
       "title": "Alarmes en cours",
@@ -4186,7 +4262,7 @@
     "summary": {
       "alarms_title": "Alarmes",
       "alarms_description": "Alarmes en cours : {inProgress}",
-      "alarms_helper": "Alarmes termin?es en attente d'acquittement : {pending}"
+      "alarms_helper": "Alarmes terminées en attente d'acquittement : {pending}"
     }
   },
   "cacheControls": {
@@ -5411,6 +5487,244 @@
       "warningTitle": "Confirmation requise",
       "warningDescription": "Utilisez cette action uniquement si la tournée doit etre abandonnee. Le VigiLog redeviendra disponible dans l'application.",
       "confirm": "Confirmer l'annulation"
+    }
+  },
+  "metrologyAdmin": {
+    "dashboard": {
+      "header": {
+        "title": "Bains & étalons",
+        "description": "Vue d'ensemble métrologie et accès rapide aux opérations."
+      },
+      "section": {
+        "title": "Suivi métrologique des lieux",
+        "description": "Tableau de synthèse des lieux instrumentés et de leur état métrologique."
+      },
+      "table": {
+        "searchPlaceholder": "Rechercher un lieu ou une sonde",
+        "empty": "Aucun lieu trouvé",
+        "exportFileName": "tableau-metrologie",
+        "columns": {
+          "location": "Nom du lieu",
+          "sensor": "Sonde associée",
+          "conformity": "Conformité",
+          "toleranceInf": "Tolérance inf",
+          "setpoint": "Consigne",
+          "toleranceSup": "Tolérance sup",
+          "calibrationDate": "Date d'étalonnage",
+          "accuracyError": "Erreur de justesse",
+          "calibrationUncertainty": "Incertitude d'étalonnage",
+          "ejActive": "EJ active",
+          "driftActive": "Dérive active",
+          "drift": "Dérive",
+          "measurementUncertainty": "Incertitude de mesure",
+          "nextCalibrationDate": "Date prochain étalonnage"
+        }
+      },
+      "badges": {
+        "yes": "Oui",
+        "no": "Non",
+        "conformity": {
+          "ok": "Conforme",
+          "alert": "Alerte",
+          "na": "Non applicable"
+        }
+      },
+      "cards": {
+        "baths": {
+          "title": "Bains & sondes étalons",
+          "description": "Gérer les sondes étalons et les milieux d'inter-comparaison.",
+          "cta": "Ouvrir la gestion"
+        },
+        "adjustment": {
+          "title": "Réaliser un ajustage",
+          "description": "Préparer et exécuter un ajustage/calibrage sur une sonde.",
+          "cta": "Accéder à l'ajustage"
+        },
+        "calibration": {
+          "title": "Réaliser un étalonnage",
+          "description": "Lancer un étalonnage et consulter les opérations à venir.",
+          "cta": "Accéder à l'étalonnage"
+        }
+      }
+    },
+    "bathsPage": {
+      "header": {
+        "title": "Bains & étalons",
+        "description": "Gestion des sondes étalons et des milieux d'inter-comparaison."
+      },
+      "blocked": {
+        "headerDescription": "Gestion indisponible avec votre licence actuelle.",
+        "message": "Cette page n'est pas disponible avec votre licence actuelle.",
+        "back": "Retour"
+      }
+    },
+    "adjustmentPage": {
+      "header": {
+        "title": "Réaliser un ajustage",
+        "description": "Sélection des sondes puis préparation de l'ajustage/calibrage."
+      },
+      "selection": {
+        "title": "Étape 1 - Sélection des sondes",
+        "description": "Choisissez une ou plusieurs sondes à inclure dans l'opération d'ajustage.",
+        "banner": {
+          "title": "{count, plural, one {# sonde sélectionnée} other {# sondes sélectionnées}}",
+          "description": "La sélection est prête. Passez à l'étape d'ajustage pour préparer l'opération.",
+          "cta": "Aller à l'étape d'ajustage"
+        },
+        "table": {
+          "searchPlaceholder": "Rechercher une sonde ou un lieu",
+          "empty": "Aucune sonde disponible pour un ajustage",
+          "exportFileName": "selection-sondes-ajustage",
+          "selectAll": "Sélectionner toutes les sondes",
+          "selectOne": "Sélectionner la sonde {serial}",
+          "unassigned": "Non assignée à un lieu",
+          "columns": {
+            "serial": "Numéro de série de la sonde",
+            "location": "Lieu associé"
+          }
+        }
+      },
+      "adjustment": {
+        "backToSelection": "Retour à la sélection",
+        "selectionSummary": {
+          "title": "Sondes sélectionnées",
+          "description": "Récapitulatif des sondes qui seront prises en compte dans l'ajustage."
+        },
+        "cards": {
+          "general": {
+            "title": "Infos générales",
+            "description": "Paramètres généraux de préparation de l'ajustage.",
+            "currentDateTime": "Date / heure actuelle",
+            "operator": "Opérateur",
+            "operatorPlaceholder": "Nom de l'opérateur",
+            "displayDecimals": "Nb de décimales d'affichage"
+          },
+        "standard": {
+          "title": "Étalon",
+          "description": "Choix de la sonde étalon et lecture des informations du certificat.",
+            "coefficientsAlertTitle": "Vérification recommandée",
+            "coefficientsAlertDescription": "Vérifiez les coefficients et les informations du certificat avant de poursuivre.",
+            "externalProbe": "Sonde externe",
+          "externalProbeHint": "L'ajustage n'est actuellement pas possible avec une sonde externe.",
+          "standardProbe": "Sonde étalon",
+          "standardProbePlaceholder": "Choisir une sonde étalon",
+          "standardProbeSearchPlaceholder": "Rechercher une sonde étalon",
+          "standardProbeEmpty": "Aucune sonde étalon disponible",
+          "organization": "Organisme",
+            "certificateDate": "Date du certificat",
+            "certificateNumber": "Numéro du certificat",
+            "unit": "Unité",
+            "resolution": "Résolution",
+            "standardDecimals": "Nb de décimales étalon"
+          },
+          "module": {
+            "title": "Étalon : module / port série",
+            "description": "Module et port série associés à la sonde étalon sélectionnée.",
+            "module": "Module",
+            "serialPort": "Port série",
+            "empty": "Aucune donnée disponible"
+          },
+        "medium": {
+          "title": "Milieu d'inter-comparaison",
+          "description": "Sélection du bain ou milieu utilisé pour l’opération.",
+          "select": "Marque / référence",
+          "selectPlaceholder": "Choisir un milieu d'inter-comparaison",
+          "empty": "Aucun milieu d'inter-comparaison disponible",
+          "model": "Marque / modèle",
+            "reference": "Référence",
+            "stability": "Stabilité",
+            "homogeneity": "Homogénéité"
+          }
+        }
+      }
+    },
+    "calibrationPage": {
+      "header": {
+        "title": "Réaliser un étalonnage",
+        "description": "Cette page accueillera le workflow d'étalonnage."
+      },
+      "card": {
+        "title": "Étalonnage",
+        "description": "Écran préparatoire en attente du workflow mêtier complet.",
+        "content": "Le module d'étalonnage sera branché ici avec la sélection du lieu, de la sonde étalon, du milieu d'inter-comparaison et des documents associés."
+      }
+    },
+    "subpagesCards": {
+      "dashboard": {
+        "title": "Tableau de bord métrologie",
+        "description": "Revenir au suivi métrologique global et aux accès rapides.",
+        "cta": "Revenir au tableau de bord"
+      },
+      "baths": {
+        "title": "Bains & sondes étalons",
+        "description": "Gérer les sondes étalons et les milieux d'inter-comparaison.",
+        "cta": "Ouvrir la gestion"
+      },
+      "adjustment": {
+        "title": "Réaliser un ajustage",
+        "description": "Préparer et exécuter un ajustage/calibrage sur une sonde.",
+        "cta": "Accéder à l'ajustage"
+      },
+      "calibration": {
+        "title": "Réaliser un étalonnage",
+        "description": "Lancer un étalonnage et consulter les opérations à venir.",
+        "cta": "Accéder à l'étalonnage"
+      }
+    },
+    "intercomparisonTable": {
+      "title": "Milieux d'inter-comparaison",
+      "description": "Gestion des bains et autres milieux utilisés pour les comparaisons.",
+      "searchPlaceholder": "Rechercher un milieu",
+      "empty": "Aucun milieu d'inter-comparaison trouvé",
+      "columns": {
+        "model": "Modèle",
+        "reference": "Référence",
+        "stability": "Stabilité",
+        "homogeneity": "Homogénéité",
+        "content": "Contenu"
+      },
+      "actions": {
+        "new": "Nouveau",
+        "edit": "Modifier",
+        "archive": "Archiver"
+      },
+      "toast": {
+        "archived": "Milieu d'inter-comparaison archivé.",
+        "archiveError": "Erreur lors de l'archivage du milieu"
+      },
+      "archiveDialog": {
+        "title": "Archiver le milieu",
+        "description": "Confirmez l'archivage de ce milieu d'inter-comparaison.",
+        "cancel": "Annuler",
+        "confirm": "Archiver"
+      }
+    },
+    "intercomparisonModal": {
+      "titleCreate": "Créer un milieu d'inter-comparaison",
+      "titleEdit": "Modifier le milieu d'inter-comparaison",
+      "fields": {
+        "model": "Modèle",
+        "reference": "Référence",
+        "stability": "Stabilité",
+        "homogeneity": "Homogénéité",
+        "content": "Contenu"
+      },
+      "hint": "Veuillez à bien vérifier les informations avant de les enregistrer.",
+      "actions": {
+        "cancel": "Annuler",
+        "create": "Créer",
+        "update": "Mettre à jour",
+        "saving": "Enregistrement..."
+      },
+      "toast": {
+        "created": "Milieu d'inter-comparaison créé.",
+        "updated": "Milieu d'inter-comparaison mis à jour.",
+        "error": "Erreur lors de l'enregistrement du milieu"
+      },
+      "validation": {
+        "modelRequired": "Modèle requis",
+        "referenceRequired": "Référence requise"
+      }
     }
   }
 }

@@ -18,9 +18,23 @@ import {
 } from "@/lib/metrology-db"
 import { getPermissionAliases } from "@/lib/permissions"
 import { prisma } from "@/lib/prisma"
+import { inferStandardTypeCode } from "@/lib/standard-types"
 
 const ETALON_READ_CODES = getPermissionAliases("METROLOGY_ACCESS")
 const ETALON_WRITE_CODES = getPermissionAliases("METROLOGY_OPERATION_ACCESS")
+
+function formatDecimalValue(value: unknown): string | null {
+  if (value == null) return null
+  const numeric = typeof value === "number" ? value : Number(String(value).replace(",", "."))
+  if (!Number.isFinite(numeric)) {
+    const raw = String(value).trim()
+    return raw.length > 0 ? raw : null
+  }
+
+  return numeric
+    .toFixed(12)
+    .replace(/\.?0+$/, "")
+}
 
 const nullableNumberField = z.union([z.number(), z.string(), z.null(), z.undefined()]).transform((value) => {
   if (value === null || value === undefined || value === "") return null
@@ -82,14 +96,24 @@ export const GET = withStandardOrExpertAnyAuthorizationLogging(ETALON_READ_CODES
       Port_Serie: row.Port_Serie == null ? null : String(row.Port_Serie),
       Id_Worker: row.Id_Worker == null ? null : Number(row.Id_Worker),
       Id_Module: row.Id_Module == null ? null : Number(row.Id_Module),
-      Resolution: row.Resolution == null ? null : String(row.Resolution),
-      Incertitude: row.Incertitude == null ? null : String(row.Incertitude),
+      Resolution: formatDecimalValue(row.Resolution),
+      Incertitude: formatDecimalValue(row.Incertitude),
       Nb_Decimale: row.Nb_Decimale == null ? null : Number(row.Nb_Decimale),
       Est_Archive: Boolean(row.Est_Archive),
       Est_Sonde_Externe: row.Est_Sonde_Externe == null ? null : Boolean(Number(row.Est_Sonde_Externe)),
     }))
 
     const extrasMap = await fetchEtalonExtras(etalons.map((item) => item.Id_Etalon))
+    const standardTypes = await prisma.t_etalon_type.findMany({
+      select: {
+        Type_Etalon: true,
+        Resolution: true,
+        Est_Sonde_Externe: true,
+      },
+    })
+    const standardTypeByCode = new Map(
+      standardTypes.map((item) => [String(item.Type_Etalon).trim().toUpperCase(), item]),
+    )
     const serials = Array.from(new Set(etalons.map((item) => item.Etalon_Numero_Serie).filter((value): value is string => Boolean(value))))
 
     const certifs = serials.length
@@ -130,9 +154,15 @@ export const GET = withStandardOrExpertAnyAuthorizationLogging(ETALON_READ_CODES
       const certif = etalon.Etalon_Numero_Serie ? latestCertifBySerial.get(etalon.Etalon_Numero_Serie) ?? null : null
       const pdf = certif?.Id_PDF ? pdfById.get(certif.Id_PDF) ?? null : null
       const extras = extrasMap.get(etalon.Id_Etalon)
+      const typeCode = inferStandardTypeCode(etalon.Etalon_Numero_Serie, standardTypes)
+      const typeInfo = typeCode ? standardTypeByCode.get(typeCode) ?? null : null
 
       return {
         ...etalon,
+        Type_Etalon: typeCode,
+        Resolution: formatDecimalValue(typeInfo?.Resolution),
+        Est_Sonde_Externe:
+          typeInfo?.Est_Sonde_Externe == null ? etalon.Est_Sonde_Externe : Boolean(typeInfo.Est_Sonde_Externe),
         Coeff_A: extras?.Coeff_A ?? null,
         Coeff_B: extras?.Coeff_B ?? null,
         Coeff_C: extras?.Coeff_C ?? null,

@@ -970,20 +970,22 @@ export const PATCH = withAnyAuthorizationLogging(
               singleChange.to,
             )
           } else {
-            log.data.update(
-              "Lieu",
-              lieuId,
-              user.username,
-              user.userId,
+            log.audit("CC", {
+              user: user.username,
+              userId: user.userId,
+              userProfile: user.profile,
               ip,
-              {
+              resource: `Lieu: ${lieuName ?? lieuId} (Modification)`,
+              changes: {
+                action: "update",
                 [singleChange.field]: {
                   from: singleChange.from,
                   to: singleChange.to,
                 },
               },
-              actionComment || undefined,
-            )
+              reason: actionComment || undefined,
+              lieuId,
+            })
           }
         } else if (changedFieldsEntries.length > 1) {
           const changedFields = changedFieldsEntries.reduce<Record<string, unknown>>((acc, entry) => {
@@ -991,15 +993,16 @@ export const PATCH = withAnyAuthorizationLogging(
             return acc
           }, {})
 
-          log.data.update(
-            "Lieu",
-            lieuId,
-            user.username,
-            user.userId,
+          log.audit("CC", {
+            user: user.username,
+            userId: user.userId,
+            userProfile: user.profile,
             ip,
-            changedFields,
-            buildMultiFieldAuditReason(changedFieldsEntries, actionComment || undefined),
-          )
+            resource: `Lieu: ${lieuName ?? lieuId} (Modification)`,
+            changes: { action: "update", ...changedFields },
+            reason: buildMultiFieldAuditReason(changedFieldsEntries, actionComment || undefined),
+            lieuId,
+          })
         }
       }
 

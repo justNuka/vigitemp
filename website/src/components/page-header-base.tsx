@@ -45,14 +45,14 @@ export function PageHeaderBase({
     <LazyMotion features={domAnimation}>
       <header
         className={cn(
-          "sticky top-0 z-40 flex flex-col gap-4 border-b border-border/60 bg-background/95 px-4 py-3 shadow-sm backdrop-blur supports-backdrop-filter:bg-background/80 md:px-6 dark:border-border dark:bg-card/95",
+          "sticky top-0 z-40 flex min-w-0 flex-col gap-4 overflow-x-hidden border-b border-border/60 bg-background/95 px-4 py-3 shadow-sm backdrop-blur supports-backdrop-filter:bg-background/80 md:px-6 dark:border-border dark:bg-card/95",
           className
         )}
       >
-        <div className="flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3 md:gap-4">
+        <div className="flex min-w-0 items-center justify-between gap-4">
+          <div className="flex min-w-0 flex-1 items-center gap-3 md:gap-4">
             <SidebarTrigger data-testid="button-sidebar-toggle" className="-ml-1" />
-            <div className="hidden md:block h-7 w-px bg-border/60" />
+            <div className="hidden h-7 w-px shrink-0 bg-border/60 md:block" />
             <div className="min-w-0">
               <m.h1
                 className="text-lg md:text-xl font-semibold tracking-tight truncate"
@@ -70,7 +70,7 @@ export function PageHeaderBase({
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex shrink-0 items-center gap-2">
             <AnimatePresence>
               {activeAlarms > 0 && (
                 <m.div
@@ -129,7 +129,7 @@ export function PageHeaderBase({
         </div>
 
         {children && (
-          <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex min-w-0 flex-wrap items-center gap-2">
             {children}
           </div>
         )}

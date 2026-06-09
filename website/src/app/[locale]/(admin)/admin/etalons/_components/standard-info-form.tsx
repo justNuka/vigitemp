@@ -2,6 +2,7 @@
 
 import { useMemo } from 'react'
 import { useFormContext, useWatch } from 'react-hook-form'
+import { useTranslations } from 'next-intl'
 
 import { Combobox } from '@/components/ui/combobox'
 import {
@@ -37,6 +38,7 @@ export function StandardInfoForm({
   modules,
   modulesLoading,
 }: StandardInfoFormProps) {
+  const t = useTranslations('standardsPage.form')
   const { control, getValues } = useFormContext()
   const typeCode = useWatch({ control, name: 'type' }) ?? ''
   const portSerie = useWatch({ control, name: 'portSerie' }) ?? getValues('portSerie') ?? ''
@@ -50,7 +52,7 @@ export function StandardInfoForm({
   return (
     <div className="grid gap-4 lg:grid-cols-2">
       <div className="space-y-4 lg:col-span-2">
-        <h3 className="text-lg font-semibold">Sonde etalon</h3>
+        <h3 className="text-lg font-semibold">{t('sensorSection')}</h3>
       </div>
 
       <FormField
@@ -58,11 +60,11 @@ export function StandardInfoForm({
         name="type"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Type de sonde etalon</FormLabel>
+            <FormLabel>{t('fields.type.label')}</FormLabel>
             <Select value={field.value || ''} onValueChange={field.onChange} disabled={isEditing}>
               <FormControl>
                 <SelectTrigger disabled={typesLoading || isEditing}>
-                  <SelectValue placeholder="Selectionner un type" />
+                  <SelectValue placeholder={t('fields.type.placeholder')} />
                 </SelectTrigger>
               </FormControl>
               <SelectContent>
@@ -83,10 +85,10 @@ export function StandardInfoForm({
         name="serie"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Numero de serie</FormLabel>
+            <FormLabel>{t('fields.serial.label')}</FormLabel>
             <FormControl>
               <Input
-                placeholder="Ex: SPET-26000001"
+                placeholder={t('fields.serial.placeholder')}
                 value={field.value}
                 onChange={(event) => field.onChange(event.target.value.toUpperCase())}
                 readOnly={isEditing}
@@ -103,16 +105,16 @@ export function StandardInfoForm({
         name="moduleId"
         render={({ field }) => (
           <FormItem className="lg:col-span-2">
-            <FormLabel>Module</FormLabel>
+            <FormLabel>{t('fields.module.label')}</FormLabel>
             <FormControl>
               <Combobox
                 triggerId="module"
                 value={field.value || ''}
                 onValueChange={field.onChange}
                 disabled={modulesLoading}
-                placeholder="Selectionner un module"
-                searchPlaceholder="Rechercher un module"
-                emptyMessage="Aucun module"
+                placeholder={t('fields.module.placeholder')}
+                searchPlaceholder={t('fields.module.searchPlaceholder')}
+                emptyMessage={t('fields.module.empty')}
                 options={(modules ?? []).map((module) => ({
                   value: String(module.Id_Module),
                   label: `${module.Module_Numero_Serie || module.Libelle_Type_Module || module.Id_Module} - port ${module.Port_Serie || 'N/A'} (${module.Emplacement || '-'})`,
@@ -126,26 +128,28 @@ export function StandardInfoForm({
       />
 
       <FormItem>
-        <FormLabel>Port serie</FormLabel>
+        <FormLabel>{t('fields.port.label')}</FormLabel>
         <FormControl>
           <Input value={portSerie} readOnly className="bg-muted opacity-50" />
         </FormControl>
       </FormItem>
 
       <FormItem>
-        <FormLabel>Id worker</FormLabel>
+        <FormLabel>{t('fields.worker.label')}</FormLabel>
         <FormControl>
           <Input value={idWorker} readOnly className="bg-muted opacity-50" />
         </FormControl>
       </FormItem>
 
       <div className="rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 lg:col-span-2">
-        Les coefficients <strong>a</strong>, <strong>b</strong>, <strong>c</strong> et l&apos;incertitude max sont disponibles sur le certificat fourni avec la sonde etalon. Verifiez ces valeurs avant validation.
+        {t.rich('coefficientsHint', {
+          strong: (chunks) => <strong>{chunks}</strong>,
+        })}
       </div>
 
       {selectedType?.Est_Sonde_Externe ? (
         <div className="rounded-md border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-900 lg:col-span-2">
-          Cette sonde est de type externe. Les modules d&apos;ajustage et d&apos;etalonnage ne seront pas disponibles pour ce type de sonde.
+          {t('externalHint')}
         </div>
       ) : null}
 
@@ -154,9 +158,9 @@ export function StandardInfoForm({
         name="coeffA"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Coefficient a</FormLabel>
+            <FormLabel>{t('fields.coeffA.label')}</FormLabel>
             <FormControl>
-              <Input placeholder="Ex: 0.0001" {...field} />
+              <Input placeholder={t('fields.coeffA.placeholder')} {...field} />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -168,9 +172,9 @@ export function StandardInfoForm({
         name="coeffB"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Coefficient b</FormLabel>
+            <FormLabel>{t('fields.coeffB.label')}</FormLabel>
             <FormControl>
-              <Input placeholder="Ex: 1.002" {...field} />
+              <Input placeholder={t('fields.coeffB.placeholder')} {...field} />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -182,9 +186,9 @@ export function StandardInfoForm({
         name="coeffC"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Coefficient c</FormLabel>
+            <FormLabel>{t('fields.coeffC.label')}</FormLabel>
             <FormControl>
-              <Input placeholder="Ex: -0.02" {...field} />
+              <Input placeholder={t('fields.coeffC.placeholder')} {...field} />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -196,9 +200,9 @@ export function StandardInfoForm({
         name="incertitudeMax"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Incertitude max</FormLabel>
+            <FormLabel>{t('fields.maxUncertainty.label')}</FormLabel>
             <FormControl>
-              <Input placeholder="Ex: 0.05" {...field} />
+              <Input placeholder={t('fields.maxUncertainty.placeholder')} {...field} />
             </FormControl>
             <FormMessage />
           </FormItem>

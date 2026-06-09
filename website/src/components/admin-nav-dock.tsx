@@ -46,7 +46,7 @@ export function AdminNavDock() {
     {
       key: "metrologie",
       icon: <Ruler size={20} />,
-      label: "Bains & etalons",
+      label: tDock("metrologie"),
       onClick: () => router.push("/admin/metrologie"),
       isActive:
         normalizedPathname.startsWith(getLocalizedPathname("/admin/metrologie", locale as any)) ||

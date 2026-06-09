@@ -74,7 +74,7 @@ export default function AdminLayout({
 
   return (
     <div className="flex flex-col h-full min-h-0 w-full">
-      <main className="flex-1 min-h-0 overflow-y-auto bg-background">
+      <main className="flex-1 min-h-0 overflow-x-hidden overflow-y-auto bg-background pb-28">
         <PageTransitionWrapper className="min-h-full">{children}</PageTransitionWrapper>
       </main>
 

@@ -3392,7 +3392,7 @@
         <member name="F:Org.BouncyCastle.Asn1.IsisMtt.IsisMttObjectIdentifiers.IdIsisMttATPKReference">
              
              Reference for a file of a smartcard that stores the public key of this
-             certificate and that is used as �security anchor�.
+             certificate and that is used as security anchor.
              
              <pre>
             		PKReferenceSyntax ::= OCTET STRING (SIZE(20))
@@ -3541,7 +3541,7 @@
             <p/>
             ISIS-MTT-SigG: The signature act allows publishing certificates only then,
             when the certificate owner gives his isExplicit permission. Accordingly, there
-            may be �nondownloadable� certificates, about which the responder must provide
+            may be nondownloadable certificates, about which the responder must provide
             status information, but MUST NOT include them in the response. Clients may
             get therefore the following three kind of answers on a single request
             including the RetrieveIfAllowed extension:
@@ -3931,13 +3931,13 @@
             <p/>
             currency must be the ISO code.
             <p/>
-            value = amount�10*exponent
+            value = amount10*exponent
         </member>
         <member name="M:Org.BouncyCastle.Asn1.IsisMtt.X509.MonetaryLimit.#ctor(System.String,System.Int32,System.Int32)">
              Constructor from a given details.
              <p/>
              <p/>
-             value = amount�10^exponent
+             value = amount10^exponent
             
              @param currency The currency. Must be the ISO code.
              @param amount   The amount
@@ -3977,7 +3977,7 @@
         <member name="F:Org.BouncyCastle.Asn1.IsisMtt.X509.NamingAuthority.IdIsisMttATNamingAuthoritiesRechtWirtschaftSteuern">
             Profession OIDs should always be defined under the OID branch of the
             responsible naming authority. At the time of this writing, the work group
-            �Recht, Wirtschaft, Steuern� (�Law, Economy, Taxes�) is registered as the
+            Recht, Wirtschaft, Steuern (Law, Economy, Taxes) is registered as the
             first naming authority under the OID id-isismtt-at-namingAuthorities.
         </member>
         <member name="M:Org.BouncyCastle.Asn1.IsisMtt.X509.NamingAuthority.#ctor(Org.BouncyCastle.Asn1.Asn1Sequence)">
@@ -4144,7 +4144,7 @@
             @see Org.BouncyCastle.Asn1.IsisMtt.X509.AdmissionSyntax
         </member>
         <member name="F:Org.BouncyCastle.Asn1.IsisMtt.X509.ProfessionInfo.Rechtsanwltin">
-            Rechtsanw�ltin
+            Rechtsanwltin
         </member>
         <member name="F:Org.BouncyCastle.Asn1.IsisMtt.X509.ProfessionInfo.Rechtsanwalt">
             Rechtsanwalt
@@ -4159,10 +4159,10 @@
             Steuerberater
         </member>
         <member name="F:Org.BouncyCastle.Asn1.IsisMtt.X509.ProfessionInfo.Steuerbevollmchtigte">
-            Steuerbevollm�chtigte
+            Steuerbevollmchtigte
         </member>
         <member name="F:Org.BouncyCastle.Asn1.IsisMtt.X509.ProfessionInfo.Steuerbevollmchtigter">
-            Steuerbevollm�chtigter
+            Steuerbevollmchtigter
         </member>
         <member name="F:Org.BouncyCastle.Asn1.IsisMtt.X509.ProfessionInfo.Notarin">
             Notarin
@@ -4183,19 +4183,19 @@
             Notariatsverwalter
         </member>
         <member name="F:Org.BouncyCastle.Asn1.IsisMtt.X509.ProfessionInfo.Wirtschaftsprferin">
-            Wirtschaftspr�ferin
+            Wirtschaftsprferin
         </member>
         <member name="F:Org.BouncyCastle.Asn1.IsisMtt.X509.ProfessionInfo.Wirtschaftsprfer">
-            Wirtschaftspr�fer
+            Wirtschaftsprfer
         </member>
         <member name="F:Org.BouncyCastle.Asn1.IsisMtt.X509.ProfessionInfo.VereidigteBuchprferin">
-            Vereidigte Buchpr�ferin
+            Vereidigte Buchprferin
         </member>
         <member name="F:Org.BouncyCastle.Asn1.IsisMtt.X509.ProfessionInfo.VereidigterBuchprfer">
-            Vereidigter Buchpr�fer
+            Vereidigter Buchprfer
         </member>
         <member name="F:Org.BouncyCastle.Asn1.IsisMtt.X509.ProfessionInfo.Patentanwltin">
-            Patentanw�ltin
+            Patentanwltin
         </member>
         <member name="F:Org.BouncyCastle.Asn1.IsisMtt.X509.ProfessionInfo.Patentanwalt">
             Patentanwalt

@@ -6,6 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { useQueryClient } from "@tanstack/react-query"
 import { toast } from "sonner"
+import { useTranslations } from "next-intl"
 
 import { patchJson, postJson } from "@/lib/http"
 import { showFormValidationToast } from "@/lib/form-toast"
@@ -22,19 +23,26 @@ type Props = {
   medium?: IntercomparisonMedium | null
 }
 
-const schema = z.object({
-  Model: z.string().min(1, "Modele requis"),
-  Reference: z.string().min(1, "Reference requise"),
-  Stabilite: z.string().optional(),
-  Homogeneite: z.string().optional(),
-  Contenu: z.string().optional(),
-})
-
-type Values = z.input<typeof schema>
+type Values = {
+  Model: string
+  Reference: string
+  Stabilite?: string
+  Homogeneite?: string
+  Contenu?: string
+}
 
 export function IntercomparisonMediumModal({ open, onOpenChange, medium }: Props) {
+  const t = useTranslations("metrologyAdmin.intercomparisonModal")
   const queryClient = useQueryClient()
   const [isLoading, setIsLoading] = useState(false)
+
+  const schema = useMemo(() => z.object({
+    Model: z.string().min(1, t("validation.modelRequired")),
+    Reference: z.string().min(1, t("validation.referenceRequired")),
+    Stabilite: z.string().optional(),
+    Homogeneite: z.string().optional(),
+    Contenu: z.string().optional(),
+  }), [t])
 
   const defaultValues = useMemo<Values>(
     () => ({
@@ -71,11 +79,11 @@ export function IntercomparisonMediumModal({ open, onOpenChange, medium }: Props
         await postJson("/api/metrologie/milieux", payload)
       }
 
-      toast.success(medium ? "Milieu d'inter-comparaison mis a jour." : "Milieu d'inter-comparaison cree.")
+      toast.success(medium ? t("toast.updated") : t("toast.created"))
       queryClient.invalidateQueries({ queryKey: ["metrology-intercomparison-media"] })
       onOpenChange(false)
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Erreur lors de l'enregistrement du milieu")
+      toast.error(error instanceof Error ? error.message : t("toast.error"))
     } finally {
       setIsLoading(false)
     }
@@ -85,7 +93,7 @@ export function IntercomparisonMediumModal({ open, onOpenChange, medium }: Props
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-4xl">
         <DialogHeader>
-          <DialogTitle>{medium ? "Modifier le milieu d'inter-comparaison" : "Creer un milieu d'inter-comparaison"}</DialogTitle>
+          <DialogTitle>{medium ? t("titleEdit") : t("titleCreate")}</DialogTitle>
         </DialogHeader>
 
         <Form {...form}>
@@ -96,7 +104,7 @@ export function IntercomparisonMediumModal({ open, onOpenChange, medium }: Props
                 name="Model"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Modele</FormLabel>
+                    <FormLabel>{t("fields.model")}</FormLabel>
                     <FormControl>
                       <Input {...field} />
                     </FormControl>
@@ -110,7 +118,7 @@ export function IntercomparisonMediumModal({ open, onOpenChange, medium }: Props
                 name="Reference"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Reference</FormLabel>
+                    <FormLabel>{t("fields.reference")}</FormLabel>
                     <FormControl>
                       <Input {...field} />
                     </FormControl>
@@ -124,7 +132,7 @@ export function IntercomparisonMediumModal({ open, onOpenChange, medium }: Props
                 name="Stabilite"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Stabilite</FormLabel>
+                    <FormLabel>{t("fields.stability")}</FormLabel>
                     <FormControl>
                       <Input {...field} />
                     </FormControl>
@@ -138,7 +146,7 @@ export function IntercomparisonMediumModal({ open, onOpenChange, medium }: Props
                 name="Homogeneite"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Homogeneite</FormLabel>
+                    <FormLabel>{t("fields.homogeneity")}</FormLabel>
                     <FormControl>
                       <Input {...field} />
                     </FormControl>
@@ -152,7 +160,7 @@ export function IntercomparisonMediumModal({ open, onOpenChange, medium }: Props
                 name="Contenu"
                 render={({ field }) => (
                   <FormItem className="md:col-span-2">
-                    <FormLabel>Contenu</FormLabel>
+                    <FormLabel>{t("fields.content")}</FormLabel>
                     <FormControl>
                       <Textarea rows={4} {...field} />
                     </FormControl>
@@ -163,15 +171,15 @@ export function IntercomparisonMediumModal({ open, onOpenChange, medium }: Props
             </div>
 
             <div className="rounded-md border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-900">
-              Les coefficients de stabilite et d'homogeneite sont obtenus en realisant une cartographie de votre milieu d'inter-comparaison.
+              {t("hint")}
             </div>
 
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isLoading}>
-                Annuler
+                {t("actions.cancel")}
               </Button>
               <Button type="submit" disabled={isLoading}>
-                {isLoading ? "Enregistrement..." : medium ? "Mettre a jour" : "Creer"}
+                {isLoading ? t("actions.saving") : medium ? t("actions.update") : t("actions.create")}
               </Button>
             </DialogFooter>
           </form>

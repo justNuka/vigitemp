@@ -1565,9 +1565,9 @@ namespace Vigitemp_Serveur
                         ensureCmd.ExecuteNonQuery();
                     }
 
-                    // NOTE: La s�quence UPDATE+SELECT LAST_INSERT_ID() + INSERT est atomique
-                    // du point de vue de cette instance Database car toutes les m�thodes
-                    // utilisent le m�me lock(_lock). En mode multi-serveur, chaque ThreadServeur
+                    // NOTE: La sequence UPDATE+SELECT LAST_INSERT_ID() + INSERT est atomique
+                    // du point de vue de cette instance Database car toutes les methodes
+                    // utilisent le meme lock(_lock). En mode multi-serveur, chaque ThreadServeur
                     // a sa propre instance Database, donc son propre lock.
                     int nextId;
                     using (var updateCmd = this.connection_vigitemp_mesure.CreateCommand())

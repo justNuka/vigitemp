@@ -530,18 +530,27 @@ export const POST = withLogging(async (req: NextRequest) => {
 
     const ip = getClientIp(req)
 
-    log.data.create("Lieu", lieu.Id_Lieu, user.username, user.userId, ip, {
-      nom: validated.Nom_Lieu,
-      sondeNumeroSerie,
-      idSite: validated.Id_Site ?? null,
-      groupIds,
-      idModule: validated.Id_Module ?? null,
-      mailingContactsCount: mailingContacts.length,
+    log.audit("CC", {
+      user: user.username,
+      userId: user.userId,
+      userProfile: user.profile,
+      ip,
+      resource: `Lieu: ${validated.Nom_Lieu} (Création)`,
+      changes: {
+        action: "create",
+        nom: validated.Nom_Lieu,
+        sondeNumeroSerie,
+        idSite: validated.Id_Site ?? null,
+        groupIds,
+        idModule: validated.Id_Module ?? null,
+        mailingContactsCount: mailingContacts.length,
+      },
+      lieuId: lieu.Id_Lieu,
     })
 
     auditRouteCreate(req, user, {
-      resource: "Lieu",
-      resourceId: lieu.Id_Lieu,
+      resource: `Lieu: ${validated.Nom_Lieu}`,
+      resourceId: String(validated.Nom_Lieu),
       data: {
         Nom_Lieu: validated.Nom_Lieu,
         Id_Site: validated.Id_Site ?? null,

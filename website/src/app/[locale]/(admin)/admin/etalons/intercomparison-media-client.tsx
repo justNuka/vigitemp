@@ -5,6 +5,7 @@ import type { ColumnDef } from "@tanstack/react-table"
 import { Plus, Archive, Pencil } from "lucide-react"
 import { toast } from "sonner"
 import { useQueryClient } from "@tanstack/react-query"
+import { useTranslations } from "next-intl"
 
 import { deleteJson } from "@/lib/http"
 import { useIntercomparisonMedia, type IntercomparisonMedium } from "@/hooks/useIntercomparisonMedia"
@@ -24,6 +25,7 @@ import {
 import { IntercomparisonMediumModal } from "./intercomparison-medium-modal"
 
 export function IntercomparisonMediaClient() {
+  const t = useTranslations("metrologyAdmin.intercomparisonTable")
   const queryClient = useQueryClient()
   const { data, isLoading } = useIntercomparisonMedia()
   const [selectedMedium, setSelectedMedium] = useState<IntercomparisonMedium | null>(null)
@@ -31,23 +33,23 @@ export function IntercomparisonMediaClient() {
   const [archiveOpen, setArchiveOpen] = useState(false)
 
   const columns: ColumnDef<IntercomparisonMedium>[] = [
-    { accessorKey: "Model", header: "Modele" },
-    { accessorKey: "Reference", header: "Reference" },
-    { accessorKey: "Stabilite", header: "Stabilite" },
-    { accessorKey: "Homogeneite", header: "Homogeneite" },
-    { accessorKey: "Contenu", header: "Contenu" },
+    { accessorKey: "Model", header: t("columns.model") },
+    { accessorKey: "Reference", header: t("columns.reference") },
+    { accessorKey: "Stabilite", header: t("columns.stability") },
+    { accessorKey: "Homogeneite", header: t("columns.homogeneity") },
+    { accessorKey: "Contenu", header: t("columns.content") },
   ]
 
   async function handleArchive() {
     if (!selectedMedium) return
     try {
       await deleteJson(`/api/metrologie/milieux/${selectedMedium.Id_Milieu}`)
-      toast.success("Milieu d'inter-comparaison archive.")
+      toast.success(t("toast.archived"))
       queryClient.invalidateQueries({ queryKey: ["metrology-intercomparison-media"] })
       setSelectedMedium(null)
       setArchiveOpen(false)
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Erreur lors de l'archivage du milieu")
+      toast.error(error instanceof Error ? error.message : t("toast.archiveError"))
     }
   }
 
@@ -56,9 +58,9 @@ export function IntercomparisonMediaClient() {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
-            <CardTitle>Milieux d'inter-comparaison</CardTitle>
+            <CardTitle>{t("title")}</CardTitle>
             <p className="mt-1 text-sm text-muted-foreground">
-              Gestion des bains et autres milieux utilises pour les comparaisons.
+              {t("description")}
             </p>
           </div>
           <div className="flex gap-2">
@@ -73,7 +75,7 @@ export function IntercomparisonMediaClient() {
               }}
             >
               <Plus className="h-4 w-4" />
-              Nouveau
+              {t("actions.new")}
             </Button>
             <Button
               type="button"
@@ -84,7 +86,7 @@ export function IntercomparisonMediaClient() {
               onClick={() => setModalOpen(true)}
             >
               <Pencil className="h-4 w-4" />
-              Modifier
+              {t("actions.edit")}
             </Button>
             <Button
               type="button"
@@ -95,7 +97,7 @@ export function IntercomparisonMediaClient() {
               onClick={() => setArchiveOpen(true)}
             >
               <Archive className="h-4 w-4" />
-              Archiver
+              {t("actions.archive")}
             </Button>
           </div>
         </CardHeader>
@@ -104,9 +106,9 @@ export function IntercomparisonMediaClient() {
             columns={columns}
             data={data || []}
             searchField="Model"
-            searchPlaceholder="Rechercher un milieu"
+            searchPlaceholder={t("searchPlaceholder")}
             isLoading={isLoading}
-            emptyMessage="Aucun milieu d'inter-comparaison trouve"
+            emptyMessage={t("empty")}
             selectedRowId={selectedMedium?.Id_Milieu}
             onRowClick={(row) => setSelectedMedium(row)}
             onRowDoubleClick={(row) => {
@@ -126,13 +128,13 @@ export function IntercomparisonMediaClient() {
       <AlertDialog open={archiveOpen} onOpenChange={setArchiveOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Archiver le milieu</AlertDialogTitle>
+            <AlertDialogTitle>{t("archiveDialog.title")}</AlertDialogTitle>
             <AlertDialogDescription>
-              Confirmez l'archivage de ce milieu d'inter-comparaison.
+              {t("archiveDialog.description")}
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogCancel>Annuler</AlertDialogCancel>
-          <AlertDialogAction onClick={handleArchive}>Archiver</AlertDialogAction>
+          <AlertDialogCancel>{t("archiveDialog.cancel")}</AlertDialogCancel>
+          <AlertDialogAction onClick={handleArchive}>{t("archiveDialog.confirm")}</AlertDialogAction>
         </AlertDialogContent>
       </AlertDialog>
     </>

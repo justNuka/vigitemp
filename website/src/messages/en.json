@@ -74,7 +74,7 @@
     "groupes": "Groups",
     "utilisateurs": "Users",
     "profils": "Profiles",
-    "etalons": "Metrology",
+    "etalons": "Baths & standards",
     "actionneurs": "Actuators",
     "outils": "Tools",
     "lieux_templates": "Location templates"
@@ -1430,7 +1430,8 @@
       "alarms": "Alarms",
       "messaging": "Messaging",
       "archived_measures": "Archived measurements",
-      "audit": "Audit log"
+      "audit": "Audit log",
+      "metrology": "Baths & standards"
     },
     "system": {
       "settings": "Settings",
@@ -1438,7 +1439,7 @@
       "backups": "Backups"
     },
     "metrology": {
-      "calibration_import": "Calibration import",
+      "calibration_import": "Import calibration",
       "impact_analysis": "Impact analysis"
     }
   },
@@ -2575,7 +2576,8 @@
       "columns": {
         "serial": "Serial number",
         "certificate_date": "Certificate date",
-        "state": "Current state"
+        "state": "Current state",
+        "pdf": "PDF certificate"
       },
       "search_placeholder": "Serial, state...",
       "empty": "No standards found"
@@ -2598,6 +2600,80 @@
     "blocked": {
       "title": "Standards management unavailable",
       "description": "This page is not available with your current license."
+    },
+    "form": {
+      "dialog": {
+        "createTitle": "Create a standard",
+        "editTitle": "Edit standard"
+      },
+      "actions": {
+        "cancel": "Cancel",
+        "create": "Create",
+        "update": "Update",
+        "saving": "Saving..."
+      },
+      "toast": {
+        "created": "Standard created.",
+        "updated": "Standard updated.",
+        "error": "Error while saving the standard"
+      },
+      "sensorSection": "Reference probe",
+      "coefficientsHint": "The <strong>a</strong>, <strong>b</strong>, <strong>c</strong> coefficients and maximum uncertainty are available on the certificate supplied with the reference probe. Verify these values before saving.",
+      "externalHint": "This probe is an external type. Adjustment and calibration modules will not be available for this probe type.",
+      "fields": {
+        "type": {
+          "label": "Reference probe type",
+          "placeholder": "Select a type"
+        },
+        "serial": {
+          "label": "Serial number",
+          "placeholder": "e.g. SPET-26000001"
+        },
+        "module": {
+          "label": "Module",
+          "placeholder": "Select a module",
+          "searchPlaceholder": "Search module",
+          "empty": "No module"
+        },
+        "port": {
+          "label": "Serial port"
+        },
+        "worker": {
+          "label": "Worker id"
+        },
+        "coeffA": {
+          "label": "Coefficient a",
+          "placeholder": "e.g. 0.0001"
+        },
+        "coeffB": {
+          "label": "Coefficient b",
+          "placeholder": "e.g. 1.002"
+        },
+        "coeffC": {
+          "label": "Coefficient c",
+          "placeholder": "e.g. -0.02"
+        },
+        "maxUncertainty": {
+          "label": "Maximum uncertainty",
+          "placeholder": "e.g. 0.05"
+        }
+      },
+      "validation": {
+        "serialRequired": "Serial number is required"
+      }
+    },
+    "certificate": {
+      "section": "Certificate",
+      "hint": "The PDF certificate will be stored on the server and remain accessible from this record for review and document control.",
+      "label": "PDF certificate",
+      "upload": "Upload PDF",
+      "uploading": "Uploading...",
+      "none": "No certificate uploaded",
+      "preview": "Preview",
+      "remove": "Remove",
+      "previewTitle": "Certificate preview",
+      "previewEmpty": "No PDF to display.",
+      "uploadError": "Error while uploading PDF"
     }
   },
   "sitesPage": {
@@ -5399,6 +5475,250 @@
       "warningTitle": "Confirmation required",
       "warningDescription": "Use this only if the run must be abandoned. The VigiLog will become available again in the application.",
       "confirm": "Confirm cancellation"
+    }
+  },
+  "metrologyAdmin": {
+    "dashboard": {
+      "header": {
+        "title": "Baths & standards",
+        "description": "Metrology overview and quick access to operations."
+      },
+      "section": {
+        "title": "Metrology monitoring for locations",
+        "description": "Summary table of instrumented locations and their metrology status."
+      },
+      "table": {
+        "searchPlaceholder": "Search a location or probe",
+        "empty": "No location found",
+        "exportFileName": "metrology-dashboard",
+        "columns": {
+          "location": "Location name",
+          "sensor": "Assigned probe",
+          "conformity": "Conformity",
+          "toleranceInf": "Lower tolerance",
+          "setpoint": "Setpoint",
+          "toleranceSup": "Upper tolerance",
+          "calibrationDate": "Calibration date",
+          "accuracyError": "Accuracy error",
+          "calibrationUncertainty": "Calibration uncertainty",
+          "ejActive": "Accuracy corr. active",
+          "driftActive": "Drift corr. active",
+          "drift": "Drift",
+          "measurementUncertainty": "Measurement uncertainty",
+          "nextCalibrationDate": "Next calibration date"
+        }
+      },
+      "badges": {
+        "yes": "Yes",
+        "no": "No",
+        "conformity": {
+          "ok": "Compliant",
+          "alert": "Alert",
+          "na": "Not applicable"
+        }
+      },
+      "cards": {
+        "baths": {
+          "title": "Baths & reference probes",
+          "description": "Manage reference probes and intercomparison media.",
+          "cta": "Open management"
+        },
+        "adjustment": {
+          "title": "Run an adjustment",
+          "description": "Prepare and execute an adjustment/calibration on a probe.",
+          "cta": "Open adjustment"
+        },
+        "calibration": {
+          "title": "Run a calibration",
+          "description": "Start a calibration and review upcoming operations.",
+          "cta": "Open calibration"
+        }
+      }
+    },
+    "bathsPage": {
+      "header": {
+        "title": "Baths & standards",
+        "description": "Manage reference probes and intercomparison media."
+      },
+      "blocked": {
+        "headerDescription": "Management is unavailable with your current license.",
+        "message": "This page is not available with your current license.",
+        "back": "Back"
+      }
+    },
+    "adjustmentPage": {
+      "header": {
+        "title": "Run an adjustment",
+        "description": "Probe selection then preparation of the adjustment/calibration operation."
+      },
+      "selection": {
+        "title": "Step 1 ? Probe selection",
+        "description": "Choose one or more probes to include in the adjustment operation.",
+        "banner": {
+          "title": "{count, plural, one {# selected probe} other {# selected probes}}",
+          "description": "The selection is ready. Move to the adjustment step to prepare the operation.",
+          "cta": "Go to adjustment step"
+        },
+        "table": {
+          "searchPlaceholder": "Search a probe or a location",
+          "empty": "No probe available for adjustment",
+          "exportFileName": "adjustment-probe-selection",
+          "selectAll": "Select all probes",
+          "selectOne": "Select probe {serial}",
+          "unassigned": "Not assigned to a location",
+          "columns": {
+            "serial": "Probe serial number",
+            "location": "Assigned location"
+          }
+        }
+      },
+      "adjustment": {
+        "backToSelection": "Back to selection",
+        "selectionSummary": {
+          "title": "Selected probes",
+          "description": "Summary of the probes that will be included in the adjustment operation."
+        },
+        "cards": {
+          "general": {
+            "title": "General information",
+            "description": "General preparation parameters for the adjustment.",
+            "currentDateTime": "Current date / time",
+            "operator": "Operator",
+            "operatorPlaceholder": "Operator name",
+            "displayDecimals": "Displayed decimals count"
+          },
+        "standard": {
+          "title": "Reference standard",
+          "description": "Choose the reference probe and read the certificate information.",
+            "coefficientsAlertTitle": "Recommended check",
+            "coefficientsAlertDescription": "Check the coefficients and certificate information before continuing.",
+            "externalProbe": "External probe",
+          "externalProbeHint": "Adjustment is currently not available with an external probe.",
+          "standardProbe": "Reference probe",
+          "standardProbePlaceholder": "Choose a reference probe",
+          "standardProbeSearchPlaceholder": "Search a reference probe",
+          "standardProbeEmpty": "No reference probe available",
+          "organization": "Organization",
+            "certificateDate": "Certificate date",
+            "certificateNumber": "Certificate number",
+            "unit": "Unit",
+            "resolution": "Resolution",
+            "standardDecimals": "Reference decimals count"
+          },
+          "module": {
+            "title": "Reference standard ? module / serial port",
+            "description": "Module and serial port associated with the selected reference probe.",
+            "module": "Module",
+            "serialPort": "Serial port",
+            "empty": "No data available"
+          },
+        "medium": {
+          "title": "Intercomparison medium",
+          "description": "Selection of the bath or medium used for the operation.",
+          "select": "Brand / reference",
+          "selectPlaceholder": "Choose an intercomparison medium",
+          "empty": "No intercomparison medium available",
+          "model": "Brand / model",
+            "reference": "Reference",
+            "stability": "Stability",
+            "homogeneity": "Homogeneity"
+          },
+            "plateau": {
+              "title": "Stability plateau",
+              "description": "Configure the stabilization window before recording the adjustment values.",
+              "durationMinutes": "Duration (min)",
+              "maxGap": "Maximum gap"
+            }
+        }
+      }
+    },
+    "calibrationPage": {
+      "header": {
+        "title": "Run a calibration",
+        "description": "This page will host the calibration workflow."
+      },
+      "card": {
+        "title": "Calibration",
+        "description": "Preparation screen waiting for the full business workflow.",
+        "content": "The calibration module will be connected here with location, reference probe, intercomparison medium and associated documents selection."
+      }
+    },
+    "subpagesCards": {
+      "dashboard": {
+        "title": "Metrology dashboard",
+        "description": "Return to the global metrology overview and quick actions.",
+        "cta": "Back to dashboard"
+      },
+      "baths": {
+        "title": "Baths & standard probes",
+        "description": "Manage standard probes and intercomparison media.",
+        "cta": "Open management"
+      },
+      "adjustment": {
+        "title": "Run an adjustment",
+        "description": "Prepare and execute an adjustment/calibration on a probe.",
+        "cta": "Open adjustment"
+      },
+      "calibration": {
+        "title": "Run a calibration",
+        "description": "Launch a calibration and review upcoming operations.",
+        "cta": "Open calibration"
+      }
+    },
+    "intercomparisonTable": {
+      "title": "Intercomparison media",
+      "description": "Manage baths and other media used for comparisons.",
+      "searchPlaceholder": "Search a medium",
+      "empty": "No intercomparison medium found",
+      "columns": {
+        "model": "Model",
+        "reference": "Reference",
+        "stability": "Stability",
+        "homogeneity": "Homogeneity",
+        "content": "Content"
+      },
+      "actions": {
+        "new": "New",
+        "edit": "Edit",
+        "archive": "Archive"
+      },
+      "toast": {
+        "archived": "Intercomparison medium archived.",
+        "archiveError": "Error while archiving the medium"
+      },
+      "archiveDialog": {
+        "title": "Archive medium",
+        "description": "Confirm archiving of this intercomparison medium.",
+        "cancel": "Cancel",
+        "confirm": "Archive"
+      }
+    },
+    "intercomparisonModal": {
+      "titleCreate": "Create an intercomparison medium",
+      "titleEdit": "Edit intercomparison medium",
+      "fields": {
+        "model": "Model",
+        "reference": "Reference",
+        "stability": "Stability",
+        "homogeneity": "Homogeneity",
+        "content": "Content"
+      },
+      "hint": "Please make sure to verify the information before saving.",
+      "actions": {
+        "cancel": "Cancel",
+        "create": "Create",
+        "update": "Update",
+        "saving": "Saving..."
+      },
+      "toast": {
+        "created": "Intercomparison medium created.",
+        "updated": "Intercomparison medium updated.",
+        "error": "Error while saving the medium"
+      },
+      "validation": {
+        "modelRequired": "Model is required",
+        "referenceRequired": "Reference is required"
+      }
     }
   }
 }

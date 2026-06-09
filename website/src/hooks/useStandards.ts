@@ -4,6 +4,7 @@ import { getJson, isUnauthorizedError } from "@/lib/http";
 export interface Standard {
   Id_Etalon: number;
   Etalon_Numero_Serie: string | null;
+  Type_Etalon: string | null;
   Etat_Etalon: string | null;
   Port_Serie: string | null;
   Id_Worker: number | null;

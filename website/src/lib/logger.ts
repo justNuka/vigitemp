@@ -197,7 +197,7 @@ export const log = {
     // Écrire aussi dans la base de données mesure (ts_journal)
     const commentaire = [
       details.resource,
-      details.resourceId ? `#${details.resourceId}` : null,
+      details.resourceId && !details.lieuId ? `#${details.resourceId}` : null,
       details.changes ? JSON.stringify(details.changes) : null,
       normalizedIp ? `IP: ${normalizedIp}` : null,
     ].filter(Boolean).join(" | ");
