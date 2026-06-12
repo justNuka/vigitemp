@@ -30,6 +30,11 @@ interface MonitoringCardsGridProps {
     durationMinutes?: number | null,
     actionComment?: string | null,
   ) => void
+  onGroupSurveillanceToggle?: (
+    groupId: number,
+    newState: boolean,
+    durationMinutes?: number | null,
+  ) => void
   requireActionComment?: boolean
   onEditLocation?: (idLieu: number) => void
   onDetailsModalStateChange?: (idLieu: number, open: boolean) => void
@@ -73,6 +78,7 @@ export function MonitoringCardsGrid({
   disabledFirst = false,
   isLoading = false,
   onSurveillanceToggle,
+  onGroupSurveillanceToggle,
   requireActionComment = false,
   onEditLocation,
   onDetailsModalStateChange,
@@ -176,6 +182,7 @@ export function MonitoringCardsGrid({
                     timezone={timezone}
                     t={t}
                     onSurveillanceToggle={handleSurveillanceToggle}
+                    onGroupSurveillanceToggle={onGroupSurveillanceToggle}
                     requireActionComment={requireActionComment}
                     onEditLocation={onEditLocation}
                     onDetailsModalStateChange={onDetailsModalStateChange}

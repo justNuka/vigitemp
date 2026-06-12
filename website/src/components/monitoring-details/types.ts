@@ -9,6 +9,7 @@ export type AuditLog = {
   commentaireUtilisateur: string | null
   user: string | null
   profile: string | null
+  detailsSummary?: string | null
   lieuId: number
 }
 

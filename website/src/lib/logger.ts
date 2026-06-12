@@ -330,6 +330,7 @@ export const log = {
         ip,
         resource: `Lieu: ${lieuName}`,
         resourceId: lieuId,
+        lieuId,
         changes: { alarmId, acknowledgedAt },
         reason: comment,
       }),

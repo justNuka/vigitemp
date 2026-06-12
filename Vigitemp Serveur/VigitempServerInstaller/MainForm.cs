@@ -155,18 +155,22 @@ public sealed class MainForm : Form
             return p;
         }
 
+        var localIpv4 = InstallerHelpers.GetPreferredLocalIpv4();
+        var genericIpPlaceholder = string.IsNullOrWhiteSpace(localIpv4) ? "<ip-machine>" : localIpv4;
+        var websiteUrlPlaceholder = string.IsNullOrWhiteSpace(localIpv4) ? "http://<ip-machine>:3000" : $"http://{localIpv4}:3000";
+
         installDir = T(_s.InstallDir, placeholder: @"C:\ProgramData\VigiSensys\server");
         installMode = new ComboBox { Dock = DockStyle.Fill, DropDownStyle = ComboBoxStyle.DropDownList, FlatStyle = FlatStyle.Flat, BackColor = Color.White, ForeColor = TextPrimary };
         installMode.Items.AddRange(new object[] { InstallModeNormalLabel, InstallModeUpdateLabel });
         installMode.SelectedItem = string.Equals(_s.InstallMode, "update", StringComparison.OrdinalIgnoreCase) ? InstallModeUpdateLabel : InstallModeNormalLabel;
         serviceName = T(_s.ServiceName, placeholder: "VigiSensysServeur");
-        websiteBaseUrl = T(_s.WebsiteBaseUrl, placeholder: "http://127.0.0.1:3000");
+        websiteBaseUrl = T(_s.WebsiteBaseUrl, placeholder: websiteUrlPlaceholder);
         dbProvider = new ComboBox { Dock = DockStyle.Fill, DropDownStyle = ComboBoxStyle.DropDownList };
         dbProvider.Items.AddRange(new object[] { "mysql", "mssql" });
         dbProvider.SelectedItem = _s.DbProvider;
-        dbHost = T(_s.DbHost, placeholder: "127.0.0.1");
+        dbHost = T(_s.DbHost, placeholder: genericIpPlaceholder);
         dbPort = T(_s.DbPort, placeholder: "3306");
-        dbUser = T(_s.DbUser, placeholder: "root");
+        dbUser = T(_s.DbUser, placeholder: "Compte SQL dédié (pas root)");
         dbPassword = T(_s.DbPassword, true, placeholder: "Mot de passe BDD");
         dbMain = T(_s.DbMain, placeholder: "vigi_main");
         dbMeasure = T(_s.DbMeasure, placeholder: "vigi_mesures");
@@ -178,7 +182,7 @@ public sealed class MainForm : Form
         publicKeyPath = T(_s.PublicKeyPath, placeholder: "Chemin de public_key.pem");
         instancePublicKey = T(_s.InstancePublicKey, placeholder: "Optionnel");
         dispatchSecret = T(_s.DispatchSecret, placeholder: "Laisser vide pour reprise automatique");
-        detectFilesButton = SecondaryButton("D?tecter les fichiers", 170);
+        detectFilesButton = SecondaryButton("Détecter les fichiers", 170);
         detectFilesButton.Click += (_, _) => DetectSecurityFiles();
         licenseHysteresisDelta = T(_s.LicenseHysteresisDelta, placeholder: "0");
         licenseDebounceSeconds = T(_s.LicenseDebounceSeconds, placeholder: "0");
@@ -190,7 +194,7 @@ public sealed class MainForm : Form
         {
             var mssql = string.Equals(dbProvider.SelectedItem?.ToString(), "mssql", StringComparison.OrdinalIgnoreCase);
             if (string.IsNullOrWhiteSpace(dbPort.Text) || dbPort.Text is "3306" or "1433") dbPort.Text = mssql ? "1433" : "3306";
-            if (string.IsNullOrWhiteSpace(dbUser.Text) || dbUser.Text is "root" or "sa") dbUser.Text = mssql ? "sa" : "root";
+            if (string.IsNullOrWhiteSpace(dbUser.Text) || dbUser.Text is "root" or "sa") dbUser.Text = mssql ? "sa" : string.Empty;
         };
 
         var general = StepPanel();
@@ -221,7 +225,7 @@ public sealed class MainForm : Form
         var security = StepPanel();
         foreach (var c in new Control[]
                  {
-                     Field("D?tection automatique", detectFilesButton),
+                     Field("Détection automatique", detectFilesButton),
                      Field("Fichier licence (.vtlic)", licensePath, BrowseFile(licensePath, "Licence (*.vtlic)|*.vtlic|Tous les fichiers (*.*)|*.*")),
                      Field("Cle publique licence (.pem)", publicKeyPath, BrowseFile(publicKeyPath, "PEM (*.pem)|*.pem|Tous les fichiers (*.*)|*.*")),
                      Field("Cle publique instance (optionnel)", instancePublicKey),
@@ -356,6 +360,7 @@ public sealed class MainForm : Form
             if (string.IsNullOrWhiteSpace(_s.DbHost)) m = "L'hete BDD est obligatoire.";
             else if (string.IsNullOrWhiteSpace(_s.DbPort)) m = "Le port BDD est obligatoire.";
             else if (string.IsNullOrWhiteSpace(_s.DbUser)) m = "L'utilisateur BDD est obligatoire.";
+            else if (string.Equals(_s.DbProvider, "mysql", StringComparison.OrdinalIgnoreCase) && string.Equals(_s.DbUser, "root", StringComparison.OrdinalIgnoreCase)) m = "Le compte MySQL root n'est pas supporté. Créez un compte SQL dédié.";
             else if (string.IsNullOrWhiteSpace(_s.DbMain) || string.IsNullOrWhiteSpace(_s.DbMeasure)) m = "Les noms de bases sont obligatoires.";
             else if (string.IsNullOrWhiteSpace(_s.DbConnectionTimeoutSeconds) || string.IsNullOrWhiteSpace(_s.DbCommandTimeoutSeconds)) m = "Les timeouts BDD sont obligatoires.";
         }
@@ -613,11 +618,11 @@ public sealed class MainForm : Form
                 InstallDir = Path.Combine(pd, @"VigiSensys\server"),
                 InstallMode = "normal",
                 ServiceName = "VigiSensysServeur",
-                WebsiteBaseUrl = "http://127.0.0.1:3000",
+                WebsiteBaseUrl = string.Empty,
                 DbProvider = "mysql",
-                DbHost = "127.0.0.1",
+                DbHost = string.Empty,
                 DbPort = "3306",
-                DbUser = "root",
+                DbUser = string.Empty,
                 DbPassword = string.Empty,
                 DbMain = "vigi_main",
                 DbMeasure = "vigi_mesures",

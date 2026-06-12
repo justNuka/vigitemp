@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react"
 
+import { serializeDbDateTime } from "@/lib/date-display"
 import type { AuditLog } from "./types"
 
 export function useMonitoringAuditLogs(
@@ -27,8 +28,10 @@ export function useMonitoringAuditLogs(
         setError(null)
 
         const queryParams = new URLSearchParams({ limit: "200" })
-        if (rangeStart) queryParams.set("dateFrom", rangeStart.toISOString())
-        if (rangeEnd) queryParams.set("dateTo", rangeEnd.toISOString())
+        const serializedFrom = rangeStart ? serializeDbDateTime(rangeStart) : null
+        const serializedTo = rangeEnd ? serializeDbDateTime(rangeEnd) : null
+        if (serializedFrom) queryParams.set("dateFrom", serializedFrom)
+        if (serializedTo) queryParams.set("dateTo", serializedTo)
 
         const response = await fetch(`/api/lieux/${idLieu}/audit?${queryParams.toString()}`, {
           signal: controller.signal,

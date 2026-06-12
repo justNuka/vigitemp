@@ -57,32 +57,35 @@ export function MetrologyDashboardClient() {
   ]
 
   return (
-    <>
+    <div className="min-w-0 max-w-full overflow-x-hidden">
       <PageHeader title={t("header.title")} description={t("header.description")} />
-      <div className="space-y-6 p-6 min-w-0 overflow-x-hidden">
-        <Card className="min-w-0">
+      <div className="w-full max-w-full space-y-6 overflow-x-hidden p-6">
+        <Card className="min-w-0 max-w-full overflow-hidden">
           <CardHeader>
             <CardTitle>{t("section.title")}</CardTitle>
             <CardDescription>{t("section.description")}</CardDescription>
           </CardHeader>
-          <CardContent className="min-w-0 p-2 md:p-4 xl:p-4">
-            <TanStackTable
-              columns={columns}
-              data={data || []}
-              searchField={["nomLieu", "sondeAssociee"]}
-              searchPlaceholder={t("table.searchPlaceholder")}
-              isLoading={isLoading}
-              emptyMessage={t("table.empty")}
-              maxHeight="60vh"
-              headerClassName="!bg-sidebar !text-sidebar-foreground"
-              headerCellClassName="!bg-sidebar !text-sidebar-foreground !border-r !border-white/25 hover:!bg-sidebar-accent/80"
-              tableClassName="border-separate border-spacing-0 [&_thead_th]:!border-r [&_thead_th]:!border-white/25 [&_thead_th:last-child]:!border-r-0"
-              exportFileName={t("table.exportFileName")}
-            />
+          <CardContent className="min-w-0 max-w-full overflow-hidden p-2 md:p-4 xl:p-4">
+            <div className="w-full max-w-full overflow-x-auto">
+              <TanStackTable
+                columns={columns}
+                data={data || []}
+                searchField={["nomLieu", "sondeAssociee"]}
+                searchPlaceholder={t("table.searchPlaceholder")}
+                isLoading={isLoading}
+                emptyMessage={t("table.empty")}
+                maxHeight="60vh"
+                containerClassName="w-full max-w-full"
+                headerClassName="!bg-sidebar !text-sidebar-foreground"
+                headerCellClassName="!bg-sidebar !text-sidebar-foreground !border-r !border-white/25 hover:!bg-sidebar-accent/80"
+                tableClassName="w-full border-separate border-spacing-0 [&_thead_th]:!border-r [&_thead_th]:!border-white/25 [&_thead_th:last-child]:!border-r-0"
+                exportFileName={t("table.exportFileName")}
+              />
+            </div>
           </CardContent>
         </Card>
 
-        <div className="grid min-w-0 gap-4 md:grid-cols-3">
+        <div className="grid min-w-0 max-w-full gap-4 md:grid-cols-3">
           <Card className="min-w-0">
             <CardHeader>
               <div className="flex items-center gap-3">
@@ -135,6 +138,6 @@ export function MetrologyDashboardClient() {
           </Card>
         </div>
       </div>
-    </>
+    </div>
   )
 }

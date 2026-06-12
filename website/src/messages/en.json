@@ -206,6 +206,23 @@
     }
   },
   "alarmsPage": {
+    "analysis": {
+      "title": "Alarm analysis",
+      "description": "Detailed analysis of an alarm, its measurements, and its audit trail.",
+      "back": "Back to alarms",
+      "backToMonitoring": "Back to monitoring",
+      "acknowledge": "Acknowledge",
+      "print": "Print",
+      "exportMeasurements": "Export measurements",
+      "exportAudit": "Export audit",
+      "locationAlarms": "Location alarms",
+      "selectAlarm": "Select an alarm",
+      "empty": "No alarms available for this location.",
+      "focusTitle": "Selected alarm",
+      "refocus": "Refocus on alarm",
+      "statusActive": "Active",
+      "statusResolved": "Resolved"
+    },
     "title": "Alarm management",
     "description": "Follow-up and handling of alarms",
     "meta": {
@@ -349,7 +366,12 @@
       "select_column": "Select",
       "alarm_column": "Alarm",
       "status_column": "Status",
-      "select_alarm_aria": "Select alarm {id}"
+      "select_alarm_aria": "Select alarm {id}",
+      "select_all": "Select all",
+      "deselect_all": "Clear all",
+      "related_type_filter_placeholder": "Filter by type",
+      "related_type_filter_all": "All types",
+      "related_alarms_empty": "No alarms match the current filter."
     },
     "status": {
       "active": "Active",
@@ -5578,6 +5600,24 @@
           "title": "Selected probes",
           "description": "Summary of the probes that will be included in the adjustment operation."
         },
+        "selectedSensors": {
+          "title": "Adjustment targets",
+          "description": "Selected probes and their current adjustment information.",
+          "empty": "No probe selected for adjustment",
+          "exportFileName": "adjustment-targets",
+          "unassignedModule": "No module assigned",
+          "pending": "Pending",
+          "columns": {
+            "sensor": "Probe",
+            "module": "Module",
+            "currentCalibrationValue": "Current calibration value",
+            "signalRead": "Read signal"
+          }
+        },
+        "navigation": {
+          "title": "Metrology navigation",
+          "description": "Quick access to the other metrology pages."
+        },
         "cards": {
           "general": {
             "title": "General information",
@@ -5587,18 +5627,18 @@
             "operatorPlaceholder": "Operator name",
             "displayDecimals": "Displayed decimals count"
           },
-        "standard": {
-          "title": "Reference standard",
-          "description": "Choose the reference probe and read the certificate information.",
+          "standard": {
+            "title": "Reference standard",
+            "description": "Choose the reference probe and read the certificate information.",
             "coefficientsAlertTitle": "Recommended check",
             "coefficientsAlertDescription": "Check the coefficients and certificate information before continuing.",
             "externalProbe": "External probe",
-          "externalProbeHint": "Adjustment is currently not available with an external probe.",
-          "standardProbe": "Reference probe",
-          "standardProbePlaceholder": "Choose a reference probe",
-          "standardProbeSearchPlaceholder": "Search a reference probe",
-          "standardProbeEmpty": "No reference probe available",
-          "organization": "Organization",
+            "externalProbeHint": "Adjustment is currently not available with an external probe.",
+            "standardProbe": "Reference probe",
+            "standardProbePlaceholder": "Choose a reference probe",
+            "standardProbeSearchPlaceholder": "Search a reference probe",
+            "standardProbeEmpty": "No reference probe available",
+            "organization": "Organization",
             "certificateDate": "Certificate date",
             "certificateNumber": "Certificate number",
             "unit": "Unit",
@@ -5612,23 +5652,60 @@
             "serialPort": "Serial port",
             "empty": "No data available"
           },
-        "medium": {
-          "title": "Intercomparison medium",
-          "description": "Selection of the bath or medium used for the operation.",
-          "select": "Brand / reference",
-          "selectPlaceholder": "Choose an intercomparison medium",
-          "empty": "No intercomparison medium available",
-          "model": "Brand / model",
+          "medium": {
+            "title": "Intercomparison medium",
+            "description": "Selection of the bath or medium used for the operation.",
+            "select": "Brand / reference",
+            "selectPlaceholder": "Choose an intercomparison medium",
+            "empty": "No intercomparison medium available",
+            "model": "Brand / model",
             "reference": "Reference",
             "stability": "Stability",
             "homogeneity": "Homogeneity"
           },
-            "plateau": {
-              "title": "Stability plateau",
-              "description": "Configure the stabilization window before recording the adjustment values.",
-              "durationMinutes": "Duration (min)",
-              "maxGap": "Maximum gap"
-            }
+          "run": {
+            "title": "Adjustment control",
+            "description": "Start or stop the ongoing adjustment sequence.",
+            "start": "Start adjustment",
+            "stop": "Stop adjustment",
+            "hint": "The execution logic will be connected to the acquisition workflow."
+          },
+          "points": {
+            "title": "Points",
+            "description": "Enter the target points and validate each one before recording the values.",
+            "pointOne": "Point 1",
+            "pointTwo": "Point 2",
+            "validate": "Validate",
+            "invalidValue": "The entered point value is invalid.",
+            "collecting": "Collecting data for point {point}."
+          },
+          "standardMeasure": {
+            "title": "Reference reading",
+            "description": "Displays the latest measurement acquired from the reference standard.",
+            "lastMeasure": "Latest measurement",
+            "empty": "-",
+            "waiting": "Waiting for reading"
+          },
+          "plateau": {
+            "title": "Stability plateau",
+            "description": "Configure the stabilization window before recording the adjustment values.",
+            "durationMinutes": "Duration (min)",
+            "maxGap": "Maximum gap"
+          }
+        },
+        "status": {
+          "errorTitle": "Adjustment error",
+          "warningTitle": "Adjustment pending",
+          "infoTitle": "Adjustment in progress",
+          "exportReadyTitle": "Adjustment exports available",
+          "exportReadyDescription": "The results were stored in t_ajustage. You can download the XML for each probe.",
+          "exportReadyCta": "Export {serial}"
+        },
+        "stopConfirm": {
+          "title": "Stop adjustment",
+          "description": "No point has been validated yet. Stopping now will cancel all in-progress results.",
+          "cancel": "Continue",
+          "confirm": "Stop and cancel"
         }
       }
     },
@@ -5644,6 +5721,10 @@
       }
     },
     "subpagesCards": {
+      "group": {
+        "title": "Metrology navigation",
+        "description": "Move quickly between the metrology dashboard and related sub-pages."
+      },
       "dashboard": {
         "title": "Metrology dashboard",
         "description": "Return to the global metrology overview and quick actions.",

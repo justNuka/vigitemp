@@ -26,10 +26,23 @@ const mediumSchema = z.object({
   Contenu: z.string().default(""),
 })
 
+function formatDecimalNumber(value: unknown, maxFractionDigits = 6): number | null {
+  if (value === null || value === undefined || value === "") return null
+  const parsed = typeof value === "number" ? value : Number(String(value).replace(",", "."))
+  if (!Number.isFinite(parsed)) return null
+  return Number(parsed.toFixed(maxFractionDigits))
+}
+
 export const GET = withStandardOrExpertAnyAuthorizationLogging(READ_CODES, async () => {
   try {
     const rows = await fetchIntercomparisonMediaRows()
-    return apiOk(rows)
+    return apiOk(
+      rows.map((row) => ({
+        ...row,
+        Stabilite: formatDecimalNumber((row as Record<string, unknown>).Stabilite),
+        Homogeneite: formatDecimalNumber((row as Record<string, unknown>).Homogeneite),
+      })),
+    )
   } catch (error) {
     return apiError(500, "metrology_medium_fetch_failed", "Erreur lors de la recuperation des milieux d'inter-comparaison")
   }

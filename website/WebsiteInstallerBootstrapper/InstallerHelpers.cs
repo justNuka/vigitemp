@@ -3,6 +3,9 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Net;
+using System.Net.NetworkInformation;
+using System.Net.Sockets;
 using System.Security.Cryptography;
 using System.Text;
 using System.Windows.Forms;
@@ -104,6 +107,86 @@ internal static class InstallerHelpers
         }
 
         return null;
+    }
+
+    public static string GetPreferredLocalIpv4()
+    {
+        try
+        {
+            var interfaces = NetworkInterface.GetAllNetworkInterfaces()
+                .Where(nic =>
+                    nic.OperationalStatus == OperationalStatus.Up &&
+                    nic.NetworkInterfaceType != NetworkInterfaceType.Loopback &&
+                    nic.NetworkInterfaceType != NetworkInterfaceType.Tunnel);
+
+            foreach (var nic in interfaces)
+            {
+                var ip = nic.GetIPProperties().UnicastAddresses
+                    .Select(address => address.Address)
+                    .FirstOrDefault(address =>
+                        address.AddressFamily == AddressFamily.InterNetwork &&
+                        !IPAddress.IsLoopback(address));
+
+                if (ip != null)
+                {
+                    return ip.ToString();
+                }
+            }
+        }
+        catch
+        {
+            // ignore
+        }
+
+        return string.Empty;
+    }
+
+    public static string CopySecurityArtifact(string sourcePath, string destinationPath)
+    {
+        var parent = Path.GetDirectoryName(destinationPath);
+        if (!string.IsNullOrWhiteSpace(parent))
+        {
+            Directory.CreateDirectory(parent);
+        }
+
+        File.Copy(sourcePath, destinationPath, true);
+        return destinationPath;
+    }
+
+    public static void RemoveInstallerArtifacts(string installPath)
+    {
+        foreach (var dirName in new[] { "installer", "WebsiteInstallerBootstrapper", "shared-secrets" })
+        {
+            var fullDir = Path.Combine(installPath, dirName);
+            if (Directory.Exists(fullDir))
+            {
+                Directory.Delete(fullDir, true);
+            }
+        }
+
+        foreach (var pattern in new[] { "setup*.exe", "*installer*.exe", "VigiSensysWebSetup.exe", "VigiSensysWebSetup.pdb" })
+        {
+            foreach (var file in Directory.GetFiles(installPath, pattern, SearchOption.TopDirectoryOnly))
+            {
+                File.Delete(file);
+            }
+        }
+    }
+
+    public static void EnsureFirewallRules(string rulePrefix, int websitePort, int? agentPort, Action<string> log)
+    {
+        EnsureFirewallRule($"{rulePrefix} Web {websitePort}", websitePort, log);
+        if (agentPort.HasValue)
+        {
+            EnsureFirewallRule($"{rulePrefix} Agent {agentPort.Value}", agentPort.Value, log);
+        }
+    }
+
+    private static void EnsureFirewallRule(string ruleName, int port, Action<string> log)
+    {
+        var args = $"advfirewall firewall add rule name=\"{ruleName}\" dir=in action=allow protocol=TCP localport={port}";
+        log($"[INFO] Firewall: netsh {args}");
+        RunProcess("netsh.exe", args, Environment.SystemDirectory, log);
     }
     public static string GenerateSecret(int byteLength = 32)
     {

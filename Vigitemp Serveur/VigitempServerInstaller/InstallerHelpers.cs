@@ -3,6 +3,9 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Net;
+using System.Net.NetworkInformation;
+using System.Net.Sockets;
 using System.Security.Cryptography;
 using System.Text;
 using System.Windows.Forms;
@@ -111,6 +114,27 @@ internal static class InstallerHelpers
         }
 
         return null;
+    }
+
+    public static string GetPreferredLocalIpv4()
+    {
+        try
+        {
+            return NetworkInterface.GetAllNetworkInterfaces()
+                .Where(ni => ni.OperationalStatus == OperationalStatus.Up &&
+                             ni.NetworkInterfaceType != NetworkInterfaceType.Loopback &&
+                             ni.NetworkInterfaceType != NetworkInterfaceType.Tunnel)
+                .SelectMany(ni => ni.GetIPProperties().UnicastAddresses)
+                .Select(ua => ua.Address)
+                .Where(ip => ip.AddressFamily == AddressFamily.InterNetwork &&
+                             !IPAddress.IsLoopback(ip))
+                .Select(ip => ip.ToString())
+                .FirstOrDefault(ip => !string.IsNullOrWhiteSpace(ip));
+        }
+        catch
+        {
+            return null;
+        }
     }
     public static string GenerateSecret(int byteLength = 32)
     {

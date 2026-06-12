@@ -1,7 +1,8 @@
 import { AlertTriangle } from 'lucide-react'
 import { useMemo } from 'react'
+import { useLocale } from 'next-intl'
+import { useRouter } from 'next/navigation'
 
-import MonitoringDetailsModal from '@/components/monitoring-details-modal'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -56,6 +57,8 @@ export function AlarmDetailsDialog({
   focusRange,
   onClose,
 }: any) {
+  const locale = useLocale()
+  const router = useRouter()
   const formattedLastValue = useMemo(() => {
     return formatAlarmValue(selectedAlarm?.sensor.currentValue ?? selectedAlarm?.value ?? null, selectedAlarm?.sensor.unit)
   }, [selectedAlarm])
@@ -100,8 +103,23 @@ export function AlarmDetailsDialog({
                 <p className="text-sm font-medium">{t('dialog.graph_label')}</p>
                 <p className="text-xs text-muted-foreground">{t('dialog.graph_hint')}</p>
               </div>
-              <Button type="button" variant="outline" size="sm" className="border-primary/40 text-primary hover:bg-primary/10 hover:text-primary" onClick={() => setShowGraph((prev: boolean) => !prev)}>
-                {showGraph ? t('dialog.graph_hide') : t('dialog.graph_show')}
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="border-primary/40 text-primary hover:bg-primary/10 hover:text-primary"
+                onClick={() => {
+                  const targetLocationId = Number(selectedAlarm?.locationId)
+                  const targetAlarmId = Number(selectedAlarm?.id)
+                  if (!Number.isFinite(targetLocationId) || targetLocationId <= 0 || !Number.isFinite(targetAlarmId) || targetAlarmId <= 0) {
+                    return
+                  }
+                  setShowGraph(false)
+                  onClose(false)
+                  router.push(`/${locale}/alarmes/analyse?locationId=${encodeURIComponent(String(targetLocationId))}&alarmId=${encodeURIComponent(String(targetAlarmId))}`)
+                }}
+              >
+                {t('dialog.graph_show')}
               </Button>
             </div>
 
@@ -146,22 +164,6 @@ export function AlarmDetailsDialog({
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
-      {selectedAlarm && showGraph ? (
-        <MonitoringDetailsModal
-          isOpen={showGraph}
-          onClose={() => setShowGraph(false)}
-          idLieu={Number(selectedAlarm.locationId)}
-          nomLieu={selectedAlarm.location.name}
-          sondeNumeroSerie={selectedAlarm.sensor.name}
-          consigneSup={selectedAlarm.sensor.maxThreshold ?? null}
-          consigneInf={selectedAlarm.sensor.minThreshold ?? null}
-          consigne={selectedAlarm.threshold ?? null}
-          unite={selectedAlarm.sensor.unit}
-          isSurveillanceActive={true}
-          initialRange={focusRange ?? undefined}
-        />
-      ) : null}
     </>
   )
 }

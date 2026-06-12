@@ -16,6 +16,10 @@ import { useSurveillanceLiveUpdates } from "./_hooks/use-surveillance-live-updat
 import { SurveillanceHeaderControls } from "./_components/monitoring-header-controls";
 import { SurveillanceLoadMore } from "./_components/monitoring-load-more";
 import { CurvesOverlayModal } from "./_components/curves-overlay-modal";
+import {
+  MonitoringGroupToggleDialog,
+  type MonitoringGroupModalState,
+} from "./_components/monitoring-group-toggle-dialog";
 import { applySurveillanceFilters, computeSurveillanceStats, dedupeSensorsByLocation, type FilterState } from "./_helpers/monitoring-derived";
 import { toast } from "sonner";
 import { useForm, useWatch } from "react-hook-form";
@@ -92,6 +96,8 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
   const [disabledFirst, setDisabledFirst] = useState<boolean>(() => getInitialDisabledFirst());
   const [isOverlayOpen, setIsOverlayOpen] = useState(false);
   const [showNullNonResponse] = useState(initialShowNullNonResponse);
+  const [groupToggleModal, setGroupToggleModal] = useState<MonitoringGroupModalState | null>(null);
+  const [groupDisableDuration, setGroupDisableDuration] = useState("60");
   const [isRangeSelectionActive, setIsRangeSelectionActive] = useState(false);
   const [openDetailModalIds, setOpenDetailModalIds] = useState<number[]>([]);
   const [isAcknowledgeDialogOpen, setIsAcknowledgeDialogOpen] = useState(false);
@@ -525,6 +531,55 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
     [requireActionComment, t, updateAlarmCache, updateSensorsCache],
   );
 
+  const openGroupSurveillanceToggle = useCallback(
+    (groupId: number, isCurrentlyDisabled: boolean) => {
+      const groupName = groups.find((group) => group.id === groupId)?.name ?? `Groupe ${groupId}`;
+      setGroupDisableDuration("60");
+      setGroupToggleModal({
+        groupId,
+        groupName,
+        isActive: !isCurrentlyDisabled,
+      });
+    },
+    [groups],
+  );
+
+  const handleGroupSurveillanceToggleConfirm = useCallback(async () => {
+    if (!groupToggleModal) return;
+
+    try {
+      const disabled = groupToggleModal.isActive;
+      const durationMinutes =
+        disabled && groupDisableDuration !== "manual" ? Number.parseInt(groupDisableDuration, 10) : null;
+
+      const response = await fetch(`/api/groupes/${groupToggleModal.groupId}/surveillance`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          disabled,
+          durationMinutes: Number.isFinite(durationMinutes ?? NaN) ? durationMinutes : null,
+        }),
+      });
+
+      const payload = await response.json().catch(() => null);
+      if (!response.ok) {
+        toast.error(payload?.error?.message || t("refresh.error"));
+        return;
+      }
+
+      if (payload?.ok && payload?.data?.lieuIds) {
+        updateSensorsCache(
+          payload.data.lieuIds as number[],
+          payload.data.lieuEtat ?? (disabled ? "D" : "S"),
+          Boolean(payload.data.surveillanceDisabled),
+        );
+      }
+      setGroupToggleModal(null);
+    } catch {
+      toast.error(t("refresh.error"));
+    }
+  }, [groupDisableDuration, groupToggleModal, t, updateSensorsCache]);
+
 
 
 
@@ -616,6 +671,7 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
                 disabledTreeCounters={filters.searchTerm.trim() ? [] : disabledPaginatedData.treeCounters}
                 disabledFirst={disabledFirst}
                 onSurveillanceToggle={handleSurveillanceToggle}
+                onGroupSurveillanceToggle={openGroupSurveillanceToggle}
                 requireActionComment={requireActionComment}
                 onEditLocation={handleOpenLocationEdit}
                 onDetailsModalStateChange={handleDetailsModalStateChange}
@@ -681,6 +737,15 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
           locations={overlayLocations}
         />
       ) : null}
+
+      <MonitoringGroupToggleDialog
+        modal={groupToggleModal}
+        disableDuration={groupDisableDuration}
+        onDisableDurationChange={setGroupDisableDuration}
+        onClose={() => setGroupToggleModal(null)}
+        onConfirm={() => void handleGroupSurveillanceToggleConfirm()}
+        t={(key, values) => t(key, values as Record<string, string | number>)}
+      />
 
       <LocationFormDialog
         open={isEditLocationOpen}

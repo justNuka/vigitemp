@@ -1,4 +1,4 @@
-import { Building2, ChevronDown, Info, Users } from "lucide-react"
+import { Building2, ChevronDown, Info, Power, PowerOff, Users } from "lucide-react"
 import { LazyMotion, domAnimation, m } from "motion/react"
 
 import MonitoringCard from "@/components/monitoring-card"
@@ -32,6 +32,11 @@ type MonitoringSiteSectionProps = {
     newState: boolean,
     durationMinutes?: number | null,
     actionComment?: string | null,
+  ) => void
+  onGroupSurveillanceToggle?: (
+    groupId: number,
+    newState: boolean,
+    durationMinutes?: number | null,
   ) => void
   requireActionComment?: boolean
   onEditLocation?: (idLieu: number) => void
@@ -100,6 +105,7 @@ export function MonitoringSiteSection({
   timezone,
   t,
   onSurveillanceToggle,
+  onGroupSurveillanceToggle,
   requireActionComment = false,
   onEditLocation,
   onDetailsModalStateChange,
@@ -165,12 +171,24 @@ export function MonitoringSiteSection({
                   <div className="flex items-center gap-2 px-2 py-1 text-base font-semibold text-gray-600 dark:text-slate-300">
                     <Users className="w-4 h-4" />
                     <span className="font-medium">{group.groupName}</span>
+                    {group.groupId !== null && onGroupSurveillanceToggle ? (
+                      <button
+                        type="button"
+                        onClick={() => onGroupSurveillanceToggle(group.groupId!, groupDisabled, null)}
+                        className="ml-auto inline-flex h-8 w-8 items-center justify-center rounded-md border border-slate-200 text-slate-600 transition-colors hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-900/60"
+                        title={groupDisabled ? t("group_modal.toggle_enable") : t("group_modal.toggle_disable")}
+                        aria-label={groupDisabled ? t("group_modal.toggle_enable") : t("group_modal.toggle_disable")}
+                      >
+                        {groupDisabled ? <Power className="h-4 w-4" /> : <PowerOff className="h-4 w-4" />}
+                      </button>
+                    ) : null}
                   </div>
                 ) : (
-                  <button
-                    onClick={() => toggleGroup(group.groupKey)}
-                    className="w-full flex items-center gap-2 px-2 py-1 hover:bg-gray-50 dark:hover:bg-slate-900/50 rounded transition-colors"
-                  >
+                  <div className="flex items-center gap-2 px-2 py-1">
+                    <button
+                      onClick={() => toggleGroup(group.groupKey)}
+                      className="flex min-w-0 flex-1 items-center gap-2 hover:bg-gray-50 dark:hover:bg-slate-900/50 rounded transition-colors"
+                    >
                     <ChevronDown
                       className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${
                         isGroupExpanded ? "rotate-0" : "-rotate-90"
@@ -194,7 +212,19 @@ export function MonitoringSiteSection({
                         {t("grid.disabled_badge")}
                       </span>
                     ) : null}
-                  </button>
+                    </button>
+                    {group.groupId !== null && onGroupSurveillanceToggle ? (
+                      <button
+                        type="button"
+                        onClick={() => onGroupSurveillanceToggle(group.groupId!, groupDisabled, null)}
+                        className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-slate-200 text-slate-600 transition-colors hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-900/60"
+                        title={groupDisabled ? t("group_modal.toggle_enable") : t("group_modal.toggle_disable")}
+                        aria-label={groupDisabled ? t("group_modal.toggle_enable") : t("group_modal.toggle_disable")}
+                      >
+                        {groupDisabled ? <Power className="h-4 w-4" /> : <PowerOff className="h-4 w-4" />}
+                      </button>
+                    ) : null}
+                  </div>
                 )}
 
                 {isGroupExpanded ? (

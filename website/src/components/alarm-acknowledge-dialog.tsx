@@ -5,6 +5,7 @@ import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useLocale, useTranslations } from "next-intl";
+import { useRouter } from "next/navigation";
 import { formatDistanceStrict } from "date-fns";
 import { fr } from "date-fns/locale";
 import { AlertTriangle } from "lucide-react";
@@ -21,7 +22,6 @@ import {
 } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import MonitoringDetailsModal from "@/components/monitoring-details-modal";
 import { formatDbDateTime, parseDbDateTime } from "@/lib/date-display";
 import { formatMeasureValue } from "@/lib/measurements";
 import { cn } from "@/lib/utils";
@@ -83,6 +83,7 @@ export function AlarmAcknowledgeDialog({
 }: Props) {
   const t = useTranslations("alarmsPage");
   const locale = useLocale();
+  const router = useRouter();
   const baseAlarm: AcknowledgeDialogAlarm = useMemo(
     () =>
       alarm ?? {
@@ -95,7 +96,6 @@ export function AlarmAcknowledgeDialog({
   );
   const [commentOptions, setCommentOptions] = useState<{ id: number; text: string }[]>([]);
   const [selectedCommentId, setSelectedCommentId] = useState<string>("");
-  const [showGraph, setShowGraph] = useState(false);
   const [alarmCount30, setAlarmCount30] = useState<number | null>(null);
   const [isCommentsLoading, setIsCommentsLoading] = useState(false);
   const [isStatsLoading, setIsStatsLoading] = useState(false);
@@ -105,6 +105,7 @@ export function AlarmAcknowledgeDialog({
   const [isRelatedAlarmsLoading, setIsRelatedAlarmsLoading] = useState(false);
   const [selectedAlarmIds, setSelectedAlarmIds] = useState<string[]>([]);
   const [focusedAlarmId, setFocusedAlarmId] = useState<string | null>(null);
+  const [relatedTypeFilter, setRelatedTypeFilter] = useState<string>("all");
   const alarmId = alarm?.id ?? null;
   const alarmLocationId = alarm?.locationId ?? null;
 
@@ -144,11 +145,11 @@ export function AlarmAcknowledgeDialog({
     const initId = window.setTimeout(() => {
       setSelectedCommentId("");
       setAlarmCount30(null);
-      setShowGraph(false);
       setAlarmDetails(null);
       setRelatedAlarms([]);
       setSelectedAlarmIds([alarm.id]);
       setFocusedAlarmId(alarm.id);
+      setRelatedTypeFilter("all");
       setIsCommentsLoading(true);
       setIsStatsLoading(true);
       setIsRelatedAlarmsLoading(true);
@@ -374,12 +375,57 @@ export function AlarmAcknowledgeDialog({
     }
   };
 
+  const allRelatedAlarms = useMemo<RelatedAlarmRow[]>(
+    () =>
+      relatedAlarms.length > 0
+        ? relatedAlarms
+        : [
+            {
+              id: Number(baseAlarm.id),
+              type: resolvedAlarm.type,
+              status: "active" as const,
+              timestamp: resolvedAlarm.triggeredAt ? String(resolvedAlarm.triggeredAt) : null,
+              currentValue: resolvedAlarm.currentValue ?? resolvedAlarm.value ?? null,
+              unit: resolvedAlarm.unit ?? null,
+            },
+          ],
+    [baseAlarm.id, relatedAlarms, resolvedAlarm.currentValue, resolvedAlarm.triggeredAt, resolvedAlarm.type, resolvedAlarm.unit, resolvedAlarm.value],
+  );
+
+  const relatedTypeOptions = useMemo(() => {
+    const types = Array.from(new Set(allRelatedAlarms.map((row) => row.type).filter(Boolean)));
+    return types;
+  }, [allRelatedAlarms]);
+
+  const visibleRelatedAlarms = useMemo(() => {
+    if (relatedTypeFilter === "all") {
+      return allRelatedAlarms;
+    }
+    return allRelatedAlarms.filter((row) => row.type === relatedTypeFilter);
+  }, [allRelatedAlarms, relatedTypeFilter]);
+
+  const visibleRelatedAlarmIds = useMemo(() => visibleRelatedAlarms.map((row) => String(row.id)), [visibleRelatedAlarms]);
+  const allVisibleSelected =
+    visibleRelatedAlarmIds.length > 0 && visibleRelatedAlarmIds.every((id) => selectedAlarmIds.includes(id));
+  const someVisibleSelected = visibleRelatedAlarmIds.some((id) => selectedAlarmIds.includes(id));
+
   const toggleSelectedAlarm = (alarmId: string, checked: boolean) => {
     setSelectedAlarmIds((current) => {
       if (checked) {
         return current.includes(alarmId) ? current : [...current, alarmId];
       }
       const next = current.filter((id) => id !== alarmId);
+      return next.length > 0 ? next : current;
+    });
+  };
+
+  const toggleAllVisibleAlarms = (checked: boolean) => {
+    setSelectedAlarmIds((current) => {
+      if (checked) {
+        return Array.from(new Set([...current, ...visibleRelatedAlarmIds]));
+      }
+
+      const next = current.filter((id) => !visibleRelatedAlarmIds.includes(id));
       return next.length > 0 ? next : current;
     });
   };
@@ -395,7 +441,6 @@ export function AlarmAcknowledgeDialog({
           if (!nextOpen) {
             reset({ comment: "" });
             setSelectedCommentId("");
-            setShowGraph(false);
           }
         }}
       >
@@ -422,15 +467,45 @@ export function AlarmAcknowledgeDialog({
                     {t("dialog.selected_alarms_count", { count: selectedAlarmIds.length })}
                   </p>
                 </div>
-                {isRelatedAlarmsLoading ? (
-                  <span className="text-xs text-muted-foreground">{t("dialog.loading")}</span>
-                ) : null}
+                <div className="flex items-center gap-2">
+                  <Select value={relatedTypeFilter} onValueChange={setRelatedTypeFilter}>
+                    <SelectTrigger className="h-8 w-[180px]">
+                      <SelectValue placeholder={t("dialog.related_type_filter_placeholder")} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">{t("dialog.related_type_filter_all")}</SelectItem>
+                      {relatedTypeOptions.map((type) => (
+                        <SelectItem key={type} value={String(type)}>
+                          {getTypeLabel(type)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    disabled={visibleRelatedAlarmIds.length === 0}
+                    onClick={() => toggleAllVisibleAlarms(!allVisibleSelected)}
+                  >
+                    {allVisibleSelected ? t("dialog.deselect_all") : t("dialog.select_all")}
+                  </Button>
+                  {isRelatedAlarmsLoading ? (
+                    <span className="text-xs text-muted-foreground">{t("dialog.loading")}</span>
+                  ) : null}
+                </div>
               </div>
               <div className="max-h-56 overflow-auto">
                 <table className="w-full text-sm">
                   <thead className="sticky top-0 bg-muted/80 text-xs uppercase text-muted-foreground">
                     <tr>
-                      <th className="w-10 px-3 py-2 text-left">{t("dialog.select_column")}</th>
+                      <th className="w-10 px-3 py-2 text-left">
+                        <Checkbox
+                          checked={allVisibleSelected ? true : someVisibleSelected ? "indeterminate" : false}
+                          onCheckedChange={(next) => toggleAllVisibleAlarms(next === true)}
+                          aria-label={t("dialog.select_all")}
+                        />
+                      </th>
                       <th className="px-3 py-2 text-left">{t("dialog.alarm_column")}</th>
                       <th className="px-3 py-2 text-left">{t("dialog.status_column")}</th>
                       <th className="px-3 py-2 text-left">{t("dialog.start_label")}</th>
@@ -438,7 +513,7 @@ export function AlarmAcknowledgeDialog({
                     </tr>
                   </thead>
                   <tbody>
-                    {(relatedAlarms.length > 0 ? relatedAlarms : [{ id: Number(alarm.id), type: resolvedAlarm.type, status: "active" as const, timestamp: resolvedAlarm.triggeredAt ? String(resolvedAlarm.triggeredAt) : null, currentValue: resolvedAlarm.currentValue ?? resolvedAlarm.value ?? null, unit: resolvedAlarm.unit ?? null }]).map((row) => {
+                    {visibleRelatedAlarms.map((row) => {
                       const rowId = String(row.id);
                       const checked = selectedAlarmIds.includes(rowId);
                       const isFocused = rowId === (focusedAlarmId ?? alarm.id);
@@ -470,6 +545,13 @@ export function AlarmAcknowledgeDialog({
                         </tr>
                       );
                     })}
+                    {visibleRelatedAlarms.length === 0 ? (
+                      <tr>
+                        <td colSpan={5} className="px-3 py-6 text-center text-sm text-muted-foreground">
+                          {t("dialog.related_alarms_empty")}
+                        </td>
+                      </tr>
+                    ) : null}
                   </tbody>
                 </table>
               </div>
@@ -541,8 +623,24 @@ export function AlarmAcknowledgeDialog({
                 <p className="text-sm font-medium">{t("dialog.graph_label")}</p>
                 <p className="text-xs text-muted-foreground">{t("dialog.graph_hint")}</p>
               </div>
-              <Button type="button" variant="outline" size="sm" className="border-primary/40 text-primary hover:bg-primary/10 hover:text-primary" onClick={() => setShowGraph((prev) => !prev)}>
-                {showGraph ? t("dialog.graph_hide") : t("dialog.graph_show")}
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="border-primary/40 text-primary hover:bg-primary/10 hover:text-primary"
+                onClick={() => {
+                  const targetLocationId = Number(resolvedAlarm.locationId);
+                  const targetAlarmId = Number(focusedAlarmId ?? alarm.id);
+                  if (!Number.isFinite(targetLocationId) || targetLocationId <= 0 || !Number.isFinite(targetAlarmId) || targetAlarmId <= 0) {
+                    return;
+                  }
+                  onOpenChange(false);
+                  router.push(
+                    `/${locale}/alarmes/analyse?locationId=${encodeURIComponent(String(targetLocationId))}&alarmId=${encodeURIComponent(String(targetAlarmId))}`,
+                  );
+                }}
+              >
+                {t("dialog.graph_show")}
               </Button>
             </div>
 
@@ -626,20 +724,6 @@ export function AlarmAcknowledgeDialog({
         </DialogContent>
       </Dialog>
 
-      {showGraph ? (
-        <MonitoringDetailsModal
-          isOpen={showGraph}
-          onClose={() => setShowGraph(false)}
-          idLieu={Number(resolvedAlarm.locationId)}
-          nomLieu={resolvedAlarm.locationName}
-          sondeNumeroSerie={resolvedAlarm.sensorName}
-          consigneSup={resolvedAlarm.maxThreshold ?? null}
-          consigneInf={resolvedAlarm.minThreshold ?? null}
-          consigne={null}
-          unite={resolvedAlarm.unit ?? ""}
-          isSurveillanceActive={true}
-        />
-      ) : null}
     </>
   );
 }

@@ -17,10 +17,10 @@ export const GET = withOneOrHigherAnyAuthorizationLogging(SENSOR_ACCESS_CODES, a
   try {
     const sondes = await prisma.t_sonde.findMany({
       include: {
-        t_sonde_etat: {
+        t_etat_surveillance: {
           select: {
-            Etat_Sonde: true,
-            Etat_Libelle: true,
+            Surveillance_Etat: true,
+            Surveillance_Etat_Libelle: true,
           },
         },
         t_lieu: {
@@ -86,8 +86,9 @@ export const GET = withOneOrHigherAnyAuthorizationLogging(SENSOR_ACCESS_CODES, a
       Sonde_Type: (sonde as { Sonde_Type?: string | null }).Sonde_Type ?? null,
       Famille_Sonde: getSensorFamilyFromTypeCode((sonde as { Sonde_Type?: string | null }).Sonde_Type),
       Est_Sonde_GSO: sonde.Est_Sonde_GSO,
-      Surveillance_Etat: sonde.Surveillance_Etat ?? sonde.t_sonde_etat?.Etat_Sonde ?? null,
-      Surveillance_Etat_Libelle: sonde.t_sonde_etat?.Etat_Libelle ?? sonde.Surveillance_Etat ?? null,
+      Surveillance_Etat: sonde.Surveillance_Etat ?? sonde.t_etat_surveillance?.Surveillance_Etat ?? null,
+      Surveillance_Etat_Libelle:
+        sonde.t_etat_surveillance?.Surveillance_Etat_Libelle ?? sonde.Surveillance_Etat ?? null,
       Id_Module: sonde.Id_Module,
       Module_Libelle:
         (typeof sonde.Id_Module === "number" ? moduleById.get(sonde.Id_Module)?.Module_Numero_Serie : null) ??

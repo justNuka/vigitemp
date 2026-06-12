@@ -14,6 +14,8 @@ namespace Vigitemp_Serveur.sensors
         public string Unit { get; set; }
         public int? BatteryPercent { get; set; }
         public int? Rssi { get; set; }
+        public bool? IsOnBatteryPower { get; set; }
+        public string AlarmStateRaw { get; set; }
     }
 
     internal sealed class GspConfigurationResponse
@@ -259,7 +261,10 @@ namespace Vigitemp_Serveur.sensors
                 Unit = measuredUnit,
                 BatteryPercent = TryExtractIntLineValue(response, "Batterie"),
                 Rssi = TryExtractIntLineValue(response, "RSSI"),
+                AlarmStateRaw = TryExtractLineValue(response, "Alarm"),
             };
+
+            result.IsOnBatteryPower = TryExtractPowerState(result.AlarmStateRaw);
 
             if (!result.Temperature.HasValue)
             {
@@ -600,6 +605,35 @@ namespace Vigitemp_Serveur.sensors
             }
 
             return match.Groups[1].Value?.Trim();
+        }
+
+        private static bool? TryExtractPowerState(string rawAlarmState)
+        {
+            if (string.IsNullOrWhiteSpace(rawAlarmState))
+            {
+                return null;
+            }
+
+            var normalized = rawAlarmState.Trim().ToUpperInvariant();
+            switch (normalized)
+            {
+                case "BAT":
+                case "B":
+                case "SECTEUR":
+                case "SUR_BATTERIE":
+                case "ON_BATTERY":
+                case "BATTERY":
+                    return true;
+                case "NONE":
+                case "NORMAL":
+                case "N":
+                case "OK":
+                case "AUCUNE":
+                case "NO":
+                    return false;
+                default:
+                    return null;
+            }
         }
     }
 }

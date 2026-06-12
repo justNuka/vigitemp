@@ -44,10 +44,10 @@ export function AdminNavDock() {
       isActive: normalizedPathname === getLocalizedPathname("/admin/modules", locale as any),
     },
     {
-      key: "metrologie",
+      key: "etalons",
       icon: <Ruler size={20} />,
-      label: tDock("metrologie"),
-      onClick: () => router.push("/admin/metrologie"),
+      label: tDock("etalons"),
+      onClick: () => router.push("/admin/metrologie/bains-etalons"),
       isActive:
         normalizedPathname.startsWith(getLocalizedPathname("/admin/metrologie", locale as any)) ||
         normalizedPathname === getLocalizedPathname("/admin/etalons", locale as any),

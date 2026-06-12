@@ -8,6 +8,7 @@ Param(
     [string]$EnvFileName,
     [string]$AlarmDispatchSecret,
     [string]$AlarmDispatchSecretFile,
+    [switch]$ConfigureFirewall,
     [switch]$Silent,
     [switch]$Offline,
     [switch]$Standalone
@@ -47,6 +48,45 @@ function T($fr, $en) {
 function Write-Log($message) {
     $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
     Write-Host "[$timestamp] $message"
+}
+
+function Get-PreferredLocalIpv4 {
+    try {
+        $addresses = Get-NetIPAddress -AddressFamily IPv4 -ErrorAction SilentlyContinue |
+            Where-Object {
+                $_.IPAddress -ne "127.0.0.1" -and
+                $_.PrefixOrigin -ne "WellKnown"
+            } |
+            Sort-Object -Property InterfaceMetric
+        if ($addresses) {
+            return $addresses[0].IPAddress
+        }
+    } catch { }
+    return ""
+}
+
+function Copy-SecurityArtifact([string]$sourcePath, [string]$destinationPath) {
+    New-Item -ItemType Directory -Force -Path (Split-Path -Parent $destinationPath) | Out-Null
+    Copy-Item -LiteralPath $sourcePath -Destination $destinationPath -Force
+    return $destinationPath
+}
+
+function Remove-InstallerArtifacts([string]$installPath) {
+    foreach ($dirName in @("installer", "WebsiteInstallerBootstrapper", "shared-secrets")) {
+        $targetDir = Join-Path $installPath $dirName
+        if (Test-Path $targetDir) {
+            Remove-Item -LiteralPath $targetDir -Recurse -Force -ErrorAction SilentlyContinue
+        }
+    }
+    foreach ($pattern in @("setup*.exe", "*installer*.exe", "VigiSensysWebSetup.exe", "VigiSensysWebSetup.pdb")) {
+        Get-ChildItem -Path $installPath -File -Filter $pattern -ErrorAction SilentlyContinue | Remove-Item -Force -ErrorAction SilentlyContinue
+    }
+}
+
+function Ensure-FirewallRule([string]$ruleName, [int]$localPort) {
+    $args = "advfirewall firewall add rule name=`"$ruleName`" dir=in action=allow protocol=TCP localport=$localPort"
+    Write-Log "Firewall: netsh $args"
+    & netsh.exe advfirewall firewall add rule name="$ruleName" dir=in action=allow protocol=TCP localport=$localPort | Out-Null
 }
 
 function Invoke-RobocopySafe {
@@ -270,6 +310,11 @@ $programData = [Environment]::GetFolderPath("CommonApplicationData")
 $defaultInstallDir = Join-Path $programData "VigiSensys\\website"
 $defaultServiceName = "VigiSensysWeb"
 $defaultPort = 3000
+$preferredLocalIp = Get-PreferredLocalIpv4
+$websiteBaseUrlPlaceholder = if ([string]::IsNullOrWhiteSpace($preferredLocalIp)) { "http://<ip-machine>:$defaultPort/" } else { "http://${preferredLocalIp}:$defaultPort/" }
+$hotlineHostPlaceholder = if ([string]::IsNullOrWhiteSpace($preferredLocalIp)) { "<ip-serveur-hotline>" } else { $preferredLocalIp }
+$dbHostPlaceholder = if ([string]::IsNullOrWhiteSpace($preferredLocalIp)) { "<ip-bdd>" } else { $preferredLocalIp }
+$cspConnectSrcPlaceholder = if ([string]::IsNullOrWhiteSpace($preferredLocalIp)) { "http://<ip-machine>:8000,http://localhost:8000" } else { "http://${preferredLocalIp}:8000,http://localhost:8000" }
 
 if ([string]::IsNullOrWhiteSpace($SourcePath)) {
     $SourcePath = Read-InstallValue (T "Chemin du site (code source ou build standalone)" "Path to website (source code or standalone build)") $defaultSource.Path
@@ -424,16 +469,20 @@ if (-not $Offline) {
     }
 }
 
-$websiteBaseUrl = Read-InstallValue (T "URL publique du site (ex: http://127.0.0.1:$Port/)" "Website public URL (example: http://127.0.0.1:$Port/)") "http://127.0.0.1:$Port/"
+$websiteBaseUrl = Read-InstallValue (T "URL publique du site (ex: $websiteBaseUrlPlaceholder)" "Website public URL (example: $websiteBaseUrlPlaceholder)") $websiteBaseUrlPlaceholder
 $appBaseUrl = Read-InstallValue (T "URL applicative publique (liens emails/login)" "Public app URL (email/login links)") $websiteBaseUrl
 $dbProvider = Read-InstallValue (T "Type de BDD (mysql/mssql)" "DB provider (mysql/mssql)") "mysql"
 $dbProvider = $dbProvider.ToLowerInvariant()
 if ($dbProvider -ne "mssql") { $dbProvider = "mysql" }
 $dbDefaultPort = if ($dbProvider -eq "mssql") { "1433" } else { "3306" }
 $dbPort = Read-InstallValue (T "Port BDD" "DB port") $dbDefaultPort
-$dbDefaultUser = if ($dbProvider -eq "mssql") { "sa" } else { "root" }
-$dbHost = Read-InstallValue (T "Hote BDD" "DB host") "127.0.0.1"
+$dbDefaultUser = if ($dbProvider -eq "mssql") { "sa" } else { "" }
+$dbHost = Read-InstallValue (T "Hote BDD" "DB host") $dbHostPlaceholder
 $dbUser = Read-InstallValue (T "Utilisateur BDD" "DB user") $dbDefaultUser
+$dbUserTrimmed = $dbUser.Trim()
+if ($dbProvider -eq "mysql" -and $dbUserTrimmed.ToLowerInvariant() -eq "root") {
+    Write-Error (T "Le compte MySQL root n'est pas supporte par cette installation. Creez un compte SQL dedie." "The MySQL root account is not supported by this installation. Create a dedicated SQL account.")
+}
 $dbPassword = Read-InstallSecret (T "Mot de passe BDD" "DB password") ""
 $dbMain = Read-InstallValue (T "Nom BDD principale" "Main DB name") "vigi_main"
 $dbMeasure = Read-InstallValue (T "Nom BDD mesures" "Measure DB name") "vigi_mesures"
@@ -446,12 +495,12 @@ $agentSecretPrivateKeyPath = Read-InstallValue (T "Chemin cle privee secret agen
 $agentPort = Read-InstallValue (T "Port agent local" "Local agent port") "8000"
 $agentTimeoutMs = Read-InstallValue (T "Timeout agent local (ms)" "Local agent timeout (ms)") "1500"
 $agentActiveWindowMinutes = Read-InstallValue (T "Fenetre active agent (minutes)" "Agent active window (minutes)") "15"
-$hotlineServerHost = Read-InstallValue (T "Hote serveur hotline" "Hotline server host") "127.0.0.1"
+$hotlineServerHost = Read-InstallValue (T "Hote serveur hotline" "Hotline server host") $hotlineHostPlaceholder
 $hotlineServerPort = Read-InstallValue (T "Port serveur hotline" "Hotline server port") "5310"
 $hotlineServerTimeoutMs = Read-InstallValue (T "Timeout hotline (ms)" "Hotline timeout (ms)") "10000"
 $hotlineAccessTokenTtl = Read-InstallValue (T "TTL access hotline (minutes)" "Hotline access token TTL (minutes)") "15"
 $hotlineRefreshTokenTtl = Read-InstallValue (T "TTL refresh hotline (minutes)" "Hotline refresh token TTL (minutes)") "120"
-$cspConnectSrc = Read-InstallValue (T "CSP connect-src supplementaires (CSV, optionnel)" "Additional CSP connect-src values (CSV, optional)") "http://127.0.0.1:8000,http://localhost:8000"
+$cspConnectSrc = Read-InstallValue (T "CSP connect-src supplementaires (CSV, optionnel)" "Additional CSP connect-src values (CSV, optional)") $cspConnectSrcPlaceholder
 $allowedDevOrigins = Read-InstallValue (T "Origins dev autorisees (CSV, optionnel)" "Allowed dev origins (CSV, optional)") ""
 if ([string]::IsNullOrWhiteSpace($AlarmDispatchSecretFile)) {
     $AlarmDispatchSecretFile = Join-Path $programData "VigiSensys\shared-secrets\alarm-dispatch-secret.txt"
@@ -460,8 +509,16 @@ $dispatchSecret = Resolve-DispatchSecret -providedSecret $AlarmDispatchSecret -p
 $jwtSecret = Resolve-GeneratedSecretValue -label (T "JWT principal" "Primary JWT")
 $hotlineJwtSecret = Resolve-GeneratedSecretValue -label (T "JWT hotline" "Hotline JWT")
 $agentSharedSecret = Resolve-GeneratedSecretValue -label (T "Secret partage agent" "Agent shared secret")
+if (-not $PSBoundParameters.ContainsKey('ConfigureFirewall') -and -not $Silent) {
+    $fwAnswer = Read-InstallValue (T "Configurer automatiquement les regles firewall Windows pour le site et l'agent ? (y/n)" "Automatically configure Windows firewall rules for website and agent? (y/n)") "y"
+    $ConfigureFirewall = ($fwAnswer -eq "y")
+}
 
 New-Item -ItemType Directory -Force -Path $logsDir | Out-Null
+$normalizedLicensePath = Copy-SecurityArtifact $licensePath (Join-Path $programData "VigiSensys\licenses\$(Split-Path -Leaf $licensePath)")
+$normalizedPublicKeyPath = Copy-SecurityArtifact $licensePublicKeyPath (Join-Path $programData "VigiSensys\license_keys\public_key.pem")
+$normalizedAgentPrivateKeyPath = Copy-SecurityArtifact $agentSecretPrivateKeyPath (Join-Path $programData "VigiSensys\license_keys\agent_secret_private.pem")
+Write-Log (T "Fichiers de securite copies dans ProgramData." "Security files copied into ProgramData.")
 
 if ($dbProvider -eq "mssql") {
     $dbUserEscaped = "{$dbUser}"
@@ -494,9 +551,9 @@ DATABASE_PROVIDER="$dbProvider"
 NEXT_PUBLIC_API_BASE_URL="$websiteBaseUrl"
 NEXT_PUBLIC_APP_URL="$appBaseUrl"
 NEXT_PUBLIC_CACHE_TTL=$cacheTtl
-VIGISENSYS_LICENSE_PATH="$licensePath"
-VIGISENSYS_LICENSE_PUBLIC_KEY_PATH="$licensePublicKeyPath"
-VIGISENSYS_AGENT_SECRET_PRIVATE_KEY_PATH="$agentSecretPrivateKeyPath"
+VIGISENSYS_LICENSE_PATH="$normalizedLicensePath"
+VIGISENSYS_LICENSE_PUBLIC_KEY_PATH="$normalizedPublicKeyPath"
+VIGISENSYS_AGENT_SECRET_PRIVATE_KEY_PATH="$normalizedAgentPrivateKeyPath"
 VIGISENSYS_AGENT_PORT=$agentPort
 VIGISENSYS_AGENT_TIMEOUT_MS=$agentTimeoutMs
 VIGISENSYS_AGENT_ACTIVE_WINDOW_MINUTES=$agentActiveWindowMinutes
@@ -506,18 +563,6 @@ VIGISENSYS_SURVEILLANCE_DISPATCH_SECRET="$dispatchSecret"
 VIGISENSYS_LOGS_DIR="$logsDir"
 VIGISENSYS_ALLOWED_DEV_ORIGINS="$allowedDevOrigins"
 VIGISENSYS_CSP_CONNECT_SRC="$cspConnectSrc"
-VIGITEMP_LICENSE_PATH="$licensePath"
-VIGITEMP_LICENSE_PUBLIC_KEY_PATH="$licensePublicKeyPath"
-VIGITEMP_AGENT_SECRET_PRIVATE_KEY_PATH="$agentSecretPrivateKeyPath"
-VIGITEMP_AGENT_PORT=$agentPort
-VIGITEMP_AGENT_TIMEOUT_MS=$agentTimeoutMs
-VIGITEMP_AGENT_ACTIVE_WINDOW_MINUTES=$agentActiveWindowMinutes
-VIGITEMP_AGENT_SECRET="$agentSharedSecret"
-VIGITEMP_ALARM_DISPATCH_SECRET="$dispatchSecret"
-VIGITEMP_SURVEILLANCE_DISPATCH_SECRET="$dispatchSecret"
-VIGITEMP_LOGS_DIR="$logsDir"
-VIGITEMP_ALLOWED_DEV_ORIGINS="$allowedDevOrigins"
-VIGITEMP_CSP_CONNECT_SRC="$cspConnectSrc"
 JWT_SECRET="$jwtSecret"
 HOTLINE_SERVER_HOST="$hotlineServerHost"
 HOTLINE_SERVER_PORT=$hotlineServerPort
@@ -620,8 +665,13 @@ Write-Log (T "Création du service Windows (WinSW)..." "Creating Windows service
 & $winswExe install | Out-Null
 & $winswExe start | Out-Null
 
+if ($ConfigureFirewall) {
+    Ensure-FirewallRule -ruleName "VigiSensys Web $Port" -localPort $Port
+    Ensure-FirewallRule -ruleName "VigiSensys Agent $agentPort" -localPort ([int]$agentPort)
+}
 
 Write-InstallRegistryInfo -installPath $InstallDir -version $version
+Remove-InstallerArtifacts -installPath $InstallDir
 
 Write-Log (T "Registre: HKLM\\SOFTWARE\\VigiSensys\\Web" "Registry: HKLM\\SOFTWARE\\VigiSensys\\Web")
 Write-Log (T "  InstallPath: $InstallDir" "  InstallPath: $InstallDir")

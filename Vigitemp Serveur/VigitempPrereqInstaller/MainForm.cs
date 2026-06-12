@@ -91,7 +91,7 @@ public sealed class MainForm : Form
 
         _refreshButton = new Button
         {
-            Text = "Rafra?chir la d?tection",
+            Text = "Rafraîchir la détection",
             Width = 170,
             Height = 36,
             Location = new Point(24, 590),
@@ -252,7 +252,7 @@ public sealed class MainForm : Form
     {
         if (detection.VcRedistInstalled)
         {
-            AppendLog($"[INFO] VC++ Redistributable d?j? d?tect?{FormatVersionSuffix(detection.VcRedistVersion)}. Installation ignor?e.");
+            AppendLog($"[INFO] VC++ Redistributable déjà détecté{FormatVersionSuffix(detection.VcRedistVersion)}. Installation ignorée.");
         }
         else
         {
@@ -270,7 +270,7 @@ public sealed class MainForm : Form
 
         if (detection.NodeInstalled)
         {
-            AppendLog($"[INFO] Node.js d?j? d?tect?{FormatVersionSuffix(detection.NodeVersion)}. Installation ignor?e.");
+            AppendLog($"[INFO] Node.js déjà détecté{FormatVersionSuffix(detection.NodeVersion)}. Installation ignorée.");
         }
         else
         {
@@ -288,7 +288,7 @@ public sealed class MainForm : Form
 
         if (detection.MySqlInstalled)
         {
-            AppendLog($"[INFO] MySQL d?j? d?tect?{FormatVersionSuffix(detection.MySqlVersion)}. Installation ignor?e.");
+            AppendLog($"[INFO] MySQL déjà détecté{FormatVersionSuffix(detection.MySqlVersion)}. Installation ignorée.");
             return 0;
         }
 
@@ -330,7 +330,7 @@ public sealed class MainForm : Form
         if (clearLog)
         {
             _logTextBox.Clear();
-            AppendLog("[INFO] Rafra?chissement manuel de la d?tection...");
+            AppendLog("[INFO] Rafraîchissement manuel de la détection...");
         }
 
         try
@@ -361,7 +361,7 @@ public sealed class MainForm : Form
     {
         label.BackColor = installed ? Color.FromArgb(220, 252, 231) : Color.FromArgb(254, 242, 242);
         label.ForeColor = installed ? Color.FromArgb(22, 101, 52) : Color.FromArgb(153, 27, 27);
-        var status = installed ? "D?tect?" : "? installer";
+        var status = installed ? "Détecté" : "À installer";
         var suffix = string.IsNullOrWhiteSpace(version) ? string.Empty : Environment.NewLine + version.Trim();
         label.Text = title + Environment.NewLine + status + suffix;
     }
@@ -394,10 +394,10 @@ public sealed class MainForm : Form
 
     private void LogDetection(PrerequisiteDetection detection)
     {
-        AppendLog("[INFO] V?rification des pr?requis install?s...");
-        AppendLog($"[INFO] VC++ Redistributable : {(detection.VcRedistInstalled ? $"d?tect?{FormatVersionSuffix(detection.VcRedistVersion)}" : "non d?tect?")}");
-        AppendLog($"[INFO] Node.js : {(detection.NodeInstalled ? $"d?tect?{FormatVersionSuffix(detection.NodeVersion)}" : "non d?tect?")}");
-        AppendLog($"[INFO] MySQL : {(detection.MySqlInstalled ? $"d?tect?{FormatVersionSuffix(detection.MySqlVersion)}" : "non d?tect?")}");
+        AppendLog("[INFO] Vérification des prérequis installés...");
+        AppendLog($"[INFO] VC++ Redistributable : {(detection.VcRedistInstalled ? $"détecté{FormatVersionSuffix(detection.VcRedistVersion)}" : "non détecté")}");
+        AppendLog($"[INFO] Node.js : {(detection.NodeInstalled ? $"détecté{FormatVersionSuffix(detection.NodeVersion)}" : "non détecté")}");
+        AppendLog($"[INFO] MySQL : {(detection.MySqlInstalled ? $"détecté{FormatVersionSuffix(detection.MySqlVersion)}" : "non détecté")}");
     }
 
     private static string FormatVersionSuffix(string version)

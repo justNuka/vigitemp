@@ -23,6 +23,7 @@ interface MultiSelectFilterProps {
   tone?: "primary" | "default";
   enableSearch?: boolean;
   searchPlaceholder?: string;
+  dropdownMaxHeightClassName?: string;
 }
 
 export function MultiSelectFilter({
@@ -34,6 +35,7 @@ export function MultiSelectFilter({
   tone = "primary",
   enableSearch = false,
   searchPlaceholder,
+  dropdownMaxHeightClassName = "max-h-72",
 }: MultiSelectFilterProps) {
   const t = useTranslations('multiSelectFilter');
   const resolvedPlaceholder = placeholder ?? t('placeholder');
@@ -171,7 +173,7 @@ export function MultiSelectFilter({
             </div>
           )}
 
-          <div className="space-y-2 max-h-48 overflow-y-auto">
+          <div className={`space-y-2 overflow-y-auto ${dropdownMaxHeightClassName}`}>
             {filteredOptions.length === 0 ? (
               <p className="text-sm text-muted-foreground py-2">{t('empty')}</p>
             ) : (

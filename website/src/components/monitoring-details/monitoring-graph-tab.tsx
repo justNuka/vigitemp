@@ -110,7 +110,15 @@ export function MonitoringGraphTab({
       const markerValue = typeof point?.Valeur === "number" ? point.Valeur : fallbackValue
       series[nearestIndex] = markerValue
 
-      const markerDetails = [log.code, log.label].filter((value) => Boolean(value && value.trim())).join(" - ")
+      const markerDetails = [
+        log.code,
+        log.label,
+        log.detailsSummary,
+        log.commentaireUtilisateur,
+        log.commentaire,
+      ]
+        .filter((value) => Boolean(value && value.trim()))
+        .join(" - ")
       if (!markerDetails) continue
 
       const current = detailsByIndex.get(nearestIndex) ?? []
@@ -326,7 +334,7 @@ export function MonitoringGraphTab({
                     if (!first || first.dataset.label !== auditMarkerLabel) return []
                     const index = first.dataIndex
                     const details = auditMarkerDetailsByIndex.get(index) ?? []
-                    return details.slice(0, 5).map((detail) => `• ${detail}`)
+                    return details.slice(0, 5).map((detail) => `- ${detail}`)
                   },
                 },
               },

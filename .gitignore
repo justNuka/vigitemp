@@ -402,6 +402,8 @@ FodyWeavers.xsd
 *.msp
 Vigitemp agent/VigitempAgentInstaller/Payload/
 Vigitemp agent/installer/wix/out/
+VigiSensys agent/VigiSensysAgentInstaller/Payload/
+VigiSensys agent/installer/wix/out/
 
 # JetBrains Rider
 *.sln.iml

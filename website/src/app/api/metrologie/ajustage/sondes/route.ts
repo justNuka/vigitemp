@@ -19,7 +19,11 @@ export const GET = withStandardOrExpertAnyAuthorizationLogging(
           },
           OR: [{ Est_Sonde_Reformee: null }, { Est_Sonde_Reformee: false }],
         },
-        include: {
+        select: {
+          Id_Sonde: true,
+          Sonde_Numero_Serie: true,
+          Id_Module: true,
+          Sonde_Offset: true,
           t_lieu: {
             where: { Est_Archive: false },
             select: {
@@ -34,11 +38,37 @@ export const GET = withStandardOrExpertAnyAuthorizationLogging(
         },
       })
 
+      const moduleIds = Array.from(
+        new Set(sondes.map((sonde) => sonde.Id_Module).filter((value): value is number => typeof value === "number")),
+      )
+
+      const modules = moduleIds.length
+        ? await prisma.t_module.findMany({
+            where: { Id_Module: { in: moduleIds } },
+            select: {
+              Id_Module: true,
+              Module_Numero_Serie: true,
+              Port_Serie: true,
+              Emplacement: true,
+            },
+          })
+        : []
+
+      const moduleById = new Map(modules.map((module) => [module.Id_Module, module]))
+
       const data = sondes.map((sonde) => ({
         id: sonde.Id_Sonde,
         serialNumber: sonde.Sonde_Numero_Serie ?? "-",
         locationId: sonde.t_lieu[0]?.Id_Lieu ?? null,
         locationName: sonde.t_lieu[0]?.Nom_Lieu ?? null,
+        moduleId: sonde.Id_Module ?? null,
+        moduleName:
+          (typeof sonde.Id_Module === "number" ? moduleById.get(sonde.Id_Module)?.Module_Numero_Serie : null) ??
+          (typeof sonde.Id_Module === "number" ? moduleById.get(sonde.Id_Module)?.Emplacement : null) ??
+          null,
+        modulePort:
+          (typeof sonde.Id_Module === "number" ? moduleById.get(sonde.Id_Module)?.Port_Serie : null) ?? null,
+        currentCalibrationValue: typeof sonde.Sonde_Offset === "number" ? sonde.Sonde_Offset : 0,
       }))
 
       return apiOk(data)

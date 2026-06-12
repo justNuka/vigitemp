@@ -32,11 +32,29 @@ export function IntercomparisonMediaClient() {
   const [modalOpen, setModalOpen] = useState(false)
   const [archiveOpen, setArchiveOpen] = useState(false)
 
+  function formatDecimalDisplay(value: unknown, maxFractionDigits = 6) {
+    if (value === null || value === undefined || value === "") return ""
+    const parsed =
+      typeof value === "number"
+        ? value
+        : Number(String(value).replace(",", "."))
+    if (!Number.isFinite(parsed)) return String(value)
+    return parsed.toFixed(maxFractionDigits).replace(/\.?0+$/, "")
+  }
+
   const columns: ColumnDef<IntercomparisonMedium>[] = [
     { accessorKey: "Model", header: t("columns.model") },
     { accessorKey: "Reference", header: t("columns.reference") },
-    { accessorKey: "Stabilite", header: t("columns.stability") },
-    { accessorKey: "Homogeneite", header: t("columns.homogeneity") },
+    {
+      accessorKey: "Stabilite",
+      header: t("columns.stability"),
+      cell: ({ row }) => formatDecimalDisplay(row.original.Stabilite),
+    },
+    {
+      accessorKey: "Homogeneite",
+      header: t("columns.homogeneity"),
+      cell: ({ row }) => formatDecimalDisplay(row.original.Homogeneite),
+    },
     { accessorKey: "Contenu", header: t("columns.content") },
   ]
 

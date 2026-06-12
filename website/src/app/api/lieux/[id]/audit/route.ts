@@ -3,6 +3,7 @@ import { prismaMesure } from "@/lib/prisma"
 import { withAuthLogging } from "@/lib/api-wrappers"
 import { apiError, apiOk } from "@/lib/api-response"
 import { log } from "@/lib/logger"
+import { parseDbDateTime, serializeDbDateTime } from "@/lib/date-display"
 
 const FALLBACK_CODE_LABELS: Record<string, string> = {
 	AACT: "Association d'un module d'alarme %1",
@@ -49,8 +50,8 @@ export const GET = withAuthLogging(
 			const limit = Number.isFinite(limitParam) ? Math.min(Math.max(limitParam, 1), 500) : 150
 			const dateFromParam = searchParams.get("dateFrom")
 			const dateToParam = searchParams.get("dateTo")
-			const parsedFrom = dateFromParam ? new Date(dateFromParam) : null
-			const parsedTo = dateToParam ? new Date(dateToParam) : null
+			const parsedFrom = dateFromParam ? parseDbDateTime(dateFromParam) : null
+			const parsedTo = dateToParam ? parseDbDateTime(dateToParam) : null
 			const hasValidFrom = parsedFrom !== null && !Number.isNaN(parsedFrom.getTime())
 			const hasValidTo = parsedTo !== null && !Number.isNaN(parsedTo.getTime())
 
@@ -60,7 +61,10 @@ export const GET = withAuthLogging(
 
 			const logs = await prismaMesure.tm_journal.findMany({
 				where: {
-					Id_Lieu: lieuId,
+					OR: [
+						{ Id_Lieu: lieuId },
+						{ Code_Journal: "ACQ", Commentaire: { contains: `#${lieuId}` } },
+					],
 					...(Object.keys(dateFilter).length > 0 ? { Date_Heure_Journal: dateFilter } : {}),
 				},
 				take: limit,
@@ -105,13 +109,14 @@ export const GET = withAuthLogging(
 
 				return {
 					id: log.Id_Journal,
-					timestamp: log.Date_Heure_Journal?.toISOString() ?? null,
+					timestamp: serializeDbDateTime(log.Date_Heure_Journal) ?? null,
 					code,
 					label,
 					commentaire: log.Commentaire ?? null,
 					commentaireUtilisateur: log.Commentaire_Utilisateur ?? null,
 					user: log.Nom_Utilisateur ?? null,
 					profile: log.Profil_Utilisateur ?? null,
+					detailsSummary: [log.Commentaire_Utilisateur, log.Commentaire].filter(Boolean).join(" | ") || null,
 					lieuId,
 				}
 			})

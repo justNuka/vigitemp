@@ -102,6 +102,21 @@ const inferGsoTypedSerialFromFileName = (rawSerial: string, fileName: string) =>
   return match ? `${normalizeType(match[1])}-${match[2].toUpperCase()}` : null;
 };
 
+const inferUntypedGsoTypeFromFileName = (rawSerial: string, fileName: string) => {
+  const serial = normalizeSerial(rawSerial);
+  const file = normalizeSerial(fileName);
+  if (!serial || !file) return null;
+
+  const escapedSerial = serial.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const fileContainsSerial = new RegExp(`(?:^|[^A-Z0-9])${escapedSerial}(?:$|[^A-Z0-9])`, "i").test(file);
+  if (!fileContainsSerial) return null;
+
+  const suffix = serial.match(/-(T|H)$/i)?.[1]?.toUpperCase();
+  if (!suffix) return null;
+
+  return suffix === "H" ? "SOIH" : "SOIT";
+};
+
 export type ImportedSensorIdentity = {
   serial: string;
   typeCode: string;
@@ -114,7 +129,13 @@ export const resolveImportedSensorIdentity = (
   knownTypeCodes?: Iterable<string> | null,
 ): ImportedSensorIdentity => {
   const serial = normalizeSerial(rawSerial);
-  const gsoParts = getGsoTypedParts(serial) ?? getGsoTypedParts(inferGsoTypedSerialFromFileName(serial, fileName) ?? "");
+  const inferredTypedSerial =
+    inferGsoTypedSerialFromFileName(serial, fileName) ??
+    (() => {
+      const inferredType = inferUntypedGsoTypeFromFileName(serial, fileName);
+      return inferredType ? `${inferredType}-${serial}` : null;
+    })();
+  const gsoParts = getGsoTypedParts(serial) ?? getGsoTypedParts(inferredTypedSerial ?? "");
 
   if (gsoParts && isGsoType(gsoParts.typeCode)) {
     const address = gsoParts.address;

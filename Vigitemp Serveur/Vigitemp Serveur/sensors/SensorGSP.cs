@@ -186,6 +186,7 @@ namespace Vigitemp_Serveur.sensors
 
                 await CheckAndSynchronizeClockAsync(parsed, hadTimeoutBeforeSuccess);
                 LogMeasurementGap(parsed);
+                HandlePowerSupplyAlarm(parsed);
                 LogBatteryHealth(parsed);
                 LogSignalHealth(parsed);
 
@@ -873,6 +874,20 @@ namespace Vigitemp_Serveur.sensors
                 }
                 _lastBatteryStatus = status;
             }
+        }
+
+        private void HandlePowerSupplyAlarm(GspTemperatureResponse parsed)
+        {
+            if (!parsed.IsOnBatteryPower.HasValue)
+            {
+                return;
+            }
+
+            var reason = string.IsNullOrWhiteSpace(parsed.AlarmStateRaw)
+                ? (parsed.IsOnBatteryPower.Value ? "GSP-BAT" : "GSP-NORMAL")
+                : "GSP-" + parsed.AlarmStateRaw.Trim().ToUpperInvariant();
+
+            HandleSensorPowerAlarm(parsed.IsOnBatteryPower.Value, reason);
         }
 
         private void RefreshBatteryThresholdsIfNeeded()

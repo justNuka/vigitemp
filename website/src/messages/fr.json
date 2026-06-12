@@ -74,7 +74,7 @@
     "groupes": "Groupes",
     "utilisateurs": "Utilisateurs",
     "profils": "Profils",
-    "metrologie": "Métrologie",
+    "etalons": "Bains & étalons",
     "actionneurs": "Actionneurs",
     "outils": "Outils",
     "lieux_templates": "Templates lieux"
@@ -543,6 +543,23 @@
     }
   },
   "alarmsPage": {
+    "analysis": {
+      "title": "Analyse d'alarme",
+      "description": "Analyse détaillée d'une alarme, de ses mesures et de son audit.",
+      "back": "Retour aux alarmes",
+      "backToMonitoring": "Retour à la surveillance",
+      "acknowledge": "Acquitter",
+      "print": "Imprimer",
+      "exportMeasurements": "Exporter mesures",
+      "exportAudit": "Exporter audit",
+      "locationAlarms": "Alarmes du lieu",
+      "selectAlarm": "Sélectionnez une alarme",
+      "empty": "Aucune alarme disponible pour ce lieu.",
+      "focusTitle": "Alarme sélectionnée",
+      "refocus": "Recentrer sur l'alarme",
+      "statusActive": "Active",
+      "statusResolved": "Terminée"
+    },
     "title": "Gestion des alarmes",
     "description": "Suivi et traitement des alarmes",
     "meta": {
@@ -685,7 +702,12 @@
       "select_column": "Sélection",
       "alarm_column": "Alarme",
       "status_column": "Statut",
-      "select_alarm_aria": "Sélectionner l'alarme {id}"
+      "select_alarm_aria": "Sélectionner l'alarme {id}",
+      "select_all": "Tout cocher",
+      "deselect_all": "Tout décocher",
+      "related_type_filter_placeholder": "Filtrer par type",
+      "related_type_filter_all": "Tous les types",
+      "related_alarms_empty": "Aucune alarme ne correspond au filtre."
     },
     "status": {
       "active": "En cours",
@@ -5599,18 +5621,18 @@
             "operatorPlaceholder": "Nom de l'opérateur",
             "displayDecimals": "Nb de décimales d'affichage"
           },
-        "standard": {
-          "title": "Étalon",
-          "description": "Choix de la sonde étalon et lecture des informations du certificat.",
+          "standard": {
+            "title": "Étalon",
+            "description": "Choix de la sonde étalon et lecture des informations du certificat.",
             "coefficientsAlertTitle": "Vérification recommandée",
             "coefficientsAlertDescription": "Vérifiez les coefficients et les informations du certificat avant de poursuivre.",
             "externalProbe": "Sonde externe",
-          "externalProbeHint": "L'ajustage n'est actuellement pas possible avec une sonde externe.",
-          "standardProbe": "Sonde étalon",
-          "standardProbePlaceholder": "Choisir une sonde étalon",
-          "standardProbeSearchPlaceholder": "Rechercher une sonde étalon",
-          "standardProbeEmpty": "Aucune sonde étalon disponible",
-          "organization": "Organisme",
+            "externalProbeHint": "L'ajustage n'est actuellement pas possible avec une sonde externe.",
+            "standardProbe": "Sonde étalon",
+            "standardProbePlaceholder": "Choisir une sonde étalon",
+            "standardProbeSearchPlaceholder": "Rechercher une sonde étalon",
+            "standardProbeEmpty": "Aucune sonde étalon disponible",
+            "organization": "Organisme",
             "certificateDate": "Date du certificat",
             "certificateNumber": "Numéro du certificat",
             "unit": "Unité",
@@ -5624,17 +5646,78 @@
             "serialPort": "Port série",
             "empty": "Aucune donnée disponible"
           },
-        "medium": {
-          "title": "Milieu d'inter-comparaison",
-          "description": "Sélection du bain ou milieu utilisé pour l’opération.",
-          "select": "Marque / référence",
-          "selectPlaceholder": "Choisir un milieu d'inter-comparaison",
-          "empty": "Aucun milieu d'inter-comparaison disponible",
-          "model": "Marque / modèle",
+          "medium": {
+            "title": "Milieu d'inter-comparaison",
+            "description": "Sélection du bain ou milieu utilisé pour l’opération.",
+            "select": "Marque / référence",
+            "selectPlaceholder": "Choisir un milieu d'inter-comparaison",
+            "empty": "Aucun milieu d'inter-comparaison disponible",
+            "model": "Marque / modèle",
             "reference": "Référence",
             "stability": "Stabilité",
             "homogeneity": "Homogénéité"
+          },
+          "run": {
+            "title": "Pilotage de l'ajustage",
+            "description": "Démarrer ou arrêter la séquence d'ajustage en cours.",
+            "start": "Démarrer l'ajustage",
+            "stop": "Arrêter l'ajustage",
+            "hint": "La logique d'exécution sera branchée sur le workflow d'acquisition."
+          },
+          "points": {
+            "title": "Points",
+            "description": "Saisissez les points cibles et validez chacun avant l'enregistrement des valeurs.",
+            "pointOne": "1er point",
+            "pointTwo": "2eme point",
+            "validate": "Valider",
+            "invalidValue": "La valeur saisie pour le point est invalide.",
+            "collecting": "Acquisition en cours pour le point {point}."
+          },
+          "standardMeasure": {
+            "title": "Étalon",
+            "description": "Affiche la derniere mesure acquise depuis l'étalon.",
+            "lastMeasure": "Dernière mesure",
+            "empty": "-",
+            "waiting": "En attente de lecture"
+          },
+          "plateau": {
+            "title": "Plateau de stabilité",
+            "description": "Configurer la fenêtre de stabilisation avant l'enregistrement des valeurs.",
+            "durationMinutes": "Durée (min)",
+            "maxGap": "Écart max"
           }
+        },
+        "selectedSensors": {
+          "title": "Sondes à ajuster",
+          "description": "Sondes selectionnées et informations actuelles d'ajustage.",
+          "empty": "Aucune sonde selectionnée pour l'ajustage",
+          "exportFileName": "sondes-ajustage",
+          "unassignedModule": "Aucun module assigné",
+          "pending": "En attente",
+          "columns": {
+            "sensor": "Sonde",
+            "module": "Module",
+            "currentCalibrationValue": "Valeur calibrage actuel",
+            "signalRead": "Signal lu"
+          }
+        },
+        "status": {
+          "errorTitle": "Erreur d'ajustage",
+          "warningTitle": "Ajustage en attente",
+          "infoTitle": "Ajustage en cours",
+          "exportReadyTitle": "Exports d'ajustage disponibles",
+          "exportReadyDescription": "Les resultats ont ete enregistrés dans la base de données. Vous pouvez télécharger le XML de chaque sonde.",
+          "exportReadyCta": "Exporter {serial}"
+        },
+        "stopConfirm": {
+          "title": "Arrêter l'ajustage",
+          "description": "Aucun point n'a encore ete valide. Arrêter maintenant annulera tous les resultats en cours.",
+          "cancel": "Continuer",
+          "confirm": "Arrêter et annuler"
+        },
+        "navigation": {
+          "title": "Navigation métrologie",
+          "description": "Accès rapide aux autres pages du module métrologie."
         }
       }
     },
@@ -5669,6 +5752,10 @@
         "title": "Réaliser un étalonnage",
         "description": "Lancer un étalonnage et consulter les opérations à venir.",
         "cta": "Accéder à l'étalonnage"
+      },
+      "group": {
+        "title": "Navigation métrologie",
+        "description": "Passez rapidement du tableau de bord aux sous-pages de métrologie."
       }
     },
     "intercomparisonTable": {

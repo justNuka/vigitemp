@@ -31,6 +31,16 @@ type Values = {
   Contenu?: string
 }
 
+function formatDecimalDisplay(value: unknown, maxFractionDigits = 6) {
+  if (value === null || value === undefined || value === "") return ""
+  const parsed =
+    typeof value === "number"
+      ? value
+      : Number(String(value).replace(",", "."))
+  if (!Number.isFinite(parsed)) return String(value)
+  return parsed.toFixed(maxFractionDigits).replace(/\.?0+$/, "")
+}
+
 export function IntercomparisonMediumModal({ open, onOpenChange, medium }: Props) {
   const t = useTranslations("metrologyAdmin.intercomparisonModal")
   const queryClient = useQueryClient()
@@ -48,8 +58,8 @@ export function IntercomparisonMediumModal({ open, onOpenChange, medium }: Props
     () => ({
       Model: medium?.Model || "",
       Reference: medium?.Reference || "",
-      Stabilite: medium?.Stabilite?.toString() || "",
-      Homogeneite: medium?.Homogeneite?.toString() || "",
+      Stabilite: formatDecimalDisplay(medium?.Stabilite),
+      Homogeneite: formatDecimalDisplay(medium?.Homogeneite),
       Contenu: medium?.Contenu || "",
     }),
     [medium],
