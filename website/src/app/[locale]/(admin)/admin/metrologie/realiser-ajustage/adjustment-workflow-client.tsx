@@ -118,6 +118,10 @@ function formatDecimalDisplay(value: unknown, maxFractionDigits = 6) {
   return parsed.toFixed(maxFractionDigits).replace(/\.?0+$/, "")
 }
 
+function normalizeUnit(value: string | null | undefined) {
+  return value?.trim().toLowerCase() || null
+}
+
 export function AdjustmentWorkflowClient() {
   const t = useTranslations("metrologyAdmin.adjustmentPage")
   const locale = useLocale()
@@ -274,14 +278,40 @@ export function AdjustmentWorkflowClient() {
     }
   }, [session, step])
 
-  const allSensorIds = useMemo(() => sensors.map((sensor) => sensor.id), [sensors])
-  const allSelected = allSensorIds.length > 0 && allSensorIds.every((id) => selectedSensorIds.includes(id))
-  const someSelected = allSensorIds.some((id) => selectedSensorIds.includes(id))
-
   const selectedSensors = useMemo(
     () => sensors.filter((sensor) => selectedSensorIds.includes(sensor.id)),
     [selectedSensorIds, sensors],
   )
+  const lockedUnit = useMemo(() => {
+    const knownSelectedUnits = selectedSensors
+      .map((sensor) => normalizeUnit(sensor.unit))
+      .filter((value): value is string => Boolean(value))
+
+    return knownSelectedUnits[0] ?? null
+  }, [selectedSensors])
+
+  useEffect(() => {
+    if (!lockedUnit) return
+    setSelectedSensorIds((current) =>
+      current.filter((sensorId) => {
+        const sensor = sensors.find((item) => item.id === sensorId)
+        return normalizeUnit(sensor?.unit) === lockedUnit
+      }),
+    )
+  }, [lockedUnit, sensors])
+  const allSensorIds = useMemo(() => sensors.map((sensor) => sensor.id), [sensors])
+  const selectableSensorIds = useMemo(
+    () =>
+      lockedUnit === null
+        ? allSensorIds
+        : sensors
+            .filter((sensor) => normalizeUnit(sensor.unit) === lockedUnit)
+            .map((sensor) => sensor.id),
+    [allSensorIds, lockedUnit, sensors],
+  )
+  const allSelected =
+    selectableSensorIds.length > 0 && selectableSensorIds.every((id) => selectedSensorIds.includes(id))
+  const someSelected = selectableSensorIds.some((id) => selectedSensorIds.includes(id))
 
   const selectedSensorsColumns = useMemo<ColumnDef<(typeof selectedSensors)[number]>[]>(
     () => [
@@ -331,7 +361,7 @@ export function AdjustmentWorkflowClient() {
               checked={allSelected ? true : someSelected ? "indeterminate" : false}
               disabled={isAdjustmentRunning}
               onCheckedChange={(checked) => {
-                setSelectedSensorIds(checked === true ? allSensorIds : [])
+                setSelectedSensorIds(checked === true ? selectableSensorIds : [])
               }}
               aria-label={t("selection.table.selectAll")}
             />
@@ -343,7 +373,10 @@ export function AdjustmentWorkflowClient() {
             <div className="flex justify-center">
               <Checkbox
                 checked={selectedSensorIds.includes(id)}
-                disabled={isAdjustmentRunning}
+                disabled={
+                  isAdjustmentRunning ||
+                  (lockedUnit !== null && normalizeUnit(row.original.unit) !== lockedUnit)
+                }
                 onCheckedChange={(checked) => {
                   setSelectedSensorIds((current) =>
                     checked === true ? Array.from(new Set([...current, id])) : current.filter((item) => item !== id),
@@ -364,8 +397,13 @@ export function AdjustmentWorkflowClient() {
         header: t("selection.table.columns.location"),
         cell: ({ row }) => row.original.locationName ?? t("selection.table.unassigned"),
       },
+      {
+        accessorKey: "unit",
+        header: t("selection.table.columns.unit"),
+        cell: ({ row }) => row.original.unit ?? t("selection.table.unitUnknown"),
+      },
     ],
-    [allSelected, allSensorIds, selectedSensorIds, someSelected, t],
+    [allSelected, selectableSensorIds, selectedSensorIds, someSelected, t],
   )
 
   const standardDisabled = isExternalStandard || isAdjustmentRunning
@@ -447,6 +485,14 @@ export function AdjustmentWorkflowClient() {
                 </Button>
               )}
             </AlertDescription>
+          </Alert>
+        ) : null}
+
+        {lockedUnit ? (
+          <Alert className="border-sky-200 bg-sky-50 text-sky-900">
+            <BadgeInfo className="h-4 w-4 text-sky-700" />
+            <AlertTitle>{t("selection.unitLock.title", { unit: lockedUnit })}</AlertTitle>
+            <AlertDescription>{t("selection.unitLock.description")}</AlertDescription>
           </Alert>
         ) : null}
 

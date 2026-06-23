@@ -12,6 +12,7 @@ import { isSurveillanceActionCommentRequired } from "@/lib/action-comment-policy
 import { withAnyAuthorizationLogging } from "@/lib/api-wrappers"
 import { getPermissionAliases } from "@/lib/permissions"
 import { findLocationNameConflict } from "@/lib/location-name-conflicts"
+import { buildLocationValueRangeIssues, getSensorTypeValueRangeBySerial } from "@/lib/sensor-value-range"
 
 const mailingContactSchema = z.object({
   Id_Tel_Num: z.number().optional(),
@@ -502,6 +503,24 @@ export const PATCH = withAnyAuthorizationLogging(
       const hasIdSite = Object.prototype.hasOwnProperty.call(validated, "Id_Site")
       const hasSondeNumeroSerie = Object.prototype.hasOwnProperty.call(validated, "Sonde_Numero_Serie")
       const hasIdModule = Object.prototype.hasOwnProperty.call(validated, "Id_Module")
+
+      const currentLieuForRange = await prisma.t_lieu.findUnique({
+        where: { Id_Lieu: lieuId },
+        select: { Sonde_Numero_Serie: true },
+      })
+      if (!currentLieuForRange) {
+        return apiError(404, "not_found", "Lieu introuvable")
+      }
+
+      const effectiveSensorSerialForRange = hasSondeNumeroSerie
+        ? (validated.Sonde_Numero_Serie?.trim() || null)
+        : (currentLieuForRange.Sonde_Numero_Serie?.trim() || null)
+
+      const sensorTypeRange = await getSensorTypeValueRangeBySerial(effectiveSensorSerialForRange)
+      const rangeIssues = buildLocationValueRangeIssues(validated, sensorTypeRange)
+      if (rangeIssues.length > 0) {
+        return apiError(400, "validation_error", "Validation impossible", { issues: rangeIssues })
+      }
 
       const ip = getClientIp(req)
       let previousLieuEtat: string | null = null

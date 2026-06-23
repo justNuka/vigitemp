@@ -48,7 +48,7 @@ namespace Vigitemp_Serveur
         private readonly int _gspConfigFreeSlotMinSeconds = GetSettingInt("Vigitemp.Gsp.ConfigFreeSlotMinSeconds", 20);
         private readonly int _gspConfigCheckEverySuccessfulProbes = GetSettingInt("Vigitemp.Gsp.ConfigCheckEverySuccessfulProbes", 12);
         private readonly int _gspConfigModuleBackoffSeconds = GetSettingInt("Vigitemp.Gsp.ConfigModuleBackoffSeconds", 300);
-        private readonly int _gspMemoFreeSlotMinSeconds = GetSettingInt("Vigitemp.Gsp.MemoFreeSlotMinSeconds", 45);
+        private readonly int _gspMemoFreeSlotMinSeconds = GetSettingInt("Vigitemp.Gsp.MemoFreeSlotMinSeconds", 15);
         private readonly int _gspMemoMaxBatchSize = GetSettingInt("Vigitemp.Gsp.MemoMaxBatchSize", 100);
         private readonly bool _logMetrologyDetailed = GetSettingBool("Vigitemp.Metrology.LogDetailed", false);
         private readonly bool _offsetDisabledForPack;
@@ -2183,7 +2183,7 @@ namespace Vigitemp_Serveur
         private int EstimateGspMemoFreeSlotSeconds(int count)
         {
             var safeCount = Math.Max(1, count);
-            var recommended = safeCount <= 20 ? 20 : _gspMemoFreeSlotMinSeconds;
+            var recommended = safeCount <= 20 ? 10 : _gspMemoFreeSlotMinSeconds;
             return Math.Max(5, recommended);
         }
 
@@ -2240,7 +2240,6 @@ namespace Vigitemp_Serveur
         }
     }
 }
-
 
 
 

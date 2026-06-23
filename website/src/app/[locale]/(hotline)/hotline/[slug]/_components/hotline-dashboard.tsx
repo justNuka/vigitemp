@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react"
 import { AlertTriangle, Database, LogOut, MessageSquareText, Server, UserRound } from "lucide-react"
 import { useParams, useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"
+import { toast } from "sonner"
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
@@ -90,7 +91,11 @@ export function HotlineDashboard({ slug, username }: HotlineDashboardProps) {
   const [logSource, setLogSource] = useState<'web' | 'server' | 'web-service-error' | 'web-service-wrapper' | 'web-service-output'>('web')
   const [logDate, setLogDate] = useState(() => new Date().toISOString().slice(0, 10))
   const [logLimit, setLogLimit] = useState('200')
-  const [agentSecretStatus, setAgentSecretStatus] = useState<{ status: string; message: string } | null>(null)
+  const [agentSecretStatus, setAgentSecretStatus] = useState<{
+    status: string
+    scope?: "agent" | "configuration"
+    message: string
+  } | null>(null)
   const [requestErrors, setRequestErrors] = useState<HotlineRequestError[]>([])
   const [loadingRequestErrors, setLoadingRequestErrors] = useState(false)
 
@@ -164,14 +169,26 @@ export function HotlineDashboard({ slug, username }: HotlineDashboardProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  useEffect(() => {
+    if (!isFeatureEnabled('enableAgentSecretAlert')) return
+    if (!agentSecretStatus || agentSecretStatus.status === 'ok') return
+    if (agentSecretStatus.scope !== 'agent') return
+
+    toast.error(tAlert('agent_popup_title'), {
+      description: agentSecretStatus.message || tAlert('status_error'),
+      id: 'agent-local-problem-hotline',
+      duration: 8000,
+    })
+  }, [agentSecretStatus, tAlert])
+
   return (
     <div className="flex w-full flex-1 flex-col gap-6 rounded-2xl border border-border/60 bg-white/95 p-4 shadow-sm dark:bg-card/95 dark:shadow-black/25 md:p-6">
       {isFeatureEnabled('enableAgentSecretAlert') && agentSecretStatus && agentSecretStatus.status !== 'ok' ? (
-        <Alert variant="destructive">
-          <AlertTriangle className="h-4 w-4" />
-          <AlertTitle>{tAlert('title')}</AlertTitle>
-          <AlertDescription>{agentSecretStatus.message || tAlert('status_error')}</AlertDescription>
-        </Alert>
+          <Alert variant="destructive">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertTitle>{agentSecretStatus.scope === 'agent' ? tAlert('agent_title') : tAlert('title')}</AlertTitle>
+            <AlertDescription>{agentSecretStatus.message || tAlert('status_error')}</AlertDescription>
+          </Alert>
       ) : null}
 
       <div className="flex flex-wrap items-start justify-between gap-4">

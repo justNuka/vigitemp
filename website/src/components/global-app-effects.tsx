@@ -93,6 +93,7 @@ export function GlobalAppEffects() {
       try {
         const data = JSON.parse(event.data) as {
           id: number
+          idLieu: number
           lieu: string
           type: string
           valeur: number | null
@@ -127,7 +128,11 @@ export function GlobalAppEffects() {
             label: t("alarm.toast.action"),
             onClick: () => {
               stopAlarmAudio()
-              router.push("/surveillance")
+              if (typeof data.idLieu === "number" && data.idLieu > 0 && typeof data.id === "number" && data.id > 0) {
+                router.push(`/alarmes/analyse?locationId=${encodeURIComponent(String(data.idLieu))}&alarmId=${encodeURIComponent(String(data.id))}`)
+                return
+              }
+              router.push("/alarmes")
             },
           },
         })

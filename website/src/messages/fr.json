@@ -126,11 +126,12 @@
     "admin": "Administration",
     "users": "Utilisateurs",
     "profile": "Profil",
-    "admin_dashboard": "Dashboard Admin",
-    "admin_dashboard_tooltip": "Tableau de bord administrateur",
-    "services": "Services",
-    "messaging": "Messagerie",
-    "vigilog": "VigiLog",
+      "admin_dashboard": "Dashboard Admin",
+      "admin_dashboard_tooltip": "Tableau de bord administrateur",
+      "impact_analysis": "Analyse d'impact",
+      "services": "Services",
+      "messaging": "Messagerie",
+      "vigilog": "VigiLog",
     "statistics": "Statistiques"
   },
   "sidebarGroups": {
@@ -141,8 +142,10 @@
     "sound_alarms": "Alarmes sonores"
   },
   "agentSecretAlert": {
-    "title": "Secret agent invalide",
-    "status_error": "Erreur lors de la vérification du secret agent."
+    "title": "Configuration agent invalide",
+    "status_error": "Erreur lors de la verification de l'agent local.",
+    "agent_title": "Probleme agent local",
+    "agent_popup_title": "Agent local indisponible"
   },
   "dashboard": {
     "title": "Tableau de bord",
@@ -216,6 +219,16 @@
       "groups": {
         "label": "Groupes",
         "placeholder": "Tous les groupes"
+      },
+      "status": {
+        "active": "Filtre actif",
+        "siteCount": "{count} site(s)",
+        "groupCount": "{count} groupe(s)",
+        "search": "recherche",
+        "sort": "tri"
+      },
+      "actions": {
+        "clear": "Réinitialiser"
       },
       "sort": {
         "label": "Tri",
@@ -4412,6 +4425,8 @@
     "search_placeholder": "Rechercher...",
     "empty": "Aucun résultat",
     "results": "{count} résultat(s)",
+    "filter_active": "Filtre actif",
+    "clear_search": "Effacer",
     "export": "Exporter",
     "export_count_prompt": {
       "title": "Exporter des mesures",
@@ -5597,13 +5612,19 @@
           "searchPlaceholder": "Rechercher une sonde ou un lieu",
           "empty": "Aucune sonde disponible pour un ajustage",
           "exportFileName": "selection-sondes-ajustage",
-          "selectAll": "Sélectionner toutes les sondes",
-          "selectOne": "Sélectionner la sonde {serial}",
-          "unassigned": "Non assignée à un lieu",
+          "selectAll": "S?lectionner toutes les sondes",
+          "selectOne": "S?lectionner la sonde {serial}",
+          "unassigned": "Non assign?e ? un lieu",
+          "unitUnknown": "Unit? inconnue",
           "columns": {
-            "serial": "Numéro de série de la sonde",
-            "location": "Lieu associé"
+            "serial": "Num?ro de s?rie de la sonde",
+            "location": "Lieu associ?",
+            "unit": "Unit?"
           }
+        },
+        "unitLock": {
+          "title": "S?lection verrouill?e sur l'unit? {unit}",
+          "description": "Seules les sondes ayant la m?me unit? de mesure peuvent ?tre ajust?es ensemble."
         }
       },
       "adjustment": {

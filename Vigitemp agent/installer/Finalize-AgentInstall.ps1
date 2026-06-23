@@ -58,7 +58,7 @@ function Resolve-InstallDir {
     }
 
     foreach ($candidate in $candidates | Select-Object -Unique) {
-        if (Test-Path (Join-Path $candidate "VigitempAgent.exe")) {
+        if (Test-Path (Join-Path $candidate "VigiSensysAgent.exe")) {
             return $candidate
         }
     }
@@ -124,8 +124,8 @@ function Ensure-StartupRegistry {
     $runKey = "HKLM:\Software\Microsoft\Windows\CurrentVersion\Run"
     $runValue = '"' + $ExePath + '"'
     New-Item -Path $runKey -Force | Out-Null
-    Set-ItemProperty -Path $runKey -Name "VigitempAgent" -Value $runValue
-    Remove-ItemProperty -Path $runKey -Name "VigiSensysAgent" -ErrorAction SilentlyContinue
+    Set-ItemProperty -Path $runKey -Name "VigiSensysAgent" -Value $runValue
+    Remove-ItemProperty -Path $runKey -Name "VigitempAgent" -ErrorAction SilentlyContinue
     Remove-ItemProperty -Path $runKey -Name "VigiTempAgent" -ErrorAction SilentlyContinue
 }
 
@@ -149,11 +149,14 @@ Set-StrictMode -Version Latest
 `$installDir = '$InstallPath'
 `$runKey = 'HKLM:\Software\Microsoft\Windows\CurrentVersion\Run'
 
-try { Get-Process VigitempAgent -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue } catch { }
+try {
+    Get-Process VigiSensysAgent -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
+    Get-Process VigitempAgent -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
+} catch { }
 
 try {
-    Remove-ItemProperty -Path `$runKey -Name 'VigitempAgent' -ErrorAction SilentlyContinue
     Remove-ItemProperty -Path `$runKey -Name 'VigiSensysAgent' -ErrorAction SilentlyContinue
+    Remove-ItemProperty -Path `$runKey -Name 'VigitempAgent' -ErrorAction SilentlyContinue
     Remove-ItemProperty -Path `$runKey -Name 'VigiTempAgent' -ErrorAction SilentlyContinue
 } catch { }
 
@@ -221,8 +224,8 @@ if ([string]::IsNullOrWhiteSpace($InstallDir)) {
 
 Ensure-Admin
 
-$exePath = Join-Path $InstallDir "VigitempAgent.exe"
-$configPath = Join-Path $InstallDir "VigitempAgent.exe.config"
+$exePath = Join-Path $InstallDir "VigiSensysAgent.exe"
+$configPath = Join-Path $InstallDir "VigiSensysAgent.exe.config"
 $logDir = Join-Path $env:ProgramData "VigiSensys\logs"
 $logPath = Join-Path $logDir "Finalize-AgentInstall.log"
 
@@ -237,7 +240,9 @@ try {
     }
 
     Write-Log "Arret des anciennes instances..."
-    Get-Process VigitempAgent -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
+    @("VigiSensysAgent", "VigitempAgent") | ForEach-Object {
+        Get-Process $_ -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
+    }
     Start-Sleep -Seconds 1
 
     Write-Log "Suppression des anciennes reservations URLACL..."
@@ -270,7 +275,7 @@ try {
     Start-Process -FilePath $exePath | Out-Null
     Start-Sleep -Seconds 2
 
-    $running = Get-Process VigitempAgent -ErrorAction SilentlyContinue
+    $running = Get-Process VigiSensysAgent -ErrorAction SilentlyContinue
     $listening = Test-AgentPortListening -Port 8000 -TimeoutSeconds 15
 
     $summary = @(

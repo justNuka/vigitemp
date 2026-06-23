@@ -136,8 +136,10 @@ namespace VigitempAgent
                 _statusValue.Text = connected ? "Connecte" : "Deconnecte";
                 _statusValue.ForeColor = connected ? Color.FromArgb(0, 140, 70) : Color.FromArgb(200, 120, 0);
 
+                var normalizedUsername = TextEncodingHelper.NormalizeDisplayText(session?.Username);
+
                 _userValue.Text = connected
-                    ? (!string.IsNullOrWhiteSpace(session?.Username) ? session.Username : (!string.IsNullOrWhiteSpace(session?.UserId) ? session.UserId : "-"))
+                    ? (!string.IsNullOrWhiteSpace(normalizedUsername) ? normalizedUsername : (!string.IsNullOrWhiteSpace(session?.UserId) ? session.UserId : "-"))
                     : "-";
 
                 var version = FileVersionInfo.GetVersionInfo(Application.ExecutablePath).ProductVersion;

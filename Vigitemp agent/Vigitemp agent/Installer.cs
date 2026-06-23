@@ -26,7 +26,7 @@ namespace VigitempAgent
             Directory.SetCurrentDirectory(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location));
             var exePath = Path.Combine(
                 Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location),
-                "VigitempAgent.exe"
+                "VigiSensysAgent.exe"
             );
             if (File.Exists(exePath))
             {

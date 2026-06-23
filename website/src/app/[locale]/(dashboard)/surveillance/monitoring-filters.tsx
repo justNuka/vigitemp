@@ -2,9 +2,13 @@
 
 import { useEffect, useMemo, useState } from "react"
 
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import { MultiSelectFilter } from "@/components/multi-select-filter"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { cn } from "@/lib/utils"
+import { Funnel, X } from "lucide-react"
 import { useTranslations } from 'next-intl'
 
 import type { FilterState, SurveillanceSortMode } from "./_helpers/monitoring-derived"
@@ -45,7 +49,21 @@ export function SurveillanceFilters({ onFilterChange, sites, groups }: Props) {
 
   useEffect(() => {
     if (typeof window === "undefined") return
-    window.localStorage.removeItem("surveillance_filters")
+    try {
+      const raw = window.localStorage.getItem("surveillance_filters")
+      if (!raw) return
+      const parsed = JSON.parse(raw) as Partial<FilterState> | null
+      if (!parsed) return
+      setFilters((prev) => ({
+        ...prev,
+        siteIds: Array.isArray(parsed.siteIds) ? parsed.siteIds : [],
+        groupIds: Array.isArray(parsed.groupIds) ? parsed.groupIds : [],
+        searchTerm: typeof parsed.searchTerm === "string" ? parsed.searchTerm : "",
+        sortMode: parsed.sortMode === "alphabetical" ? "alphabetical" : "status",
+      }))
+    } catch {
+      window.localStorage.removeItem("surveillance_filters")
+    }
   }, [])
 
   const disabledGroupIds = useMemo(() => {
@@ -59,6 +77,9 @@ export function SurveillanceFilters({ onFilterChange, sites, groups }: Props) {
 
   useEffect(() => {
     onFilterChange(filters)
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem("surveillance_filters", JSON.stringify(filters))
+    }
   }, [filters, onFilterChange])
 
   useEffect(() => {
@@ -76,6 +97,21 @@ export function SurveillanceFilters({ onFilterChange, sites, groups }: Props) {
     }
   }, [allowedGroupIds])
 
+  const hasActiveFilters =
+    filters.siteIds.length > 0 ||
+    filters.groupIds.length > 0 ||
+    filters.searchTerm.trim().length > 0 ||
+    filters.sortMode !== "status"
+
+  const clearFilters = () => {
+    setFilters({
+      siteIds: [],
+      groupIds: [],
+      searchTerm: "",
+      sortMode: "status",
+    })
+  }
+
   const handleSiteChange = (selectedIds: number[]) => {
     const normalizedSiteIds = selectedIds ?? []
     const nextAllowed = buildAllowedGroupIdSet(groups, normalizedSiteIds)
@@ -88,7 +124,28 @@ export function SurveillanceFilters({ onFilterChange, sites, groups }: Props) {
   }
 
   return (
-    <div className="grid grid-cols-1 gap-4 xl:grid-cols-12">
+    <div className="space-y-3">
+      {hasActiveFilters ? (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-[#26A5DA]/35 bg-[#26A5DA]/8 px-3 py-2 text-sm text-[#075776] dark:border-[#26A5DA]/45 dark:bg-[#26A5DA]/12 dark:text-sky-50">
+          <div className="flex items-center gap-2">
+            <Funnel className="h-4 w-4" />
+            <span className="font-medium">{t("status.active")}</span>
+            <Badge variant="secondary" className="bg-white/70 text-[#075776] dark:bg-slate-900/40 dark:text-sky-50">
+              {[
+                filters.siteIds.length > 0 ? t("status.siteCount", { count: filters.siteIds.length }) : null,
+                filters.groupIds.length > 0 ? t("status.groupCount", { count: filters.groupIds.length }) : null,
+                filters.searchTerm.trim().length > 0 ? t("status.search") : null,
+                filters.sortMode !== "status" ? t("status.sort") : null,
+              ].filter(Boolean).join(" • ")}
+            </Badge>
+          </div>
+          <Button type="button" variant="ghost" size="sm" className="gap-2 text-[#075776] hover:bg-[#26A5DA]/14 hover:text-[#075776] dark:text-sky-50 dark:hover:bg-[#26A5DA]/18" onClick={clearFilters}>
+            <X className="h-4 w-4" />
+            {t("actions.clear")}
+          </Button>
+        </div>
+      ) : null}
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-12">
       <div className="xl:col-span-3">
         <MultiSelectFilter
           label={t('sites.label')}
@@ -137,6 +194,7 @@ export function SurveillanceFilters({ onFilterChange, sites, groups }: Props) {
           }}
           placeholder={t('search.placeholder')}
           aria-label={t('search.label')}
+          className={cn(filters.searchTerm.trim().length > 0 && "border-[#26A5DA]/60 bg-[#26A5DA]/8 focus-visible:ring-[#26A5DA]/35")}
         />
       </div>
 
@@ -150,7 +208,7 @@ export function SurveillanceFilters({ onFilterChange, sites, groups }: Props) {
             }))
           }}
         >
-          <SelectTrigger>
+          <SelectTrigger className={cn(filters.sortMode !== "status" && "border-[#26A5DA]/60 bg-[#26A5DA]/8 text-[#075776] dark:text-sky-50")}>
             <SelectValue placeholder={t('sort.placeholder')} />
           </SelectTrigger>
           <SelectContent>
@@ -159,6 +217,7 @@ export function SurveillanceFilters({ onFilterChange, sites, groups }: Props) {
           </SelectContent>
         </Select>
       </div>
+    </div>
     </div>
   )
 }

@@ -126,7 +126,7 @@ if ([string]::IsNullOrWhiteSpace($AgentBuildOutput)) {
     $AgentBuildOutput = Join-Path $agentRoot "Vigitemp agent\bin\$Configuration"
 }
 
-$agentExe = Join-Path $AgentBuildOutput "VigitempAgent.exe"
+$agentExe = Join-Path $AgentBuildOutput "VigiSensysAgent.exe"
 if (-not (Test-Path $agentExe)) {
     throw "Executable agent introuvable: $agentExe"
 }

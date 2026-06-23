@@ -327,6 +327,7 @@ namespace Vigitemp_Serveur.sensors
         {
             try
             {
+                var metrology = ths.GetSondeMetrologyCached(m_sondeSerialNumber);
                 var alarmSettings = ths.GetLieuAlarmSettingsCached(m_idLieu);
                 if (alarmSettings == null)
                 {
@@ -347,37 +348,66 @@ namespace Vigitemp_Serveur.sensors
                     return false;
                 }
 
+                if (current.MissingConfigurationCodes.Count > 0)
+                {
+                    var codes = string.Join("+", current.MissingConfigurationCodes);
+                    var requiresMetrologySync =
+                        current.MissingConfigurationCodes.Contains("A") ||
+                        current.MissingConfigurationCodes.Contains("B") ||
+                        current.MissingConfigurationCodes.Contains("E");
+
+                    VigitempServeur.Log(
+                        $"[SONDE][CFG-CHECK] type=GSP serial={m_sondeSerialNumber} status=eeprom-missing codes={codes} action={(requiresMetrologySync ? "full-sync" : "econ-sync")}");
+
+                    if (requiresMetrologySync)
+                    {
+                        var commands = BuildConfigurationCommands(metrology, alarmSettings);
+                        if (commands.Count == 0)
+                        {
+                            VigitempServeur.Log($"[SONDE][CFG-CHECK] type=GSP serial={m_sondeSerialNumber} status=eeprom-missing-no-command codes={codes}");
+                            return false;
+                        }
+
+                        return await TrySynchronizeConfigurationAsync();
+                    }
+
+                    return await SendExpectedEconomyConfigurationAsync(alarmSettings);
+                }
+
                 var expectedHigh = alarmSettings.ConsigneSup;
                 var expectedLow = alarmSettings.ConsigneInf;
                 var expectedFrequencyMinutes = Math.Max(1, (int)Math.Round(Math.Max(1, _frequencySeconds) / 60d, MidpointRounding.AwayFromZero));
-                var expectedDelayMinutes = Math.Min(Math.Max(0, alarmSettings.RetardAlarmeBasMinutes), Math.Max(0, alarmSettings.RetardAlarmeHautMinutes));
+                var expectedDelayLowMinutes = Math.Max(0, alarmSettings.RetardAlarmeBasMinutes);
+                var expectedDelayHighMinutes = Math.Max(0, alarmSettings.RetardAlarmeHautMinutes);
 
                 var highMismatch = current.HighLimit.HasValue && expectedHigh.HasValue && !AreClose(current.HighLimit.Value, expectedHigh.Value);
                 var lowMismatch = current.LowLimit.HasValue && expectedLow.HasValue && !AreClose(current.LowLimit.Value, expectedLow.Value);
                 var frequencyMismatch = current.FrequencyMinutes.HasValue && current.FrequencyMinutes.Value != expectedFrequencyMinutes;
-                var delayMismatch = current.AlarmDelayMinutes.HasValue && current.AlarmDelayMinutes.Value != expectedDelayMinutes;
+                var lowDelayMismatch = current.AlarmDelayLowMinutes.HasValue && current.AlarmDelayLowMinutes.Value != expectedDelayLowMinutes;
+                var highDelayMismatch = current.AlarmDelayHighMinutes.HasValue && current.AlarmDelayHighMinutes.Value != expectedDelayHighMinutes;
                 var hasUnknownCriticalField =
                     !current.HighLimit.HasValue ||
                     !current.LowLimit.HasValue ||
                     !current.FrequencyMinutes.HasValue ||
-                    (expectedDelayMinutes > 0 && !current.AlarmDelayMinutes.HasValue);
+                    (expectedDelayLowMinutes > 0 && !current.AlarmDelayLowMinutes.HasValue) ||
+                    (expectedDelayHighMinutes > 0 && !current.AlarmDelayHighMinutes.HasValue);
 
-                if (!highMismatch && !lowMismatch && !frequencyMismatch && !delayMismatch)
+                if (!highMismatch && !lowMismatch && !frequencyMismatch && !lowDelayMismatch && !highDelayMismatch)
                 {
                     if (hasUnknownCriticalField)
                     {
-                        VigitempServeur.Log($"[SONDE][CFG-CHECK] type=GSP serial={m_sondeSerialNumber} status=partial expectedDelayMin={expectedDelayMinutes}");
+                        VigitempServeur.Log($"[SONDE][CFG-CHECK] type=GSP serial={m_sondeSerialNumber} status=partial expectedDelayLowMin={expectedDelayLowMinutes} expectedDelayHighMin={expectedDelayHighMinutes}");
                         return await SendExpectedEconomyConfigurationAsync(alarmSettings);
                     }
 
                     VigitempServeur.Log(
-                        $"[SONDE][CFG-CHECK] type=GSP serial={m_sondeSerialNumber} status=ok high={(current.HighLimit.HasValue ? current.HighLimit.Value.ToString(CultureInfo.InvariantCulture) : "unknown")} low={(current.LowLimit.HasValue ? current.LowLimit.Value.ToString(CultureInfo.InvariantCulture) : "unknown")} freqMin={(current.FrequencyMinutes.HasValue ? current.FrequencyMinutes.Value.ToString(CultureInfo.InvariantCulture) : "unknown")} delayMin={(current.AlarmDelayMinutes.HasValue ? current.AlarmDelayMinutes.Value.ToString(CultureInfo.InvariantCulture) : "unknown")}");
+                        $"[SONDE][CFG-CHECK] type=GSP serial={m_sondeSerialNumber} status=ok high={(current.HighLimit.HasValue ? current.HighLimit.Value.ToString(CultureInfo.InvariantCulture) : "unknown")} low={(current.LowLimit.HasValue ? current.LowLimit.Value.ToString(CultureInfo.InvariantCulture) : "unknown")} freqMin={(current.FrequencyMinutes.HasValue ? current.FrequencyMinutes.Value.ToString(CultureInfo.InvariantCulture) : "unknown")} delayLowMin={(current.AlarmDelayLowMinutes.HasValue ? current.AlarmDelayLowMinutes.Value.ToString(CultureInfo.InvariantCulture) : "unknown")} delayHighMin={(current.AlarmDelayHighMinutes.HasValue ? current.AlarmDelayHighMinutes.Value.ToString(CultureInfo.InvariantCulture) : "unknown")}");
 
                     return true;
                 }
 
                 VigitempServeur.Log(
-                    $"[SONDE][CFG-CHECK] type=GSP serial={m_sondeSerialNumber} status=mismatch high={FormatCompare(current.HighLimit, expectedHigh)} low={FormatCompare(current.LowLimit, expectedLow)} freqMin={FormatCompare(current.FrequencyMinutes, expectedFrequencyMinutes)} delayMin={FormatCompare(current.AlarmDelayMinutes, expectedDelayMinutes)}");
+                    $"[SONDE][CFG-CHECK] type=GSP serial={m_sondeSerialNumber} status=mismatch high={FormatCompare(current.HighLimit, expectedHigh)} low={FormatCompare(current.LowLimit, expectedLow)} freqMin={FormatCompare(current.FrequencyMinutes, expectedFrequencyMinutes)} delayLowMin={FormatCompare(current.AlarmDelayLowMinutes, expectedDelayLowMinutes)} delayHighMin={FormatCompare(current.AlarmDelayHighMinutes, expectedDelayHighMinutes)}");
 
                 return await SendExpectedEconomyConfigurationAsync(alarmSettings);
             }

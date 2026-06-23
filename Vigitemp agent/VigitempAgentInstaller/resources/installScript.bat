@@ -64,7 +64,7 @@ netsh advfirewall firewall add rule name="Vigitemp send to server" dir=out actio
 
 ::pause
 
-start /d "%~dp0" VigitempAgent.exe
+start /d "%~dp0" VigiSensysAgent.exe
 
 ::pause
 

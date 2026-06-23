@@ -663,10 +663,17 @@ export function AlarmAnalysisClient() {
         alarm={acknowledgeDialogAlarm}
         onOpenChange={setIsAcknowledgeOpen}
         isConfirming={isAcknowledgePending}
+        selectionMode="single"
         onConfirm={async (alarmIds, comment) => {
           setIsAcknowledgePending(true)
           try {
-            await Promise.all(alarmIds.map((alarmId) => alarmsApi.acknowledge(alarmId, comment || "")))
+            const results = await Promise.allSettled(
+              alarmIds.map((alarmId) => alarmsApi.acknowledge(alarmId, comment || "")),
+            )
+            const successCount = results.filter((result) => result.status === "fulfilled").length
+            if (successCount === 0) {
+              throw new Error("no_acknowledgement_succeeded")
+            }
             toast.success(t("toast.acknowledge_success"))
             setIsAcknowledgeOpen(false)
             await refreshAlarms()

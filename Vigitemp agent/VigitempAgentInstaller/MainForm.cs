@@ -16,9 +16,9 @@ namespace VigitempAgentInstaller
 {
     public partial class MainForm : Form
     {
-        private const string AgentExeName = "VigitempAgent.exe";
+        private const string AgentExeName = "VigiSensysAgent.exe";
         private const string SetupExeName = "VigiSensysAgentSetup.exe";
-        private const string AgentRunRegistryName = "VigitempAgent";
+        private const string AgentRunRegistryName = "VigiSensysAgent";
         private static readonly string[] LegacyAgentRunRegistryNames =
         {
             "VigitempAgent",

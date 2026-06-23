@@ -139,7 +139,7 @@ namespace VigitempAgent
                 var obj = JObject.Parse(json);
                 session.Token = obj.Value<string>("token");
                 session.UserId = obj.Value<string>("userId");
-                session.Username = obj.Value<string>("username");
+                session.Username = TextEncodingHelper.NormalizeDisplayText(obj.Value<string>("username"));
                 var expiresRaw = obj.Value<string>("expiresAtUtc") ?? obj.Value<string>("expiresAt");
                 if (!string.IsNullOrWhiteSpace(expiresRaw) && expiresRaw != "null")
                 {
@@ -168,7 +168,7 @@ namespace VigitempAgent
             return "{" +
                    "\"token\":\"" + esc(session?.Token) + "\"," +
                    "\"userId\":\"" + esc(session?.UserId) + "\"," +
-                   "\"username\":\"" + esc(session?.Username) + "\"," +
+                   "\"username\":\"" + esc(TextEncodingHelper.NormalizeDisplayText(session?.Username)) + "\"," +
                    "\"expiresAtUtc\":" + expires +
                    "}";
         }

@@ -35,6 +35,8 @@ namespace Vigitemp_Serveur
             public double? LowLimit { get; set; }
             public int? FrequencySeconds { get; set; }
             public int? AlarmDelayMinutes { get; set; }
+            public int? AlarmDelayLowMinutes { get; set; }
+            public int? AlarmDelayHighMinutes { get; set; }
             public string Channel { get; set; }
             public int? MemoryCount { get; set; }
             public int? MemoryOffset { get; set; }
@@ -265,6 +267,8 @@ namespace Vigitemp_Serveur
                     LowLimit = ValueOrNullDouble(gspToken["lowLimit"]),
                     FrequencySeconds = ValueOrNullInt(gspToken["frequencySeconds"]),
                     AlarmDelayMinutes = ValueOrNullInt(gspToken["alarmDelayMinutes"]),
+                    AlarmDelayLowMinutes = ValueOrNullInt(gspToken["alarmDelayLowMinutes"]),
+                    AlarmDelayHighMinutes = ValueOrNullInt(gspToken["alarmDelayHighMinutes"]),
                     Channel = (gspToken.Value<string>("channel") ?? string.Empty).Trim(),
                     MemoryCount = ValueOrNullInt(gspToken["memoryCount"]),
                     MemoryOffset = ValueOrNullInt(gspToken["memoryOffset"]),
@@ -570,7 +574,8 @@ namespace Vigitemp_Serveur
                 metrology: metrology,
                 highLimit: gsp.HighLimit,
                 lowLimit: gsp.LowLimit,
-                alarmDelayMinutes: Math.Max(0, gsp.AlarmDelayMinutes ?? 0),
+                alarmDelayLowMinutes: Math.Max(0, gsp.AlarmDelayLowMinutes ?? gsp.AlarmDelayMinutes ?? 0),
+                alarmDelayHighMinutes: Math.Max(0, gsp.AlarmDelayHighMinutes ?? gsp.AlarmDelayMinutes ?? 0),
                 frequencySeconds: Math.Max(1, gsp.FrequencySeconds ?? 60));
         }
 

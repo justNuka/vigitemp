@@ -804,6 +804,7 @@ export async function startAdjustmentSession(user: JWTPayload, input: StartAdjus
           Nom_Lieu: true,
           Lieu_Etat: true,
           Lieu_Etat_N1: true,
+          Derniere_Unite: true,
         },
       },
     },
@@ -842,15 +843,17 @@ export async function startAdjustmentSession(user: JWTPayload, input: StartAdjus
       Sonde_Numero_Serie: true,
       Coeff_X: true,
       Coeff_Constant: true,
+      Unite: true,
     },
   })
-  const latestAdjustmentBySerial = new Map<string, { coeffX: number; coeffConstant: number }>()
+  const latestAdjustmentBySerial = new Map<string, { coeffX: number; coeffConstant: number; unit: string | null }>()
   for (const row of latestAdjustments) {
     const serial = row.Sonde_Numero_Serie?.trim()
     if (!serial || latestAdjustmentBySerial.has(serial)) continue
     latestAdjustmentBySerial.set(serial, {
       coeffX: typeof row.Coeff_X === "number" ? row.Coeff_X : 1,
       coeffConstant: typeof row.Coeff_Constant === "number" ? row.Coeff_Constant : 0,
+      unit: row.Unite?.trim() || null,
     })
   }
 
@@ -881,6 +884,7 @@ export async function startAdjustmentSession(user: JWTPayload, input: StartAdjus
       moduleName: module?.Module_Numero_Serie ?? module?.Emplacement ?? null,
       modulePort: module?.Port_Serie ?? null,
       currentCalibrationValue: typeof sensor.Sonde_Offset === "number" ? sensor.Sonde_Offset : 0,
+      unit: previousAdjustment?.unit ?? sensor.t_lieu[0]?.Derniere_Unite?.trim() ?? null,
       address: sensor.Adresse_Sonde?.trim() || null,
       previousSensorState: sensor.Surveillance_Etat,
       previousLocationState: sensor.t_lieu[0]?.Lieu_Etat ?? null,

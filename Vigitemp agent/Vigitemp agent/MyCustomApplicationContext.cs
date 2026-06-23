@@ -178,7 +178,7 @@ namespace VigitempAgent
             }
             catch (MySqlException ex) when (ex.Number == 1045)
             {
-                AgentLog.Info("Database init skipped (auth failed). Configurez Vigi.Db.Password dans VigitempAgent.exe.config si vous souhaitez activer la synchro DB de l'agent.");
+                AgentLog.Info("Database init skipped (auth failed). Configurez Vigi.Db.Password dans VigiSensysAgent.exe.config si vous souhaitez activer la synchro DB de l'agent.");
             }
             catch (Exception ex)
             {
@@ -545,8 +545,9 @@ namespace VigitempAgent
             trayIcon.Text = "VigiSensys Agent";
             if (sessionStatusMenuItem != null)
             {
-                var who = !string.IsNullOrWhiteSpace(session?.Username)
-                    ? session.Username
+                var normalizedUsername = TextEncodingHelper.NormalizeDisplayText(session?.Username);
+                var who = !string.IsNullOrWhiteSpace(normalizedUsername)
+                    ? normalizedUsername
                     : (!string.IsNullOrWhiteSpace(session?.UserId) ? session.UserId : null);
 
                 sessionStatusMenuItem.Text = who == null ? "Statut: connecté" : ("Statut: connecté (" + who + ")");
@@ -644,7 +645,7 @@ namespace VigitempAgent
                     return;
                 }
 
-                var installPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory ?? "", "VigitempAgent.exe");
+                var installPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory ?? "", "VigiSensysAgent.exe");
                 var agentInstalled = File.Exists(installPath);
                 var urlAclOk = HasLoopbackUrlAcl();
                 var httpServerOk = HttpServer.listener != null && HttpServer.listener.IsListening;

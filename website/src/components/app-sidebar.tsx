@@ -32,6 +32,7 @@ import {
   Shield,
   MessageSquare,
   Truck,
+  TrendingUp,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ALARM_AUDIO_STATE_EVENT, getAlarmAudioMuted, setAlarmAudioMuted } from "@/lib/alarm-audio";
@@ -99,6 +100,7 @@ export function AppSidebar({ activeAlarms = 0, currentUser, onLogout }: AppSideb
   const canAccessVigilog = isStandardOrExpert(license) && hasAuthorizationCode(currentUser, ["ACCES_VIGILOG"]);
   const canAccessMessaging = messagingEnabled && hasPermission(currentUser, "CONVERSATION_ACCESS");
   const canAccessAdmin = hasPermission(currentUser, "DASHBOARD_ADMIN_ACCESS") || hasPermission(currentUser, "GENERAL_SETTINGS_ACCESS");
+  const canAccessMetrology = isStandardOrExpert(license) && hasPermission(currentUser, "METROLOGY_WORK_ACCESS");
 
   useEffect(() => {
     const syncMuted = () => setIsMuted(getAlarmAudioMuted());
@@ -227,6 +229,26 @@ export function AppSidebar({ activeAlarms = 0, currentUser, onLogout }: AppSideb
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
+                {canAccessMetrology ? (
+                  <SidebarMenuItem>
+                    <SidebarMenuButton
+                      asChild
+                      isActive={isActive("/admin/analyse-impact")}
+                      tooltip={tSidebar("impact_analysis")}
+                    >
+                      <Link
+                        href="/admin/analyse-impact"
+                        data-testid="nav-admin-impact-analysis"
+                        onClick={() => {
+                          if (isMobile) setOpenMobile(false);
+                        }}
+                      >
+                        <TrendingUp className="h-4 w-4" />
+                        <span>{tSidebar("impact_analysis")}</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ) : null}
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>

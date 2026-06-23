@@ -126,11 +126,12 @@
     "admin": "Administration",
     "users": "Users",
     "profile": "Profile",
-    "admin_dashboard": "Admin dashboard",
-    "admin_dashboard_tooltip": "Administrator dashboard",
-    "services": "Services",
-    "messaging": "Messaging",
-    "vigilog": "VigiLog",
+      "admin_dashboard": "Admin dashboard",
+      "admin_dashboard_tooltip": "Administrator dashboard",
+      "impact_analysis": "Impact analysis",
+      "services": "Services",
+      "messaging": "Messaging",
+      "vigilog": "VigiLog",
     "statistics": "Statistics"
   },
   "sidebarGroups": {
@@ -141,8 +142,10 @@
     "sound_alarms": "Sound alarms"
   },
   "agentSecretAlert": {
-    "title": "Invalid agent secret",
-    "status_error": "Unable to verify agent secret."
+    "title": "Invalid agent configuration",
+    "status_error": "Unable to verify the local agent.",
+    "agent_title": "Local agent issue",
+    "agent_popup_title": "Local agent unavailable"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -476,6 +479,16 @@
       "groups": {
         "label": "Groups",
         "placeholder": "All groups"
+      },
+      "status": {
+        "active": "Active filter",
+        "siteCount": "{count} site(s)",
+        "groupCount": "{count} group(s)",
+        "search": "search",
+        "sort": "sort"
+      },
+      "actions": {
+        "clear": "Reset"
       },
       "sort": {
         "label": "Sort",
@@ -4400,6 +4413,8 @@
     "search_placeholder": "Search...",
     "empty": "No results",
     "results": "{count} result(s)",
+    "filter_active": "Active filter",
+    "clear_search": "Clear",
     "export": "Export",
     "export_count_prompt": {
       "title": "Export measurements",
@@ -5588,10 +5603,16 @@
           "selectAll": "Select all probes",
           "selectOne": "Select probe {serial}",
           "unassigned": "Not assigned to a location",
+          "unitUnknown": "Unknown unit",
           "columns": {
             "serial": "Probe serial number",
-            "location": "Assigned location"
+            "location": "Assigned location",
+            "unit": "Unit"
           }
+        },
+        "unitLock": {
+          "title": "Selection locked to unit {unit}",
+          "description": "Only probes with the same measurement unit can be adjusted together."
         }
       },
       "adjustment": {

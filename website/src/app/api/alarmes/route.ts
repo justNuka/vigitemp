@@ -58,8 +58,6 @@ export const GET = withAuthLogging(async (req: NextRequest, ctx) => {
 
     const baseWhere: Record<string, unknown> = {}
 
-    if (siteId) baseWhere.Id_Lieu = undefined
-
     if (status === "active") {
 
       baseWhere.Est_Acquittee = false
@@ -179,63 +177,41 @@ export const GET = withAuthLogging(async (req: NextRequest, ctx) => {
 
 
     const [activeCounts, histoCounts] = lieuIds.length
-
       ? await Promise.all([
-
-          prisma.t_alarme.groupBy({
-
-            by: ["Id_Lieu"],
-
+          prisma.t_alarme.findMany({
             where: {
-
               Id_Lieu: { in: lieuIds },
-
               Date_Heure_Debut: { gte: startDate },
-
-  
             },
-
-            _count: { _all: true },
-
+            select: {
+              Id_Lieu: true,
+            },
           }),
-
-          prisma.t_alarme_histo.groupBy({
-
-            by: ["Id_Lieu"],
-
+          prisma.t_alarme_histo.findMany({
             where: {
-
               Id_Lieu: { in: lieuIds },
-
               Date_Heure_Debut: { gte: startDate },
-
-  
             },
-
-            _count: { _all: true },
-
+            select: {
+              Id_Lieu: true,
+            },
           }),
-
         ])
-
       : [[], []]
 
 
 
     const countsByLieu = new Map<number, number>()
 
-    for (const row of activeCounts as Array<{ Id_Lieu: number; _count: { _all: number } }>) {
-
-      countsByLieu.set(row.Id_Lieu, row._count._all)
-
+    for (const row of activeCounts as Array<{ Id_Lieu: number | null }>) {
+      if (typeof row.Id_Lieu !== "number" || Number.isNaN(row.Id_Lieu)) continue
+      countsByLieu.set(row.Id_Lieu, (countsByLieu.get(row.Id_Lieu) ?? 0) + 1)
     }
 
-    for (const row of histoCounts as Array<{ Id_Lieu: number; _count: { _all: number } }>) {
-
+    for (const row of histoCounts as Array<{ Id_Lieu: number | null }>) {
+      if (typeof row.Id_Lieu !== "number" || Number.isNaN(row.Id_Lieu)) continue
       const current = countsByLieu.get(row.Id_Lieu) ?? 0
-
-      countsByLieu.set(row.Id_Lieu, current + row._count._all)
-
+      countsByLieu.set(row.Id_Lieu, current + 1)
     }
 
 

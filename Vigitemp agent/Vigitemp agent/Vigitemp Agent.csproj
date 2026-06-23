@@ -7,7 +7,7 @@
     <ProjectGuid>{1E375FB8-30C7-4275-857B-9BF3B92B818D}</ProjectGuid>
     <OutputType>WinExe</OutputType>
     <RootNamespace>VigitempAgent</RootNamespace>
-    <AssemblyName>VigitempAgent</AssemblyName>
+    <AssemblyName>VigiSensysAgent</AssemblyName>
     <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
@@ -147,6 +147,7 @@
     <Compile Include="AgentLog.cs" />
     <Compile Include="AgentSecretStore.cs" />
     <Compile Include="LoopbackSessionServer.cs" />
+    <Compile Include="TextEncodingHelper.cs" />
     <Compile Include="StatusForm.cs">
       <SubType>Form</SubType>
     </Compile>

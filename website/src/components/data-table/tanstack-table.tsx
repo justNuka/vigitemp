@@ -16,6 +16,7 @@ import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react
 import { LazyMotion, domAnimation, m } from 'motion/react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import {
@@ -33,7 +34,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { ChevronDown, ChevronUp, ChevronsUpDown, Download, Inbox } from 'lucide-react';
+import { ChevronDown, ChevronUp, ChevronsUpDown, Download, Inbox, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
   DropdownMenu,
@@ -497,9 +498,20 @@ export function TanStackTable<TData extends Record<string, any>>({
                 placeholder={resolvedSearchPlaceholder}
                 value={globalFilter ?? ''}
                 onChange={(e) => setGlobalFilter(e.target.value)}
-                className="max-w-sm"
+                className={cn("max-w-sm", globalFilter ? "border-[#26A5DA]/60 bg-[#26A5DA]/8" : undefined)}
                 disabled={isLoading}
               />
+              {globalFilter ? (
+                <>
+                  <Badge variant="secondary" className="border border-[#26A5DA]/35 bg-[#26A5DA]/8 text-[#075776] dark:text-sky-50">
+                    {t('filter_active')}
+                  </Badge>
+                  <Button type="button" size="sm" variant="ghost" className="gap-1" onClick={() => setGlobalFilter("")} disabled={isLoading}>
+                    <X className="h-4 w-4" />
+                    {t('clear_search')}
+                  </Button>
+                </>
+              ) : null}
               <span className="text-sm text-muted-foreground">
                 {t('results', { count: table.getFilteredRowModel().rows.length })}
               </span>

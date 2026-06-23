@@ -123,6 +123,7 @@ export function AdminSidebar({ currentUser, onLogout, activeAlarms = 0 }: AdminS
 
   const metrologyNavItems: NavItem[] = canAccessMetrology
     ? [
+        { title: t("metrology.impact_analysis"), href: "/admin/analyse-impact", icon: TrendingUp },
         { title: t("metrology.calibration_import"), href: "/admin/sondes/etalonnage-import", icon: FlaskConical },
       ]
     : [];

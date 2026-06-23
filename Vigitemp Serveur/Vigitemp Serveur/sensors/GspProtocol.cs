@@ -24,7 +24,9 @@ namespace Vigitemp_Serveur.sensors
         public double? HighLimit { get; set; }
         public double? LowLimit { get; set; }
         public int? FrequencyMinutes { get; set; }
-        public int? AlarmDelayMinutes { get; set; }
+        public int? AlarmDelayLowMinutes { get; set; }
+        public int? AlarmDelayHighMinutes { get; set; }
+        public List<string> MissingConfigurationCodes { get; } = new List<string>();
     }
 
     internal sealed class GspMemoMeasurement
@@ -62,7 +64,8 @@ namespace Vigitemp_Serveur.sensors
                 metrology,
                 alarmSettings?.ConsigneSup,
                 alarmSettings?.ConsigneInf,
-                alarmSettings == null ? 0 : Math.Min(Math.Max(0, alarmSettings.RetardAlarmeBasMinutes), Math.Max(0, alarmSettings.RetardAlarmeHautMinutes)),
+                alarmSettings == null ? 0 : Math.Max(0, alarmSettings.RetardAlarmeBasMinutes),
+                alarmSettings == null ? 0 : Math.Max(0, alarmSettings.RetardAlarmeHautMinutes),
                 frequencySeconds);
         }
 
@@ -71,7 +74,8 @@ namespace Vigitemp_Serveur.sensors
             SondeMetrologySettings metrology,
             double? highLimit,
             double? lowLimit,
-            int alarmDelayMinutes,
+            int alarmDelayLowMinutes,
+            int alarmDelayHighMinutes,
             int frequencySeconds)
         {
             var commands = new List<KeyValuePair<string, string>>();
@@ -102,7 +106,7 @@ namespace Vigitemp_Serveur.sensors
                 }
             }
 
-            if (highLimit.HasValue || lowLimit.HasValue || frequencySeconds > 0 || alarmDelayMinutes > 0)
+            if (highLimit.HasValue || lowLimit.HasValue || frequencySeconds > 0 || alarmDelayLowMinutes > 0 || alarmDelayHighMinutes > 0)
             {
                 var payload = string.Format(
                     CultureInfo.InvariantCulture,
@@ -111,9 +115,13 @@ namespace Vigitemp_Serveur.sensors
                     FormatNumericPayload(lowLimit ?? 0d),
                     Math.Max(1, (int)Math.Round(Math.Max(1, frequencySeconds) / 60d, MidpointRounding.AwayFromZero)));
 
-                if (alarmDelayMinutes > 0)
+                if (alarmDelayLowMinutes > 0 || alarmDelayHighMinutes > 0)
                 {
-                    payload += string.Format(CultureInfo.InvariantCulture, "{0}r", Math.Max(0, alarmDelayMinutes));
+                    payload += string.Format(
+                        CultureInfo.InvariantCulture,
+                        "{0}r{1}t",
+                        Math.Max(0, alarmDelayLowMinutes),
+                        Math.Max(0, alarmDelayHighMinutes));
                 }
 
                 commands.Add(new KeyValuePair<string, string>(
@@ -395,17 +403,35 @@ namespace Vigitemp_Serveur.sensors
                 FrequencyMinutes = TryExtractRoundedIntLineValue(response, "Frequence")
                     ?? TryExtractRoundedIntLineValue(response, "FrequenceMinutes")
                     ?? TryExtractCompactInt(response, 'f'),
-                AlarmDelayMinutes = TryExtractRoundedIntLineValue(response, "Retard")
+                AlarmDelayLowMinutes = TryExtractRoundedIntLineValue(response, "RetardBas")
+                    ?? TryExtractRoundedIntLineValue(response, "RetardAlarmeBas")
+                    ?? TryExtractRoundedIntLineValue(response, "RetardAlarmeBasMinutes")
+                    ?? TryExtractCompactInt(response, 'r')
+                    ?? TryExtractRoundedIntLineValue(response, "Retard")
                     ?? TryExtractRoundedIntLineValue(response, "RetardAlarme")
                     ?? TryExtractRoundedIntLineValue(response, "RetardAlarmeMinutes")
-                    ?? TryExtractCompactInt(response, 'r')
+                    ?? TryExtractCompactInt(response, 'd'),
+                AlarmDelayHighMinutes = TryExtractRoundedIntLineValue(response, "RetardHaut")
+                    ?? TryExtractRoundedIntLineValue(response, "RetardAlarmeHaut")
+                    ?? TryExtractRoundedIntLineValue(response, "RetardAlarmeHautMinutes")
+                    ?? TryExtractCompactInt(response, 't')
+                    ?? TryExtractRoundedIntLineValue(response, "Retard")
+                    ?? TryExtractRoundedIntLineValue(response, "RetardAlarme")
+                    ?? TryExtractRoundedIntLineValue(response, "RetardAlarmeMinutes")
                     ?? TryExtractCompactInt(response, 'd'),
             };
+
+            foreach (var code in ExtractMissingConfigurationCodes(response))
+            {
+                result.MissingConfigurationCodes.Add(code);
+            }
 
             if (!result.HighLimit.HasValue &&
                 !result.LowLimit.HasValue &&
                 !result.FrequencyMinutes.HasValue &&
-                !result.AlarmDelayMinutes.HasValue)
+                !result.AlarmDelayLowMinutes.HasValue &&
+                !result.AlarmDelayHighMinutes.HasValue &&
+                result.MissingConfigurationCodes.Count == 0)
             {
                 return false;
             }
@@ -605,6 +631,60 @@ namespace Vigitemp_Serveur.sensors
             }
 
             return match.Groups[1].Value?.Trim();
+        }
+
+        private static IEnumerable<string> ExtractMissingConfigurationCodes(string response)
+        {
+            if (string.IsNullOrWhiteSpace(response))
+            {
+                yield break;
+            }
+
+            var rawCodes =
+                TryExtractLineValue(response, "EEPROM")
+                ?? TryExtractLineValue(response, "ConfigMissing")
+                ?? TryExtractLineValue(response, "ConfigurationMissing")
+                ?? TryExtractLineValue(response, "Missing")
+                ?? TryExtractLineValue(response, "MissingConfig")
+                ?? TryExtractLineValue(response, "ParametresManquants")
+                ?? TryExtractLineValue(response, "ParamètresManquants")
+                ?? TryExtractLineValue(response, "ErreurEEPROM")
+                ?? TryExtractLineValue(response, "EepromError");
+
+            if (string.IsNullOrWhiteSpace(rawCodes))
+            {
+                yield break;
+            }
+
+            var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var token in rawCodes
+                .Split(new[] { '+', ',', ';', '|', ' ' }, StringSplitOptions.RemoveEmptyEntries)
+                .Select(part => (part ?? string.Empty).Trim().ToUpperInvariant()))
+            {
+                if (!IsKnownMissingConfigurationCode(token) || !seen.Add(token))
+                {
+                    continue;
+                }
+
+                yield return token;
+            }
+        }
+
+        private static bool IsKnownMissingConfigurationCode(string code)
+        {
+            switch ((code ?? string.Empty).Trim().ToUpperInvariant())
+            {
+                case "A":
+                case "B":
+                case "E":
+                case "LH":
+                case "LB":
+                case "RB":
+                case "RH":
+                    return true;
+                default:
+                    return false;
+            }
         }
 
         private static bool? TryExtractPowerState(string rawAlarmState)

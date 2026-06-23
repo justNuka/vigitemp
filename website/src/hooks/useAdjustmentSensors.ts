@@ -7,6 +7,7 @@ export type AdjustmentSensorRow = {
   serialNumber: string
   locationId: number | null
   locationName: string | null
+  unit: string | null
   moduleId: number | null
   moduleName: string | null
   modulePort: string | null

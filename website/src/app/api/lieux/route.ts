@@ -11,6 +11,7 @@ import { computeEmt, emtModeToDb, emtModeFromDb } from "@/lib/emt"
 import { requireStandardOrExpertIfFieldsUsed } from "@/lib/license-guards"
 import { applyAccessFilter, buildLieuAccessFilter, getUserLocationScope } from "@/lib/location-access-scope"
 import { findLocationNameConflict, normalizeLocationName } from "@/lib/location-name-conflicts"
+import { buildLocationValueRangeIssues, getSensorTypeValueRangeBySerial } from "@/lib/sensor-value-range"
 
 const mailingContactSchema = z.object({
   Id_Tel_Num: z.number().optional(),
@@ -349,6 +350,12 @@ export const POST = withLogging(async (req: NextRequest) => {
       if (estLieuGso) {
         adresseSondeLieu = gsoInfo?.Adresse_Sonde ?? extractAddressFromSerial(sondeNumeroSerie)
       }
+    }
+
+    const sensorTypeRange = await getSensorTypeValueRangeBySerial(sondeNumeroSerie)
+    const rangeIssues = buildLocationValueRangeIssues(validated, sensorTypeRange)
+    if (rangeIssues.length > 0) {
+      return apiError(400, "validation_error", "Validation impossible", { issues: rangeIssues })
     }
 
     const frequencySeconds =

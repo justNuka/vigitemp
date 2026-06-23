@@ -200,7 +200,7 @@ namespace VigitempAgent
                             {
                                 Token = ExtractJsonString(body, "token"),
                                 UserId = ExtractJsonString(body, "userId"),
-                                Username = ExtractJsonString(body, "username"),
+                                Username = TextEncodingHelper.NormalizeDisplayText(ExtractJsonString(body, "username")),
                                 ExpiresAtUtc = ParseJsonDate(body, "expiresAtUtc") ?? ParseJsonDate(body, "expiresAt"),
                             };
                             SessionStore.Save(session);

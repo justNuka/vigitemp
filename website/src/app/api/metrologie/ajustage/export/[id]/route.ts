@@ -43,7 +43,7 @@ export const GET = withStandardOrExpertAnyAuthorizationLogging(
               Est_Sonde_Externe: true,
               Port_Serie: true,
               Nb_Decimale: true,
-              Incertitude: true,
+              Incertitude_Max: true,
             },
           })
         : null
@@ -71,7 +71,7 @@ export const GET = withStandardOrExpertAnyAuthorizationLogging(
         standardPort: standard?.Port_Serie ?? null,
         standardIsExternal: Boolean(standard?.Est_Sonde_Externe),
         standardUncertainty:
-          standard?.Incertitude == null ? null : Number(String(standard.Incertitude).replace(",", ".")),
+          standard?.Incertitude_Max == null ? null : Number(String(standard.Incertitude_Max).replace(",", ".")),
         standardResolution: typeInfo?.Resolution ?? null,
         standardDecimals: standard?.Nb_Decimale ?? null,
         sensorSerial: adjustment.Sonde_Numero_Serie,

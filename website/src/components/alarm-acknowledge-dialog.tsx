@@ -62,6 +62,7 @@ type Props = {
   onOpenChange: (open: boolean) => void;
   onConfirm: (alarmIds: string[], comment?: string) => Promise<void>;
   isConfirming?: boolean;
+  selectionMode?: "single" | "multiple";
 };
 
 type RelatedAlarmRow = {
@@ -80,6 +81,7 @@ export function AlarmAcknowledgeDialog({
   onOpenChange,
   onConfirm,
   isConfirming = false,
+  selectionMode = "multiple",
 }: Props) {
   const t = useTranslations("alarmsPage");
   const locale = useLocale();
@@ -189,7 +191,12 @@ export function AlarmAcknowledgeDialog({
       });
 
     const rawLocationId = Number(alarm.locationId);
-    if (Number.isFinite(rawLocationId) && rawLocationId > 0) {
+    if (selectionMode === "single") {
+      setRelatedAlarms([]);
+      setSelectedAlarmIds([alarm.id]);
+      setFocusedAlarmId(alarm.id);
+      setIsRelatedAlarmsLoading(false);
+    } else if (Number.isFinite(rawLocationId) && rawLocationId > 0) {
       fetch(`/api/alarmes?locationId=${encodeURIComponent(String(rawLocationId))}&limit=200`)
         .then((res) => (res.ok ? res.json() : null))
         .then((payload) => {
@@ -233,7 +240,7 @@ export function AlarmAcknowledgeDialog({
       isActive = false;
       window.clearTimeout(initId);
     };
-  }, [open, alarmId, alarmLocationId]);
+  }, [open, alarmId, alarmLocationId, selectionMode]);
 
   useEffect(() => {
     if (!open || !focusedAlarmId) return;
@@ -459,6 +466,7 @@ export function AlarmAcknowledgeDialog({
           </DialogHeader>
 
           <div className="space-y-4">
+            {selectionMode === "multiple" ? (
             <div className="rounded-xl border border-border/60 bg-background">
               <div className="flex items-center justify-between gap-3 border-b border-border/60 px-4 py-3">
                 <div>
@@ -556,6 +564,7 @@ export function AlarmAcknowledgeDialog({
                 </table>
               </div>
             </div>
+            ) : null}
 
             <div className="grid gap-3 rounded-xl border border-border/50 bg-muted/40 p-4 md:grid-cols-2">
               <div>
@@ -709,14 +718,24 @@ export function AlarmAcknowledgeDialog({
             </Button>
             <Button
               onClick={handleSubmit(async ({ comment: commentValue }) => {
-                await onConfirm(selectedAlarmIds.length > 0 ? selectedAlarmIds : [alarm.id], commentValue);
+                const targetAlarmIds =
+                  selectionMode === "single"
+                    ? [focusedAlarmId ?? alarm.id]
+                    : selectedAlarmIds.length > 0
+                      ? selectedAlarmIds
+                      : [alarm.id];
+                await onConfirm(targetAlarmIds, commentValue);
               })}
-              disabled={isConfirming || isSubmitting || selectedAlarmIds.length === 0}
+              disabled={
+                isConfirming ||
+                isSubmitting ||
+                (selectionMode === "multiple" && selectedAlarmIds.length === 0)
+              }
               data-testid="button-confirm-acknowledge"
             >
               {isConfirming
                 ? t("dialog.confirming")
-                : selectedAlarmIds.length > 1
+                : selectionMode === "multiple" && selectedAlarmIds.length > 1
                   ? t("dialog.confirm_many", { count: selectedAlarmIds.length })
                   : t("dialog.confirm")}
             </Button>

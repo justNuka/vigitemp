@@ -13,6 +13,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useTranslations } from "next-intl";
 import { AlertTriangle } from "lucide-react";
 import { isFeatureEnabled } from "@/lib/feature-flags";
+import { toast } from "sonner";
 export default function AdminGroupLayout({
   children,
 }: {
@@ -24,6 +25,7 @@ export default function AdminGroupLayout({
   const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
   const [agentSecretStatus, setAgentSecretStatus] = useState<{
     status: string;
+    scope?: "agent" | "configuration";
     message: string;
   } | null>(null);
   const t = useTranslations("agentSecretAlert");
@@ -66,6 +68,18 @@ export default function AdminGroupLayout({
     };
     loadStatus();
   }, [currentUser, t]);
+
+  useEffect(() => {
+    if (!isFeatureEnabled("enableAgentSecretAlert")) return;
+    if (!agentSecretStatus || agentSecretStatus.status === "ok") return;
+    if (agentSecretStatus.scope !== "agent") return;
+
+    toast.error(t("agent_popup_title"), {
+      description: agentSecretStatus.message || t("status_error"),
+      id: "agent-local-problem-admin",
+      duration: 8000,
+    });
+  }, [agentSecretStatus, t]);
   const handleLogout = async () => {
     try {
       await authApi.logout();
@@ -99,7 +113,7 @@ export default function AdminGroupLayout({
             <div className="px-6 pt-6">
               <Alert variant="destructive">
                 <AlertTriangle className="h-4 w-4" />
-                <AlertTitle>{t("title")}</AlertTitle>
+                <AlertTitle>{agentSecretStatus.scope === "agent" ? t("agent_title") : t("title")}</AlertTitle>
                 <AlertDescription>
                   {agentSecretStatus.message || t("status_error")}
                 </AlertDescription>

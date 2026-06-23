@@ -36,8 +36,8 @@
         <RegistryValue
           Root="HKLM"
           Key="Software\Microsoft\Windows\CurrentVersion\Run"
-          Name="VigitempAgent"
-          Value="&quot;[INSTALLFOLDER]VigitempAgent.exe&quot;"
+          Name="VigiSensysAgent"
+          Value="&quot;[INSTALLFOLDER]VigiSensysAgent.exe&quot;"
           Type="string"
           KeyPath="yes" />
       </Component>
@@ -51,13 +51,13 @@
           KeyPath="yes" />
         <util:XmlFile
           Id="SetWebUrl"
-          File="[INSTALLFOLDER]VigitempAgent.exe.config"
+          File="[INSTALLFOLDER]VigiSensysAgent.exe.config"
           ElementPath="/configuration/appSettings/add[@key='VigiSensysSiteWebUrl']/@value"
           Action="setValue"
           Value="[VIGI_WEB_URL]" />
         <util:XmlFile
           Id="SetLegacyWebUrl"
-          File="[INSTALLFOLDER]VigitempAgent.exe.config"
+          File="[INSTALLFOLDER]VigiSensysAgent.exe.config"
           ElementPath="/configuration/appSettings/add[@key='VigitempSiteWebUrl']/@value"
           Action="setValue"
           Value="[VIGI_WEB_URL]" />

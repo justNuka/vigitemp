@@ -23,10 +23,10 @@ function isAuthorized(req: NextRequest) {
 
 export const POST = withLogging(async (req: NextRequest) => {
   if (!isAuthorized(req)) {
-    log.warn("AGENT_HEARTBEAT", "Agent heartbeat rejected: invalid secret", {
+    log.warn("AGENT_HEARTBEAT", "Agent heartbeat rejected", {
       ip: getClientIp(req),
     })
-    return apiError(401, "unauthorized", "Non autoris?")
+    return apiError(401, "unauthorized", "Non autorise")
   }
 
   const licenseError = await requireOneOrHigherLicense()

@@ -108,10 +108,10 @@
   <File Id="fil_34" Source="C:\VigitempProject\vigitemp\Vigitemp agent\Vigitemp agent\bin\Release\\System.Threading.Tasks.Extensions.xml" KeyPath="yes" />
 </Component>
 <Component Id="cmp_35" Guid="*">
-  <File Id="fil_35" Source="C:\VigitempProject\vigitemp\Vigitemp agent\Vigitemp agent\bin\Release\\VigitempAgent.exe" KeyPath="yes" />
+  <File Id="fil_35" Source="C:\VigitempProject\vigitemp\Vigitemp agent\Vigitemp agent\bin\Release\\VigiSensysAgent.exe" KeyPath="yes" />
 </Component>
 <Component Id="cmp_36" Guid="*">
-  <File Id="fil_36" Source="C:\VigitempProject\vigitemp\Vigitemp agent\Vigitemp agent\bin\Release\\VigitempAgent.exe.config" KeyPath="yes" />
+  <File Id="fil_36" Source="C:\VigitempProject\vigitemp\Vigitemp agent\Vigitemp agent\bin\Release\\VigiSensysAgent.exe.config" KeyPath="yes" />
 </Component>
 <Component Id="cmp_37" Guid="*">
   <File Id="fil_37" Source="C:\VigitempProject\vigitemp\Vigitemp agent\Vigitemp agent\bin\Release\\ZstdSharp.dll" KeyPath="yes" />
