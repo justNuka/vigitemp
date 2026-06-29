@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma"
 import { apiError, apiOk } from "@/lib/api-response"
 import { withAuthLogging } from "@/lib/api-wrappers"
 import { log } from "@/lib/logger"
+import { getDbDatePlusMinutes } from "@/lib/sql-provider"
 
 const alarmToggleSchema = z.object({
   disabled: z.boolean(),
@@ -27,11 +28,10 @@ export const PATCH = withAuthLogging(
         payload.disabled && payload.durationMinutes && payload.durationMinutes > 0
           ? payload.durationMinutes
           : null
-      const [reactivationRow] =
+      const reactivationAt =
         payload.disabled && durationMinutes
-          ? await prisma.$queryRaw<Array<{ reactivationAt: Date }>>`SELECT DATE_ADD(NOW(), INTERVAL ${durationMinutes} MINUTE) AS reactivationAt`
-          : [null]
-      const reactivationAt = reactivationRow?.reactivationAt ?? null
+          ? await getDbDatePlusMinutes(prisma, durationMinutes)
+          : null
 
       const lieux = await prisma.t_lieu.findMany({
         where: {

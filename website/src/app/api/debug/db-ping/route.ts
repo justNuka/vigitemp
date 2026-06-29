@@ -3,6 +3,7 @@
 import { withAuthorizationLogging } from "@/lib/api-wrappers"
 import { apiOk } from "@/lib/api-response"
 import { prisma, prismaMesure } from "@/lib/prisma"
+import { getDbNow } from "@/lib/sql-provider"
 
 type PingResult = {
   ok: boolean
@@ -16,11 +17,11 @@ type PingResult = {
 async function pingMainDb(): Promise<PingResult> {
   const start = Date.now()
   try {
-    const rows = await prisma.$queryRaw<Array<{ now: Date | string }>>`SELECT NOW() AS now`
+    const now = await getDbNow(prisma)
     return {
       ok: true,
       elapsedMs: Date.now() - start,
-      value: rows?.[0]?.now ? String(rows[0].now) : "ok",
+      value: String(now),
     }
   } catch (error) {
     return {
@@ -36,11 +37,11 @@ async function pingMainDb(): Promise<PingResult> {
 async function pingMesuresDb(): Promise<PingResult> {
   const start = Date.now()
   try {
-    const rows = await prismaMesure.$queryRaw<Array<{ now: Date | string }>>`SELECT NOW() AS now`
+    const now = await getDbNow(prismaMesure)
     return {
       ok: true,
       elapsedMs: Date.now() - start,
-      value: rows?.[0]?.now ? String(rows[0].now) : "ok",
+      value: String(now),
     }
   } catch (error) {
     return {

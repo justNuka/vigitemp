@@ -46,7 +46,7 @@ type MonitoringSiteSectionProps = {
   sortMode: SurveillanceSortMode
 }
 
-function formatDisabledLabel(
+function formatDisabledSinceLabel(
   disabledUntil: Date | string | null,
   locale: string,
   timezone: string | undefined,
@@ -64,12 +64,12 @@ function formatDisabledLabel(
     hour: "2-digit",
     minute: "2-digit",
   }).format(date)
-  return t("grid.disabled_until", { date: formatted })
+  return t("grid.disabled_since", { date: formatted })
 }
 
-function getLatestDisabledUntil(sensors: SensorWithLocation[]) {
+function getLatestDisabledSince(sensors: SensorWithLocation[]) {
   return sensors
-    .map((sensor) => sensor.location.alarmDisabledUntil)
+    .map((sensor) => sensor.location.surveillanceDisabledSince)
     .filter((value) => value !== null && value !== undefined)
     .map((value) => parseDbDateTime(value as string | number | Date))
     .filter((date): date is Date => date !== null)
@@ -163,7 +163,7 @@ export function MonitoringSiteSection({
               group.groupId !== null &&
               group.sensors.length > 0 &&
               group.sensors.every((sensor) => sensor.location.surveillanceDisabled)
-            const groupDisabledUntil = groupDisabled ? getLatestDisabledUntil(group.sensors) : null
+            const groupDisabledSince = groupDisabled ? getLatestDisabledSince(group.sensors) : null
 
             return (
               <div key={`${siteKey}-${group.groupKey}`} className="space-y-3">
@@ -174,7 +174,10 @@ export function MonitoringSiteSection({
                     {group.groupId !== null && onGroupSurveillanceToggle ? (
                       <button
                         type="button"
-                        onClick={() => onGroupSurveillanceToggle(group.groupId!, groupDisabled, null)}
+                        onClick={(event) => {
+                          event.stopPropagation()
+                          onGroupSurveillanceToggle(group.groupId!, groupDisabled, null)
+                        }}
                         className="ml-auto inline-flex h-8 w-8 items-center justify-center rounded-md border border-slate-200 text-slate-600 transition-colors hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-900/60"
                         title={groupDisabled ? t("group_modal.toggle_enable") : t("group_modal.toggle_disable")}
                         aria-label={groupDisabled ? t("group_modal.toggle_enable") : t("group_modal.toggle_disable")}
@@ -207,7 +210,7 @@ export function MonitoringSiteSection({
                     {groupDisabled ? (
                       <span
                         className="ml-2 inline-flex items-center rounded-full bg-orange-500/20 text-orange-900 dark:text-orange-100 text-[10px] px-2 py-0.5"
-                        title={formatDisabledLabel(groupDisabledUntil, locale, timezone, t)}
+                        title={formatDisabledSinceLabel(groupDisabledSince, locale, timezone, t)}
                       >
                         {t("grid.disabled_badge")}
                       </span>
@@ -216,7 +219,10 @@ export function MonitoringSiteSection({
                     {group.groupId !== null && onGroupSurveillanceToggle ? (
                       <button
                         type="button"
-                        onClick={() => onGroupSurveillanceToggle(group.groupId!, groupDisabled, null)}
+                        onClick={(event) => {
+                          event.stopPropagation()
+                          onGroupSurveillanceToggle(group.groupId!, groupDisabled, null)
+                        }}
                         className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-slate-200 text-slate-600 transition-colors hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-900/60"
                         title={groupDisabled ? t("group_modal.toggle_enable") : t("group_modal.toggle_disable")}
                         aria-label={groupDisabled ? t("group_modal.toggle_enable") : t("group_modal.toggle_disable")}

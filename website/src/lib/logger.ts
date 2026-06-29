@@ -343,6 +343,7 @@ export const log = {
         ip,
         resource: `Lieu: ${lieuName}`,
         resourceId: lieuId,
+        lieuId,
         reason,
       }),
     
@@ -354,6 +355,7 @@ export const log = {
         ip,
         resource: `Lieu: ${lieuName}`,
         resourceId: lieuId,
+        lieuId,
       }),
     
     // AS - Arrêt de la surveillance
@@ -364,6 +366,7 @@ export const log = {
         ip,
         resource: `Lieu: ${lieuName}`,
         resourceId: lieuId,
+        lieuId,
         reason,
       }),
     
@@ -375,6 +378,7 @@ export const log = {
         ip,
         resource: `Lieu: ${lieuName}`,
         resourceId: lieuId,
+        lieuId,
       }),
   },
 
@@ -454,6 +458,7 @@ export const log = {
         ip,
         resource,
         resourceId,
+        lieuId: resourceId,
         changes: { from: oldFreq, to: newFreq },
       }),
     
@@ -465,6 +470,7 @@ export const log = {
         ip,
         resource,
         resourceId,
+        lieuId: resourceId,
         changes: { from: oldDelay, to: newDelay },
       }),
     
@@ -476,6 +482,7 @@ export const log = {
         ip,
         resource: `Lieu: ${lieuName}`,
         resourceId: lieuId,
+        lieuId,
         changes: { from: oldSensor, to: newSensor },
       }),
   },
@@ -563,6 +570,7 @@ export const log = {
         ip,
         resource: `Lieu: ${lieuName}`,
         resourceId: lieuId,
+        lieuId,
         changes: { newToleranceSup: data.newSup, newToleranceInf: data.newInf, simAlarms: data.simCount, realAlarms: data.realCount, dateRange: data.dateRange },
         reason: comment,
       }),
@@ -577,6 +585,7 @@ export const log = {
         ip,
         resource: `Lieu: ${lieuName}`,
         resourceId: lieuId,
+        lieuId,
         reason,
       }),
     soundOff: (lieuName: string, lieuId: number, user: string, userId: number, ip: string, reason?: string) =>
@@ -586,6 +595,7 @@ export const log = {
         ip,
         resource: `Lieu: ${lieuName}`,
         resourceId: lieuId,
+        lieuId,
         reason,
       }),
   },

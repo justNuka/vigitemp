@@ -12,6 +12,7 @@ import { requireStandardOrExpertIfFieldsUsed } from "@/lib/license-guards"
 import { applyAccessFilter, buildLieuAccessFilter, getUserLocationScope } from "@/lib/location-access-scope"
 import { findLocationNameConflict, normalizeLocationName } from "@/lib/location-name-conflicts"
 import { buildLocationValueRangeIssues, getSensorTypeValueRangeBySerial } from "@/lib/sensor-value-range"
+import { getDbNow } from "@/lib/sql-provider"
 
 const mailingContactSchema = z.object({
   Id_Tel_Num: z.number().optional(),
@@ -370,8 +371,7 @@ export const POST = withLogging(async (req: NextRequest) => {
     const mailingContacts = normalizeMailingContacts(validated.MailingContacts)
     const dateCreation = new Date()
     dateCreation.setHours(0, 0, 0, 0)
-    const [dbNowRow] = await prisma.$queryRaw<Array<{ nowAt: Date }>>`SELECT NOW() AS nowAt`
-    const dbNow = dbNowRow?.nowAt ?? new Date()
+    const dbNow = await getDbNow(prisma)
     const surveillanceOnAt = lieuEtat === "S" ? dbNow : null
     const surveillanceOffAt = lieuEtat === "D" ? dbNow : null
 
@@ -484,7 +484,6 @@ export const POST = withLogging(async (req: NextRequest) => {
               t_lieu_groupe: {
                 createMany: {
                   data: groupIds.map((Id_Groupe) => ({ Id_Groupe })),
-                  skipDuplicates: true,
                 },
               },
             }
@@ -578,6 +577,7 @@ export const POST = withLogging(async (req: NextRequest) => {
         ip,
         resource: `Lieu: ${validated.Nom_Lieu}`,
         resourceId: lieu.Id_Lieu,
+        lieuId: lieu.Id_Lieu,
         reason: "Application manuelle d'étalonnage",
         changes: {
           appliedCalibrationId,

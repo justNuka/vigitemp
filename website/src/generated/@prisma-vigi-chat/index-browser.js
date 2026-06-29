@@ -117,7 +117,8 @@ exports.Prisma.TransactionIsolationLevel = makeStrictEnum({
   ReadUncommitted: 'ReadUncommitted',
   ReadCommitted: 'ReadCommitted',
   RepeatableRead: 'RepeatableRead',
-  Serializable: 'Serializable'
+  Serializable: 'Serializable',
+  Snapshot: 'Snapshot'
 });
 
 exports.Prisma.T_conversationScalarFieldEnum = {
@@ -164,22 +165,6 @@ exports.Prisma.SortOrder = {
 exports.Prisma.NullsOrder = {
   first: 'first',
   last: 'last'
-};
-
-exports.Prisma.t_conversationOrderByRelevanceFieldEnum = {
-  Type: 'Type',
-  Titre: 'Titre',
-  DM_Key: 'DM_Key'
-};
-
-exports.Prisma.t_messageOrderByRelevanceFieldEnum = {
-  Contenu: 'Contenu'
-};
-
-exports.Prisma.t_message_attachmentOrderByRelevanceFieldEnum = {
-  File_Name: 'File_Name',
-  File_Path: 'File_Path',
-  Mime_Type: 'Mime_Type'
 };
 
 

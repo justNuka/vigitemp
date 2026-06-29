@@ -36,6 +36,7 @@ Objectif : fournir une vue fiable des endpoints réellement implémentés.
 - `GET, POST /api/groupes`
 - `PATCH, DELETE /api/groupes/[id]`
 - `PATCH /api/groupes/[id]/alarm`
+- `PATCH /api/groupes/[id]/surveillance`
 - `GET /api/groupes/[id]/lieux`
 - `GET /api/groupes/[id]/utilisateurs`
 - `GET, POST /api/sites`

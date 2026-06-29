@@ -51,6 +51,7 @@ namespace Vigitemp_Serveur.sensors
         private readonly int _frequencySeconds;
         private readonly bool _synchronizeConfiguration;
         private readonly string _commandTarget;
+        private readonly bool _requestGraphDisplay;
 
         private int? _lastBatteryPercent;
         private int? _lastRssi;
@@ -74,10 +75,12 @@ namespace Vigitemp_Serveur.sensors
             string p_sondeSerialNumber,
             string p_sondeAdresse,
             int frequencySeconds = 0,
-            bool synchronizeConfiguration = false) : base(p_ths, p_comPort, p_sondeSerialNumber, p_sondeAdresse)
+            bool synchronizeConfiguration = false,
+            bool requestGraphDisplay = false) : base(p_ths, p_comPort, p_sondeSerialNumber, p_sondeAdresse)
         {
             _frequencySeconds = Math.Max(0, frequencySeconds);
             _synchronizeConfiguration = synchronizeConfiguration;
+            _requestGraphDisplay = requestGraphDisplay;
             _commandTarget = GspProtocol.NormalizeCommandTarget(string.IsNullOrWhiteSpace(p_sondeAdresse) ? p_sondeSerialNumber : p_sondeAdresse);
         }
 
@@ -87,6 +90,19 @@ namespace Vigitemp_Serveur.sensors
         public string LastFailureReason { get; private set; }
         public bool LastFailureLooksLikeModuleUnavailable =>
             string.Equals(LastFailureReason, "serial-semaphore-timeout", StringComparison.OrdinalIgnoreCase);
+
+        public static void PrimeLastSuccessfulProbeDateTime(string serialNumber, DateTime probeDateTime)
+        {
+            var serialKey = string.IsNullOrWhiteSpace(serialNumber)
+                ? string.Empty
+                : serialNumber.Trim().ToUpperInvariant();
+            if (string.IsNullOrWhiteSpace(serialKey))
+            {
+                return;
+            }
+
+            LastSuccessfulProbeDateTimeBySerial[serialKey] = probeDateTime;
+        }
 
         public override async Task<bool> read()
         {
@@ -139,12 +155,13 @@ namespace Vigitemp_Serveur.sensors
                 m_port.DiscardOutBuffer();
                 VigitempServeur.Log($"[SONDE][OPEN] type=GSP serial={m_sondeSerialNumber} port={m_comPort} adresse={m_sondeAdresse} target={_commandTarget}");
 
-                string response = await SendRequestAndReadAsync("TEMP", allowEmptyResponse: false);
+                var tempPayload = _requestGraphDisplay ? "1g" : string.Empty;
+                string response = await SendRequestAndReadAsync("TEMP", tempPayload, allowEmptyResponse: false);
                 if (string.IsNullOrWhiteSpace(response))
                 {
                     VigitempServeur.Log($"[SONDE][WARN] type=GSP serial={m_sondeSerialNumber} no response on TEMP, retrying TEMP after {TemperatureRetryDelayMs / 1000}s");
                     await Task.Delay(TemperatureRetryDelayMs);
-                    response = await SendRequestAndReadAsync("TEMP", allowEmptyResponse: false);
+                    response = await SendRequestAndReadAsync("TEMP", tempPayload, allowEmptyResponse: false);
                 }
 
                 if (string.IsNullOrWhiteSpace(response))
@@ -871,6 +888,7 @@ namespace Vigitemp_Serveur.sensors
                 var missingCount = Math.Max(1, (int)Math.Floor(gapSeconds / _frequencySeconds) - 1);
                 VigitempServeur.Log(
                     $"[SONDE][GAP] type=GSP serial={m_sondeSerialNumber} previous={previousProbeDateTime:O} current={currentProbeDateTime:O} expectedSec={_frequencySeconds} actualSec={Math.Round(gapSeconds, 0, MidpointRounding.AwayFromZero)} status=anomaly missingCount={missingCount}");
+                ths.GetDatabase().setLieuGspRecoveryPending(m_idLieu, true);
                 ths.EnqueueGspRecovery(m_sondeSerialNumber, previousProbeDateTime, currentProbeDateTime, missingCount);
             }
         }

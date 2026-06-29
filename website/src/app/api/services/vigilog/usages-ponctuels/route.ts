@@ -6,6 +6,7 @@ import { withStandardOrExpertAnyAuthorizationLogging, type HandlerContext } from
 import { auditRouteCreate } from "@/lib/audit-route"
 import { log } from "@/lib/logger"
 import { prisma } from "@/lib/prisma"
+import { isMssqlProvider } from "@/lib/sql-provider"
 import {
   buildVigilogTemporaryUsageReference,
   normalizeOptionalText,
@@ -68,64 +69,102 @@ export const GET = withStandardOrExpertAnyAuthorizationLogging(VIGILOG_ACCESS_CO
       : null
     const limit = Math.min(Math.max(Number(searchParams.get("limit") ?? "50"), 1), 200)
 
+    const isMssql = isMssqlProvider()
+    const baseSelect = `
+      SELECT ${isMssql ? `TOP (${limit})` : ""}
+        u.Id_VigiLog_Usage_Ponctuel AS id,
+        u.Reference_Usage AS reference,
+        u.Id_VigiLog_Configuration AS configurationId,
+        u.Id_VigiLog AS loggerId,
+        u.Nom_Configuration AS configurationName,
+        u.Numero_Serie_VigiLog AS loggerSerial,
+        u.Nom_Lieu_Temporaire AS temporaryLocationName,
+        u.Statut AS status,
+        u.Date_Heure_Demarrage AS startedAt,
+        u.Date_Heure_Arret AS stoppedAt,
+        u.Commentaire_Demarrage AS startComment,
+        u.Commentaire_Arret AS stopComment,
+        u.Date_Heure_Creation AS createdAt,
+        u.Date_Heure_Maj AS updatedAt,
+        startUser.Login AS startedByLogin,
+        startUser.Prenom AS startedByFirstName,
+        startUser.Nom AS startedByLastName,
+        stopUser.Login AS stoppedByLogin,
+        stopUser.Prenom AS stoppedByFirstName,
+        stopUser.Nom AS stoppedByLastName
+      FROM t_vigilog_usage_ponctuel u
+      LEFT JOIN t_utilisateur startUser ON startUser.Id_Utilisateur = u.Id_Utilisateur_Demarrage
+      LEFT JOIN t_utilisateur stopUser ON stopUser.Id_Utilisateur = u.Id_Utilisateur_Arret
+    `
     const usages = requestedStatus
-      ? await prisma.$queryRaw<TempUsageRow[]>`
-          SELECT
-            u.Id_VigiLog_Usage_Ponctuel AS id,
-            u.Reference_Usage AS reference,
-            u.Id_VigiLog_Configuration AS configurationId,
-            u.Id_VigiLog AS loggerId,
-            u.Nom_Configuration AS configurationName,
-            u.Numero_Serie_VigiLog AS loggerSerial,
-            u.Nom_Lieu_Temporaire AS temporaryLocationName,
-            u.Statut AS status,
-            u.Date_Heure_Demarrage AS startedAt,
-            u.Date_Heure_Arret AS stoppedAt,
-            u.Commentaire_Demarrage AS startComment,
-            u.Commentaire_Arret AS stopComment,
-            u.Date_Heure_Creation AS createdAt,
-            u.Date_Heure_Maj AS updatedAt,
-            startUser.Login AS startedByLogin,
-            startUser.Prenom AS startedByFirstName,
-            startUser.Nom AS startedByLastName,
-            stopUser.Login AS stoppedByLogin,
-            stopUser.Prenom AS stoppedByFirstName,
-            stopUser.Nom AS stoppedByLastName
-          FROM t_vigilog_usage_ponctuel u
-          LEFT JOIN t_utilisateur startUser ON startUser.Id_Utilisateur = u.Id_Utilisateur_Demarrage
-          LEFT JOIN t_utilisateur stopUser ON stopUser.Id_Utilisateur = u.Id_Utilisateur_Arret
-          WHERE u.Statut = ${requestedStatus}
-          ORDER BY u.Date_Heure_Demarrage DESC
-          LIMIT ${limit}
-        `
-      : await prisma.$queryRaw<TempUsageRow[]>`
-          SELECT
-            u.Id_VigiLog_Usage_Ponctuel AS id,
-            u.Reference_Usage AS reference,
-            u.Id_VigiLog_Configuration AS configurationId,
-            u.Id_VigiLog AS loggerId,
-            u.Nom_Configuration AS configurationName,
-            u.Numero_Serie_VigiLog AS loggerSerial,
-            u.Nom_Lieu_Temporaire AS temporaryLocationName,
-            u.Statut AS status,
-            u.Date_Heure_Demarrage AS startedAt,
-            u.Date_Heure_Arret AS stoppedAt,
-            u.Commentaire_Demarrage AS startComment,
-            u.Commentaire_Arret AS stopComment,
-            u.Date_Heure_Creation AS createdAt,
-            u.Date_Heure_Maj AS updatedAt,
-            startUser.Login AS startedByLogin,
-            startUser.Prenom AS startedByFirstName,
-            startUser.Nom AS startedByLastName,
-            stopUser.Login AS stoppedByLogin,
-            stopUser.Prenom AS stoppedByFirstName,
-            stopUser.Nom AS stoppedByLastName
-          FROM t_vigilog_usage_ponctuel u
-          LEFT JOIN t_utilisateur startUser ON startUser.Id_Utilisateur = u.Id_Utilisateur_Demarrage
-          LEFT JOIN t_utilisateur stopUser ON stopUser.Id_Utilisateur = u.Id_Utilisateur_Arret
-          ORDER BY u.Date_Heure_Demarrage DESC
-          LIMIT ${limit}
-        `
+      ? isMssql
+        ? await prisma.$queryRawUnsafe<TempUsageRow[]>(`
+            ${baseSelect}
+            WHERE u.Statut = '${requestedStatus}'
+            ORDER BY u.Date_Heure_Demarrage DESC
+          `)
+        : await prisma.$queryRaw<TempUsageRow[]>`
+            SELECT
+              u.Id_VigiLog_Usage_Ponctuel AS id,
+              u.Reference_Usage AS reference,
+              u.Id_VigiLog_Configuration AS configurationId,
+              u.Id_VigiLog AS loggerId,
+              u.Nom_Configuration AS configurationName,
+              u.Numero_Serie_VigiLog AS loggerSerial,
+              u.Nom_Lieu_Temporaire AS temporaryLocationName,
+              u.Statut AS status,
+              u.Date_Heure_Demarrage AS startedAt,
+              u.Date_Heure_Arret AS stoppedAt,
+              u.Commentaire_Demarrage AS startComment,
+              u.Commentaire_Arret AS stopComment,
+              u.Date_Heure_Creation AS createdAt,
+              u.Date_Heure_Maj AS updatedAt,
+              startUser.Login AS startedByLogin,
+              startUser.Prenom AS startedByFirstName,
+              startUser.Nom AS startedByLastName,
+              stopUser.Login AS stoppedByLogin,
+              stopUser.Prenom AS stoppedByFirstName,
+              stopUser.Nom AS stoppedByLastName
+            FROM t_vigilog_usage_ponctuel u
+            LEFT JOIN t_utilisateur startUser ON startUser.Id_Utilisateur = u.Id_Utilisateur_Demarrage
+            LEFT JOIN t_utilisateur stopUser ON stopUser.Id_Utilisateur = u.Id_Utilisateur_Arret
+            WHERE u.Statut = ${requestedStatus}
+            ORDER BY u.Date_Heure_Demarrage DESC
+            LIMIT ${limit}
+          `
+      : isMssql
+        ? await prisma.$queryRawUnsafe<TempUsageRow[]>(`
+            ${baseSelect}
+            ORDER BY u.Date_Heure_Demarrage DESC
+          `)
+        : await prisma.$queryRaw<TempUsageRow[]>`
+            SELECT
+              u.Id_VigiLog_Usage_Ponctuel AS id,
+              u.Reference_Usage AS reference,
+              u.Id_VigiLog_Configuration AS configurationId,
+              u.Id_VigiLog AS loggerId,
+              u.Nom_Configuration AS configurationName,
+              u.Numero_Serie_VigiLog AS loggerSerial,
+              u.Nom_Lieu_Temporaire AS temporaryLocationName,
+              u.Statut AS status,
+              u.Date_Heure_Demarrage AS startedAt,
+              u.Date_Heure_Arret AS stoppedAt,
+              u.Commentaire_Demarrage AS startComment,
+              u.Commentaire_Arret AS stopComment,
+              u.Date_Heure_Creation AS createdAt,
+              u.Date_Heure_Maj AS updatedAt,
+              startUser.Login AS startedByLogin,
+              startUser.Prenom AS startedByFirstName,
+              startUser.Nom AS startedByLastName,
+              stopUser.Login AS stoppedByLogin,
+              stopUser.Prenom AS stoppedByFirstName,
+              stopUser.Nom AS stoppedByLastName
+            FROM t_vigilog_usage_ponctuel u
+            LEFT JOIN t_utilisateur startUser ON startUser.Id_Utilisateur = u.Id_Utilisateur_Demarrage
+            LEFT JOIN t_utilisateur stopUser ON stopUser.Id_Utilisateur = u.Id_Utilisateur_Arret
+            ORDER BY u.Date_Heure_Demarrage DESC
+            LIMIT ${limit}
+          `
 
     const [stats] = await prisma.$queryRaw<TempUsageStatsRow[]>`
       SELECT
@@ -201,13 +240,20 @@ export const POST = withStandardOrExpertAnyAuthorizationLogging(
       }
 
       const serial = payload.Numero_Serie_VigiLog.trim()
-      const [activeUsage] = await prisma.$queryRaw<Array<{ id: number }>>`
-        SELECT Id_VigiLog_Usage_Ponctuel AS id
-        FROM t_vigilog_usage_ponctuel
-        WHERE Numero_Serie_VigiLog = ${serial}
-          AND Statut = 'EN_COURS'
-        LIMIT 1
-      `
+      const [activeUsage] = isMssqlProvider()
+        ? await prisma.$queryRaw<Array<{ id: number }>>`
+            SELECT TOP 1 Id_VigiLog_Usage_Ponctuel AS id
+            FROM t_vigilog_usage_ponctuel
+            WHERE Numero_Serie_VigiLog = ${serial}
+              AND Statut = 'EN_COURS'
+          `
+        : await prisma.$queryRaw<Array<{ id: number }>>`
+            SELECT Id_VigiLog_Usage_Ponctuel AS id
+            FROM t_vigilog_usage_ponctuel
+            WHERE Numero_Serie_VigiLog = ${serial}
+              AND Statut = 'EN_COURS'
+            LIMIT 1
+          `
 
       if (activeUsage) {
         return apiError(
@@ -256,12 +302,18 @@ export const POST = withStandardOrExpertAnyAuthorizationLogging(
         )
       `
 
-      const [createdUsage] = await prisma.$queryRaw<Array<{ id: number; status: string }>>`
-        SELECT Id_VigiLog_Usage_Ponctuel AS id, Statut AS status
-        FROM t_vigilog_usage_ponctuel
-        WHERE Reference_Usage = ${reference}
-        LIMIT 1
-      `
+      const [createdUsage] = isMssqlProvider()
+        ? await prisma.$queryRaw<Array<{ id: number; status: string }>>`
+            SELECT TOP 1 Id_VigiLog_Usage_Ponctuel AS id, Statut AS status
+            FROM t_vigilog_usage_ponctuel
+            WHERE Reference_Usage = ${reference}
+          `
+        : await prisma.$queryRaw<Array<{ id: number; status: string }>>`
+            SELECT Id_VigiLog_Usage_Ponctuel AS id, Statut AS status
+            FROM t_vigilog_usage_ponctuel
+            WHERE Reference_Usage = ${reference}
+            LIMIT 1
+          `
 
       if (!createdUsage) {
         return apiError(500, "vigilog_temp_usage_create_failed", "Creation de l'usage ponctuel impossible")

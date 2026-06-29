@@ -1031,121 +1031,49 @@ export async function ServerAlarmTrendCount() {
 
 
 
-  const idsList = allowedLieuIds.join(",")
-
-
-  const trendRows = await prisma.$queryRawUnsafe<Array<{ dayKey: string | Date; total: bigint | number }>>(`
-
-
-    SELECT
-
-
-      d.day_key AS dayKey,
-
-
-      COALESCE(a.cnt, 0) + COALESCE(h.cnt, 0) AS total
-
-
-    FROM (
-
-
-      SELECT DATE_SUB(CURDATE(), INTERVAL 6 DAY) AS day_key
-
-
-      UNION ALL SELECT DATE_SUB(CURDATE(), INTERVAL 5 DAY)
-
-
-      UNION ALL SELECT DATE_SUB(CURDATE(), INTERVAL 4 DAY)
-
-
-      UNION ALL SELECT DATE_SUB(CURDATE(), INTERVAL 3 DAY)
-
-
-      UNION ALL SELECT DATE_SUB(CURDATE(), INTERVAL 2 DAY)
-
-
-      UNION ALL SELECT DATE_SUB(CURDATE(), INTERVAL 1 DAY)
-
-
-      UNION ALL SELECT CURDATE()
-
-
-    ) d
-
-
-    LEFT JOIN (
-
-
-      SELECT DATE(Date_Heure_Debut) AS day_key, COUNT(*) AS cnt
-
-
-      FROM t_alarme
-
-
-      WHERE Date_Heure_Debut >= DATE_SUB(CURDATE(), INTERVAL 6 DAY)
-
-
-        AND Id_Lieu IN (${idsList})
-
-
-      GROUP BY DATE(Date_Heure_Debut)
-
-
-    ) a ON a.day_key = d.day_key
-
-
-    LEFT JOIN (
-
-
-      SELECT DATE(Date_Heure_Debut) AS day_key, COUNT(*) AS cnt
-
-
-      FROM t_alarme_histo
-
-
-      WHERE Date_Heure_Debut >= DATE_SUB(CURDATE(), INTERVAL 6 DAY)
-
-
-        AND Id_Lieu IN (${idsList})
-
-
-      GROUP BY DATE(Date_Heure_Debut)
-
-
-    ) h ON h.day_key = d.day_key
-
-
-    ORDER BY d.day_key ASC
-
-
-  `);
-
-
-
-
-
-  const measurements = trendRows.map((row) => {
-
-
-    const day = row.dayKey instanceof Date ? row.dayKey.toISOString().slice(0, 10) : String(row.dayKey).slice(0, 10);
-
-
-    return {
-
-
-      timestamp: `${day}T00:00:00`,
-
-
-      value: Number(row.total ?? 0),
-
-
-      sensorId: "alarm-trend",
-
-
-    };
-
-
-  });
+  const startDate = new Date()
+  startDate.setHours(0, 0, 0, 0)
+  startDate.setDate(startDate.getDate() - 6)
+
+  const [activeAlarms, historyAlarms] = await Promise.all([
+    prisma.t_alarme.findMany({
+      where: {
+        Id_Lieu: { in: allowedLieuIds },
+        Date_Heure_Debut: { gte: startDate },
+      },
+      select: { Date_Heure_Debut: true },
+    }),
+    prisma.t_alarme_histo.findMany({
+      where: {
+        Id_Lieu: { in: allowedLieuIds },
+        Date_Heure_Debut: { gte: startDate },
+      },
+      select: { Date_Heure_Debut: true },
+    }),
+  ])
+
+  const countsByDay = new Map<string, number>()
+  for (let offset = 0; offset < 7; offset += 1) {
+    const day = new Date(startDate)
+    day.setDate(startDate.getDate() + offset)
+    countsByDay.set(day.toISOString().slice(0, 10), 0)
+  }
+
+  for (const alarm of [...activeAlarms, ...historyAlarms]) {
+    if (!alarm.Date_Heure_Debut) {
+      continue
+    }
+    const key = alarm.Date_Heure_Debut.toISOString().slice(0, 10)
+    if (countsByDay.has(key)) {
+      countsByDay.set(key, (countsByDay.get(key) ?? 0) + 1)
+    }
+  }
+
+  const measurements = Array.from(countsByDay.entries()).map(([day, total]) => ({
+    timestamp: `${day}T00:00:00`,
+    value: total,
+    sensorId: "alarm-trend",
+  }))
 
 
 

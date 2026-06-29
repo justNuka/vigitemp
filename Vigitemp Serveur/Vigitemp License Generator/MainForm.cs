@@ -158,8 +158,9 @@ namespace Vigitemp_License_Generator
             {
                 _txtPackSensorLimitManual.Enabled =
                     string.Equals(_cmbPackSensorLimit.SelectedItem.ToString(), "manuel", StringComparison.OrdinalIgnoreCase);
+                RefreshEditionDependentControls();
             };
-            _cmbEdition.SelectedIndexChanged += (s, e) => UpdatePackLimitControls();
+            _cmbEdition.SelectedIndexChanged += (s, e) => RefreshEditionDependentControls();
             packLimitPanel.Controls.Add(_cmbPackSensorLimit);
             packLimitPanel.Controls.Add(_txtPackSensorLimitManual);
             AddRowWithInfo(
@@ -168,7 +169,7 @@ namespace Vigitemp_License_Generator
                 packLimitPanel,
                 "Applicable uniquement à la licence Pack.\nValeurs rapides : 5, 10, 15, 20, 25 ou saisie manuelle (>0)."
             );
-            UpdatePackLimitControls();
+            RefreshEditionDependentControls();
             _cmbConcurrent = new ComboBox { DropDownStyle = ComboBoxStyle.DropDownList, Width = 240 };
             _cmbConcurrent.Items.AddRange(new object[] { "5", "10", "25", "illimité" });
             _cmbConcurrent.SelectedIndex = 0;
@@ -403,6 +404,7 @@ namespace Vigitemp_License_Generator
             btnSaveRecap.Click += (s, e) => SaveLicenseRecapToFile();
             AddRow(outputTable, "", btnSaveRecap);
 
+            RefreshEditionDependentControls();
             TryLoadDefaultKey();
         }
 
@@ -628,7 +630,14 @@ namespace Vigitemp_License_Generator
             var options = new List<string>();
             foreach (var item in _clbOptions.CheckedItems)
             {
-                options.Add(item.ToString());
+                var option = item.ToString();
+                if (!string.Equals(edition, "pack", StringComparison.OrdinalIgnoreCase)
+                    && string.Equals(option, "mail", StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+
+                options.Add(option);
             }
 
             var hotlineSlug = (_txtHotlineSlug.Text ?? string.Empty).Trim().ToLowerInvariant();
@@ -663,7 +672,8 @@ namespace Vigitemp_License_Generator
             var licenseId = $"VT-{DateTime.UtcNow:yyyyMMdd}-{Guid.NewGuid().ToString("N").Substring(0, 8).ToUpperInvariant()}";
             _txtLicenseId.Text = licenseId;
 
-            var agentSecret = GenerateAgentSecret();
+            var isPack = IsPackEdition();
+            string agentSecret = null;
 
             var payload = new Dictionary<string, object>
             {
@@ -680,7 +690,11 @@ namespace Vigitemp_License_Generator
                 payload["maxSensors"] = maxSensors.Value;
             }
 
-            payload["agentSecret"] = agentSecret;
+            if (!isPack)
+            {
+                agentSecret = GenerateAgentSecret();
+                payload["agentSecret"] = agentSecret;
+            }
 
             payload["hotline"] = new Dictionary<string, object>
             {
@@ -704,17 +718,20 @@ namespace Vigitemp_License_Generator
             }
 
             var agentSecretPublicKey = _txtAgentSecretPublicKey.Text.Trim();
-            if (string.IsNullOrWhiteSpace(agentSecretPublicKey))
+            if (!isPack && string.IsNullOrWhiteSpace(agentSecretPublicKey))
             {
                 MessageBox.Show("Clé publique du secret agent requise pour chiffrer le secret.", "Erreur", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
 
-            payload["agentSecretEnc"] = new Dictionary<string, object>
+            if (!isPack)
             {
-                { "alg", "RSA-OAEP" },
-                { "value", EncryptAgentSecret(agentSecret, agentSecretPublicKey) }
-            };
+                payload["agentSecretEnc"] = new Dictionary<string, object>
+                {
+                    { "alg", "RSA-OAEP" },
+                    { "value", EncryptAgentSecret(agentSecret, agentSecretPublicKey) }
+                };
+            }
 
             var header = new Dictionary<string, object>
             {
@@ -752,12 +769,46 @@ namespace Vigitemp_License_Generator
         }
 
 
-        private void UpdatePackLimitControls()
+        private bool IsPackEdition()
         {
-            var isPack = string.Equals(_cmbEdition.SelectedItem.ToString(), "pack", StringComparison.OrdinalIgnoreCase);
+            return string.Equals(_cmbEdition.SelectedItem?.ToString(), "pack", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private void RefreshEditionDependentControls()
+        {
+            var isPack = IsPackEdition();
             _cmbPackSensorLimit.Enabled = isPack;
             _txtPackSensorLimitManual.Enabled =
-                isPack && string.Equals(_cmbPackSensorLimit.SelectedItem.ToString(), "manuel", StringComparison.OrdinalIgnoreCase);
+                isPack && string.Equals(_cmbPackSensorLimit.SelectedItem?.ToString(), "manuel", StringComparison.OrdinalIgnoreCase);
+
+            foreach (var control in new Control[]
+            {
+                _txtAgentSecretPublicKey,
+                _txtAgentSecretPrivateKeyPath,
+                _btnGenerateAgentSecretKeys,
+                _btnLoadAgentSecretPublicKey,
+                _btnCopyAgentSecretPublicKey
+            })
+            {
+                if (control != null)
+                {
+                    control.Enabled = !isPack;
+                }
+            }
+
+            if (_clbOptions == null)
+            {
+                return;
+            }
+
+            for (var index = 0; index < _clbOptions.Items.Count; index++)
+            {
+                var option = _clbOptions.Items[index]?.ToString();
+                if (string.Equals(option, "mail", StringComparison.OrdinalIgnoreCase) && !isPack)
+                {
+                    _clbOptions.SetItemChecked(index, false);
+                }
+            }
         }
         private static byte[] SignEd25519(AsymmetricKeyParameter privateKey, byte[] data)
         {
@@ -1016,6 +1067,7 @@ namespace Vigitemp_License_Generator
                 content.AppendLine("Technical:");
                 content.AppendLine($"- Token generated: {!string.IsNullOrWhiteSpace(_lastGeneratedLicenseToken)}");
                 content.AppendLine($"- Bind instance key present: {payload["bind"] != null}");
+                content.AppendLine($"- Agent integration required: {!string.Equals(payload.Value<string>("edition"), "pack", StringComparison.OrdinalIgnoreCase)}");
                 content.AppendLine($"- Agent secret encrypted present: {payload["agentSecretEnc"] != null}");
                 content.AppendLine();
                 content.AppendLine("WARNING: keep this file in a secure storage.");
@@ -1229,5 +1281,6 @@ namespace Vigitemp_License_Generator
         }
     }
 }
+
 
 

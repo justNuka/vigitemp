@@ -176,20 +176,49 @@ export async function persistVigilogReception(params: {
   })
 
   if (analysis.analysed.length > 0) {
-    await prismaMesure.tm_vigilog_mesure.createMany({
-      data: analysis.analysed.map((measure, index) => ({
-        Id_VigiLog_Tournee: params.tourneeId,
-        Numero_Ordre: measure.order ?? index + 1,
-        Date_Heure_Mesure: measure.measuredAt,
-        Valeur: measure.value,
-        Est_Hors_Limites: measure.isOutOfLimit,
-        Est_En_Alarme: measure.isInAlarm,
-        Est_Marqueur: measure.isMarker,
-        Details: measure.details,
-        Date_Heure_Import: params.now,
-      })),
-      skipDuplicates: true,
+    const rawMeasures = analysis.analysed.map((measure, index) => ({
+      Id_VigiLog_Tournee: params.tourneeId,
+      Numero_Ordre: measure.order ?? index + 1,
+      Date_Heure_Mesure: measure.measuredAt,
+      Valeur: measure.value,
+      Est_Hors_Limites: measure.isOutOfLimit,
+      Est_En_Alarme: measure.isInAlarm,
+      Est_Marqueur: measure.isMarker,
+      Details: measure.details,
+      Date_Heure_Import: params.now,
+    }))
+
+    const dedupedMeasures = Array.from(
+      new Map(
+        rawMeasures.map((measure) => [
+          `${measure.Id_VigiLog_Tournee}::${measure.Numero_Ordre}::${measure.Date_Heure_Mesure.toISOString()}`,
+          measure,
+        ]),
+      ).values(),
+    )
+
+    const existingMeasures = await prismaMesure.tm_vigilog_mesure.findMany({
+      where: { Id_VigiLog_Tournee: params.tourneeId },
+      select: { Numero_Ordre: true, Date_Heure_Mesure: true },
     })
+
+    const existingKeys = new Set(
+      existingMeasures.map(
+        (measure) =>
+          `${params.tourneeId}::${measure.Numero_Ordre}::${measure.Date_Heure_Mesure.toISOString()}`,
+      ),
+    )
+
+    const measuresToInsert = dedupedMeasures.filter((measure) => {
+      const key = `${measure.Id_VigiLog_Tournee}::${measure.Numero_Ordre}::${measure.Date_Heure_Mesure.toISOString()}`
+      return !existingKeys.has(key)
+    })
+
+    if (measuresToInsert.length > 0) {
+    await prismaMesure.tm_vigilog_mesure.createMany({
+      data: measuresToInsert,
+    })
+    }
   }
 
   const updated = await prisma.t_vigilog_tournee.update({

@@ -1,4 +1,4 @@
--- =====================================================================
+﻿-- =====================================================================
 -- BOOTSTRAP SQL SERVER VigiSensys
 -- Cree les 3 bases et les tables absentes avant le seed/alignement.
 -- Genere depuis les schemas Prisma, sans FK bloquantes pour rester idempotent.
@@ -569,6 +569,7 @@ BEGIN
     [Notification_Active] BIT NOT NULL DEFAULT(1),
     [Commentaire] VARCHAR(200) NULL,
     [Infos_Modifiees_Depuis_Derniere_Mesure] BIT NOT NULL DEFAULT(1),
+    [Est_Remontee_Memoire_A_Faire] BIT NOT NULL DEFAULT(0),
     [Date_Heure_Reactivation_Surveillance] DATETIME NULL,
     [Date_Heure_Surveillance_On] DATETIME NULL,
     [Date_Heure_Surveillance_Off] DATETIME NULL,
@@ -657,6 +658,7 @@ IF OBJECT_ID(N'dbo.t_lieu', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu', N'Da
 IF OBJECT_ID(N'dbo.t_lieu', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu', N'Notification_Active') IS NULL ALTER TABLE dbo.[t_lieu] ADD [Notification_Active] BIT NULL DEFAULT(1);
 IF OBJECT_ID(N'dbo.t_lieu', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu', N'Commentaire') IS NULL ALTER TABLE dbo.[t_lieu] ADD [Commentaire] VARCHAR(200) NULL;
 IF OBJECT_ID(N'dbo.t_lieu', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu', N'Infos_Modifiees_Depuis_Derniere_Mesure') IS NULL ALTER TABLE dbo.[t_lieu] ADD [Infos_Modifiees_Depuis_Derniere_Mesure] BIT NULL DEFAULT(1);
+IF OBJECT_ID(N'dbo.t_lieu', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu', N'Est_Remontee_Memoire_A_Faire') IS NULL ALTER TABLE dbo.[t_lieu] ADD [Est_Remontee_Memoire_A_Faire] BIT NULL DEFAULT(0);
 IF OBJECT_ID(N'dbo.t_lieu', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu', N'Date_Heure_Reactivation_Surveillance') IS NULL ALTER TABLE dbo.[t_lieu] ADD [Date_Heure_Reactivation_Surveillance] DATETIME NULL;
 IF OBJECT_ID(N'dbo.t_lieu', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu', N'Date_Heure_Surveillance_On') IS NULL ALTER TABLE dbo.[t_lieu] ADD [Date_Heure_Surveillance_On] DATETIME NULL;
 IF OBJECT_ID(N'dbo.t_lieu', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu', N'Date_Heure_Surveillance_Off') IS NULL ALTER TABLE dbo.[t_lieu] ADD [Date_Heure_Surveillance_Off] DATETIME NULL;
@@ -1235,25 +1237,6 @@ IF NOT EXISTS (SELECT 1 FROM dbo.[t_etalon_type] WHERE [Type_Etalon] = N'SEF') I
 IF NOT EXISTS (SELECT 1 FROM dbo.[t_etalon_type] WHERE [Type_Etalon] = N'SPET') INSERT INTO dbo.[t_etalon_type] ([Type_Etalon], [Nom], [Descriptif], [Est_Saisie_Module], [Est_Sonde_Externe], [Resolution]) VALUES (N'SPET', N'Sonde etalon platine', N'Sonde etalon GSP platine', 1, 0, 0.02);
 GO
 
-IF OBJECT_ID(N'dbo.t_mem_gso', N'U') IS NULL
-BEGIN
-  CREATE TABLE dbo.[t_mem_gso] (
-    [id] INT NOT NULL,
-    [last_sonde] VARCHAR(20) NULL,
-    [cycle_MEM] INT NULL,
-    [cycle_start] DATETIME NULL,
-    [last_update] DATETIME NULL,
-    CONSTRAINT [PK_t_mem_gso] PRIMARY KEY ([id])
-  );
-END;
-GO
-IF OBJECT_ID(N'dbo.t_mem_gso', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_mem_gso', N'id') IS NULL ALTER TABLE dbo.[t_mem_gso] ADD [id] INT NULL;
-IF OBJECT_ID(N'dbo.t_mem_gso', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_mem_gso', N'last_sonde') IS NULL ALTER TABLE dbo.[t_mem_gso] ADD [last_sonde] VARCHAR(20) NULL;
-IF OBJECT_ID(N'dbo.t_mem_gso', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_mem_gso', N'cycle_MEM') IS NULL ALTER TABLE dbo.[t_mem_gso] ADD [cycle_MEM] INT NULL;
-IF OBJECT_ID(N'dbo.t_mem_gso', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_mem_gso', N'cycle_start') IS NULL ALTER TABLE dbo.[t_mem_gso] ADD [cycle_start] DATETIME NULL;
-IF OBJECT_ID(N'dbo.t_mem_gso', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_mem_gso', N'last_update') IS NULL ALTER TABLE dbo.[t_mem_gso] ADD [last_update] DATETIME NULL;
-GO
-
 IF OBJECT_ID(N'dbo.t_sonde_etat', N'U') IS NULL
 BEGIN
   CREATE TABLE dbo.[t_sonde_etat] (
@@ -1290,6 +1273,33 @@ IF OBJECT_ID(N'dbo.t_lieu_mail_tel', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_li
 IF OBJECT_ID(N'dbo.t_lieu_mail_tel', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu_mail_tel', N'Id_Utilisateur') IS NULL ALTER TABLE dbo.[t_lieu_mail_tel] ADD [Id_Utilisateur] INT NULL;
 IF OBJECT_ID(N'dbo.t_lieu_mail_tel', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu_mail_tel', N'Est_Via_Telephone') IS NULL ALTER TABLE dbo.[t_lieu_mail_tel] ADD [Est_Via_Telephone] BIT NULL;
 IF OBJECT_ID(N'dbo.t_lieu_mail_tel', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu_mail_tel', N'Est_Via_Email') IS NULL ALTER TABLE dbo.[t_lieu_mail_tel] ADD [Est_Via_Email] BIT NULL;
+GO
+
+IF OBJECT_ID(N'dbo.t_lieu_planning', N'U') IS NULL
+BEGIN
+  CREATE TABLE dbo.[t_lieu_planning] (
+    [Id_Lieu_Planning] INT IDENTITY(1,1) NOT NULL,
+    [Id_Lieu] INT NULL,
+    [Est_Id_Jour] TINYINT NULL,
+    [Est_Actif] BIT NULL CONSTRAINT [DF_t_lieu_planning_Est_Actif] DEFAULT(1),
+    [Heure_Debut_Periode1] VARCHAR(4) NULL CONSTRAINT [DF_t_lieu_planning_Heure_Debut_Periode1] DEFAULT('0000'),
+    [Heure_Fin_Periode1] VARCHAR(4) NULL CONSTRAINT [DF_t_lieu_planning_Heure_Fin_Periode1] DEFAULT('0000'),
+    [Heure_Debut_Periode2] VARCHAR(4) NULL CONSTRAINT [DF_t_lieu_planning_Heure_Debut_Periode2] DEFAULT('0000'),
+    [Heure_Fin_Periode2] VARCHAR(4) NULL CONSTRAINT [DF_t_lieu_planning_Heure_Fin_Periode2] DEFAULT('0000'),
+    CONSTRAINT [PK_t_lieu_planning] PRIMARY KEY ([Id_Lieu_Planning])
+  );
+  CREATE UNIQUE INDEX [UX_t_lieu_planning_IdLieuJour] ON dbo.[t_lieu_planning]([Id_Lieu], [Est_Id_Jour]);
+  CREATE INDEX [IDX_t_lieu_planning_Id_Lieu] ON dbo.[t_lieu_planning]([Id_Lieu]);
+END;
+GO
+IF OBJECT_ID(N'dbo.t_lieu_planning', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu_planning', N'Id_Lieu_Planning') IS NULL ALTER TABLE dbo.[t_lieu_planning] ADD [Id_Lieu_Planning] INT NULL;
+IF OBJECT_ID(N'dbo.t_lieu_planning', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu_planning', N'Id_Lieu') IS NULL ALTER TABLE dbo.[t_lieu_planning] ADD [Id_Lieu] INT NULL;
+IF OBJECT_ID(N'dbo.t_lieu_planning', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu_planning', N'Est_Id_Jour') IS NULL ALTER TABLE dbo.[t_lieu_planning] ADD [Est_Id_Jour] TINYINT NULL;
+IF OBJECT_ID(N'dbo.t_lieu_planning', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu_planning', N'Est_Actif') IS NULL ALTER TABLE dbo.[t_lieu_planning] ADD [Est_Actif] BIT NULL DEFAULT(1);
+IF OBJECT_ID(N'dbo.t_lieu_planning', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu_planning', N'Heure_Debut_Periode1') IS NULL ALTER TABLE dbo.[t_lieu_planning] ADD [Heure_Debut_Periode1] VARCHAR(4) NULL DEFAULT('0000');
+IF OBJECT_ID(N'dbo.t_lieu_planning', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu_planning', N'Heure_Fin_Periode1') IS NULL ALTER TABLE dbo.[t_lieu_planning] ADD [Heure_Fin_Periode1] VARCHAR(4) NULL DEFAULT('0000');
+IF OBJECT_ID(N'dbo.t_lieu_planning', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu_planning', N'Heure_Debut_Periode2') IS NULL ALTER TABLE dbo.[t_lieu_planning] ADD [Heure_Debut_Periode2] VARCHAR(4) NULL DEFAULT('0000');
+IF OBJECT_ID(N'dbo.t_lieu_planning', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu_planning', N'Heure_Fin_Periode2') IS NULL ALTER TABLE dbo.[t_lieu_planning] ADD [Heure_Fin_Periode2] VARCHAR(4) NULL DEFAULT('0000');
 GO
 
 IF OBJECT_ID(N'dbo.t_lieu_planning_audit', N'U') IS NULL
@@ -1795,6 +1805,7 @@ BEGIN
     [Unite] VARCHAR(10) NULL,
     [Sonde_Numero_Serie] VARCHAR(50) NULL,
     [Adresse_Sonde] VARCHAR(50) NULL,
+    [COM_sonde] FLOAT NULL,
     [Id_Lieu] INT NOT NULL DEFAULT(0),
     [Est_Valeur_Null] TINYINT NOT NULL DEFAULT(0),
     [Frequence] INT NULL,
@@ -1804,6 +1815,8 @@ BEGIN
     [Moyenne] FLOAT NULL,
     [Rssi] VARCHAR(10) NULL,
     [Tension] VARCHAR(10) NULL,
+    [Planning_Regle_Existe] BIT NOT NULL DEFAULT(0),
+    [Planning_Actif] BIT NOT NULL DEFAULT(0),
     CONSTRAINT [PK_tm_mesures] PRIMARY KEY ([Id_Serveur_BDD], [Id_Mesure], [Date_Heure_Mesure], [Id_Lieu], [Est_Valeur_Null])
   );
 END;
@@ -1821,6 +1834,7 @@ IF OBJECT_ID(N'dbo.tm_mesures', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesure
 IF OBJECT_ID(N'dbo.tm_mesures', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures', N'Unite') IS NULL ALTER TABLE dbo.[tm_mesures] ADD [Unite] VARCHAR(10) NULL;
 IF OBJECT_ID(N'dbo.tm_mesures', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures', N'Sonde_Numero_Serie') IS NULL ALTER TABLE dbo.[tm_mesures] ADD [Sonde_Numero_Serie] VARCHAR(50) NULL;
 IF OBJECT_ID(N'dbo.tm_mesures', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures', N'Adresse_Sonde') IS NULL ALTER TABLE dbo.[tm_mesures] ADD [Adresse_Sonde] VARCHAR(50) NULL;
+IF OBJECT_ID(N'dbo.tm_mesures', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures', N'COM_sonde') IS NULL ALTER TABLE dbo.[tm_mesures] ADD [COM_sonde] FLOAT NULL;
 IF OBJECT_ID(N'dbo.tm_mesures', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures', N'Id_Lieu') IS NULL ALTER TABLE dbo.[tm_mesures] ADD [Id_Lieu] INT NULL DEFAULT(0);
 IF OBJECT_ID(N'dbo.tm_mesures', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures', N'Est_Valeur_Null') IS NULL ALTER TABLE dbo.[tm_mesures] ADD [Est_Valeur_Null] TINYINT NULL DEFAULT(0);
 IF OBJECT_ID(N'dbo.tm_mesures', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures', N'Frequence') IS NULL ALTER TABLE dbo.[tm_mesures] ADD [Frequence] INT NULL;
@@ -1830,6 +1844,8 @@ IF OBJECT_ID(N'dbo.tm_mesures', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesure
 IF OBJECT_ID(N'dbo.tm_mesures', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures', N'Moyenne') IS NULL ALTER TABLE dbo.[tm_mesures] ADD [Moyenne] FLOAT NULL;
 IF OBJECT_ID(N'dbo.tm_mesures', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures', N'Rssi') IS NULL ALTER TABLE dbo.[tm_mesures] ADD [Rssi] VARCHAR(10) NULL;
 IF OBJECT_ID(N'dbo.tm_mesures', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures', N'Tension') IS NULL ALTER TABLE dbo.[tm_mesures] ADD [Tension] VARCHAR(10) NULL;
+IF OBJECT_ID(N'dbo.tm_mesures', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures', N'Planning_Regle_Existe') IS NULL ALTER TABLE dbo.[tm_mesures] ADD [Planning_Regle_Existe] BIT NOT NULL CONSTRAINT [DF_tm_mesures_Planning_Regle_Existe_patch] DEFAULT(0);
+IF OBJECT_ID(N'dbo.tm_mesures', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures', N'Planning_Actif') IS NULL ALTER TABLE dbo.[tm_mesures] ADD [Planning_Actif] BIT NOT NULL CONSTRAINT [DF_tm_mesures_Planning_Actif_patch] DEFAULT(0);
 GO
 
 IF OBJECT_ID(N'dbo.tm_mesures_gso', N'U') IS NULL
@@ -1840,8 +1856,10 @@ BEGIN
     [tep] FLOAT NULL,
     [unite] VARCHAR(10) NULL,
     [date_mesure] DATETIME NOT NULL,
+    [trame] BINARY(8) NULL,
     [rssi] VARCHAR(10) NULL,
     [tension] VARCHAR(10) NULL,
+    [COM_sonde] FLOAT NULL,
     CONSTRAINT [PK_tm_mesures_gso] PRIMARY KEY ([id_capteur], [date_mesure])
   );
 END;
@@ -1851,8 +1869,10 @@ IF OBJECT_ID(N'dbo.tm_mesures_gso', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_me
 IF OBJECT_ID(N'dbo.tm_mesures_gso', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_gso', N'tep') IS NULL ALTER TABLE dbo.[tm_mesures_gso] ADD [tep] FLOAT NULL;
 IF OBJECT_ID(N'dbo.tm_mesures_gso', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_gso', N'unite') IS NULL ALTER TABLE dbo.[tm_mesures_gso] ADD [unite] VARCHAR(10) NULL;
 IF OBJECT_ID(N'dbo.tm_mesures_gso', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_gso', N'date_mesure') IS NULL ALTER TABLE dbo.[tm_mesures_gso] ADD [date_mesure] DATETIME NULL;
+IF OBJECT_ID(N'dbo.tm_mesures_gso', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_gso', N'trame') IS NULL ALTER TABLE dbo.[tm_mesures_gso] ADD [trame] BINARY(8) NULL;
 IF OBJECT_ID(N'dbo.tm_mesures_gso', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_gso', N'rssi') IS NULL ALTER TABLE dbo.[tm_mesures_gso] ADD [rssi] VARCHAR(10) NULL;
 IF OBJECT_ID(N'dbo.tm_mesures_gso', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_gso', N'tension') IS NULL ALTER TABLE dbo.[tm_mesures_gso] ADD [tension] VARCHAR(10) NULL;
+IF OBJECT_ID(N'dbo.tm_mesures_gso', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_gso', N'COM_sonde') IS NULL ALTER TABLE dbo.[tm_mesures_gso] ADD [COM_sonde] FLOAT NULL;
 GO
 
 IF OBJECT_ID(N'dbo.tm_journal_histo', N'U') IS NULL
@@ -1884,50 +1904,74 @@ IF OBJECT_ID(N'dbo.tm_journal_histo', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_
 IF OBJECT_ID(N'dbo.tm_journal_histo', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_journal_histo', N'Commentaire_Utilisateur') IS NULL ALTER TABLE dbo.[tm_journal_histo] ADD [Commentaire_Utilisateur] NVARCHAR(MAX) NULL;
 GO
 
-IF OBJECT_ID(N'dbo.tm_mesure_calibrage', N'U') IS NULL
+IF OBJECT_ID(N'dbo.tm_mesures_ajustage', N'U') IS NULL AND OBJECT_ID(N'dbo.tm_mesure_calibrage', N'U') IS NOT NULL
 BEGIN
-  CREATE TABLE dbo.[tm_mesure_calibrage] (
-    [Id_Mesure_Calibrage] INT IDENTITY(1,1) NOT NULL,
-    [Id_Serveur_BDD] INT NOT NULL DEFAULT(0),
-    [Valeur] FLOAT NOT NULL DEFAULT(0),
-    [Valeur_Brute] FLOAT NOT NULL DEFAULT(0),
-    [Sonde_Numero_Serie] VARCHAR(50) NOT NULL,
-    [Est_Valeur_Null] TINYINT NOT NULL,
-    [Date_Heure] DATETIME NOT NULL DEFAULT(GETDATE()),
-    CONSTRAINT [PK_tm_mesure_calibrage] PRIMARY KEY ([Id_Mesure_Calibrage], [Id_Serveur_BDD])
-  );
+  EXEC sp_rename N'dbo.tm_mesure_calibrage', N'tm_mesures_ajustage';
 END;
 GO
-IF OBJECT_ID(N'dbo.tm_mesure_calibrage', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesure_calibrage', N'Id_Mesure_Calibrage') IS NULL ALTER TABLE dbo.[tm_mesure_calibrage] ADD [Id_Mesure_Calibrage] INT NULL;
-IF OBJECT_ID(N'dbo.tm_mesure_calibrage', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesure_calibrage', N'Id_Serveur_BDD') IS NULL ALTER TABLE dbo.[tm_mesure_calibrage] ADD [Id_Serveur_BDD] INT NULL DEFAULT(0);
-IF OBJECT_ID(N'dbo.tm_mesure_calibrage', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesure_calibrage', N'Valeur') IS NULL ALTER TABLE dbo.[tm_mesure_calibrage] ADD [Valeur] FLOAT NULL DEFAULT(0);
-IF OBJECT_ID(N'dbo.tm_mesure_calibrage', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesure_calibrage', N'Valeur_Brute') IS NULL ALTER TABLE dbo.[tm_mesure_calibrage] ADD [Valeur_Brute] FLOAT NULL DEFAULT(0);
-IF OBJECT_ID(N'dbo.tm_mesure_calibrage', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesure_calibrage', N'Sonde_Numero_Serie') IS NULL ALTER TABLE dbo.[tm_mesure_calibrage] ADD [Sonde_Numero_Serie] VARCHAR(50) NULL;
-IF OBJECT_ID(N'dbo.tm_mesure_calibrage', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesure_calibrage', N'Est_Valeur_Null') IS NULL ALTER TABLE dbo.[tm_mesure_calibrage] ADD [Est_Valeur_Null] TINYINT NULL;
-IF OBJECT_ID(N'dbo.tm_mesure_calibrage', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesure_calibrage', N'Date_Heure') IS NULL ALTER TABLE dbo.[tm_mesure_calibrage] ADD [Date_Heure] DATETIME NULL DEFAULT(GETDATE());
+IF OBJECT_ID(N'dbo.tm_mesures_ajustage_etalon', N'U') IS NULL AND OBJECT_ID(N'dbo.tm_mesure_calibrage_etalon', N'U') IS NOT NULL
+BEGIN
+  EXEC sp_rename N'dbo.tm_mesure_calibrage_etalon', N'tm_mesures_ajustage_etalon';
+END;
+GO
+IF OBJECT_ID(N'dbo.tm_mesures_etalonnage', N'U') IS NULL AND OBJECT_ID(N'dbo.tm_mesure_etalonnage', N'U') IS NOT NULL
+BEGIN
+  EXEC sp_rename N'dbo.tm_mesure_etalonnage', N'tm_mesures_etalonnage';
+END;
 GO
 
-IF OBJECT_ID(N'dbo.tm_mesure_calibrage_etalon', N'U') IS NULL
+IF OBJECT_ID(N'dbo.tm_mesures_ajustage', N'U') IS NULL
 BEGIN
-  CREATE TABLE dbo.[tm_mesure_calibrage_etalon] (
-    [Id_Mesure_Calibrage_Etalon] INT IDENTITY(1,1) NOT NULL,
+  CREATE TABLE dbo.[tm_mesures_ajustage] (
+    [Id_Mesure_Ajustage] INT IDENTITY(1,1) NOT NULL,
     [Id_Serveur_BDD] INT NOT NULL DEFAULT(0),
-    [Valeur] FLOAT NOT NULL DEFAULT(0),
-    [Valeur_Brute] FLOAT NOT NULL DEFAULT(0),
-    [Etalon_Numero_Serie] VARCHAR(50) NOT NULL,
-    [Est_Valeur_Null] TINYINT NOT NULL,
-    [Date_Heure] DATETIME NOT NULL DEFAULT(GETDATE()),
-    CONSTRAINT [PK_tm_mesure_calibrage_etalon] PRIMARY KEY ([Id_Mesure_Calibrage_Etalon], [Id_Serveur_BDD])
+    [Valeur] FLOAT NULL,
+    [Valeur_Brute] FLOAT NULL,
+    [Unite] VARCHAR(10) NULL,
+    [Date_Heure_Mesure] DATETIME NOT NULL,
+    [Sonde_Numero_Serie] VARCHAR(50) NOT NULL,
+    [Adresse_Sonde] VARCHAR(50) NOT NULL CONSTRAINT [DF_tm_mesures_ajustage_Adresse_Sonde] DEFAULT(''),
+    [Est_Valeur_Null] TINYINT NOT NULL CONSTRAINT [DF_tm_mesures_ajustage_Est_Valeur_Null] DEFAULT(0),
+    CONSTRAINT [PK_tm_mesures_ajustage] PRIMARY KEY ([Id_Mesure_Ajustage], [Id_Serveur_BDD])
   );
 END;
 GO
-IF OBJECT_ID(N'dbo.tm_mesure_calibrage_etalon', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesure_calibrage_etalon', N'Id_Mesure_Calibrage_Etalon') IS NULL ALTER TABLE dbo.[tm_mesure_calibrage_etalon] ADD [Id_Mesure_Calibrage_Etalon] INT NULL;
-IF OBJECT_ID(N'dbo.tm_mesure_calibrage_etalon', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesure_calibrage_etalon', N'Id_Serveur_BDD') IS NULL ALTER TABLE dbo.[tm_mesure_calibrage_etalon] ADD [Id_Serveur_BDD] INT NULL DEFAULT(0);
-IF OBJECT_ID(N'dbo.tm_mesure_calibrage_etalon', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesure_calibrage_etalon', N'Valeur') IS NULL ALTER TABLE dbo.[tm_mesure_calibrage_etalon] ADD [Valeur] FLOAT NULL DEFAULT(0);
-IF OBJECT_ID(N'dbo.tm_mesure_calibrage_etalon', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesure_calibrage_etalon', N'Valeur_Brute') IS NULL ALTER TABLE dbo.[tm_mesure_calibrage_etalon] ADD [Valeur_Brute] FLOAT NULL DEFAULT(0);
-IF OBJECT_ID(N'dbo.tm_mesure_calibrage_etalon', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesure_calibrage_etalon', N'Etalon_Numero_Serie') IS NULL ALTER TABLE dbo.[tm_mesure_calibrage_etalon] ADD [Etalon_Numero_Serie] VARCHAR(50) NULL;
-IF OBJECT_ID(N'dbo.tm_mesure_calibrage_etalon', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesure_calibrage_etalon', N'Est_Valeur_Null') IS NULL ALTER TABLE dbo.[tm_mesure_calibrage_etalon] ADD [Est_Valeur_Null] TINYINT NULL;
-IF OBJECT_ID(N'dbo.tm_mesure_calibrage_etalon', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesure_calibrage_etalon', N'Date_Heure') IS NULL ALTER TABLE dbo.[tm_mesure_calibrage_etalon] ADD [Date_Heure] DATETIME NULL DEFAULT(GETDATE());
+IF OBJECT_ID(N'dbo.tm_mesures_ajustage', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_ajustage', N'Id_Mesure_Ajustage') IS NULL ALTER TABLE dbo.[tm_mesures_ajustage] ADD [Id_Mesure_Ajustage] INT NULL;
+IF OBJECT_ID(N'dbo.tm_mesures_ajustage', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_ajustage', N'Id_Serveur_BDD') IS NULL ALTER TABLE dbo.[tm_mesures_ajustage] ADD [Id_Serveur_BDD] INT NULL DEFAULT(0);
+IF OBJECT_ID(N'dbo.tm_mesures_ajustage', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_ajustage', N'Valeur') IS NULL ALTER TABLE dbo.[tm_mesures_ajustage] ADD [Valeur] FLOAT NULL;
+IF OBJECT_ID(N'dbo.tm_mesures_ajustage', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_ajustage', N'Valeur_Brute') IS NULL ALTER TABLE dbo.[tm_mesures_ajustage] ADD [Valeur_Brute] FLOAT NULL;
+IF OBJECT_ID(N'dbo.tm_mesures_ajustage', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_ajustage', N'Unite') IS NULL ALTER TABLE dbo.[tm_mesures_ajustage] ADD [Unite] VARCHAR(10) NULL;
+IF OBJECT_ID(N'dbo.tm_mesures_ajustage', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_ajustage', N'Date_Heure_Mesure') IS NULL ALTER TABLE dbo.[tm_mesures_ajustage] ADD [Date_Heure_Mesure] DATETIME NULL;
+IF OBJECT_ID(N'dbo.tm_mesures_ajustage', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_ajustage', N'Sonde_Numero_Serie') IS NULL ALTER TABLE dbo.[tm_mesures_ajustage] ADD [Sonde_Numero_Serie] VARCHAR(50) NULL;
+IF OBJECT_ID(N'dbo.tm_mesures_ajustage', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_ajustage', N'Adresse_Sonde') IS NULL ALTER TABLE dbo.[tm_mesures_ajustage] ADD [Adresse_Sonde] VARCHAR(50) NULL;
+IF OBJECT_ID(N'dbo.tm_mesures_ajustage', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_ajustage', N'Est_Valeur_Null') IS NULL ALTER TABLE dbo.[tm_mesures_ajustage] ADD [Est_Valeur_Null] TINYINT NULL;
+GO
+
+IF OBJECT_ID(N'dbo.tm_mesures_ajustage_etalon', N'U') IS NULL
+BEGIN
+  CREATE TABLE dbo.[tm_mesures_ajustage_etalon] (
+    [Id_Mesure_Ajustage_Etalon] INT IDENTITY(1,1) NOT NULL,
+    [Id_Serveur_BDD] INT NOT NULL DEFAULT(0),
+    [Valeur] FLOAT NULL,
+    [Valeur_Brute] FLOAT NULL,
+    [Unite] VARCHAR(10) NULL,
+    [Date_Heure_Mesure] DATETIME NOT NULL,
+    [Etalon_Numero_Serie] VARCHAR(50) NOT NULL,
+    [Adresse_Sonde] VARCHAR(50) NULL,
+    [Est_Valeur_Null] TINYINT NOT NULL CONSTRAINT [DF_tm_mesures_ajustage_etalon_Est_Valeur_Null] DEFAULT(0),
+    CONSTRAINT [PK_tm_mesures_ajustage_etalon] PRIMARY KEY ([Id_Mesure_Ajustage_Etalon], [Id_Serveur_BDD])
+  );
+END;
+GO
+IF OBJECT_ID(N'dbo.tm_mesures_ajustage_etalon', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_ajustage_etalon', N'Id_Mesure_Ajustage_Etalon') IS NULL ALTER TABLE dbo.[tm_mesures_ajustage_etalon] ADD [Id_Mesure_Ajustage_Etalon] INT NULL;
+IF OBJECT_ID(N'dbo.tm_mesures_ajustage_etalon', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_ajustage_etalon', N'Id_Serveur_BDD') IS NULL ALTER TABLE dbo.[tm_mesures_ajustage_etalon] ADD [Id_Serveur_BDD] INT NULL DEFAULT(0);
+IF OBJECT_ID(N'dbo.tm_mesures_ajustage_etalon', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_ajustage_etalon', N'Valeur') IS NULL ALTER TABLE dbo.[tm_mesures_ajustage_etalon] ADD [Valeur] FLOAT NULL;
+IF OBJECT_ID(N'dbo.tm_mesures_ajustage_etalon', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_ajustage_etalon', N'Valeur_Brute') IS NULL ALTER TABLE dbo.[tm_mesures_ajustage_etalon] ADD [Valeur_Brute] FLOAT NULL;
+IF OBJECT_ID(N'dbo.tm_mesures_ajustage_etalon', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_ajustage_etalon', N'Unite') IS NULL ALTER TABLE dbo.[tm_mesures_ajustage_etalon] ADD [Unite] VARCHAR(10) NULL;
+IF OBJECT_ID(N'dbo.tm_mesures_ajustage_etalon', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_ajustage_etalon', N'Date_Heure_Mesure') IS NULL ALTER TABLE dbo.[tm_mesures_ajustage_etalon] ADD [Date_Heure_Mesure] DATETIME NULL;
+IF OBJECT_ID(N'dbo.tm_mesures_ajustage_etalon', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_ajustage_etalon', N'Etalon_Numero_Serie') IS NULL ALTER TABLE dbo.[tm_mesures_ajustage_etalon] ADD [Etalon_Numero_Serie] VARCHAR(50) NULL;
+IF OBJECT_ID(N'dbo.tm_mesures_ajustage_etalon', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_ajustage_etalon', N'Adresse_Sonde') IS NULL ALTER TABLE dbo.[tm_mesures_ajustage_etalon] ADD [Adresse_Sonde] VARCHAR(50) NULL;
+IF OBJECT_ID(N'dbo.tm_mesures_ajustage_etalon', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_ajustage_etalon', N'Est_Valeur_Null') IS NULL ALTER TABLE dbo.[tm_mesures_ajustage_etalon] ADD [Est_Valeur_Null] TINYINT NULL;
 GO
 
 IF OBJECT_ID(N'dbo.tm_mesure_etalon', N'U') IS NULL
@@ -1953,27 +1997,35 @@ IF OBJECT_ID(N'dbo.tm_mesure_etalon', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_
 IF OBJECT_ID(N'dbo.tm_mesure_etalon', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesure_etalon', N'Message_Erreur') IS NULL ALTER TABLE dbo.[tm_mesure_etalon] ADD [Message_Erreur] VARCHAR(50) NULL;
 GO
 
-IF OBJECT_ID(N'dbo.tm_mesure_etalonnage', N'U') IS NULL
+IF OBJECT_ID(N'dbo.tm_mesures_etalonnage', N'U') IS NULL
 BEGIN
-  CREATE TABLE dbo.[tm_mesure_etalonnage] (
+  CREATE TABLE dbo.[tm_mesures_etalonnage] (
     [Id_Mesure_Etalonnage] INT IDENTITY(1,1) NOT NULL,
     [Id_Serveur_BDD] INT NOT NULL DEFAULT(0),
+    [Valeur] FLOAT NULL,
+    [Valeur_Brute] FLOAT NULL,
+    [Unite] VARCHAR(10) NULL,
+    [Date_Heure_Mesure] DATETIME NOT NULL,
     [Sonde_Numero_serie] VARCHAR(50) NULL,
+    [Adresse_Sonde] VARCHAR(50) NULL,
     [Numero_Ordre] INT NULL,
     [Mesure_Sonde] FLOAT NULL,
     [Mesure_Etalon] FLOAT NULL,
-    [Date_Heure] DATETIME NULL,
-    CONSTRAINT [PK_tm_mesure_etalonnage] PRIMARY KEY ([Id_Mesure_Etalonnage], [Id_Serveur_BDD])
+    CONSTRAINT [PK_tm_mesures_etalonnage] PRIMARY KEY ([Id_Mesure_Etalonnage], [Id_Serveur_BDD])
   );
 END;
 GO
-IF OBJECT_ID(N'dbo.tm_mesure_etalonnage', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesure_etalonnage', N'Id_Mesure_Etalonnage') IS NULL ALTER TABLE dbo.[tm_mesure_etalonnage] ADD [Id_Mesure_Etalonnage] INT NULL;
-IF OBJECT_ID(N'dbo.tm_mesure_etalonnage', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesure_etalonnage', N'Id_Serveur_BDD') IS NULL ALTER TABLE dbo.[tm_mesure_etalonnage] ADD [Id_Serveur_BDD] INT NULL DEFAULT(0);
-IF OBJECT_ID(N'dbo.tm_mesure_etalonnage', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesure_etalonnage', N'Sonde_Numero_serie') IS NULL ALTER TABLE dbo.[tm_mesure_etalonnage] ADD [Sonde_Numero_serie] VARCHAR(50) NULL;
-IF OBJECT_ID(N'dbo.tm_mesure_etalonnage', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesure_etalonnage', N'Numero_Ordre') IS NULL ALTER TABLE dbo.[tm_mesure_etalonnage] ADD [Numero_Ordre] INT NULL;
-IF OBJECT_ID(N'dbo.tm_mesure_etalonnage', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesure_etalonnage', N'Mesure_Sonde') IS NULL ALTER TABLE dbo.[tm_mesure_etalonnage] ADD [Mesure_Sonde] FLOAT NULL;
-IF OBJECT_ID(N'dbo.tm_mesure_etalonnage', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesure_etalonnage', N'Mesure_Etalon') IS NULL ALTER TABLE dbo.[tm_mesure_etalonnage] ADD [Mesure_Etalon] FLOAT NULL;
-IF OBJECT_ID(N'dbo.tm_mesure_etalonnage', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesure_etalonnage', N'Date_Heure') IS NULL ALTER TABLE dbo.[tm_mesure_etalonnage] ADD [Date_Heure] DATETIME NULL;
+IF OBJECT_ID(N'dbo.tm_mesures_etalonnage', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_etalonnage', N'Id_Mesure_Etalonnage') IS NULL ALTER TABLE dbo.[tm_mesures_etalonnage] ADD [Id_Mesure_Etalonnage] INT NULL;
+IF OBJECT_ID(N'dbo.tm_mesures_etalonnage', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_etalonnage', N'Id_Serveur_BDD') IS NULL ALTER TABLE dbo.[tm_mesures_etalonnage] ADD [Id_Serveur_BDD] INT NULL DEFAULT(0);
+IF OBJECT_ID(N'dbo.tm_mesures_etalonnage', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_etalonnage', N'Valeur') IS NULL ALTER TABLE dbo.[tm_mesures_etalonnage] ADD [Valeur] FLOAT NULL;
+IF OBJECT_ID(N'dbo.tm_mesures_etalonnage', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_etalonnage', N'Valeur_Brute') IS NULL ALTER TABLE dbo.[tm_mesures_etalonnage] ADD [Valeur_Brute] FLOAT NULL;
+IF OBJECT_ID(N'dbo.tm_mesures_etalonnage', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_etalonnage', N'Unite') IS NULL ALTER TABLE dbo.[tm_mesures_etalonnage] ADD [Unite] VARCHAR(10) NULL;
+IF OBJECT_ID(N'dbo.tm_mesures_etalonnage', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_etalonnage', N'Date_Heure_Mesure') IS NULL ALTER TABLE dbo.[tm_mesures_etalonnage] ADD [Date_Heure_Mesure] DATETIME NULL;
+IF OBJECT_ID(N'dbo.tm_mesures_etalonnage', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_etalonnage', N'Sonde_Numero_serie') IS NULL ALTER TABLE dbo.[tm_mesures_etalonnage] ADD [Sonde_Numero_serie] VARCHAR(50) NULL;
+IF OBJECT_ID(N'dbo.tm_mesures_etalonnage', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_etalonnage', N'Adresse_Sonde') IS NULL ALTER TABLE dbo.[tm_mesures_etalonnage] ADD [Adresse_Sonde] VARCHAR(50) NULL;
+IF OBJECT_ID(N'dbo.tm_mesures_etalonnage', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_etalonnage', N'Numero_Ordre') IS NULL ALTER TABLE dbo.[tm_mesures_etalonnage] ADD [Numero_Ordre] INT NULL;
+IF OBJECT_ID(N'dbo.tm_mesures_etalonnage', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_etalonnage', N'Mesure_Sonde') IS NULL ALTER TABLE dbo.[tm_mesures_etalonnage] ADD [Mesure_Sonde] FLOAT NULL;
+IF OBJECT_ID(N'dbo.tm_mesures_etalonnage', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_etalonnage', N'Mesure_Etalon') IS NULL ALTER TABLE dbo.[tm_mesures_etalonnage] ADD [Mesure_Etalon] FLOAT NULL;
 GO
 
 IF OBJECT_ID(N'dbo.tm_mesures_histo', N'U') IS NULL
@@ -2303,7 +2355,7 @@ DECLARE @AdminProfilId INT = (SELECT TOP 1 Id_Profil FROM dbo.t_profil WHERE Pro
 INSERT INTO dbo.t_liaison_profil_autorisation (Id_Profil, Id_Autorisation) SELECT @AdminProfilId, a.Id_Autorisation FROM dbo.t_autorisation a WHERE @AdminProfilId IS NOT NULL AND NOT EXISTS (SELECT 1 FROM dbo.t_liaison_profil_autorisation l WHERE l.Id_Profil = @AdminProfilId AND l.Id_Autorisation = a.Id_Autorisation);
 GO
 IF NOT EXISTS (SELECT 1 FROM dbo.t_utilisateur WHERE Login = N'admin') INSERT INTO dbo.t_utilisateur (Login, Mot_De_Passe, Est_Archive, Profil_Utilisateur, Est_Mot_De_Passe_Temporaire, Date_Creation, Date_Derniere_Modification_MDP) VALUES (N'admin', N'$2b$10$EPQPVuaZ6RX4JhMpgR8BD.44ZEuC9OsH7hRMdt2j/GO64eWJcA7.W', 0, N'Administrateurs', 1, CAST(GETDATE() AS DATE), GETDATE());
-ELSE UPDATE dbo.t_utilisateur SET Mot_De_Passe = N'$2b$10$EPQPVuaZ6RX4JhMpgR8BD.44ZEuC9OsH7hRMdt2j/GO64eWJcA7.W', Est_Mot_De_Passe_Temporaire = 1, Profil_Utilisateur = COALESCE(Profil_Utilisateur, N'Administrateurs'), Est_Archive = 0 WHERE Login = N'admin' AND (Mot_De_Passe IS NULL OR Est_Mot_De_Passe_Temporaire = 1);
+ELSE UPDATE dbo.t_utilisateur SET Mot_De_Passe = N'$2b$10$p794ptDulNuN5Md2j3Y6Ge2wEYRjaG3Er8CexJ8RkrD4er1A2AhXS', Est_Mot_De_Passe_Temporaire = 1, Profil_Utilisateur = COALESCE(Profil_Utilisateur, N'Administrateurs'), Est_Archive = 0 WHERE Login = N'admin' AND (Mot_De_Passe IS NULL OR Est_Mot_De_Passe_Temporaire = 1);
 GO
 
 USE [vigi_main];
@@ -2415,329 +2467,7 @@ BEGIN
 END;
 GO
 
--- t_lieu_mail_tel
-IF OBJECT_ID('dbo.t_lieu_mail_tel', 'U') IS NULL AND OBJECT_ID('dbo.t_lieu_tel_num', 'U') IS NOT NULL
-BEGIN
-  EXEC sp_rename 'dbo.t_lieu_tel_num', 't_lieu_mail_tel';
-END;
-GO
-IF OBJECT_ID('dbo.t_lieu_mail_tel', 'U') IS NULL
-BEGIN
-  CREATE TABLE dbo.t_lieu_mail_tel (
-    Id_Mail_Tel INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
-    Id_Lieu INT NULL,
-    Ordre_Contact INT NULL,
-    Id_Utilisateur INT NULL,
-    Est_Via_Telephone BIT NULL,
-    Est_Via_Email BIT NULL
-  );
-  CREATE INDEX IDX_Id_Lieu ON dbo.t_lieu_mail_tel(Id_Lieu);
-  CREATE INDEX IDX_Id_Utilisateur ON dbo.t_lieu_mail_tel(Id_Utilisateur);
-END;
-GO
-IF COL_LENGTH('dbo.t_lieu_mail_tel', 'Id_Tel_Num') IS NOT NULL EXEC sp_rename 'dbo.t_lieu_mail_tel.Id_Tel_Num', 'Id_Mail_Tel', 'COLUMN';
-IF COL_LENGTH('dbo.t_lieu_mail_tel', 'Numero_Ordre') IS NOT NULL EXEC sp_rename 'dbo.t_lieu_mail_tel.Numero_Ordre', 'Ordre_Contact', 'COLUMN';
-IF COL_LENGTH('dbo.t_lieu_mail_tel', 'Id_Utilisation') IS NOT NULL EXEC sp_rename 'dbo.t_lieu_mail_tel.Id_Utilisation', 'Id_Utilisateur', 'COLUMN';
-IF COL_LENGTH('dbo.t_lieu_mail_tel', 'Est_Via_Mail') IS NOT NULL EXEC sp_rename 'dbo.t_lieu_mail_tel.Est_Via_Mail', 'Est_Via_Email', 'COLUMN';
-GO
-
--- t_ajustage / t_milieu_inter
-IF OBJECT_ID('dbo.t_ajustage', 'U') IS NULL AND OBJECT_ID('dbo.t_calibrage', 'U') IS NOT NULL
-BEGIN
-  EXEC sp_rename 'dbo.t_calibrage', 't_ajustage';
-END;
-GO
-IF OBJECT_ID('dbo.t_milieu_inter', 'U') IS NULL AND OBJECT_ID('dbo.t_bain', 'U') IS NOT NULL
-BEGIN
-  EXEC sp_rename 'dbo.t_bain', 't_milieu_inter';
-END;
-GO
-IF OBJECT_ID('dbo.t_milieu_inter', 'U') IS NULL AND OBJECT_ID('dbo.t_milieu', 'U') IS NOT NULL
-BEGIN
-  EXEC sp_rename 'dbo.t_milieu', 't_milieu_inter';
-END;
-GO
-IF OBJECT_ID('dbo.t_ajustage', 'U') IS NULL
-BEGIN
-  CREATE TABLE dbo.t_ajustage (
-    Id_Ajustage INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
-    Date_Heure_Ajustage DATETIME NULL,
-    Sonde_Numero_Serie VARCHAR(50) NULL,
-    Coeff_X2 FLOAT NULL,
-    Coeff_X FLOAT NULL,
-    Coeff_Constant FLOAT NULL,
-    Unite VARCHAR(10) NULL,
-    Nb_Decimale INT NULL,
-    Operateur VARCHAR(255) NULL,
-    SE_Numero VARCHAR(50) NULL,
-    SE_Organisme VARCHAR(50) NULL,
-    SE_Date_Certif DATE NULL,
-    SE_Numero_Certif VARCHAR(50) NULL,
-    Mesure_Etalon1 FLOAT NULL,
-    Mesure_Etalon2 FLOAT NULL,
-    Valeur_Brute1 FLOAT NULL,
-    Valeur_Brute2 FLOAT NULL,
-    Ancienne_Mesure1 FLOAT NULL,
-    Ancienne_Mesure2 FLOAT NULL,
-    Nouvelle_Mesure1 FLOAT NULL,
-    Nouvelle_Mesure2 FLOAT NULL,
-    Id_Milieu INT NULL
-  );
-END;
-GO
-IF OBJECT_ID('dbo.t_milieu_inter', 'U') IS NULL
-BEGIN
-  CREATE TABLE dbo.t_milieu_inter (
-    Id_Milieu INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
-    Model VARCHAR(50) NULL,
-    Reference VARCHAR(50) NULL,
-    Stabilite FLOAT NULL,
-    Homogeneite FLOAT NULL,
-    Contenu VARCHAR(50) NULL,
-    Est_Reserve_MC2 BIT NULL,
-    Est_Archive BIT NULL
-  );
-END;
-GO
-
--- t_sonde_etat
-IF OBJECT_ID('dbo.t_sonde_etat', 'U') IS NULL
-BEGIN
-  CREATE TABLE dbo.t_sonde_etat (
-    Id_Sonde_Etat INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
-    Etat_Sonde VARCHAR(1) NULL UNIQUE,
-    Etat_Libelle VARCHAR(50) NULL
-  );
-END;
-GO
-IF NOT EXISTS (SELECT 1 FROM dbo.t_sonde_etat WHERE Etat_Sonde = 'D') INSERT INTO dbo.t_sonde_etat(Etat_Sonde, Etat_Libelle) VALUES ('D','DESACTIVE');
-IF NOT EXISTS (SELECT 1 FROM dbo.t_sonde_etat WHERE Etat_Sonde = 'S') INSERT INTO dbo.t_sonde_etat(Etat_Sonde, Etat_Libelle) VALUES ('S','SURVEILLANCE ACTIVE');
-GO
-
--- notifications
-IF OBJECT_ID('dbo.t_notification', 'U') IS NULL
-BEGIN
-  CREATE TABLE dbo.t_notification (
-    Id_Notification INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
-    Type VARCHAR(32) NOT NULL,
-    Id_Alarme INT NULL,
-    Titre VARCHAR(128) NULL,
-    Message VARCHAR(512) NOT NULL,
-    Payload_Json NVARCHAR(MAX) NULL,
-    Priorite INT NULL CONSTRAINT DF_t_notification_Priorite DEFAULT(0),
-    Date_Creation DATETIME NOT NULL CONSTRAINT DF_t_notification_Date DEFAULT(GETDATE()),
-    Est_Archive BIT NOT NULL CONSTRAINT DF_t_notification_Archive DEFAULT(0)
-  );
-  CREATE INDEX IDX_Id_Alarme_Notification ON dbo.t_notification(Id_Alarme);
-  CREATE INDEX IDX_Date_Creation_Notification ON dbo.t_notification(Date_Creation);
-END;
-GO
-IF OBJECT_ID('dbo.t_notification_delivery', 'U') IS NULL
-BEGIN
-  CREATE TABLE dbo.t_notification_delivery (
-    Id_Delivery INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
-    Id_Notification INT NOT NULL,
-    Id_Poste INT NOT NULL,
-    Id_Utilisateur INT NULL,
-    Statut VARCHAR(32) NOT NULL,
-    Nb_Tentatives INT NOT NULL CONSTRAINT DF_t_notification_delivery_NbTentatives DEFAULT(0),
-    Derniere_Erreur VARCHAR(255) NULL,
-    Date_Queue DATETIME NOT NULL CONSTRAINT DF_t_notification_delivery_DateQueue DEFAULT(GETDATE()),
-    Date_Envoi DATETIME NULL,
-    Date_Ack_Agent DATETIME NULL,
-    Date_Dernier_Event DATETIME NULL,
-    Correlation_Id VARCHAR(64) NULL,
-    CONSTRAINT UK_NOTIFICATION_POSTE UNIQUE(Id_Notification, Id_Poste)
-  );
-  CREATE INDEX IDX_STATUT_DELIVERY ON dbo.t_notification_delivery(Statut);
-  CREATE INDEX IDX_Date_Envoi_Delivery ON dbo.t_notification_delivery(Date_Envoi);
-END;
-GO
-IF OBJECT_ID('dbo.t_notification_event', 'U') IS NULL
-BEGIN
-  CREATE TABLE dbo.t_notification_event (
-    Id_Event INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
-    Id_Delivery INT NOT NULL,
-    Event_Type VARCHAR(32) NOT NULL,
-    Event_Data NVARCHAR(MAX) NULL,
-    Date_Event DATETIME NOT NULL CONSTRAINT DF_t_notification_event_Date DEFAULT(GETDATE())
-  );
-  CREATE INDEX IDX_Id_Delivery_Event ON dbo.t_notification_event(Id_Delivery);
-  CREATE INDEX IDX_Date_Event ON dbo.t_notification_event(Date_Event);
-END;
-GO
-
--- t_vigilog_usage_ponctuel
-IF OBJECT_ID('dbo.t_vigilog_usage_ponctuel', 'U') IS NULL
-BEGIN
-  CREATE TABLE dbo.t_vigilog_usage_ponctuel (
-    Id_VigiLog_Usage_Ponctuel INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
-    Reference_Usage VARCHAR(50) NOT NULL,
-    Id_VigiLog_Configuration INT NULL,
-    Id_VigiLog INT NULL,
-    Nom_Configuration VARCHAR(100) NOT NULL,
-    Numero_Serie_VigiLog VARCHAR(30) NOT NULL,
-    Nom_Lieu_Temporaire VARCHAR(120) NOT NULL,
-    Statut VARCHAR(30) NOT NULL,
-    Id_Utilisateur_Demarrage INT NOT NULL,
-    Date_Heure_Demarrage DATETIME NOT NULL,
-    Commentaire_Demarrage VARCHAR(MAX) NULL,
-    Id_Utilisateur_Arret INT NULL,
-    Date_Heure_Arret DATETIME NULL,
-    Commentaire_Arret VARCHAR(MAX) NULL,
-    Date_Heure_Creation DATETIME NOT NULL CONSTRAINT DF_t_vigilog_usage_ponctuel_DateCreation DEFAULT(GETDATE()),
-    Date_Heure_Maj DATETIME NULL,
-    CONSTRAINT UK_t_vigilog_usage_ponctuel_reference UNIQUE (Reference_Usage),
-    CONSTRAINT FK_t_vigilog_usage_ponctuel_configuration FOREIGN KEY (Id_VigiLog_Configuration) REFERENCES dbo.t_vigilog_configuration(Id_VigiLog_Configuration),
-    CONSTRAINT FK_t_vigilog_usage_ponctuel_logger FOREIGN KEY (Id_VigiLog) REFERENCES dbo.t_vigilog(Id_VigiLog),
-    CONSTRAINT FK_t_vigilog_usage_ponctuel_user_start FOREIGN KEY (Id_Utilisateur_Demarrage) REFERENCES dbo.t_utilisateur(Id_Utilisateur),
-    CONSTRAINT FK_t_vigilog_usage_ponctuel_user_stop FOREIGN KEY (Id_Utilisateur_Arret) REFERENCES dbo.t_utilisateur(Id_Utilisateur)
-  );
-  CREATE INDEX IDX_t_vigilog_usage_ponctuel_statut ON dbo.t_vigilog_usage_ponctuel(Statut);
-  CREATE INDEX IDX_t_vigilog_usage_ponctuel_logger ON dbo.t_vigilog_usage_ponctuel(Numero_Serie_VigiLog);
-  CREATE INDEX IDX_t_vigilog_usage_ponctuel_started_by ON dbo.t_vigilog_usage_ponctuel(Id_Utilisateur_Demarrage);
-  CREATE INDEX IDX_t_vigilog_usage_ponctuel_stopped_by ON dbo.t_vigilog_usage_ponctuel(Id_Utilisateur_Arret);
-END;
-GO
-
--- planning
-IF OBJECT_ID('dbo.t_lieu_planning_regle', 'U') IS NULL
-BEGIN
-  CREATE TABLE dbo.t_lieu_planning_regle (
-    Id_Regle INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
-    Id_Lieu INT NOT NULL,
-    Actif BIT NOT NULL CONSTRAINT DF_t_lieu_planning_regle_Actif DEFAULT(1),
-    Jour_Debut TINYINT NOT NULL,
-    Heure_Debut TIME NOT NULL,
-    Jour_Fin TINYINT NOT NULL,
-    Heure_Fin TIME NOT NULL,
-    Consigne FLOAT NULL,
-    Consigne_Sup FLOAT NULL,
-    Consigne_Inf FLOAT NULL,
-    Priorite INT NOT NULL CONSTRAINT DF_t_lieu_planning_regle_Priorite DEFAULT(0),
-    Tolerance_Sup_Calc FLOAT NULL,
-    Tolerance_Inf_Calc FLOAT NULL,
-    Retard_Alarme_Changement_Consigne INT NULL,
-    Date_Creation DATETIME NOT NULL CONSTRAINT DF_t_lieu_planning_regle_DateCreation DEFAULT(GETDATE()),
-    Date_Maj DATETIME NULL
-  );
-  CREATE INDEX IDX_Actif_Lieu ON dbo.t_lieu_planning_regle(Actif, Id_Lieu);
-  CREATE INDEX IDX_Id_Lieu ON dbo.t_lieu_planning_regle(Id_Lieu);
-END;
-GO
-IF OBJECT_ID('dbo.t_lieu_planning_audit', 'U') IS NULL
-BEGIN
-  CREATE TABLE dbo.t_lieu_planning_audit (
-    Id_Audit INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
-    Id_Lieu INT NOT NULL,
-    [Timestamp] DATETIME NOT NULL CONSTRAINT DF_t_lieu_planning_audit_Timestamp DEFAULT(GETDATE()),
-    Date_Heure_Debut_Changement DATETIME NULL,
-    Date_Heure_Fin_Changement DATETIME NULL,
-    [Type] VARCHAR(32) NOT NULL,
-    CONSTRAINT CK_t_lieu_planning_audit_Type CHECK ([Type] IN ('PLAN_APPLY')),
-    Planning_Regle_Id INT NULL,
-    Consigne_Avant FLOAT NULL,
-    Tolerance_Surveillance_Sup_Avant FLOAT NULL,
-    Tolerance_Surveillance_Inf_Avant FLOAT NULL,
-    Consigne_Apres FLOAT NULL,
-    Tolerance_Surveillance_Sup_Apres FLOAT NULL,
-    Tolerance_Surveillance_Inf_Apres FLOAT NULL
-  );
-  CREATE INDEX IDX_Id_Lieu_Timestamp ON dbo.t_lieu_planning_audit(Id_Lieu, [Timestamp]);
-END;
-GO
-
-
--- NOTE MSSQL: le scheduling planning consignes doit etre implemente via SQL Server Agent job
--- equivalent a EVT_PLANNING_CONSIGNE (MySQL), cadence recommandee: 1 minute.
--- tables techniques
-IF OBJECT_ID('dbo.liste_clients', 'U') IS NULL
-BEGIN
-  CREATE TABLE dbo.liste_clients (
-    Id_Client INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
-    Nom VARCHAR(100) NOT NULL,
-    Num_Compte VARCHAR(50) NULL UNIQUE,
-    VigiServ_Derniere_Date_Heure DATETIME NULL,
-    Vigitel_Derniere_Date_Heure DATETIME NULL
-  );
-END;
-GO
-IF OBJECT_ID('dbo.t_mem_gso', 'U') IS NULL
-BEGIN
-  CREATE TABLE dbo.t_mem_gso (
-    id INT NOT NULL PRIMARY KEY,
-    last_sonde VARCHAR(20) NULL,
-    cycle_MEM INT NULL,
-    cycle_start DATETIME NULL,
-    last_update DATETIME NULL
-  );
-END;
-GO
-IF OBJECT_ID('dbo.t_mem_gso_2', 'U') IS NULL
-BEGIN
-  CREATE TABLE dbo.t_mem_gso_2 (
-    com_port_send INT NOT NULL PRIMARY KEY,
-    last_sonde VARCHAR(20) NULL,
-    last_sonde_datetime DATETIME NULL,
-    cycle_MEM INT NULL,
-    cycle_start DATETIME NULL,
-    last_update DATETIME NULL
-  );
-END;
-GO
-
 -- templates de lieu
-IF OBJECT_ID('dbo.t_lieu_template', 'U') IS NULL
-BEGIN
-  CREATE TABLE dbo.t_lieu_template (
-    Id_Lieu_Template INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
-    Nom_Template VARCHAR(80) NOT NULL,
-    Description VARCHAR(255) NULL,
-    Lieu_Etat VARCHAR(1) NOT NULL DEFAULT 'D',
-    Frequence INT NULL,
-    Retard_Alarme_Haut INT NULL,
-    Retard_Alarme_Bas INT NULL,
-    Retard_Non_Reponse INT NULL DEFAULT 60,
-    Retard_Alarme_Changement_Consigne INT NULL,
-    Consigne DECIMAL(10,2) NULL,
-    Consigne_Sup DECIMAL(10,2) NULL,
-    Consigne_Inf DECIMAL(10,2) NULL,
-    Tolerance_Surveillance_Sup DECIMAL(10,2) NULL,
-    Tolerance_Surveillance_Inf DECIMAL(10,2) NULL,
-    Consigne_Sup_Pre_Alarme DECIMAL(10,2) NULL,
-    Consigne_Inf_Pre_Alarme DECIMAL(10,2) NULL,
-    Est_Consigne_Sup_Active BIT NOT NULL DEFAULT 0,
-    Est_Consigne_Inf_Active BIT NOT NULL DEFAULT 0,
-    Est_Consigne_Sup_Pre_Alarme_Active BIT NOT NULL DEFAULT 0,
-    Est_Consigne_Inf_Pre_Alarme_Active BIT NOT NULL DEFAULT 0,
-    Est_Son_Alarme_Active BIT NOT NULL DEFAULT 1,
-    Est_Redeclenchement_Immediat BIT NOT NULL DEFAULT 0,
-    Nb_Mesures_Temporisation_Redeclenchement INT NULL DEFAULT 0,
-    Observations_Info VARCHAR(MAX) NULL,
-    Est_Archive BIT NOT NULL DEFAULT 0,
-    Date_Creation DATETIME NOT NULL DEFAULT GETDATE(),
-    Date_Maj DATETIME NOT NULL DEFAULT GETDATE(),
-    Id_Utilisateur_Creation INT NULL,
-    Id_Utilisateur_Maj INT NULL
-  );
-
-  ALTER TABLE dbo.t_lieu_template
-    ADD CONSTRAINT UK_t_lieu_template_nom UNIQUE (Nom_Template);
-
-  CREATE INDEX IDX_t_lieu_template_archive ON dbo.t_lieu_template(Est_Archive);
-  CREATE INDEX IDX_t_lieu_template_user_create ON dbo.t_lieu_template(Id_Utilisateur_Creation);
-  CREATE INDEX IDX_t_lieu_template_user_update ON dbo.t_lieu_template(Id_Utilisateur_Maj);
-
-  IF OBJECT_ID('dbo.t_utilisateur', 'U') IS NOT NULL
-  BEGIN
-    ALTER TABLE dbo.t_lieu_template
-      ADD CONSTRAINT FK_t_lieu_template_user_create FOREIGN KEY (Id_Utilisateur_Creation) REFERENCES dbo.t_utilisateur(Id_Utilisateur) ON DELETE SET NULL;
-    ALTER TABLE dbo.t_lieu_template
-      ADD CONSTRAINT FK_t_lieu_template_user_update FOREIGN KEY (Id_Utilisateur_Maj) REFERENCES dbo.t_utilisateur(Id_Utilisateur) ON DELETE SET NULL;
-  END;
-END;
-GO
-
 -- parametres recents (uppercase)
 IF NOT EXISTS (SELECT 1 FROM dbo.t_parametre WHERE Section='GENERAL' AND Mot_Cle='GLOBAL_LANGUAGE')
   INSERT INTO dbo.t_parametre(Section, Mot_Cle, Valeur, Commentaire) VALUES ('GENERAL','GLOBAL_LANGUAGE','fr','Langue globale de l''application (mails et futurs modules)');
@@ -2894,5 +2624,1337 @@ BEGIN
 END;
 GO
 
+-- =====================================================================
+-- GSO / GSP memory recovery helpers, views and procedures
+-- SQL Server Standard: execution via SQL Server Agent jobs
+-- =====================================================================
+USE [vigi_mesures];
+GO
+
+IF OBJECT_ID(N'dbo.tm_mesures_gso_count_mem', N'U') IS NULL
+BEGIN
+  CREATE TABLE dbo.[tm_mesures_gso_count_mem] (
+    [Id] BIGINT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+    [GSO_SN] VARCHAR(32) NOT NULL,
+    [Port_Serie_Send_GSO] VARCHAR(10) NULL,
+    [Missing_Data_Begin] FLOAT NOT NULL CONSTRAINT [DF_tm_mesures_gso_count_mem_begin] DEFAULT(0),
+    [Missing_Data_End] FLOAT NOT NULL CONSTRAINT [DF_tm_mesures_gso_count_mem_end] DEFAULT(0),
+    [Missing_Data_Total] FLOAT NOT NULL CONSTRAINT [DF_tm_mesures_gso_count_mem_total] DEFAULT(0),
+    [Commande_Mem] VARCHAR(50) NULL,
+    [Statut] VARCHAR(20) NOT NULL CONSTRAINT [DF_tm_mesures_gso_count_mem_statut] DEFAULT('0'),
+    [date_calcul] DATETIME NOT NULL CONSTRAINT [DF_tm_mesures_gso_count_mem_date_calcul] DEFAULT(GETDATE()),
+    [Date_Heure_Demande_Mem] DATETIME NULL
+  );
+  CREATE UNIQUE INDEX [UX_tm_mesures_gso_count_mem]
+    ON dbo.[tm_mesures_gso_count_mem]([GSO_SN], [Missing_Data_Begin], [Missing_Data_End], [Missing_Data_Total], [date_calcul]);
+  CREATE INDEX [IDX_tm_mesures_gso_count_mem_statut] ON dbo.[tm_mesures_gso_count_mem]([Statut]);
+END;
+GO
+IF OBJECT_ID(N'dbo.tm_mesures_gso_count_mem', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_gso_count_mem', N'Id') IS NULL ALTER TABLE dbo.[tm_mesures_gso_count_mem] ADD [Id] BIGINT NULL;
+IF OBJECT_ID(N'dbo.tm_mesures_gso_count_mem', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_gso_count_mem', N'Statut') IS NULL ALTER TABLE dbo.[tm_mesures_gso_count_mem] ADD [Statut] VARCHAR(20) NOT NULL CONSTRAINT [DF_tm_mesures_gso_count_mem_statut_patch] DEFAULT('0');
+IF OBJECT_ID(N'dbo.tm_mesures_gso_count_mem', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_gso_count_mem', N'Date_Heure_Demande_Mem') IS NULL ALTER TABLE dbo.[tm_mesures_gso_count_mem] ADD [Date_Heure_Demande_Mem] DATETIME NULL;
+GO
+
+IF OBJECT_ID(N'dbo.tm_mesures_gso_commandes_mem', N'U') IS NULL
+BEGIN
+  CREATE TABLE dbo.[tm_mesures_gso_commandes_mem] (
+    [Id] BIGINT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+    [GSO_SN] VARCHAR(32) NOT NULL,
+    [Port_Serie_Send_GSO] VARCHAR(10) NULL,
+    [Commande_Globale_Begin] FLOAT NOT NULL CONSTRAINT [DF_tm_mesures_gso_commandes_mem_begin] DEFAULT(0),
+    [Commande_Globale_End] FLOAT NOT NULL CONSTRAINT [DF_tm_mesures_gso_commandes_mem_end] DEFAULT(0),
+    [Missing_Data_Total] FLOAT NOT NULL CONSTRAINT [DF_tm_mesures_gso_commandes_mem_total] DEFAULT(0),
+    [Commande_Mem_Globale] VARCHAR(50) NULL,
+    [Date_Calcul] DATETIME NOT NULL CONSTRAINT [DF_tm_mesures_gso_commandes_mem_Date_Calcul] DEFAULT(GETDATE()),
+    [Statut] VARCHAR(20) NOT NULL CONSTRAINT [DF_tm_mesures_gso_commandes_mem_statut] DEFAULT('0'),
+    [Date_Heure_Demande_Mem] DATETIME NULL
+  );
+  CREATE UNIQUE INDEX [UX_tm_mesures_gso_commandes_mem]
+    ON dbo.[tm_mesures_gso_commandes_mem]([GSO_SN], [Commande_Globale_Begin], [Commande_Globale_End], [Missing_Data_Total]);
+  CREATE INDEX [IDX_tm_mesures_gso_commandes_mem_statut] ON dbo.[tm_mesures_gso_commandes_mem]([Statut]);
+END;
+GO
+IF OBJECT_ID(N'dbo.tm_mesures_gso_commandes_mem', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_gso_commandes_mem', N'Id') IS NULL ALTER TABLE dbo.[tm_mesures_gso_commandes_mem] ADD [Id] BIGINT NULL;
+IF OBJECT_ID(N'dbo.tm_mesures_gso_commandes_mem', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_gso_commandes_mem', N'Statut') IS NULL ALTER TABLE dbo.[tm_mesures_gso_commandes_mem] ADD [Statut] VARCHAR(20) NOT NULL CONSTRAINT [DF_tm_mesures_gso_commandes_mem_statut_patch] DEFAULT('0');
+IF OBJECT_ID(N'dbo.tm_mesures_gso_commandes_mem', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_gso_commandes_mem', N'Date_Heure_Demande_Mem') IS NULL ALTER TABLE dbo.[tm_mesures_gso_commandes_mem] ADD [Date_Heure_Demande_Mem] DATETIME NULL;
+GO
+
+IF OBJECT_ID(N'dbo.tm_mesures_gso_build', N'U') IS NULL
+BEGIN
+  CREATE TABLE dbo.[tm_mesures_gso_build] (
+    [Id_GSO_Build] INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+    [Date_Heure_Mesure] DATETIME NOT NULL CONSTRAINT [DF_tm_mesures_gso_build_Date_Heure_Mesure] DEFAULT(GETDATE()),
+    [Valeur] FLOAT NULL,
+    [Valeur_Brute] FLOAT NULL,
+    [Est_Valeur_Memoire] BIT NOT NULL CONSTRAINT [DF_tm_mesures_gso_build_Est_Valeur_Memoire] DEFAULT(0),
+    [Planning_Regle_Existe] BIT NOT NULL CONSTRAINT [DF_tm_mesures_gso_build_Planning_Regle_Existe] DEFAULT(0),
+    [Planning_Actif] BIT NOT NULL CONSTRAINT [DF_tm_mesures_gso_build_Planning_Actif] DEFAULT(0),
+    [Consigne] FLOAT NULL,
+    [Consigne_Sup] FLOAT NULL,
+    [Consigne_Inf] FLOAT NULL,
+    [Unite] VARCHAR(10) NULL,
+    [Sonde_Numero_Serie] VARCHAR(50) NULL,
+    [Adresse_Sonde] VARCHAR(50) NULL,
+    [COM_sonde] FLOAT NULL,
+    [Id_Lieu] INT NOT NULL CONSTRAINT [DF_tm_mesures_gso_build_Id_Lieu] DEFAULT(0),
+    [Consigne_Inf_Pre_Alarme] FLOAT NULL,
+    [Consigne_Sup_Pre_Alarme] FLOAT NULL,
+    [Rssi] VARCHAR(10) NULL,
+    [Tension] VARCHAR(10) NULL,
+    [GSO_SN] VARCHAR(50) NULL
+  );
+  CREATE INDEX [IDX_tm_mesures_gso_build_Date_Heure_Mesure] ON dbo.[tm_mesures_gso_build]([Date_Heure_Mesure]);
+  CREATE INDEX [IDX_tm_mesures_gso_build_Id_Lieu] ON dbo.[tm_mesures_gso_build]([Id_Lieu]);
+END;
+GO
+IF OBJECT_ID(N'dbo.tm_mesures_gso_build', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_gso_build', N'Valeur_Brute') IS NULL ALTER TABLE dbo.[tm_mesures_gso_build] ADD [Valeur_Brute] FLOAT NULL;
+IF OBJECT_ID(N'dbo.tm_mesures_gso_build', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_gso_build', N'Est_Valeur_Memoire') IS NULL ALTER TABLE dbo.[tm_mesures_gso_build] ADD [Est_Valeur_Memoire] BIT NOT NULL CONSTRAINT [DF_tm_mesures_gso_build_Est_Valeur_Memoire_patch] DEFAULT(0);
+IF OBJECT_ID(N'dbo.tm_mesures_gso_build', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_gso_build', N'Planning_Regle_Existe') IS NULL ALTER TABLE dbo.[tm_mesures_gso_build] ADD [Planning_Regle_Existe] BIT NOT NULL CONSTRAINT [DF_tm_mesures_gso_build_Planning_Regle_Existe_patch] DEFAULT(0);
+IF OBJECT_ID(N'dbo.tm_mesures_gso_build', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_gso_build', N'Planning_Actif') IS NULL ALTER TABLE dbo.[tm_mesures_gso_build] ADD [Planning_Actif] BIT NOT NULL CONSTRAINT [DF_tm_mesures_gso_build_Planning_Actif_patch] DEFAULT(0);
+IF OBJECT_ID(N'dbo.tm_mesures_gso_build', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_gso_build', N'Consigne') IS NULL ALTER TABLE dbo.[tm_mesures_gso_build] ADD [Consigne] FLOAT NULL;
+IF OBJECT_ID(N'dbo.tm_mesures_gso_build', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_gso_build', N'Consigne_Sup') IS NULL ALTER TABLE dbo.[tm_mesures_gso_build] ADD [Consigne_Sup] FLOAT NULL;
+IF OBJECT_ID(N'dbo.tm_mesures_gso_build', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_gso_build', N'Consigne_Inf') IS NULL ALTER TABLE dbo.[tm_mesures_gso_build] ADD [Consigne_Inf] FLOAT NULL;
+IF OBJECT_ID(N'dbo.tm_mesures_gso_build', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_gso_build', N'Sonde_Numero_Serie') IS NULL ALTER TABLE dbo.[tm_mesures_gso_build] ADD [Sonde_Numero_Serie] VARCHAR(50) NULL;
+IF OBJECT_ID(N'dbo.tm_mesures_gso_build', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_gso_build', N'COM_sonde') IS NULL ALTER TABLE dbo.[tm_mesures_gso_build] ADD [COM_sonde] FLOAT NULL;
+IF OBJECT_ID(N'dbo.tm_mesures_gso_build', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_gso_build', N'Id_Lieu') IS NULL ALTER TABLE dbo.[tm_mesures_gso_build] ADD [Id_Lieu] INT NOT NULL CONSTRAINT [DF_tm_mesures_gso_build_Id_Lieu_patch] DEFAULT(0);
+IF OBJECT_ID(N'dbo.tm_mesures_gso_build', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_gso_build', N'Consigne_Inf_Pre_Alarme') IS NULL ALTER TABLE dbo.[tm_mesures_gso_build] ADD [Consigne_Inf_Pre_Alarme] FLOAT NULL;
+IF OBJECT_ID(N'dbo.tm_mesures_gso_build', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_gso_build', N'Consigne_Sup_Pre_Alarme') IS NULL ALTER TABLE dbo.[tm_mesures_gso_build] ADD [Consigne_Sup_Pre_Alarme] FLOAT NULL;
+IF OBJECT_ID(N'dbo.tm_mesures_gso_build', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_gso_build', N'Rssi') IS NULL ALTER TABLE dbo.[tm_mesures_gso_build] ADD [Rssi] VARCHAR(10) NULL;
+IF OBJECT_ID(N'dbo.tm_mesures_gso_build', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_gso_build', N'Tension') IS NULL ALTER TABLE dbo.[tm_mesures_gso_build] ADD [Tension] VARCHAR(10) NULL;
+IF OBJECT_ID(N'dbo.tm_mesures_gso_build', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_gso_build', N'GSO_SN') IS NULL ALTER TABLE dbo.[tm_mesures_gso_build] ADD [GSO_SN] VARCHAR(50) NULL;
+GO
+
+IF OBJECT_ID(N'dbo.tm_mesures_gso_read_mem', N'U') IS NULL
+BEGIN
+  CREATE TABLE dbo.[tm_mesures_gso_read_mem] (
+    [Id] BIGINT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+    [GSO_SN] VARCHAR(32) NOT NULL,
+    [Ecart] VARCHAR(32) NOT NULL,
+    [Date_Heure_Read_Mem] DATETIME NULL
+  );
+  CREATE UNIQUE INDEX [UX_tm_mesures_gso_read_mem] ON dbo.[tm_mesures_gso_read_mem]([GSO_SN], [Ecart]);
+  CREATE INDEX [IDX_tm_mesures_gso_read_mem_date] ON dbo.[tm_mesures_gso_read_mem]([Date_Heure_Read_Mem]);
+END;
+GO
+
+IF OBJECT_ID(N'dbo.tm_mesures_gso_read_metro', N'U') IS NULL
+BEGIN
+  CREATE TABLE dbo.[tm_mesures_gso_read_metro] (
+    [Id] BIGINT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+    [GSO_SN] VARCHAR(32) NOT NULL,
+    [Commande_metro] VARCHAR(32) NOT NULL,
+    [Commande_metro_envoyee] BIT NOT NULL CONSTRAINT [DF_tm_mesures_gso_read_metro_CommandeEnvoyee] DEFAULT(0),
+    [Metro_en_cours] BIT NOT NULL CONSTRAINT [DF_tm_mesures_gso_read_metro_MetroEnCours] DEFAULT(0),
+    [Dernier_Date_MAJ] DATETIME NULL
+  );
+  CREATE UNIQUE INDEX [UX_tm_mesures_gso_read_metro] ON dbo.[tm_mesures_gso_read_metro]([GSO_SN], [Commande_metro]);
+  CREATE INDEX [IDX_tm_mesures_gso_read_metro_Dernier_Date_MAJ] ON dbo.[tm_mesures_gso_read_metro]([Dernier_Date_MAJ]);
+END;
+GO
+IF OBJECT_ID(N'dbo.tm_mesures_gso_read_metro', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_gso_read_metro', N'Id') IS NULL ALTER TABLE dbo.[tm_mesures_gso_read_metro] ADD [Id] BIGINT NULL;
+IF OBJECT_ID(N'dbo.tm_mesures_gso_read_metro', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_gso_read_metro', N'Commande_metro') IS NULL ALTER TABLE dbo.[tm_mesures_gso_read_metro] ADD [Commande_metro] VARCHAR(32) NULL;
+IF OBJECT_ID(N'dbo.tm_mesures_gso_read_metro', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_gso_read_metro', N'Commande_metro_envoyee') IS NULL ALTER TABLE dbo.[tm_mesures_gso_read_metro] ADD [Commande_metro_envoyee] BIT NOT NULL CONSTRAINT [DF_tm_mesures_gso_read_metro_CommandeEnvoyee_patch] DEFAULT(0);
+IF OBJECT_ID(N'dbo.tm_mesures_gso_read_metro', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_gso_read_metro', N'Metro_en_cours') IS NULL ALTER TABLE dbo.[tm_mesures_gso_read_metro] ADD [Metro_en_cours] BIT NOT NULL CONSTRAINT [DF_tm_mesures_gso_read_metro_MetroEnCours_patch] DEFAULT(0);
+GO
+
+CREATE OR ALTER VIEW dbo.[v_compteur_valeurs_gso]
+AS
+select
+  [tm_mesures].[Adresse_Sonde] AS [Adresse_Sonde],
+  sum(case when ([tm_mesures].[Date_Heure_Mesure] >= dateadd(hour, -1, getdate())) then 1 else 0 end) AS [quart_0_4=4m],
+  sum(case when ([tm_mesures].[Date_Heure_Mesure] < dateadd(hour, -1, getdate()) and [tm_mesures].[Date_Heure_Mesure] >= dateadd(hour, -2, getdate())) then 1 else 0 end) AS [quart_4_8=4m],
+  sum(case when ([tm_mesures].[Date_Heure_Mesure] < dateadd(hour, -2, getdate()) and [tm_mesures].[Date_Heure_Mesure] >= dateadd(hour, -4, getdate())) then 1 else 0 end) AS [quart_8_16=8m],
+  sum(case when ([tm_mesures].[Date_Heure_Mesure] < dateadd(hour, -4, getdate()) and [tm_mesures].[Date_Heure_Mesure] >= dateadd(hour, -8, getdate())) then 1 else 0 end) AS [quart_16_32=16m],
+  sum(case when ([tm_mesures].[Date_Heure_Mesure] < dateadd(hour, -8, getdate()) and [tm_mesures].[Date_Heure_Mesure] >= dateadd(hour, -16, getdate())) then 1 else 0 end) AS [quart_32_64=32m],
+  sum(case when ([tm_mesures].[Date_Heure_Mesure] < dateadd(hour, -16, getdate()) and [tm_mesures].[Date_Heure_Mesure] >= dateadd(hour, -32, getdate())) then 1 else 0 end) AS [quart_64_128=64m],
+  sum(case when ([tm_mesures].[Date_Heure_Mesure] < dateadd(hour, -32, getdate()) and [tm_mesures].[Date_Heure_Mesure] >= dateadd(hour, -64, getdate())) then 1 else 0 end) AS [quart_128_256=128m],
+  sum(case when ([tm_mesures].[Date_Heure_Mesure] < dateadd(hour, -64, getdate()) and [tm_mesures].[Date_Heure_Mesure] >= dateadd(hour, -128, getdate())) then 1 else 0 end) AS [quart_256_512=256m],
+  sum(case when ([tm_mesures].[Date_Heure_Mesure] < dateadd(hour, -128, getdate()) and [tm_mesures].[Date_Heure_Mesure] >= dateadd(hour, -175, getdate())) then 1 else 0 end) AS [quart_512_700=188m],
+  sum(case when ([tm_mesures].[Date_Heure_Mesure] >= dateadd(minute, -10500, getdate())) then 1 else 0 end) AS [Total]
+from dbo.[tm_mesures]
+where [tm_mesures].[Adresse_Sonde] like '1__%'
+  and [tm_mesures].[Date_Heure_Mesure] >= dateadd(hour, -175, getdate())
+group by [tm_mesures].[Adresse_Sonde];
+GO
+
+USE [vigi_main];
+GO
+
+IF COL_LENGTH('dbo.t_sonde', 'Metrologie_en_cours') IS NULL ALTER TABLE dbo.t_sonde ADD Metrologie_en_cours BIT NOT NULL CONSTRAINT DF_t_sonde_Metrologie_en_cours DEFAULT(0);
+IF COL_LENGTH('dbo.t_sonde', 'Metrologie_cmd_envoyee') IS NULL ALTER TABLE dbo.t_sonde ADD Metrologie_cmd_envoyee BIT NOT NULL CONSTRAINT DF_t_sonde_Metrologie_cmd_envoyee DEFAULT(0);
+IF COL_LENGTH('dbo.t_sonde', 'Etat_Sonde') IS NULL ALTER TABLE dbo.t_sonde ADD Etat_Sonde VARCHAR(1) NULL CONSTRAINT DF_t_sonde_Etat_Sonde DEFAULT('D');
+GO
+
+USE [vigi_main];
+GO
+
+CREATE OR ALTER VIEW dbo.[v_tm_mesures_dernier]
+AS
+select
+  [l].[Id_Lieu] AS [Id_Lieu],
+  [l].[Sonde_Numero_Serie] AS [Sonde_Numero_Serie],
+  [l].[Adresse_Sonde] AS [Adresse_Sonde],
+  [l].[Nom_Lieu] AS [Nom_Lieu],
+  [l].[Id_Alarme] AS [Id_Alarme],
+  [l].[Est_Lieu_En_Alarme] AS [Alarme_en_cours],
+  [m].[Valeur] AS [Dernier_Releve],
+  [m].[Unite] AS [Unite],
+  [m].[Date_Heure_Mesure] AS [Date_Heure_Mesure],
+  [m].[COM_sonde] AS [COM_Lecture],
+  [m].[Rssi] AS [Signal_Radio],
+  [m].[Tension] AS [Tension_Piles],
+  case when len(isnull([l].[Adresse_Sonde], '')) > 2 then left([l].[Adresse_Sonde], len([l].[Adresse_Sonde]) - 2) end AS [GSO_SN]
+from [vigi_main].[dbo].[t_lieu] [l]
+outer apply (
+  select top 1
+    [m1].[Valeur],
+    [m1].[Unite],
+    [m1].[Date_Heure_Mesure],
+    [m1].[COM_sonde],
+    [m1].[Rssi],
+    [m1].[Tension]
+  from [vigi_mesures].[dbo].[tm_mesures] [m1]
+  where [m1].[Id_Lieu] = [l].[Id_Lieu]
+  order by [m1].[Date_Heure_Mesure] desc
+) [m]
+where [l].[Lieu_Etat] = 'S'
+  and [l].[Est_Lieu_GSO] = 1;
+GO
+
+USE [vigi_mesures];
+GO
+
+CREATE OR ALTER VIEW dbo.[v_config_lieu_planning_consignes]
+AS
+select
+  [pl].[Id_Lieu] AS [Id_Lieu],
+  [pl].[Date_Heure_Debut_Changement] AS [Date_Heure_Debut_Changement],
+  [pl].[Date_Heure_Fin_Changement] AS [Date_Heure_Fin_Changement],
+  [pl].[Consigne_Apres] AS [Consigne_Apres],
+  [pl].[Tolerance_Surveillance_Sup_Apres] AS [Tolerance_Surveillance_Sup_Apres],
+  [pl].[Tolerance_Surveillance_Inf_Apres] AS [Tolerance_Surveillance_Inf_Apres]
+from [vigi_main].[dbo].[t_lieu_planning_audit] [pl];
+GO
+
+CREATE OR ALTER VIEW dbo.[v_config_lieu_sonde]
+AS
+SELECT
+    [l].[Id_Lieu] AS [Id_Lieu],
+    [l].[Sonde_Numero_Serie] AS [Sonde_Numero_Serie],
+    LEFT([s].[Adresse_Sonde], LEN([s].[Adresse_Sonde]) - 2) AS [GSO_SN],
+    [s].[Port_Serie] AS [Port_Serie],
+    [l].[Adresse_Sonde] AS [Adresse_Sonde],
+    [l].[Date_Heure_Surveillance_On] AS [Date_Heure_Surveillance_On],
+    [l].[Planning_Actif] AS [Planning_Actif],
+    [l].[Planning_Regle_Existe] AS [Planning_Regle_Existe],
+    [l].[Consigne] AS [Consigne],
+    [l].[Tolerance_Surveillance_Sup] AS [Consigne_Sup_Corr],
+    [l].[Tolerance_Surveillance_Inf] AS [Consigne_Inf_Corr],
+    [l].[Consigne_Sup_Pre_Alarme] AS [Consigne_Sup_Pre_Alarme],
+    [l].[Consigne_Inf_Pre_Alarme] AS [Consigne_Inf_Pre_Alarme],
+    [l].[Consigne_Base] AS [Consigne_Base],
+    [l].[Tolerance_Surveillance_Sup_Base] AS [Tolerance_Surveillance_Sup_Base],
+    [l].[Tolerance_Surveillance_Inf_Base] AS [Tolerance_Surveillance_Inf_Base],
+    [l].[Retard_Alarme_Haut] AS [Retard_Haut],
+    [l].[Retard_Alarme_Bas] AS [Retard_Bas],
+    [s].[Sonde_Offset] AS [Sonde_Offset],
+    ISNULL([aj].[Coeff_X], 1) AS [coeff_a],
+    ISNULL([aj].[Coeff_Constant], 0) AS [coeff_b],
+    ROUND(ISNULL(
+        CASE
+            WHEN [l].[Est_Correction_Ej] = 1 THEN -[l].[Derniere_Erreur_Justesse]
+            ELSE 0
+        END
+    , 0), 2) AS [-(EJ)]
+FROM [vigi_main].[dbo].[t_lieu] [l]
+LEFT JOIN [vigi_main].[dbo].[t_sonde] [s]
+    ON [s].[Sonde_Numero_Serie] = [l].[Sonde_Numero_Serie]
+LEFT JOIN (
+    SELECT
+        [x].[Sonde_Numero_Serie],
+        [x].[Coeff_X],
+        [x].[Coeff_Constant]
+    FROM (
+        SELECT
+            [a].[Sonde_Numero_Serie],
+            [a].[Coeff_X],
+            [a].[Coeff_Constant],
+            ROW_NUMBER() OVER (
+                PARTITION BY [a].[Sonde_Numero_Serie]
+                ORDER BY [a].[Date_Heure_Ajustage] DESC
+            ) AS [rn]
+        FROM [vigi_main].[dbo].[t_ajustage] [a]
+    ) [x]
+    WHERE [x].[rn] = 1
+) [aj]
+    ON [aj].[Sonde_Numero_Serie] = [s].[Sonde_Numero_Serie]
+WHERE
+    [l].[Est_Lieu_GSO] = 1
+    AND [l].[Lieu_Etat] = 'S';
+GO
+
+CREATE OR ALTER VIEW dbo.[v_config_sonde_com]
+AS
+SELECT
+    [s].[Adresse_Sonde] AS [Adresse_Sonde],
+    LEFT([s].[Adresse_Sonde], LEN([s].[Adresse_Sonde]) - 2) AS [GSO_SN],
+    [s].[Etat_Sonde] AS [Etat_Sonde],
+    [s].[Metrologie_en_cours] AS [Metrologie_en_cours],
+    [s].[Metrologie_cmd_envoyee] AS [Metrologie_cmd_envoyee],
+    [m].[Port_Serie_Send_GSO] AS [Port_Serie_Send_GSO],
+    [m].[Port_Serie] AS [Port_Serie_Real],
+    [s].[Sonde_Offset] AS [Sonde_Offset],
+    ISNULL([aj].[Coeff_X], 1) AS [coeff_a],
+    ISNULL([aj].[Coeff_Constant], 0) AS [coeff_b]
+FROM [vigi_main].[dbo].[t_sonde] [s]
+INNER JOIN [vigi_main].[dbo].[t_module] [m]
+    ON [m].[Port_Serie] = [s].[Port_Serie]
+LEFT JOIN (
+    SELECT
+        [x].[Sonde_Numero_Serie],
+        [x].[Coeff_X],
+        [x].[Coeff_Constant]
+    FROM (
+        SELECT
+            [ta].[Sonde_Numero_Serie],
+            [ta].[Coeff_X],
+            [ta].[Coeff_Constant],
+            ROW_NUMBER() OVER (
+                PARTITION BY [ta].[Sonde_Numero_Serie]
+                ORDER BY [ta].[Date_Heure_Ajustage] DESC
+            ) AS [rn]
+        FROM [vigi_main].[dbo].[t_ajustage] [ta]
+    ) [x]
+    WHERE [x].[rn] = 1
+) [aj]
+    ON [aj].[Sonde_Numero_Serie] = [s].[Sonde_Numero_Serie]
+WHERE
+    [s].[Est_Sonde_GSO] = 1;
+GO
+
+CREATE OR ALTER PROCEDURE dbo.[usp_EVT_PLANNING_CONSIGNE]
+AS
+BEGIN
+  SET NOCOUNT ON;
+  SET XACT_ABORT ON;
+
+  SET DATEFIRST 1;
+
+  DECLARE @now DATETIME = GETDATE();
+  DECLARE @v_now_day TINYINT = DATEPART(WEEKDAY, @now);
+  DECLARE @v_now_time TIME = CAST(@now AS TIME);
+
+  IF OBJECT_ID(N'tempdb..#tmp_planning_best') IS NOT NULL DROP TABLE #tmp_planning_best;
+  IF OBJECT_ID(N'tempdb..#tmp_planning_apply') IS NOT NULL DROP TABLE #tmp_planning_apply;
+  IF OBJECT_ID(N'tempdb..#tmp_planning_return') IS NOT NULL DROP TABLE #tmp_planning_return;
+
+  SELECT
+      r.[Id_Lieu],
+      r.[Id_Regle],
+      r.[Consigne],
+      r.[Tolerance_Sup_Calc],
+      r.[Tolerance_Inf_Calc],
+      r.[Retard_Alarme_Changement_Consigne]
+  INTO #tmp_planning_best
+  FROM dbo.[t_lieu_planning_regle] r
+  INNER JOIN (
+    SELECT
+        [Id_Lieu],
+        MAX([Priorite]) AS [max_prio]
+    FROM dbo.[t_lieu_planning_regle]
+    WHERE [Actif] = 1
+      AND (
+        ([Jour_Debut] = [Jour_Fin]
+          AND @v_now_day = [Jour_Debut]
+          AND @v_now_time >= [Heure_Debut]
+          AND @v_now_time <  [Heure_Fin])
+        OR
+        ([Jour_Debut] < [Jour_Fin] AND (
+          (@v_now_day > [Jour_Debut] AND @v_now_day < [Jour_Fin])
+          OR (@v_now_day = [Jour_Debut] AND @v_now_time >= [Heure_Debut])
+          OR (@v_now_day = [Jour_Fin]   AND @v_now_time <  [Heure_Fin])
+        ))
+        OR
+        ([Jour_Debut] > [Jour_Fin] AND (
+          (@v_now_day = [Jour_Debut] AND @v_now_time >= [Heure_Debut])
+          OR (@v_now_day = [Jour_Fin]   AND @v_now_time <  [Heure_Fin])
+          OR (@v_now_day > [Jour_Debut])
+          OR (@v_now_day < [Jour_Fin])
+        ))
+      )
+    GROUP BY [Id_Lieu]
+  ) best_prio
+    ON best_prio.[Id_Lieu] = r.[Id_Lieu]
+   AND best_prio.[max_prio] = r.[Priorite]
+  WHERE r.[Actif] = 1
+    AND (
+      (r.[Jour_Debut] = r.[Jour_Fin]
+        AND @v_now_day = r.[Jour_Debut]
+        AND @v_now_time >= r.[Heure_Debut]
+        AND @v_now_time <  r.[Heure_Fin])
+      OR
+      (r.[Jour_Debut] < r.[Jour_Fin] AND (
+        (@v_now_day > r.[Jour_Debut] AND @v_now_day < r.[Jour_Fin])
+        OR (@v_now_day = r.[Jour_Debut] AND @v_now_time >= r.[Heure_Debut])
+        OR (@v_now_day = r.[Jour_Fin]   AND @v_now_time <  r.[Heure_Fin])
+      ))
+      OR
+      (r.[Jour_Debut] > r.[Jour_Fin] AND (
+        (@v_now_day = r.[Jour_Debut] AND @v_now_time >= r.[Heure_Debut])
+        OR (@v_now_day = r.[Jour_Fin]   AND @v_now_time <  r.[Heure_Fin])
+        OR (@v_now_day > r.[Jour_Debut])
+        OR (@v_now_day < r.[Jour_Fin])
+      ))
+    );
+
+  SELECT
+      l.[Id_Lieu],
+      best.[Id_Regle] AS [Planning_Regle_Id],
+      l.[Consigne] AS [Consigne_Avant],
+      l.[Tolerance_Surveillance_Sup] AS [Tolerance_Surveillance_Sup_Avant],
+      l.[Tolerance_Surveillance_Inf] AS [Tolerance_Surveillance_Inf_Avant],
+      best.[Consigne] AS [Consigne_Apres],
+      best.[Tolerance_Sup_Calc] AS [Tolerance_Surveillance_Sup_Apres],
+      best.[Tolerance_Inf_Calc] AS [Tolerance_Surveillance_Inf_Apres],
+      best.[Retard_Alarme_Changement_Consigne]
+  INTO #tmp_planning_apply
+  FROM dbo.[t_lieu] l
+  INNER JOIN #tmp_planning_best best
+    ON best.[Id_Lieu] = l.[Id_Lieu]
+  WHERE l.[Planning_Source_Regle_Id] <> best.[Id_Regle]
+     OR l.[Planning_Source_Regle_Id] IS NULL
+     OR l.[Planning_Actif] = 0
+     OR ISNULL(l.[Consigne], -999999) <> ISNULL(best.[Consigne], -999999)
+     OR ISNULL(l.[Tolerance_Surveillance_Sup], -999999) <> ISNULL(best.[Tolerance_Sup_Calc], -999999)
+     OR ISNULL(l.[Tolerance_Surveillance_Inf], -999999) <> ISNULL(best.[Tolerance_Inf_Calc], -999999);
+
+  UPDATE a
+  SET a.[Date_Heure_Fin_Changement] = @now
+  FROM dbo.[t_lieu_planning_audit] a
+  INNER JOIN #tmp_planning_apply c
+    ON c.[Id_Lieu] = a.[Id_Lieu]
+  WHERE a.[Type] = 'PLAN_APPLY'
+    AND a.[Date_Heure_Fin_Changement] IS NULL;
+
+  UPDATE l
+  SET
+      l.[Consigne]                          = c.[Consigne_Apres],
+      l.[Consigne_Sup]                      = c.[Tolerance_Surveillance_Sup_Apres],
+      l.[Consigne_Inf]                      = c.[Tolerance_Surveillance_Inf_Apres],
+      l.[Tolerance_Surveillance_Sup]        = c.[Tolerance_Surveillance_Sup_Apres],
+      l.[Tolerance_Surveillance_Inf]        = c.[Tolerance_Surveillance_Inf_Apres],
+      l.[Retard_Alarme_Changement_Consigne] = c.[Retard_Alarme_Changement_Consigne],
+      l.[Planning_Actif]                    = 1,
+      l.[Planning_Regle_Existe]             = 1,
+      l.[Planning_Source_Regle_Id]          = c.[Planning_Regle_Id],
+      l.[Planning_Derniere_Maj]             = @now
+  FROM dbo.[t_lieu] l
+  INNER JOIN #tmp_planning_apply c
+    ON c.[Id_Lieu] = l.[Id_Lieu];
+
+  INSERT INTO dbo.[t_lieu_planning_audit]
+  (
+    [Id_Lieu],
+    [Timestamp],
+    [Date_Heure_Debut_Changement],
+    [Date_Heure_Fin_Changement],
+    [Type],
+    [Planning_Regle_Id],
+    [Consigne_Avant],
+    [Tolerance_Surveillance_Sup_Avant],
+    [Tolerance_Surveillance_Inf_Avant],
+    [Consigne_Apres],
+    [Tolerance_Surveillance_Sup_Apres],
+    [Tolerance_Surveillance_Inf_Apres]
+  )
+  SELECT
+      c.[Id_Lieu],
+      @now,
+      @now,
+      NULL,
+      'PLAN_APPLY',
+      c.[Planning_Regle_Id],
+      c.[Consigne_Avant],
+      c.[Tolerance_Surveillance_Sup_Avant],
+      c.[Tolerance_Surveillance_Inf_Avant],
+      c.[Consigne_Apres],
+      c.[Tolerance_Surveillance_Sup_Apres],
+      c.[Tolerance_Surveillance_Inf_Apres]
+  FROM #tmp_planning_apply c;
+
+  SELECT l.[Id_Lieu]
+  INTO #tmp_planning_return
+  FROM dbo.[t_lieu] l
+  WHERE l.[Planning_Actif] = 1
+    AND NOT EXISTS (
+      SELECT 1
+      FROM #tmp_planning_best best
+      WHERE best.[Id_Lieu] = l.[Id_Lieu]
+    );
+
+  UPDATE a
+  SET a.[Date_Heure_Fin_Changement] = @now
+  FROM dbo.[t_lieu_planning_audit] a
+  INNER JOIN #tmp_planning_return r
+    ON r.[Id_Lieu] = a.[Id_Lieu]
+  WHERE a.[Type] = 'PLAN_APPLY'
+    AND a.[Date_Heure_Fin_Changement] IS NULL;
+
+  UPDATE l
+  SET
+      l.[Consigne]                          = l.[Consigne_Base],
+      l.[Consigne_Sup]                      = l.[Consigne_Sup_Base],
+      l.[Consigne_Inf]                      = l.[Consigne_Inf_Base],
+      l.[Tolerance_Surveillance_Sup]        = l.[Tolerance_Surveillance_Sup_Base],
+      l.[Tolerance_Surveillance_Inf]        = l.[Tolerance_Surveillance_Inf_Base],
+      l.[Retard_Alarme_Changement_Consigne] = NULL,
+      l.[Planning_Actif]                    = 0,
+      l.[Planning_Regle_Existe]             = CASE WHEN EXISTS (
+                                                SELECT 1
+                                                FROM dbo.[t_lieu_planning_regle] pr
+                                                WHERE pr.[Id_Lieu] = l.[Id_Lieu]
+                                              ) THEN 1 ELSE 0 END,
+      l.[Planning_Source_Regle_Id]          = NULL,
+      l.[Planning_Derniere_Maj]             = @now
+  FROM dbo.[t_lieu] l
+  INNER JOIN #tmp_planning_return r
+    ON r.[Id_Lieu] = l.[Id_Lieu];
+END;
+GO
+
+CREATE OR ALTER PROCEDURE dbo.[usp_EVT_GSO_DERNIERVALEUR_LIEU]
+AS
+BEGIN
+  SET NOCOUNT ON;
+
+  UPDATE l
+  SET
+    [Derniere_Date_Heure] = v.[Date_Heure_Mesure],
+    [Derniere_Valeur] = v.[Dernier_Releve],
+    [Derniere_Unite] = v.[Unite],
+    [Date_Heure_Derniere_Reponse] = v.[Date_Heure_Mesure],
+    [Derniere_Val_Rssi] = v.[Signal_Radio],
+    [Derniere_Val_Tension] = v.[Tension_Piles]
+  FROM dbo.[t_lieu] l
+  JOIN [vigi_main].[dbo].[v_tm_mesures_dernier] v
+    ON v.[Id_Lieu] = l.[Id_Lieu];
+
+  UPDATE dbo.[t_lieu]
+  SET [Date_Heure_Derniere_Reponse_Recue_OK] = [Derniere_Date_Heure]
+  WHERE [Derniere_Valeur] <= [Tolerance_Surveillance_Sup]
+    AND [Derniere_Valeur] >= [Tolerance_Surveillance_Inf]
+    AND [Est_Lieu_GSO] = 1
+    AND [Lieu_Etat] = 'S';
+
+  UPDATE dbo.[t_lieu]
+  SET [Date_Heure_Derniere_Reponse_Recue_OK] = [Derniere_Date_Heure]
+  WHERE [Derniere_Valeur] IS NOT NULL
+    AND ([Tolerance_Surveillance_Sup] IS NULL OR [Tolerance_Surveillance_Inf] IS NULL)
+    AND [Est_Lieu_GSO] = 1
+    AND [Lieu_Etat] = 'S';
+
+  UPDATE dbo.[t_lieu]
+  SET [Date_Heure_Last_Update_EVT_GSO] = GETDATE()
+  WHERE [Est_Lieu_GSO] = 1
+    AND [Lieu_Etat] = 'S';
+
+  UPDATE dbo.[t_parametre]
+  SET [Champ_DATETIME] = (SELECT MAX([Date_Heure_Mesure]) FROM [vigi_main].[dbo].[v_tm_mesures_dernier])
+  WHERE [Mot_Cle] = 'GSO_DERNIER_DATE_HEURE';
+
+  DELETE FROM dbo.[t_lieu_planning_audit]
+  WHERE [Date_Heure_Fin_Changement] < DATEADD(HOUR, -240, GETDATE());
+END;
+GO
+
+USE [vigi_mesures];
+GO
+
+CREATE OR ALTER PROCEDURE dbo.[usp_EVT_CALCUL_MESURE_MEM_GSO]
+AS
+BEGIN
+  SET NOCOUNT ON;
+
+  DELETE FROM dbo.[tm_mesures_gso_count_mem];
+
+  ;WITH [slots] AS (
+    SELECT 1 AS [slot_index]
+    UNION ALL
+    SELECT [slot_index] + 1
+    FROM [slots]
+    WHERE [slot_index] < 699
+  ),
+  [base_time] AS (
+    SELECT DATEADD(MINUTE, (DATEDIFF(MINUTE, 0, GETDATE()) / 15) * 15, 0) AS [ref_time]
+  ),
+  [sondes_param] AS (
+    SELECT
+      [s].[Adresse_Sonde],
+      [c].[Port_Serie_Send_GSO],
+      [s].[Date_Heure_Surveillance_On],
+      CASE
+        WHEN DATEDIFF(MINUTE, [s].[Date_Heure_Surveillance_On], [b].[ref_time]) / 15 > 699 THEN 699
+        ELSE DATEDIFF(MINUTE, [s].[Date_Heure_Surveillance_On], [b].[ref_time]) / 15
+      END AS [max_slot]
+    FROM [vigi_mesures].[dbo].[v_config_lieu_sonde] [s]
+    LEFT JOIN [vigi_mesures].[dbo].[v_config_sonde_com] [c]
+      ON [c].[GSO_SN] = CASE WHEN LEN([s].[Adresse_Sonde]) > 2 THEN LEFT([s].[Adresse_Sonde], LEN([s].[Adresse_Sonde]) - 2) END
+    CROSS JOIN [base_time] [b]
+    WHERE [s].[Adresse_Sonde] IS NOT NULL
+      AND [s].[Date_Heure_Surveillance_On] IS NOT NULL
+      AND DATEDIFF(MINUTE, [s].[Date_Heure_Surveillance_On], [b].[ref_time]) >= 15
+  ),
+  [mesures_indexees] AS (
+    SELECT
+      [m].[Adresse_Sonde],
+      DATEDIFF(MINUTE, [m].[Date_Heure_Mesure], [b].[ref_time]) / 15 AS [slot_index]
+    FROM dbo.[tm_mesures] [m]
+    CROSS JOIN [base_time] [b]
+    WHERE [m].[Date_Heure_Mesure] >= DATEADD(MINUTE, -10500, [b].[ref_time])
+      AND [m].[Adresse_Sonde] IS NOT NULL
+  ),
+  [slots_sondes] AS (
+    SELECT
+      [sp].[Adresse_Sonde],
+      [sp].[Port_Serie_Send_GSO],
+      [sl].[slot_index],
+      700 - [sl].[slot_index] AS [numero_releve]
+    FROM [sondes_param] [sp]
+    JOIN [slots] [sl]
+      ON [sl].[slot_index] <= [sp].[max_slot]
+  ),
+  [manquants] AS (
+    SELECT
+      [ss].[Adresse_Sonde],
+      [ss].[Port_Serie_Send_GSO],
+      [ss].[slot_index],
+      [ss].[numero_releve]
+    FROM [slots_sondes] [ss]
+    LEFT JOIN [mesures_indexees] [mi]
+      ON [mi].[Adresse_Sonde] = [ss].[Adresse_Sonde]
+     AND [mi].[slot_index] = [ss].[slot_index]
+    WHERE [mi].[slot_index] IS NULL
+  ),
+  [groupes] AS (
+    SELECT
+      [Adresse_Sonde],
+      [Port_Serie_Send_GSO],
+      [numero_releve],
+      [numero_releve] - ROW_NUMBER() OVER (PARTITION BY [Adresse_Sonde] ORDER BY [numero_releve]) AS [grp]
+    FROM [manquants]
+  )
+  INSERT INTO dbo.[tm_mesures_gso_count_mem]
+  ([GSO_SN], [Port_Serie_Send_GSO], [Missing_Data_Begin], [Missing_Data_End], [Missing_Data_Total], [Commande_Mem], [date_calcul])
+  SELECT
+    CASE WHEN LEN([Adresse_Sonde]) > 2 THEN LEFT([Adresse_Sonde], LEN([Adresse_Sonde]) - 2) END AS [GSO_SN],
+    MAX([Port_Serie_Send_GSO]) AS [Port_Serie_Send_GSO],
+    MIN([numero_releve]) AS [Missing_Data_Begin],
+    MAX([numero_releve]) AS [Missing_Data_End],
+    COUNT(*) AS [Missing_Data_Total],
+    CONCAT('$<EDDT:', CASE WHEN LEN([Adresse_Sonde]) > 2 THEN LEFT([Adresse_Sonde], LEN([Adresse_Sonde]) - 2) END, '(', MIN([numero_releve]), '-', MAX([numero_releve]), ')>') AS [Commande_Mem],
+    GETDATE() AS [date_calcul]
+  FROM [groupes]
+  GROUP BY [Adresse_Sonde], [grp]
+  HAVING COUNT(*) >= 3
+  OPTION (MAXRECURSION 700);
+
+  INSERT INTO dbo.[tm_mesures_gso_commandes_mem]
+  ([GSO_SN], [Port_Serie_Send_GSO], [Commande_Globale_Begin], [Commande_Globale_End], [Missing_Data_Total], [Commande_Mem_Globale], [Date_Calcul])
+  SELECT
+    [c].[GSO_SN],
+    [c].[Port_Serie_Send_GSO],
+    [c].[Missing_Data_Begin],
+    [c].[Missing_Data_End],
+    [c].[Missing_Data_Total],
+    [c].[Commande_Mem],
+    [c].[date_calcul]
+  FROM dbo.[tm_mesures_gso_count_mem] [c]
+  WHERE NOT EXISTS (
+    SELECT 1
+    FROM dbo.[tm_mesures_gso_commandes_mem] [x]
+    WHERE [x].[GSO_SN] = [c].[GSO_SN]
+      AND [x].[Commande_Globale_Begin] = [c].[Missing_Data_Begin]
+      AND [x].[Commande_Globale_End] = [c].[Missing_Data_End]
+  );
+
+  DELETE FROM dbo.[tm_mesures_gso_count_mem];
+END;
+GO
+
+CREATE OR ALTER PROCEDURE dbo.[usp_EVT_CLEAN_GRAPH_MES_GSO]
+AS
+BEGIN
+  SET NOCOUNT ON;
+
+  DELETE FROM dbo.[tm_graphique] WHERE [Date_Heure_Mesure] < DATEADD(HOUR, -72, GETDATE());
+  DELETE FROM dbo.[tm_graphique] WHERE [Date_Heure_Mesure] > DATEADD(HOUR, 48, GETDATE());
+  DELETE FROM dbo.[tm_mesures] WHERE [Date_Heure_Mesure] > DATEADD(HOUR, 48, GETDATE());
+  DELETE FROM dbo.[tm_mesures_gso] WHERE [date_mesure] < DATEADD(HOUR, -720, GETDATE());
+  DELETE FROM dbo.[tm_mesures_gso_build] WHERE [Date_Heure_Mesure] < DATEADD(HOUR, -720, GETDATE());
+  DELETE FROM dbo.[tm_mesures_gso_commandes_mem] WHERE [Date_Calcul] < DATEADD(HOUR, -24, GETDATE());
+  DELETE FROM dbo.[tm_mesures] WHERE [Id_Lieu] = 0;
+  DELETE FROM dbo.[tm_graphique] WHERE [Id_Lieu] = 0;
+  DELETE FROM dbo.[tm_mesures_ajustage] WHERE [Date_Heure_Mesure] < DATEADD(HOUR, -24, GETDATE());
+  DELETE FROM dbo.[tm_mesures_ajustage_etalon] WHERE [Date_Heure_Mesure] < DATEADD(HOUR, -24, GETDATE());
+  DELETE FROM dbo.[tm_mesures_etalonnage] WHERE [Date_Heure_Mesure] < DATEADD(HOUR, -24, GETDATE());
+  DELETE FROM dbo.[tm_mesures_gso_read_metro] WHERE [Dernier_Date_MAJ] < DATEADD(HOUR, -2, GETDATE());
+END;
+GO
+
+-- =====================================================================
+-- Triggers GSO convertis depuis db/triggersvigisensys.sql
+-- =====================================================================
+USE [vigi_main];
+GO
+
+CREATE OR ALTER TRIGGER dbo.[TRG_GSO_BEF_DEL_ALARME]
+ON dbo.[t_alarme]
+AFTER DELETE
+AS
+BEGIN
+  SET NOCOUNT ON;
+
+  INSERT INTO dbo.[t_alarme_histo]
+  ([Id_Alarme],[Date_Heure_Debut],[Valeur],[Type],[Date_Heure_Fin],[Id_Lieu],[Sonde_Numero_Serie],[Unite],[Est_Acquittee],[Date_Heure_Derniere_Mesure],[Est_Alarme_Pour_VigiTel],[Est_Mail_Envoye],[Est_Tel_Acquittee],[Date_Heure_Acquittement])
+  SELECT
+    d.[Id_Alarme],
+    d.[Date_Heure_Debut],
+    d.[Valeur],
+    d.[Type],
+    d.[Date_Heure_Fin],
+    d.[Id_Lieu],
+    d.[Sonde_Numero_Serie],
+    d.[Unite],
+    d.[Est_Acquittee],
+    d.[Date_Heure_Derniere_Mesure],
+    d.[Est_Alarme_Pour_VigiTel],
+    d.[Est_Mail_Envoye],
+    d.[Est_Tel_Acquittee],
+    GETDATE()
+  FROM deleted d;
+END;
+GO
+
+CREATE OR ALTER TRIGGER dbo.[TRG_GSO_BEF_UPD_LIEU_ALARME]
+ON dbo.[t_lieu]
+AFTER UPDATE
+AS
+BEGIN
+  SET NOCOUNT ON;
+
+  IF TRY_CAST(SESSION_CONTEXT(N'SKIP_LIEU_ALARM_LOGIC') AS bit) = 1
+    RETURN;
+
+  IF TRIGGER_NESTLEVEL() > 1
+    RETURN;
+
+  DECLARE
+    @Id_Lieu INT,
+    @Est_Lieu_GSO BIT,
+    @Lieu_Etat VARCHAR(1),
+    @Date_Heure_Dernier_Acquittement_En_Cours DATETIME,
+    @Derniere_Date_Heure DATETIME,
+    @Date_Heure_Derniere_Reponse DATETIME,
+    @Retard_Non_Reponse INT,
+    @Derniere_Valeur FLOAT,
+    @Tolerance_Surveillance_Inf FLOAT,
+    @Tolerance_Surveillance_Sup FLOAT,
+    @Retard_Alarme_Bas INT,
+    @Retard_Alarme_Haut INT,
+    @Sonde_Numero_Serie VARCHAR(50),
+    @Date_Heure_Last_Update_EVT_GSO DATETIME,
+    @Derniere_Unite VARCHAR(10),
+    @Date_Heure_Derniere_Reponse_Recue_OK DATETIME,
+    @Id_Alarme INT,
+    @Est_Lieu_En_Alarme BIT,
+    @Est_Lieu_En_Pre_Alarme BIT,
+    @Est_Lieu_Alarme_Terminee_Non_Acquittee BIT,
+    @Est_Lieu_Alarme_Terminee_Non_Acquittee_T1 BIT,
+    @Est_Consigne_Inf_Pre_Alarme_Active BIT,
+    @Consigne_Inf_Pre_Alarme FLOAT,
+    @Est_Consigne_Sup_Pre_Alarme_Active BIT,
+    @Consigne_Sup_Pre_Alarme FLOAT,
+    @v_Id_Alarme INT,
+    @v_TypeAlarme VARCHAR(1),
+    @New_Id_Alarme INT,
+    @New_Derniere_Valeur FLOAT,
+    @New_Derniere_Date_Heure DATETIME,
+    @New_Est_Lieu_En_Alarme BIT,
+    @New_Est_Lieu_En_Pre_Alarme BIT,
+    @New_Est_Lieu_Alarme_Terminee_Non_Acquittee BIT,
+    @New_Est_Lieu_Alarme_Terminee_Non_Acquittee_T1 BIT,
+    @ApplyUpdate BIT;
+
+  DECLARE cur CURSOR LOCAL FAST_FORWARD FOR
+    SELECT
+      i.[Id_Lieu],
+      ISNULL(i.[Est_Lieu_GSO], 0),
+      i.[Lieu_Etat],
+      i.[Date_Heure_Dernier_Acquittement_En_Cours],
+      i.[Derniere_Date_Heure],
+      i.[Date_Heure_Derniere_Reponse],
+      ISNULL(i.[Retard_Non_Reponse], 0),
+      i.[Derniere_Valeur],
+      i.[Tolerance_Surveillance_Inf],
+      i.[Tolerance_Surveillance_Sup],
+      ISNULL(i.[Retard_Alarme_Bas], 0),
+      ISNULL(i.[Retard_Alarme_Haut], 0),
+      i.[Sonde_Numero_Serie],
+      i.[Date_Heure_Last_Update_EVT_GSO],
+      i.[Derniere_Unite],
+      i.[Date_Heure_Derniere_Reponse_Recue_OK],
+      ISNULL(i.[Id_Alarme], 0),
+      ISNULL(i.[Est_Lieu_En_Alarme], 0),
+      ISNULL(i.[Est_Lieu_En_Pre_Alarme], 0),
+      ISNULL(i.[Est_Lieu_Alarme_Terminee_Non_Acquittee], 0),
+      ISNULL(i.[Est_Lieu_Alarme_Terminee_Non_Acquittee_T1], 0),
+      ISNULL(i.[Est_Consigne_Inf_Pre_Alarme_Active], 0),
+      i.[Consigne_Inf_Pre_Alarme],
+      ISNULL(i.[Est_Consigne_Sup_Pre_Alarme_Active], 0),
+      i.[Consigne_Sup_Pre_Alarme]
+    FROM inserted i;
+
+  OPEN cur;
+  FETCH NEXT FROM cur INTO
+    @Id_Lieu,@Est_Lieu_GSO,@Lieu_Etat,@Date_Heure_Dernier_Acquittement_En_Cours,@Derniere_Date_Heure,@Date_Heure_Derniere_Reponse,@Retard_Non_Reponse,
+    @Derniere_Valeur,@Tolerance_Surveillance_Inf,@Tolerance_Surveillance_Sup,@Retard_Alarme_Bas,@Retard_Alarme_Haut,@Sonde_Numero_Serie,
+    @Date_Heure_Last_Update_EVT_GSO,@Derniere_Unite,@Date_Heure_Derniere_Reponse_Recue_OK,@Id_Alarme,@Est_Lieu_En_Alarme,@Est_Lieu_En_Pre_Alarme,
+    @Est_Lieu_Alarme_Terminee_Non_Acquittee,@Est_Lieu_Alarme_Terminee_Non_Acquittee_T1,@Est_Consigne_Inf_Pre_Alarme_Active,@Consigne_Inf_Pre_Alarme,
+    @Est_Consigne_Sup_Pre_Alarme_Active,@Consigne_Sup_Pre_Alarme;
+
+  WHILE @@FETCH_STATUS = 0
+  BEGIN
+    IF @Est_Lieu_GSO = 1
+    BEGIN
+      SET @v_Id_Alarme = NULL;
+      SET @v_TypeAlarme = NULL;
+      SET @New_Id_Alarme = @Id_Alarme;
+      SET @New_Derniere_Valeur = @Derniere_Valeur;
+      SET @New_Derniere_Date_Heure = @Derniere_Date_Heure;
+      SET @New_Est_Lieu_En_Alarme = @Est_Lieu_En_Alarme;
+      SET @New_Est_Lieu_En_Pre_Alarme = @Est_Lieu_En_Pre_Alarme;
+      SET @New_Est_Lieu_Alarme_Terminee_Non_Acquittee = @Est_Lieu_Alarme_Terminee_Non_Acquittee;
+      SET @New_Est_Lieu_Alarme_Terminee_Non_Acquittee_T1 = @Est_Lieu_Alarme_Terminee_Non_Acquittee_T1;
+      SET @ApplyUpdate = 0;
+
+      IF @Date_Heure_Dernier_Acquittement_En_Cours IS NOT NULL
+         AND @Derniere_Date_Heure <= @Date_Heure_Dernier_Acquittement_En_Cours
+         AND DATEDIFF(SECOND, @Date_Heure_Derniere_Reponse, GETDATE()) <= @Retard_Non_Reponse * 60
+      BEGIN
+        SET @New_Id_Alarme = 0;
+        SET @New_Est_Lieu_En_Alarme = 0;
+        SET @New_Est_Lieu_Alarme_Terminee_Non_Acquittee = 0;
+        SET @ApplyUpdate = 1;
+      END
+      ELSE
+      BEGIN
+        SELECT TOP 1 @v_Id_Alarme = [Id_Alarme], @v_TypeAlarme = [Type]
+        FROM dbo.[t_alarme]
+        WHERE [Id_Lieu] = @Id_Lieu
+          AND [Type] IN ('B','H','N')
+          AND [Date_Heure_Fin] IS NULL;
+
+        IF @v_Id_Alarme IS NULL
+        BEGIN
+          IF @Lieu_Etat = 'S'
+             AND DATEDIFF(SECOND, @Date_Heure_Derniere_Reponse, GETDATE()) <= @Retard_Non_Reponse * 60
+             AND @Derniere_Valeur < @Tolerance_Surveillance_Inf
+             AND DATEDIFF(SECOND, @Date_Heure_Derniere_Reponse_Recue_OK, @Derniere_Date_Heure) >= @Retard_Alarme_Bas * 60
+          BEGIN
+            INSERT INTO dbo.[t_alarme]([Date_Heure_Debut],[Valeur],[Type],[Id_Lieu],[Sonde_Numero_Serie],[Date_Heure_Derniere_Mesure],[Unite])
+            VALUES(@Date_Heure_Derniere_Reponse_Recue_OK,@Derniere_Valeur,'B',@Id_Lieu,@Sonde_Numero_Serie,@Derniere_Date_Heure,@Derniere_Unite);
+            SET @New_Id_Alarme = CONVERT(INT, SCOPE_IDENTITY());
+            SET @New_Est_Lieu_En_Alarme = 1;
+            SET @New_Est_Lieu_En_Pre_Alarme = 0;
+            SET @New_Est_Lieu_Alarme_Terminee_Non_Acquittee = 0;
+            SET @New_Est_Lieu_Alarme_Terminee_Non_Acquittee_T1 = 0;
+            SET @ApplyUpdate = 1;
+          END
+          ELSE IF @Lieu_Etat = 'S'
+             AND DATEDIFF(SECOND, @Date_Heure_Derniere_Reponse, GETDATE()) <= @Retard_Non_Reponse * 60
+             AND @Derniere_Valeur > @Tolerance_Surveillance_Sup
+             AND DATEDIFF(SECOND, @Date_Heure_Derniere_Reponse_Recue_OK, @Derniere_Date_Heure) >= @Retard_Alarme_Haut * 60
+          BEGIN
+            INSERT INTO dbo.[t_alarme]([Date_Heure_Debut],[Valeur],[Type],[Id_Lieu],[Sonde_Numero_Serie],[Date_Heure_Derniere_Mesure],[Unite])
+            VALUES(@Date_Heure_Derniere_Reponse_Recue_OK,@Derniere_Valeur,'H',@Id_Lieu,@Sonde_Numero_Serie,@Derniere_Date_Heure,@Derniere_Unite);
+            SET @New_Id_Alarme = CONVERT(INT, SCOPE_IDENTITY());
+            SET @New_Est_Lieu_En_Alarme = 1;
+            SET @New_Est_Lieu_En_Pre_Alarme = 0;
+            SET @New_Est_Lieu_Alarme_Terminee_Non_Acquittee = 0;
+            SET @New_Est_Lieu_Alarme_Terminee_Non_Acquittee_T1 = 0;
+            SET @ApplyUpdate = 1;
+          END
+          ELSE IF @Lieu_Etat = 'S'
+             AND DATEDIFF(SECOND, @Date_Heure_Derniere_Reponse, GETDATE()) >= @Retard_Non_Reponse * 60
+          BEGIN
+            INSERT INTO dbo.[t_alarme]([Date_Heure_Debut],[Valeur],[Type],[Id_Lieu],[Sonde_Numero_Serie],[Date_Heure_Derniere_Mesure],[Unite])
+            VALUES(@Date_Heure_Derniere_Reponse,NULL,'N',@Id_Lieu,@Sonde_Numero_Serie,@Date_Heure_Last_Update_EVT_GSO,@Derniere_Unite);
+            SET @New_Id_Alarme = CONVERT(INT, SCOPE_IDENTITY());
+            SET @New_Derniere_Valeur = NULL;
+            SET @New_Derniere_Date_Heure = @Date_Heure_Last_Update_EVT_GSO;
+            SET @New_Est_Lieu_En_Alarme = 1;
+            SET @New_Est_Lieu_En_Pre_Alarme = 0;
+            SET @New_Est_Lieu_Alarme_Terminee_Non_Acquittee = 0;
+            SET @New_Est_Lieu_Alarme_Terminee_Non_Acquittee_T1 = 0;
+            SET @ApplyUpdate = 1;
+          END
+        END
+        ELSE
+        BEGIN
+          IF @v_TypeAlarme = 'N'
+             AND @Lieu_Etat = 'S'
+             AND DATEDIFF(SECOND, @Date_Heure_Derniere_Reponse, GETDATE()) <= @Retard_Non_Reponse * 60
+             AND @Derniere_Valeur < @Tolerance_Surveillance_Inf
+          BEGIN
+            UPDATE dbo.[t_alarme] SET [Date_Heure_Fin] = @Derniere_Date_Heure, [Valeur] = @Derniere_Valeur, [Date_Heure_Derniere_Mesure] = @Derniere_Date_Heure WHERE [Id_Alarme] = @v_Id_Alarme;
+            INSERT INTO dbo.[t_alarme]([Date_Heure_Debut],[Valeur],[Type],[Id_Lieu],[Sonde_Numero_Serie],[Date_Heure_Derniere_Mesure],[Unite])
+            VALUES(@Derniere_Date_Heure,@Derniere_Valeur,'B',@Id_Lieu,@Sonde_Numero_Serie,@Derniere_Date_Heure,@Derniere_Unite);
+            SET @New_Id_Alarme = CONVERT(INT, SCOPE_IDENTITY()); SET @New_Est_Lieu_En_Alarme = 1; SET @New_Est_Lieu_En_Pre_Alarme = 0; SET @New_Est_Lieu_Alarme_Terminee_Non_Acquittee = 0; SET @New_Est_Lieu_Alarme_Terminee_Non_Acquittee_T1 = 0; SET @ApplyUpdate = 1;
+          END
+          ELSE IF @v_TypeAlarme = 'N'
+             AND @Lieu_Etat = 'S'
+             AND DATEDIFF(SECOND, @Date_Heure_Derniere_Reponse, GETDATE()) <= @Retard_Non_Reponse * 60
+             AND @Derniere_Valeur > @Tolerance_Surveillance_Sup
+          BEGIN
+            UPDATE dbo.[t_alarme] SET [Date_Heure_Fin] = @Derniere_Date_Heure, [Valeur] = @Derniere_Valeur, [Date_Heure_Derniere_Mesure] = @Derniere_Date_Heure WHERE [Id_Alarme] = @v_Id_Alarme;
+            INSERT INTO dbo.[t_alarme]([Date_Heure_Debut],[Valeur],[Type],[Id_Lieu],[Sonde_Numero_Serie],[Date_Heure_Derniere_Mesure],[Unite])
+            VALUES(@Derniere_Date_Heure,@Derniere_Valeur,'H',@Id_Lieu,@Sonde_Numero_Serie,@Derniere_Date_Heure,@Derniere_Unite);
+            SET @New_Id_Alarme = CONVERT(INT, SCOPE_IDENTITY()); SET @New_Est_Lieu_En_Alarme = 1; SET @New_Est_Lieu_En_Pre_Alarme = 0; SET @New_Est_Lieu_Alarme_Terminee_Non_Acquittee = 0; SET @New_Est_Lieu_Alarme_Terminee_Non_Acquittee_T1 = 0; SET @ApplyUpdate = 1;
+          END
+          ELSE IF @v_TypeAlarme = 'B'
+             AND @Lieu_Etat = 'S'
+             AND DATEDIFF(SECOND, @Date_Heure_Derniere_Reponse, GETDATE()) >= @Retard_Non_Reponse * 60
+          BEGIN
+            UPDATE dbo.[t_alarme] SET [Date_Heure_Fin] = @Derniere_Date_Heure, [Valeur] = @Derniere_Valeur, [Date_Heure_Derniere_Mesure] = @Derniere_Date_Heure WHERE [Id_Alarme] = @v_Id_Alarme;
+            INSERT INTO dbo.[t_alarme]([Date_Heure_Debut],[Valeur],[Type],[Id_Lieu],[Sonde_Numero_Serie],[Date_Heure_Derniere_Mesure],[Unite])
+            VALUES(@Date_Heure_Derniere_Reponse,NULL,'N',@Id_Lieu,@Sonde_Numero_Serie,@Date_Heure_Last_Update_EVT_GSO,@Derniere_Unite);
+            SET @New_Id_Alarme = CONVERT(INT, SCOPE_IDENTITY()); SET @New_Derniere_Valeur = NULL; SET @New_Derniere_Date_Heure = @Date_Heure_Last_Update_EVT_GSO; SET @New_Est_Lieu_En_Alarme = 1; SET @New_Est_Lieu_En_Pre_Alarme = 0; SET @New_Est_Lieu_Alarme_Terminee_Non_Acquittee = 0; SET @New_Est_Lieu_Alarme_Terminee_Non_Acquittee_T1 = 0; SET @ApplyUpdate = 1;
+          END
+          ELSE IF @v_TypeAlarme = 'H'
+             AND @Lieu_Etat = 'S'
+             AND DATEDIFF(SECOND, @Date_Heure_Derniere_Reponse, GETDATE()) >= @Retard_Non_Reponse * 60
+          BEGIN
+            UPDATE dbo.[t_alarme] SET [Date_Heure_Fin] = @Derniere_Date_Heure, [Valeur] = @Derniere_Valeur, [Date_Heure_Derniere_Mesure] = @Derniere_Date_Heure WHERE [Id_Alarme] = @v_Id_Alarme;
+            INSERT INTO dbo.[t_alarme]([Date_Heure_Debut],[Valeur],[Type],[Id_Lieu],[Sonde_Numero_Serie],[Date_Heure_Derniere_Mesure],[Unite])
+            VALUES(@Date_Heure_Derniere_Reponse,NULL,'N',@Id_Lieu,@Sonde_Numero_Serie,@Date_Heure_Last_Update_EVT_GSO,@Derniere_Unite);
+            SET @New_Id_Alarme = CONVERT(INT, SCOPE_IDENTITY()); SET @New_Derniere_Valeur = NULL; SET @New_Derniere_Date_Heure = @Date_Heure_Last_Update_EVT_GSO; SET @New_Est_Lieu_En_Alarme = 1; SET @New_Est_Lieu_En_Pre_Alarme = 0; SET @New_Est_Lieu_Alarme_Terminee_Non_Acquittee = 0; SET @New_Est_Lieu_Alarme_Terminee_Non_Acquittee_T1 = 0; SET @ApplyUpdate = 1;
+          END
+          ELSE IF @v_TypeAlarme = 'B'
+             AND @Lieu_Etat = 'S'
+             AND @Derniere_Valeur > @Tolerance_Surveillance_Sup
+          BEGIN
+            UPDATE dbo.[t_alarme] SET [Date_Heure_Fin] = @Derniere_Date_Heure, [Valeur] = @Derniere_Valeur, [Date_Heure_Derniere_Mesure] = @Derniere_Date_Heure WHERE [Id_Alarme] = @v_Id_Alarme;
+            INSERT INTO dbo.[t_alarme]([Date_Heure_Debut],[Valeur],[Type],[Id_Lieu],[Sonde_Numero_Serie],[Date_Heure_Derniere_Mesure],[Unite])
+            VALUES(@Derniere_Date_Heure,@Derniere_Valeur,'H',@Id_Lieu,@Sonde_Numero_Serie,@Derniere_Date_Heure,@Derniere_Unite);
+            SET @New_Id_Alarme = CONVERT(INT, SCOPE_IDENTITY()); SET @New_Est_Lieu_En_Alarme = 1; SET @New_Est_Lieu_En_Pre_Alarme = 0; SET @New_Est_Lieu_Alarme_Terminee_Non_Acquittee = 0; SET @New_Est_Lieu_Alarme_Terminee_Non_Acquittee_T1 = 0; SET @ApplyUpdate = 1;
+          END
+          ELSE IF @v_TypeAlarme = 'H'
+             AND @Lieu_Etat = 'S'
+             AND @Derniere_Valeur < @Tolerance_Surveillance_Inf
+          BEGIN
+            UPDATE dbo.[t_alarme] SET [Date_Heure_Fin] = @Derniere_Date_Heure, [Valeur] = @Derniere_Valeur, [Date_Heure_Derniere_Mesure] = @Derniere_Date_Heure WHERE [Id_Alarme] = @v_Id_Alarme;
+            INSERT INTO dbo.[t_alarme]([Date_Heure_Debut],[Valeur],[Type],[Id_Lieu],[Sonde_Numero_Serie],[Date_Heure_Derniere_Mesure],[Unite])
+            VALUES(@Derniere_Date_Heure,@Derniere_Valeur,'B',@Id_Lieu,@Sonde_Numero_Serie,@Derniere_Date_Heure,@Derniere_Unite);
+            SET @New_Id_Alarme = CONVERT(INT, SCOPE_IDENTITY()); SET @New_Est_Lieu_En_Alarme = 1; SET @New_Est_Lieu_En_Pre_Alarme = 0; SET @New_Est_Lieu_Alarme_Terminee_Non_Acquittee = 0; SET @New_Est_Lieu_Alarme_Terminee_Non_Acquittee_T1 = 0; SET @ApplyUpdate = 1;
+          END
+          ELSE IF @v_TypeAlarme = 'N'
+             AND DATEDIFF(SECOND, @Date_Heure_Derniere_Reponse, GETDATE()) > @Retard_Non_Reponse * 60
+          BEGIN
+            UPDATE dbo.[t_alarme] SET [Valeur] = NULL, [Date_Heure_Derniere_Mesure] = @Date_Heure_Last_Update_EVT_GSO WHERE [Id_Alarme] = @v_Id_Alarme;
+            SET @New_Id_Alarme = @v_Id_Alarme; SET @New_Derniere_Valeur = NULL; SET @New_Derniere_Date_Heure = @Date_Heure_Last_Update_EVT_GSO; SET @New_Est_Lieu_En_Alarme = 1; SET @New_Est_Lieu_En_Pre_Alarme = 0; SET @New_Est_Lieu_Alarme_Terminee_Non_Acquittee = 0; SET @New_Est_Lieu_Alarme_Terminee_Non_Acquittee_T1 = 0; SET @ApplyUpdate = 1;
+          END
+          ELSE IF @v_TypeAlarme IN ('B','H')
+             AND (@Derniere_Valeur < @Tolerance_Surveillance_Inf OR @Derniere_Valeur > @Tolerance_Surveillance_Sup)
+          BEGIN
+            UPDATE dbo.[t_alarme] SET [Valeur] = @Derniere_Valeur, [Date_Heure_Derniere_Mesure] = @Derniere_Date_Heure WHERE [Id_Alarme] = @v_Id_Alarme;
+            SET @New_Id_Alarme = @v_Id_Alarme; SET @New_Est_Lieu_En_Alarme = 1; SET @New_Est_Lieu_En_Pre_Alarme = 0; SET @New_Est_Lieu_Alarme_Terminee_Non_Acquittee = 0; SET @New_Est_Lieu_Alarme_Terminee_Non_Acquittee_T1 = 0; SET @ApplyUpdate = 1;
+          END
+          ELSE IF @v_TypeAlarme = 'N'
+             AND DATEDIFF(SECOND, @Date_Heure_Derniere_Reponse, GETDATE()) < @Retard_Non_Reponse * 60
+          BEGIN
+            UPDATE dbo.[t_alarme] SET [Date_Heure_Fin] = @Derniere_Date_Heure, [Date_Heure_Derniere_Mesure] = @Derniere_Date_Heure WHERE [Id_Alarme] = @v_Id_Alarme;
+            SET @New_Id_Alarme = 0; SET @New_Est_Lieu_En_Alarme = 0; SET @New_Est_Lieu_Alarme_Terminee_Non_Acquittee = 1; SET @New_Est_Lieu_Alarme_Terminee_Non_Acquittee_T1 = 0; SET @ApplyUpdate = 1;
+          END
+          ELSE IF @v_TypeAlarme IN ('B','H')
+          BEGIN
+            UPDATE dbo.[t_alarme] SET [Date_Heure_Fin] = @Derniere_Date_Heure, [Valeur] = @Derniere_Valeur, [Date_Heure_Derniere_Mesure] = @Derniere_Date_Heure WHERE [Id_Alarme] = @v_Id_Alarme;
+            SET @New_Id_Alarme = 0; SET @New_Est_Lieu_En_Alarme = 0; SET @New_Est_Lieu_Alarme_Terminee_Non_Acquittee = 1; SET @New_Est_Lieu_Alarme_Terminee_Non_Acquittee_T1 = 0; SET @ApplyUpdate = 1;
+          END
+        END
+
+        IF @New_Est_Lieu_En_Alarme = 0
+        BEGIN
+          IF @Est_Consigne_Inf_Pre_Alarme_Active = 1
+          BEGIN
+            IF @Derniere_Valeur < @Consigne_Inf_Pre_Alarme AND @New_Est_Lieu_Alarme_Terminee_Non_Acquittee = 1
+            BEGIN
+              SET @New_Est_Lieu_Alarme_Terminee_Non_Acquittee = 0;
+              SET @New_Est_Lieu_En_Pre_Alarme = 1;
+              SET @New_Est_Lieu_Alarme_Terminee_Non_Acquittee_T1 = 1;
+              SET @ApplyUpdate = 1;
+            END
+            ELSE IF @Derniere_Valeur < @Consigne_Inf_Pre_Alarme
+            BEGIN
+              SET @New_Est_Lieu_En_Pre_Alarme = 1;
+              SET @ApplyUpdate = 1;
+            END
+            ELSE IF @Derniere_Valeur >= @Consigne_Inf_Pre_Alarme AND @New_Est_Lieu_Alarme_Terminee_Non_Acquittee_T1 = 1
+            BEGIN
+              SET @New_Est_Lieu_En_Pre_Alarme = 0;
+              SET @New_Est_Lieu_Alarme_Terminee_Non_Acquittee = 1;
+              SET @New_Est_Lieu_Alarme_Terminee_Non_Acquittee_T1 = 0;
+              SET @ApplyUpdate = 1;
+            END
+            ELSE IF @Derniere_Valeur >= @Consigne_Inf_Pre_Alarme AND @New_Est_Lieu_Alarme_Terminee_Non_Acquittee_T1 = 0
+            BEGIN
+              SET @New_Est_Lieu_En_Pre_Alarme = 0;
+              SET @ApplyUpdate = 1;
+            END
+          END
+
+          IF @Est_Consigne_Sup_Pre_Alarme_Active = 1
+          BEGIN
+            IF @Derniere_Valeur > @Consigne_Sup_Pre_Alarme AND @New_Est_Lieu_Alarme_Terminee_Non_Acquittee = 1
+            BEGIN
+              SET @New_Est_Lieu_Alarme_Terminee_Non_Acquittee = 0;
+              SET @New_Est_Lieu_En_Pre_Alarme = 1;
+              SET @New_Est_Lieu_Alarme_Terminee_Non_Acquittee_T1 = 1;
+              SET @ApplyUpdate = 1;
+            END
+            ELSE IF @Derniere_Valeur > @Consigne_Sup_Pre_Alarme
+            BEGIN
+              SET @New_Est_Lieu_En_Pre_Alarme = 1;
+              SET @ApplyUpdate = 1;
+            END
+            ELSE IF @Derniere_Valeur <= @Consigne_Sup_Pre_Alarme AND @New_Est_Lieu_Alarme_Terminee_Non_Acquittee_T1 = 1
+            BEGIN
+              SET @New_Est_Lieu_En_Pre_Alarme = 0;
+              SET @New_Est_Lieu_Alarme_Terminee_Non_Acquittee = 1;
+              SET @New_Est_Lieu_Alarme_Terminee_Non_Acquittee_T1 = 0;
+              SET @ApplyUpdate = 1;
+            END
+            ELSE IF @Derniere_Valeur <= @Consigne_Sup_Pre_Alarme AND @New_Est_Lieu_Alarme_Terminee_Non_Acquittee_T1 = 0
+            BEGIN
+              SET @New_Est_Lieu_En_Pre_Alarme = 0;
+              SET @ApplyUpdate = 1;
+            END
+          END
+        END
+      END
+
+      IF @ApplyUpdate = 1
+      BEGIN
+        EXEC sp_set_session_context @key = N'SKIP_LIEU_ALARM_LOGIC', @value = 1;
+        UPDATE dbo.[t_lieu]
+        SET [Id_Alarme] = @New_Id_Alarme,
+            [Derniere_Valeur] = @New_Derniere_Valeur,
+            [Derniere_Date_Heure] = @New_Derniere_Date_Heure,
+            [Est_Lieu_En_Alarme] = @New_Est_Lieu_En_Alarme,
+            [Est_Lieu_En_Pre_Alarme] = @New_Est_Lieu_En_Pre_Alarme,
+            [Est_Lieu_Alarme_Terminee_Non_Acquittee] = @New_Est_Lieu_Alarme_Terminee_Non_Acquittee,
+            [Est_Lieu_Alarme_Terminee_Non_Acquittee_T1] = @New_Est_Lieu_Alarme_Terminee_Non_Acquittee_T1
+        WHERE [Id_Lieu] = @Id_Lieu;
+        EXEC sp_set_session_context @key = N'SKIP_LIEU_ALARM_LOGIC', @value = NULL;
+      END
+    END
+
+    FETCH NEXT FROM cur INTO
+      @Id_Lieu,@Est_Lieu_GSO,@Lieu_Etat,@Date_Heure_Dernier_Acquittement_En_Cours,@Derniere_Date_Heure,@Date_Heure_Derniere_Reponse,@Retard_Non_Reponse,
+      @Derniere_Valeur,@Tolerance_Surveillance_Inf,@Tolerance_Surveillance_Sup,@Retard_Alarme_Bas,@Retard_Alarme_Haut,@Sonde_Numero_Serie,
+      @Date_Heure_Last_Update_EVT_GSO,@Derniere_Unite,@Date_Heure_Derniere_Reponse_Recue_OK,@Id_Alarme,@Est_Lieu_En_Alarme,@Est_Lieu_En_Pre_Alarme,
+      @Est_Lieu_Alarme_Terminee_Non_Acquittee,@Est_Lieu_Alarme_Terminee_Non_Acquittee_T1,@Est_Consigne_Inf_Pre_Alarme_Active,@Consigne_Inf_Pre_Alarme,
+      @Est_Consigne_Sup_Pre_Alarme_Active,@Consigne_Sup_Pre_Alarme;
+  END
+
+  CLOSE cur;
+  DEALLOCATE cur;
+END;
+GO
+
+USE [vigi_mesures];
+GO
+
+CREATE OR ALTER TRIGGER dbo.[TRG_AFT_INS_GSO_CMD_MEM]
+ON dbo.[tm_mesures_gso_commandes_mem]
+AFTER INSERT
+AS
+BEGIN
+  SET NOCOUNT ON;
+
+  UPDATE c
+  SET [Port_Serie_Send_GSO] = v.[Port_Serie_Send_GSO]
+  FROM dbo.[tm_mesures_gso_commandes_mem] c
+  JOIN inserted i
+    ON i.[GSO_SN] = c.[GSO_SN]
+   AND i.[Commande_Globale_Begin] = c.[Commande_Globale_Begin]
+   AND i.[Commande_Globale_End] = c.[Commande_Globale_End]
+  JOIN dbo.[v_config_sonde_com] v
+    ON v.[GSO_SN] = i.[GSO_SN]
+  WHERE c.[Port_Serie_Send_GSO] IS NULL;
+END;
+GO
+
+CREATE OR ALTER TRIGGER dbo.[TRG_AFT_INS_GSO_READ_MEM]
+ON dbo.[tm_mesures_gso_read_mem]
+AFTER INSERT
+AS
+BEGIN
+  SET NOCOUNT ON;
+
+  INSERT INTO dbo.[tm_mesures_gso_read_metro] ([GSO_SN], [Commande_metro], [Commande_metro_envoyee], [Dernier_Date_MAJ])
+  SELECT i.[GSO_SN], i.[Ecart], 1, i.[Date_Heure_Read_Mem]
+  FROM inserted i
+  WHERE i.[Ecart] = '0-1'
+    AND EXISTS (SELECT 1 FROM dbo.[v_config_sonde_com] v WHERE v.[GSO_SN] = i.[GSO_SN] AND v.[Metrologie_en_cours] = 1)
+    AND NOT EXISTS (
+      SELECT 1 FROM dbo.[tm_mesures_gso_read_metro] x WHERE x.[GSO_SN] = i.[GSO_SN] AND x.[Commande_metro] = i.[Ecart]
+    );
+END;
+GO
+
+CREATE OR ALTER TRIGGER dbo.[TRG_AFT_INS_MES_GSO]
+ON dbo.[tm_mesures_gso]
+AFTER INSERT
+AS
+BEGIN
+  SET NOCOUNT ON;
+
+  INSERT INTO dbo.[tm_mesures_gso_build]
+  ([Date_Heure_Mesure],[Valeur_Brute],[Unite],[Adresse_Sonde],[Rssi],[Tension],[COM_sonde],[Id_Lieu],[Est_Valeur_Memoire],[Planning_Actif],[Planning_Regle_Existe])
+  SELECT
+    i.[date_mesure],
+    i.[tep],
+    i.[unite],
+    i.[id_capteur],
+    i.[rssi],
+    i.[tension],
+    i.[COM_sonde],
+    v.[Id_Lieu],
+    CASE WHEN i.[date_mesure] <= DATEADD(MINUTE, -45, GETDATE()) THEN 1 ELSE 0 END,
+    v.[Planning_Actif],
+    v.[Planning_Regle_Existe]
+  FROM inserted i
+  JOIN dbo.[v_config_lieu_sonde] v ON v.[Adresse_Sonde] = i.[id_capteur]
+  WHERE i.[trame] IN (0x0000000000000000, 0x0000000000000001)
+    AND i.[date_mesure] >= DATEADD(HOUR, -175, GETDATE());
+
+  INSERT INTO dbo.[tm_mesures_ajustage] ([Date_Heure_Mesure],[Valeur_Brute],[Unite],[Adresse_Sonde])
+  SELECT i.[date_mesure], i.[tep], i.[unite], i.[id_capteur]
+  FROM inserted i
+  WHERE EXISTS (SELECT 1 FROM dbo.[v_config_sonde_com] v WHERE v.[Adresse_Sonde] = i.[id_capteur])
+    AND i.[trame] = 0x0000000000000010
+    AND i.[date_mesure] >= DATEADD(HOUR, -2, GETDATE());
+
+  INSERT INTO dbo.[tm_mesures_etalonnage] ([Valeur],[Date_Heure_Mesure],[Valeur_Brute],[Unite],[Adresse_Sonde])
+  SELECT
+    ROUND((i.[tep] * v.[coeff_a]) + v.[coeff_b], 2),
+    i.[date_mesure],
+    i.[tep],
+    i.[unite],
+    i.[id_capteur]
+  FROM inserted i
+  JOIN dbo.[v_config_sonde_com] v ON v.[Adresse_Sonde] = i.[id_capteur]
+  WHERE i.[trame] = 0x0000000000000010
+    AND i.[date_mesure] >= DATEADD(HOUR, -2, GETDATE());
+
+  UPDATE m
+  SET [Metro_en_cours] = 1,
+      [Dernier_Date_MAJ] = i.[date_mesure]
+  FROM dbo.[tm_mesures_gso_read_metro] m
+  JOIN inserted i
+    ON m.[GSO_SN] = CASE WHEN LEN(i.[id_capteur]) > 2 THEN LEFT(i.[id_capteur], LEN(i.[id_capteur]) - 2) ELSE i.[id_capteur] END
+  WHERE i.[trame] = 0x0000000000000010
+    AND i.[date_mesure] >= DATEADD(HOUR, -2, GETDATE());
+END;
+GO
+
+CREATE OR ALTER TRIGGER dbo.[TRG_AFT_INS_MES_GSO_BUILD]
+ON dbo.[tm_mesures_gso_build]
+AFTER INSERT
+AS
+BEGIN
+  SET NOCOUNT ON;
+
+  ;WITH src AS (
+    SELECT
+      i.[Date_Heure_Mesure],
+      i.[Valeur_Brute],
+      i.[Unite],
+      i.[Adresse_Sonde],
+      i.[COM_sonde],
+      i.[Id_Lieu],
+      i.[Rssi],
+      i.[Tension],
+      i.[Est_Valeur_Memoire],
+      i.[Planning_Actif],
+      i.[Planning_Regle_Existe],
+      v.[Sonde_Numero_Serie],
+      v.[Consigne],
+      v.[Consigne_Sup_Corr],
+      v.[Consigne_Inf_Corr],
+      v.[Consigne_Sup_Pre_Alarme],
+      v.[Consigne_Inf_Pre_Alarme],
+      v.[Consigne_Base],
+      v.[Tolerance_Surveillance_Sup_Base],
+      v.[Tolerance_Surveillance_Inf_Base],
+      v.[coeff_a],
+      v.[coeff_b],
+      v.[Sonde_Offset],
+      v.[-(EJ)] AS [NegEJ],
+      p.[Consigne_Apres],
+      p.[Tolerance_Surveillance_Sup_Apres],
+      p.[Tolerance_Surveillance_Inf_Apres],
+      ROUND((i.[Valeur_Brute] * v.[coeff_a]) + v.[coeff_b] + ISNULL(v.[Sonde_Offset], 0) + ISNULL(v.[-(EJ)], 0), 2) AS [ValeurCalc]
+    FROM inserted i
+    JOIN dbo.[v_config_lieu_sonde] v ON v.[Id_Lieu] = i.[Id_Lieu]
+    OUTER APPLY (
+      SELECT TOP 1
+        pc.[Consigne_Apres],
+        pc.[Tolerance_Surveillance_Sup_Apres],
+        pc.[Tolerance_Surveillance_Inf_Apres]
+      FROM dbo.[v_config_lieu_planning_consignes] pc
+      WHERE pc.[Id_Lieu] = i.[Id_Lieu]
+        AND (
+          i.[Date_Heure_Mesure] BETWEEN pc.[Date_Heure_Debut_Changement] AND pc.[Date_Heure_Fin_Changement]
+          OR (i.[Date_Heure_Mesure] > pc.[Date_Heure_Debut_Changement] AND pc.[Date_Heure_Fin_Changement] IS NULL)
+        )
+    ) p
+  )
+  INSERT INTO dbo.[tm_mesures]
+  ([Valeur],[Sonde_Numero_Serie],[Consigne],[Consigne_Sup],[Consigne_Inf],[Consigne_Sup_Pre_Alarme],[Consigne_Inf_Pre_Alarme],[Date_Heure_Mesure],[Valeur_Brute],[Unite],[Adresse_Sonde],[COM_sonde],[Id_Lieu],[Rssi],[Tension],[Est_Valeur_Memoire],[Planning_Actif],[Planning_Regle_Existe])
+  SELECT
+    s.[ValeurCalc],
+    s.[Sonde_Numero_Serie],
+    CASE
+      WHEN s.[Planning_Actif] = 1 AND s.[Est_Valeur_Memoire] = 1 THEN COALESCE(s.[Consigne_Apres], s.[Consigne_Base])
+      WHEN s.[Planning_Actif] = 1 THEN s.[Consigne_Apres]
+      WHEN s.[Est_Valeur_Memoire] = 1 AND s.[Planning_Regle_Existe] = 1 THEN COALESCE(s.[Consigne_Apres], s.[Consigne])
+      ELSE s.[Consigne]
+    END,
+    CASE
+      WHEN s.[Planning_Actif] = 1 AND s.[Est_Valeur_Memoire] = 1 THEN COALESCE(s.[Tolerance_Surveillance_Sup_Apres], s.[Tolerance_Surveillance_Sup_Base])
+      WHEN s.[Planning_Actif] = 1 THEN s.[Tolerance_Surveillance_Sup_Apres]
+      WHEN s.[Est_Valeur_Memoire] = 1 AND s.[Planning_Regle_Existe] = 1 THEN COALESCE(s.[Tolerance_Surveillance_Sup_Apres], s.[Consigne_Sup_Corr])
+      ELSE s.[Consigne_Sup_Corr]
+    END,
+    CASE
+      WHEN s.[Planning_Actif] = 1 AND s.[Est_Valeur_Memoire] = 1 THEN COALESCE(s.[Tolerance_Surveillance_Inf_Apres], s.[Tolerance_Surveillance_Inf_Base])
+      WHEN s.[Planning_Actif] = 1 THEN s.[Tolerance_Surveillance_Inf_Apres]
+      WHEN s.[Est_Valeur_Memoire] = 1 AND s.[Planning_Regle_Existe] = 1 THEN COALESCE(s.[Tolerance_Surveillance_Inf_Apres], s.[Consigne_Inf_Corr])
+      ELSE s.[Consigne_Inf_Corr]
+    END,
+    s.[Consigne_Sup_Pre_Alarme],
+    s.[Consigne_Inf_Pre_Alarme],
+    s.[Date_Heure_Mesure],
+    s.[Valeur_Brute],
+    s.[Unite],
+    s.[Adresse_Sonde],
+    s.[COM_sonde],
+    s.[Id_Lieu],
+    s.[Rssi],
+    s.[Tension],
+    s.[Est_Valeur_Memoire],
+    s.[Planning_Actif],
+    s.[Planning_Regle_Existe]
+  FROM src s;
+
+  ;WITH src AS (
+    SELECT
+      i.[Date_Heure_Mesure],
+      i.[Valeur_Brute],
+      i.[Unite],
+      i.[Adresse_Sonde],
+      i.[COM_sonde],
+      i.[Id_Lieu],
+      i.[Rssi],
+      i.[Tension],
+      i.[Est_Valeur_Memoire],
+      i.[Planning_Actif],
+      i.[Planning_Regle_Existe],
+      v.[Sonde_Numero_Serie],
+      v.[Consigne],
+      v.[Consigne_Sup_Corr],
+      v.[Consigne_Inf_Corr],
+      v.[Consigne_Sup_Pre_Alarme],
+      v.[Consigne_Inf_Pre_Alarme],
+      v.[Consigne_Base],
+      v.[Tolerance_Surveillance_Sup_Base],
+      v.[Tolerance_Surveillance_Inf_Base],
+      v.[coeff_a],
+      v.[coeff_b],
+      v.[Sonde_Offset],
+      v.[-(EJ)] AS [NegEJ],
+      p.[Consigne_Apres],
+      p.[Tolerance_Surveillance_Sup_Apres],
+      p.[Tolerance_Surveillance_Inf_Apres],
+      ROUND((i.[Valeur_Brute] * v.[coeff_a]) + v.[coeff_b] + ISNULL(v.[Sonde_Offset], 0) + ISNULL(v.[-(EJ)], 0), 2) AS [ValeurCalc]
+    FROM inserted i
+    JOIN dbo.[v_config_lieu_sonde] v ON v.[Id_Lieu] = i.[Id_Lieu]
+    OUTER APPLY (
+      SELECT TOP 1
+        pc.[Consigne_Apres],
+        pc.[Tolerance_Surveillance_Sup_Apres],
+        pc.[Tolerance_Surveillance_Inf_Apres]
+      FROM dbo.[v_config_lieu_planning_consignes] pc
+      WHERE pc.[Id_Lieu] = i.[Id_Lieu]
+        AND (
+          i.[Date_Heure_Mesure] BETWEEN pc.[Date_Heure_Debut_Changement] AND pc.[Date_Heure_Fin_Changement]
+          OR (i.[Date_Heure_Mesure] > pc.[Date_Heure_Debut_Changement] AND pc.[Date_Heure_Fin_Changement] IS NULL)
+        )
+    ) p
+  )
+  INSERT INTO dbo.[tm_graphique]
+  ([Valeur],[Sonde_Numero_Serie],[Consigne],[Consigne_Sup],[Consigne_Inf],[Consigne_Sup_Pre_Alarme],[Consigne_Inf_Pre_Alarme],[Date_Heure_Mesure],[Valeur_Brute],[Unite],[Adresse_Sonde],[Id_Lieu])
+  SELECT
+    s.[ValeurCalc],
+    s.[Sonde_Numero_Serie],
+    CASE
+      WHEN s.[Planning_Actif] = 1 AND s.[Est_Valeur_Memoire] = 1 THEN COALESCE(s.[Consigne_Apres], s.[Consigne_Base])
+      WHEN s.[Planning_Actif] = 1 THEN s.[Consigne_Apres]
+      WHEN s.[Est_Valeur_Memoire] = 1 AND s.[Planning_Regle_Existe] = 1 THEN COALESCE(s.[Consigne_Apres], s.[Consigne])
+      ELSE s.[Consigne]
+    END,
+    CASE
+      WHEN s.[Planning_Actif] = 1 AND s.[Est_Valeur_Memoire] = 1 THEN COALESCE(s.[Tolerance_Surveillance_Sup_Apres], s.[Tolerance_Surveillance_Sup_Base])
+      WHEN s.[Planning_Actif] = 1 THEN s.[Tolerance_Surveillance_Sup_Apres]
+      WHEN s.[Est_Valeur_Memoire] = 1 AND s.[Planning_Regle_Existe] = 1 THEN COALESCE(s.[Tolerance_Surveillance_Sup_Apres], s.[Consigne_Sup_Corr])
+      ELSE s.[Consigne_Sup_Corr]
+    END,
+    CASE
+      WHEN s.[Planning_Actif] = 1 AND s.[Est_Valeur_Memoire] = 1 THEN COALESCE(s.[Tolerance_Surveillance_Inf_Apres], s.[Tolerance_Surveillance_Inf_Base])
+      WHEN s.[Planning_Actif] = 1 THEN s.[Tolerance_Surveillance_Inf_Apres]
+      WHEN s.[Est_Valeur_Memoire] = 1 AND s.[Planning_Regle_Existe] = 1 THEN COALESCE(s.[Tolerance_Surveillance_Inf_Apres], s.[Consigne_Inf_Corr])
+      ELSE s.[Consigne_Inf_Corr]
+    END,
+    s.[Consigne_Sup_Pre_Alarme],
+    s.[Consigne_Inf_Pre_Alarme],
+    s.[Date_Heure_Mesure],
+    s.[Valeur_Brute],
+    s.[Unite],
+    s.[Adresse_Sonde],
+    s.[Id_Lieu]
+  FROM src s;
+END;
+GO
+
+CREATE OR ALTER TRIGGER dbo.[TRG_BEF_INS_GSO_COUNT]
+ON dbo.[tm_mesures_gso_count_mem]
+AFTER INSERT
+AS
+BEGIN
+  SET NOCOUNT ON;
+
+  UPDATE c
+  SET [Port_Serie_Send_GSO] = v.[Port_Serie_Send_GSO]
+  FROM dbo.[tm_mesures_gso_count_mem] c
+  JOIN inserted i
+    ON i.[GSO_SN] = c.[GSO_SN]
+   AND i.[Missing_Data_Begin] = c.[Missing_Data_Begin]
+   AND i.[Missing_Data_End] = c.[Missing_Data_End]
+  JOIN dbo.[v_config_sonde_com] v
+    ON v.[GSO_SN] = i.[GSO_SN]
+  WHERE c.[Port_Serie_Send_GSO] IS NULL;
+END;
+GO
 
 

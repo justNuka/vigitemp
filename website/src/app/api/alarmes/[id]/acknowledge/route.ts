@@ -11,6 +11,7 @@ import { sendAlarmEventEmails } from "@/lib/alarm-email"
 import { getPermissionAliases } from "@/lib/permissions"
 import { buildLieuAccessFilter, getUserLocationScope } from "@/lib/location-access-scope"
 import { serializeDbDateTime } from "@/lib/date-display"
+import { getDbNow, isMssqlProvider } from "@/lib/sql-provider"
 
 const acknowledgeSchema = z.object({
   comment: z.string().optional(),
@@ -29,8 +30,7 @@ export const POST = withAnyAuthorizationLogging(getPermissionAliases("ALARM_ACK_
       ackStep = "parse_body"
       const body = await req.json()
       const { comment } = acknowledgeSchema.parse(body)
-      const [dbNowRow] = await prisma.$queryRaw<Array<{ acknowledgedAt: Date }>>`SELECT NOW() AS acknowledgedAt`
-      const acknowledgedAt = dbNowRow?.acknowledgedAt ?? new Date()
+      const acknowledgedAt = await getDbNow(prisma)
 
       const userScope = await getUserLocationScope(ctx.user.userId)
       const lieuAccessFilter = buildLieuAccessFilter(userScope)
@@ -77,7 +77,13 @@ export const POST = withAnyAuthorizationLogging(getPermissionAliases("ALARM_ACK_
 
         if (lieuId) {
           ackStep = "tx_set_skip_lieu_alarm_on"
-          await tx.$executeRaw`SET @SKIP_LIEU_ALARM_LOGIC = 1`
+          if (isMssqlProvider()) {
+            await tx.$executeRawUnsafe(
+              "EXEC sp_set_session_context @key=N'SKIP_LIEU_ALARM_LOGIC', @value=1;",
+            )
+          } else {
+            await tx.$executeRaw`SET @SKIP_LIEU_ALARM_LOGIC = 1`
+          }
           try {
             ackStep = "tx_recompute_lieu_state"
             const [nextActiveAlarm, remainingEndedUnack, lieu] = await Promise.all([
@@ -136,7 +142,13 @@ export const POST = withAnyAuthorizationLogging(getPermissionAliases("ALARM_ACK_
             await tx.$executeRaw`UPDATE t_lieu SET Est_Redeclenchement_Immediat = 1 WHERE Id_Lieu = ${lieuId}`
           } finally {
             ackStep = "tx_set_skip_lieu_alarm_off"
-            await tx.$executeRaw`SET @SKIP_LIEU_ALARM_LOGIC = NULL`
+            if (isMssqlProvider()) {
+              await tx.$executeRawUnsafe(
+                "EXEC sp_set_session_context @key=N'SKIP_LIEU_ALARM_LOGIC', @value=NULL;",
+              )
+            } else {
+              await tx.$executeRaw`SET @SKIP_LIEU_ALARM_LOGIC = NULL`
+            }
           }
         }
 

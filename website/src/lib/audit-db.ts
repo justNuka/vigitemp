@@ -1,11 +1,14 @@
-import { prismaMesure } from "@/lib/prisma";
+﻿import { prismaMesure } from "@/lib/prisma";
 import { log } from "@/lib/logger";
 
+function isSqlServerProvider() {
+  const provider = process.env.DATABASE_PROVIDER?.trim().toLowerCase();
+  return provider === "mssql" || provider === "sqlserver";
+}
+
 /**
- * Écrit un événement d'audit dans la base de données mesure (table tm_journal)
- * Cette fonction est appelée en parallèle du logging fichier
- * 
- * Utilise la table tm_compteur_id_table pour gérer les IDs de manière thread-safe
+ * Ecrit un evenement d'audit dans la base de donnees mesure (table tm_journal).
+ * Cette fonction est appelee en parallele du logging fichier.
  */
 export async function writeAuditToDatabase(params: {
   codeJournal: string;
@@ -17,9 +20,35 @@ export async function writeAuditToDatabase(params: {
 }) {
   try {
     const SERVEUR_ID = 1;
+
+    if (isSqlServerProvider()) {
+      await prismaMesure.$executeRaw`
+        INSERT INTO tm_journal (
+          Id_Serveur_BDD,
+          Code_Journal,
+          Nom_Utilisateur,
+          Profil_Utilisateur,
+          Date_Heure_Journal,
+          Id_Lieu,
+          Commentaire,
+          Commentaire_Utilisateur
+        )
+        VALUES (
+          ${SERVEUR_ID},
+          ${params.codeJournal},
+          ${params.username || ""},
+          ${params.userProfile || ""},
+          ${new Date()},
+          ${params.lieuId || null},
+          ${params.commentaire || null},
+          ${params.commentaireUtilisateur || null}
+        )
+      `;
+      return;
+    }
+
     const TABLE_NAME = "tm_journal";
 
-    // D'abord, s'assurer que la ligne de compteur existe
     await prismaMesure.tm_compteur_id_table.upsert({
       where: {
         Id_Serveur_BDD_Nom_Table: {
@@ -35,7 +64,6 @@ export async function writeAuditToDatabase(params: {
       },
     });
 
-    // Incrémenter et récupérer l'ID en une seule opération atomique
     const counter = await prismaMesure.tm_compteur_id_table.update({
       where: {
         Id_Serveur_BDD_Nom_Table: {
@@ -52,7 +80,6 @@ export async function writeAuditToDatabase(params: {
 
     const nextId = counter.Compteur_Id || 1;
 
-    // Écrire dans tm_journal avec l'ID géré par le compteur
     await prismaMesure.tm_journal.create({
       data: {
         Id_Serveur_BDD: SERVEUR_ID,
@@ -67,7 +94,6 @@ export async function writeAuditToDatabase(params: {
       },
     });
   } catch (error) {
-    // Ne pas bloquer l'application si l'écriture en BDD échoue
     log.error("audit-db", "audit_write_failed", { error });
   }
 }

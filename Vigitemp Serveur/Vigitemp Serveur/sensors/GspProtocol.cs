@@ -694,16 +694,43 @@ namespace Vigitemp_Serveur.sensors
                 return null;
             }
 
-            var normalized = rawAlarmState.Trim().ToUpperInvariant();
-            switch (normalized)
+            var tokens = rawAlarmState
+                .Split(new[] { '+', ',', ';', '|', ' ' }, StringSplitOptions.RemoveEmptyEntries)
+                .Select(token => (token ?? string.Empty).Trim().ToUpperInvariant())
+                .Where(token => !string.IsNullOrWhiteSpace(token))
+                .ToList();
+
+            if (tokens.Count == 0)
             {
-                case "BAT":
-                case "B":
-                case "SECTEUR":
-                case "SUR_BATTERIE":
-                case "ON_BATTERY":
-                case "BATTERY":
-                    return true;
+                return null;
+            }
+
+            // Compatibilite ancien/nouveau firmware:
+            // - ancien: BAT/B/ON_BATTERY...
+            // - nouveau: S = secteur/defaut alimentation
+            if (tokens.Any(token =>
+                token == "S" ||
+                token == "BAT" ||
+                token == "SUR_BATTERIE" ||
+                token == "ON_BATTERY" ||
+                token == "BATTERY"))
+            {
+                return true;
+            }
+
+            if (tokens.Any(token =>
+                token == "NONE" ||
+                token == "NORMAL" ||
+                token == "N" ||
+                token == "OK" ||
+                token == "AUCUNE" ||
+                token == "NO"))
+            {
+                return false;
+            }
+
+            switch (rawAlarmState.Trim().ToUpperInvariant())
+            {
                 case "NONE":
                 case "NORMAL":
                 case "N":

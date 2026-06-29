@@ -331,29 +331,39 @@ async function readHotlineGspMeasurement(request: HotlineReadRequest): Promise<H
 }
 
 async function persistAdjustmentReading(serial: string, reading: RuntimeReading) {
-  await prismaMesure.tm_mesure_calibrage.create({
-    data: {
-      Id_Serveur_BDD: DEFAULT_SERVER_BDD_ID,
-      Sonde_Numero_Serie: serial,
-      Valeur: reading.value ?? 0,
-      Valeur_Brute: reading.value ?? 0,
-      Est_Valeur_Null: reading.value == null ? 1 : 0,
-      Date_Heure: new Date(reading.measuredAt),
-    },
-  })
+  await prismaMesure.$executeRaw`
+    INSERT INTO tm_mesures_ajustage
+      (Id_Serveur_BDD, Sonde_Numero_Serie, Valeur, Valeur_Brute, Unite, Date_Heure_Mesure, Adresse_Sonde, Est_Valeur_Null)
+    VALUES
+      (
+        ${DEFAULT_SERVER_BDD_ID},
+        ${serial},
+        ${reading.value},
+        ${reading.value},
+        ${reading.unit},
+        ${new Date(reading.measuredAt)},
+        ${serial},
+        ${reading.value == null ? 1 : 0}
+      )
+  `
 }
 
 async function persistStandardReading(serial: string, reading: RuntimeReading) {
-  await prismaMesure.tm_mesure_calibrage_etalon.create({
-    data: {
-      Id_Serveur_BDD: DEFAULT_SERVER_BDD_ID,
-      Etalon_Numero_Serie: serial,
-      Valeur: reading.value ?? 0,
-      Valeur_Brute: reading.value ?? 0,
-      Est_Valeur_Null: reading.value == null ? 1 : 0,
-      Date_Heure: new Date(reading.measuredAt),
-    },
-  })
+  await prismaMesure.$executeRaw`
+    INSERT INTO tm_mesures_ajustage_etalon
+      (Id_Serveur_BDD, Etalon_Numero_Serie, Valeur, Valeur_Brute, Unite, Date_Heure_Mesure, Adresse_Sonde, Est_Valeur_Null)
+    VALUES
+      (
+        ${DEFAULT_SERVER_BDD_ID},
+        ${serial},
+        ${reading.value},
+        ${reading.value},
+        ${reading.unit},
+        ${new Date(reading.measuredAt)},
+        ${serial},
+        ${reading.value == null ? 1 : 0}
+      )
+  `
 }
 
 function toPublicSession(session: AdjustmentSession): PublicSession {

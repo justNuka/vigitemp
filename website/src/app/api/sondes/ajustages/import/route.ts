@@ -79,17 +79,23 @@ export const POST = withOneOrHigherAnyAuthorizationLogging(getPermissionAliases(
         ? sensorIdentity.serial
         : extractProbeAddressFromSerial(sensorIdentity.serial, knownTypeCodes);
 
-      await prisma.t_sonde.createMany({
-        data: [{
-          Sonde_Numero_Serie: sensorIdentity.serial,
-          Sonde_Type: sensorType.Sonde_Type,
-          Adresse_Sonde: probeAddress,
-          Est_Sonde_GSO: isGsoFamily,
-          Surveillance_Etat: "D",
-          Sonde_Offset: 0,
-        }],
-        skipDuplicates: true,
+      const existingSensor = await prisma.t_sonde.findUnique({
+        where: { Sonde_Numero_Serie: sensorIdentity.serial },
+        select: { Sonde_Numero_Serie: true },
       });
+
+      if (!existingSensor) {
+        await prisma.t_sonde.create({
+          data: {
+            Sonde_Numero_Serie: sensorIdentity.serial,
+            Sonde_Type: sensorType.Sonde_Type,
+            Adresse_Sonde: probeAddress,
+            Est_Sonde_GSO: isGsoFamily,
+            Surveillance_Etat: "D",
+            Sonde_Offset: 0,
+          },
+        });
+      }
 
       await prisma.t_sonde.updateMany({
         where: { Sonde_Numero_Serie: sensorIdentity.serial },

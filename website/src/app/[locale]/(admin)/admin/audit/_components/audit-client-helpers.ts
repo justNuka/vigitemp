@@ -156,39 +156,32 @@ export function toAuditTableData(logs: AuditLog[]): AuditLogRow[] {
   }))
 }
 
-// ─── Human-readable expanded details ────────────────────────────────────────
-
 const FIELD_LABEL_MAP: Record<string, { fr: string; en: string }> = {
-  // CONNEXION / DECONNEXION
   address: { fr: 'Adresse', en: 'Address' },
-  connectedAt: { fr: 'Connecté le', en: 'Connected at' },
+  connectedAt: { fr: 'Connecte le', en: 'Connected at' },
   machineName: { fr: 'Machine', en: 'Machine' },
-  // AIM (analyse d'impact)
-  newToleranceSup: { fr: 'Tolérance sup.', en: 'Upper tolerance' },
-  newToleranceInf: { fr: 'Tolérance inf.', en: 'Lower tolerance' },
-  simAlarms: { fr: 'Alarmes simulées', en: 'Simulated alarms' },
-  realAlarms: { fr: 'Alarmes réelles', en: 'Real alarms' },
-  dateRange: { fr: 'Période', en: 'Period' },
-  // ACQ
-  alarmId: { fr: 'N° alarme', en: 'Alarm #' },
-  acknowledgedAt: { fr: 'Acquitté le', en: 'Acknowledged at' },
-  // Champs génériques de changement (CF, CR, CS, config.change)
+  newToleranceSup: { fr: 'Tolerance sup.', en: 'Upper tolerance' },
+  newToleranceInf: { fr: 'Tolerance inf.', en: 'Lower tolerance' },
+  simAlarms: { fr: 'Alarmes simulees', en: 'Simulated alarms' },
+  realAlarms: { fr: 'Alarmes reelles', en: 'Real alarms' },
+  dateRange: { fr: 'Periode', en: 'Period' },
+  alarmId: { fr: 'No alarme', en: 'Alarm #' },
+  acknowledgedAt: { fr: 'Acquitte le', en: 'Acknowledged at' },
   from: { fr: 'Avant', en: 'Before' },
-  to: { fr: 'Après', en: 'After' },
-  forced: { fr: 'Forcé', en: 'Forced' },
+  to: { fr: 'Apres', en: 'After' },
+  forced: { fr: 'Force', en: 'Forced' },
   description: { fr: 'Description', en: 'Description' },
   format: { fr: 'Format', en: 'Format' },
-  // Noms de champs Prisma / DB dans les entrées CC
   Nom_Lieu: { fr: 'Nom du lieu', en: 'Location name' },
-  Tolerance_Sup: { fr: 'Tolérance sup.', en: 'Upper tolerance' },
-  Tolerance_Inf: { fr: 'Tolérance inf.', en: 'Lower tolerance' },
+  Tolerance_Sup: { fr: 'Tolerance sup.', en: 'Upper tolerance' },
+  Tolerance_Inf: { fr: 'Tolerance inf.', en: 'Lower tolerance' },
   Consigne_Sup: { fr: 'Consigne sup.', en: 'Upper setpoint' },
   Consigne_Inf: { fr: 'Consigne inf.', en: 'Lower setpoint' },
   Est_Son_Alarme_Active: { fr: "Son d'alarme", en: 'Alarm sound' },
   Nom_Sonde: { fr: 'Nom de la sonde', en: 'Sensor name' },
-  Frequence_Mesure: { fr: 'Fréquence mesure (s)', en: 'Measurement freq. (s)' },
+  Frequence_Mesure: { fr: 'Frequence mesure (s)', en: 'Measurement freq. (s)' },
   Retard_Alarme: { fr: "Retard d'alarme (s)", en: 'Alarm delay (s)' },
-  Hysteresis: { fr: 'Hystérésis', en: 'Hysteresis' },
+  Hysteresis: { fr: 'Hysteresis', en: 'Hysteresis' },
 }
 
 function formatFieldValue(
@@ -197,7 +190,7 @@ function formatFieldValue(
   localeTag: string,
   timezone?: string,
 ): string {
-  if (value === null || value === undefined) return '—'
+  if (value === null || value === undefined) return '-'
 
   if (typeof value === 'boolean') {
     return localeTag.startsWith('fr') ? (value ? 'Oui' : 'Non') : (value ? 'Yes' : 'No')
@@ -206,16 +199,15 @@ function formatFieldValue(
   if (typeof value === 'number') return String(value)
 
   if (typeof value === 'string') {
-    // Plage de dates : "ISO_START → ISO_END"
-    if (value.includes(' → ')) {
-      const sep = value.indexOf(' → ')
+    if (value.includes(' ? ')) {
+      const sep = value.indexOf(' ? ')
       const start = value.slice(0, sep).trim()
       const end = value.slice(sep + 3).trim()
       const startFmt = formatDateSafe(start, localeTag, timezone) ?? start
       const endFmt = formatDateSafe(end, localeTag, timezone) ?? end
-      return `${startFmt} → ${endFmt}`
+      return `${startFmt} ? ${endFmt}`
     }
-    // Chaînes ISO pour les clés à connotation temporelle
+
     const keyLower = key.toLowerCase()
     if (keyLower.endsWith('at') || keyLower.includes('date') || keyLower.includes('time')) {
       const formatted = formatDateSafe(value, localeTag, timezone)
@@ -228,10 +220,11 @@ function formatFieldValue(
   return String(value)
 }
 
-/**
- * Convertit un objet `changes` (extrait du JSON d'audit) en liste de paires
- * label / valeur lisibles, pour l'affichage dans la ligne expandée.
- */
+function isFromToChange(value: unknown): value is { from?: unknown; to?: unknown } {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false
+  return Object.prototype.hasOwnProperty.call(value, 'from') || Object.prototype.hasOwnProperty.call(value, 'to')
+}
+
 export function renderChangesAsRows(
   changes: Record<string, unknown>,
   localeTag: string,
@@ -241,13 +234,22 @@ export function renderChangesAsRows(
   const rows: Array<{ label: string; value: string }> = []
 
   for (const [key, value] of Object.entries(changes)) {
-    // On saute le champ synthétique 'action' (create/update/delete) — déjà
-    // visible via le badge d'action et le titre de ressource
     if (key === 'action') continue
     if (value === null || value === undefined) continue
 
     const labelDef = FIELD_LABEL_MAP[key]
     const label = labelDef ? (isFr ? labelDef.fr : labelDef.en) : key
+
+    if (isFromToChange(value)) {
+      const beforeLabel = isFr ? 'Avant' : 'Before'
+      const afterLabel = isFr ? 'Apres' : 'After'
+      rows.push({
+        label,
+        value: `${beforeLabel}: ${formatFieldValue('from', value.from, localeTag, timezone)} | ${afterLabel}: ${formatFieldValue('to', value.to, localeTag, timezone)}`,
+      })
+      continue
+    }
+
     rows.push({ label, value: formatFieldValue(key, value, localeTag, timezone) })
   }
 

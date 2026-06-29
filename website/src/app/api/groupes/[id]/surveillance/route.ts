@@ -4,14 +4,16 @@ import { z } from "zod"
 import { getClientIp } from "@/lib/api-logger"
 import { apiError, apiOk } from "@/lib/api-response"
 import { withAnyAuthorizationLogging } from "@/lib/api-wrappers"
+import { isSurveillanceActionCommentRequired } from "@/lib/action-comment-policy"
 import { log } from "@/lib/logger"
 import { getPermissionAliases } from "@/lib/permissions"
 import { prisma } from "@/lib/prisma"
+import { getDbDatePlusMinutes, getDbNow } from "@/lib/sql-provider"
 
 const surveillanceToggleSchema = z.object({
   disabled: z.boolean(),
   durationMinutes: z.number().int().positive().nullable().optional(),
-  commentaireAction: z.string().nullable().optional(),
+  commentaireAction: z.string().trim().max(500).nullable().optional(),
 })
 
 export const PATCH = withAnyAuthorizationLogging(
@@ -27,20 +29,21 @@ export const PATCH = withAnyAuthorizationLogging(
 
       const payload = surveillanceToggleSchema.parse(await req.json())
       const actionComment = payload.commentaireAction?.trim() ?? ""
+      const requireActionComment = await isSurveillanceActionCommentRequired()
+      if (requireActionComment && actionComment.length === 0) {
+        return apiError(400, "missing_action_comment", "Le commentaire est obligatoire pour cette action")
+      }
 
       const durationMinutes =
         payload.disabled && payload.durationMinutes && payload.durationMinutes > 0
           ? payload.durationMinutes
           : null
 
-      const [reactivationRow] =
+      const reactivationAt =
         payload.disabled && durationMinutes
-          ? await prisma.$queryRaw<Array<{ reactivationAt: Date }>>`SELECT DATE_ADD(NOW(), INTERVAL ${durationMinutes} MINUTE) AS reactivationAt`
-          : [null]
-      const [changedAtRow] = await prisma.$queryRaw<Array<{ nowAt: Date }>>`SELECT NOW() AS nowAt`
-
-      const reactivationAt = reactivationRow?.reactivationAt ?? null
-      const changedAt = changedAtRow?.nowAt ?? new Date()
+          ? await getDbDatePlusMinutes(prisma, durationMinutes)
+          : null
+      const changedAt = await getDbNow(prisma)
       const nextLieuEtat = payload.disabled ? "D" : "S"
 
       const lieux = await prisma.t_lieu.findMany({
@@ -92,13 +95,16 @@ export const PATCH = withAnyAuthorizationLogging(
         reactivationAt: reactivationAt?.toISOString() ?? null,
         updated: updatedLieux.count,
         lieuIds,
-      })
+      }, actionComment || undefined)
 
       return apiOk({
         updated: updatedLieux.count,
         lieuIds,
         lieuEtat: nextLieuEtat,
         surveillanceDisabled: payload.disabled,
+        surveillanceDisabledSince: payload.disabled ? changedAt : null,
+        surveillanceDisabledBy: payload.disabled ? ctx.user.username : null,
+        surveillanceDisabledComment: payload.disabled ? actionComment || null : null,
         surveillanceDisabledUntil: reactivationAt,
       })
     } catch (error) {

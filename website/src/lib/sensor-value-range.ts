@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma"
+import { isMssqlProvider } from "@/lib/sql-provider"
 
 type SensorTypeRangeRow = {
   valeurMin: number | null
@@ -44,15 +45,24 @@ export async function getSensorTypeValueRangeBySerial(serialNumber: string | nul
   if (!serialNumber) return null
 
   try {
-    const rows = await prisma.$queryRaw<SensorTypeRangeRow[]>`
-      SELECT
-        st.Valeur_Min AS valeurMin,
-        st.Valeur_Max AS valeurMax
-      FROM t_sonde s
-      LEFT JOIN t_sonde_type st ON st.Sonde_Type = s.Sonde_Type
-      WHERE s.Sonde_Numero_Serie = ${serialNumber}
-      LIMIT 1
-    `
+    const rows = isMssqlProvider()
+      ? await prisma.$queryRaw<SensorTypeRangeRow[]>`
+          SELECT TOP 1
+            st.Valeur_Min AS valeurMin,
+            st.Valeur_Max AS valeurMax
+          FROM t_sonde s
+          LEFT JOIN t_sonde_type st ON st.Sonde_Type = s.Sonde_Type
+          WHERE s.Sonde_Numero_Serie = ${serialNumber}
+        `
+      : await prisma.$queryRaw<SensorTypeRangeRow[]>`
+          SELECT
+            st.Valeur_Min AS valeurMin,
+            st.Valeur_Max AS valeurMax
+          FROM t_sonde s
+          LEFT JOIN t_sonde_type st ON st.Sonde_Type = s.Sonde_Type
+          WHERE s.Sonde_Numero_Serie = ${serialNumber}
+          LIMIT 1
+        `
 
     const row = rows[0]
     if (!row) return null

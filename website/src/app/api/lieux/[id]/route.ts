@@ -13,6 +13,7 @@ import { withAnyAuthorizationLogging } from "@/lib/api-wrappers"
 import { getPermissionAliases } from "@/lib/permissions"
 import { findLocationNameConflict } from "@/lib/location-name-conflicts"
 import { buildLocationValueRangeIssues, getSensorTypeValueRangeBySerial } from "@/lib/sensor-value-range"
+import { getDbDatePlusMinutes, getDbNow } from "@/lib/sql-provider"
 
 const mailingContactSchema = z.object({
   Id_Tel_Num: z.number().optional(),
@@ -488,14 +489,12 @@ export const PATCH = withAnyAuthorizationLogging(
         typeof surveillanceDurationMinutes === "number" &&
         surveillanceDurationMinutes > 0
 
-      const [surveillanceReactivationRow] = shouldScheduleSurveillanceReactivation
-        ? await prisma.$queryRaw<Array<{ reactivationAt: Date }>>`SELECT DATE_ADD(NOW(), INTERVAL ${surveillanceDurationMinutes} MINUTE) AS reactivationAt`
-        : [null]
-      const surveillanceReactivationAt = surveillanceReactivationRow?.reactivationAt ?? null
-      const [surveillanceStateChangedRow] = applyLieuEtat
-        ? await prisma.$queryRaw<Array<{ nowAt: Date }>>`SELECT NOW() AS nowAt`
-        : [null]
-      const surveillanceStateChangedAt = surveillanceStateChangedRow?.nowAt ?? null
+      const surveillanceReactivationAt = shouldScheduleSurveillanceReactivation
+        ? await getDbDatePlusMinutes(prisma, surveillanceDurationMinutes)
+        : null
+      const surveillanceStateChangedAt = applyLieuEtat
+        ? await getDbNow(prisma)
+        : null
 
       const shouldUpdateMailingContacts = Object.prototype.hasOwnProperty.call(body, "MailingContacts")
       const mailingContacts = shouldUpdateMailingContacts ? normalizeMailingContacts(MailingContacts) : []
@@ -746,7 +745,6 @@ export const PATCH = withAnyAuthorizationLogging(
           if (groupIds.length > 0) {
             await tx.t_lieu_groupe.createMany({
               data: groupIds.map((Id_Groupe) => ({ Id_Lieu: lieuId, Id_Groupe })),
-              skipDuplicates: true,
             })
           }
         }
@@ -835,6 +833,7 @@ export const PATCH = withAnyAuthorizationLogging(
           userProfile: user.profile,
           resource: `Lieu: ${lieuName ?? lieuId}`,
           resourceId: lieuId,
+          lieuId,
           reason,
         })
       }
@@ -876,6 +875,7 @@ export const PATCH = withAnyAuthorizationLogging(
           userProfile: user.profile,
           resource: `Lieu: ${lieuName ?? lieuId}`,
           resourceId: lieuId,
+          lieuId,
           reason: actionComment || "Application manuelle d'étalonnage",
           changes: {
             appliedCalibrationId,

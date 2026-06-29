@@ -3265,7 +3265,6 @@ export namespace Prisma {
      * The data used to create many tm_graphiques.
      */
     data: tm_graphiqueCreateManyInput | tm_graphiqueCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -4238,7 +4237,6 @@ export namespace Prisma {
      * The data used to create many tm_journals.
      */
     data: tm_journalCreateManyInput | tm_journalCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -5092,7 +5090,6 @@ export namespace Prisma {
      * The data used to create many tm_journal_codes.
      */
     data: tm_journal_codeCreateManyInput | tm_journal_codeCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -5995,7 +5992,6 @@ export namespace Prisma {
      * The data used to create many tm_compteur_id_tables.
      */
     data: tm_compteur_id_tableCreateManyInput | tm_compteur_id_tableCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -7155,7 +7151,6 @@ export namespace Prisma {
      * The data used to create many tm_mesures.
      */
     data: tm_mesuresCreateManyInput | tm_mesuresCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -8102,7 +8097,6 @@ export namespace Prisma {
      * The data used to create many tm_mesures_gsos.
      */
     data: tm_mesures_gsoCreateManyInput | tm_mesures_gsoCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -9090,7 +9084,6 @@ export namespace Prisma {
      * The data used to create many tm_journal_histos.
      */
     data: tm_journal_histoCreateManyInput | tm_journal_histoCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -10049,7 +10042,6 @@ export namespace Prisma {
      * The data used to create many tm_mesure_calibrages.
      */
     data: tm_mesure_calibrageCreateManyInput | tm_mesure_calibrageCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -11008,7 +11000,6 @@ export namespace Prisma {
      * The data used to create many tm_mesure_calibrage_etalons.
      */
     data: tm_mesure_calibrage_etalonCreateManyInput | tm_mesure_calibrage_etalonCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -11963,7 +11954,6 @@ export namespace Prisma {
      * The data used to create many tm_mesure_etalons.
      */
     data: tm_mesure_etalonCreateManyInput | tm_mesure_etalonCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -12922,7 +12912,6 @@ export namespace Prisma {
      * The data used to create many tm_mesure_etalonnages.
      */
     data: tm_mesure_etalonnageCreateManyInput | tm_mesure_etalonnageCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -14038,7 +14027,6 @@ export namespace Prisma {
      * The data used to create many tm_mesures_histos.
      */
     data: tm_mesures_histoCreateManyInput | tm_mesures_histoCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -15012,7 +15000,6 @@ export namespace Prisma {
      * The data used to create many tm_mesures_tests.
      */
     data: tm_mesures_testCreateManyInput | tm_mesures_testCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -15986,7 +15973,6 @@ export namespace Prisma {
      * The data used to create many tm_mesures_test_etalons.
      */
     data: tm_mesures_test_etalonCreateManyInput | tm_mesures_test_etalonCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -16922,7 +16908,6 @@ export namespace Prisma {
      * The data used to create many tm_mode_degrades.
      */
     data: tm_mode_degradeCreateManyInput | tm_mode_degradeCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -17843,7 +17828,6 @@ export namespace Prisma {
      * The data used to create many tm_parametres.
      */
     data: tm_parametreCreateManyInput | tm_parametreCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -18831,7 +18815,6 @@ export namespace Prisma {
      * The data used to create many tm_vigilog_mesures.
      */
     data: tm_vigilog_mesureCreateManyInput | tm_vigilog_mesureCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -19752,7 +19735,6 @@ export namespace Prisma {
      * The data used to create many tm_journal_commentaire_libres.
      */
     data: tm_journal_commentaire_libreCreateManyInput | tm_journal_commentaire_libreCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -19876,7 +19858,8 @@ export namespace Prisma {
     ReadUncommitted: 'ReadUncommitted',
     ReadCommitted: 'ReadCommitted',
     RepeatableRead: 'RepeatableRead',
-    Serializable: 'Serializable'
+    Serializable: 'Serializable',
+    Snapshot: 'Snapshot'
   };
 
   export type TransactionIsolationLevel = (typeof TransactionIsolationLevel)[keyof typeof TransactionIsolationLevel]
@@ -20165,156 +20148,6 @@ export namespace Prisma {
   export type NullsOrder = (typeof NullsOrder)[keyof typeof NullsOrder]
 
 
-  export const tm_graphiqueOrderByRelevanceFieldEnum: {
-    Unite: 'Unite',
-    Sonde_Numero_Serie: 'Sonde_Numero_Serie',
-    Adresse_Sonde: 'Adresse_Sonde'
-  };
-
-  export type tm_graphiqueOrderByRelevanceFieldEnum = (typeof tm_graphiqueOrderByRelevanceFieldEnum)[keyof typeof tm_graphiqueOrderByRelevanceFieldEnum]
-
-
-  export const tm_journalOrderByRelevanceFieldEnum: {
-    Code_Journal: 'Code_Journal',
-    Commentaire: 'Commentaire',
-    Nom_Utilisateur: 'Nom_Utilisateur',
-    Profil_Utilisateur: 'Profil_Utilisateur',
-    Commentaire_Utilisateur: 'Commentaire_Utilisateur'
-  };
-
-  export type tm_journalOrderByRelevanceFieldEnum = (typeof tm_journalOrderByRelevanceFieldEnum)[keyof typeof tm_journalOrderByRelevanceFieldEnum]
-
-
-  export const tm_journal_codeOrderByRelevanceFieldEnum: {
-    Code_Journal: 'Code_Journal',
-    Commentaire: 'Commentaire'
-  };
-
-  export type tm_journal_codeOrderByRelevanceFieldEnum = (typeof tm_journal_codeOrderByRelevanceFieldEnum)[keyof typeof tm_journal_codeOrderByRelevanceFieldEnum]
-
-
-  export const tm_compteur_id_tableOrderByRelevanceFieldEnum: {
-    Nom_Table: 'Nom_Table'
-  };
-
-  export type tm_compteur_id_tableOrderByRelevanceFieldEnum = (typeof tm_compteur_id_tableOrderByRelevanceFieldEnum)[keyof typeof tm_compteur_id_tableOrderByRelevanceFieldEnum]
-
-
-  export const tm_mesuresOrderByRelevanceFieldEnum: {
-    Unite: 'Unite',
-    Sonde_Numero_Serie: 'Sonde_Numero_Serie',
-    Adresse_Sonde: 'Adresse_Sonde',
-    Rssi: 'Rssi',
-    Tension: 'Tension'
-  };
-
-  export type tm_mesuresOrderByRelevanceFieldEnum = (typeof tm_mesuresOrderByRelevanceFieldEnum)[keyof typeof tm_mesuresOrderByRelevanceFieldEnum]
-
-
-  export const tm_mesures_gsoOrderByRelevanceFieldEnum: {
-    id_capteur: 'id_capteur',
-    unite: 'unite',
-    rssi: 'rssi',
-    tension: 'tension'
-  };
-
-  export type tm_mesures_gsoOrderByRelevanceFieldEnum = (typeof tm_mesures_gsoOrderByRelevanceFieldEnum)[keyof typeof tm_mesures_gsoOrderByRelevanceFieldEnum]
-
-
-  export const tm_journal_histoOrderByRelevanceFieldEnum: {
-    Code_Journal: 'Code_Journal',
-    Commentaire: 'Commentaire',
-    Nom_Utilisateur: 'Nom_Utilisateur',
-    Profil_Utilisateur: 'Profil_Utilisateur',
-    Commentaire_Utilisateur: 'Commentaire_Utilisateur'
-  };
-
-  export type tm_journal_histoOrderByRelevanceFieldEnum = (typeof tm_journal_histoOrderByRelevanceFieldEnum)[keyof typeof tm_journal_histoOrderByRelevanceFieldEnum]
-
-
-  export const tm_mesure_calibrageOrderByRelevanceFieldEnum: {
-    Sonde_Numero_Serie: 'Sonde_Numero_Serie'
-  };
-
-  export type tm_mesure_calibrageOrderByRelevanceFieldEnum = (typeof tm_mesure_calibrageOrderByRelevanceFieldEnum)[keyof typeof tm_mesure_calibrageOrderByRelevanceFieldEnum]
-
-
-  export const tm_mesure_calibrage_etalonOrderByRelevanceFieldEnum: {
-    Etalon_Numero_Serie: 'Etalon_Numero_Serie'
-  };
-
-  export type tm_mesure_calibrage_etalonOrderByRelevanceFieldEnum = (typeof tm_mesure_calibrage_etalonOrderByRelevanceFieldEnum)[keyof typeof tm_mesure_calibrage_etalonOrderByRelevanceFieldEnum]
-
-
-  export const tm_mesure_etalonOrderByRelevanceFieldEnum: {
-    Etalon_Numero_Serie: 'Etalon_Numero_Serie',
-    Message_Erreur: 'Message_Erreur'
-  };
-
-  export type tm_mesure_etalonOrderByRelevanceFieldEnum = (typeof tm_mesure_etalonOrderByRelevanceFieldEnum)[keyof typeof tm_mesure_etalonOrderByRelevanceFieldEnum]
-
-
-  export const tm_mesure_etalonnageOrderByRelevanceFieldEnum: {
-    Sonde_Numero_serie: 'Sonde_Numero_serie'
-  };
-
-  export type tm_mesure_etalonnageOrderByRelevanceFieldEnum = (typeof tm_mesure_etalonnageOrderByRelevanceFieldEnum)[keyof typeof tm_mesure_etalonnageOrderByRelevanceFieldEnum]
-
-
-  export const tm_mesures_histoOrderByRelevanceFieldEnum: {
-    Unite: 'Unite',
-    Sonde_Numero_Serie: 'Sonde_Numero_Serie'
-  };
-
-  export type tm_mesures_histoOrderByRelevanceFieldEnum = (typeof tm_mesures_histoOrderByRelevanceFieldEnum)[keyof typeof tm_mesures_histoOrderByRelevanceFieldEnum]
-
-
-  export const tm_mesures_testOrderByRelevanceFieldEnum: {
-    Sonde_Numero_Serie: 'Sonde_Numero_Serie'
-  };
-
-  export type tm_mesures_testOrderByRelevanceFieldEnum = (typeof tm_mesures_testOrderByRelevanceFieldEnum)[keyof typeof tm_mesures_testOrderByRelevanceFieldEnum]
-
-
-  export const tm_mesures_test_etalonOrderByRelevanceFieldEnum: {
-    Etalon_Numero_Serie: 'Etalon_Numero_Serie'
-  };
-
-  export type tm_mesures_test_etalonOrderByRelevanceFieldEnum = (typeof tm_mesures_test_etalonOrderByRelevanceFieldEnum)[keyof typeof tm_mesures_test_etalonOrderByRelevanceFieldEnum]
-
-
-  export const tm_mode_degradeOrderByRelevanceFieldEnum: {
-    Requete_SQL: 'Requete_SQL'
-  };
-
-  export type tm_mode_degradeOrderByRelevanceFieldEnum = (typeof tm_mode_degradeOrderByRelevanceFieldEnum)[keyof typeof tm_mode_degradeOrderByRelevanceFieldEnum]
-
-
-  export const tm_parametreOrderByRelevanceFieldEnum: {
-    Cle_Parametre: 'Cle_Parametre',
-    Valeur_Parametre: 'Valeur_Parametre',
-    Groupe_Parametre: 'Groupe_Parametre',
-    Commentaire_Parametre: 'Commentaire_Parametre'
-  };
-
-  export type tm_parametreOrderByRelevanceFieldEnum = (typeof tm_parametreOrderByRelevanceFieldEnum)[keyof typeof tm_parametreOrderByRelevanceFieldEnum]
-
-
-  export const tm_vigilog_mesureOrderByRelevanceFieldEnum: {
-    Details: 'Details'
-  };
-
-  export type tm_vigilog_mesureOrderByRelevanceFieldEnum = (typeof tm_vigilog_mesureOrderByRelevanceFieldEnum)[keyof typeof tm_vigilog_mesureOrderByRelevanceFieldEnum]
-
-
-  export const tm_journal_commentaire_libreOrderByRelevanceFieldEnum: {
-    Code_Journal: 'Code_Journal',
-    Commentaire: 'Commentaire'
-  };
-
-  export type tm_journal_commentaire_libreOrderByRelevanceFieldEnum = (typeof tm_journal_commentaire_libreOrderByRelevanceFieldEnum)[keyof typeof tm_journal_commentaire_libreOrderByRelevanceFieldEnum]
-
-
   /**
    * Field references
    */
@@ -20408,7 +20241,6 @@ export namespace Prisma {
     Est_Etat_Alarme?: SortOrder
     Consigne_Inf_Pre_Alarme?: SortOrderInput | SortOrder
     Consigne_Sup_Pre_Alarme?: SortOrderInput | SortOrder
-    _relevance?: tm_graphiqueOrderByRelevanceInput
   }
 
   export type tm_graphiqueWhereUniqueInput = Prisma.AtLeast<{
@@ -20511,7 +20343,6 @@ export namespace Prisma {
     Date_Heure_Journal?: SortOrderInput | SortOrder
     Id_Lieu?: SortOrderInput | SortOrder
     Commentaire_Utilisateur?: SortOrderInput | SortOrder
-    _relevance?: tm_journalOrderByRelevanceInput
   }
 
   export type tm_journalWhereUniqueInput = Prisma.AtLeast<{
@@ -20573,7 +20404,6 @@ export namespace Prisma {
   export type tm_journal_codeOrderByWithRelationInput = {
     Code_Journal?: SortOrder
     Commentaire?: SortOrderInput | SortOrder
-    _relevance?: tm_journal_codeOrderByRelevanceInput
   }
 
   export type tm_journal_codeWhereUniqueInput = Prisma.AtLeast<{
@@ -20613,7 +20443,6 @@ export namespace Prisma {
     Id_Serveur_BDD?: SortOrder
     Nom_Table?: SortOrder
     Compteur_Id?: SortOrderInput | SortOrder
-    _relevance?: tm_compteur_id_tableOrderByRelevanceInput
   }
 
   export type tm_compteur_id_tableWhereUniqueInput = Prisma.AtLeast<{
@@ -20697,7 +20526,6 @@ export namespace Prisma {
     Moyenne?: SortOrderInput | SortOrder
     Rssi?: SortOrderInput | SortOrder
     Tension?: SortOrderInput | SortOrder
-    _relevance?: tm_mesuresOrderByRelevanceInput
   }
 
   export type tm_mesuresWhereUniqueInput = Prisma.AtLeast<{
@@ -20808,7 +20636,6 @@ export namespace Prisma {
     date_mesure?: SortOrder
     rssi?: SortOrderInput | SortOrder
     tension?: SortOrderInput | SortOrder
-    _relevance?: tm_mesures_gsoOrderByRelevanceInput
   }
 
   export type tm_mesures_gsoWhereUniqueInput = Prisma.AtLeast<{
@@ -20880,7 +20707,6 @@ export namespace Prisma {
     Date_Heure_Journal?: SortOrderInput | SortOrder
     Id_Lieu?: SortOrderInput | SortOrder
     Commentaire_Utilisateur?: SortOrderInput | SortOrder
-    _relevance?: tm_journal_histoOrderByRelevanceInput
   }
 
   export type tm_journal_histoWhereUniqueInput = Prisma.AtLeast<{
@@ -20955,7 +20781,6 @@ export namespace Prisma {
     Sonde_Numero_Serie?: SortOrder
     Est_Valeur_Null?: SortOrder
     Date_Heure?: SortOrder
-    _relevance?: tm_mesure_calibrageOrderByRelevanceInput
   }
 
   export type tm_mesure_calibrageWhereUniqueInput = Prisma.AtLeast<{
@@ -21021,7 +20846,6 @@ export namespace Prisma {
     Etalon_Numero_Serie?: SortOrder
     Est_Valeur_Null?: SortOrder
     Date_Heure?: SortOrder
-    _relevance?: tm_mesure_calibrage_etalonOrderByRelevanceInput
   }
 
   export type tm_mesure_calibrage_etalonWhereUniqueInput = Prisma.AtLeast<{
@@ -21087,7 +20911,6 @@ export namespace Prisma {
     Est_Valeur_Null?: SortOrder
     Date_Heure?: SortOrder
     Message_Erreur?: SortOrder
-    _relevance?: tm_mesure_etalonOrderByRelevanceInput
   }
 
   export type tm_mesure_etalonWhereUniqueInput = Prisma.AtLeast<{
@@ -21153,7 +20976,6 @@ export namespace Prisma {
     Mesure_Sonde?: SortOrderInput | SortOrder
     Mesure_Etalon?: SortOrderInput | SortOrder
     Date_Heure?: SortOrderInput | SortOrder
-    _relevance?: tm_mesure_etalonnageOrderByRelevanceInput
   }
 
   export type tm_mesure_etalonnageWhereUniqueInput = Prisma.AtLeast<{
@@ -21241,7 +21063,6 @@ export namespace Prisma {
     Consigne_Inf_Pre_Alarme?: SortOrderInput | SortOrder
     Consigne_Sup_Pre_Alarme?: SortOrderInput | SortOrder
     Moyenne?: SortOrderInput | SortOrder
-    _relevance?: tm_mesures_histoOrderByRelevanceInput
   }
 
   export type tm_mesures_histoWhereUniqueInput = Prisma.AtLeast<{
@@ -21342,7 +21163,6 @@ export namespace Prisma {
     Date_Heure?: SortOrder
     Nombre_Total?: SortOrder
     Nombre_Recu?: SortOrder
-    _relevance?: tm_mesures_testOrderByRelevanceInput
   }
 
   export type tm_mesures_testWhereUniqueInput = Prisma.AtLeast<{
@@ -21413,7 +21233,6 @@ export namespace Prisma {
     Date_Heure?: SortOrder
     Nombre_Total?: SortOrder
     Nombre_Recu?: SortOrder
-    _relevance?: tm_mesures_test_etalonOrderByRelevanceInput
   }
 
   export type tm_mesures_test_etalonWhereUniqueInput = Prisma.AtLeast<{
@@ -21480,7 +21299,6 @@ export namespace Prisma {
     Requete_SQL?: SortOrderInput | SortOrder
     Est_Archivee?: SortOrder
     Date_Heure_Archive?: SortOrderInput | SortOrder
-    _relevance?: tm_mode_degradeOrderByRelevanceInput
   }
 
   export type tm_mode_degradeWhereUniqueInput = Prisma.AtLeast<{
@@ -21538,7 +21356,6 @@ export namespace Prisma {
     Valeur_Parametre?: SortOrderInput | SortOrder
     Groupe_Parametre?: SortOrderInput | SortOrder
     Commentaire_Parametre?: SortOrderInput | SortOrder
-    _relevance?: tm_parametreOrderByRelevanceInput
   }
 
   export type tm_parametreWhereUniqueInput = Prisma.AtLeast<{
@@ -21604,7 +21421,6 @@ export namespace Prisma {
     Est_Marqueur?: SortOrder
     Details?: SortOrderInput | SortOrder
     Date_Heure_Import?: SortOrder
-    _relevance?: tm_vigilog_mesureOrderByRelevanceInput
   }
 
   export type tm_vigilog_mesureWhereUniqueInput = Prisma.AtLeast<{
@@ -21675,7 +21491,6 @@ export namespace Prisma {
     Commentaire?: SortOrder
     Date_Creation?: SortOrder
     Date_Modification?: SortOrderInput | SortOrder
-    _relevance?: tm_journal_commentaire_libreOrderByRelevanceInput
   }
 
   export type tm_journal_commentaire_libreWhereUniqueInput = Prisma.AtLeast<{
@@ -21798,7 +21613,6 @@ export namespace Prisma {
   }
 
   export type tm_graphiqueCreateManyInput = {
-    Id_Graphique?: number
     Date_Heure_Mesure?: Date | string
     Valeur?: number | null
     Valeur_Brute?: number | null
@@ -21910,7 +21724,6 @@ export namespace Prisma {
 
   export type tm_journalCreateManyInput = {
     Id_Serveur_BDD: number
-    Id_Journal?: number
     Code_Journal?: string | null
     Commentaire?: string | null
     Nom_Utilisateur?: string | null
@@ -22123,7 +21936,6 @@ export namespace Prisma {
 
   export type tm_mesuresCreateManyInput = {
     Id_Serveur_BDD?: number
-    Id_Mesure?: number
     Date_Heure_Mesure: Date | string
     Valeur?: number | null
     Valeur_Brute?: number | null
@@ -22237,7 +22049,6 @@ export namespace Prisma {
   }
 
   export type tm_mesures_gsoCreateManyInput = {
-    Id_mesures_gso?: number
     id_capteur?: string
     tep?: number | null
     unite?: string | null
@@ -22319,7 +22130,6 @@ export namespace Prisma {
   }
 
   export type tm_journal_histoCreateManyInput = {
-    Id_Journal_Histo?: number
     Id_Serveur_BDD?: number
     Id_Journal?: number
     Code_Journal?: string | null
@@ -22398,7 +22208,6 @@ export namespace Prisma {
   }
 
   export type tm_mesure_calibrageCreateManyInput = {
-    Id_Mesure_Calibrage?: number
     Id_Serveur_BDD?: number
     Valeur?: number
     Valeur_Brute?: number
@@ -22468,7 +22277,6 @@ export namespace Prisma {
   }
 
   export type tm_mesure_calibrage_etalonCreateManyInput = {
-    Id_Mesure_Calibrage_Etalon?: number
     Id_Serveur_BDD?: number
     Valeur?: number
     Valeur_Brute?: number
@@ -22538,7 +22346,6 @@ export namespace Prisma {
   }
 
   export type tm_mesure_etalonCreateManyInput = {
-    Id_Mesure_Etalon?: number
     Id_Serveur_BDD?: number
     Valeur_Brute: number
     Etalon_Numero_Serie?: string
@@ -22608,7 +22415,6 @@ export namespace Prisma {
   }
 
   export type tm_mesure_etalonnageCreateManyInput = {
-    Id_Mesure_Etalonnage?: number
     Id_Serveur_BDD?: number
     Sonde_Numero_serie?: string | null
     Numero_Ordre?: number | null
@@ -22722,7 +22528,6 @@ export namespace Prisma {
   }
 
   export type tm_mesures_histoCreateManyInput = {
-    Id_Mesure?: number
     Id_Serveur_BDD?: number
     Date_Heure_Mesure?: Date | string
     Valeur?: number | null
@@ -22829,7 +22634,6 @@ export namespace Prisma {
   }
 
   export type tm_mesures_testCreateManyInput = {
-    Id_Mesure_Test?: number
     Id_Serveur_BDD?: number
     Valeur_Brute: number
     Sonde_Numero_Serie?: string
@@ -22906,7 +22710,6 @@ export namespace Prisma {
   }
 
   export type tm_mesures_test_etalonCreateManyInput = {
-    Id_Mesure_Test_Etalon?: number
     Id_Serveur_BDD?: number
     Valeur_Brute: number
     Etalon_Numero_Serie?: string
@@ -22973,7 +22776,6 @@ export namespace Prisma {
   }
 
   export type tm_mode_degradeCreateManyInput = {
-    Id_Mode_Degrade?: number
     Id_Utilisateur?: number | null
     Date_Heure_Creation?: Date | string | null
     Requete_SQL?: string | null
@@ -23031,7 +22833,6 @@ export namespace Prisma {
   }
 
   export type tm_parametreCreateManyInput = {
-    Id_Parametre?: number
     Cle_Parametre?: string
     Valeur_Parametre?: string | null
     Groupe_Parametre?: string | null
@@ -23105,7 +22906,6 @@ export namespace Prisma {
   }
 
   export type tm_vigilog_mesureCreateManyInput = {
-    Id_VigiLog_Mesure?: number
     Id_VigiLog_Tournee: number
     Numero_Ordre?: number | null
     Date_Heure_Mesure: Date | string
@@ -23173,7 +22973,6 @@ export namespace Prisma {
   }
 
   export type tm_journal_commentaire_libreCreateManyInput = {
-    Id_Commentaire_Journal?: number
     Code_Journal: string
     Commentaire: string
     Date_Creation?: Date | string
@@ -23250,7 +23049,6 @@ export namespace Prisma {
     contains?: string | StringFieldRefInput<$PrismaModel>
     startsWith?: string | StringFieldRefInput<$PrismaModel>
     endsWith?: string | StringFieldRefInput<$PrismaModel>
-    search?: string
     not?: NestedStringNullableFilter<$PrismaModel> | string | null
   }
 
@@ -23262,12 +23060,6 @@ export namespace Prisma {
   export type SortOrderInput = {
     sort: SortOrder
     nulls?: NullsOrder
-  }
-
-  export type tm_graphiqueOrderByRelevanceInput = {
-    fields: tm_graphiqueOrderByRelevanceFieldEnum | tm_graphiqueOrderByRelevanceFieldEnum[]
-    sort: SortOrder
-    search: string
   }
 
   export type tm_graphiqueId_GraphiqueDate_Heure_MesureId_LieuEst_Valeur_NullEst_Etat_AlarmeCompoundUniqueInput = {
@@ -23446,7 +23238,6 @@ export namespace Prisma {
     contains?: string | StringFieldRefInput<$PrismaModel>
     startsWith?: string | StringFieldRefInput<$PrismaModel>
     endsWith?: string | StringFieldRefInput<$PrismaModel>
-    search?: string
     not?: NestedStringNullableWithAggregatesFilter<$PrismaModel> | string | null
     _count?: NestedIntNullableFilter<$PrismaModel>
     _min?: NestedStringNullableFilter<$PrismaModel>
@@ -23470,12 +23261,6 @@ export namespace Prisma {
     gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     not?: NestedDateTimeNullableFilter<$PrismaModel> | Date | string | null
-  }
-
-  export type tm_journalOrderByRelevanceInput = {
-    fields: tm_journalOrderByRelevanceFieldEnum | tm_journalOrderByRelevanceFieldEnum[]
-    sort: SortOrder
-    search: string
   }
 
   export type tm_journalId_Serveur_BDDId_JournalCompoundUniqueInput = {
@@ -23556,14 +23341,7 @@ export namespace Prisma {
     contains?: string | StringFieldRefInput<$PrismaModel>
     startsWith?: string | StringFieldRefInput<$PrismaModel>
     endsWith?: string | StringFieldRefInput<$PrismaModel>
-    search?: string
     not?: NestedStringFilter<$PrismaModel> | string
-  }
-
-  export type tm_journal_codeOrderByRelevanceInput = {
-    fields: tm_journal_codeOrderByRelevanceFieldEnum | tm_journal_codeOrderByRelevanceFieldEnum[]
-    sort: SortOrder
-    search: string
   }
 
   export type tm_journal_codeCountOrderByAggregateInput = {
@@ -23592,17 +23370,10 @@ export namespace Prisma {
     contains?: string | StringFieldRefInput<$PrismaModel>
     startsWith?: string | StringFieldRefInput<$PrismaModel>
     endsWith?: string | StringFieldRefInput<$PrismaModel>
-    search?: string
     not?: NestedStringWithAggregatesFilter<$PrismaModel> | string
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedStringFilter<$PrismaModel>
     _max?: NestedStringFilter<$PrismaModel>
-  }
-
-  export type tm_compteur_id_tableOrderByRelevanceInput = {
-    fields: tm_compteur_id_tableOrderByRelevanceFieldEnum | tm_compteur_id_tableOrderByRelevanceFieldEnum[]
-    sort: SortOrder
-    search: string
   }
 
   export type tm_compteur_id_tableId_Serveur_BDDNom_TableCompoundUniqueInput = {
@@ -23636,12 +23407,6 @@ export namespace Prisma {
   export type tm_compteur_id_tableSumOrderByAggregateInput = {
     Id_Serveur_BDD?: SortOrder
     Compteur_Id?: SortOrder
-  }
-
-  export type tm_mesuresOrderByRelevanceInput = {
-    fields: tm_mesuresOrderByRelevanceFieldEnum | tm_mesuresOrderByRelevanceFieldEnum[]
-    sort: SortOrder
-    search: string
   }
 
   export type tm_mesuresId_Serveur_BDDId_MesureDate_Heure_MesureId_LieuEst_Valeur_NullCompoundUniqueInput = {
@@ -23761,12 +23526,6 @@ export namespace Prisma {
     Moyenne?: SortOrder
   }
 
-  export type tm_mesures_gsoOrderByRelevanceInput = {
-    fields: tm_mesures_gsoOrderByRelevanceFieldEnum | tm_mesures_gsoOrderByRelevanceFieldEnum[]
-    sort: SortOrder
-    search: string
-  }
-
   export type tm_mesures_gsoId_capteurDate_mesureCompoundUniqueInput = {
     id_capteur: string
     date_mesure: Date | string
@@ -23810,12 +23569,6 @@ export namespace Prisma {
   export type tm_mesures_gsoSumOrderByAggregateInput = {
     Id_mesures_gso?: SortOrder
     tep?: SortOrder
-  }
-
-  export type tm_journal_histoOrderByRelevanceInput = {
-    fields: tm_journal_histoOrderByRelevanceFieldEnum | tm_journal_histoOrderByRelevanceFieldEnum[]
-    sort: SortOrder
-    search: string
   }
 
   export type tm_journal_histoId_Journal_HistoId_Serveur_BDDId_JournalCompoundUniqueInput = {
@@ -23888,12 +23641,6 @@ export namespace Prisma {
     not?: NestedFloatFilter<$PrismaModel> | number
   }
 
-  export type tm_mesure_calibrageOrderByRelevanceInput = {
-    fields: tm_mesure_calibrageOrderByRelevanceFieldEnum | tm_mesure_calibrageOrderByRelevanceFieldEnum[]
-    sort: SortOrder
-    search: string
-  }
-
   export type tm_mesure_calibrageId_Mesure_CalibrageId_Serveur_BDDCompoundUniqueInput = {
     Id_Mesure_Calibrage: number
     Id_Serveur_BDD: number
@@ -23961,12 +23708,6 @@ export namespace Prisma {
     _max?: NestedFloatFilter<$PrismaModel>
   }
 
-  export type tm_mesure_calibrage_etalonOrderByRelevanceInput = {
-    fields: tm_mesure_calibrage_etalonOrderByRelevanceFieldEnum | tm_mesure_calibrage_etalonOrderByRelevanceFieldEnum[]
-    sort: SortOrder
-    search: string
-  }
-
   export type tm_mesure_calibrage_etalonId_Mesure_Calibrage_EtalonId_Serveur_BDDCompoundUniqueInput = {
     Id_Mesure_Calibrage_Etalon: number
     Id_Serveur_BDD: number
@@ -24018,12 +23759,6 @@ export namespace Prisma {
     Est_Valeur_Null?: SortOrder
   }
 
-  export type tm_mesure_etalonOrderByRelevanceInput = {
-    fields: tm_mesure_etalonOrderByRelevanceFieldEnum | tm_mesure_etalonOrderByRelevanceFieldEnum[]
-    sort: SortOrder
-    search: string
-  }
-
   export type tm_mesure_etalonId_Mesure_EtalonId_Serveur_BDDCompoundUniqueInput = {
     Id_Mesure_Etalon: number
     Id_Serveur_BDD: number
@@ -24071,12 +23806,6 @@ export namespace Prisma {
     Id_Serveur_BDD?: SortOrder
     Valeur_Brute?: SortOrder
     Est_Valeur_Null?: SortOrder
-  }
-
-  export type tm_mesure_etalonnageOrderByRelevanceInput = {
-    fields: tm_mesure_etalonnageOrderByRelevanceFieldEnum | tm_mesure_etalonnageOrderByRelevanceFieldEnum[]
-    sort: SortOrder
-    search: string
   }
 
   export type tm_mesure_etalonnageId_Mesure_EtalonnageId_Serveur_BDDCompoundUniqueInput = {
@@ -24133,12 +23862,6 @@ export namespace Prisma {
   export type BoolNullableFilter<$PrismaModel = never> = {
     equals?: boolean | BooleanFieldRefInput<$PrismaModel> | null
     not?: NestedBoolNullableFilter<$PrismaModel> | boolean | null
-  }
-
-  export type tm_mesures_histoOrderByRelevanceInput = {
-    fields: tm_mesures_histoOrderByRelevanceFieldEnum | tm_mesures_histoOrderByRelevanceFieldEnum[]
-    sort: SortOrder
-    search: string
   }
 
   export type tm_mesures_histoId_MesureId_Serveur_BDDDate_Heure_MesureId_LieuEst_Valeur_NullCompoundUniqueInput = {
@@ -24254,12 +23977,6 @@ export namespace Prisma {
     _max?: NestedBoolNullableFilter<$PrismaModel>
   }
 
-  export type tm_mesures_testOrderByRelevanceInput = {
-    fields: tm_mesures_testOrderByRelevanceFieldEnum | tm_mesures_testOrderByRelevanceFieldEnum[]
-    sort: SortOrder
-    search: string
-  }
-
   export type tm_mesures_testId_Mesure_TestId_Serveur_BDDCompoundUniqueInput = {
     Id_Mesure_Test: number
     Id_Serveur_BDD: number
@@ -24314,12 +24031,6 @@ export namespace Prisma {
     Est_Valeur_Null?: SortOrder
     Nombre_Total?: SortOrder
     Nombre_Recu?: SortOrder
-  }
-
-  export type tm_mesures_test_etalonOrderByRelevanceInput = {
-    fields: tm_mesures_test_etalonOrderByRelevanceFieldEnum | tm_mesures_test_etalonOrderByRelevanceFieldEnum[]
-    sort: SortOrder
-    search: string
   }
 
   export type tm_mesures_test_etalonId_Mesure_Test_EtalonId_Serveur_BDDCompoundUniqueInput = {
@@ -24378,12 +24089,6 @@ export namespace Prisma {
     Nombre_Recu?: SortOrder
   }
 
-  export type tm_mode_degradeOrderByRelevanceInput = {
-    fields: tm_mode_degradeOrderByRelevanceFieldEnum | tm_mode_degradeOrderByRelevanceFieldEnum[]
-    sort: SortOrder
-    search: string
-  }
-
   export type tm_mode_degradeCountOrderByAggregateInput = {
     Id_Mode_Degrade?: SortOrder
     Id_Utilisateur?: SortOrder
@@ -24419,12 +24124,6 @@ export namespace Prisma {
   export type tm_mode_degradeSumOrderByAggregateInput = {
     Id_Mode_Degrade?: SortOrder
     Id_Utilisateur?: SortOrder
-  }
-
-  export type tm_parametreOrderByRelevanceInput = {
-    fields: tm_parametreOrderByRelevanceFieldEnum | tm_parametreOrderByRelevanceFieldEnum[]
-    sort: SortOrder
-    search: string
   }
 
   export type tm_parametreId_ParametreCle_ParametreCompoundUniqueInput = {
@@ -24473,12 +24172,6 @@ export namespace Prisma {
     gt?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
     gte?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
     not?: NestedDecimalNullableFilter<$PrismaModel> | Decimal | DecimalJsLike | number | string | null
-  }
-
-  export type tm_vigilog_mesureOrderByRelevanceInput = {
-    fields: tm_vigilog_mesureOrderByRelevanceFieldEnum | tm_vigilog_mesureOrderByRelevanceFieldEnum[]
-    sort: SortOrder
-    search: string
   }
 
   export type tm_vigilog_mesureId_VigiLog_TourneeDate_Heure_MesureNumero_OrdreCompoundUniqueInput = {
@@ -24554,12 +24247,6 @@ export namespace Prisma {
     _sum?: NestedDecimalNullableFilter<$PrismaModel>
     _min?: NestedDecimalNullableFilter<$PrismaModel>
     _max?: NestedDecimalNullableFilter<$PrismaModel>
-  }
-
-  export type tm_journal_commentaire_libreOrderByRelevanceInput = {
-    fields: tm_journal_commentaire_libreOrderByRelevanceFieldEnum | tm_journal_commentaire_libreOrderByRelevanceFieldEnum[]
-    sort: SortOrder
-    search: string
   }
 
   export type tm_journal_commentaire_libreCountOrderByAggregateInput = {
@@ -24713,7 +24400,6 @@ export namespace Prisma {
     contains?: string | StringFieldRefInput<$PrismaModel>
     startsWith?: string | StringFieldRefInput<$PrismaModel>
     endsWith?: string | StringFieldRefInput<$PrismaModel>
-    search?: string
     not?: NestedStringNullableFilter<$PrismaModel> | string | null
   }
 
@@ -24806,7 +24492,6 @@ export namespace Prisma {
     contains?: string | StringFieldRefInput<$PrismaModel>
     startsWith?: string | StringFieldRefInput<$PrismaModel>
     endsWith?: string | StringFieldRefInput<$PrismaModel>
-    search?: string
     not?: NestedStringNullableWithAggregatesFilter<$PrismaModel> | string | null
     _count?: NestedIntNullableFilter<$PrismaModel>
     _min?: NestedStringNullableFilter<$PrismaModel>
@@ -24857,7 +24542,6 @@ export namespace Prisma {
     contains?: string | StringFieldRefInput<$PrismaModel>
     startsWith?: string | StringFieldRefInput<$PrismaModel>
     endsWith?: string | StringFieldRefInput<$PrismaModel>
-    search?: string
     not?: NestedStringFilter<$PrismaModel> | string
   }
 
@@ -24872,7 +24556,6 @@ export namespace Prisma {
     contains?: string | StringFieldRefInput<$PrismaModel>
     startsWith?: string | StringFieldRefInput<$PrismaModel>
     endsWith?: string | StringFieldRefInput<$PrismaModel>
-    search?: string
     not?: NestedStringWithAggregatesFilter<$PrismaModel> | string
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedStringFilter<$PrismaModel>

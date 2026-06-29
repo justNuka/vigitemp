@@ -8,6 +8,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Textarea } from "@/components/ui/textarea"
 
 type Translate = (key: string, values?: Record<string, string>) => string
 
@@ -20,7 +21,11 @@ export type MonitoringGroupModalState = {
 type MonitoringGroupToggleDialogProps = {
   modal: MonitoringGroupModalState | null
   disableDuration: string
+  actionComment: string
+  actionCommentError: string | null
+  requireActionComment: boolean
   onDisableDurationChange: (value: string) => void
+  onActionCommentChange: (value: string) => void
   onClose: () => void
   onConfirm: () => void
   t: Translate
@@ -29,11 +34,20 @@ type MonitoringGroupToggleDialogProps = {
 export function MonitoringGroupToggleDialog({
   modal,
   disableDuration,
+  actionComment,
+  actionCommentError,
+  requireActionComment,
   onDisableDurationChange,
+  onActionCommentChange,
   onClose,
   onConfirm,
   t,
 }: MonitoringGroupToggleDialogProps) {
+  const commentLabel = t("confirm.action_comment.label")
+  const commentPlaceholder = requireActionComment
+    ? t("confirm.action_comment.placeholder_required")
+    : t("confirm.action_comment.placeholder_optional")
+
   return (
     <Dialog open={modal !== null} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md">
@@ -67,6 +81,20 @@ export function MonitoringGroupToggleDialog({
             </Select>
           </div>
         ) : null}
+        <div className="space-y-2">
+          <label className="text-sm font-medium" htmlFor="group-toggle-comment">
+            {commentLabel}
+          </label>
+          <Textarea
+            id="group-toggle-comment"
+            value={actionComment}
+            onChange={(event) => onActionCommentChange(event.target.value)}
+            placeholder={commentPlaceholder}
+            aria-invalid={actionCommentError ? "true" : "false"}
+            className="min-h-24"
+          />
+          {actionCommentError ? <p className="text-xs text-destructive">{actionCommentError}</p> : null}
+        </div>
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>
             {t("group_modal.cancel")}

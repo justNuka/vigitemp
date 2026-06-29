@@ -270,47 +270,6 @@ export type t_vigilog_usage_ponctuel = $Result.DefaultSelection<Prisma.$t_vigilo
 export type t_vigilog_tournee = $Result.DefaultSelection<Prisma.$t_vigilog_tourneePayload>
 
 /**
- * Enums
- */
-export namespace $Enums {
-  export const t_lieu_planning_audit_Type: {
-  PLAN_APPLY: 'PLAN_APPLY'
-};
-
-export type t_lieu_planning_audit_Type = (typeof t_lieu_planning_audit_Type)[keyof typeof t_lieu_planning_audit_Type]
-
-
-export const t_commande_materiel_Mode_Transmission: {
-  SMTP: 'SMTP',
-  MAILTO: 'MAILTO'
-};
-
-export type t_commande_materiel_Mode_Transmission = (typeof t_commande_materiel_Mode_Transmission)[keyof typeof t_commande_materiel_Mode_Transmission]
-
-
-export const t_commande_materiel_Statut_Commande: {
-  BROUILLON: 'BROUILLON',
-  ENVOYEE: 'ENVOYEE',
-  PREPAREE: 'PREPAREE'
-};
-
-export type t_commande_materiel_Statut_Commande = (typeof t_commande_materiel_Statut_Commande)[keyof typeof t_commande_materiel_Statut_Commande]
-
-}
-
-export type t_lieu_planning_audit_Type = $Enums.t_lieu_planning_audit_Type
-
-export const t_lieu_planning_audit_Type: typeof $Enums.t_lieu_planning_audit_Type
-
-export type t_commande_materiel_Mode_Transmission = $Enums.t_commande_materiel_Mode_Transmission
-
-export const t_commande_materiel_Mode_Transmission: typeof $Enums.t_commande_materiel_Mode_Transmission
-
-export type t_commande_materiel_Statut_Commande = $Enums.t_commande_materiel_Statut_Commande
-
-export const t_commande_materiel_Statut_Commande: typeof $Enums.t_commande_materiel_Statut_Commande
-
-/**
  * ##  Prisma Client ʲˢ
  *
  * Type-safe database client for TypeScript & Node.js
@@ -6937,7 +6896,6 @@ export namespace Prisma {
      * The data used to create many t_actionneurs.
      */
     data: t_actionneurCreateManyInput | t_actionneurCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -8045,7 +8003,6 @@ export namespace Prisma {
      * The data used to create many t_alarmes.
      */
     data: t_alarmeCreateManyInput | t_alarmeCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -9178,7 +9135,6 @@ export namespace Prisma {
      * The data used to create many t_alarme_histos.
      */
     data: t_alarme_histoCreateManyInput | t_alarme_histoCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -10123,7 +10079,6 @@ export namespace Prisma {
      * The data used to create many t_alarme_messages.
      */
     data: t_alarme_messageCreateManyInput | t_alarme_messageCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -11066,7 +11021,6 @@ export namespace Prisma {
      * The data used to create many t_autorisations.
      */
     data: t_autorisationCreateManyInput | t_autorisationCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -12068,7 +12022,6 @@ export namespace Prisma {
      * The data used to create many t_milieus.
      */
     data: t_milieuCreateManyInput | t_milieuCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -13228,7 +13181,6 @@ export namespace Prisma {
      * The data used to create many t_ajustages.
      */
     data: t_ajustageCreateManyInput | t_ajustageCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -14175,7 +14127,6 @@ export namespace Prisma {
      * The data used to create many t_certifs.
      */
     data: t_certifCreateManyInput | t_certifCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -15119,7 +15070,6 @@ export namespace Prisma {
      * The data used to create many t_certif_mesures.
      */
     data: t_certif_mesureCreateManyInput | t_certif_mesureCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -16129,7 +16079,6 @@ export namespace Prisma {
      * The data used to create many t_etalons.
      */
     data: t_etalonCreateManyInput | t_etalonCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -17217,7 +17166,6 @@ export namespace Prisma {
      * The data used to create many t_etalonnages.
      */
     data: t_etalonnageCreateManyInput | t_etalonnageCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -18154,7 +18102,6 @@ export namespace Prisma {
      * The data used to create many t_etalonnage_mesures.
      */
     data: t_etalonnage_mesureCreateManyInput | t_etalonnage_mesureCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -19101,7 +19048,6 @@ export namespace Prisma {
      * The data used to create many t_groupes.
      */
     data: t_groupeCreateManyInput | t_groupeCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -20092,7 +20038,6 @@ export namespace Prisma {
      * The data used to create many t_liaison_profil_autorisations.
      */
     data: t_liaison_profil_autorisationCreateManyInput | t_liaison_profil_autorisationCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -21050,7 +20995,6 @@ export namespace Prisma {
      * The data used to create many t_liaison_utilisateur_groupes.
      */
     data: t_liaison_utilisateur_groupeCreateManyInput | t_liaison_utilisateur_groupeCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -22038,7 +21982,6 @@ export namespace Prisma {
      * The data used to create many t_liaison_utilisateur_sites.
      */
     data: t_liaison_utilisateur_siteCreateManyInput | t_liaison_utilisateur_siteCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -23019,7 +22962,6 @@ export namespace Prisma {
      * The data used to create many t_lieu_groupes.
      */
     data: t_lieu_groupeCreateManyInput | t_lieu_groupeCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -25062,7 +25004,6 @@ export namespace Prisma {
      * The data used to create many t_lieus.
      */
     data: t_lieuCreateManyInput | t_lieuCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -26538,7 +26479,6 @@ export namespace Prisma {
      * The data used to create many t_lieu_templates.
      */
     data: t_lieu_templateCreateManyInput | t_lieu_templateCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -27586,7 +27526,6 @@ export namespace Prisma {
      * The data used to create many t_modules.
      */
     data: t_moduleCreateManyInput | t_moduleCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -28496,7 +28435,6 @@ export namespace Prisma {
      * The data used to create many t_module_types.
      */
     data: t_module_typeCreateManyInput | t_module_typeCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -29383,7 +29321,6 @@ export namespace Prisma {
      * The data used to create many t_parametres.
      */
     data: t_parametreCreateManyInput | t_parametreCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -30319,7 +30256,6 @@ export namespace Prisma {
      * The data used to create many t_pdfs.
      */
     data: t_pdfCreateManyInput | t_pdfCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -31330,7 +31266,6 @@ export namespace Prisma {
      * The data used to create many t_plans.
      */
     data: t_planCreateManyInput | t_planCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -32370,7 +32305,6 @@ export namespace Prisma {
      * The data used to create many t_postes_clients.
      */
     data: t_postes_clientsCreateManyInput | t_postes_clientsCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -33364,7 +33298,6 @@ export namespace Prisma {
      * The data used to create many t_profils.
      */
     data: t_profilCreateManyInput | t_profilCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -34359,7 +34292,6 @@ export namespace Prisma {
      * The data used to create many t_sites.
      */
     data: t_siteCreateManyInput | t_siteCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -35615,7 +35547,6 @@ export namespace Prisma {
      * The data used to create many t_sondes.
      */
     data: t_sondeCreateManyInput | t_sondeCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -36629,7 +36560,6 @@ export namespace Prisma {
      * The data used to create many t_etat_surveillances.
      */
     data: t_etat_surveillanceCreateManyInput | t_etat_surveillanceCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -37658,7 +37588,6 @@ export namespace Prisma {
      * The data used to create many t_sonde_types.
      */
     data: t_sonde_typeCreateManyInput | t_sonde_typeCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -38876,7 +38805,6 @@ export namespace Prisma {
      * The data used to create many t_utilisateurs.
      */
     data: t_utilisateurCreateManyInput | t_utilisateurCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -40190,7 +40118,6 @@ export namespace Prisma {
      * The data used to create many t_notifications.
      */
     data: t_notificationCreateManyInput | t_notificationCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -41308,7 +41235,6 @@ export namespace Prisma {
      * The data used to create many t_notification_deliveries.
      */
     data: t_notification_deliveryCreateManyInput | t_notification_deliveryCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -42323,7 +42249,6 @@ export namespace Prisma {
      * The data used to create many t_notification_events.
      */
     data: t_notification_eventCreateManyInput | t_notification_eventCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -43260,7 +43185,6 @@ export namespace Prisma {
      * The data used to create many liste_clients.
      */
     data: liste_clientsCreateManyInput | liste_clientsCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -44207,7 +44131,6 @@ export namespace Prisma {
      * The data used to create many t_actionneur_types.
      */
     data: t_actionneur_typeCreateManyInput | t_actionneur_typeCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -45192,7 +45115,6 @@ export namespace Prisma {
      * The data used to create many t_ancien_mot_de_passes.
      */
     data: t_ancien_mot_de_passeCreateManyInput | t_ancien_mot_de_passeCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -46126,7 +46048,6 @@ export namespace Prisma {
      * The data used to create many t_commentaire_acquittement_alarmes.
      */
     data: t_commentaire_acquittement_alarmeCreateManyInput | t_commentaire_acquittement_alarmeCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -47058,7 +46979,6 @@ export namespace Prisma {
      * The data used to create many t_etalon_types.
      */
     data: t_etalon_typeCreateManyInput | t_etalon_typeCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -47983,7 +47903,6 @@ export namespace Prisma {
      * The data used to create many t_mem_gsos.
      */
     data: t_mem_gsoCreateManyInput | t_mem_gsoCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -48915,7 +48834,6 @@ export namespace Prisma {
      * The data used to create many t_sonde_etats.
      */
     data: t_sonde_etatCreateManyInput | t_sonde_etatCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -49930,7 +49848,6 @@ export namespace Prisma {
      * The data used to create many t_lieu_mail_tels.
      */
     data: t_lieu_mail_telCreateManyInput | t_lieu_mail_telCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -50123,7 +50040,7 @@ export namespace Prisma {
     Timestamp: Date | null
     Date_Heure_Debut_Changement: Date | null
     Date_Heure_Fin_Changement: Date | null
-    Type: $Enums.t_lieu_planning_audit_Type | null
+    Type: string | null
     Planning_Regle_Id: number | null
     Consigne_Avant: number | null
     Tolerance_Surveillance_Sup_Avant: number | null
@@ -50139,7 +50056,7 @@ export namespace Prisma {
     Timestamp: Date | null
     Date_Heure_Debut_Changement: Date | null
     Date_Heure_Fin_Changement: Date | null
-    Type: $Enums.t_lieu_planning_audit_Type | null
+    Type: string | null
     Planning_Regle_Id: number | null
     Consigne_Avant: number | null
     Tolerance_Surveillance_Sup_Avant: number | null
@@ -50332,7 +50249,7 @@ export namespace Prisma {
     Timestamp: Date
     Date_Heure_Debut_Changement: Date | null
     Date_Heure_Fin_Changement: Date | null
-    Type: $Enums.t_lieu_planning_audit_Type
+    Type: string
     Planning_Regle_Id: number | null
     Consigne_Avant: number | null
     Tolerance_Surveillance_Sup_Avant: number | null
@@ -50406,7 +50323,7 @@ export namespace Prisma {
       Timestamp: Date
       Date_Heure_Debut_Changement: Date | null
       Date_Heure_Fin_Changement: Date | null
-      Type: $Enums.t_lieu_planning_audit_Type
+      Type: string
       Planning_Regle_Id: number | null
       Consigne_Avant: number | null
       Tolerance_Surveillance_Sup_Avant: number | null
@@ -50788,7 +50705,7 @@ export namespace Prisma {
     readonly Timestamp: FieldRef<"t_lieu_planning_audit", 'DateTime'>
     readonly Date_Heure_Debut_Changement: FieldRef<"t_lieu_planning_audit", 'DateTime'>
     readonly Date_Heure_Fin_Changement: FieldRef<"t_lieu_planning_audit", 'DateTime'>
-    readonly Type: FieldRef<"t_lieu_planning_audit", 't_lieu_planning_audit_Type'>
+    readonly Type: FieldRef<"t_lieu_planning_audit", 'String'>
     readonly Planning_Regle_Id: FieldRef<"t_lieu_planning_audit", 'Int'>
     readonly Consigne_Avant: FieldRef<"t_lieu_planning_audit", 'Float'>
     readonly Tolerance_Surveillance_Sup_Avant: FieldRef<"t_lieu_planning_audit", 'Float'>
@@ -51006,7 +50923,6 @@ export namespace Prisma {
      * The data used to create many t_lieu_planning_audits.
      */
     data: t_lieu_planning_auditCreateManyInput | t_lieu_planning_auditCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -52119,7 +52035,6 @@ export namespace Prisma {
      * The data used to create many t_lieu_planning_regles.
      */
     data: t_lieu_planning_regleCreateManyInput | t_lieu_planning_regleCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -53111,7 +53026,6 @@ export namespace Prisma {
      * The data used to create many t_materiels.
      */
     data: t_materielCreateManyInput | t_materielCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -53299,8 +53213,8 @@ export namespace Prisma {
     Email_Demandeur: string | null
     Email_Commercial: string | null
     Commentaire: string | null
-    Mode_Transmission: $Enums.t_commande_materiel_Mode_Transmission | null
-    Statut_Commande: $Enums.t_commande_materiel_Statut_Commande | null
+    Mode_Transmission: string | null
+    Statut_Commande: string | null
     Date_Creation: Date | null
     Date_Envoi: Date | null
     Id_Pdf: number | null
@@ -53314,8 +53228,8 @@ export namespace Prisma {
     Email_Demandeur: string | null
     Email_Commercial: string | null
     Commentaire: string | null
-    Mode_Transmission: $Enums.t_commande_materiel_Mode_Transmission | null
-    Statut_Commande: $Enums.t_commande_materiel_Statut_Commande | null
+    Mode_Transmission: string | null
+    Statut_Commande: string | null
     Date_Creation: Date | null
     Date_Envoi: Date | null
     Id_Pdf: number | null
@@ -53490,8 +53404,8 @@ export namespace Prisma {
     Email_Demandeur: string | null
     Email_Commercial: string
     Commentaire: string | null
-    Mode_Transmission: $Enums.t_commande_materiel_Mode_Transmission
-    Statut_Commande: $Enums.t_commande_materiel_Statut_Commande
+    Mode_Transmission: string
+    Statut_Commande: string
     Date_Creation: Date
     Date_Envoi: Date | null
     Id_Pdf: number | null
@@ -53575,8 +53489,8 @@ export namespace Prisma {
       Email_Demandeur: string | null
       Email_Commercial: string
       Commentaire: string | null
-      Mode_Transmission: $Enums.t_commande_materiel_Mode_Transmission
-      Statut_Commande: $Enums.t_commande_materiel_Statut_Commande
+      Mode_Transmission: string
+      Statut_Commande: string
       Date_Creation: Date
       Date_Envoi: Date | null
       Id_Pdf: number | null
@@ -53959,8 +53873,8 @@ export namespace Prisma {
     readonly Email_Demandeur: FieldRef<"t_commande_materiel", 'String'>
     readonly Email_Commercial: FieldRef<"t_commande_materiel", 'String'>
     readonly Commentaire: FieldRef<"t_commande_materiel", 'String'>
-    readonly Mode_Transmission: FieldRef<"t_commande_materiel", 't_commande_materiel_Mode_Transmission'>
-    readonly Statut_Commande: FieldRef<"t_commande_materiel", 't_commande_materiel_Statut_Commande'>
+    readonly Mode_Transmission: FieldRef<"t_commande_materiel", 'String'>
+    readonly Statut_Commande: FieldRef<"t_commande_materiel", 'String'>
     readonly Date_Creation: FieldRef<"t_commande_materiel", 'DateTime'>
     readonly Date_Envoi: FieldRef<"t_commande_materiel", 'DateTime'>
     readonly Id_Pdf: FieldRef<"t_commande_materiel", 'Int'>
@@ -54198,7 +54112,6 @@ export namespace Prisma {
      * The data used to create many t_commande_materiels.
      */
     data: t_commande_materielCreateManyInput | t_commande_materielCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -55269,7 +55182,6 @@ export namespace Prisma {
      * The data used to create many t_commande_materiel_lignes.
      */
     data: t_commande_materiel_ligneCreateManyInput | t_commande_materiel_ligneCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -56426,7 +56338,6 @@ export namespace Prisma {
      * The data used to create many t_vigilog_configurations.
      */
     data: t_vigilog_configurationCreateManyInput | t_vigilog_configurationCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -57601,7 +57512,6 @@ export namespace Prisma {
      * The data used to create many t_vigilogs.
      */
     data: t_vigilogCreateManyInput | t_vigilogCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -58766,7 +58676,6 @@ export namespace Prisma {
      * The data used to create many t_vigilog_usage_ponctuels.
      */
     data: t_vigilog_usage_ponctuelCreateManyInput | t_vigilog_usage_ponctuelCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -60265,7 +60174,6 @@ export namespace Prisma {
      * The data used to create many t_vigilog_tournees.
      */
     data: t_vigilog_tourneeCreateManyInput | t_vigilog_tourneeCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -60481,7 +60389,8 @@ export namespace Prisma {
     ReadUncommitted: 'ReadUncommitted',
     ReadCommitted: 'ReadCommitted',
     RepeatableRead: 'RepeatableRead',
-    Serializable: 'Serializable'
+    Serializable: 'Serializable',
+    Snapshot: 'Snapshot'
   };
 
   export type TransactionIsolationLevel = (typeof TransactionIsolationLevel)[keyof typeof TransactionIsolationLevel]
@@ -61371,436 +61280,6 @@ export namespace Prisma {
   export type NullsOrder = (typeof NullsOrder)[keyof typeof NullsOrder]
 
 
-  export const t_actionneurOrderByRelevanceFieldEnum: {
-    Num_Serie: 'Num_Serie',
-    Commentaire: 'Commentaire',
-    Relai_1: 'Relai_1',
-    Relai_2: 'Relai_2',
-    Relai_3: 'Relai_3',
-    Relai_4: 'Relai_4',
-    Libelle_Erreur: 'Libelle_Erreur'
-  };
-
-  export type t_actionneurOrderByRelevanceFieldEnum = (typeof t_actionneurOrderByRelevanceFieldEnum)[keyof typeof t_actionneurOrderByRelevanceFieldEnum]
-
-
-  export const t_alarmeOrderByRelevanceFieldEnum: {
-    Type: 'Type',
-    Sonde_Numero_Serie: 'Sonde_Numero_Serie',
-    Unite: 'Unite'
-  };
-
-  export type t_alarmeOrderByRelevanceFieldEnum = (typeof t_alarmeOrderByRelevanceFieldEnum)[keyof typeof t_alarmeOrderByRelevanceFieldEnum]
-
-
-  export const t_alarme_histoOrderByRelevanceFieldEnum: {
-    Type: 'Type',
-    Sonde_Numero_Serie: 'Sonde_Numero_Serie',
-    Unite: 'Unite'
-  };
-
-  export type t_alarme_histoOrderByRelevanceFieldEnum = (typeof t_alarme_histoOrderByRelevanceFieldEnum)[keyof typeof t_alarme_histoOrderByRelevanceFieldEnum]
-
-
-  export const t_alarme_messageOrderByRelevanceFieldEnum: {
-    Code_Alarme_Message: 'Code_Alarme_Message',
-    Type: 'Type',
-    Texte_Message: 'Texte_Message'
-  };
-
-  export type t_alarme_messageOrderByRelevanceFieldEnum = (typeof t_alarme_messageOrderByRelevanceFieldEnum)[keyof typeof t_alarme_messageOrderByRelevanceFieldEnum]
-
-
-  export const t_autorisationOrderByRelevanceFieldEnum: {
-    Code_Autorisation: 'Code_Autorisation',
-    Libelle_Autorisation: 'Libelle_Autorisation',
-    Commentaire: 'Commentaire'
-  };
-
-  export type t_autorisationOrderByRelevanceFieldEnum = (typeof t_autorisationOrderByRelevanceFieldEnum)[keyof typeof t_autorisationOrderByRelevanceFieldEnum]
-
-
-  export const t_milieuOrderByRelevanceFieldEnum: {
-    Model: 'Model',
-    Reference: 'Reference',
-    Contenu: 'Contenu'
-  };
-
-  export type t_milieuOrderByRelevanceFieldEnum = (typeof t_milieuOrderByRelevanceFieldEnum)[keyof typeof t_milieuOrderByRelevanceFieldEnum]
-
-
-  export const t_ajustageOrderByRelevanceFieldEnum: {
-    Sonde_Numero_Serie: 'Sonde_Numero_Serie',
-    Unite: 'Unite',
-    Operateur: 'Operateur',
-    SE_Numero: 'SE_Numero',
-    SE_Organisme: 'SE_Organisme',
-    SE_Numero_Certif: 'SE_Numero_Certif'
-  };
-
-  export type t_ajustageOrderByRelevanceFieldEnum = (typeof t_ajustageOrderByRelevanceFieldEnum)[keyof typeof t_ajustageOrderByRelevanceFieldEnum]
-
-
-  export const t_certifOrderByRelevanceFieldEnum: {
-    Numero: 'Numero',
-    Organisme: 'Organisme',
-    Etalon_Numero_Serie: 'Etalon_Numero_Serie',
-    Unite: 'Unite'
-  };
-
-  export type t_certifOrderByRelevanceFieldEnum = (typeof t_certifOrderByRelevanceFieldEnum)[keyof typeof t_certifOrderByRelevanceFieldEnum]
-
-
-  export const t_certif_mesureOrderByRelevanceFieldEnum: {
-    Temperature_Vraie: 'Temperature_Vraie',
-    Temperature_Reference: 'Temperature_Reference'
-  };
-
-  export type t_certif_mesureOrderByRelevanceFieldEnum = (typeof t_certif_mesureOrderByRelevanceFieldEnum)[keyof typeof t_certif_mesureOrderByRelevanceFieldEnum]
-
-
-  export const t_etalonOrderByRelevanceFieldEnum: {
-    Etalon_Numero_Serie: 'Etalon_Numero_Serie',
-    Etat_Etalon: 'Etat_Etalon',
-    Port_Serie: 'Port_Serie',
-    Resolution: 'Resolution',
-    Incertitude: 'Incertitude',
-    Reserve_MC2: 'Reserve_MC2'
-  };
-
-  export type t_etalonOrderByRelevanceFieldEnum = (typeof t_etalonOrderByRelevanceFieldEnum)[keyof typeof t_etalonOrderByRelevanceFieldEnum]
-
-
-  export const t_etalonnageOrderByRelevanceFieldEnum: {
-    Sonde_Numero_Serie: 'Sonde_Numero_Serie',
-    Operateur: 'Operateur',
-    Etalon_Numero_Serie: 'Etalon_Numero_Serie',
-    Organisme: 'Organisme',
-    Num_Certif: 'Num_Certif',
-    Unite: 'Unite',
-    Repetabilite: 'Repetabilite'
-  };
-
-  export type t_etalonnageOrderByRelevanceFieldEnum = (typeof t_etalonnageOrderByRelevanceFieldEnum)[keyof typeof t_etalonnageOrderByRelevanceFieldEnum]
-
-
-  export const t_groupeOrderByRelevanceFieldEnum: {
-    Nom_Groupe: 'Nom_Groupe',
-    Numero_Regroupement: 'Numero_Regroupement'
-  };
-
-  export type t_groupeOrderByRelevanceFieldEnum = (typeof t_groupeOrderByRelevanceFieldEnum)[keyof typeof t_groupeOrderByRelevanceFieldEnum]
-
-
-  export const t_lieuOrderByRelevanceFieldEnum: {
-    Nom_Lieu: 'Nom_Lieu',
-    Sonde_Numero_Serie: 'Sonde_Numero_Serie',
-    Adresse_Sonde: 'Adresse_Sonde',
-    Observations_Info: 'Observations_Info',
-    Lieu_Etat: 'Lieu_Etat',
-    Tel_Code: 'Tel_Code',
-    Tel_Son_Lieu: 'Tel_Son_Lieu',
-    Derniere_Unite: 'Derniere_Unite',
-    Lieu_Etat_N1: 'Lieu_Etat_N1',
-    Type_Lieu: 'Type_Lieu',
-    Commentaire: 'Commentaire',
-    Derniere_Val_Rssi: 'Derniere_Val_Rssi',
-    Derniere_Val_Tension: 'Derniere_Val_Tension'
-  };
-
-  export type t_lieuOrderByRelevanceFieldEnum = (typeof t_lieuOrderByRelevanceFieldEnum)[keyof typeof t_lieuOrderByRelevanceFieldEnum]
-
-
-  export const t_lieu_templateOrderByRelevanceFieldEnum: {
-    Nom_Template: 'Nom_Template',
-    Description: 'Description',
-    Lieu_Etat: 'Lieu_Etat',
-    Observations_Info: 'Observations_Info'
-  };
-
-  export type t_lieu_templateOrderByRelevanceFieldEnum = (typeof t_lieu_templateOrderByRelevanceFieldEnum)[keyof typeof t_lieu_templateOrderByRelevanceFieldEnum]
-
-
-  export const t_moduleOrderByRelevanceFieldEnum: {
-    Module_Numero_Serie: 'Module_Numero_Serie',
-    Port_Serie: 'Port_Serie',
-    Adresse_IP: 'Adresse_IP',
-    Emplacement: 'Emplacement',
-    Port_Serie_Send_GSO: 'Port_Serie_Send_GSO'
-  };
-
-  export type t_moduleOrderByRelevanceFieldEnum = (typeof t_moduleOrderByRelevanceFieldEnum)[keyof typeof t_moduleOrderByRelevanceFieldEnum]
-
-
-  export const t_module_typeOrderByRelevanceFieldEnum: {
-    Libelle_Type_Module: 'Libelle_Type_Module',
-    Libelle_Module: 'Libelle_Module'
-  };
-
-  export type t_module_typeOrderByRelevanceFieldEnum = (typeof t_module_typeOrderByRelevanceFieldEnum)[keyof typeof t_module_typeOrderByRelevanceFieldEnum]
-
-
-  export const t_parametreOrderByRelevanceFieldEnum: {
-    Section: 'Section',
-    Mot_Cle: 'Mot_Cle',
-    Valeur: 'Valeur',
-    Commentaire: 'Commentaire'
-  };
-
-  export type t_parametreOrderByRelevanceFieldEnum = (typeof t_parametreOrderByRelevanceFieldEnum)[keyof typeof t_parametreOrderByRelevanceFieldEnum]
-
-
-  export const t_pdfOrderByRelevanceFieldEnum: {
-    Nom_PDF: 'Nom_PDF'
-  };
-
-  export type t_pdfOrderByRelevanceFieldEnum = (typeof t_pdfOrderByRelevanceFieldEnum)[keyof typeof t_pdfOrderByRelevanceFieldEnum]
-
-
-  export const t_planOrderByRelevanceFieldEnum: {
-    Titre: 'Titre'
-  };
-
-  export type t_planOrderByRelevanceFieldEnum = (typeof t_planOrderByRelevanceFieldEnum)[keyof typeof t_planOrderByRelevanceFieldEnum]
-
-
-  export const t_postes_clientsOrderByRelevanceFieldEnum: {
-    Nom_Machine_Connexion: 'Nom_Machine_Connexion',
-    Adresse_IP_Connexion: 'Adresse_IP_Connexion',
-    Login: 'Login',
-    Nom: 'Nom',
-    Prenom: 'Prenom'
-  };
-
-  export type t_postes_clientsOrderByRelevanceFieldEnum = (typeof t_postes_clientsOrderByRelevanceFieldEnum)[keyof typeof t_postes_clientsOrderByRelevanceFieldEnum]
-
-
-  export const t_profilOrderByRelevanceFieldEnum: {
-    Profil_Utilisateur: 'Profil_Utilisateur',
-    Commentaire: 'Commentaire'
-  };
-
-  export type t_profilOrderByRelevanceFieldEnum = (typeof t_profilOrderByRelevanceFieldEnum)[keyof typeof t_profilOrderByRelevanceFieldEnum]
-
-
-  export const t_siteOrderByRelevanceFieldEnum: {
-    Libelle_Site: 'Libelle_Site',
-    Commentaire: 'Commentaire'
-  };
-
-  export type t_siteOrderByRelevanceFieldEnum = (typeof t_siteOrderByRelevanceFieldEnum)[keyof typeof t_siteOrderByRelevanceFieldEnum]
-
-
-  export const t_sondeOrderByRelevanceFieldEnum: {
-    Adresse_Sonde: 'Adresse_Sonde',
-    Sonde_Numero_Serie: 'Sonde_Numero_Serie',
-    Sonde_Type: 'Sonde_Type',
-    Port_Serie: 'Port_Serie',
-    Surveillance_Etat: 'Surveillance_Etat',
-    Relai_1: 'Relai_1',
-    Relai_2: 'Relai_2',
-    Relai_3: 'Relai_3',
-    Relai_4: 'Relai_4',
-    Etat_Sonde_N1: 'Etat_Sonde_N1'
-  };
-
-  export type t_sondeOrderByRelevanceFieldEnum = (typeof t_sondeOrderByRelevanceFieldEnum)[keyof typeof t_sondeOrderByRelevanceFieldEnum]
-
-
-  export const t_etat_surveillanceOrderByRelevanceFieldEnum: {
-    Surveillance_Etat: 'Surveillance_Etat',
-    Surveillance_Etat_Libelle: 'Surveillance_Etat_Libelle'
-  };
-
-  export type t_etat_surveillanceOrderByRelevanceFieldEnum = (typeof t_etat_surveillanceOrderByRelevanceFieldEnum)[keyof typeof t_etat_surveillanceOrderByRelevanceFieldEnum]
-
-
-  export const t_sonde_typeOrderByRelevanceFieldEnum: {
-    Sonde_Type: 'Sonde_Type',
-    Libelle_Sonde_Type: 'Libelle_Sonde_Type',
-    Famille_Sonde: 'Famille_Sonde'
-  };
-
-  export type t_sonde_typeOrderByRelevanceFieldEnum = (typeof t_sonde_typeOrderByRelevanceFieldEnum)[keyof typeof t_sonde_typeOrderByRelevanceFieldEnum]
-
-
-  export const t_utilisateurOrderByRelevanceFieldEnum: {
-    Login: 'Login',
-    Mot_De_Passe: 'Mot_De_Passe',
-    Profil_Utilisateur: 'Profil_Utilisateur',
-    Adresse_IP_Connexion: 'Adresse_IP_Connexion',
-    Nom_Machine_Connexion: 'Nom_Machine_Connexion',
-    Nom: 'Nom',
-    Prenom: 'Prenom',
-    Tel_Num_Fixe: 'Tel_Num_Fixe',
-    Tel_Num_Mobile: 'Tel_Num_Mobile',
-    Adresse_Email: 'Adresse_Email',
-    Reset_Password_Token: 'Reset_Password_Token',
-    Avatar_Utilisateur: 'Avatar_Utilisateur'
-  };
-
-  export type t_utilisateurOrderByRelevanceFieldEnum = (typeof t_utilisateurOrderByRelevanceFieldEnum)[keyof typeof t_utilisateurOrderByRelevanceFieldEnum]
-
-
-  export const t_notificationOrderByRelevanceFieldEnum: {
-    Type: 'Type',
-    Titre: 'Titre',
-    Message: 'Message',
-    Payload_Json: 'Payload_Json'
-  };
-
-  export type t_notificationOrderByRelevanceFieldEnum = (typeof t_notificationOrderByRelevanceFieldEnum)[keyof typeof t_notificationOrderByRelevanceFieldEnum]
-
-
-  export const t_notification_deliveryOrderByRelevanceFieldEnum: {
-    Statut: 'Statut',
-    Derniere_Erreur: 'Derniere_Erreur',
-    Correlation_Id: 'Correlation_Id'
-  };
-
-  export type t_notification_deliveryOrderByRelevanceFieldEnum = (typeof t_notification_deliveryOrderByRelevanceFieldEnum)[keyof typeof t_notification_deliveryOrderByRelevanceFieldEnum]
-
-
-  export const t_notification_eventOrderByRelevanceFieldEnum: {
-    Event_Type: 'Event_Type',
-    Event_Data: 'Event_Data'
-  };
-
-  export type t_notification_eventOrderByRelevanceFieldEnum = (typeof t_notification_eventOrderByRelevanceFieldEnum)[keyof typeof t_notification_eventOrderByRelevanceFieldEnum]
-
-
-  export const liste_clientsOrderByRelevanceFieldEnum: {
-    Nom: 'Nom',
-    Num_Compte: 'Num_Compte'
-  };
-
-  export type liste_clientsOrderByRelevanceFieldEnum = (typeof liste_clientsOrderByRelevanceFieldEnum)[keyof typeof liste_clientsOrderByRelevanceFieldEnum]
-
-
-  export const t_actionneur_typeOrderByRelevanceFieldEnum: {
-    Description: 'Description'
-  };
-
-  export type t_actionneur_typeOrderByRelevanceFieldEnum = (typeof t_actionneur_typeOrderByRelevanceFieldEnum)[keyof typeof t_actionneur_typeOrderByRelevanceFieldEnum]
-
-
-  export const t_ancien_mot_de_passeOrderByRelevanceFieldEnum: {
-    Mot_De_Passe: 'Mot_De_Passe'
-  };
-
-  export type t_ancien_mot_de_passeOrderByRelevanceFieldEnum = (typeof t_ancien_mot_de_passeOrderByRelevanceFieldEnum)[keyof typeof t_ancien_mot_de_passeOrderByRelevanceFieldEnum]
-
-
-  export const t_commentaire_acquittement_alarmeOrderByRelevanceFieldEnum: {
-    Type_Commentaire: 'Type_Commentaire',
-    Texte: 'Texte'
-  };
-
-  export type t_commentaire_acquittement_alarmeOrderByRelevanceFieldEnum = (typeof t_commentaire_acquittement_alarmeOrderByRelevanceFieldEnum)[keyof typeof t_commentaire_acquittement_alarmeOrderByRelevanceFieldEnum]
-
-
-  export const t_etalon_typeOrderByRelevanceFieldEnum: {
-    Type_Etalon: 'Type_Etalon',
-    Nom: 'Nom',
-    Descriptif: 'Descriptif'
-  };
-
-  export type t_etalon_typeOrderByRelevanceFieldEnum = (typeof t_etalon_typeOrderByRelevanceFieldEnum)[keyof typeof t_etalon_typeOrderByRelevanceFieldEnum]
-
-
-  export const t_mem_gsoOrderByRelevanceFieldEnum: {
-    last_sonde: 'last_sonde'
-  };
-
-  export type t_mem_gsoOrderByRelevanceFieldEnum = (typeof t_mem_gsoOrderByRelevanceFieldEnum)[keyof typeof t_mem_gsoOrderByRelevanceFieldEnum]
-
-
-  export const t_sonde_etatOrderByRelevanceFieldEnum: {
-    Etat_Sonde: 'Etat_Sonde',
-    Etat_Libelle: 'Etat_Libelle'
-  };
-
-  export type t_sonde_etatOrderByRelevanceFieldEnum = (typeof t_sonde_etatOrderByRelevanceFieldEnum)[keyof typeof t_sonde_etatOrderByRelevanceFieldEnum]
-
-
-  export const t_materielOrderByRelevanceFieldEnum: {
-    Ref_Commercial: 'Ref_Commercial',
-    Designation: 'Designation',
-    Descriptif: 'Descriptif',
-    Gamme: 'Gamme',
-    Type: 'Type',
-    Chemin_Image: 'Chemin_Image'
-  };
-
-  export type t_materielOrderByRelevanceFieldEnum = (typeof t_materielOrderByRelevanceFieldEnum)[keyof typeof t_materielOrderByRelevanceFieldEnum]
-
-
-  export const t_commande_materielOrderByRelevanceFieldEnum: {
-    Reference_Commande: 'Reference_Commande',
-    Nom_Demandeur: 'Nom_Demandeur',
-    Email_Demandeur: 'Email_Demandeur',
-    Email_Commercial: 'Email_Commercial',
-    Commentaire: 'Commentaire'
-  };
-
-  export type t_commande_materielOrderByRelevanceFieldEnum = (typeof t_commande_materielOrderByRelevanceFieldEnum)[keyof typeof t_commande_materielOrderByRelevanceFieldEnum]
-
-
-  export const t_commande_materiel_ligneOrderByRelevanceFieldEnum: {
-    Ref_Commercial: 'Ref_Commercial',
-    Designation: 'Designation',
-    Descriptif: 'Descriptif',
-    Gamme: 'Gamme',
-    Type: 'Type'
-  };
-
-  export type t_commande_materiel_ligneOrderByRelevanceFieldEnum = (typeof t_commande_materiel_ligneOrderByRelevanceFieldEnum)[keyof typeof t_commande_materiel_ligneOrderByRelevanceFieldEnum]
-
-
-  export const t_vigilog_configurationOrderByRelevanceFieldEnum: {
-    Nom_Configuration: 'Nom_Configuration',
-    Description_Configuration: 'Description_Configuration'
-  };
-
-  export type t_vigilog_configurationOrderByRelevanceFieldEnum = (typeof t_vigilog_configurationOrderByRelevanceFieldEnum)[keyof typeof t_vigilog_configurationOrderByRelevanceFieldEnum]
-
-
-  export const t_vigilogOrderByRelevanceFieldEnum: {
-    Numero_Serie: 'Numero_Serie',
-    Modele: 'Modele',
-    Libelle: 'Libelle',
-    Commentaire: 'Commentaire'
-  };
-
-  export type t_vigilogOrderByRelevanceFieldEnum = (typeof t_vigilogOrderByRelevanceFieldEnum)[keyof typeof t_vigilogOrderByRelevanceFieldEnum]
-
-
-  export const t_vigilog_usage_ponctuelOrderByRelevanceFieldEnum: {
-    Reference_Usage: 'Reference_Usage',
-    Nom_Configuration: 'Nom_Configuration',
-    Numero_Serie_VigiLog: 'Numero_Serie_VigiLog',
-    Nom_Lieu_Temporaire: 'Nom_Lieu_Temporaire',
-    Statut: 'Statut',
-    Commentaire_Demarrage: 'Commentaire_Demarrage',
-    Commentaire_Arret: 'Commentaire_Arret'
-  };
-
-  export type t_vigilog_usage_ponctuelOrderByRelevanceFieldEnum = (typeof t_vigilog_usage_ponctuelOrderByRelevanceFieldEnum)[keyof typeof t_vigilog_usage_ponctuelOrderByRelevanceFieldEnum]
-
-
-  export const t_vigilog_tourneeOrderByRelevanceFieldEnum: {
-    Reference_Tournee: 'Reference_Tournee',
-    Nom_Configuration: 'Nom_Configuration',
-    Numero_Serie_VigiLog: 'Numero_Serie_VigiLog',
-    Statut: 'Statut',
-    Resultat_Feu: 'Resultat_Feu',
-    Commentaire: 'Commentaire',
-    Commentaire_Acquittement: 'Commentaire_Acquittement'
-  };
-
-  export type t_vigilog_tourneeOrderByRelevanceFieldEnum = (typeof t_vigilog_tourneeOrderByRelevanceFieldEnum)[keyof typeof t_vigilog_tourneeOrderByRelevanceFieldEnum]
-
-
   /**
    * Field references
    */
@@ -61860,27 +61339,6 @@ export namespace Prisma {
    */
   export type BytesFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Bytes'>
     
-
-
-  /**
-   * Reference to a field of type 't_lieu_planning_audit_Type'
-   */
-  export type Enumt_lieu_planning_audit_TypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 't_lieu_planning_audit_Type'>
-    
-
-
-  /**
-   * Reference to a field of type 't_commande_materiel_Mode_Transmission'
-   */
-  export type Enumt_commande_materiel_Mode_TransmissionFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 't_commande_materiel_Mode_Transmission'>
-    
-
-
-  /**
-   * Reference to a field of type 't_commande_materiel_Statut_Commande'
-   */
-  export type Enumt_commande_materiel_Statut_CommandeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 't_commande_materiel_Statut_Commande'>
-    
   /**
    * Deep Input Types
    */
@@ -61935,7 +61393,6 @@ export namespace Prisma {
     Id_Worker?: SortOrderInput | SortOrder
     t_plan?: t_planOrderByWithRelationInput
     t_actionneurtype?: t_actionneur_typeOrderByWithRelationInput
-    _relevance?: t_actionneurOrderByRelevanceInput
   }
 
   export type t_actionneurWhereUniqueInput = Prisma.AtLeast<{
@@ -62054,7 +61511,6 @@ export namespace Prisma {
     Est_Tel_Acquittee?: SortOrderInput | SortOrder
     t_lieu?: t_lieuOrderByWithRelationInput
     t_notification?: t_notificationOrderByRelationAggregateInput
-    _relevance?: t_alarmeOrderByRelevanceInput
   }
 
   export type t_alarmeWhereUniqueInput = Prisma.AtLeast<{
@@ -62157,7 +61613,6 @@ export namespace Prisma {
     Est_Tel_Acquittee?: SortOrderInput | SortOrder
     Date_Heure_Acquittement?: SortOrderInput | SortOrder
     t_lieu?: t_lieuOrderByWithRelationInput
-    _relevance?: t_alarme_histoOrderByRelevanceInput
   }
 
   export type t_alarme_histoWhereUniqueInput = Prisma.AtLeast<{
@@ -62241,7 +61696,6 @@ export namespace Prisma {
     Code_Alarme_Message?: SortOrderInput | SortOrder
     Type?: SortOrderInput | SortOrder
     Texte_Message?: SortOrderInput | SortOrder
-    _relevance?: t_alarme_messageOrderByRelevanceInput
   }
 
   export type t_alarme_messageWhereUniqueInput = Prisma.AtLeast<{
@@ -62293,7 +61747,6 @@ export namespace Prisma {
     Libelle_Autorisation?: SortOrderInput | SortOrder
     Commentaire?: SortOrderInput | SortOrder
     t_liaison_profil_autorisation?: t_liaison_profil_autorisationOrderByRelationAggregateInput
-    _relevance?: t_autorisationOrderByRelevanceInput
   }
 
   export type t_autorisationWhereUniqueInput = Prisma.AtLeast<{
@@ -62352,7 +61805,6 @@ export namespace Prisma {
     Contenu?: SortOrderInput | SortOrder
     Est_Reserve_MC2?: SortOrderInput | SortOrder
     Est_Archive?: SortOrderInput | SortOrder
-    _relevance?: t_milieuOrderByRelevanceInput
   }
 
   export type t_milieuWhereUniqueInput = Prisma.AtLeast<{
@@ -62450,7 +61902,6 @@ export namespace Prisma {
     Nouvelle_Mesure1?: SortOrderInput | SortOrder
     Nouvelle_Mesure2?: SortOrderInput | SortOrder
     Id_Milieu?: SortOrderInput | SortOrder
-    _relevance?: t_ajustageOrderByRelevanceInput
   }
 
   export type t_ajustageWhereUniqueInput = Prisma.AtLeast<{
@@ -62560,7 +62011,6 @@ export namespace Prisma {
     Etalon_Numero_Serie?: SortOrderInput | SortOrder
     Unite?: SortOrderInput | SortOrder
     Id_PDF?: SortOrderInput | SortOrder
-    _relevance?: t_certifOrderByRelevanceInput
   }
 
   export type t_certifWhereUniqueInput = Prisma.AtLeast<{
@@ -62623,7 +62073,6 @@ export namespace Prisma {
     Temperature_Vraie?: SortOrderInput | SortOrder
     Temperature_Reference?: SortOrderInput | SortOrder
     Incertitude?: SortOrderInput | SortOrder
-    _relevance?: t_certif_mesureOrderByRelevanceInput
   }
 
   export type t_certif_mesureWhereUniqueInput = Prisma.AtLeast<{
@@ -62695,7 +62144,6 @@ export namespace Prisma {
     Reserve_MC2?: SortOrderInput | SortOrder
     Id_Worker?: SortOrderInput | SortOrder
     Id_Module?: SortOrderInput | SortOrder
-    _relevance?: t_etalonOrderByRelevanceInput
   }
 
   export type t_etalonWhereUniqueInput = Prisma.AtLeast<{
@@ -62797,7 +62245,6 @@ export namespace Prisma {
     Repetabilite?: SortOrderInput | SortOrder
     Id_Bain?: SortOrderInput | SortOrder
     Err_Justesse?: SortOrderInput | SortOrder
-    _relevance?: t_etalonnageOrderByRelevanceInput
   }
 
   export type t_etalonnageWhereUniqueInput = Prisma.AtLeast<{
@@ -62947,7 +62394,6 @@ export namespace Prisma {
     Est_Archive?: SortOrderInput | SortOrder
     t_liaison_utilisateur_groupe?: t_liaison_utilisateur_groupeOrderByRelationAggregateInput
     t_lieu_groupe?: t_lieu_groupeOrderByRelationAggregateInput
-    _relevance?: t_groupeOrderByRelevanceInput
   }
 
   export type t_groupeWhereUniqueInput = Prisma.AtLeast<{
@@ -63377,7 +62823,6 @@ export namespace Prisma {
     t_lieu_groupe?: t_lieu_groupeOrderByRelationAggregateInput
     t_lieu_mail_tel?: t_lieu_mail_telOrderByRelationAggregateInput
     t_lieu_planning_regle?: t_lieu_planning_regleOrderByRelationAggregateInput
-    _relevance?: t_lieuOrderByRelevanceInput
   }
 
   export type t_lieuWhereUniqueInput = Prisma.AtLeast<{
@@ -63727,7 +63172,6 @@ export namespace Prisma {
     Date_Maj?: SortOrder
     Id_Utilisateur_Creation?: SortOrderInput | SortOrder
     Id_Utilisateur_Maj?: SortOrderInput | SortOrder
-    _relevance?: t_lieu_templateOrderByRelevanceInput
   }
 
   export type t_lieu_templateWhereUniqueInput = Prisma.AtLeast<{
@@ -63872,7 +63316,6 @@ export namespace Prisma {
     Id_Worker?: SortOrderInput | SortOrder
     Est_Module_GSO?: SortOrder
     Port_Serie_Send_GSO?: SortOrderInput | SortOrder
-    _relevance?: t_moduleOrderByRelevanceInput
   }
 
   export type t_moduleWhereUniqueInput = Prisma.AtLeast<{
@@ -63953,7 +63396,6 @@ export namespace Prisma {
     Libelle_Type_Module?: SortOrderInput | SortOrder
     Libelle_Module?: SortOrderInput | SortOrder
     Est_Flag_Affiche_Plan?: SortOrderInput | SortOrder
-    _relevance?: t_module_typeOrderByRelevanceInput
   }
 
   export type t_module_typeWhereUniqueInput = Prisma.AtLeast<{
@@ -64005,7 +63447,6 @@ export namespace Prisma {
     Valeur?: SortOrderInput | SortOrder
     Commentaire?: SortOrderInput | SortOrder
     Champ_DATETIME?: SortOrderInput | SortOrder
-    _relevance?: t_parametreOrderByRelevanceInput
   }
 
   export type t_parametreWhereUniqueInput = Prisma.AtLeast<{
@@ -64059,7 +63500,6 @@ export namespace Prisma {
     Contenu_PDF?: SortOrderInput | SortOrder
     t_commande_materiel?: t_commande_materielOrderByRelationAggregateInput
     t_lieu?: t_lieuOrderByRelationAggregateInput
-    _relevance?: t_pdfOrderByRelevanceInput
   }
 
   export type t_pdfWhereUniqueInput = Prisma.AtLeast<{
@@ -64112,7 +63552,6 @@ export namespace Prisma {
     Est_Archive?: SortOrderInput | SortOrder
     t_actionneur?: t_actionneurOrderByRelationAggregateInput
     t_lieu?: t_lieuOrderByRelationAggregateInput
-    _relevance?: t_planOrderByRelevanceInput
   }
 
   export type t_planWhereUniqueInput = Prisma.AtLeast<{
@@ -64172,7 +63611,6 @@ export namespace Prisma {
     Prenom?: SortOrderInput | SortOrder
     Date_Heure_Derniere_Connexion?: SortOrderInput | SortOrder
     t_notification_delivery?: t_notification_deliveryOrderByRelationAggregateInput
-    _relevance?: t_postes_clientsOrderByRelevanceInput
   }
 
   export type t_postes_clientsWhereUniqueInput = Prisma.AtLeast<{
@@ -64236,7 +63674,6 @@ export namespace Prisma {
     Est_MC2?: SortOrderInput | SortOrder
     Est_Archive?: SortOrderInput | SortOrder
     t_liaison_profil_autorisation?: t_liaison_profil_autorisationOrderByRelationAggregateInput
-    _relevance?: t_profilOrderByRelevanceInput
   }
 
   export type t_profilWhereUniqueInput = Prisma.AtLeast<{
@@ -64298,7 +63735,6 @@ export namespace Prisma {
     t_lieu?: t_lieuOrderByRelationAggregateInput
     t_vigilog_tournee_t_vigilog_tournee_Id_Site_ArriveeTot_site?: t_vigilog_tourneeOrderByRelationAggregateInput
     t_vigilog_tournee_t_vigilog_tournee_Id_Site_DepartTot_site?: t_vigilog_tourneeOrderByRelationAggregateInput
-    _relevance?: t_siteOrderByRelevanceInput
   }
 
   export type t_siteWhereUniqueInput = Prisma.AtLeast<{
@@ -64390,7 +63826,6 @@ export namespace Prisma {
     t_sonde_etat?: t_sonde_etatOrderByWithRelationInput
     t_etat_surveillance?: t_etat_surveillanceOrderByWithRelationInput
     t_sonde_type?: t_sonde_typeOrderByWithRelationInput
-    _relevance?: t_sondeOrderByRelevanceInput
   }
 
   export type t_sondeWhereUniqueInput = Prisma.AtLeast<{
@@ -64491,7 +63926,6 @@ export namespace Prisma {
     Surveillance_Etat_Libelle?: SortOrderInput | SortOrder
     t_lieu?: t_lieuOrderByRelationAggregateInput
     t_sonde?: t_sondeOrderByRelationAggregateInput
-    _relevance?: t_etat_surveillanceOrderByRelevanceInput
   }
 
   export type t_etat_surveillanceWhereUniqueInput = Prisma.AtLeast<{
@@ -64546,7 +63980,6 @@ export namespace Prisma {
     Est_Double_Capteur?: SortOrder
     Famille_Sonde?: SortOrder
     t_sonde?: t_sondeOrderByRelationAggregateInput
-    _relevance?: t_sonde_typeOrderByRelevanceInput
   }
 
   export type t_sonde_typeWhereUniqueInput = Prisma.AtLeast<{
@@ -64661,7 +64094,6 @@ export namespace Prisma {
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateur?: t_vigilog_tourneeOrderByRelationAggregateInput
     t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur?: t_vigilog_usage_ponctuelOrderByRelationAggregateInput
     t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: t_vigilog_usage_ponctuelOrderByRelationAggregateInput
-    _relevance?: t_utilisateurOrderByRelevanceInput
   }
 
   export type t_utilisateurWhereUniqueInput = Prisma.AtLeast<{
@@ -64788,7 +64220,6 @@ export namespace Prisma {
     Est_Archive?: SortOrder
     t_alarme?: t_alarmeOrderByWithRelationInput
     t_notification_delivery?: t_notification_deliveryOrderByRelationAggregateInput
-    _relevance?: t_notificationOrderByRelevanceInput
   }
 
   export type t_notificationWhereUniqueInput = Prisma.AtLeast<{
@@ -64879,7 +64310,6 @@ export namespace Prisma {
     t_postes_clients?: t_postes_clientsOrderByWithRelationInput
     t_utilisateur?: t_utilisateurOrderByWithRelationInput
     t_notification_event?: t_notification_eventOrderByRelationAggregateInput
-    _relevance?: t_notification_deliveryOrderByRelevanceInput
   }
 
   export type t_notification_deliveryWhereUniqueInput = Prisma.AtLeast<{
@@ -64962,7 +64392,6 @@ export namespace Prisma {
     Event_Data?: SortOrderInput | SortOrder
     Date_Event?: SortOrder
     t_notification_delivery?: t_notification_deliveryOrderByWithRelationInput
-    _relevance?: t_notification_eventOrderByRelevanceInput
   }
 
   export type t_notification_eventWhereUniqueInput = Prisma.AtLeast<{
@@ -65018,7 +64447,6 @@ export namespace Prisma {
     Num_Compte?: SortOrderInput | SortOrder
     VigiServ_Derniere_Date_Heure?: SortOrderInput | SortOrder
     Vigitel_Derniere_Date_Heure?: SortOrderInput | SortOrder
-    _relevance?: liste_clientsOrderByRelevanceInput
   }
 
   export type liste_clientsWhereUniqueInput = Prisma.AtLeast<{
@@ -65073,7 +64501,6 @@ export namespace Prisma {
     Description?: SortOrderInput | SortOrder
     Gere_Relais?: SortOrderInput | SortOrder
     t_actionneur?: t_actionneurOrderByRelationAggregateInput
-    _relevance?: t_actionneur_typeOrderByRelevanceInput
   }
 
   export type t_actionneur_typeWhereUniqueInput = Prisma.AtLeast<{
@@ -65126,7 +64553,6 @@ export namespace Prisma {
     Mot_De_Passe?: SortOrderInput | SortOrder
     Est_Premiere_Connexion?: SortOrderInput | SortOrder
     t_utilisateur?: t_utilisateurOrderByWithRelationInput
-    _relevance?: t_ancien_mot_de_passeOrderByRelevanceInput
   }
 
   export type t_ancien_mot_de_passeWhereUniqueInput = Prisma.AtLeast<{
@@ -65175,7 +64601,6 @@ export namespace Prisma {
     Id_Commentaire?: SortOrder
     Type_Commentaire?: SortOrderInput | SortOrder
     Texte?: SortOrderInput | SortOrder
-    _relevance?: t_commentaire_acquittement_alarmeOrderByRelevanceInput
   }
 
   export type t_commentaire_acquittement_alarmeWhereUniqueInput = Prisma.AtLeast<{
@@ -65226,7 +64651,6 @@ export namespace Prisma {
     Est_Saisie_Module?: SortOrderInput | SortOrder
     Est_Sonde_Externe?: SortOrderInput | SortOrder
     Resolution?: SortOrderInput | SortOrder
-    _relevance?: t_etalon_typeOrderByRelevanceInput
   }
 
   export type t_etalon_typeWhereUniqueInput = Prisma.AtLeast<{
@@ -65284,7 +64708,6 @@ export namespace Prisma {
     cycle_MEM?: SortOrderInput | SortOrder
     cycle_start?: SortOrderInput | SortOrder
     last_update?: SortOrderInput | SortOrder
-    _relevance?: t_mem_gsoOrderByRelevanceInput
   }
 
   export type t_mem_gsoWhereUniqueInput = Prisma.AtLeast<{
@@ -65337,7 +64760,6 @@ export namespace Prisma {
     Etat_Sonde?: SortOrderInput | SortOrder
     Etat_Libelle?: SortOrderInput | SortOrder
     t_sonde?: t_sondeOrderByRelationAggregateInput
-    _relevance?: t_sonde_etatOrderByRelevanceInput
   }
 
   export type t_sonde_etatWhereUniqueInput = Prisma.AtLeast<{
@@ -65441,7 +64863,7 @@ export namespace Prisma {
     Timestamp?: DateTimeFilter<"t_lieu_planning_audit"> | Date | string
     Date_Heure_Debut_Changement?: DateTimeNullableFilter<"t_lieu_planning_audit"> | Date | string | null
     Date_Heure_Fin_Changement?: DateTimeNullableFilter<"t_lieu_planning_audit"> | Date | string | null
-    Type?: Enumt_lieu_planning_audit_TypeFilter<"t_lieu_planning_audit"> | $Enums.t_lieu_planning_audit_Type
+    Type?: StringFilter<"t_lieu_planning_audit"> | string
     Planning_Regle_Id?: IntNullableFilter<"t_lieu_planning_audit"> | number | null
     Consigne_Avant?: FloatNullableFilter<"t_lieu_planning_audit"> | number | null
     Tolerance_Surveillance_Sup_Avant?: FloatNullableFilter<"t_lieu_planning_audit"> | number | null
@@ -65476,7 +64898,7 @@ export namespace Prisma {
     Timestamp?: DateTimeFilter<"t_lieu_planning_audit"> | Date | string
     Date_Heure_Debut_Changement?: DateTimeNullableFilter<"t_lieu_planning_audit"> | Date | string | null
     Date_Heure_Fin_Changement?: DateTimeNullableFilter<"t_lieu_planning_audit"> | Date | string | null
-    Type?: Enumt_lieu_planning_audit_TypeFilter<"t_lieu_planning_audit"> | $Enums.t_lieu_planning_audit_Type
+    Type?: StringFilter<"t_lieu_planning_audit"> | string
     Planning_Regle_Id?: IntNullableFilter<"t_lieu_planning_audit"> | number | null
     Consigne_Avant?: FloatNullableFilter<"t_lieu_planning_audit"> | number | null
     Tolerance_Surveillance_Sup_Avant?: FloatNullableFilter<"t_lieu_planning_audit"> | number | null
@@ -65516,7 +64938,7 @@ export namespace Prisma {
     Timestamp?: DateTimeWithAggregatesFilter<"t_lieu_planning_audit"> | Date | string
     Date_Heure_Debut_Changement?: DateTimeNullableWithAggregatesFilter<"t_lieu_planning_audit"> | Date | string | null
     Date_Heure_Fin_Changement?: DateTimeNullableWithAggregatesFilter<"t_lieu_planning_audit"> | Date | string | null
-    Type?: Enumt_lieu_planning_audit_TypeWithAggregatesFilter<"t_lieu_planning_audit"> | $Enums.t_lieu_planning_audit_Type
+    Type?: StringWithAggregatesFilter<"t_lieu_planning_audit"> | string
     Planning_Regle_Id?: IntNullableWithAggregatesFilter<"t_lieu_planning_audit"> | number | null
     Consigne_Avant?: FloatNullableWithAggregatesFilter<"t_lieu_planning_audit"> | number | null
     Tolerance_Surveillance_Sup_Avant?: FloatNullableWithAggregatesFilter<"t_lieu_planning_audit"> | number | null
@@ -65661,7 +65083,6 @@ export namespace Prisma {
     Type?: SortOrder
     Chemin_Image?: SortOrderInput | SortOrder
     t_commande_materiel_ligne?: t_commande_materiel_ligneOrderByRelationAggregateInput
-    _relevance?: t_materielOrderByRelevanceInput
   }
 
   export type t_materielWhereUniqueInput = Prisma.AtLeast<{
@@ -65717,8 +65138,8 @@ export namespace Prisma {
     Email_Demandeur?: StringNullableFilter<"t_commande_materiel"> | string | null
     Email_Commercial?: StringFilter<"t_commande_materiel"> | string
     Commentaire?: StringNullableFilter<"t_commande_materiel"> | string | null
-    Mode_Transmission?: Enumt_commande_materiel_Mode_TransmissionFilter<"t_commande_materiel"> | $Enums.t_commande_materiel_Mode_Transmission
-    Statut_Commande?: Enumt_commande_materiel_Statut_CommandeFilter<"t_commande_materiel"> | $Enums.t_commande_materiel_Statut_Commande
+    Mode_Transmission?: StringFilter<"t_commande_materiel"> | string
+    Statut_Commande?: StringFilter<"t_commande_materiel"> | string
     Date_Creation?: DateTimeFilter<"t_commande_materiel"> | Date | string
     Date_Envoi?: DateTimeNullableFilter<"t_commande_materiel"> | Date | string | null
     Id_Pdf?: IntNullableFilter<"t_commande_materiel"> | number | null
@@ -65743,7 +65164,6 @@ export namespace Prisma {
     t_pdf?: t_pdfOrderByWithRelationInput
     t_utilisateur?: t_utilisateurOrderByWithRelationInput
     lignes?: t_commande_materiel_ligneOrderByRelationAggregateInput
-    _relevance?: t_commande_materielOrderByRelevanceInput
   }
 
   export type t_commande_materielWhereUniqueInput = Prisma.AtLeast<{
@@ -65757,8 +65177,8 @@ export namespace Prisma {
     Email_Demandeur?: StringNullableFilter<"t_commande_materiel"> | string | null
     Email_Commercial?: StringFilter<"t_commande_materiel"> | string
     Commentaire?: StringNullableFilter<"t_commande_materiel"> | string | null
-    Mode_Transmission?: Enumt_commande_materiel_Mode_TransmissionFilter<"t_commande_materiel"> | $Enums.t_commande_materiel_Mode_Transmission
-    Statut_Commande?: Enumt_commande_materiel_Statut_CommandeFilter<"t_commande_materiel"> | $Enums.t_commande_materiel_Statut_Commande
+    Mode_Transmission?: StringFilter<"t_commande_materiel"> | string
+    Statut_Commande?: StringFilter<"t_commande_materiel"> | string
     Date_Creation?: DateTimeFilter<"t_commande_materiel"> | Date | string
     Date_Envoi?: DateTimeNullableFilter<"t_commande_materiel"> | Date | string | null
     Id_Pdf?: IntNullableFilter<"t_commande_materiel"> | number | null
@@ -65798,8 +65218,8 @@ export namespace Prisma {
     Email_Demandeur?: StringNullableWithAggregatesFilter<"t_commande_materiel"> | string | null
     Email_Commercial?: StringWithAggregatesFilter<"t_commande_materiel"> | string
     Commentaire?: StringNullableWithAggregatesFilter<"t_commande_materiel"> | string | null
-    Mode_Transmission?: Enumt_commande_materiel_Mode_TransmissionWithAggregatesFilter<"t_commande_materiel"> | $Enums.t_commande_materiel_Mode_Transmission
-    Statut_Commande?: Enumt_commande_materiel_Statut_CommandeWithAggregatesFilter<"t_commande_materiel"> | $Enums.t_commande_materiel_Statut_Commande
+    Mode_Transmission?: StringWithAggregatesFilter<"t_commande_materiel"> | string
+    Statut_Commande?: StringWithAggregatesFilter<"t_commande_materiel"> | string
     Date_Creation?: DateTimeWithAggregatesFilter<"t_commande_materiel"> | Date | string
     Date_Envoi?: DateTimeNullableWithAggregatesFilter<"t_commande_materiel"> | Date | string | null
     Id_Pdf?: IntNullableWithAggregatesFilter<"t_commande_materiel"> | number | null
@@ -65834,7 +65254,6 @@ export namespace Prisma {
     Quantite?: SortOrder
     commande?: t_commande_materielOrderByWithRelationInput
     materiel?: t_materielOrderByWithRelationInput
-    _relevance?: t_commande_materiel_ligneOrderByRelevanceInput
   }
 
   export type t_commande_materiel_ligneWhereUniqueInput = Prisma.AtLeast<{
@@ -65937,7 +65356,6 @@ export namespace Prisma {
     t_utilisateur_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateur?: t_utilisateurOrderByWithRelationInput
     t_vigilog_tournee?: t_vigilog_tourneeOrderByRelationAggregateInput
     t_vigilog_usage_ponctuel?: t_vigilog_usage_ponctuelOrderByRelationAggregateInput
-    _relevance?: t_vigilog_configurationOrderByRelevanceInput
   }
 
   export type t_vigilog_configurationWhereUniqueInput = Prisma.AtLeast<{
@@ -66057,7 +65475,6 @@ export namespace Prisma {
     Date_Heure_Maj?: SortOrderInput | SortOrder
     t_vigilog_tournee?: t_vigilog_tourneeOrderByRelationAggregateInput
     t_vigilog_usage_ponctuel?: t_vigilog_usage_ponctuelOrderByRelationAggregateInput
-    _relevance?: t_vigilogOrderByRelevanceInput
   }
 
   export type t_vigilogWhereUniqueInput = Prisma.AtLeast<{
@@ -66171,7 +65588,6 @@ export namespace Prisma {
     t_vigilog?: t_vigilogOrderByWithRelationInput
     t_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur?: t_utilisateurOrderByWithRelationInput
     t_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: t_utilisateurOrderByWithRelationInput
-    _relevance?: t_vigilog_usage_ponctuelOrderByRelevanceInput
   }
 
   export type t_vigilog_usage_ponctuelWhereUniqueInput = Prisma.AtLeast<{
@@ -66345,7 +65761,6 @@ export namespace Prisma {
     t_utilisateur_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateur?: t_utilisateurOrderByWithRelationInput
     t_utilisateur_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateur?: t_utilisateurOrderByWithRelationInput
     t_vigilog?: t_vigilogOrderByWithRelationInput
-    _relevance?: t_vigilog_tourneeOrderByRelevanceInput
   }
 
   export type t_vigilog_tourneeWhereUniqueInput = Prisma.AtLeast<{
@@ -66579,7 +65994,6 @@ export namespace Prisma {
   }
 
   export type t_actionneurCreateManyInput = {
-    Id_Actionneur?: number
     Num_Serie?: string | null
     Type?: number | null
     Est_Etat?: boolean | null
@@ -66708,7 +66122,6 @@ export namespace Prisma {
   }
 
   export type t_alarmeCreateManyInput = {
-    Id_Alarme?: number
     Date_Heure_Debut?: Date | string | null
     Valeur?: number | null
     Type?: string | null
@@ -66824,7 +66237,6 @@ export namespace Prisma {
   }
 
   export type t_alarme_histoCreateManyInput = {
-    Id_Alarme_Histo?: number
     Id_Alarme: number
     Date_Heure_Debut?: Date | string | null
     Valeur?: number | null
@@ -66902,7 +66314,6 @@ export namespace Prisma {
   }
 
   export type t_alarme_messageCreateManyInput = {
-    Id_Alarme_Message?: number
     Code_Alarme_Message?: string | null
     Type?: string | null
     Texte_Message?: string | null
@@ -66952,7 +66363,6 @@ export namespace Prisma {
   }
 
   export type t_autorisationCreateManyInput = {
-    Id_Autorisation?: number
     Code_Autorisation?: string | null
     Libelle_Autorisation?: string | null
     Commentaire?: string | null
@@ -67014,7 +66424,6 @@ export namespace Prisma {
   }
 
   export type t_milieuCreateManyInput = {
-    Id_Milieu?: number
     Model?: string | null
     Reference?: string | null
     Stabilite?: number | null
@@ -67144,7 +66553,6 @@ export namespace Prisma {
   }
 
   export type t_ajustageCreateManyInput = {
-    Id_Ajustage?: number
     Date_Heure_Ajustage?: Date | string | null
     Sonde_Numero_Serie?: string | null
     Coeff_X2?: number | null
@@ -67256,7 +66664,6 @@ export namespace Prisma {
   }
 
   export type t_certifCreateManyInput = {
-    Id_Certif?: number
     Numero?: string | null
     Organisme?: string | null
     Date?: Date | string | null
@@ -67319,7 +66726,6 @@ export namespace Prisma {
   }
 
   export type t_certif_mesureCreateManyInput = {
-    Id_Certif_Mesure?: number
     Id_Certif?: number | null
     Numero_Ordre?: number | null
     Temperature_Vraie?: string | null
@@ -67403,7 +66809,6 @@ export namespace Prisma {
   }
 
   export type t_etalonCreateManyInput = {
-    Id_Etalon?: number
     Etalon_Numero_Serie?: string | null
     Est_Archive?: boolean | null
     Etat_Etalon?: string | null
@@ -67529,7 +66934,6 @@ export namespace Prisma {
   }
 
   export type t_etalonnageCreateManyInput = {
-    Id_Etalonnage?: number
     Date_Heure_Etalonnage?: Date | string | null
     Sonde_Numero_Serie?: string | null
     Date_Validite?: Date | string | null
@@ -67621,7 +67025,6 @@ export namespace Prisma {
   }
 
   export type t_etalonnage_mesureCreateManyInput = {
-    Id_Etalonnage_Mesure_Sonde?: number
     Id_Etalonnage?: number | null
     Numero_Ordre?: number | null
     Mesure_Sonde?: number | null
@@ -67678,7 +67081,6 @@ export namespace Prisma {
   }
 
   export type t_groupeCreateManyInput = {
-    Id_Groupe?: number
     Nom_Groupe?: string | null
     Numero_Regroupement?: string | null
     Est_Archive?: boolean | null
@@ -67754,7 +67156,6 @@ export namespace Prisma {
   }
 
   export type t_liaison_utilisateur_groupeCreateManyInput = {
-    Id_Liaison_u_g?: number
     Id_Utilisateur: number
     Id_Groupe?: number | null
   }
@@ -67796,7 +67197,6 @@ export namespace Prisma {
   }
 
   export type t_liaison_utilisateur_siteCreateManyInput = {
-    Id_Liaison?: number
     Id_Utilisateur?: number | null
     Id_Site?: number | null
     Date_Affectation?: Date | string | null
@@ -68214,7 +67614,6 @@ export namespace Prisma {
   }
 
   export type t_lieuCreateManyInput = {
-    Id_Lieu?: number
     Id_Site?: number | null
     Nom_Lieu?: string | null
     Sonde_Numero_Serie?: string | null
@@ -68595,7 +67994,6 @@ export namespace Prisma {
   }
 
   export type t_lieu_templateCreateManyInput = {
-    Id_Lieu_Template?: number
     Nom_Template: string
     Description?: string | null
     Lieu_Etat?: string
@@ -68756,7 +68154,6 @@ export namespace Prisma {
   }
 
   export type t_moduleCreateManyInput = {
-    Id_Module?: number
     Module_Numero_Serie?: string | null
     Type_Module?: number | null
     Port_Serie?: string | null
@@ -68832,7 +68229,6 @@ export namespace Prisma {
   }
 
   export type t_module_typeCreateManyInput = {
-    Id_Module_Type?: number
     Libelle_Type_Module?: string | null
     Libelle_Module?: string | null
     Est_Flag_Affiche_Plan?: boolean | null
@@ -68938,7 +68334,6 @@ export namespace Prisma {
   }
 
   export type t_pdfCreateManyInput = {
-    Id_PDF?: number
     Nom_PDF?: string | null
     Contenu_PDF?: Bytes | null
   }
@@ -68989,7 +68384,6 @@ export namespace Prisma {
   }
 
   export type t_planCreateManyInput = {
-    Id_Plan?: number
     Image?: Bytes | null
     Titre?: string | null
     Est_Archive?: boolean | null
@@ -69051,7 +68445,6 @@ export namespace Prisma {
   }
 
   export type t_postes_clientsCreateManyInput = {
-    Id_Poste?: number
     Nom_Machine_Connexion?: string | null
     Adresse_IP_Connexion?: string | null
     Login?: string | null
@@ -69114,7 +68507,6 @@ export namespace Prisma {
   }
 
   export type t_profilCreateManyInput = {
-    Id_Profil?: number
     Profil_Utilisateur?: string | null
     Commentaire?: string | null
     Est_MC2?: boolean | null
@@ -69179,7 +68571,6 @@ export namespace Prisma {
   }
 
   export type t_siteCreateManyInput = {
-    Id_Site?: number
     Libelle_Site?: string | null
     Commentaire?: string | null
     Est_Archive?: boolean | null
@@ -69289,7 +68680,6 @@ export namespace Prisma {
   }
 
   export type t_sondeCreateManyInput = {
-    Id_Sonde?: number
     Adresse_Sonde?: string | null
     Sonde_Numero_Serie?: string | null
     Sonde_Type?: string | null
@@ -69381,7 +68771,6 @@ export namespace Prisma {
   }
 
   export type t_etat_surveillanceCreateManyInput = {
-    Id_Surveillance_Etat?: number
     Surveillance_Etat?: string | null
     Surveillance_Etat_Libelle?: string | null
   }
@@ -69436,7 +68825,6 @@ export namespace Prisma {
   }
 
   export type t_sonde_typeCreateManyInput = {
-    Id_Sonde_Type?: number
     Sonde_Type?: string | null
     Libelle_Sonde_Type?: string | null
     Est_Gestion_Relais?: boolean | null
@@ -69604,7 +68992,6 @@ export namespace Prisma {
   }
 
   export type t_utilisateurCreateManyInput = {
-    Id_Utilisateur?: number
     Login?: string | null
     Mot_De_Passe?: string | null
     Date_Validite?: Date | string | null
@@ -69725,7 +69112,6 @@ export namespace Prisma {
   }
 
   export type t_notificationCreateManyInput = {
-    Id_Notification?: number
     Type: string
     Id_Alarme?: number | null
     Titre?: string | null
@@ -69821,7 +69207,6 @@ export namespace Prisma {
   }
 
   export type t_notification_deliveryCreateManyInput = {
-    Id_Delivery?: number
     Id_Notification: number
     Id_Poste: number
     Id_Utilisateur?: number | null
@@ -69892,7 +69277,6 @@ export namespace Prisma {
   }
 
   export type t_notification_eventCreateManyInput = {
-    Id_Event?: number
     Id_Delivery: number
     Event_Type: string
     Event_Data?: string | null
@@ -69944,7 +69328,6 @@ export namespace Prisma {
   }
 
   export type liste_clientsCreateManyInput = {
-    Id_Client?: number
     Nom: string
     Num_Compte?: string | null
     VigiServ_Derniere_Date_Heure?: Date | string | null
@@ -69997,7 +69380,6 @@ export namespace Prisma {
   }
 
   export type t_actionneur_typeCreateManyInput = {
-    Id_Actionneur_Type?: number
     Type?: number | null
     Description?: string | null
     Gere_Relais?: boolean | null
@@ -70043,7 +69425,6 @@ export namespace Prisma {
   }
 
   export type t_ancien_mot_de_passeCreateManyInput = {
-    Id_Ancien_Mot_De_Passe?: number
     Id_Utilisateur?: number | null
     Mot_De_Passe?: string | null
     Est_Premiere_Connexion?: boolean | null
@@ -70084,7 +69465,6 @@ export namespace Prisma {
   }
 
   export type t_commentaire_acquittement_alarmeCreateManyInput = {
-    Id_Commentaire?: number
     Type_Commentaire?: string | null
     Texte?: string | null
   }
@@ -70246,7 +69626,6 @@ export namespace Prisma {
   }
 
   export type t_sonde_etatCreateManyInput = {
-    Id_Sonde_Etat?: number
     Etat_Sonde?: string | null
     Etat_Libelle?: string | null
   }
@@ -70297,7 +69676,6 @@ export namespace Prisma {
   }
 
   export type t_lieu_mail_telCreateManyInput = {
-    Id_Mail_Tel?: number
     Id_Lieu?: number | null
     Ordre_Contact?: number | null
     Id_Utilisateur?: number | null
@@ -70326,7 +69704,7 @@ export namespace Prisma {
     Timestamp?: Date | string
     Date_Heure_Debut_Changement?: Date | string | null
     Date_Heure_Fin_Changement?: Date | string | null
-    Type: $Enums.t_lieu_planning_audit_Type
+    Type: string
     Planning_Regle_Id?: number | null
     Consigne_Avant?: number | null
     Tolerance_Surveillance_Sup_Avant?: number | null
@@ -70342,7 +69720,7 @@ export namespace Prisma {
     Timestamp?: Date | string
     Date_Heure_Debut_Changement?: Date | string | null
     Date_Heure_Fin_Changement?: Date | string | null
-    Type: $Enums.t_lieu_planning_audit_Type
+    Type: string
     Planning_Regle_Id?: number | null
     Consigne_Avant?: number | null
     Tolerance_Surveillance_Sup_Avant?: number | null
@@ -70357,7 +69735,7 @@ export namespace Prisma {
     Timestamp?: DateTimeFieldUpdateOperationsInput | Date | string
     Date_Heure_Debut_Changement?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Date_Heure_Fin_Changement?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Type?: Enumt_lieu_planning_audit_TypeFieldUpdateOperationsInput | $Enums.t_lieu_planning_audit_Type
+    Type?: StringFieldUpdateOperationsInput | string
     Planning_Regle_Id?: NullableIntFieldUpdateOperationsInput | number | null
     Consigne_Avant?: NullableFloatFieldUpdateOperationsInput | number | null
     Tolerance_Surveillance_Sup_Avant?: NullableFloatFieldUpdateOperationsInput | number | null
@@ -70373,7 +69751,7 @@ export namespace Prisma {
     Timestamp?: DateTimeFieldUpdateOperationsInput | Date | string
     Date_Heure_Debut_Changement?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Date_Heure_Fin_Changement?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Type?: Enumt_lieu_planning_audit_TypeFieldUpdateOperationsInput | $Enums.t_lieu_planning_audit_Type
+    Type?: StringFieldUpdateOperationsInput | string
     Planning_Regle_Id?: NullableIntFieldUpdateOperationsInput | number | null
     Consigne_Avant?: NullableFloatFieldUpdateOperationsInput | number | null
     Tolerance_Surveillance_Sup_Avant?: NullableFloatFieldUpdateOperationsInput | number | null
@@ -70384,12 +69762,11 @@ export namespace Prisma {
   }
 
   export type t_lieu_planning_auditCreateManyInput = {
-    Id_Audit?: number
     Id_Lieu: number
     Timestamp?: Date | string
     Date_Heure_Debut_Changement?: Date | string | null
     Date_Heure_Fin_Changement?: Date | string | null
-    Type: $Enums.t_lieu_planning_audit_Type
+    Type: string
     Planning_Regle_Id?: number | null
     Consigne_Avant?: number | null
     Tolerance_Surveillance_Sup_Avant?: number | null
@@ -70404,7 +69781,7 @@ export namespace Prisma {
     Timestamp?: DateTimeFieldUpdateOperationsInput | Date | string
     Date_Heure_Debut_Changement?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Date_Heure_Fin_Changement?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Type?: Enumt_lieu_planning_audit_TypeFieldUpdateOperationsInput | $Enums.t_lieu_planning_audit_Type
+    Type?: StringFieldUpdateOperationsInput | string
     Planning_Regle_Id?: NullableIntFieldUpdateOperationsInput | number | null
     Consigne_Avant?: NullableFloatFieldUpdateOperationsInput | number | null
     Tolerance_Surveillance_Sup_Avant?: NullableFloatFieldUpdateOperationsInput | number | null
@@ -70420,7 +69797,7 @@ export namespace Prisma {
     Timestamp?: DateTimeFieldUpdateOperationsInput | Date | string
     Date_Heure_Debut_Changement?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Date_Heure_Fin_Changement?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Type?: Enumt_lieu_planning_audit_TypeFieldUpdateOperationsInput | $Enums.t_lieu_planning_audit_Type
+    Type?: StringFieldUpdateOperationsInput | string
     Planning_Regle_Id?: NullableIntFieldUpdateOperationsInput | number | null
     Consigne_Avant?: NullableFloatFieldUpdateOperationsInput | number | null
     Tolerance_Surveillance_Sup_Avant?: NullableFloatFieldUpdateOperationsInput | number | null
@@ -70505,7 +69882,6 @@ export namespace Prisma {
   }
 
   export type t_lieu_planning_regleCreateManyInput = {
-    Id_Regle?: number
     Id_Lieu: number
     Actif?: boolean
     Jour_Debut: number
@@ -70602,7 +69978,6 @@ export namespace Prisma {
   }
 
   export type t_materielCreateManyInput = {
-    Id_Materiel?: number
     Ref_Commercial?: string
     Designation?: string
     Descriptif?: string
@@ -70636,8 +70011,8 @@ export namespace Prisma {
     Email_Demandeur?: string | null
     Email_Commercial: string
     Commentaire?: string | null
-    Mode_Transmission: $Enums.t_commande_materiel_Mode_Transmission
-    Statut_Commande?: $Enums.t_commande_materiel_Statut_Commande
+    Mode_Transmission: string
+    Statut_Commande?: string
     Date_Creation?: Date | string
     Date_Envoi?: Date | string | null
     t_pdf?: t_pdfCreateNestedOneWithoutT_commande_materielInput
@@ -70653,8 +70028,8 @@ export namespace Prisma {
     Email_Demandeur?: string | null
     Email_Commercial: string
     Commentaire?: string | null
-    Mode_Transmission: $Enums.t_commande_materiel_Mode_Transmission
-    Statut_Commande?: $Enums.t_commande_materiel_Statut_Commande
+    Mode_Transmission: string
+    Statut_Commande?: string
     Date_Creation?: Date | string
     Date_Envoi?: Date | string | null
     Id_Pdf?: number | null
@@ -70667,8 +70042,8 @@ export namespace Prisma {
     Email_Demandeur?: NullableStringFieldUpdateOperationsInput | string | null
     Email_Commercial?: StringFieldUpdateOperationsInput | string
     Commentaire?: NullableStringFieldUpdateOperationsInput | string | null
-    Mode_Transmission?: Enumt_commande_materiel_Mode_TransmissionFieldUpdateOperationsInput | $Enums.t_commande_materiel_Mode_Transmission
-    Statut_Commande?: Enumt_commande_materiel_Statut_CommandeFieldUpdateOperationsInput | $Enums.t_commande_materiel_Statut_Commande
+    Mode_Transmission?: StringFieldUpdateOperationsInput | string
+    Statut_Commande?: StringFieldUpdateOperationsInput | string
     Date_Creation?: DateTimeFieldUpdateOperationsInput | Date | string
     Date_Envoi?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     t_pdf?: t_pdfUpdateOneWithoutT_commande_materielNestedInput
@@ -70684,8 +70059,8 @@ export namespace Prisma {
     Email_Demandeur?: NullableStringFieldUpdateOperationsInput | string | null
     Email_Commercial?: StringFieldUpdateOperationsInput | string
     Commentaire?: NullableStringFieldUpdateOperationsInput | string | null
-    Mode_Transmission?: Enumt_commande_materiel_Mode_TransmissionFieldUpdateOperationsInput | $Enums.t_commande_materiel_Mode_Transmission
-    Statut_Commande?: Enumt_commande_materiel_Statut_CommandeFieldUpdateOperationsInput | $Enums.t_commande_materiel_Statut_Commande
+    Mode_Transmission?: StringFieldUpdateOperationsInput | string
+    Statut_Commande?: StringFieldUpdateOperationsInput | string
     Date_Creation?: DateTimeFieldUpdateOperationsInput | Date | string
     Date_Envoi?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Id_Pdf?: NullableIntFieldUpdateOperationsInput | number | null
@@ -70693,15 +70068,14 @@ export namespace Prisma {
   }
 
   export type t_commande_materielCreateManyInput = {
-    Id_Commande_Materiel?: number
     Reference_Commande: string
     Id_Utilisateur: number
     Nom_Demandeur: string
     Email_Demandeur?: string | null
     Email_Commercial: string
     Commentaire?: string | null
-    Mode_Transmission: $Enums.t_commande_materiel_Mode_Transmission
-    Statut_Commande?: $Enums.t_commande_materiel_Statut_Commande
+    Mode_Transmission: string
+    Statut_Commande?: string
     Date_Creation?: Date | string
     Date_Envoi?: Date | string | null
     Id_Pdf?: number | null
@@ -70713,8 +70087,8 @@ export namespace Prisma {
     Email_Demandeur?: NullableStringFieldUpdateOperationsInput | string | null
     Email_Commercial?: StringFieldUpdateOperationsInput | string
     Commentaire?: NullableStringFieldUpdateOperationsInput | string | null
-    Mode_Transmission?: Enumt_commande_materiel_Mode_TransmissionFieldUpdateOperationsInput | $Enums.t_commande_materiel_Mode_Transmission
-    Statut_Commande?: Enumt_commande_materiel_Statut_CommandeFieldUpdateOperationsInput | $Enums.t_commande_materiel_Statut_Commande
+    Mode_Transmission?: StringFieldUpdateOperationsInput | string
+    Statut_Commande?: StringFieldUpdateOperationsInput | string
     Date_Creation?: DateTimeFieldUpdateOperationsInput | Date | string
     Date_Envoi?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   }
@@ -70727,8 +70101,8 @@ export namespace Prisma {
     Email_Demandeur?: NullableStringFieldUpdateOperationsInput | string | null
     Email_Commercial?: StringFieldUpdateOperationsInput | string
     Commentaire?: NullableStringFieldUpdateOperationsInput | string | null
-    Mode_Transmission?: Enumt_commande_materiel_Mode_TransmissionFieldUpdateOperationsInput | $Enums.t_commande_materiel_Mode_Transmission
-    Statut_Commande?: Enumt_commande_materiel_Statut_CommandeFieldUpdateOperationsInput | $Enums.t_commande_materiel_Statut_Commande
+    Mode_Transmission?: StringFieldUpdateOperationsInput | string
+    Statut_Commande?: StringFieldUpdateOperationsInput | string
     Date_Creation?: DateTimeFieldUpdateOperationsInput | Date | string
     Date_Envoi?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Id_Pdf?: NullableIntFieldUpdateOperationsInput | number | null
@@ -70781,7 +70155,6 @@ export namespace Prisma {
   }
 
   export type t_commande_materiel_ligneCreateManyInput = {
-    Id_Commande_Materiel_Ligne?: number
     Id_Commande_Materiel: number
     Id_Materiel: number
     Ref_Commercial: string
@@ -70904,7 +70277,6 @@ export namespace Prisma {
   }
 
   export type t_vigilog_configurationCreateManyInput = {
-    Id_VigiLog_Configuration?: number
     Nom_Configuration: string
     Description_Configuration?: string | null
     Consigne?: Decimal | DecimalJsLike | number | string | null
@@ -71038,7 +70410,6 @@ export namespace Prisma {
   }
 
   export type t_vigilogCreateManyInput = {
-    Id_VigiLog?: number
     Numero_Serie: string
     Modele?: string | null
     Libelle?: string | null
@@ -71162,7 +70533,6 @@ export namespace Prisma {
   }
 
   export type t_vigilog_usage_ponctuelCreateManyInput = {
-    Id_VigiLog_Usage_Ponctuel?: number
     Reference_Usage: string
     Id_VigiLog_Configuration?: number | null
     Id_VigiLog?: number | null
@@ -71380,7 +70750,6 @@ export namespace Prisma {
   }
 
   export type t_vigilog_tourneeCreateManyInput = {
-    Id_VigiLog_Tournee?: number
     Reference_Tournee: string
     Id_VigiLog_Configuration?: number | null
     Id_VigiLog?: number | null
@@ -71519,7 +70888,6 @@ export namespace Prisma {
     contains?: string | StringFieldRefInput<$PrismaModel>
     startsWith?: string | StringFieldRefInput<$PrismaModel>
     endsWith?: string | StringFieldRefInput<$PrismaModel>
-    search?: string
     not?: NestedStringNullableFilter<$PrismaModel> | string | null
   }
 
@@ -71563,12 +70931,6 @@ export namespace Prisma {
   export type SortOrderInput = {
     sort: SortOrder
     nulls?: NullsOrder
-  }
-
-  export type t_actionneurOrderByRelevanceInput = {
-    fields: t_actionneurOrderByRelevanceFieldEnum | t_actionneurOrderByRelevanceFieldEnum[]
-    sort: SortOrder
-    search: string
   }
 
   export type t_actionneurCountOrderByAggregateInput = {
@@ -71686,7 +71048,6 @@ export namespace Prisma {
     contains?: string | StringFieldRefInput<$PrismaModel>
     startsWith?: string | StringFieldRefInput<$PrismaModel>
     endsWith?: string | StringFieldRefInput<$PrismaModel>
-    search?: string
     not?: NestedStringNullableWithAggregatesFilter<$PrismaModel> | string | null
     _count?: NestedIntNullableFilter<$PrismaModel>
     _min?: NestedStringNullableFilter<$PrismaModel>
@@ -71768,12 +71129,6 @@ export namespace Prisma {
 
   export type t_notificationOrderByRelationAggregateInput = {
     _count?: SortOrder
-  }
-
-  export type t_alarmeOrderByRelevanceInput = {
-    fields: t_alarmeOrderByRelevanceFieldEnum | t_alarmeOrderByRelevanceFieldEnum[]
-    sort: SortOrder
-    search: string
   }
 
   export type t_alarmeCountOrderByAggregateInput = {
@@ -71866,12 +71221,6 @@ export namespace Prisma {
     _max?: NestedFloatNullableFilter<$PrismaModel>
   }
 
-  export type t_alarme_histoOrderByRelevanceInput = {
-    fields: t_alarme_histoOrderByRelevanceFieldEnum | t_alarme_histoOrderByRelevanceFieldEnum[]
-    sort: SortOrder
-    search: string
-  }
-
   export type t_alarme_histoCountOrderByAggregateInput = {
     Id_Alarme_Histo?: SortOrder
     Id_Alarme?: SortOrder
@@ -71940,12 +71289,6 @@ export namespace Prisma {
     Id_Lieu?: SortOrder
   }
 
-  export type t_alarme_messageOrderByRelevanceInput = {
-    fields: t_alarme_messageOrderByRelevanceFieldEnum | t_alarme_messageOrderByRelevanceFieldEnum[]
-    sort: SortOrder
-    search: string
-  }
-
   export type t_alarme_messageCountOrderByAggregateInput = {
     Id_Alarme_Message?: SortOrder
     Code_Alarme_Message?: SortOrder
@@ -71985,12 +71328,6 @@ export namespace Prisma {
     _count?: SortOrder
   }
 
-  export type t_autorisationOrderByRelevanceInput = {
-    fields: t_autorisationOrderByRelevanceFieldEnum | t_autorisationOrderByRelevanceFieldEnum[]
-    sort: SortOrder
-    search: string
-  }
-
   export type t_autorisationCountOrderByAggregateInput = {
     Id_Autorisation?: SortOrder
     Code_Autorisation?: SortOrder
@@ -72018,12 +71355,6 @@ export namespace Prisma {
 
   export type t_autorisationSumOrderByAggregateInput = {
     Id_Autorisation?: SortOrder
-  }
-
-  export type t_milieuOrderByRelevanceInput = {
-    fields: t_milieuOrderByRelevanceFieldEnum | t_milieuOrderByRelevanceFieldEnum[]
-    sort: SortOrder
-    search: string
   }
 
   export type t_milieuCountOrderByAggregateInput = {
@@ -72069,12 +71400,6 @@ export namespace Prisma {
     Id_Milieu?: SortOrder
     Stabilite?: SortOrder
     Homogeneite?: SortOrder
-  }
-
-  export type t_ajustageOrderByRelevanceInput = {
-    fields: t_ajustageOrderByRelevanceFieldEnum | t_ajustageOrderByRelevanceFieldEnum[]
-    sort: SortOrder
-    search: string
   }
 
   export type t_ajustageCountOrderByAggregateInput = {
@@ -72186,12 +71511,6 @@ export namespace Prisma {
     Id_Milieu?: SortOrder
   }
 
-  export type t_certifOrderByRelevanceInput = {
-    fields: t_certifOrderByRelevanceFieldEnum | t_certifOrderByRelevanceFieldEnum[]
-    sort: SortOrder
-    search: string
-  }
-
   export type t_certifCountOrderByAggregateInput = {
     Id_Certif?: SortOrder
     Numero?: SortOrder
@@ -72230,12 +71549,6 @@ export namespace Prisma {
   export type t_certifSumOrderByAggregateInput = {
     Id_Certif?: SortOrder
     Id_PDF?: SortOrder
-  }
-
-  export type t_certif_mesureOrderByRelevanceInput = {
-    fields: t_certif_mesureOrderByRelevanceFieldEnum | t_certif_mesureOrderByRelevanceFieldEnum[]
-    sort: SortOrder
-    search: string
   }
 
   export type t_certif_mesureCountOrderByAggregateInput = {
@@ -72277,12 +71590,6 @@ export namespace Prisma {
     Id_Certif?: SortOrder
     Numero_Ordre?: SortOrder
     Incertitude?: SortOrder
-  }
-
-  export type t_etalonOrderByRelevanceInput = {
-    fields: t_etalonOrderByRelevanceFieldEnum | t_etalonOrderByRelevanceFieldEnum[]
-    sort: SortOrder
-    search: string
   }
 
   export type t_etalonCountOrderByAggregateInput = {
@@ -72342,12 +71649,6 @@ export namespace Prisma {
     Nb_Decimale?: SortOrder
     Id_Worker?: SortOrder
     Id_Module?: SortOrder
-  }
-
-  export type t_etalonnageOrderByRelevanceInput = {
-    fields: t_etalonnageOrderByRelevanceFieldEnum | t_etalonnageOrderByRelevanceFieldEnum[]
-    sort: SortOrder
-    search: string
   }
 
   export type t_etalonnageCountOrderByAggregateInput = {
@@ -72491,12 +71792,6 @@ export namespace Prisma {
 
   export type t_lieu_groupeOrderByRelationAggregateInput = {
     _count?: SortOrder
-  }
-
-  export type t_groupeOrderByRelevanceInput = {
-    fields: t_groupeOrderByRelevanceFieldEnum | t_groupeOrderByRelevanceFieldEnum[]
-    sort: SortOrder
-    search: string
   }
 
   export type t_groupeCountOrderByAggregateInput = {
@@ -72754,12 +72049,6 @@ export namespace Prisma {
 
   export type t_lieu_planning_regleOrderByRelationAggregateInput = {
     _count?: SortOrder
-  }
-
-  export type t_lieuOrderByRelevanceInput = {
-    fields: t_lieuOrderByRelevanceFieldEnum | t_lieuOrderByRelevanceFieldEnum[]
-    sort: SortOrder
-    search: string
   }
 
   export type t_lieuCountOrderByAggregateInput = {
@@ -73134,7 +72423,6 @@ export namespace Prisma {
     contains?: string | StringFieldRefInput<$PrismaModel>
     startsWith?: string | StringFieldRefInput<$PrismaModel>
     endsWith?: string | StringFieldRefInput<$PrismaModel>
-    search?: string
     not?: NestedStringFilter<$PrismaModel> | string
   }
 
@@ -73158,12 +72446,6 @@ export namespace Prisma {
     gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     not?: NestedDateTimeFilter<$PrismaModel> | Date | string
-  }
-
-  export type t_lieu_templateOrderByRelevanceInput = {
-    fields: t_lieu_templateOrderByRelevanceFieldEnum | t_lieu_templateOrderByRelevanceFieldEnum[]
-    sort: SortOrder
-    search: string
   }
 
   export type t_lieu_templateCountOrderByAggregateInput = {
@@ -73311,7 +72593,6 @@ export namespace Prisma {
     contains?: string | StringFieldRefInput<$PrismaModel>
     startsWith?: string | StringFieldRefInput<$PrismaModel>
     endsWith?: string | StringFieldRefInput<$PrismaModel>
-    search?: string
     not?: NestedStringWithAggregatesFilter<$PrismaModel> | string
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedStringFilter<$PrismaModel>
@@ -73346,12 +72627,6 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedDateTimeFilter<$PrismaModel>
     _max?: NestedDateTimeFilter<$PrismaModel>
-  }
-
-  export type t_moduleOrderByRelevanceInput = {
-    fields: t_moduleOrderByRelevanceFieldEnum | t_moduleOrderByRelevanceFieldEnum[]
-    sort: SortOrder
-    search: string
   }
 
   export type t_moduleType_ModuleModule_Numero_SerieCompoundUniqueInput = {
@@ -73432,12 +72707,6 @@ export namespace Prisma {
     Id_Worker?: SortOrder
   }
 
-  export type t_module_typeOrderByRelevanceInput = {
-    fields: t_module_typeOrderByRelevanceFieldEnum | t_module_typeOrderByRelevanceFieldEnum[]
-    sort: SortOrder
-    search: string
-  }
-
   export type t_module_typeCountOrderByAggregateInput = {
     Id_Module_Type?: SortOrder
     Libelle_Type_Module?: SortOrder
@@ -73465,12 +72734,6 @@ export namespace Prisma {
 
   export type t_module_typeSumOrderByAggregateInput = {
     Id_Module_Type?: SortOrder
-  }
-
-  export type t_parametreOrderByRelevanceInput = {
-    fields: t_parametreOrderByRelevanceFieldEnum | t_parametreOrderByRelevanceFieldEnum[]
-    sort: SortOrder
-    search: string
   }
 
   export type t_parametreSectionMot_CleCompoundUniqueInput = {
@@ -73529,12 +72792,6 @@ export namespace Prisma {
     _count?: SortOrder
   }
 
-  export type t_pdfOrderByRelevanceInput = {
-    fields: t_pdfOrderByRelevanceFieldEnum | t_pdfOrderByRelevanceFieldEnum[]
-    sort: SortOrder
-    search: string
-  }
-
   export type t_pdfCountOrderByAggregateInput = {
     Id_PDF?: SortOrder
     Nom_PDF?: SortOrder
@@ -73581,12 +72838,6 @@ export namespace Prisma {
     _count?: SortOrder
   }
 
-  export type t_planOrderByRelevanceInput = {
-    fields: t_planOrderByRelevanceFieldEnum | t_planOrderByRelevanceFieldEnum[]
-    sort: SortOrder
-    search: string
-  }
-
   export type t_planCountOrderByAggregateInput = {
     Id_Plan?: SortOrder
     Image?: SortOrder
@@ -73626,12 +72877,6 @@ export namespace Prisma {
     _count?: SortOrder
   }
 
-  export type t_postes_clientsOrderByRelevanceInput = {
-    fields: t_postes_clientsOrderByRelevanceFieldEnum | t_postes_clientsOrderByRelevanceFieldEnum[]
-    sort: SortOrder
-    search: string
-  }
-
   export type t_postes_clientsCountOrderByAggregateInput = {
     Id_Poste?: SortOrder
     Nom_Machine_Connexion?: SortOrder
@@ -73668,12 +72913,6 @@ export namespace Prisma {
 
   export type t_postes_clientsSumOrderByAggregateInput = {
     Id_Poste?: SortOrder
-  }
-
-  export type t_profilOrderByRelevanceInput = {
-    fields: t_profilOrderByRelevanceFieldEnum | t_profilOrderByRelevanceFieldEnum[]
-    sort: SortOrder
-    search: string
   }
 
   export type t_profilCountOrderByAggregateInput = {
@@ -73726,12 +72965,6 @@ export namespace Prisma {
 
   export type t_vigilog_tourneeOrderByRelationAggregateInput = {
     _count?: SortOrder
-  }
-
-  export type t_siteOrderByRelevanceInput = {
-    fields: t_siteOrderByRelevanceFieldEnum | t_siteOrderByRelevanceFieldEnum[]
-    sort: SortOrder
-    search: string
   }
 
   export type t_siteCountOrderByAggregateInput = {
@@ -73787,12 +73020,6 @@ export namespace Prisma {
   export type T_sonde_typeNullableScalarRelationFilter = {
     is?: t_sonde_typeWhereInput | null
     isNot?: t_sonde_typeWhereInput | null
-  }
-
-  export type t_sondeOrderByRelevanceInput = {
-    fields: t_sondeOrderByRelevanceFieldEnum | t_sondeOrderByRelevanceFieldEnum[]
-    sort: SortOrder
-    search: string
   }
 
   export type t_sondeCountOrderByAggregateInput = {
@@ -73907,12 +73134,6 @@ export namespace Prisma {
     _count?: SortOrder
   }
 
-  export type t_etat_surveillanceOrderByRelevanceInput = {
-    fields: t_etat_surveillanceOrderByRelevanceFieldEnum | t_etat_surveillanceOrderByRelevanceFieldEnum[]
-    sort: SortOrder
-    search: string
-  }
-
   export type t_etat_surveillanceCountOrderByAggregateInput = {
     Id_Surveillance_Etat?: SortOrder
     Surveillance_Etat?: SortOrder
@@ -73937,12 +73158,6 @@ export namespace Prisma {
 
   export type t_etat_surveillanceSumOrderByAggregateInput = {
     Id_Surveillance_Etat?: SortOrder
-  }
-
-  export type t_sonde_typeOrderByRelevanceInput = {
-    fields: t_sonde_typeOrderByRelevanceFieldEnum | t_sonde_typeOrderByRelevanceFieldEnum[]
-    sort: SortOrder
-    search: string
   }
 
   export type t_sonde_typeCountOrderByAggregateInput = {
@@ -74008,12 +73223,6 @@ export namespace Prisma {
 
   export type t_vigilog_usage_ponctuelOrderByRelationAggregateInput = {
     _count?: SortOrder
-  }
-
-  export type t_utilisateurOrderByRelevanceInput = {
-    fields: t_utilisateurOrderByRelevanceFieldEnum | t_utilisateurOrderByRelevanceFieldEnum[]
-    sort: SortOrder
-    search: string
   }
 
   export type t_utilisateurCountOrderByAggregateInput = {
@@ -74103,12 +73312,6 @@ export namespace Prisma {
     isNot?: t_alarmeWhereInput | null
   }
 
-  export type t_notificationOrderByRelevanceInput = {
-    fields: t_notificationOrderByRelevanceFieldEnum | t_notificationOrderByRelevanceFieldEnum[]
-    sort: SortOrder
-    search: string
-  }
-
   export type t_notificationCountOrderByAggregateInput = {
     Id_Notification?: SortOrder
     Type?: SortOrder
@@ -74175,12 +73378,6 @@ export namespace Prisma {
 
   export type t_notification_eventOrderByRelationAggregateInput = {
     _count?: SortOrder
-  }
-
-  export type t_notification_deliveryOrderByRelevanceInput = {
-    fields: t_notification_deliveryOrderByRelevanceFieldEnum | t_notification_deliveryOrderByRelevanceFieldEnum[]
-    sort: SortOrder
-    search: string
   }
 
   export type t_notification_deliveryId_NotificationId_PosteCompoundUniqueInput = {
@@ -74254,12 +73451,6 @@ export namespace Prisma {
     isNot?: t_notification_deliveryWhereInput
   }
 
-  export type t_notification_eventOrderByRelevanceInput = {
-    fields: t_notification_eventOrderByRelevanceFieldEnum | t_notification_eventOrderByRelevanceFieldEnum[]
-    sort: SortOrder
-    search: string
-  }
-
   export type t_notification_eventCountOrderByAggregateInput = {
     Id_Event?: SortOrder
     Id_Delivery?: SortOrder
@@ -74294,12 +73485,6 @@ export namespace Prisma {
     Id_Delivery?: SortOrder
   }
 
-  export type liste_clientsOrderByRelevanceInput = {
-    fields: liste_clientsOrderByRelevanceFieldEnum | liste_clientsOrderByRelevanceFieldEnum[]
-    sort: SortOrder
-    search: string
-  }
-
   export type liste_clientsCountOrderByAggregateInput = {
     Id_Client?: SortOrder
     Nom?: SortOrder
@@ -74330,12 +73515,6 @@ export namespace Prisma {
 
   export type liste_clientsSumOrderByAggregateInput = {
     Id_Client?: SortOrder
-  }
-
-  export type t_actionneur_typeOrderByRelevanceInput = {
-    fields: t_actionneur_typeOrderByRelevanceFieldEnum | t_actionneur_typeOrderByRelevanceFieldEnum[]
-    sort: SortOrder
-    search: string
   }
 
   export type t_actionneur_typeCountOrderByAggregateInput = {
@@ -74369,12 +73548,6 @@ export namespace Prisma {
     Type?: SortOrder
   }
 
-  export type t_ancien_mot_de_passeOrderByRelevanceInput = {
-    fields: t_ancien_mot_de_passeOrderByRelevanceFieldEnum | t_ancien_mot_de_passeOrderByRelevanceFieldEnum[]
-    sort: SortOrder
-    search: string
-  }
-
   export type t_ancien_mot_de_passeCountOrderByAggregateInput = {
     Id_Ancien_Mot_De_Passe?: SortOrder
     Id_Utilisateur?: SortOrder
@@ -74406,12 +73579,6 @@ export namespace Prisma {
     Id_Utilisateur?: SortOrder
   }
 
-  export type t_commentaire_acquittement_alarmeOrderByRelevanceInput = {
-    fields: t_commentaire_acquittement_alarmeOrderByRelevanceFieldEnum | t_commentaire_acquittement_alarmeOrderByRelevanceFieldEnum[]
-    sort: SortOrder
-    search: string
-  }
-
   export type t_commentaire_acquittement_alarmeCountOrderByAggregateInput = {
     Id_Commentaire?: SortOrder
     Type_Commentaire?: SortOrder
@@ -74436,12 +73603,6 @@ export namespace Prisma {
 
   export type t_commentaire_acquittement_alarmeSumOrderByAggregateInput = {
     Id_Commentaire?: SortOrder
-  }
-
-  export type t_etalon_typeOrderByRelevanceInput = {
-    fields: t_etalon_typeOrderByRelevanceFieldEnum | t_etalon_typeOrderByRelevanceFieldEnum[]
-    sort: SortOrder
-    search: string
   }
 
   export type t_etalon_typeCountOrderByAggregateInput = {
@@ -74479,12 +73640,6 @@ export namespace Prisma {
     Resolution?: SortOrder
   }
 
-  export type t_mem_gsoOrderByRelevanceInput = {
-    fields: t_mem_gsoOrderByRelevanceFieldEnum | t_mem_gsoOrderByRelevanceFieldEnum[]
-    sort: SortOrder
-    search: string
-  }
-
   export type t_mem_gsoCountOrderByAggregateInput = {
     id?: SortOrder
     last_sonde?: SortOrder
@@ -74517,12 +73672,6 @@ export namespace Prisma {
   export type t_mem_gsoSumOrderByAggregateInput = {
     id?: SortOrder
     cycle_MEM?: SortOrder
-  }
-
-  export type t_sonde_etatOrderByRelevanceInput = {
-    fields: t_sonde_etatOrderByRelevanceFieldEnum | t_sonde_etatOrderByRelevanceFieldEnum[]
-    sort: SortOrder
-    search: string
   }
 
   export type t_sonde_etatCountOrderByAggregateInput = {
@@ -74590,13 +73739,6 @@ export namespace Prisma {
     Id_Lieu?: SortOrder
     Ordre_Contact?: SortOrder
     Id_Utilisateur?: SortOrder
-  }
-
-  export type Enumt_lieu_planning_audit_TypeFilter<$PrismaModel = never> = {
-    equals?: $Enums.t_lieu_planning_audit_Type | Enumt_lieu_planning_audit_TypeFieldRefInput<$PrismaModel>
-    in?: $Enums.t_lieu_planning_audit_Type[]
-    notIn?: $Enums.t_lieu_planning_audit_Type[]
-    not?: NestedEnumt_lieu_planning_audit_TypeFilter<$PrismaModel> | $Enums.t_lieu_planning_audit_Type
   }
 
   export type t_lieu_planning_auditCountOrderByAggregateInput = {
@@ -74669,16 +73811,6 @@ export namespace Prisma {
     Consigne_Apres?: SortOrder
     Tolerance_Surveillance_Sup_Apres?: SortOrder
     Tolerance_Surveillance_Inf_Apres?: SortOrder
-  }
-
-  export type Enumt_lieu_planning_audit_TypeWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: $Enums.t_lieu_planning_audit_Type | Enumt_lieu_planning_audit_TypeFieldRefInput<$PrismaModel>
-    in?: $Enums.t_lieu_planning_audit_Type[]
-    notIn?: $Enums.t_lieu_planning_audit_Type[]
-    not?: NestedEnumt_lieu_planning_audit_TypeWithAggregatesFilter<$PrismaModel> | $Enums.t_lieu_planning_audit_Type
-    _count?: NestedIntFilter<$PrismaModel>
-    _min?: NestedEnumt_lieu_planning_audit_TypeFilter<$PrismaModel>
-    _max?: NestedEnumt_lieu_planning_audit_TypeFilter<$PrismaModel>
   }
 
   export type t_lieu_planning_regleCountOrderByAggregateInput = {
@@ -74776,12 +73908,6 @@ export namespace Prisma {
     _count?: SortOrder
   }
 
-  export type t_materielOrderByRelevanceInput = {
-    fields: t_materielOrderByRelevanceFieldEnum | t_materielOrderByRelevanceFieldEnum[]
-    sort: SortOrder
-    search: string
-  }
-
   export type t_materielCountOrderByAggregateInput = {
     Id_Materiel?: SortOrder
     Ref_Commercial?: SortOrder
@@ -74818,26 +73944,6 @@ export namespace Prisma {
 
   export type t_materielSumOrderByAggregateInput = {
     Id_Materiel?: SortOrder
-  }
-
-  export type Enumt_commande_materiel_Mode_TransmissionFilter<$PrismaModel = never> = {
-    equals?: $Enums.t_commande_materiel_Mode_Transmission | Enumt_commande_materiel_Mode_TransmissionFieldRefInput<$PrismaModel>
-    in?: $Enums.t_commande_materiel_Mode_Transmission[]
-    notIn?: $Enums.t_commande_materiel_Mode_Transmission[]
-    not?: NestedEnumt_commande_materiel_Mode_TransmissionFilter<$PrismaModel> | $Enums.t_commande_materiel_Mode_Transmission
-  }
-
-  export type Enumt_commande_materiel_Statut_CommandeFilter<$PrismaModel = never> = {
-    equals?: $Enums.t_commande_materiel_Statut_Commande | Enumt_commande_materiel_Statut_CommandeFieldRefInput<$PrismaModel>
-    in?: $Enums.t_commande_materiel_Statut_Commande[]
-    notIn?: $Enums.t_commande_materiel_Statut_Commande[]
-    not?: NestedEnumt_commande_materiel_Statut_CommandeFilter<$PrismaModel> | $Enums.t_commande_materiel_Statut_Commande
-  }
-
-  export type t_commande_materielOrderByRelevanceInput = {
-    fields: t_commande_materielOrderByRelevanceFieldEnum | t_commande_materielOrderByRelevanceFieldEnum[]
-    sort: SortOrder
-    search: string
   }
 
   export type t_commande_materielCountOrderByAggregateInput = {
@@ -74897,26 +74003,6 @@ export namespace Prisma {
     Id_Pdf?: SortOrder
   }
 
-  export type Enumt_commande_materiel_Mode_TransmissionWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: $Enums.t_commande_materiel_Mode_Transmission | Enumt_commande_materiel_Mode_TransmissionFieldRefInput<$PrismaModel>
-    in?: $Enums.t_commande_materiel_Mode_Transmission[]
-    notIn?: $Enums.t_commande_materiel_Mode_Transmission[]
-    not?: NestedEnumt_commande_materiel_Mode_TransmissionWithAggregatesFilter<$PrismaModel> | $Enums.t_commande_materiel_Mode_Transmission
-    _count?: NestedIntFilter<$PrismaModel>
-    _min?: NestedEnumt_commande_materiel_Mode_TransmissionFilter<$PrismaModel>
-    _max?: NestedEnumt_commande_materiel_Mode_TransmissionFilter<$PrismaModel>
-  }
-
-  export type Enumt_commande_materiel_Statut_CommandeWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: $Enums.t_commande_materiel_Statut_Commande | Enumt_commande_materiel_Statut_CommandeFieldRefInput<$PrismaModel>
-    in?: $Enums.t_commande_materiel_Statut_Commande[]
-    notIn?: $Enums.t_commande_materiel_Statut_Commande[]
-    not?: NestedEnumt_commande_materiel_Statut_CommandeWithAggregatesFilter<$PrismaModel> | $Enums.t_commande_materiel_Statut_Commande
-    _count?: NestedIntFilter<$PrismaModel>
-    _min?: NestedEnumt_commande_materiel_Statut_CommandeFilter<$PrismaModel>
-    _max?: NestedEnumt_commande_materiel_Statut_CommandeFilter<$PrismaModel>
-  }
-
   export type T_commande_materielScalarRelationFilter = {
     is?: t_commande_materielWhereInput
     isNot?: t_commande_materielWhereInput
@@ -74925,12 +74011,6 @@ export namespace Prisma {
   export type T_materielScalarRelationFilter = {
     is?: t_materielWhereInput
     isNot?: t_materielWhereInput
-  }
-
-  export type t_commande_materiel_ligneOrderByRelevanceInput = {
-    fields: t_commande_materiel_ligneOrderByRelevanceFieldEnum | t_commande_materiel_ligneOrderByRelevanceFieldEnum[]
-    sort: SortOrder
-    search: string
   }
 
   export type t_commande_materiel_ligneCountOrderByAggregateInput = {
@@ -74981,12 +74061,6 @@ export namespace Prisma {
     Id_Commande_Materiel?: SortOrder
     Id_Materiel?: SortOrder
     Quantite?: SortOrder
-  }
-
-  export type t_vigilog_configurationOrderByRelevanceInput = {
-    fields: t_vigilog_configurationOrderByRelevanceFieldEnum | t_vigilog_configurationOrderByRelevanceFieldEnum[]
-    sort: SortOrder
-    search: string
   }
 
   export type t_vigilog_configurationCountOrderByAggregateInput = {
@@ -75076,12 +74150,6 @@ export namespace Prisma {
     Id_Utilisateur_Maj?: SortOrder
   }
 
-  export type t_vigilogOrderByRelevanceInput = {
-    fields: t_vigilogOrderByRelevanceFieldEnum | t_vigilogOrderByRelevanceFieldEnum[]
-    sort: SortOrder
-    search: string
-  }
-
   export type t_vigilogCountOrderByAggregateInput = {
     Id_VigiLog?: SortOrder
     Numero_Serie?: SortOrder
@@ -75157,12 +74225,6 @@ export namespace Prisma {
   export type T_vigilogNullableScalarRelationFilter = {
     is?: t_vigilogWhereInput | null
     isNot?: t_vigilogWhereInput | null
-  }
-
-  export type t_vigilog_usage_ponctuelOrderByRelevanceInput = {
-    fields: t_vigilog_usage_ponctuelOrderByRelevanceFieldEnum | t_vigilog_usage_ponctuelOrderByRelevanceFieldEnum[]
-    sort: SortOrder
-    search: string
   }
 
   export type t_vigilog_usage_ponctuelCountOrderByAggregateInput = {
@@ -75241,12 +74303,6 @@ export namespace Prisma {
   export type T_siteScalarRelationFilter = {
     is?: t_siteWhereInput
     isNot?: t_siteWhereInput
-  }
-
-  export type t_vigilog_tourneeOrderByRelevanceInput = {
-    fields: t_vigilog_tourneeOrderByRelevanceFieldEnum | t_vigilog_tourneeOrderByRelevanceFieldEnum[]
-    sort: SortOrder
-    search: string
   }
 
   export type t_vigilog_tourneeCountOrderByAggregateInput = {
@@ -77549,10 +76605,6 @@ export namespace Prisma {
     update?: XOR<XOR<t_lieuUpdateToOneWithWhereWithoutT_lieu_mail_telInput, t_lieuUpdateWithoutT_lieu_mail_telInput>, t_lieuUncheckedUpdateWithoutT_lieu_mail_telInput>
   }
 
-  export type Enumt_lieu_planning_audit_TypeFieldUpdateOperationsInput = {
-    set?: $Enums.t_lieu_planning_audit_Type
-  }
-
   export type t_lieuCreateNestedOneWithoutT_lieu_planning_regleInput = {
     create?: XOR<t_lieuCreateWithoutT_lieu_planning_regleInput, t_lieuUncheckedCreateWithoutT_lieu_planning_regleInput>
     connectOrCreate?: t_lieuCreateOrConnectWithoutT_lieu_planning_regleInput
@@ -77633,14 +76685,6 @@ export namespace Prisma {
     connectOrCreate?: t_commande_materiel_ligneCreateOrConnectWithoutCommandeInput | t_commande_materiel_ligneCreateOrConnectWithoutCommandeInput[]
     createMany?: t_commande_materiel_ligneCreateManyCommandeInputEnvelope
     connect?: t_commande_materiel_ligneWhereUniqueInput | t_commande_materiel_ligneWhereUniqueInput[]
-  }
-
-  export type Enumt_commande_materiel_Mode_TransmissionFieldUpdateOperationsInput = {
-    set?: $Enums.t_commande_materiel_Mode_Transmission
-  }
-
-  export type Enumt_commande_materiel_Statut_CommandeFieldUpdateOperationsInput = {
-    set?: $Enums.t_commande_materiel_Statut_Commande
   }
 
   export type t_pdfUpdateOneWithoutT_commande_materielNestedInput = {
@@ -78107,7 +77151,6 @@ export namespace Prisma {
     contains?: string | StringFieldRefInput<$PrismaModel>
     startsWith?: string | StringFieldRefInput<$PrismaModel>
     endsWith?: string | StringFieldRefInput<$PrismaModel>
-    search?: string
     not?: NestedStringNullableFilter<$PrismaModel> | string | null
   }
 
@@ -78176,7 +77219,6 @@ export namespace Prisma {
     contains?: string | StringFieldRefInput<$PrismaModel>
     startsWith?: string | StringFieldRefInput<$PrismaModel>
     endsWith?: string | StringFieldRefInput<$PrismaModel>
-    search?: string
     not?: NestedStringNullableWithAggregatesFilter<$PrismaModel> | string | null
     _count?: NestedIntNullableFilter<$PrismaModel>
     _min?: NestedStringNullableFilter<$PrismaModel>
@@ -78299,7 +77341,6 @@ export namespace Prisma {
     contains?: string | StringFieldRefInput<$PrismaModel>
     startsWith?: string | StringFieldRefInput<$PrismaModel>
     endsWith?: string | StringFieldRefInput<$PrismaModel>
-    search?: string
     not?: NestedStringFilter<$PrismaModel> | string
   }
 
@@ -78336,7 +77377,6 @@ export namespace Prisma {
     contains?: string | StringFieldRefInput<$PrismaModel>
     startsWith?: string | StringFieldRefInput<$PrismaModel>
     endsWith?: string | StringFieldRefInput<$PrismaModel>
-    search?: string
     not?: NestedStringWithAggregatesFilter<$PrismaModel> | string
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedStringFilter<$PrismaModel>
@@ -78404,57 +77444,6 @@ export namespace Prisma {
     _sum?: NestedFloatFilter<$PrismaModel>
     _min?: NestedFloatFilter<$PrismaModel>
     _max?: NestedFloatFilter<$PrismaModel>
-  }
-
-  export type NestedEnumt_lieu_planning_audit_TypeFilter<$PrismaModel = never> = {
-    equals?: $Enums.t_lieu_planning_audit_Type | Enumt_lieu_planning_audit_TypeFieldRefInput<$PrismaModel>
-    in?: $Enums.t_lieu_planning_audit_Type[]
-    notIn?: $Enums.t_lieu_planning_audit_Type[]
-    not?: NestedEnumt_lieu_planning_audit_TypeFilter<$PrismaModel> | $Enums.t_lieu_planning_audit_Type
-  }
-
-  export type NestedEnumt_lieu_planning_audit_TypeWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: $Enums.t_lieu_planning_audit_Type | Enumt_lieu_planning_audit_TypeFieldRefInput<$PrismaModel>
-    in?: $Enums.t_lieu_planning_audit_Type[]
-    notIn?: $Enums.t_lieu_planning_audit_Type[]
-    not?: NestedEnumt_lieu_planning_audit_TypeWithAggregatesFilter<$PrismaModel> | $Enums.t_lieu_planning_audit_Type
-    _count?: NestedIntFilter<$PrismaModel>
-    _min?: NestedEnumt_lieu_planning_audit_TypeFilter<$PrismaModel>
-    _max?: NestedEnumt_lieu_planning_audit_TypeFilter<$PrismaModel>
-  }
-
-  export type NestedEnumt_commande_materiel_Mode_TransmissionFilter<$PrismaModel = never> = {
-    equals?: $Enums.t_commande_materiel_Mode_Transmission | Enumt_commande_materiel_Mode_TransmissionFieldRefInput<$PrismaModel>
-    in?: $Enums.t_commande_materiel_Mode_Transmission[]
-    notIn?: $Enums.t_commande_materiel_Mode_Transmission[]
-    not?: NestedEnumt_commande_materiel_Mode_TransmissionFilter<$PrismaModel> | $Enums.t_commande_materiel_Mode_Transmission
-  }
-
-  export type NestedEnumt_commande_materiel_Statut_CommandeFilter<$PrismaModel = never> = {
-    equals?: $Enums.t_commande_materiel_Statut_Commande | Enumt_commande_materiel_Statut_CommandeFieldRefInput<$PrismaModel>
-    in?: $Enums.t_commande_materiel_Statut_Commande[]
-    notIn?: $Enums.t_commande_materiel_Statut_Commande[]
-    not?: NestedEnumt_commande_materiel_Statut_CommandeFilter<$PrismaModel> | $Enums.t_commande_materiel_Statut_Commande
-  }
-
-  export type NestedEnumt_commande_materiel_Mode_TransmissionWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: $Enums.t_commande_materiel_Mode_Transmission | Enumt_commande_materiel_Mode_TransmissionFieldRefInput<$PrismaModel>
-    in?: $Enums.t_commande_materiel_Mode_Transmission[]
-    notIn?: $Enums.t_commande_materiel_Mode_Transmission[]
-    not?: NestedEnumt_commande_materiel_Mode_TransmissionWithAggregatesFilter<$PrismaModel> | $Enums.t_commande_materiel_Mode_Transmission
-    _count?: NestedIntFilter<$PrismaModel>
-    _min?: NestedEnumt_commande_materiel_Mode_TransmissionFilter<$PrismaModel>
-    _max?: NestedEnumt_commande_materiel_Mode_TransmissionFilter<$PrismaModel>
-  }
-
-  export type NestedEnumt_commande_materiel_Statut_CommandeWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: $Enums.t_commande_materiel_Statut_Commande | Enumt_commande_materiel_Statut_CommandeFieldRefInput<$PrismaModel>
-    in?: $Enums.t_commande_materiel_Statut_Commande[]
-    notIn?: $Enums.t_commande_materiel_Statut_Commande[]
-    not?: NestedEnumt_commande_materiel_Statut_CommandeWithAggregatesFilter<$PrismaModel> | $Enums.t_commande_materiel_Statut_Commande
-    _count?: NestedIntFilter<$PrismaModel>
-    _min?: NestedEnumt_commande_materiel_Statut_CommandeFilter<$PrismaModel>
-    _max?: NestedEnumt_commande_materiel_Statut_CommandeFilter<$PrismaModel>
   }
 
   export type t_planCreateWithoutT_actionneurInput = {
@@ -78761,7 +77750,6 @@ export namespace Prisma {
 
   export type t_notificationCreateManyT_alarmeInputEnvelope = {
     data: t_notificationCreateManyT_alarmeInput | t_notificationCreateManyT_alarmeInput[]
-    skipDuplicates?: boolean
   }
 
   export type t_lieuUpsertWithoutT_alarmeInput = {
@@ -79380,7 +78368,6 @@ export namespace Prisma {
 
   export type t_liaison_profil_autorisationCreateManyT_autorisationInputEnvelope = {
     data: t_liaison_profil_autorisationCreateManyT_autorisationInput | t_liaison_profil_autorisationCreateManyT_autorisationInput[]
-    skipDuplicates?: boolean
   }
 
   export type t_liaison_profil_autorisationUpsertWithWhereUniqueWithoutT_autorisationInput = {
@@ -79423,7 +78410,6 @@ export namespace Prisma {
 
   export type t_liaison_utilisateur_groupeCreateManyT_groupeInputEnvelope = {
     data: t_liaison_utilisateur_groupeCreateManyT_groupeInput | t_liaison_utilisateur_groupeCreateManyT_groupeInput[]
-    skipDuplicates?: boolean
   }
 
   export type t_lieu_groupeCreateWithoutT_groupeInput = {
@@ -79441,7 +78427,6 @@ export namespace Prisma {
 
   export type t_lieu_groupeCreateManyT_groupeInputEnvelope = {
     data: t_lieu_groupeCreateManyT_groupeInput | t_lieu_groupeCreateManyT_groupeInput[]
-    skipDuplicates?: boolean
   }
 
   export type t_liaison_utilisateur_groupeUpsertWithWhereUniqueWithoutT_groupeInput = {
@@ -80451,7 +79436,6 @@ export namespace Prisma {
 
   export type t_alarmeCreateManyT_lieuInputEnvelope = {
     data: t_alarmeCreateManyT_lieuInput | t_alarmeCreateManyT_lieuInput[]
-    skipDuplicates?: boolean
   }
 
   export type t_alarme_histoCreateWithoutT_lieuInput = {
@@ -80494,7 +79478,6 @@ export namespace Prisma {
 
   export type t_alarme_histoCreateManyT_lieuInputEnvelope = {
     data: t_alarme_histoCreateManyT_lieuInput | t_alarme_histoCreateManyT_lieuInput[]
-    skipDuplicates?: boolean
   }
 
   export type t_etat_surveillanceCreateWithoutT_lieuInput = {
@@ -80640,7 +79623,6 @@ export namespace Prisma {
 
   export type t_lieu_groupeCreateManyT_lieuInputEnvelope = {
     data: t_lieu_groupeCreateManyT_lieuInput | t_lieu_groupeCreateManyT_lieuInput[]
-    skipDuplicates?: boolean
   }
 
   export type t_lieu_mail_telCreateWithoutT_lieuInput = {
@@ -80665,7 +79647,6 @@ export namespace Prisma {
 
   export type t_lieu_mail_telCreateManyT_lieuInputEnvelope = {
     data: t_lieu_mail_telCreateManyT_lieuInput | t_lieu_mail_telCreateManyT_lieuInput[]
-    skipDuplicates?: boolean
   }
 
   export type t_lieu_planning_regleCreateWithoutT_lieuInput = {
@@ -80710,7 +79691,6 @@ export namespace Prisma {
 
   export type t_lieu_planning_regleCreateManyT_lieuInputEnvelope = {
     data: t_lieu_planning_regleCreateManyT_lieuInput | t_lieu_planning_regleCreateManyT_lieuInput[]
-    skipDuplicates?: boolean
   }
 
   export type t_alarmeUpsertWithWhereUniqueWithoutT_lieuInput = {
@@ -81031,8 +80011,8 @@ export namespace Prisma {
     Email_Demandeur?: string | null
     Email_Commercial: string
     Commentaire?: string | null
-    Mode_Transmission: $Enums.t_commande_materiel_Mode_Transmission
-    Statut_Commande?: $Enums.t_commande_materiel_Statut_Commande
+    Mode_Transmission: string
+    Statut_Commande?: string
     Date_Creation?: Date | string
     Date_Envoi?: Date | string | null
     t_utilisateur: t_utilisateurCreateNestedOneWithoutT_commande_materielInput
@@ -81047,8 +80027,8 @@ export namespace Prisma {
     Email_Demandeur?: string | null
     Email_Commercial: string
     Commentaire?: string | null
-    Mode_Transmission: $Enums.t_commande_materiel_Mode_Transmission
-    Statut_Commande?: $Enums.t_commande_materiel_Statut_Commande
+    Mode_Transmission: string
+    Statut_Commande?: string
     Date_Creation?: Date | string
     Date_Envoi?: Date | string | null
     lignes?: t_commande_materiel_ligneUncheckedCreateNestedManyWithoutCommandeInput
@@ -81061,7 +80041,6 @@ export namespace Prisma {
 
   export type t_commande_materielCreateManyT_pdfInputEnvelope = {
     data: t_commande_materielCreateManyT_pdfInput | t_commande_materielCreateManyT_pdfInput[]
-    skipDuplicates?: boolean
   }
 
   export type t_lieuCreateWithoutT_pdfInput = {
@@ -81252,7 +80231,6 @@ export namespace Prisma {
 
   export type t_lieuCreateManyT_pdfInputEnvelope = {
     data: t_lieuCreateManyT_pdfInput | t_lieuCreateManyT_pdfInput[]
-    skipDuplicates?: boolean
   }
 
   export type t_commande_materielUpsertWithWhereUniqueWithoutT_pdfInput = {
@@ -81282,8 +80260,8 @@ export namespace Prisma {
     Email_Demandeur?: StringNullableFilter<"t_commande_materiel"> | string | null
     Email_Commercial?: StringFilter<"t_commande_materiel"> | string
     Commentaire?: StringNullableFilter<"t_commande_materiel"> | string | null
-    Mode_Transmission?: Enumt_commande_materiel_Mode_TransmissionFilter<"t_commande_materiel"> | $Enums.t_commande_materiel_Mode_Transmission
-    Statut_Commande?: Enumt_commande_materiel_Statut_CommandeFilter<"t_commande_materiel"> | $Enums.t_commande_materiel_Statut_Commande
+    Mode_Transmission?: StringFilter<"t_commande_materiel"> | string
+    Statut_Commande?: StringFilter<"t_commande_materiel"> | string
     Date_Creation?: DateTimeFilter<"t_commande_materiel"> | Date | string
     Date_Envoi?: DateTimeNullableFilter<"t_commande_materiel"> | Date | string | null
     Id_Pdf?: IntNullableFilter<"t_commande_materiel"> | number | null
@@ -81443,7 +80421,6 @@ export namespace Prisma {
 
   export type t_actionneurCreateManyT_planInputEnvelope = {
     data: t_actionneurCreateManyT_planInput | t_actionneurCreateManyT_planInput[]
-    skipDuplicates?: boolean
   }
 
   export type t_lieuCreateWithoutT_planInput = {
@@ -81634,7 +80611,6 @@ export namespace Prisma {
 
   export type t_lieuCreateManyT_planInputEnvelope = {
     data: t_lieuCreateManyT_planInput | t_lieuCreateManyT_planInput[]
-    skipDuplicates?: boolean
   }
 
   export type t_actionneurUpsertWithWhereUniqueWithoutT_planInput = {
@@ -81730,7 +80706,6 @@ export namespace Prisma {
 
   export type t_notification_deliveryCreateManyT_postes_clientsInputEnvelope = {
     data: t_notification_deliveryCreateManyT_postes_clientsInput | t_notification_deliveryCreateManyT_postes_clientsInput[]
-    skipDuplicates?: boolean
   }
 
   export type t_notification_deliveryUpsertWithWhereUniqueWithoutT_postes_clientsInput = {
@@ -81782,7 +80757,6 @@ export namespace Prisma {
 
   export type t_liaison_profil_autorisationCreateManyT_profilInputEnvelope = {
     data: t_liaison_profil_autorisationCreateManyT_profilInput | t_liaison_profil_autorisationCreateManyT_profilInput[]
-    skipDuplicates?: boolean
   }
 
   export type t_liaison_profil_autorisationUpsertWithWhereUniqueWithoutT_profilInput = {
@@ -81819,7 +80793,6 @@ export namespace Prisma {
 
   export type t_liaison_utilisateur_siteCreateManyT_siteInputEnvelope = {
     data: t_liaison_utilisateur_siteCreateManyT_siteInput | t_liaison_utilisateur_siteCreateManyT_siteInput[]
-    skipDuplicates?: boolean
   }
 
   export type t_lieuCreateWithoutT_siteInput = {
@@ -82010,7 +80983,6 @@ export namespace Prisma {
 
   export type t_lieuCreateManyT_siteInputEnvelope = {
     data: t_lieuCreateManyT_siteInput | t_lieuCreateManyT_siteInput[]
-    skipDuplicates?: boolean
   }
 
   export type t_vigilog_tourneeCreateWithoutT_site_t_vigilog_tournee_Id_Site_ArriveeTot_siteInput = {
@@ -82101,7 +81073,6 @@ export namespace Prisma {
 
   export type t_vigilog_tourneeCreateManyT_site_t_vigilog_tournee_Id_Site_ArriveeTot_siteInputEnvelope = {
     data: t_vigilog_tourneeCreateManyT_site_t_vigilog_tournee_Id_Site_ArriveeTot_siteInput | t_vigilog_tourneeCreateManyT_site_t_vigilog_tournee_Id_Site_ArriveeTot_siteInput[]
-    skipDuplicates?: boolean
   }
 
   export type t_vigilog_tourneeCreateWithoutT_site_t_vigilog_tournee_Id_Site_DepartTot_siteInput = {
@@ -82192,7 +81163,6 @@ export namespace Prisma {
 
   export type t_vigilog_tourneeCreateManyT_site_t_vigilog_tournee_Id_Site_DepartTot_siteInputEnvelope = {
     data: t_vigilog_tourneeCreateManyT_site_t_vigilog_tournee_Id_Site_DepartTot_siteInput | t_vigilog_tourneeCreateManyT_site_t_vigilog_tournee_Id_Site_DepartTot_siteInput[]
-    skipDuplicates?: boolean
   }
 
   export type t_liaison_utilisateur_siteUpsertWithWhereUniqueWithoutT_siteInput = {
@@ -82502,7 +81472,6 @@ export namespace Prisma {
 
   export type t_lieuCreateManyT_sondeInputEnvelope = {
     data: t_lieuCreateManyT_sondeInput | t_lieuCreateManyT_sondeInput[]
-    skipDuplicates?: boolean
   }
 
   export type t_sonde_etatCreateWithoutT_sondeInput = {
@@ -82839,7 +81808,6 @@ export namespace Prisma {
 
   export type t_lieuCreateManyT_etat_surveillanceInputEnvelope = {
     data: t_lieuCreateManyT_etat_surveillanceInput | t_lieuCreateManyT_etat_surveillanceInput[]
-    skipDuplicates?: boolean
   }
 
   export type t_sondeCreateWithoutT_etat_surveillanceInput = {
@@ -82892,7 +81860,6 @@ export namespace Prisma {
 
   export type t_sondeCreateManyT_etat_surveillanceInputEnvelope = {
     data: t_sondeCreateManyT_etat_surveillanceInput | t_sondeCreateManyT_etat_surveillanceInput[]
-    skipDuplicates?: boolean
   }
 
   export type t_lieuUpsertWithWhereUniqueWithoutT_etat_surveillanceInput = {
@@ -83002,7 +81969,6 @@ export namespace Prisma {
 
   export type t_sondeCreateManyT_sonde_typeInputEnvelope = {
     data: t_sondeCreateManyT_sonde_typeInput | t_sondeCreateManyT_sonde_typeInput[]
-    skipDuplicates?: boolean
   }
 
   export type t_sondeUpsertWithWhereUniqueWithoutT_sonde_typeInput = {
@@ -83039,7 +82005,6 @@ export namespace Prisma {
 
   export type t_ancien_mot_de_passeCreateManyT_utilisateurInputEnvelope = {
     data: t_ancien_mot_de_passeCreateManyT_utilisateurInput | t_ancien_mot_de_passeCreateManyT_utilisateurInput[]
-    skipDuplicates?: boolean
   }
 
   export type t_commande_materielCreateWithoutT_utilisateurInput = {
@@ -83048,8 +82013,8 @@ export namespace Prisma {
     Email_Demandeur?: string | null
     Email_Commercial: string
     Commentaire?: string | null
-    Mode_Transmission: $Enums.t_commande_materiel_Mode_Transmission
-    Statut_Commande?: $Enums.t_commande_materiel_Statut_Commande
+    Mode_Transmission: string
+    Statut_Commande?: string
     Date_Creation?: Date | string
     Date_Envoi?: Date | string | null
     t_pdf?: t_pdfCreateNestedOneWithoutT_commande_materielInput
@@ -83063,8 +82028,8 @@ export namespace Prisma {
     Email_Demandeur?: string | null
     Email_Commercial: string
     Commentaire?: string | null
-    Mode_Transmission: $Enums.t_commande_materiel_Mode_Transmission
-    Statut_Commande?: $Enums.t_commande_materiel_Statut_Commande
+    Mode_Transmission: string
+    Statut_Commande?: string
     Date_Creation?: Date | string
     Date_Envoi?: Date | string | null
     Id_Pdf?: number | null
@@ -83078,7 +82043,6 @@ export namespace Prisma {
 
   export type t_commande_materielCreateManyT_utilisateurInputEnvelope = {
     data: t_commande_materielCreateManyT_utilisateurInput | t_commande_materielCreateManyT_utilisateurInput[]
-    skipDuplicates?: boolean
   }
 
   export type t_liaison_utilisateur_groupeCreateWithoutT_utilisateurInput = {
@@ -83097,7 +82061,6 @@ export namespace Prisma {
 
   export type t_liaison_utilisateur_groupeCreateManyT_utilisateurInputEnvelope = {
     data: t_liaison_utilisateur_groupeCreateManyT_utilisateurInput | t_liaison_utilisateur_groupeCreateManyT_utilisateurInput[]
-    skipDuplicates?: boolean
   }
 
   export type t_liaison_utilisateur_siteCreateWithoutT_utilisateurInput = {
@@ -83118,7 +82081,6 @@ export namespace Prisma {
 
   export type t_liaison_utilisateur_siteCreateManyT_utilisateurInputEnvelope = {
     data: t_liaison_utilisateur_siteCreateManyT_utilisateurInput | t_liaison_utilisateur_siteCreateManyT_utilisateurInput[]
-    skipDuplicates?: boolean
   }
 
   export type t_notification_deliveryCreateWithoutT_utilisateurInput = {
@@ -83157,7 +82119,6 @@ export namespace Prisma {
 
   export type t_notification_deliveryCreateManyT_utilisateurInputEnvelope = {
     data: t_notification_deliveryCreateManyT_utilisateurInput | t_notification_deliveryCreateManyT_utilisateurInput[]
-    skipDuplicates?: boolean
   }
 
   export type t_vigilog_configurationCreateWithoutT_utilisateur_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateurInput = {
@@ -83210,7 +82171,6 @@ export namespace Prisma {
 
   export type t_vigilog_configurationCreateManyT_utilisateur_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateurInputEnvelope = {
     data: t_vigilog_configurationCreateManyT_utilisateur_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateurInput | t_vigilog_configurationCreateManyT_utilisateur_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateurInput[]
-    skipDuplicates?: boolean
   }
 
   export type t_vigilog_configurationCreateWithoutT_utilisateur_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateurInput = {
@@ -83263,7 +82223,6 @@ export namespace Prisma {
 
   export type t_vigilog_configurationCreateManyT_utilisateur_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateurInputEnvelope = {
     data: t_vigilog_configurationCreateManyT_utilisateur_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateurInput | t_vigilog_configurationCreateManyT_utilisateur_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateurInput[]
-    skipDuplicates?: boolean
   }
 
   export type t_vigilog_tourneeCreateWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateurInput = {
@@ -83354,7 +82313,6 @@ export namespace Prisma {
 
   export type t_vigilog_tourneeCreateManyT_utilisateur_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateurInputEnvelope = {
     data: t_vigilog_tourneeCreateManyT_utilisateur_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateurInput | t_vigilog_tourneeCreateManyT_utilisateur_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateurInput[]
-    skipDuplicates?: boolean
   }
 
   export type t_vigilog_tourneeCreateWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateurInput = {
@@ -83445,7 +82403,6 @@ export namespace Prisma {
 
   export type t_vigilog_tourneeCreateManyT_utilisateur_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateurInputEnvelope = {
     data: t_vigilog_tourneeCreateManyT_utilisateur_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateurInput | t_vigilog_tourneeCreateManyT_utilisateur_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateurInput[]
-    skipDuplicates?: boolean
   }
 
   export type t_vigilog_tourneeCreateWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateurInput = {
@@ -83536,7 +82493,6 @@ export namespace Prisma {
 
   export type t_vigilog_tourneeCreateManyT_utilisateur_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateurInputEnvelope = {
     data: t_vigilog_tourneeCreateManyT_utilisateur_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateurInput | t_vigilog_tourneeCreateManyT_utilisateur_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateurInput[]
-    skipDuplicates?: boolean
   }
 
   export type t_vigilog_usage_ponctuelCreateWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput = {
@@ -83581,7 +82537,6 @@ export namespace Prisma {
 
   export type t_vigilog_usage_ponctuelCreateManyT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInputEnvelope = {
     data: t_vigilog_usage_ponctuelCreateManyT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput | t_vigilog_usage_ponctuelCreateManyT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput[]
-    skipDuplicates?: boolean
   }
 
   export type t_vigilog_usage_ponctuelCreateWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput = {
@@ -83626,7 +82581,6 @@ export namespace Prisma {
 
   export type t_vigilog_usage_ponctuelCreateManyT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInputEnvelope = {
     data: t_vigilog_usage_ponctuelCreateManyT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput | t_vigilog_usage_ponctuelCreateManyT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput[]
-    skipDuplicates?: boolean
   }
 
   export type t_ancien_mot_de_passeUpsertWithWhereUniqueWithoutT_utilisateurInput = {
@@ -83949,7 +82903,6 @@ export namespace Prisma {
 
   export type t_notification_deliveryCreateManyT_notificationInputEnvelope = {
     data: t_notification_deliveryCreateManyT_notificationInput | t_notification_deliveryCreateManyT_notificationInput[]
-    skipDuplicates?: boolean
   }
 
   export type t_alarmeUpsertWithoutT_notificationInput = {
@@ -84156,7 +83109,6 @@ export namespace Prisma {
 
   export type t_notification_eventCreateManyT_notification_deliveryInputEnvelope = {
     data: t_notification_eventCreateManyT_notification_deliveryInput | t_notification_eventCreateManyT_notification_deliveryInput[]
-    skipDuplicates?: boolean
   }
 
   export type t_notificationUpsertWithoutT_notification_deliveryInput = {
@@ -84452,7 +83404,6 @@ export namespace Prisma {
 
   export type t_actionneurCreateManyT_actionneurtypeInputEnvelope = {
     data: t_actionneurCreateManyT_actionneurtypeInput | t_actionneurCreateManyT_actionneurtypeInput[]
-    skipDuplicates?: boolean
   }
 
   export type t_actionneurUpsertWithWhereUniqueWithoutT_actionneurtypeInput = {
@@ -84675,7 +83626,6 @@ export namespace Prisma {
 
   export type t_sondeCreateManyT_sonde_etatInputEnvelope = {
     data: t_sondeCreateManyT_sonde_etatInput | t_sondeCreateManyT_sonde_etatInput[]
-    skipDuplicates?: boolean
   }
 
   export type t_sondeUpsertWithWhereUniqueWithoutT_sonde_etatInput = {
@@ -85478,7 +84428,6 @@ export namespace Prisma {
 
   export type t_commande_materiel_ligneCreateManyMaterielInputEnvelope = {
     data: t_commande_materiel_ligneCreateManyMaterielInput | t_commande_materiel_ligneCreateManyMaterielInput[]
-    skipDuplicates?: boolean
   }
 
   export type t_commande_materiel_ligneUpsertWithWhereUniqueWithoutMaterielInput = {
@@ -85632,7 +84581,6 @@ export namespace Prisma {
 
   export type t_commande_materiel_ligneCreateManyCommandeInputEnvelope = {
     data: t_commande_materiel_ligneCreateManyCommandeInput | t_commande_materiel_ligneCreateManyCommandeInput[]
-    skipDuplicates?: boolean
   }
 
   export type t_pdfUpsertWithoutT_commande_materielInput = {
@@ -85761,8 +84709,8 @@ export namespace Prisma {
     Email_Demandeur?: string | null
     Email_Commercial: string
     Commentaire?: string | null
-    Mode_Transmission: $Enums.t_commande_materiel_Mode_Transmission
-    Statut_Commande?: $Enums.t_commande_materiel_Statut_Commande
+    Mode_Transmission: string
+    Statut_Commande?: string
     Date_Creation?: Date | string
     Date_Envoi?: Date | string | null
     t_pdf?: t_pdfCreateNestedOneWithoutT_commande_materielInput
@@ -85777,8 +84725,8 @@ export namespace Prisma {
     Email_Demandeur?: string | null
     Email_Commercial: string
     Commentaire?: string | null
-    Mode_Transmission: $Enums.t_commande_materiel_Mode_Transmission
-    Statut_Commande?: $Enums.t_commande_materiel_Statut_Commande
+    Mode_Transmission: string
+    Statut_Commande?: string
     Date_Creation?: Date | string
     Date_Envoi?: Date | string | null
     Id_Pdf?: number | null
@@ -85830,8 +84778,8 @@ export namespace Prisma {
     Email_Demandeur?: NullableStringFieldUpdateOperationsInput | string | null
     Email_Commercial?: StringFieldUpdateOperationsInput | string
     Commentaire?: NullableStringFieldUpdateOperationsInput | string | null
-    Mode_Transmission?: Enumt_commande_materiel_Mode_TransmissionFieldUpdateOperationsInput | $Enums.t_commande_materiel_Mode_Transmission
-    Statut_Commande?: Enumt_commande_materiel_Statut_CommandeFieldUpdateOperationsInput | $Enums.t_commande_materiel_Statut_Commande
+    Mode_Transmission?: StringFieldUpdateOperationsInput | string
+    Statut_Commande?: StringFieldUpdateOperationsInput | string
     Date_Creation?: DateTimeFieldUpdateOperationsInput | Date | string
     Date_Envoi?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     t_pdf?: t_pdfUpdateOneWithoutT_commande_materielNestedInput
@@ -85846,8 +84794,8 @@ export namespace Prisma {
     Email_Demandeur?: NullableStringFieldUpdateOperationsInput | string | null
     Email_Commercial?: StringFieldUpdateOperationsInput | string
     Commentaire?: NullableStringFieldUpdateOperationsInput | string | null
-    Mode_Transmission?: Enumt_commande_materiel_Mode_TransmissionFieldUpdateOperationsInput | $Enums.t_commande_materiel_Mode_Transmission
-    Statut_Commande?: Enumt_commande_materiel_Statut_CommandeFieldUpdateOperationsInput | $Enums.t_commande_materiel_Statut_Commande
+    Mode_Transmission?: StringFieldUpdateOperationsInput | string
+    Statut_Commande?: StringFieldUpdateOperationsInput | string
     Date_Creation?: DateTimeFieldUpdateOperationsInput | Date | string
     Date_Envoi?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Id_Pdf?: NullableIntFieldUpdateOperationsInput | number | null
@@ -86119,7 +85067,6 @@ export namespace Prisma {
 
   export type t_vigilog_tourneeCreateManyT_vigilog_configurationInputEnvelope = {
     data: t_vigilog_tourneeCreateManyT_vigilog_configurationInput | t_vigilog_tourneeCreateManyT_vigilog_configurationInput[]
-    skipDuplicates?: boolean
   }
 
   export type t_vigilog_usage_ponctuelCreateWithoutT_vigilog_configurationInput = {
@@ -86164,7 +85111,6 @@ export namespace Prisma {
 
   export type t_vigilog_usage_ponctuelCreateManyT_vigilog_configurationInputEnvelope = {
     data: t_vigilog_usage_ponctuelCreateManyT_vigilog_configurationInput | t_vigilog_usage_ponctuelCreateManyT_vigilog_configurationInput[]
-    skipDuplicates?: boolean
   }
 
   export type t_utilisateurUpsertWithoutT_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateurInput = {
@@ -86447,7 +85393,6 @@ export namespace Prisma {
 
   export type t_vigilog_tourneeCreateManyT_vigilogInputEnvelope = {
     data: t_vigilog_tourneeCreateManyT_vigilogInput | t_vigilog_tourneeCreateManyT_vigilogInput[]
-    skipDuplicates?: boolean
   }
 
   export type t_vigilog_usage_ponctuelCreateWithoutT_vigilogInput = {
@@ -86492,7 +85437,6 @@ export namespace Prisma {
 
   export type t_vigilog_usage_ponctuelCreateManyT_vigilogInputEnvelope = {
     data: t_vigilog_usage_ponctuelCreateManyT_vigilogInput | t_vigilog_usage_ponctuelCreateManyT_vigilogInput[]
-    skipDuplicates?: boolean
   }
 
   export type t_vigilog_tourneeUpsertWithWhereUniqueWithoutT_vigilogInput = {
@@ -87782,7 +86726,6 @@ export namespace Prisma {
   }
 
   export type t_notificationCreateManyT_alarmeInput = {
-    Id_Notification?: number
     Type: string
     Titre?: string | null
     Message: string
@@ -87843,7 +86786,6 @@ export namespace Prisma {
   }
 
   export type t_liaison_utilisateur_groupeCreateManyT_groupeInput = {
-    Id_Liaison_u_g?: number
     Id_Utilisateur: number
   }
 
@@ -87878,7 +86820,6 @@ export namespace Prisma {
   }
 
   export type t_alarmeCreateManyT_lieuInput = {
-    Id_Alarme?: number
     Date_Heure_Debut?: Date | string | null
     Valeur?: number | null
     Type?: string | null
@@ -87893,7 +86834,6 @@ export namespace Prisma {
   }
 
   export type t_alarme_histoCreateManyT_lieuInput = {
-    Id_Alarme_Histo?: number
     Id_Alarme: number
     Date_Heure_Debut?: Date | string | null
     Valeur?: number | null
@@ -87914,7 +86854,6 @@ export namespace Prisma {
   }
 
   export type t_lieu_mail_telCreateManyT_lieuInput = {
-    Id_Mail_Tel?: number
     Ordre_Contact?: number | null
     Id_Utilisateur?: number | null
     Est_Via_Telephone?: boolean | null
@@ -87922,7 +86861,6 @@ export namespace Prisma {
   }
 
   export type t_lieu_planning_regleCreateManyT_lieuInput = {
-    Id_Regle?: number
     Actif?: boolean
     Jour_Debut: number
     Heure_Debut: Date | string
@@ -88124,21 +87062,19 @@ export namespace Prisma {
   }
 
   export type t_commande_materielCreateManyT_pdfInput = {
-    Id_Commande_Materiel?: number
     Reference_Commande: string
     Id_Utilisateur: number
     Nom_Demandeur: string
     Email_Demandeur?: string | null
     Email_Commercial: string
     Commentaire?: string | null
-    Mode_Transmission: $Enums.t_commande_materiel_Mode_Transmission
-    Statut_Commande?: $Enums.t_commande_materiel_Statut_Commande
+    Mode_Transmission: string
+    Statut_Commande?: string
     Date_Creation?: Date | string
     Date_Envoi?: Date | string | null
   }
 
   export type t_lieuCreateManyT_pdfInput = {
-    Id_Lieu?: number
     Id_Site?: number | null
     Nom_Lieu?: string | null
     Sonde_Numero_Serie?: string | null
@@ -88229,8 +87165,8 @@ export namespace Prisma {
     Email_Demandeur?: NullableStringFieldUpdateOperationsInput | string | null
     Email_Commercial?: StringFieldUpdateOperationsInput | string
     Commentaire?: NullableStringFieldUpdateOperationsInput | string | null
-    Mode_Transmission?: Enumt_commande_materiel_Mode_TransmissionFieldUpdateOperationsInput | $Enums.t_commande_materiel_Mode_Transmission
-    Statut_Commande?: Enumt_commande_materiel_Statut_CommandeFieldUpdateOperationsInput | $Enums.t_commande_materiel_Statut_Commande
+    Mode_Transmission?: StringFieldUpdateOperationsInput | string
+    Statut_Commande?: StringFieldUpdateOperationsInput | string
     Date_Creation?: DateTimeFieldUpdateOperationsInput | Date | string
     Date_Envoi?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     t_utilisateur?: t_utilisateurUpdateOneRequiredWithoutT_commande_materielNestedInput
@@ -88245,8 +87181,8 @@ export namespace Prisma {
     Email_Demandeur?: NullableStringFieldUpdateOperationsInput | string | null
     Email_Commercial?: StringFieldUpdateOperationsInput | string
     Commentaire?: NullableStringFieldUpdateOperationsInput | string | null
-    Mode_Transmission?: Enumt_commande_materiel_Mode_TransmissionFieldUpdateOperationsInput | $Enums.t_commande_materiel_Mode_Transmission
-    Statut_Commande?: Enumt_commande_materiel_Statut_CommandeFieldUpdateOperationsInput | $Enums.t_commande_materiel_Statut_Commande
+    Mode_Transmission?: StringFieldUpdateOperationsInput | string
+    Statut_Commande?: StringFieldUpdateOperationsInput | string
     Date_Creation?: DateTimeFieldUpdateOperationsInput | Date | string
     Date_Envoi?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     lignes?: t_commande_materiel_ligneUncheckedUpdateManyWithoutCommandeNestedInput
@@ -88260,8 +87196,8 @@ export namespace Prisma {
     Email_Demandeur?: NullableStringFieldUpdateOperationsInput | string | null
     Email_Commercial?: StringFieldUpdateOperationsInput | string
     Commentaire?: NullableStringFieldUpdateOperationsInput | string | null
-    Mode_Transmission?: Enumt_commande_materiel_Mode_TransmissionFieldUpdateOperationsInput | $Enums.t_commande_materiel_Mode_Transmission
-    Statut_Commande?: Enumt_commande_materiel_Statut_CommandeFieldUpdateOperationsInput | $Enums.t_commande_materiel_Statut_Commande
+    Mode_Transmission?: StringFieldUpdateOperationsInput | string
+    Statut_Commande?: StringFieldUpdateOperationsInput | string
     Date_Creation?: DateTimeFieldUpdateOperationsInput | Date | string
     Date_Envoi?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   }
@@ -88534,7 +87470,6 @@ export namespace Prisma {
   }
 
   export type t_actionneurCreateManyT_planInput = {
-    Id_Actionneur?: number
     Num_Serie?: string | null
     Type?: number | null
     Est_Etat?: boolean | null
@@ -88555,7 +87490,6 @@ export namespace Prisma {
   }
 
   export type t_lieuCreateManyT_planInput = {
-    Id_Lieu?: number
     Id_Site?: number | null
     Nom_Lieu?: string | null
     Sonde_Numero_Serie?: string | null
@@ -88970,7 +87904,6 @@ export namespace Prisma {
   }
 
   export type t_notification_deliveryCreateManyT_postes_clientsInput = {
-    Id_Delivery?: number
     Id_Notification: number
     Id_Utilisateur?: number | null
     Statut: string
@@ -89043,13 +87976,11 @@ export namespace Prisma {
   }
 
   export type t_liaison_utilisateur_siteCreateManyT_siteInput = {
-    Id_Liaison?: number
     Id_Utilisateur?: number | null
     Date_Affectation?: Date | string | null
   }
 
   export type t_lieuCreateManyT_siteInput = {
-    Id_Lieu?: number
     Nom_Lieu?: string | null
     Sonde_Numero_Serie?: string | null
     Adresse_Sonde?: string | null
@@ -89135,7 +88066,6 @@ export namespace Prisma {
   }
 
   export type t_vigilog_tourneeCreateManyT_site_t_vigilog_tournee_Id_Site_ArriveeTot_siteInput = {
-    Id_VigiLog_Tournee?: number
     Reference_Tournee: string
     Id_VigiLog_Configuration?: number | null
     Id_VigiLog?: number | null
@@ -89176,7 +88106,6 @@ export namespace Prisma {
   }
 
   export type t_vigilog_tourneeCreateManyT_site_t_vigilog_tournee_Id_Site_DepartTot_siteInput = {
-    Id_VigiLog_Tournee?: number
     Reference_Tournee: string
     Id_VigiLog_Configuration?: number | null
     Id_VigiLog?: number | null
@@ -89745,7 +88674,6 @@ export namespace Prisma {
   }
 
   export type t_lieuCreateManyT_sondeInput = {
-    Id_Lieu?: number
     Id_Site?: number | null
     Nom_Lieu?: string | null
     Adresse_Sonde?: string | null
@@ -90098,7 +89026,6 @@ export namespace Prisma {
   }
 
   export type t_lieuCreateManyT_etat_surveillanceInput = {
-    Id_Lieu?: number
     Id_Site?: number | null
     Nom_Lieu?: string | null
     Sonde_Numero_Serie?: string | null
@@ -90184,7 +89111,6 @@ export namespace Prisma {
   }
 
   export type t_sondeCreateManyT_etat_surveillanceInput = {
-    Id_Sonde?: number
     Adresse_Sonde?: string | null
     Sonde_Numero_Serie?: string | null
     Sonde_Type?: string | null
@@ -90536,7 +89462,6 @@ export namespace Prisma {
   }
 
   export type t_sondeCreateManyT_sonde_typeInput = {
-    Id_Sonde?: number
     Adresse_Sonde?: string | null
     Sonde_Numero_Serie?: string | null
     Est_Sonde_GSO?: boolean
@@ -90621,38 +89546,33 @@ export namespace Prisma {
   }
 
   export type t_ancien_mot_de_passeCreateManyT_utilisateurInput = {
-    Id_Ancien_Mot_De_Passe?: number
     Mot_De_Passe?: string | null
     Est_Premiere_Connexion?: boolean | null
   }
 
   export type t_commande_materielCreateManyT_utilisateurInput = {
-    Id_Commande_Materiel?: number
     Reference_Commande: string
     Nom_Demandeur: string
     Email_Demandeur?: string | null
     Email_Commercial: string
     Commentaire?: string | null
-    Mode_Transmission: $Enums.t_commande_materiel_Mode_Transmission
-    Statut_Commande?: $Enums.t_commande_materiel_Statut_Commande
+    Mode_Transmission: string
+    Statut_Commande?: string
     Date_Creation?: Date | string
     Date_Envoi?: Date | string | null
     Id_Pdf?: number | null
   }
 
   export type t_liaison_utilisateur_groupeCreateManyT_utilisateurInput = {
-    Id_Liaison_u_g?: number
     Id_Groupe?: number | null
   }
 
   export type t_liaison_utilisateur_siteCreateManyT_utilisateurInput = {
-    Id_Liaison?: number
     Id_Site?: number | null
     Date_Affectation?: Date | string | null
   }
 
   export type t_notification_deliveryCreateManyT_utilisateurInput = {
-    Id_Delivery?: number
     Id_Notification: number
     Id_Poste: number
     Statut: string
@@ -90666,7 +89586,6 @@ export namespace Prisma {
   }
 
   export type t_vigilog_configurationCreateManyT_utilisateur_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateurInput = {
-    Id_VigiLog_Configuration?: number
     Nom_Configuration: string
     Description_Configuration?: string | null
     Consigne?: Decimal | DecimalJsLike | number | string | null
@@ -90686,7 +89605,6 @@ export namespace Prisma {
   }
 
   export type t_vigilog_configurationCreateManyT_utilisateur_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateurInput = {
-    Id_VigiLog_Configuration?: number
     Nom_Configuration: string
     Description_Configuration?: string | null
     Consigne?: Decimal | DecimalJsLike | number | string | null
@@ -90706,7 +89624,6 @@ export namespace Prisma {
   }
 
   export type t_vigilog_tourneeCreateManyT_utilisateur_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateurInput = {
-    Id_VigiLog_Tournee?: number
     Reference_Tournee: string
     Id_VigiLog_Configuration?: number | null
     Id_VigiLog?: number | null
@@ -90747,7 +89664,6 @@ export namespace Prisma {
   }
 
   export type t_vigilog_tourneeCreateManyT_utilisateur_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateurInput = {
-    Id_VigiLog_Tournee?: number
     Reference_Tournee: string
     Id_VigiLog_Configuration?: number | null
     Id_VigiLog?: number | null
@@ -90788,7 +89704,6 @@ export namespace Prisma {
   }
 
   export type t_vigilog_tourneeCreateManyT_utilisateur_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateurInput = {
-    Id_VigiLog_Tournee?: number
     Reference_Tournee: string
     Id_VigiLog_Configuration?: number | null
     Id_VigiLog?: number | null
@@ -90829,7 +89744,6 @@ export namespace Prisma {
   }
 
   export type t_vigilog_usage_ponctuelCreateManyT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput = {
-    Id_VigiLog_Usage_Ponctuel?: number
     Reference_Usage: string
     Id_VigiLog_Configuration?: number | null
     Id_VigiLog?: number | null
@@ -90847,7 +89761,6 @@ export namespace Prisma {
   }
 
   export type t_vigilog_usage_ponctuelCreateManyT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput = {
-    Id_VigiLog_Usage_Ponctuel?: number
     Reference_Usage: string
     Id_VigiLog_Configuration?: number | null
     Id_VigiLog?: number | null
@@ -90887,8 +89800,8 @@ export namespace Prisma {
     Email_Demandeur?: NullableStringFieldUpdateOperationsInput | string | null
     Email_Commercial?: StringFieldUpdateOperationsInput | string
     Commentaire?: NullableStringFieldUpdateOperationsInput | string | null
-    Mode_Transmission?: Enumt_commande_materiel_Mode_TransmissionFieldUpdateOperationsInput | $Enums.t_commande_materiel_Mode_Transmission
-    Statut_Commande?: Enumt_commande_materiel_Statut_CommandeFieldUpdateOperationsInput | $Enums.t_commande_materiel_Statut_Commande
+    Mode_Transmission?: StringFieldUpdateOperationsInput | string
+    Statut_Commande?: StringFieldUpdateOperationsInput | string
     Date_Creation?: DateTimeFieldUpdateOperationsInput | Date | string
     Date_Envoi?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     t_pdf?: t_pdfUpdateOneWithoutT_commande_materielNestedInput
@@ -90902,8 +89815,8 @@ export namespace Prisma {
     Email_Demandeur?: NullableStringFieldUpdateOperationsInput | string | null
     Email_Commercial?: StringFieldUpdateOperationsInput | string
     Commentaire?: NullableStringFieldUpdateOperationsInput | string | null
-    Mode_Transmission?: Enumt_commande_materiel_Mode_TransmissionFieldUpdateOperationsInput | $Enums.t_commande_materiel_Mode_Transmission
-    Statut_Commande?: Enumt_commande_materiel_Statut_CommandeFieldUpdateOperationsInput | $Enums.t_commande_materiel_Statut_Commande
+    Mode_Transmission?: StringFieldUpdateOperationsInput | string
+    Statut_Commande?: StringFieldUpdateOperationsInput | string
     Date_Creation?: DateTimeFieldUpdateOperationsInput | Date | string
     Date_Envoi?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Id_Pdf?: NullableIntFieldUpdateOperationsInput | number | null
@@ -90917,8 +89830,8 @@ export namespace Prisma {
     Email_Demandeur?: NullableStringFieldUpdateOperationsInput | string | null
     Email_Commercial?: StringFieldUpdateOperationsInput | string
     Commentaire?: NullableStringFieldUpdateOperationsInput | string | null
-    Mode_Transmission?: Enumt_commande_materiel_Mode_TransmissionFieldUpdateOperationsInput | $Enums.t_commande_materiel_Mode_Transmission
-    Statut_Commande?: Enumt_commande_materiel_Statut_CommandeFieldUpdateOperationsInput | $Enums.t_commande_materiel_Statut_Commande
+    Mode_Transmission?: StringFieldUpdateOperationsInput | string
+    Statut_Commande?: StringFieldUpdateOperationsInput | string
     Date_Creation?: DateTimeFieldUpdateOperationsInput | Date | string
     Date_Envoi?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Id_Pdf?: NullableIntFieldUpdateOperationsInput | number | null
@@ -91597,7 +90510,6 @@ export namespace Prisma {
   }
 
   export type t_notification_deliveryCreateManyT_notificationInput = {
-    Id_Delivery?: number
     Id_Poste: number
     Id_Utilisateur?: number | null
     Statut: string
@@ -91654,7 +90566,6 @@ export namespace Prisma {
   }
 
   export type t_notification_eventCreateManyT_notification_deliveryInput = {
-    Id_Event?: number
     Event_Type: string
     Event_Data?: string | null
     Date_Event?: Date | string
@@ -91681,7 +90592,6 @@ export namespace Prisma {
   }
 
   export type t_actionneurCreateManyT_actionneurtypeInput = {
-    Id_Actionneur?: number
     Num_Serie?: string | null
     Est_Etat?: boolean | null
     Est_Demande?: boolean | null
@@ -91764,7 +90674,6 @@ export namespace Prisma {
   }
 
   export type t_sondeCreateManyT_sonde_etatInput = {
-    Id_Sonde?: number
     Adresse_Sonde?: string | null
     Sonde_Numero_Serie?: string | null
     Sonde_Type?: string | null
@@ -91849,7 +90758,6 @@ export namespace Prisma {
   }
 
   export type t_commande_materiel_ligneCreateManyMaterielInput = {
-    Id_Commande_Materiel_Ligne?: number
     Id_Commande_Materiel: number
     Ref_Commercial: string
     Designation: string
@@ -91892,7 +90800,6 @@ export namespace Prisma {
   }
 
   export type t_commande_materiel_ligneCreateManyCommandeInput = {
-    Id_Commande_Materiel_Ligne?: number
     Id_Materiel: number
     Ref_Commercial: string
     Designation: string
@@ -91935,7 +90842,6 @@ export namespace Prisma {
   }
 
   export type t_vigilog_tourneeCreateManyT_vigilog_configurationInput = {
-    Id_VigiLog_Tournee?: number
     Reference_Tournee: string
     Id_VigiLog?: number | null
     Nom_Configuration: string
@@ -91976,7 +90882,6 @@ export namespace Prisma {
   }
 
   export type t_vigilog_usage_ponctuelCreateManyT_vigilog_configurationInput = {
-    Id_VigiLog_Usage_Ponctuel?: number
     Reference_Usage: string
     Id_VigiLog?: number | null
     Nom_Configuration: string
@@ -92169,7 +91074,6 @@ export namespace Prisma {
   }
 
   export type t_vigilog_tourneeCreateManyT_vigilogInput = {
-    Id_VigiLog_Tournee?: number
     Reference_Tournee: string
     Id_VigiLog_Configuration?: number | null
     Nom_Configuration: string
@@ -92210,7 +91114,6 @@ export namespace Prisma {
   }
 
   export type t_vigilog_usage_ponctuelCreateManyT_vigilogInput = {
-    Id_VigiLog_Usage_Ponctuel?: number
     Reference_Usage: string
     Id_VigiLog_Configuration?: number | null
     Nom_Configuration: string

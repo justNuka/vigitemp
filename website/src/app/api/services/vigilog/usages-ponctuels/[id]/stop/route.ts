@@ -26,6 +26,10 @@ type ExistingUsageRow = {
   stoppedAt: Date | string | null
 }
 
+function isMssqlProvider() {
+  const provider = process.env.DATABASE_PROVIDER?.trim().toLowerCase()
+  return provider === "mssql" || provider === "sqlserver"
+}
 export const POST = withStandardOrExpertAnyAuthorizationLogging(
   VIGILOG_ACCESS_CODES,
   async (req: NextRequest, ctx: HandlerContext, routeContext: { params: Promise<{ id: string }> }) => {
@@ -53,22 +57,36 @@ export const POST = withStandardOrExpertAnyAuthorizationLogging(
         })
       }
 
-      const [existing] = await prisma.$queryRaw<ExistingUsageRow[]>`
-        SELECT
-          Id_VigiLog_Usage_Ponctuel AS id,
-          Reference_Usage AS reference,
-          Statut AS status,
-          Numero_Serie_VigiLog AS loggerSerial,
-          Nom_Lieu_Temporaire AS temporaryLocationName,
-          Commentaire_Demarrage AS startComment,
-          Commentaire_Arret AS stopComment,
-          Date_Heure_Demarrage AS startedAt,
-          Date_Heure_Arret AS stoppedAt
-        FROM t_vigilog_usage_ponctuel
-        WHERE Id_VigiLog_Usage_Ponctuel = ${usageId}
-        LIMIT 1
-      `
-
+      const [existing] = isMssqlProvider()
+        ? await prisma.$queryRaw<ExistingUsageRow[]>`
+            SELECT TOP 1
+              Id_VigiLog_Usage_Ponctuel AS id,
+              Reference_Usage AS reference,
+              Statut AS status,
+              Numero_Serie_VigiLog AS loggerSerial,
+              Nom_Lieu_Temporaire AS temporaryLocationName,
+              Commentaire_Demarrage AS startComment,
+              Commentaire_Arret AS stopComment,
+              Date_Heure_Demarrage AS startedAt,
+              Date_Heure_Arret AS stoppedAt
+            FROM t_vigilog_usage_ponctuel
+            WHERE Id_VigiLog_Usage_Ponctuel = ${usageId}
+          `
+        : await prisma.$queryRaw<ExistingUsageRow[]>`
+            SELECT
+              Id_VigiLog_Usage_Ponctuel AS id,
+              Reference_Usage AS reference,
+              Statut AS status,
+              Numero_Serie_VigiLog AS loggerSerial,
+              Nom_Lieu_Temporaire AS temporaryLocationName,
+              Commentaire_Demarrage AS startComment,
+              Commentaire_Arret AS stopComment,
+              Date_Heure_Demarrage AS startedAt,
+              Date_Heure_Arret AS stoppedAt
+            FROM t_vigilog_usage_ponctuel
+            WHERE Id_VigiLog_Usage_Ponctuel = ${usageId}
+            LIMIT 1
+          `
       if (!existing) {
         return apiError(404, "not_found", "Usage ponctuel VigiLog introuvable")
       }
@@ -161,4 +179,5 @@ export const POST = withStandardOrExpertAnyAuthorizationLogging(
     }
   },
 )
+
 

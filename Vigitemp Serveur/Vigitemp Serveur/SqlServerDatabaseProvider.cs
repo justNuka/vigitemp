@@ -1067,7 +1067,7 @@ namespace Vigitemp_Serveur
                     using (var cmd = CreateCommand(
                         _connectionMain,
                         "SELECT t_lieu.Id_Lieu, t_lieu.Frequence, t_lieu.Derniere_Date_Heure, " +
-                        "t_lieu.Infos_Modifiees_Depuis_Derniere_Mesure, t_lieu.EMT_Choix_Mode, t_lieu.Est_Correction_Ej, " +
+                        "t_lieu.Infos_Modifiees_Depuis_Derniere_Mesure, ISNULL(t_lieu.Est_Remontee_Memoire_A_Faire, 0) AS Est_Remontee_Memoire_A_Faire, t_lieu.EMT_Choix_Mode, t_lieu.Est_Correction_Ej, " +
                         "t_module.Port_Serie, t_module.Module_Numero_Serie, t_module.Type_Module, t_module.Id_Worker AS Id_Worker, " +
                         "t_sonde.Sonde_Numero_Serie, t_sonde.Sonde_Type, tt.Famille_Sonde, t_sonde.Adresse_Sonde, t_sonde.Sonde_Offset, " +
                         "ta.Coeff_X, ta.Coeff_Constant, te.Err_Justesse, te.Incertitude, te.Date_Validite " +
@@ -1116,6 +1116,7 @@ namespace Vigitemp_Serveur
                                     FrequenceSecondes = frequency,
                                     DerniereDateHeure = lastMeasure,
                                     InfosModifiees = GetOptionalBool(reader, "Infos_Modifiees_Depuis_Derniere_Mesure", false),
+                                    GspRecoveryPending = GetOptionalBool(reader, "Est_Remontee_Memoire_A_Faire", false),
                                     PortSerie = "COM" + reader["Port_Serie"].ToString(),
                                     ModuleNumeroSerie = reader["Module_Numero_Serie"].ToString(),
                                     ModuleType = GetNullableInt(reader, "Type_Module"),
@@ -1604,9 +1605,68 @@ namespace Vigitemp_Serveur
             }
         }
 
+        public bool setLieuGspRecoveryPending(int idLieu, bool value)
+        {
+            lock (_lock)
+            {
+                try
+                {
+                    if (!EnsureConnected())
+                    {
+                        return false;
+                    }
+
+                    using (var cmd = CreateCommand(_connectionMain,
+                        "UPDATE t_lieu SET Est_Remontee_Memoire_A_Faire = @value WHERE Id_Lieu = @idLieu;"))
+                    {
+                        cmd.Parameters.AddWithValue("@value", value ? 1 : 0);
+                        cmd.Parameters.AddWithValue("@idLieu", idLieu);
+                        cmd.ExecuteNonQuery();
+                    }
+
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    VigitempServeur.Log("(setLieuGspRecoveryPending MSSQL) SQL Erreur: " + ex.Message);
+                    return false;
+                }
+            }
+        }
+
         public bool setNonResponseAlarm(int idLieu, string sondeNumeroSerie, bool isActive)
         {
             return setTechnicalAlarm(idLieu, sondeNumeroSerie, "N", isActive, "setNonResponseAlarm MSSQL");
+        }
+
+        public bool? getPowerAlarmActiveState(int idLieu)
+        {
+            lock (_lock)
+            {
+                try
+                {
+                    if (!EnsureConnected())
+                    {
+                        return null;
+                    }
+
+                    using (var cmd = CreateCommand(
+                        _connectionMain,
+                        "SELECT TOP 1 1 FROM t_alarme " +
+                        "WHERE Id_Lieu = @idLieu AND Type IN ('A', 'S') AND Date_Heure_Fin IS NULL " +
+                        "ORDER BY Date_Heure_Debut DESC;"))
+                    {
+                        cmd.Parameters.AddWithValue("@idLieu", idLieu);
+                        var result = cmd.ExecuteScalar();
+                        return result != null && result != DBNull.Value;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    VigitempServeur.Log("(getPowerAlarmActiveState MSSQL) SQL Erreur: " + ex.Message);
+                    return null;
+                }
+            }
         }
 
         public bool setPowerAlarm(int idLieu, string sondeNumeroSerie, bool isActive)

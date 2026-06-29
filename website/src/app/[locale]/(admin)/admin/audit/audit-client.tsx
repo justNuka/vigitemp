@@ -3,7 +3,7 @@
 import { Fragment, useCallback, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ColumnDef } from "@tanstack/react-table";
-import { ChevronDown, ChevronRight, FileText, RefreshCw, Search, X } from "lucide-react";
+import { FileText, RefreshCw, Search, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useLocale, useTranslations } from "next-intl";
@@ -56,8 +56,6 @@ export function AuditClient({ logs: initialLogs }: Props) {
   const [codesOpen, setCodesOpen] = useState(false);
   const [dateFrom, setDateFrom] = useState(() => formatDateInput(new Date()));
   const [dateTo, setDateTo] = useState(() => formatDateInput(new Date()));
-  const [expandedRowId, setExpandedRowId] = useState<string | null>(null);
-
   const activeFilters: ActiveFilters = useMemo(() => ({
     dateFrom,
     dateTo,
@@ -111,7 +109,6 @@ export function AuditClient({ logs: initialLogs }: Props) {
     setDateTo("");
     setCodeFilter("all");
     setSearchQuery("");
-    setExpandedRowId(null);
   };
 
   const totalLogs = filtersActive ? sourceLogs.length : initialLogs.length;
@@ -141,25 +138,6 @@ export function AuditClient({ logs: initialLogs }: Props) {
   }, [sourceLogs, localeTag, timezone])
 
   const columns: ColumnDef<AuditLogRow>[] = [
-    {
-      id: "expand",
-      header: "",
-      size: 32,
-      cell: ({ row }) => {
-        const isExpanded = expandedRowId === row.original.id;
-        const { hasContent } = getRowExpandableContent(row.original.id);
-        if (!hasContent) return null;
-        return (
-          <button
-            onClick={() => setExpandedRowId(isExpanded ? null : row.original.id)}
-            className="flex items-center justify-center text-muted-foreground hover:text-foreground"
-            aria-label={isExpanded ? "Collapse" : "Expand"}
-          >
-            {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-          </button>
-        );
-      },
-    },
     {
       accessorKey: "timestamp",
       header: t("table.columns.timestamp"),
@@ -225,7 +203,6 @@ export function AuditClient({ logs: initialLogs }: Props) {
       accessorKey: "details",
       header: t("table.columns.details"),
       cell: ({ row }) => {
-        const isExpanded = expandedRowId === row.original.id;
         const details = row.getValue("details") as string | null;
         const parsed = parseAuditDetails(details, t, localeTag, timezone);
         const content = getRowExpandableContent(row.original.id);
@@ -262,7 +239,7 @@ export function AuditClient({ logs: initialLogs }: Props) {
                 </Tooltip>
               </TooltipProvider>
             )}
-            {isExpanded && content.hasContent && (
+            {content.hasContent && (
               <div className="mt-2 rounded border bg-muted/50 p-2 space-y-2">
                 {content.rows.length > 0 && (
                   <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1">

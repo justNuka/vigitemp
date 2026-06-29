@@ -2,6 +2,7 @@
 using System.Drawing;
 using System.IO;
 using System.Text;
+using System.Text.Json;
 using System.Windows.Forms;
 
 namespace VigitempWebInstaller;
@@ -183,13 +184,63 @@ public sealed class MainForm : Form
         _s.AgentPort = agentPort.Text.Trim(); _s.AgentTimeoutMs = agentTimeoutMs.Text.Trim(); _s.AgentActiveWindowMinutes = agentActiveWindowMinutes.Text.Trim(); _s.HotlineServerHost = hotlineServerHost.Text.Trim(); _s.HotlineServerPort = hotlineServerPort.Text.Trim(); _s.HotlineServerTimeoutMs = hotlineServerTimeoutMs.Text.Trim(); _s.HotlineAccessTokenTtl = hotlineAccessTokenTtl.Text.Trim(); _s.HotlineRefreshTokenTtl = hotlineRefreshTokenTtl.Text.Trim(); _s.EmailTimezone = emailTimezone.Text.Trim(); _s.AllowedDevOrigins = allowedDevOrigins.Text.Trim(); _s.CspConnectSrc = cspConnectSrc.Text.Trim(); _s.DispatchSecret = dispatchSecret.Text.Trim(); _s.AutoConfigureFirewall = autoConfigureFirewall.Checked;
     }
 
+    private bool IsPackLicense()
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(_s.LicensePath) || !File.Exists(_s.LicensePath))
+            {
+                return false;
+            }
+
+            var token = File.ReadAllText(_s.LicensePath).Trim();
+            if (string.IsNullOrWhiteSpace(token))
+            {
+                return false;
+            }
+
+            var parts = token.Split('.');
+            if (parts.Length != 3)
+            {
+                return false;
+            }
+
+            var payloadJson = Encoding.UTF8.GetString(Base64UrlDecode(parts[1]));
+            using var document = JsonDocument.Parse(payloadJson);
+            if (!document.RootElement.TryGetProperty("edition", out var editionElement))
+            {
+                return false;
+            }
+
+            var edition = editionElement.GetString();
+            return string.Equals(edition?.Trim(), "pack", StringComparison.OrdinalIgnoreCase);
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private static byte[] Base64UrlDecode(string input)
+    {
+        var base64 = (input ?? string.Empty).Replace('-', '+').Replace('_', '/');
+        switch (base64.Length % 4)
+        {
+            case 2: base64 += "=="; break;
+            case 3: base64 += "="; break;
+        }
+
+        return Convert.FromBase64String(base64);
+    }
+
     private bool Valid(int idx)
     {
         Persist();
         string m = null;
+        var isPackLicense = IsPackLicense();
         if (idx == 0) { if (string.IsNullOrWhiteSpace(_s.InstallDir)) m = "Le dossier d'installation est obligatoire."; else if (string.IsNullOrWhiteSpace(_s.ServiceName)) m = "Le nom du service Windows est obligatoire."; else if (string.IsNullOrWhiteSpace(_s.Port)) m = "Le port HTTP est obligatoire."; else if (string.IsNullOrWhiteSpace(_s.WebsiteBaseUrl)) m = "L'URL publique du site est obligatoire."; else if (string.IsNullOrWhiteSpace(_s.AppBaseUrl)) m = "L'URL applicative publique est obligatoire."; }
         else if (idx == 1) { if (string.IsNullOrWhiteSpace(_s.DbHost)) m = "L'hÃ´te BDD est obligatoire."; else if (string.IsNullOrWhiteSpace(_s.DbPort)) m = "Le port BDD est obligatoire."; else if (string.IsNullOrWhiteSpace(_s.DbUser)) m = "L'utilisateur BDD est obligatoire."; else if (string.IsNullOrWhiteSpace(_s.DbMain) || string.IsNullOrWhiteSpace(_s.DbMeasure) || string.IsNullOrWhiteSpace(_s.DbChat)) m = "Les noms de bases sont obligatoires."; else if (string.IsNullOrWhiteSpace(_s.CacheTtl)) m = "Le cache TTL est obligatoire."; }
-        else if (idx == 2) { if (string.IsNullOrWhiteSpace(_s.LogsDir)) m = "Le dossier des logs est obligatoire."; else if (string.IsNullOrWhiteSpace(_s.LicensePath) || !File.Exists(_s.LicensePath)) m = "Le fichier licence est obligatoire."; else if (string.IsNullOrWhiteSpace(_s.PublicKeyPath) || !File.Exists(_s.PublicKeyPath)) m = "La clÃ© publique licence est obligatoire."; else if (string.IsNullOrWhiteSpace(_s.AgentPrivateKeyPath) || !File.Exists(_s.AgentPrivateKeyPath)) m = "La clÃ© privÃ©e agent est obligatoire."; }
+        else if (idx == 2) { if (string.IsNullOrWhiteSpace(_s.LogsDir)) m = "Le dossier des logs est obligatoire."; else if (string.IsNullOrWhiteSpace(_s.LicensePath) || !File.Exists(_s.LicensePath)) m = "Le fichier licence est obligatoire."; else if (string.IsNullOrWhiteSpace(_s.PublicKeyPath) || !File.Exists(_s.PublicKeyPath)) m = "La clÃ© publique licence est obligatoire."; else if (!isPackLicense && (string.IsNullOrWhiteSpace(_s.AgentPrivateKeyPath) || !File.Exists(_s.AgentPrivateKeyPath))) m = "La clÃ© privÃ©e agent est obligatoire."; }
         else if (idx == 3) { if (string.IsNullOrWhiteSpace(_s.AgentPort)) m = "Le port agent local est obligatoire."; else if (string.IsNullOrWhiteSpace(_s.AgentTimeoutMs)) m = "Le timeout agent local est obligatoire."; else if (string.IsNullOrWhiteSpace(_s.AgentActiveWindowMinutes)) m = "La fenÃªtre active agent est obligatoire."; else if (string.IsNullOrWhiteSpace(_s.HotlineServerHost)) m = "L'hÃ´te hotline est obligatoire."; else if (string.IsNullOrWhiteSpace(_s.HotlineServerPort)) m = "Le port hotline est obligatoire."; else if (string.IsNullOrWhiteSpace(_s.HotlineServerTimeoutMs)) m = "Le timeout hotline est obligatoire."; else if (string.IsNullOrWhiteSpace(_s.HotlineAccessTokenTtl) || string.IsNullOrWhiteSpace(_s.HotlineRefreshTokenTtl)) m = "Les TTL hotline sont obligatoires."; else if (string.IsNullOrWhiteSpace(_s.EmailTimezone)) m = "Le fuseau horaire emails est obligatoire."; }
         if (m != null) { MessageBox.Show(m, "Configuration incomplÃ¨te", MessageBoxButtons.OK, MessageBoxIcon.Warning); return false; }
         return true;
@@ -218,10 +269,11 @@ public sealed class MainForm : Form
     private void RefreshSummary()
     {
         Persist();
+        var isPackLicense = IsPackLicense();
         var sb = new StringBuilder();
         sb.AppendLine("GÃ©nÃ©ral"); sb.AppendLine($"- Dossier d'installation : {_s.InstallDir}"); sb.AppendLine($"- Service Windows : {_s.ServiceName}"); sb.AppendLine($"- Port HTTP : {_s.Port}"); sb.AppendLine($"- URL site : {_s.WebsiteBaseUrl}"); sb.AppendLine($"- URL applicative : {_s.AppBaseUrl}"); sb.AppendLine();
         sb.AppendLine("Base de donnÃ©es"); sb.AppendLine($"- Provider : {_s.DbProvider}"); sb.AppendLine($"- HÃ´te : {_s.DbHost}:{_s.DbPort}"); sb.AppendLine($"- Utilisateur : {_s.DbUser}"); sb.AppendLine($"- BDD principale : {_s.DbMain}"); sb.AppendLine($"- BDD mesures : {_s.DbMeasure}"); sb.AppendLine($"- BDD chat : {_s.DbChat}"); sb.AppendLine();
-        sb.AppendLine("Fichiers et sÃ©curitÃ©"); sb.AppendLine($"- Logs : {_s.LogsDir}"); sb.AppendLine($"- Licence : {_s.LicensePath}"); sb.AppendLine($"- ClÃ© publique : {_s.PublicKeyPath}"); sb.AppendLine($"- ClÃ© privÃ©e agent : {_s.AgentPrivateKeyPath}"); sb.AppendLine();
+        sb.AppendLine("Fichiers et sÃ©curitÃ©"); sb.AppendLine($"- Logs : {_s.LogsDir}"); sb.AppendLine($"- Licence : {_s.LicensePath}"); sb.AppendLine($"- ClÃ© publique : {_s.PublicKeyPath}"); sb.AppendLine($"- ClÃ© privÃ©e agent : {(isPackLicense ? "non requise (licence Pack)" : _s.AgentPrivateKeyPath)}"); sb.AppendLine();
         sb.AppendLine("AvancÃ©"); sb.AppendLine($"- Agent : {_s.AgentPort} / {_s.AgentTimeoutMs} ms / {_s.AgentActiveWindowMinutes} min"); sb.AppendLine($"- Hotline : {_s.HotlineServerHost}:{_s.HotlineServerPort} / {_s.HotlineServerTimeoutMs} ms"); sb.AppendLine($"- TTL hotline : access {_s.HotlineAccessTokenTtl} min / refresh {_s.HotlineRefreshTokenTtl} min"); sb.AppendLine($"- Fuseau horaire emails : {_s.EmailTimezone}"); sb.AppendLine($"- Origins dev : {_s.AllowedDevOrigins}"); sb.AppendLine($"- CSP connect-src : {_s.CspConnectSrc}"); sb.AppendLine($"- Firewall Windows : {(_s.AutoConfigureFirewall ? "configuration automatique" : "configuration manuelle")}"); sb.AppendLine($"- Secret dispatch : {(string.IsNullOrWhiteSpace(_s.DispatchSecret) ? "gÃ©nÃ©rÃ© / repris automatiquement" : "fourni manuellement")}");
         _summary.Text = sb.ToString();
     }
@@ -246,20 +298,21 @@ public sealed class MainForm : Form
             var winswSource = Path.Combine(_s.InstallDir, "winsw.exe"); if (!File.Exists(winswSource)) throw new FileNotFoundException("winsw.exe introuvable dans le package", winswSource); var winswExe = Path.Combine(_s.InstallDir, _s.ServiceName + ".exe"); File.Copy(winswSource, winswExe, true); var winswXml = Path.Combine(_s.InstallDir, _s.ServiceName + ".xml");
             var sharedSecretsDir = InstallerHelpers.GetSharedArtifactsDirectory(src);
             AppendLog($"[INFO] Secrets partag?s utilis?s: {sharedSecretsDir}");
+            var isPackLicense = IsPackLicense();
             var dispatch = InstallerHelpers.GetOrCreateSharedSecret(src, "alarm-dispatch-secret.txt", _s.DispatchSecret);
             var jwt = InstallerHelpers.GetOrCreateSharedSecret(src, "web-jwt-secret.txt");
             var hotlineJwt = InstallerHelpers.GetOrCreateSharedSecret(src, "hotline-jwt-secret.txt");
-            var agentSecret = InstallerHelpers.GetOrCreateSharedSecret(src, "agent-runtime-secret.txt");
+            var agentSecret = isPackLicense ? null : InstallerHelpers.GetOrCreateSharedSecret(src, "agent-runtime-secret.txt");
             if (string.Equals(_s.DbProvider, "mysql", StringComparison.OrdinalIgnoreCase) && string.Equals(_s.DbUser, "root", StringComparison.OrdinalIgnoreCase)) throw new InvalidOperationException("Le compte MySQL root n'est pas supportÃ© par cette installation. CrÃ©ez un compte SQL dÃ©diÃ©.");
             var programDataRoot = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
             var normalizedLicensePath = InstallerHelpers.CopySecurityArtifact(_s.LicensePath, Path.Combine(programDataRoot, @"VigiSensys\licenses", Path.GetFileName(_s.LicensePath)));
             var normalizedPublicKeyPath = InstallerHelpers.CopySecurityArtifact(_s.PublicKeyPath, Path.Combine(programDataRoot, @"VigiSensys\license_keys\public_key.pem"));
-            var normalizedAgentPrivateKeyPath = InstallerHelpers.CopySecurityArtifact(_s.AgentPrivateKeyPath, Path.Combine(programDataRoot, @"VigiSensys\license_keys\agent_secret_private.pem"));
-            AppendLog($"[OK] Fichiers de sÃ©curitÃ© copiÃ©s vers ProgramData: {normalizedLicensePath}, {normalizedPublicKeyPath}, {normalizedAgentPrivateKeyPath}");
+            var normalizedAgentPrivateKeyPath = isPackLicense ? null : InstallerHelpers.CopySecurityArtifact(_s.AgentPrivateKeyPath, Path.Combine(programDataRoot, @"VigiSensys\license_keys\agent_secret_private.pem"));
+            AppendLog($"[OK] Fichiers de sÃ©curitÃ© copiÃ©s vers ProgramData: {normalizedLicensePath}, {normalizedPublicKeyPath}{(isPackLicense ? string.Empty : ", " + normalizedAgentPrivateKeyPath)}");
             var envPath = Path.Combine(_s.InstallDir, ".next", "standalone", ".env"); Directory.CreateDirectory(Path.GetDirectoryName(envPath)!); string dbUrl, dbMesures, dbChatUrl;
             if (_s.DbProvider == "mssql") { var dbUserEscaped = SqlServerValue(_s.DbUser); var dbPasswordEscaped = SqlServerValue(_s.DbPassword); var dbMainEscaped = SqlServerValue(_s.DbMain); var dbMeasureEscaped = SqlServerValue(_s.DbMeasure); var dbChatEscaped = SqlServerValue(_s.DbChat); dbUrl = $"sqlserver://{_s.DbHost}:{_s.DbPort};database={dbMainEscaped};user={dbUserEscaped};password={dbPasswordEscaped};encrypt=true;trustServerCertificate=true;schema=dbo"; dbMesures = $"sqlserver://{_s.DbHost}:{_s.DbPort};database={dbMeasureEscaped};user={dbUserEscaped};password={dbPasswordEscaped};encrypt=true;trustServerCertificate=true;schema=dbo"; dbChatUrl = $"sqlserver://{_s.DbHost}:{_s.DbPort};database={dbChatEscaped};user={dbUserEscaped};password={dbPasswordEscaped};encrypt=true;trustServerCertificate=true;schema=dbo"; }
             else { const string q = "allowPublicKeyRetrieval=true"; dbUrl = $"mysql://{Uri.EscapeDataString(_s.DbUser)}:{Uri.EscapeDataString(_s.DbPassword)}@{_s.DbHost}:{_s.DbPort}/{_s.DbMain}?{q}"; dbMesures = $"mysql://{Uri.EscapeDataString(_s.DbUser)}:{Uri.EscapeDataString(_s.DbPassword)}@{_s.DbHost}:{_s.DbPort}/{_s.DbMeasure}?{q}"; dbChatUrl = $"mysql://{Uri.EscapeDataString(_s.DbUser)}:{Uri.EscapeDataString(_s.DbPassword)}@{_s.DbHost}:{_s.DbPort}/{_s.DbChat}?{q}"; }
-            var env = new StringBuilder(); env.AppendLine($"DATABASE_URL=\"{dbUrl}\""); env.AppendLine($"DATABASE_MESURES_URL=\"{dbMesures}\""); env.AppendLine($"DATABASE_CHAT_URL=\"{dbChatUrl}\""); env.AppendLine($"DATABASE_PROVIDER=\"{_s.DbProvider}\""); env.AppendLine($"NEXT_PUBLIC_API_BASE_URL=\"{_s.WebsiteBaseUrl}\""); env.AppendLine($"NEXT_PUBLIC_APP_URL=\"{_s.AppBaseUrl}\""); env.AppendLine($"NEXT_PUBLIC_CACHE_TTL={_s.CacheTtl}"); env.AppendLine($"VIGISENSYS_LICENSE_PATH=\"{normalizedLicensePath}\""); env.AppendLine($"VIGISENSYS_LICENSE_PUBLIC_KEY_PATH=\"{normalizedPublicKeyPath}\""); env.AppendLine($"VIGISENSYS_AGENT_SECRET_PRIVATE_KEY_PATH=\"{normalizedAgentPrivateKeyPath}\""); env.AppendLine($"VIGISENSYS_AGENT_PORT={_s.AgentPort}"); env.AppendLine($"VIGISENSYS_AGENT_TIMEOUT_MS={_s.AgentTimeoutMs}"); env.AppendLine($"VIGISENSYS_AGENT_ACTIVE_WINDOW_MINUTES={_s.AgentActiveWindowMinutes}"); env.AppendLine($"VIGISENSYS_AGENT_SECRET=\"{agentSecret}\""); env.AppendLine($"VIGISENSYS_ALARM_DISPATCH_SECRET=\"{dispatch}\""); env.AppendLine($"VIGISENSYS_SURVEILLANCE_DISPATCH_SECRET=\"{dispatch}\""); env.AppendLine($"VIGISENSYS_LOGS_DIR=\"{_s.LogsDir}\""); env.AppendLine($"VIGISENSYS_EMAIL_TIMEZONE=\"{_s.EmailTimezone}\""); env.AppendLine($"VIGISENSYS_ALLOWED_DEV_ORIGINS=\"{_s.AllowedDevOrigins}\""); env.AppendLine($"VIGISENSYS_CSP_CONNECT_SRC=\"{_s.CspConnectSrc}\""); env.AppendLine($"TZ=\"{_s.EmailTimezone}\""); env.AppendLine($"JWT_SECRET=\"{jwt}\""); env.AppendLine($"HOTLINE_SERVER_HOST=\"{_s.HotlineServerHost}\""); env.AppendLine($"HOTLINE_SERVER_PORT={_s.HotlineServerPort}"); env.AppendLine($"HOTLINE_SERVER_TIMEOUT_MS={_s.HotlineServerTimeoutMs}"); env.AppendLine($"HOTLINE_JWT_SECRET=\"{hotlineJwt}\""); env.AppendLine($"HOTLINE_ACCESS_TOKEN_TTL_MINUTES={_s.HotlineAccessTokenTtl}"); env.AppendLine($"HOTLINE_REFRESH_TOKEN_TTL_MINUTES={_s.HotlineRefreshTokenTtl}"); env.AppendLine("NODE_ENV=production"); File.WriteAllText(envPath, env.ToString()); AppendLog("[OK] Fichier .env gÃ©nÃ©rÃ©.");
+            var env = new StringBuilder(); env.AppendLine($"DATABASE_URL=\"{dbUrl}\""); env.AppendLine($"DATABASE_MESURES_URL=\"{dbMesures}\""); env.AppendLine($"DATABASE_CHAT_URL=\"{dbChatUrl}\""); env.AppendLine($"DATABASE_PROVIDER=\"{_s.DbProvider}\""); env.AppendLine($"NEXT_PUBLIC_API_BASE_URL=\"{_s.WebsiteBaseUrl}\""); env.AppendLine($"NEXT_PUBLIC_APP_URL=\"{_s.AppBaseUrl}\""); env.AppendLine($"NEXT_PUBLIC_CACHE_TTL={_s.CacheTtl}"); env.AppendLine($"VIGISENSYS_LICENSE_PATH=\"{normalizedLicensePath}\""); env.AppendLine($"VIGISENSYS_LICENSE_PUBLIC_KEY_PATH=\"{normalizedPublicKeyPath}\""); if (!isPackLicense && !string.IsNullOrWhiteSpace(normalizedAgentPrivateKeyPath)) env.AppendLine($"VIGISENSYS_AGENT_SECRET_PRIVATE_KEY_PATH=\"{normalizedAgentPrivateKeyPath}\""); env.AppendLine($"VIGISENSYS_AGENT_PORT={_s.AgentPort}"); env.AppendLine($"VIGISENSYS_AGENT_TIMEOUT_MS={_s.AgentTimeoutMs}"); env.AppendLine($"VIGISENSYS_AGENT_ACTIVE_WINDOW_MINUTES={_s.AgentActiveWindowMinutes}"); if (!isPackLicense && !string.IsNullOrWhiteSpace(agentSecret)) env.AppendLine($"VIGISENSYS_AGENT_SECRET=\"{agentSecret}\""); env.AppendLine($"VIGISENSYS_ALARM_DISPATCH_SECRET=\"{dispatch}\""); env.AppendLine($"VIGISENSYS_SURVEILLANCE_DISPATCH_SECRET=\"{dispatch}\""); env.AppendLine($"VIGISENSYS_LOGS_DIR=\"{_s.LogsDir}\""); env.AppendLine($"VIGISENSYS_EMAIL_TIMEZONE=\"{_s.EmailTimezone}\""); env.AppendLine($"VIGISENSYS_ALLOWED_DEV_ORIGINS=\"{_s.AllowedDevOrigins}\""); env.AppendLine($"VIGISENSYS_CSP_CONNECT_SRC=\"{_s.CspConnectSrc}\""); env.AppendLine($"TZ=\"{_s.EmailTimezone}\""); env.AppendLine($"JWT_SECRET=\"{jwt}\""); env.AppendLine($"HOTLINE_SERVER_HOST=\"{_s.HotlineServerHost}\""); env.AppendLine($"HOTLINE_SERVER_PORT={_s.HotlineServerPort}"); env.AppendLine($"HOTLINE_SERVER_TIMEOUT_MS={_s.HotlineServerTimeoutMs}"); env.AppendLine($"HOTLINE_JWT_SECRET=\"{hotlineJwt}\""); env.AppendLine($"HOTLINE_ACCESS_TOKEN_TTL_MINUTES={_s.HotlineAccessTokenTtl}"); env.AppendLine($"HOTLINE_REFRESH_TOKEN_TTL_MINUTES={_s.HotlineRefreshTokenTtl}"); env.AppendLine("NODE_ENV=production"); File.WriteAllText(envPath, env.ToString()); AppendLog("[OK] Fichier .env gÃ©nÃ©rÃ©.");
             if (InstallerHelpers.ServiceExists(_s.ServiceName)) { var confirm = MessageBox.Show($"Le service {_s.ServiceName} existe dÃ©jÃ . Le rÃ©installer ?", "Service existant", MessageBoxButtons.YesNo, MessageBoxIcon.Question); if (confirm != DialogResult.Yes) throw new InvalidOperationException("Installation annulÃ©e."); InstallerHelpers.RemoveService(_s.ServiceName, winswExe, AppendLog); }
             var xml = $@"<service>
   <id>{_s.ServiceName}</id>

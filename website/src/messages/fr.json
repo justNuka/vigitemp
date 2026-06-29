@@ -299,6 +299,7 @@
       "toggle_disabled_first": "Afficher d'abord les lieux désactivés",
       "toggle_active_first": "Afficher d'abord les lieux en surveillance",
       "disabled_badge": "Surveillance désactivée",
+      "disabled_since": "Surveillance désactivée depuis le {date}",
       "disabled_until": "Surveillance désactivée jusqu'au {date}",
       "partial_group_loaded": "Affichage partiel : {loaded} sur {total} lieux chargés. Cliquez sur « Charger plus » pour afficher la suite.",
       "empty_title": "Aucune sonde",
@@ -3171,7 +3172,8 @@
       "tension": "Tension : {value}"
     },
     "wireless": {
-      "battery": "Batterie : {value}%"
+      "battery": "Batterie : {value}%",
+      "on_battery": "Sur batterie"
     },
     "tabs": {
       "graph": "Graphique",

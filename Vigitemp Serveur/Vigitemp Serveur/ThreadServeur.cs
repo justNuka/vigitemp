@@ -47,6 +47,7 @@ namespace Vigitemp_Serveur
         private readonly bool _logScheduler = GetSettingBool("Vigitemp.Scheduler.Log", true);
         private readonly int _gspConfigFreeSlotMinSeconds = GetSettingInt("Vigitemp.Gsp.ConfigFreeSlotMinSeconds", 20);
         private readonly int _gspConfigCheckEverySuccessfulProbes = GetSettingInt("Vigitemp.Gsp.ConfigCheckEverySuccessfulProbes", 12);
+        private readonly int _gspGraphDisplayEveryMeasures = GetSettingInt("Vigitemp.Gsp.GraphDisplayEveryMeasures", 0);
         private readonly int _gspConfigModuleBackoffSeconds = GetSettingInt("Vigitemp.Gsp.ConfigModuleBackoffSeconds", 300);
         private readonly int _gspMemoFreeSlotMinSeconds = GetSettingInt("Vigitemp.Gsp.MemoFreeSlotMinSeconds", 15);
         private readonly int _gspMemoMaxBatchSize = GetSettingInt("Vigitemp.Gsp.MemoMaxBatchSize", 100);
@@ -132,6 +133,7 @@ namespace Vigitemp_Serveur
             public DateTime NextDue { get; set; }
             public DateTime? CurrentCycleSchedulingAnchor { get; set; }
             public bool InProgress { get; set; }
+            public int SuccessfulProbeCountTotal { get; set; }
         }
 
         private sealed class ModuleFailureState
@@ -199,6 +201,8 @@ namespace Vigitemp_Serveur
                 return false;
             }
 
+            var schedule = _schedules.Values.FirstOrDefault(s => string.Equals(s.Serial, serial, StringComparison.OrdinalIgnoreCase));
+
             var requestedCount = Math.Max(1, totalCount);
             var safeBatchSize = ClampGspMemoBatchSize(batchSize);
             var safeOffset = Math.Max(0, startOffset ?? 0);
@@ -228,6 +232,11 @@ namespace Vigitemp_Serveur
                     return existing;
                 });
 
+            if (schedule != null)
+            {
+                GetDatabase().setLieuGspRecoveryPending(schedule.IdLieu, true);
+            }
+
             VigitempServeur.Log($"[SONDE][MEMO-JOB] serial={serial} status=queued requested={requestedCount} batch={safeBatchSize} offset={safeOffset}");
             return true;
         }
@@ -242,6 +251,11 @@ namespace Vigitemp_Serveur
 
             if (_gspMemoJobs.TryRemove(serial, out _))
             {
+                var schedule = _schedules.Values.FirstOrDefault(s => string.Equals(s.Serial, serial, StringComparison.OrdinalIgnoreCase));
+                if (schedule != null)
+                {
+                    GetDatabase().setLieuGspRecoveryPending(schedule.IdLieu, false);
+                }
                 VigitempServeur.Log($"[SONDE][MEMO-JOB] serial={serial} status=cancelled");
                 return true;
             }
@@ -1100,6 +1114,7 @@ namespace Vigitemp_Serveur
             if (!job.RecoverUntilProbeDateTime.HasValue && remaining <= 0)
             {
                 _gspMemoJobs.TryRemove(job.Serial, out _);
+                GetDatabase().setLieuGspRecoveryPending(schedule.IdLieu, false);
                 VigitempServeur.Log($"[SONDE][MEMO-JOB] serial={job.Serial} status=completed requested={job.RequestedCount} completed={job.CompletedCount} offset={job.CurrentOffset}");
                 return;
             }
@@ -1107,6 +1122,7 @@ namespace Vigitemp_Serveur
             if (job.ScannedCount >= 6000)
             {
                 _gspMemoJobs.TryRemove(job.Serial, out _);
+                GetDatabase().setLieuGspRecoveryPending(schedule.IdLieu, false);
                 VigitempServeur.Log($"[SONDE][MEMO-JOB] serial={job.Serial} status=aborted reason=scan-limit scanned={job.ScannedCount}");
                 return;
             }
@@ -1145,6 +1161,7 @@ namespace Vigitemp_Serveur
                     if (job.ConsecutiveFailures >= 3)
                     {
                         _gspMemoJobs.TryRemove(job.Serial, out _);
+                        GetDatabase().setLieuGspRecoveryPending(schedule.IdLieu, false);
                         VigitempServeur.Log($"[SONDE][MEMO-JOB] serial={job.Serial} status=failed failures={job.ConsecutiveFailures}");
                     }
                     else
@@ -1163,6 +1180,7 @@ namespace Vigitemp_Serveur
                 if (returnedCount <= 0)
                 {
                     _gspMemoJobs.TryRemove(job.Serial, out _);
+                    GetDatabase().setLieuGspRecoveryPending(schedule.IdLieu, false);
                     VigitempServeur.Log($"[SONDE][MEMO-JOB] serial={job.Serial} status=completed requested={job.RequestedCount} completed={job.CompletedCount} offset={job.CurrentOffset} reason=no-more-data");
                     return;
                 }
@@ -1220,6 +1238,7 @@ namespace Vigitemp_Serveur
                 if (shouldComplete)
                 {
                     _gspMemoJobs.TryRemove(job.Serial, out _);
+                    GetDatabase().setLieuGspRecoveryPending(schedule.IdLieu, false);
                     VigitempServeur.Log($"[SONDE][MEMO-JOB] serial={job.Serial} status=completed requested={job.RequestedCount} completed={job.CompletedCount} offset={job.CurrentOffset} scanned={job.ScannedCount}");
                 }
             }
@@ -1229,6 +1248,7 @@ namespace Vigitemp_Serveur
                 if (job.ConsecutiveFailures >= 3)
                 {
                     _gspMemoJobs.TryRemove(job.Serial, out _);
+                    GetDatabase().setLieuGspRecoveryPending(schedule.IdLieu, false);
                     VigitempServeur.Log($"[SONDE][MEMO-JOB] serial={job.Serial} status=failed failures={job.ConsecutiveFailures} error={ex}");
                 }
                 else
@@ -1560,8 +1580,9 @@ namespace Vigitemp_Serveur
                     return await sensorHN.read();
                 case "GSP":
                     Interlocked.Increment(ref VigitempServeur.nombres_interrogations);
-                    var gspSensor = new SensorGSP(this, schedule.Port, serial, schedule.Adresse, schedule.FrequencySeconds, false);
-                    VigitempServeur.Log($"Interrogation sonde GSP serial={serial} port={schedule.Port} adresse={schedule.Adresse} configDirty={schedule.ConfigDirty} workerServer={_idServer}");
+                    var requestGraphDisplay = ShouldRequestGspGraphDisplay(schedule);
+                    var gspSensor = new SensorGSP(this, schedule.Port, serial, schedule.Adresse, schedule.FrequencySeconds, false, requestGraphDisplay);
+                    VigitempServeur.Log($"Interrogation sonde GSP serial={serial} port={schedule.Port} adresse={schedule.Adresse} configDirty={schedule.ConfigDirty} requestGraphDisplay={requestGraphDisplay} workerServer={_idServer}");
                     var gspSuccess = await gspSensor.read();
                     if (!gspSuccess && gspSensor.LastFailureLooksLikeModuleUnavailable)
                     {
@@ -1584,6 +1605,8 @@ namespace Vigitemp_Serveur
             {
                 return;
             }
+
+            schedule.SuccessfulProbeCountTotal++;
 
             if (_gspConfigCheckEverySuccessfulProbes <= 0)
             {
@@ -1880,6 +1903,10 @@ namespace Vigitemp_Serveur
                     _schedules[row.IdLieu] = schedule;
                     RememberNextProbeDue(schedule);
                     SetSondeMetrologyFromSchedule(row);
+                    if (row.GspRecoveryPending && row.DerniereDateHeure.HasValue)
+                    {
+                        SensorGSP.PrimeLastSuccessfulProbeDateTime(row.SondeNumeroSerie, row.DerniereDateHeure.Value);
+                    }
                     if (_logScheduler)
                     {
                         VigitempServeur.Log($"Scheduler add idLieu={row.IdLieu} serial={row.SondeNumeroSerie} freqSec={row.FrequenceSecondes}");
@@ -1908,6 +1935,10 @@ namespace Vigitemp_Serveur
                 {
                     var previousSerial = schedule.Serial;
                     SetSondeMetrologyFromSchedule(row);
+                    if (row.GspRecoveryPending && row.DerniereDateHeure.HasValue)
+                    {
+                        SensorGSP.PrimeLastSuccessfulProbeDateTime(row.SondeNumeroSerie, row.DerniereDateHeure.Value);
+                    }
                     schedule.Serial = row.SondeNumeroSerie;
                     schedule.SondeType = row.SondeType;
                     schedule.FamilleSonde = row.FamilleSonde;
@@ -2212,8 +2243,26 @@ namespace Vigitemp_Serveur
                 ConfigCheckDue = false,
                 FrequencySeconds = info.FrequenceSecondes,
                 LastMeasure = lastMeasure,
-                NextDue = ComputeNextDue(now, lastMeasure, info.FrequenceSecondes)
+                NextDue = ComputeNextDue(now, lastMeasure, info.FrequenceSecondes),
+                SuccessfulProbeCountTotal = 0
             };
+        }
+
+        private bool ShouldRequestGspGraphDisplay(SensorSchedule schedule)
+        {
+            if (schedule == null || !IsGspSchedule(schedule))
+            {
+                return false;
+            }
+
+            if (_gspGraphDisplayEveryMeasures <= 0)
+            {
+                return false;
+            }
+
+            var everyMeasures = Math.Max(1, _gspGraphDisplayEveryMeasures);
+            var nextProbeIndex = schedule.SuccessfulProbeCountTotal + 1;
+            return nextProbeIndex % everyMeasures == 0;
         }
 
         private static bool IsScheduleDue(SensorSchedule schedule, DateTime now)
@@ -2240,10 +2289,6 @@ namespace Vigitemp_Serveur
         }
     }
 }
-
-
-
-
 
 
 

@@ -631,6 +631,7 @@ CREATE TABLE `t_lieu` (
   `Type_Lieu` varchar(20) DEFAULT NULL,
   `Date_Heure_Dernier_Acquittement_En_Cours` datetime DEFAULT NULL,
   `Date_Heure_Last_Update_EVT_GSO` datetime DEFAULT NULL,
+  `Est_Remontee_Memoire_A_Faire` tinyint(1) NOT NULL DEFAULT '0',
   `Est_Lieu_Alarme_Terminee_Non_Acquittee_T1` tinyint DEFAULT NULL,
   PRIMARY KEY (`Id_Lieu`),
   KEY `IDX_Lieu_Etat` (`Lieu_Etat`),
@@ -969,11 +970,11 @@ SET FOREIGN_KEY_CHECKS=1;
 
 SET FOREIGN_KEY_CHECKS=0;
 INSERT INTO `t_actionneur_type` VALUES (1,4,'IACTX Lumineux',1),(2,5,'IACTX Lumineux contact',1),(3,6,'IACTX Contact',1),(4,7,'IACTX Sonore',1);
-INSERT INTO `t_autorisation` VALUES (1,'PARAM_EDITION_STATISTIQUES','Parametrage edition automatiques des statistique','Indique les heures d\'edition des rapports de statistiques',1,0,0,0),(2,'MATERIEL_MESURE_GERER','Gerer le materiel de mesure','Ajouter / Modifier / Supprimer du materiel',1,0,0,0),(3,'MATERIEL_MESURE_VISUALISER','Visualiser le schema de l\'installation','Autorise la visualisation de la table sondes , table module',1,0,0,0),(4,'MATERIEL_ALARME_GERER','Gerer le materiel d\'alarme','',1,0,0,0),(5,'PARAMETRES_GERER','Gerer les paramÃƒÂ¨tres','Autorise l\'administration des tables de references',1,0,0,0),(6,'APPLICATION_QUITTER_ADMIN','Fermeture de l\'application depuis l\'administration','Autorise la fermeture de l\'application',1,0,0,0),(7,'MATERIEL_METROLOGIE_GERER','Gerer le materiel de metrologie','',0,1,0,0),(8,'METROLOGIE_REALISER','Realiser la metrologie','',0,1,0,0),(9,'METROLOGIE_VISUALISER','Visualiser la metrologie','Autorise la visualisation de la table etalonnage, de la table calibrage',0,1,0,0),(10,'APPLICATION_QUITTER_METRO','Fermeture de l\'application depuis la metrologie','Autorise la fermeture de l\'application',0,1,0,0),(11,'LIEU_GERER','Gerer les lieux','Autorise la gestion des lieux',0,0,1,0),(12,'LIEU_VISUALISER','Visualiser les lieux','Autorise la visualisation de la table lieux',0,0,1,0),(13,'ALARMES_GERER','Gerer les alarmes','',0,0,1,0),(14,'LIEU_ACTIV_DESACT','Activer / Desactiver un lieu','Autorise l\'activation et la desactivation des lieux',0,0,1,0),(15,'APPLICATION_QUITTER_SURV','Fermeture de l\'application depuis la surveillance','Autorise la fermeture de l\'application',0,0,1,0),(16,'APPLICATION_QUITTER_VIGILOG','Fermeture de l\'application depuis VigiLog','Autorise la fermeture de l\'application',0,0,0,1),(17,'GERER_PROFIL','Gerer les profils et les autorisations','Autorise la gestion des profils et des autorisations pour les utilisateurs',1,0,0,0),(18,'TELE_ASSISTANCE','Demander une assistance','Autorise l\'utilisation de la teleassitace',0,0,1,0),(19,'SUPERPOSITION_COURBE','Realiser une superposition de courbe','Autorise la fonction superposer les courbes',0,0,1,0);
+INSERT INTO `t_autorisation` VALUES (1,'PARAM_EDITION_STATISTIQUES','Parametrage edition automatiques des statistique','Indique les heures d\'edition des rapports de statistiques',1,0,0,0),(2,'MATERIEL_MESURE_GERER','Gerer le materiel de mesure','Ajouter / Modifier / Supprimer du materiel',1,0,0,0),(3,'MATERIEL_MESURE_VISUALISER','Visualiser le schema de l\'installation','Autorise la visualisation de la table sondes , table module',1,0,0,0),(4,'MATERIEL_ALARME_GERER','Gerer le materiel d\'alarme','',1,0,0,0),(5,'PARAMETRES_GERER','Gerer les paramÃƒÆ’Ã‚Â¨tres','Autorise l\'administration des tables de references',1,0,0,0),(6,'APPLICATION_QUITTER_ADMIN','Fermeture de l\'application depuis l\'administration','Autorise la fermeture de l\'application',1,0,0,0),(7,'MATERIEL_METROLOGIE_GERER','Gerer le materiel de metrologie','',0,1,0,0),(8,'METROLOGIE_REALISER','Realiser la metrologie','',0,1,0,0),(9,'METROLOGIE_VISUALISER','Visualiser la metrologie','Autorise la visualisation de la table etalonnage, de la table calibrage',0,1,0,0),(10,'APPLICATION_QUITTER_METRO','Fermeture de l\'application depuis la metrologie','Autorise la fermeture de l\'application',0,1,0,0),(11,'LIEU_GERER','Gerer les lieux','Autorise la gestion des lieux',0,0,1,0),(12,'LIEU_VISUALISER','Visualiser les lieux','Autorise la visualisation de la table lieux',0,0,1,0),(13,'ALARMES_GERER','Gerer les alarmes','',0,0,1,0),(14,'LIEU_ACTIV_DESACT','Activer / Desactiver un lieu','Autorise l\'activation et la desactivation des lieux',0,0,1,0),(15,'APPLICATION_QUITTER_SURV','Fermeture de l\'application depuis la surveillance','Autorise la fermeture de l\'application',0,0,1,0),(16,'APPLICATION_QUITTER_VIGILOG','Fermeture de l\'application depuis VigiLog','Autorise la fermeture de l\'application',0,0,0,1),(17,'GERER_PROFIL','Gerer les profils et les autorisations','Autorise la gestion des profils et des autorisations pour les utilisateurs',1,0,0,0),(18,'TELE_ASSISTANCE','Demander une assistance','Autorise l\'utilisation de la teleassitace',0,0,1,0),(19,'SUPERPOSITION_COURBE','Realiser une superposition de courbe','Autorise la fonction superposer les courbes',0,0,1,0);
 INSERT INTO `t_etalon_type` VALUES ('ES','VigiTemp Type ES','Sonde talon radio type E',1,0,0.05),('EX','Externe','Sonde externe',1,1,0),('SEF','VigiTemp Type SEF','Sonde talon filaire ou filaire/radio avec prise RJ45',1,0,0.02),('SPET','Sonde etalon platine','Sonde etalon GSP platine',1,0,0.02);
 INSERT INTO `t_liaison_profil_autorisation` VALUES (1,6),(1,11),(1,12),(1,13),(1,14),(1,15),(1,16),(3,12),(3,13),(3,14),(3,15),(7,15),(8,1),(8,2),(8,3),(8,4),(8,5),(8,6),(8,7),(8,8),(8,9),(8,10),(8,11),(8,12),(8,13),(8,14),(8,15),(8,16),(8,17),(8,18),(8,19),(9,12),(9,13),(9,14),(9,15),(12,5),(12,6),(12,7),(12,8),(12,11),(12,12),(12,14),(12,16),(12,17);
 INSERT INTO `t_module_type` VALUES (1,'BIN','Boitier filaire avec prise DB9 (port serie)',0),(2,'BIR (filaire)','Boitier reseau filaire avec pris RJ45 (prise reseau)',1),(3,'BTR','Boitier radio avec prise DB9 (port serie)',0),(4,'BIR (radio)','Boitier reseau radio avec prise RJ45 (port serie)',1),(5,'CORONIS','Boitier radio CORONIS avec prise DB9 (port serie)',0),(6,'MRH','Boitier MRH',0),(7,'ITR','Module port serie',0),(8,'IETH','Module ethernet',0);
-INSERT INTO `t_parametre` VALUES ('CFR21','ACTIVATION_EXPIRATION_MOT_DE_PASSE','true','Activer l\'expiration des mots de passe (CFR21)'),('CFR21','ACTIVATION_NORME_CFR21','1','Activer la conformite CFR21 (saisie des configurations)'),('CFR21','EVENEMENTS','1','Activation des evenements'),('CFR21','JOURS_VALIDITE_MOT_DE_PASSE','90',NULL),('CFR21','MOT_DE_PASSE_PERMANENT','1','Le mot de passe ne peut pas ÃƒÂªtre change par l\'utilisateur'),('CFR21','MOT_DE_PASSE_REUTILISABLE','0','L\'utilisateur ne peut pas reutiliser un ancien mot de passe'),('CFR21','NOMBRE_TENTATIVES_MOT_DE_PASSE','3','Nombre de tentatives autorisees avant verrouillage du compte'),('CFR21','REACTIVATION_ALARME_SONORE','500','Delai de reactivation de l\'alarme sonore en millisecondes'),('CFR21','SECURITE','0','Mode securite renforce'),('CFR21','TEMPS_DECONNEXION_MINUTES','20','Temps d\'inactivite avant deconnexion automatique en minutes'),('CFR21','VALIDITE_MOT_DE_PASSE_JOURS','90','Duree de validite du mot de passe en jours'),('LICENCE','CLIENT','9310027000','Numero client de licence'),('LICENCE','VIGITEL','Kd2sV0V5ujab8uqVIyIxGHVWx70','Cle de licence VigiTel'),('LICENCE','VIGITEMP','PzA5CoG+fGCp7L/SO3fTXQCa22Y','Cle de licence VigiTemp'),('MYSQL','MOT_DE_PASSE_CRYPTE','1','Le mot de passe MySQL est crypte'),('MYSQL','VERSION_BASE_DONNEES','20200201','Version de la base de donnees (utile pour les mises ÃƒÂ  jour)'),('SAUVEGARDES','ADRESSE_IP_MACHINE','10.133.226.14','Adresse IP de la machine serveur'),('SAUVEGARDES','CONSTRUCTION_BATCH','','Script de construction batch pour les sauvegardes'),('SAUVEGARDES','DOSSIER_MYSQL','C:/MySQL/APP','Chemin du dossier d\'installation MySQL'),('SAUVEGARDES','DOSSIER_SAUVEGARDE','D:/MySQL/BACKUP','Chemin du dossier de sauvegarde'),('SAUVEGARDES','LISTE_FICHIERS','D:/MySQL/BACKUP/BackupVigiTempX_20251205_2200.sql	BackupVigiTempX_20251205_2200	20251205	220022	310566532\r\nD:/MySQL/BACKUP/BackupVigiTempX_20251206_2200.sql	BackupVigiTempX_20251206_2200	20251206	220018	310567296\r\nD:/MySQL/BACKUP/BackupVigiTempX_20251207_2200.sql	BackupVigiTempX_20251207_2200	20251207	220015	310567819\r\nD:/MySQL/BACKUP/BackupVigiTempX_mesure_20251205_2200.sql	BackupVigiTempX_mesure_20251205_2200	20251205	220331	5706207530\r\nD:/MySQL/BACKUP/BackupVigiTempX_mesure_20251206_2200.sql	BackupVigiTempX_mesure_20251206_2200	20251206	220328	5712244382\r\nD:/MySQL/BACKUP/BackupVigiTempX_mesure_20251207_2200.sql	BackupVigiTempX_mesure_20251207_2200	20251207	220324	5718306181','Liste des fichiers de sauvegarde avec details'),('SAUVEGARDES','NOM_TACHE','SauvegardeVigiTempX','Nom de la tÃƒÂ¢che planifiee de sauvegarde'),('SECURITE','LONGUEUR_MINIMALE_MOT_DE_PASSE','8','Nombre minimum de caracteres pour un mot de passe'),('SECURITE','NOMBRE_MIN_CARACTERES_SPECIAUX','1','Nombre minimum de caracteres speciaux requis (!@#$%^&* etc.)'),('SECURITE','NOMBRE_MIN_CHIFFRES','1','Nombre minimum de chiffres requis'),('SECURITE','NOMBRE_MIN_LETTRES_MAJUSCULES','1','Nombre minimum de lettres majuscules requises'),('SECURITE','NOMBRE_MIN_LETTRES_MINUSCULES','1','Nombre minimum de lettres minuscules requises'),('SECURITE_EMAIL','SMTP_ACTIVATION','true','Activer l\'envoi d\'emails'),('SECURITE_EMAIL','SMTP_EXPEDITEUR','noreply@vigitemp.fr','Adresse email expediteur (doit correspondre au domaine SMTP)'),('SECURITE_EMAIL','SMTP_MOT_DE_PASSE','Password-123','Mot de passe SMTP'),('SECURITE_EMAIL','SMTP_PORT','587','Port SMTP (587 pour TLS, 465 pour SSL)'),('SECURITE_EMAIL','SMTP_SERVEUR','smtp-randommail18473.alwaysdata.net','Serveur SMTP pour l\'envoi d\'emails'),('SECURITE_EMAIL','SMTP_UTILISATEUR','randommail18473@alwaysdata.net','Utilisateur SMTP'),('SECURITE_MOT_DE_PASSE','LONGUEUR_MINIMALE','8','Longueur minimale du mot de passe'),('SECURITE_MOT_DE_PASSE','MIN_CARACTERES_SPECIAUX','1','Nombre minimum de caracteres speciaux'),('SECURITE_MOT_DE_PASSE','MIN_CHIFFRES','1','Nombre minimum de chiffres'),('SECURITE_MOT_DE_PASSE','MIN_LETTRES_MAJUSCULES','1','Nombre minimum de majuscules'),('SECURITE_MOT_DE_PASSE','MIN_LETTRES_MINUSCULES','1','Nombre minimum de minuscules'),('STATISTIQUE','ENTETE_RAPPORT_UTILISATEUR_221','','En-tÃƒÂªte du rapport utilisateur 221'),('STATISTIQUE','ENTETE_RAPPORT_UTILISATEUR_81','','En-tÃƒÂªte du rapport utilisateur 81'),('STATISTIQUE','HEURE_RAPPORT_UTILISATEUR_221','','Heure du rapport utilisateur 221'),('STATISTIQUE','HEURE_RAPPORT_UTILISATEUR_81','','Heure du rapport utilisateur 81'),('STATISTIQUE','ORIENTATION_RAPPORT_221','','Orientation du rapport 221'),('STATISTIQUE','ORIENTATION_RAPPORT_81','','Orientation du rapport 81'),('VIGISERV','ACTIONS_PRIORITAIRES','0','Activation des actions prioritaires'),('VIGISERV','ACTIONS_PRIORITAIRES_DESACTIVATION','0','Desactivation des actions prioritaires (si egal ÃƒÂ  1, les actions prioritaires n\'ont pas d\'effet)'),('VIGISERV','DATE_DERNIER_FICHIER_SAUVEGARDE','2025-12-07 22:03:24','Date du dernier fichier de sauvegarde remonte par VigiServ'),('VIGISERV','DELAI_ALERTE_MESURE_MINUTES','60','Delai de verification maximum avant de lancer une alerte sur la derniere mesure (en minutes)'),('VIGISERV','DELAI_REPONSE_SONDE_AVR_CENTIEMES_SECONDES','100','Delai maximum pour l\'attente de lecture des sondes AVR en centiemes de seconde'),('VIGISERV','DELAI_REPONSE_SONDE_EI_CENTIEMES_SECONDES','150','Delai maximum pour l\'attente de lecture des sondes EI en centiemes de seconde'),('VIGISERV','DELAI_SONNERIE_ALARME_MINUTES','2','Delai pour la verification si des alarmes sont presentes avant activation d\'une alarme sonore (en minutes)'),('VIGISERV','DERNIER_MESURE_APPEL','SondesSurveillance','Derniere fonction appelee par le service VigiServ'),('VIGISERV','DERNIER_MESURE_APPEL_1','SondesSurveillance','Derniere fonction appelee par le service VigiServ (serveur 1)'),('VIGISERV','DERNIER_MESURE_APPEL_2','SondesSurveillance','Derniere fonction appelee par le service VigiServ (serveur 2)'),('VIGISERV','DERNIER_MESURE_APPEL_3','SondesSurveillance','Derniere fonction appelee par le service VigiServ (serveur 3)'),('VIGISERV','DERNIER_MESURE_DATE_HEURE','2025120822000153','Date heure de la derniere mesure inscrite par le service VigiServ'),('VIGISERV','DERNIER_MESURE_DATE_HEURE_1','2025120822000152','Date heure de la derniere mesure inscrite par le service VigiServ (serveur 1)'),('VIGISERV','DERNIER_MESURE_DATE_HEURE_2','2025120822000152','Date heure de la derniere mesure inscrite par le service VigiServ (serveur 2)'),('VIGISERV','DERNIER_MESURE_DATE_HEURE_3','2025120822000220','Date heure de la derniere mesure inscrite par le service VigiServ (serveur 3)'),('VIGISERV','DERNIER_MESURE_SONDE','IPPD2I','Numero de sonde de la derniere mesure inscrite par le service VigiServ'),('VIGISERV','DERNIER_MESURE_SONDE_1','IN24CI','Numero de sonde de la derniere mesure inscrite par le service VigiServ (serveur 1)'),('VIGISERV','DERNIER_MESURE_SONDE_2','IN22PP','Numero de sonde de la derniere mesure inscrite par le service VigiServ (serveur 2)'),('VIGISERV','DERNIER_MESURE_SONDE_3','IN22GU','Numero de sonde de la derniere mesure inscrite par le service VigiServ (serveur 3)'),('VIGISERV','DIALOGUE_EN_MINUTES','1','Intervalle de dialogue avec le service VigiServ en minutes'),('VIGISERV','DUREE_LOGIN_SECONDES','60','Duree de validite du login (le login ne sera pas redemande dans ce delai) (en secondes)'),('VIGISERV','ECRAN_OFF','1','ecran eteint'),('VIGISERV','ENREGISTREMENT_ON','1','Activation de l\'enregistrement'),('VIGISERV','FICHIER_EXTERNE','0','Utiliser un fichier externe'),('VIGISERV','FREQUENCE_NON_REPONSE_MINUTES','15','Frequence ÃƒÂ  appliquer si la derniere mesure est en erreur (en minutes)'),('VIGISERV','FREQUENCE_VERIFICATION_MINUTES','15','Frequence de verification en minutes'),('VIGISERV','MEMOIRE_OFF','1','Memoire eteinte'),('VIGISERV','NOM_UTILISATEUR_SERVEUR','Serveur VigiTemp MC2','Nom de l\'utilisateur du serveur'),('VIGISERV','PING_MODULE','1','Autorise ou pas le ping en cas de test d\'un module reseau (0 = OFF, 1 = ON)'),('VIGISERV','SATURATION_SONDE_LINEAIRE','-40','Seuil de saturation d\'une sonde lineaire'),('VIGISERV','SECONDES_ENTRE_MESURES_ETALONNAGE','30','Nombre de secondes entre chaque mesure d\'etalonnage'),('VIGISERV','SERVEUR_ADRESSE_IP','10.133.226.14','Adresse IP du serveur VigiServ'),('VIGISERV','SERVEUR_ADRESSE_IP_1','10.133.226.14','Adresse IP du serveur VigiServ (serveur 1)'),('VIGISERV','SERVEUR_ADRESSE_IP_2','10.133.226.14','Adresse IP du serveur VigiServ (serveur 2)'),('VIGISERV','SERVEUR_ADRESSE_IP_3','10.133.226.14','Adresse IP du serveur VigiServ (serveur 3)'),('VIGISERV','SERVEUR_NOM','SVM-IFB-VIGIS','Nom du serveur VigiServ'),('VIGISERV','SERVEUR_NOM_1','SVM-IFB-VIGIS','Nom du serveur VigiServ (serveur 1)'),('VIGISERV','SERVEUR_NOM_2','SVM-IFB-VIGIS','Nom du serveur VigiServ (serveur 2)'),('VIGISERV','SERVEUR_NOM_3','SVM-IFB-VIGIS','Nom du serveur VigiServ (serveur 3)'),('VIGISERV','SERVICE_DATE_HEURE','2025120822000219','Date heure inscrite par le service VigiServ'),('VIGISERV','SERVICE_DATE_HEURE_1','2025120822000144','Date heure inscrite par le service VigiServ (serveur 1)'),('VIGISERV','SERVICE_DATE_HEURE_2','2025120822000144','Date heure inscrite par le service VigiServ (serveur 2)'),('VIGISERV','SERVICE_DATE_HEURE_3','2025120822000219','Date heure inscrite par le service VigiServ (serveur 3)'),('VIGISERV','SONDE_EN_SEUIL_BAS','-60','Seuil bas pour les sondes de type EN'),('VIGISERV','SONDE_EN_SEUIL_HAUT','100','Seuil haut pour les sondes de type EN'),('VIGISERV','SONDE_EP_SEUIL_BAS','-400','Seuil bas pour les sondes de type EP'),('VIGISERV','SONDE_EP_SEUIL_HAUT','400','Seuil haut pour les sondes de type EP'),('VIGISERV','SONDE_GN_SEUIL_BAS','-60','Seuil bas pour les sondes de type GN'),('VIGISERV','SONDE_GN_SEUIL_HAUT','70','Seuil haut pour les sondes de type GN'),('VIGISERV','SONDE_GP_SEUIL_BAS','-400','Seuil bas pour les sondes de type GP'),('VIGISERV','SONDE_GP_SEUIL_HAUT','400','Seuil haut pour les sondes de type GP'),('VIGISERV','SONDE_HN_SEUIL_BAS','-60','Seuil bas pour les sondes de type HN'),('VIGISERV','SONDE_HN_SEUIL_HAUT','100','Seuil haut pour les sondes de type HN'),('VIGISERV','SONDE_HP_SEUIL_BAS','-400','Seuil bas pour les sondes de type HP'),('VIGISERV','SONDE_HP_SEUIL_HAUT','400','Seuil haut pour les sondes de type HP'),('VIGISERV','SONDE_IC_SEUIL_BAS','-400','Seuil bas pour les sondes de type IC'),('VIGISERV','SONDE_IC_SEUIL_HAUT','400','Seuil haut pour les sondes de type IC'),('VIGISERV','SONDE_IHCQP_SEUIL_BAS','-400','Seuil bas pour les sondes de type IHCQP'),('VIGISERV','SONDE_IHCQP_SEUIL_HAUT','1200','Seuil haut pour les sondes de type IHCQP'),('VIGISERV','SONDE_IH_SEUIL_BAS','-400','Seuil bas pour les sondes de type IH'),('VIGISERV','SONDE_IH_SEUIL_HAUT','400','Seuil haut pour les sondes de type IH'),('VIGISERV','SONDE_IN_SEUIL_BAS','-60','Seuil bas pour les sondes de type IN'),('VIGISERV','SONDE_IN_SEUIL_HAUT','80','Seuil haut pour les sondes de type IN'),('VIGISERV','SONDE_IP_SEUIL_BAS','-400','Seuil bas pour les sondes de type IP'),('VIGISERV','SONDE_IP_SEUIL_HAUT','400','Seuil haut pour les sondes de type IP'),('VIGISERV','SONDE_IQ_SEUIL_BAS','-400','Seuil bas pour les sondes de type IQ'),('VIGISERV','SONDE_IQ_SEUIL_HAUT','1100','Seuil haut pour les sondes de type IQ'),('VIGISERV','TIMEOUT_PING_MILLISECONDES','200','TimeOut de la duree d\'attente de la fonction Ping() en millisecondes'),('VIGISERV','TIMEOUT_PORT_SERIE_MILLISECONDES','5000','TimeOut de la duree d\'attente de la fonction sOuvre() en millisecondes'),('VIGISURV','ALARME_SONORE_LIEU_NON_ACQUITE','0','Alarme sonore pour les lieux non acquittes'),('VIGISURV','ALERTE_SURVEILLANCE','0','Alerte de surveillance'),('VIGISURV','DELAI_ARRET_THREAD_CHANGEMENT_GROUPE_MILLISECONDES','500','Delai laisse ÃƒÂ  l\'application pour arrÃƒÂªter le thread de mise ÃƒÂ  jour avant rafraÃƒÂ®chissement pour le changement de groupe (en millisecondes)'),('VIGISURV','DELAI_ARRET_THREAD_DESSIN_MILLISECONDES','100','Delai laisse ÃƒÂ  l\'application avant de redemarrer le thread dessin apres un changement de groupe (en millisecondes)'),('VIGISURV','DELAI_AVANT_ARCHIVE_JOURS','365','Nombre de jours avant archivage automatique'),('VIGISURV','DELAI_PAUSE_THREAD_MAJ_DESSIN_SECONDES','25','Delai en secondes de pause entre 2 mises ÃƒÂ  jour completes des dessins. Augmenter ce nombre pour dessiner moins souvent les graphes'),('VIGISURV','DELAI_PAUSE_THREAD_MAJ_SECONDES','30','Delai en secondes de pause entre 2 mises ÃƒÂ  jour completes des lieux. Augmenter ce nombre pour rafraÃƒÂ®chir moins souvent'),('VIGISURV','DELAI_RAFRAICHISSEMENT_ADMIN_SECONDES','300','Delai de mise ÃƒÂ  jour de l\'ecran d\'administration en secondes'),('VIGISURV','DELAI_RAFRAICHISSEMENT_METROLOGIE_SECONDES','300','Delai de mise ÃƒÂ  jour de l\'ecran de metrologie en secondes'),('VIGISURV','DELAI_VERIFICATION_ALERTES_SECONDES','30','Delai de verification des alertes en secondes'),('VIGISURV','DELAI_VERIFICATION_VIGISERV_MINUTES','60','Delai du message d\'alarme VigiServ en minutes'),('VIGISURV','DELAI_VERIFICATION_VIGITEL_MINUTES','60','Delai du message d\'alarme VigiTel en minutes'),('VIGISURV','EXPLICATIONS_TESTS','- Ping base VigiTemp\r\n  Permet de savoir si le serveur hebergeant la base de donnees VigiTemp est accessible. Un ping permet de connaÃƒÂ®tre son etat de connexion au reseau.\r\n\r\n- RequÃƒÂªte base VigiTemp\r\n  Une requÃƒÂªte est executee sur la base de donnees VigiTemp afin de savoir si MySQL est bien operationnel.\r\n\r\n- Ping serveur VigiServ\r\n  Permet de savoir si le serveur hebergeant la base de donnees des mesures est accessible. Un ping permet de connaÃƒÂ®tre son etat de connexion au reseau.\r\n\r\n- RequÃƒÂªte serveur VigiServ\r\n  Une requÃƒÂªte est executee sur la base de donnees VigiTemp afin de savoir si la base de donnees ÃƒÂ  bien ete initialisee.\r\n\r\n- Interrogation VigiServ\r\n  Verifie si VigiServ est actif. Le service VigiServ informe de son etat de faÃƒÂ§on reguliere en ecrivant dans la base de donnees. Si cette ecriture n\'a pas ete effectuee recemment alors VigiServ est inactif.\r\n\r\n- Interrogation VigiTel\r\n  Verifie si VigiTel est actif. Le service VigiTel informe de son etat de faÃƒÂ§on reguliere en ecrivant dans la base de donnees. Si cette ecriture n\'a pas ete effectuee recemment alors VigiTel est inactif.','Texte d\'explication pour les tests de la fenÃƒÂªtre outils'),('VIGISURV','IDENT_VIGILOG','0','Identifiant VigiLog'),('VIGISURV','LANCEMENT_ROBOT_SURVEILLANCE_MINUTES','10','Lance la verification (Ping, RequÃƒÂªtes, Services) toutes les 10 minutes'),('VIGISURV','LIAISON_ARMURE','0','Liaison avec l\'armoire'),('VIGISURV','LIAISON_ARMURE_MODE','1','Mode de liaison avec l\'armoire'),('VIGISURV','LIAISON_ARMURE_REPERTOIRE','','Repertoire de liaison avec l\'armoire'),('VIGISURV','MAX_VALIDITE_ETALONNAGE_JOURS','365','Nombre de jours durant lequel les etalonnages sont valides'),('VIGISURV','MAX_VALIDITE_SAUVEGARDE_JOURS','7','Nombre de jours durant lequel la sauvegarde est valide'),('VIGISURV','MOT_DE_PASSE_ETALONNAGE','METRO','Mot de passe pour les operations d\'etalonnage'),('VIGISURV','REMONTER_HEURE_SERVEUR_LOGIN','0','Activer la remontee de l\'heure du serveur au login'),('VIGISURV','TAUX_RAFRAICHISSEMENT_INITIALISATION_ECRAN','10','Nombre de lieux ÃƒÂ  afficher lors du chargement de l\'ecran. Augmenter ce nombre pour accelerer le premier chargement'),('VIGISURV','TEXTE_SAUVEGARDE','La mise en place des sauvegardes s\'effectue sur le poste serveur VigiTemp.','Texte d\'information sur les sauvegardes'),('VIGISURV','VISION_SIMPLE','0','Mode vision simple'),('VIGITEL','ALARME_NON_REPONSE','0','Alarme de non-reponse'),('VIGITEL','DUREE_LOGIN_SECONDES','60','Duree de validite du login VigiTel (en secondes)'),('VIGITEL','EMAIL_ALARME_EXPEDITEUR','vigitemp@chu-toulouse.fr','Adresse e-mail expediteur pour les alarmes'),('VIGITEL','EMAIL_ALARME_MESSAGE','Le lieu en alarme est : %Lieu (sonde nÃ‚Â° %NumSonde)\r\nType d\'alarme : %AlarmeTexteMessage\r\nDernier releve : %Valeur %Unite','Template du message d\'alarme par e-mail'),('VIGITEL','EMAIL_ALARME_OBJET','Alarme VigiTemp','Objet de l\'e-mail d\'alarme'),('VIGITEL','FORMAT_FICHIER_SON','41','Format du fichier son (41 = SAFTCCITT_ALaw_8kHzMono)'),('VIGITEL','FREQUENCE_VERIFICATION_MINUTES','15','Frequence de verification VigiTel en minutes'),('VIGITEL','MODE_DEBUG','0','Activer le mode debogage de VigiTel'),('VIGITEL','NOM_MODEM','Diva Server \'POTS2<41060>\' Chn 1 Ln 1 Ctrl \'1\'','Nom du modem utilise'),('VIGITEL','SEPARATEUR_DECIMAL',',','Separateur decimal (. ou ,) pour la mise en forme d\'une valeur relevee'),('VIGITEL','SERVICE_DATE_HEURE','2025120821594515','Date heure inscrite par le service VigiTel'),('VIGITEL','SMTP_COMPTE','','Compte SMTP VigiTel'),('VIGITEL','SMTP_MODE_ASYNCHRONE','0','Mode asynchrone SMTP'),('VIGITEL','SMTP_MOT_DE_PASSE','','Mot de passe SMTP VigiTel'),('VIGITEL','SMTP_PORT','25','Port SMTP VigiTel'),('VIGITEL','SMTP_SECURISE_TSL','0','Activer la securisation TSL du SMTP'),('VIGITEL','SMTP_SERVEUR','smtp','Serveur SMTP VigiTel'),('VIGITEL','VITESSE_VOIX','1','Vitesse de la voix (de -10 ÃƒÂ  10)'),('VIGITEL','VOLUME_VOIX','100','Volume de la voix (de 1 ÃƒÂ  100)');
+INSERT INTO `t_parametre` VALUES ('CFR21','ACTIVATION_EXPIRATION_MOT_DE_PASSE','true','Activer l\'expiration des mots de passe (CFR21)'),('CFR21','ACTIVATION_NORME_CFR21','1','Activer la conformite CFR21 (saisie des configurations)'),('CFR21','EVENEMENTS','1','Activation des evenements'),('CFR21','JOURS_VALIDITE_MOT_DE_PASSE','90',NULL),('CFR21','MOT_DE_PASSE_PERMANENT','1','Le mot de passe ne peut pas ÃƒÆ’Ã‚Âªtre change par l\'utilisateur'),('CFR21','MOT_DE_PASSE_REUTILISABLE','0','L\'utilisateur ne peut pas reutiliser un ancien mot de passe'),('CFR21','NOMBRE_TENTATIVES_MOT_DE_PASSE','3','Nombre de tentatives autorisees avant verrouillage du compte'),('CFR21','REACTIVATION_ALARME_SONORE','500','Delai de reactivation de l\'alarme sonore en millisecondes'),('CFR21','SECURITE','0','Mode securite renforce'),('CFR21','TEMPS_DECONNEXION_MINUTES','20','Temps d\'inactivite avant deconnexion automatique en minutes'),('CFR21','VALIDITE_MOT_DE_PASSE_JOURS','90','Duree de validite du mot de passe en jours'),('LICENCE','CLIENT','9310027000','Numero client de licence'),('LICENCE','VIGITEL','Kd2sV0V5ujab8uqVIyIxGHVWx70','Cle de licence VigiTel'),('LICENCE','VIGITEMP','PzA5CoG+fGCp7L/SO3fTXQCa22Y','Cle de licence VigiTemp'),('MYSQL','MOT_DE_PASSE_CRYPTE','1','Le mot de passe MySQL est crypte'),('MYSQL','VERSION_BASE_DONNEES','20200201','Version de la base de donnees (utile pour les mises ÃƒÆ’Ã‚Â  jour)'),('SAUVEGARDES','ADRESSE_IP_MACHINE','10.133.226.14','Adresse IP de la machine serveur'),('SAUVEGARDES','CONSTRUCTION_BATCH','','Script de construction batch pour les sauvegardes'),('SAUVEGARDES','DOSSIER_MYSQL','C:/MySQL/APP','Chemin du dossier d\'installation MySQL'),('SAUVEGARDES','DOSSIER_SAUVEGARDE','D:/MySQL/BACKUP','Chemin du dossier de sauvegarde'),('SAUVEGARDES','LISTE_FICHIERS','D:/MySQL/BACKUP/BackupVigiTempX_20251205_2200.sql	BackupVigiTempX_20251205_2200	20251205	220022	310566532\r\nD:/MySQL/BACKUP/BackupVigiTempX_20251206_2200.sql	BackupVigiTempX_20251206_2200	20251206	220018	310567296\r\nD:/MySQL/BACKUP/BackupVigiTempX_20251207_2200.sql	BackupVigiTempX_20251207_2200	20251207	220015	310567819\r\nD:/MySQL/BACKUP/BackupVigiTempX_mesure_20251205_2200.sql	BackupVigiTempX_mesure_20251205_2200	20251205	220331	5706207530\r\nD:/MySQL/BACKUP/BackupVigiTempX_mesure_20251206_2200.sql	BackupVigiTempX_mesure_20251206_2200	20251206	220328	5712244382\r\nD:/MySQL/BACKUP/BackupVigiTempX_mesure_20251207_2200.sql	BackupVigiTempX_mesure_20251207_2200	20251207	220324	5718306181','Liste des fichiers de sauvegarde avec details'),('SAUVEGARDES','NOM_TACHE','SauvegardeVigiTempX','Nom de la tÃƒÆ’Ã‚Â¢che planifiee de sauvegarde'),('SECURITE','LONGUEUR_MINIMALE_MOT_DE_PASSE','8','Nombre minimum de caracteres pour un mot de passe'),('SECURITE','NOMBRE_MIN_CARACTERES_SPECIAUX','1','Nombre minimum de caracteres speciaux requis (!@#$%^&* etc.)'),('SECURITE','NOMBRE_MIN_CHIFFRES','1','Nombre minimum de chiffres requis'),('SECURITE','NOMBRE_MIN_LETTRES_MAJUSCULES','1','Nombre minimum de lettres majuscules requises'),('SECURITE','NOMBRE_MIN_LETTRES_MINUSCULES','1','Nombre minimum de lettres minuscules requises'),('SECURITE_EMAIL','SMTP_ACTIVATION','true','Activer l\'envoi d\'emails'),('SECURITE_EMAIL','SMTP_EXPEDITEUR','noreply@vigitemp.fr','Adresse email expediteur (doit correspondre au domaine SMTP)'),('SECURITE_EMAIL','SMTP_MOT_DE_PASSE','Password-123','Mot de passe SMTP'),('SECURITE_EMAIL','SMTP_PORT','587','Port SMTP (587 pour TLS, 465 pour SSL)'),('SECURITE_EMAIL','SMTP_SERVEUR','smtp-randommail18473.alwaysdata.net','Serveur SMTP pour l\'envoi d\'emails'),('SECURITE_EMAIL','SMTP_UTILISATEUR','randommail18473@alwaysdata.net','Utilisateur SMTP'),('SECURITE_MOT_DE_PASSE','LONGUEUR_MINIMALE','8','Longueur minimale du mot de passe'),('SECURITE_MOT_DE_PASSE','MIN_CARACTERES_SPECIAUX','1','Nombre minimum de caracteres speciaux'),('SECURITE_MOT_DE_PASSE','MIN_CHIFFRES','1','Nombre minimum de chiffres'),('SECURITE_MOT_DE_PASSE','MIN_LETTRES_MAJUSCULES','1','Nombre minimum de majuscules'),('SECURITE_MOT_DE_PASSE','MIN_LETTRES_MINUSCULES','1','Nombre minimum de minuscules'),('STATISTIQUE','ENTETE_RAPPORT_UTILISATEUR_221','','En-tÃƒÆ’Ã‚Âªte du rapport utilisateur 221'),('STATISTIQUE','ENTETE_RAPPORT_UTILISATEUR_81','','En-tÃƒÆ’Ã‚Âªte du rapport utilisateur 81'),('STATISTIQUE','HEURE_RAPPORT_UTILISATEUR_221','','Heure du rapport utilisateur 221'),('STATISTIQUE','HEURE_RAPPORT_UTILISATEUR_81','','Heure du rapport utilisateur 81'),('STATISTIQUE','ORIENTATION_RAPPORT_221','','Orientation du rapport 221'),('STATISTIQUE','ORIENTATION_RAPPORT_81','','Orientation du rapport 81'),('VIGISERV','ACTIONS_PRIORITAIRES','0','Activation des actions prioritaires'),('VIGISERV','ACTIONS_PRIORITAIRES_DESACTIVATION','0','Desactivation des actions prioritaires (si egal ÃƒÆ’Ã‚Â  1, les actions prioritaires n\'ont pas d\'effet)'),('VIGISERV','DATE_DERNIER_FICHIER_SAUVEGARDE','2025-12-07 22:03:24','Date du dernier fichier de sauvegarde remonte par VigiServ'),('VIGISERV','DELAI_ALERTE_MESURE_MINUTES','60','Delai de verification maximum avant de lancer une alerte sur la derniere mesure (en minutes)'),('VIGISERV','DELAI_REPONSE_SONDE_AVR_CENTIEMES_SECONDES','100','Delai maximum pour l\'attente de lecture des sondes AVR en centiemes de seconde'),('VIGISERV','DELAI_REPONSE_SONDE_EI_CENTIEMES_SECONDES','150','Delai maximum pour l\'attente de lecture des sondes EI en centiemes de seconde'),('VIGISERV','DELAI_SONNERIE_ALARME_MINUTES','2','Delai pour la verification si des alarmes sont presentes avant activation d\'une alarme sonore (en minutes)'),('VIGISERV','DERNIER_MESURE_APPEL','SondesSurveillance','Derniere fonction appelee par le service VigiServ'),('VIGISERV','DERNIER_MESURE_APPEL_1','SondesSurveillance','Derniere fonction appelee par le service VigiServ (serveur 1)'),('VIGISERV','DERNIER_MESURE_APPEL_2','SondesSurveillance','Derniere fonction appelee par le service VigiServ (serveur 2)'),('VIGISERV','DERNIER_MESURE_APPEL_3','SondesSurveillance','Derniere fonction appelee par le service VigiServ (serveur 3)'),('VIGISERV','DERNIER_MESURE_DATE_HEURE','2025120822000153','Date heure de la derniere mesure inscrite par le service VigiServ'),('VIGISERV','DERNIER_MESURE_DATE_HEURE_1','2025120822000152','Date heure de la derniere mesure inscrite par le service VigiServ (serveur 1)'),('VIGISERV','DERNIER_MESURE_DATE_HEURE_2','2025120822000152','Date heure de la derniere mesure inscrite par le service VigiServ (serveur 2)'),('VIGISERV','DERNIER_MESURE_DATE_HEURE_3','2025120822000220','Date heure de la derniere mesure inscrite par le service VigiServ (serveur 3)'),('VIGISERV','DERNIER_MESURE_SONDE','IPPD2I','Numero de sonde de la derniere mesure inscrite par le service VigiServ'),('VIGISERV','DERNIER_MESURE_SONDE_1','IN24CI','Numero de sonde de la derniere mesure inscrite par le service VigiServ (serveur 1)'),('VIGISERV','DERNIER_MESURE_SONDE_2','IN22PP','Numero de sonde de la derniere mesure inscrite par le service VigiServ (serveur 2)'),('VIGISERV','DERNIER_MESURE_SONDE_3','IN22GU','Numero de sonde de la derniere mesure inscrite par le service VigiServ (serveur 3)'),('VIGISERV','DIALOGUE_EN_MINUTES','1','Intervalle de dialogue avec le service VigiServ en minutes'),('VIGISERV','DUREE_LOGIN_SECONDES','60','Duree de validite du login (le login ne sera pas redemande dans ce delai) (en secondes)'),('VIGISERV','ECRAN_OFF','1','ecran eteint'),('VIGISERV','ENREGISTREMENT_ON','1','Activation de l\'enregistrement'),('VIGISERV','FICHIER_EXTERNE','0','Utiliser un fichier externe'),('VIGISERV','FREQUENCE_NON_REPONSE_MINUTES','15','Frequence ÃƒÆ’Ã‚Â  appliquer si la derniere mesure est en erreur (en minutes)'),('VIGISERV','FREQUENCE_VERIFICATION_MINUTES','15','Frequence de verification en minutes'),('VIGISERV','MEMOIRE_OFF','1','Memoire eteinte'),('VIGISERV','NOM_UTILISATEUR_SERVEUR','Serveur VigiTemp MC2','Nom de l\'utilisateur du serveur'),('VIGISERV','PING_MODULE','1','Autorise ou pas le ping en cas de test d\'un module reseau (0 = OFF, 1 = ON)'),('VIGISERV','SATURATION_SONDE_LINEAIRE','-40','Seuil de saturation d\'une sonde lineaire'),('VIGISERV','SECONDES_ENTRE_MESURES_ETALONNAGE','30','Nombre de secondes entre chaque mesure d\'etalonnage'),('VIGISERV','SERVEUR_ADRESSE_IP','10.133.226.14','Adresse IP du serveur VigiServ'),('VIGISERV','SERVEUR_ADRESSE_IP_1','10.133.226.14','Adresse IP du serveur VigiServ (serveur 1)'),('VIGISERV','SERVEUR_ADRESSE_IP_2','10.133.226.14','Adresse IP du serveur VigiServ (serveur 2)'),('VIGISERV','SERVEUR_ADRESSE_IP_3','10.133.226.14','Adresse IP du serveur VigiServ (serveur 3)'),('VIGISERV','SERVEUR_NOM','SVM-IFB-VIGIS','Nom du serveur VigiServ'),('VIGISERV','SERVEUR_NOM_1','SVM-IFB-VIGIS','Nom du serveur VigiServ (serveur 1)'),('VIGISERV','SERVEUR_NOM_2','SVM-IFB-VIGIS','Nom du serveur VigiServ (serveur 2)'),('VIGISERV','SERVEUR_NOM_3','SVM-IFB-VIGIS','Nom du serveur VigiServ (serveur 3)'),('VIGISERV','SERVICE_DATE_HEURE','2025120822000219','Date heure inscrite par le service VigiServ'),('VIGISERV','SERVICE_DATE_HEURE_1','2025120822000144','Date heure inscrite par le service VigiServ (serveur 1)'),('VIGISERV','SERVICE_DATE_HEURE_2','2025120822000144','Date heure inscrite par le service VigiServ (serveur 2)'),('VIGISERV','SERVICE_DATE_HEURE_3','2025120822000219','Date heure inscrite par le service VigiServ (serveur 3)'),('VIGISERV','SONDE_EN_SEUIL_BAS','-60','Seuil bas pour les sondes de type EN'),('VIGISERV','SONDE_EN_SEUIL_HAUT','100','Seuil haut pour les sondes de type EN'),('VIGISERV','SONDE_EP_SEUIL_BAS','-400','Seuil bas pour les sondes de type EP'),('VIGISERV','SONDE_EP_SEUIL_HAUT','400','Seuil haut pour les sondes de type EP'),('VIGISERV','SONDE_GN_SEUIL_BAS','-60','Seuil bas pour les sondes de type GN'),('VIGISERV','SONDE_GN_SEUIL_HAUT','70','Seuil haut pour les sondes de type GN'),('VIGISERV','SONDE_GP_SEUIL_BAS','-400','Seuil bas pour les sondes de type GP'),('VIGISERV','SONDE_GP_SEUIL_HAUT','400','Seuil haut pour les sondes de type GP'),('VIGISERV','SONDE_HN_SEUIL_BAS','-60','Seuil bas pour les sondes de type HN'),('VIGISERV','SONDE_HN_SEUIL_HAUT','100','Seuil haut pour les sondes de type HN'),('VIGISERV','SONDE_HP_SEUIL_BAS','-400','Seuil bas pour les sondes de type HP'),('VIGISERV','SONDE_HP_SEUIL_HAUT','400','Seuil haut pour les sondes de type HP'),('VIGISERV','SONDE_IC_SEUIL_BAS','-400','Seuil bas pour les sondes de type IC'),('VIGISERV','SONDE_IC_SEUIL_HAUT','400','Seuil haut pour les sondes de type IC'),('VIGISERV','SONDE_IHCQP_SEUIL_BAS','-400','Seuil bas pour les sondes de type IHCQP'),('VIGISERV','SONDE_IHCQP_SEUIL_HAUT','1200','Seuil haut pour les sondes de type IHCQP'),('VIGISERV','SONDE_IH_SEUIL_BAS','-400','Seuil bas pour les sondes de type IH'),('VIGISERV','SONDE_IH_SEUIL_HAUT','400','Seuil haut pour les sondes de type IH'),('VIGISERV','SONDE_IN_SEUIL_BAS','-60','Seuil bas pour les sondes de type IN'),('VIGISERV','SONDE_IN_SEUIL_HAUT','80','Seuil haut pour les sondes de type IN'),('VIGISERV','SONDE_IP_SEUIL_BAS','-400','Seuil bas pour les sondes de type IP'),('VIGISERV','SONDE_IP_SEUIL_HAUT','400','Seuil haut pour les sondes de type IP'),('VIGISERV','SONDE_IQ_SEUIL_BAS','-400','Seuil bas pour les sondes de type IQ'),('VIGISERV','SONDE_IQ_SEUIL_HAUT','1100','Seuil haut pour les sondes de type IQ'),('VIGISERV','TIMEOUT_PING_MILLISECONDES','200','TimeOut de la duree d\'attente de la fonction Ping() en millisecondes'),('VIGISERV','TIMEOUT_PORT_SERIE_MILLISECONDES','5000','TimeOut de la duree d\'attente de la fonction sOuvre() en millisecondes'),('VIGISURV','ALARME_SONORE_LIEU_NON_ACQUITE','0','Alarme sonore pour les lieux non acquittes'),('VIGISURV','ALERTE_SURVEILLANCE','0','Alerte de surveillance'),('VIGISURV','DELAI_ARRET_THREAD_CHANGEMENT_GROUPE_MILLISECONDES','500','Delai laisse ÃƒÆ’Ã‚Â  l\'application pour arrÃƒÆ’Ã‚Âªter le thread de mise ÃƒÆ’Ã‚Â  jour avant rafraÃƒÆ’Ã‚Â®chissement pour le changement de groupe (en millisecondes)'),('VIGISURV','DELAI_ARRET_THREAD_DESSIN_MILLISECONDES','100','Delai laisse ÃƒÆ’Ã‚Â  l\'application avant de redemarrer le thread dessin apres un changement de groupe (en millisecondes)'),('VIGISURV','DELAI_AVANT_ARCHIVE_JOURS','365','Nombre de jours avant archivage automatique'),('VIGISURV','DELAI_PAUSE_THREAD_MAJ_DESSIN_SECONDES','25','Delai en secondes de pause entre 2 mises ÃƒÆ’Ã‚Â  jour completes des dessins. Augmenter ce nombre pour dessiner moins souvent les graphes'),('VIGISURV','DELAI_PAUSE_THREAD_MAJ_SECONDES','30','Delai en secondes de pause entre 2 mises ÃƒÆ’Ã‚Â  jour completes des lieux. Augmenter ce nombre pour rafraÃƒÆ’Ã‚Â®chir moins souvent'),('VIGISURV','DELAI_RAFRAICHISSEMENT_ADMIN_SECONDES','300','Delai de mise ÃƒÆ’Ã‚Â  jour de l\'ecran d\'administration en secondes'),('VIGISURV','DELAI_RAFRAICHISSEMENT_METROLOGIE_SECONDES','300','Delai de mise ÃƒÆ’Ã‚Â  jour de l\'ecran de metrologie en secondes'),('VIGISURV','DELAI_VERIFICATION_ALERTES_SECONDES','30','Delai de verification des alertes en secondes'),('VIGISURV','DELAI_VERIFICATION_VIGISERV_MINUTES','60','Delai du message d\'alarme VigiServ en minutes'),('VIGISURV','DELAI_VERIFICATION_VIGITEL_MINUTES','60','Delai du message d\'alarme VigiTel en minutes'),('VIGISURV','EXPLICATIONS_TESTS','- Ping base VigiTemp\r\n  Permet de savoir si le serveur hebergeant la base de donnees VigiTemp est accessible. Un ping permet de connaÃƒÆ’Ã‚Â®tre son etat de connexion au reseau.\r\n\r\n- RequÃƒÆ’Ã‚Âªte base VigiTemp\r\n  Une requÃƒÆ’Ã‚Âªte est executee sur la base de donnees VigiTemp afin de savoir si MySQL est bien operationnel.\r\n\r\n- Ping serveur VigiServ\r\n  Permet de savoir si le serveur hebergeant la base de donnees des mesures est accessible. Un ping permet de connaÃƒÆ’Ã‚Â®tre son etat de connexion au reseau.\r\n\r\n- RequÃƒÆ’Ã‚Âªte serveur VigiServ\r\n  Une requÃƒÆ’Ã‚Âªte est executee sur la base de donnees VigiTemp afin de savoir si la base de donnees ÃƒÆ’Ã‚Â  bien ete initialisee.\r\n\r\n- Interrogation VigiServ\r\n  Verifie si VigiServ est actif. Le service VigiServ informe de son etat de faÃƒÆ’Ã‚Â§on reguliere en ecrivant dans la base de donnees. Si cette ecriture n\'a pas ete effectuee recemment alors VigiServ est inactif.\r\n\r\n- Interrogation VigiTel\r\n  Verifie si VigiTel est actif. Le service VigiTel informe de son etat de faÃƒÆ’Ã‚Â§on reguliere en ecrivant dans la base de donnees. Si cette ecriture n\'a pas ete effectuee recemment alors VigiTel est inactif.','Texte d\'explication pour les tests de la fenÃƒÆ’Ã‚Âªtre outils'),('VIGISURV','IDENT_VIGILOG','0','Identifiant VigiLog'),('VIGISURV','LANCEMENT_ROBOT_SURVEILLANCE_MINUTES','10','Lance la verification (Ping, RequÃƒÆ’Ã‚Âªtes, Services) toutes les 10 minutes'),('VIGISURV','LIAISON_ARMURE','0','Liaison avec l\'armoire'),('VIGISURV','LIAISON_ARMURE_MODE','1','Mode de liaison avec l\'armoire'),('VIGISURV','LIAISON_ARMURE_REPERTOIRE','','Repertoire de liaison avec l\'armoire'),('VIGISURV','MAX_VALIDITE_ETALONNAGE_JOURS','365','Nombre de jours durant lequel les etalonnages sont valides'),('VIGISURV','MAX_VALIDITE_SAUVEGARDE_JOURS','7','Nombre de jours durant lequel la sauvegarde est valide'),('VIGISURV','MOT_DE_PASSE_ETALONNAGE','METRO','Mot de passe pour les operations d\'etalonnage'),('VIGISURV','REMONTER_HEURE_SERVEUR_LOGIN','0','Activer la remontee de l\'heure du serveur au login'),('VIGISURV','TAUX_RAFRAICHISSEMENT_INITIALISATION_ECRAN','10','Nombre de lieux ÃƒÆ’Ã‚Â  afficher lors du chargement de l\'ecran. Augmenter ce nombre pour accelerer le premier chargement'),('VIGISURV','TEXTE_SAUVEGARDE','La mise en place des sauvegardes s\'effectue sur le poste serveur VigiTemp.','Texte d\'information sur les sauvegardes'),('VIGISURV','VISION_SIMPLE','0','Mode vision simple'),('VIGITEL','ALARME_NON_REPONSE','0','Alarme de non-reponse'),('VIGITEL','DUREE_LOGIN_SECONDES','60','Duree de validite du login VigiTel (en secondes)'),('VIGITEL','EMAIL_ALARME_EXPEDITEUR','vigitemp@chu-toulouse.fr','Adresse e-mail expediteur pour les alarmes'),('VIGITEL','EMAIL_ALARME_MESSAGE','Le lieu en alarme est : %Lieu (sonde nÃƒâ€šÃ‚Â° %NumSonde)\r\nType d\'alarme : %AlarmeTexteMessage\r\nDernier releve : %Valeur %Unite','Template du message d\'alarme par e-mail'),('VIGITEL','EMAIL_ALARME_OBJET','Alarme VigiTemp','Objet de l\'e-mail d\'alarme'),('VIGITEL','FORMAT_FICHIER_SON','41','Format du fichier son (41 = SAFTCCITT_ALaw_8kHzMono)'),('VIGITEL','FREQUENCE_VERIFICATION_MINUTES','15','Frequence de verification VigiTel en minutes'),('VIGITEL','MODE_DEBUG','0','Activer le mode debogage de VigiTel'),('VIGITEL','NOM_MODEM','Diva Server \'POTS2<41060>\' Chn 1 Ln 1 Ctrl \'1\'','Nom du modem utilise'),('VIGITEL','SEPARATEUR_DECIMAL',',','Separateur decimal (. ou ,) pour la mise en forme d\'une valeur relevee'),('VIGITEL','SERVICE_DATE_HEURE','2025120821594515','Date heure inscrite par le service VigiTel'),('VIGITEL','SMTP_COMPTE','','Compte SMTP VigiTel'),('VIGITEL','SMTP_MODE_ASYNCHRONE','0','Mode asynchrone SMTP'),('VIGITEL','SMTP_MOT_DE_PASSE','','Mot de passe SMTP VigiTel'),('VIGITEL','SMTP_PORT','25','Port SMTP VigiTel'),('VIGITEL','SMTP_SECURISE_TSL','0','Activer la securisation TSL du SMTP'),('VIGITEL','SMTP_SERVEUR','smtp','Serveur SMTP VigiTel'),('VIGITEL','VITESSE_VOIX','1','Vitesse de la voix (de -10 ÃƒÆ’Ã‚Â  10)'),('VIGITEL','VOLUME_VOIX','100','Volume de la voix (de 1 ÃƒÆ’Ã‚Â  100)');
 INSERT INTO `t_profil` (`Id_Profil`, `Profil_Utilisateur`, `Commentaire`, `Est_MC2`, `Est_Archive`) VALUES
 (1,'Administrateurs',NULL,0,0),
 (3,'Consultation + Acquittement',NULL,0,0),
@@ -1016,50 +1017,7 @@ INSERT INTO `t_sonde_type` (`Id_Sonde_Type`,`Sonde_Type`,`Libelle_Sonde_Type`,`E
 (33,'SPFB','Gemsense Pro filaire numerique blanc',0,0,'GSP'),
 (34,'SPFG','Gemsense Pro filaire numerique gris',0,0,'GSP'),
 (35,'SPFP','Gemsense Pro filaire platine',0,0,'GSP');
-INSERT INTO `t_utilisateur` (Login, Mot_De_Passe, Est_Archive, Profil_Utilisateur, Est_Mot_De_Passe_Temporaire, Date_Creation, Date_Derniere_Modification_MDP) VALUES ('admin', '$2b$10$exu0K3GI93aCnu8S1rXqle6QFUblWAwv5LPer2swBja/XGpjRiTCG', 0, 'Administrateurs', 1, NOW(), NOW());
-DROP TRIGGER IF EXISTS trg_alarme_to_histo;
-DELIMITER $$
-CREATE TRIGGER trg_alarme_to_histo
-BEFORE DELETE ON t_alarme
-FOR EACH ROW
-BEGIN
-  INSERT INTO t_alarme_histo (
-    Id_Alarme,
-    Date_Heure_Debut,
-    Valeur,
-    Type,
-    Date_Heure_Fin,
-    Est_Alarme_Vrai,
-    Id_Lieu,
-    Sonde_Numero_Serie,
-    Unite,
-    Est_Acquittee,
-    Date_Heure_Derniere_Mesure,
-    Date_Heure_Debut_Alarme_Vrai,
-    Est_Alarme_Pour_VigiTel,
-    Est_Mail_Envoye,
-    Est_Tel_Acquittee,
-    Date_Heure_Acquittement
-  ) VALUES (
-    OLD.Id_Alarme,
-    OLD.Date_Heure_Debut,
-    OLD.Valeur,
-    OLD.Type,
-    OLD.Date_Heure_Fin,
-    OLD.Est_Alarme_Vrai,
-    OLD.Id_Lieu,
-    OLD.Sonde_Numero_Serie,
-    OLD.Unite,
-    OLD.Est_Acquittee,
-    OLD.Date_Heure_Derniere_Mesure,
-    OLD.Date_Heure_Debut_Alarme_Vrai,
-    OLD.Est_Alarme_Pour_VigiTel,
-    OLD.Est_Mail_Envoye,
-    OLD.Est_Tel_Acquittee,
-    NOW()
-  );
-END$$
-DELIMITER ;
+INSERT INTO `t_utilisateur` (Login, Mot_De_Passe, Est_Archive, Profil_Utilisateur, Est_Mot_De_Passe_Temporaire, Date_Creation, Date_Derniere_Modification_MDP) VALUES ('admin', '$2b$10$p794ptDulNuN5Md2j3Y6Ge2wEYRjaG3Er8CexJ8RkrD4er1A2AhXS', 0, 'Administrateurs', 1, NOW(), NOW());
 SET FOREIGN_KEY_CHECKS=1;
 
 
@@ -1497,6 +1455,18 @@ SET @has_old := (SELECT COUNT(*) FROM information_schema.tables WHERE table_sche
 SET @has_new := (SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 't_ajustage');
 SET @sql := IF(@has_old = 1 AND @has_new = 0, 'RENAME TABLE `t_calibrage` TO `t_ajustage`', 'SELECT 1');
 PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+SET @has_old := (SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'tm_mesure_calibrage');
+SET @has_new := (SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'tm_mesures_ajustage');
+SET @sql := IF(@has_old = 1 AND @has_new = 0, 'RENAME TABLE `tm_mesure_calibrage` TO `tm_mesures_ajustage`', 'SELECT 1');
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+SET @has_old := (SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'tm_mesure_calibrage_etalon');
+SET @has_new := (SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'tm_mesures_ajustage_etalon');
+SET @sql := IF(@has_old = 1 AND @has_new = 0, 'RENAME TABLE `tm_mesure_calibrage_etalon` TO `tm_mesures_ajustage_etalon`', 'SELECT 1');
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+SET @has_old := (SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'tm_mesure_etalonnage');
+SET @has_new := (SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'tm_mesures_etalonnage');
+SET @sql := IF(@has_old = 1 AND @has_new = 0, 'RENAME TABLE `tm_mesure_etalonnage` TO `tm_mesures_etalonnage`', 'SELECT 1');
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 SET @has_new := (SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 't_ajustage');
 SET @sql := IF(@has_new = 0,
   'CREATE TABLE `t_ajustage` (\
@@ -1886,7 +1856,7 @@ BEGIN
 END$$
 DELIMITER ;
 
--- tables memoires GSO + liste clients
+-- tables techniques legacy
 CREATE TABLE IF NOT EXISTS `liste_clients` (
   `Id_Client` INT NOT NULL AUTO_INCREMENT,
   `Nom` VARCHAR(100) NOT NULL,
@@ -1895,23 +1865,6 @@ CREATE TABLE IF NOT EXISTS `liste_clients` (
   `Vigitel_Derniere_Date_Heure` DATETIME NULL,
   PRIMARY KEY (`Id_Client`),
   UNIQUE KEY `UK_Num_Compte` (`Num_Compte`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-CREATE TABLE IF NOT EXISTS `t_mem_gso` (
-  `id` INT NOT NULL,
-  `last_sonde` VARCHAR(20) NULL,
-  `cycle_MEM` INT NULL,
-  `cycle_start` DATETIME NULL,
-  `last_update` DATETIME NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-CREATE TABLE IF NOT EXISTS `t_mem_gso_2` (
-  `com_port_send` INT NOT NULL,
-  `last_sonde` VARCHAR(20) NULL,
-  `last_sonde_datetime` DATETIME NULL,
-  `cycle_MEM` INT NULL,
-  `cycle_start` DATETIME NULL,
-  `last_update` DATETIME NULL,
-  PRIMARY KEY (`com_port_send`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 INSERT INTO `t_parametre` (`Section`, `Mot_Cle`, `Valeur`, `Commentaire`)
@@ -2284,42 +2237,48 @@ CREATE TABLE `tm_journal_histo` (
   KEY `IDX_Date_Heure_Journal` (`Date_Heure_Journal`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
-DROP TABLE IF EXISTS `tm_mesure_calibrage`;
+DROP TABLE IF EXISTS `tm_mesures_ajustage`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `tm_mesure_calibrage` (
-  `Id_Mesure_Calibrage` int NOT NULL AUTO_INCREMENT,
+CREATE TABLE `tm_mesures_ajustage` (
+  `Id_Mesure_Ajustage` int NOT NULL AUTO_INCREMENT,
   `Id_Serveur_BDD` int NOT NULL DEFAULT '0',
-  `Valeur` float NOT NULL DEFAULT '0',
-  `Valeur_Brute` float NOT NULL DEFAULT '0',
+  `Valeur` float DEFAULT NULL,
+  `Valeur_Brute` float DEFAULT NULL,
+  `Unite` varchar(10) DEFAULT NULL,
+  `Date_Heure_Mesure` datetime NOT NULL,
   `Sonde_Numero_Serie` varchar(50) NOT NULL DEFAULT '',
-  `Est_Valeur_Null` tinyint NOT NULL,
-  `Date_Heure` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`Id_Mesure_Calibrage`,`Id_Serveur_BDD`),
+  `Adresse_Sonde` varchar(50) NOT NULL DEFAULT '',
+  `Est_Valeur_Null` tinyint NOT NULL DEFAULT '0',
+  PRIMARY KEY (`Id_Mesure_Ajustage`,`Id_Serveur_BDD`),
   KEY `IDX_Valeur` (`Valeur`),
   KEY `IDX_Valeur_Brute` (`Valeur_Brute`),
   KEY `IDX_Est_Valeur_Null` (`Est_Valeur_Null`),
-  KEY `IDX_Date_Heure` (`Date_Heure`),
-  KEY `IDX_Sonde_Numero_Serie` (`Sonde_Numero_Serie`)
+  KEY `IDX_Date_Heure_Mesure` (`Date_Heure_Mesure`),
+  KEY `IDX_Sonde_Numero_Serie` (`Sonde_Numero_Serie`),
+  KEY `IDX_Adresse_Sonde` (`Adresse_Sonde`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
-DROP TABLE IF EXISTS `tm_mesure_calibrage_etalon`;
+DROP TABLE IF EXISTS `tm_mesures_ajustage_etalon`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `tm_mesure_calibrage_etalon` (
-  `Id_Mesure_Calibrage_Etalon` int NOT NULL AUTO_INCREMENT,
+CREATE TABLE `tm_mesures_ajustage_etalon` (
+  `Id_Mesure_Ajustage_Etalon` int NOT NULL AUTO_INCREMENT,
   `Id_Serveur_BDD` int NOT NULL DEFAULT '0',
-  `Valeur` float NOT NULL DEFAULT '0',
-  `Valeur_Brute` float NOT NULL DEFAULT '0',
+  `Valeur` float DEFAULT NULL,
+  `Valeur_Brute` float DEFAULT NULL,
+  `Unite` varchar(10) DEFAULT NULL,
+  `Date_Heure_Mesure` datetime NOT NULL,
   `Etalon_Numero_Serie` varchar(50) NOT NULL DEFAULT '',
-  `Est_Valeur_Null` tinyint NOT NULL,
-  `Date_Heure` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`Id_Mesure_Calibrage_Etalon`,`Id_Serveur_BDD`),
+  `Adresse_Sonde` varchar(50) DEFAULT NULL,
+  `Est_Valeur_Null` tinyint NOT NULL DEFAULT '0',
+  PRIMARY KEY (`Id_Mesure_Ajustage_Etalon`,`Id_Serveur_BDD`),
   KEY `IDX_Valeur` (`Valeur`),
   KEY `IDX_Valeur_Brute` (`Valeur_Brute`),
   KEY `IDX_Est_Valeur_Null` (`Est_Valeur_Null`),
-  KEY `IDX_Date_Heure` (`Date_Heure`),
-  KEY `IDX_Etalon_Numero_Serie` (`Etalon_Numero_Serie`)
+  KEY `IDX_Date_Heure_Mesure` (`Date_Heure_Mesure`),
+  KEY `IDX_Etalon_Numero_Serie` (`Etalon_Numero_Serie`),
+  KEY `IDX_Adresse_Sonde` (`Adresse_Sonde`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `tm_mesure_etalon`;
@@ -2342,20 +2301,26 @@ CREATE TABLE `tm_mesure_etalon` (
   KEY `IDX_Message_Erreur` (`Message_Erreur`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
-DROP TABLE IF EXISTS `tm_mesure_etalonnage`;
+DROP TABLE IF EXISTS `tm_mesures_etalonnage`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 -- Mesures de campagne d'etalonnage d'une sonde (sonde etalonnee vs etalon).
-CREATE TABLE `tm_mesure_etalonnage` (
+CREATE TABLE `tm_mesures_etalonnage` (
   `Id_Mesure_Etalonnage` int NOT NULL AUTO_INCREMENT,
   `Id_Serveur_BDD` int NOT NULL DEFAULT '0',
+  `Valeur` float DEFAULT NULL,
+  `Valeur_Brute` float DEFAULT NULL,
+  `Unite` varchar(10) DEFAULT NULL,
+  `Date_Heure_Mesure` datetime NOT NULL,
   `Sonde_Numero_serie` varchar(50) DEFAULT NULL,
+  `Adresse_Sonde` varchar(50) DEFAULT NULL,
   `Numero_Ordre` int DEFAULT NULL,
   `Mesure_Sonde` float DEFAULT NULL,
   `Mesure_Etalon` float DEFAULT NULL,
-  `Date_Heure` datetime DEFAULT NULL,
   PRIMARY KEY (`Id_Mesure_Etalonnage`,`Id_Serveur_BDD`),
-  KEY `IDX_Sonde_Numero_serie` (`Sonde_Numero_serie`)
+  KEY `IDX_Sonde_Numero_serie` (`Sonde_Numero_serie`),
+  KEY `IDX_Date_Heure_Mesure` (`Date_Heure_Mesure`),
+  KEY `IDX_Adresse_Sonde` (`Adresse_Sonde`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `tm_mesures`;
@@ -2401,8 +2366,10 @@ CREATE TABLE `tm_mesures_gso` (
   `tep` double DEFAULT NULL,
   `unite` varchar(10) COLLATE utf8mb4_unicode_ci DEFAULT '',
   `date_mesure` datetime NOT NULL,
+  `trame` binary(8) DEFAULT NULL,
   `rssi` varchar(10) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `tension` varchar(10) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `COM_sonde` float DEFAULT NULL,
   PRIMARY KEY (`id_capteur`,`date_mesure`),
   KEY `Id_mesures_gso` (`Id_mesures_gso`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -2520,37 +2487,8 @@ CREATE TABLE `tm_journal_commentaire_libre` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 SET FOREIGN_KEY_CHECKS=1;
 
--- Cache tm_graphique: garder 150 mesures par sonde (nettoyage periodique)
--- NOTE: necessite l'event_scheduler active cÃƒÂ´te MySQL.
-DROP EVENT IF EXISTS `evt_trim_tm_graphique`;
-CREATE EVENT `evt_trim_tm_graphique`
-ON SCHEDULE EVERY 5 MINUTE
-DO
-  WITH ranked AS (
-    SELECT
-      Id_Graphique,
-      Date_Heure_Mesure,
-      Id_Lieu,
-      Est_Valeur_Null,
-      Est_Etat_Alarme,
-      ROW_NUMBER() OVER (
-        PARTITION BY Id_Sonde
-        ORDER BY Date_Heure_Mesure DESC, Id_Graphique DESC
-      ) AS rn
-    FROM tm_graphique
-  )
-  DELETE g
-  FROM tm_graphique g
-  JOIN ranked r
-    ON g.Id_Graphique = r.Id_Graphique
-   AND g.Date_Heure_Mesure = r.Date_Heure_Mesure
-   AND g.Id_Lieu = r.Id_Lieu
-   AND g.Est_Valeur_Null = r.Est_Valeur_Null
-   AND g.Est_Etat_Alarme = r.Est_Etat_Alarme
-  WHERE r.rn > 150;
-
 SET FOREIGN_KEY_CHECKS=0;
-INSERT INTO `tm_journal_code` VALUES ('AACT','Association d\'un module d\'alarme %1'),('ACQ','Acquitter les alarmes'),('ACT','Activer la surveillance'),('ACTU','Reactivation de l\'utilisateur %1'),('AJE','Ajoute evÃƒÂ¨nement manuel'),('ARC','Archivage des donnees %1 %2'),('AS','ArrÃƒÂªt de la surveillance'),('AT','Activation de la surveillance telephonique %1'),('CA','Demarrage d\'un calibrage pour la sonde'),('CC','Changement sur un element %1'),('CDA','Changement d\'etat du datalogger %1'),('CF','Changement de frequence %1'),('CONNEXION','Connexion de l\'utilisateur %1'),('CR','Changement de retard d\'alarme %1'),('CS','Changement de sonde %1'),('DECONNEXION','Deconnexion de l\'utilisateur %1'),('DES','Desactiver la surveillance'),('DS','Demarrage de la surveillance'),('DT','Desactivation de la surveillance telephonique %1'),('ET','Demarrage d\'un etalonnage pour la sonde'),('FERMSURV','Fermeture de la fenÃƒÂªtre de surveillance'),('MDP','Changement fiche utilisateur %1'),('PS','Le gestionnaire de port serie virtuel ÃƒÂ  ete relance'),('SACT','Suppression du module d\'alarme associe %1'),('TC','Test de connexion de la sonde'),('TEL','SystÃƒÂ¨me'),('UT','');
+INSERT INTO `tm_journal_code` VALUES ('AACT','Association d\'un module d\'alarme %1'),('ACQ','Acquitter les alarmes'),('ACT','Activer la surveillance'),('ACTU','Reactivation de l\'utilisateur %1'),('AJE','Ajoute evÃƒÆ’Ã‚Â¨nement manuel'),('ARC','Archivage des donnees %1 %2'),('AS','ArrÃƒÆ’Ã‚Âªt de la surveillance'),('AT','Activation de la surveillance telephonique %1'),('CA','Demarrage d\'un calibrage pour la sonde'),('CC','Changement sur un element %1'),('CDA','Changement d\'etat du datalogger %1'),('CF','Changement de frequence %1'),('CONNEXION','Connexion de l\'utilisateur %1'),('CR','Changement de retard d\'alarme %1'),('CS','Changement de sonde %1'),('DECONNEXION','Deconnexion de l\'utilisateur %1'),('DES','Desactiver la surveillance'),('DS','Demarrage de la surveillance'),('DT','Desactivation de la surveillance telephonique %1'),('ET','Demarrage d\'un etalonnage pour la sonde'),('FERMSURV','Fermeture de la fenÃƒÆ’Ã‚Âªtre de surveillance'),('MDP','Changement fiche utilisateur %1'),('PS','Le gestionnaire de port serie virtuel ÃƒÆ’Ã‚Â  ete relance'),('SACT','Suppression du module d\'alarme associe %1'),('TC','Test de connexion de la sonde'),('TEL','SystÃƒÆ’Ã‚Â¨me'),('UT','');
 SET FOREIGN_KEY_CHECKS=1;
 
 -- =====================================================================
@@ -2645,6 +2583,1270 @@ CREATE TABLE `t_message_attachment` (
   CONSTRAINT `t_message_attachment_Id_Message_fkey` FOREIGN KEY (`Id_Message`) REFERENCES `t_message` (`Id_Message`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 SET FOREIGN_KEY_CHECKS=1;
+
+-- =====================================================================
+-- GSO / GSP memory recovery helpers, views and events
+-- =====================================================================
+USE `vigi_mesures`;
+
+DROP TABLE IF EXISTS `tm_mesures_gso_count_mem`;
+CREATE TABLE `tm_mesures_gso_count_mem` (
+  `Id` bigint NOT NULL AUTO_INCREMENT,
+  `GSO_SN` varchar(32) NOT NULL,
+  `Port_Serie_Send_GSO` varchar(10) DEFAULT NULL,
+  `Missing_Data_Begin` float NOT NULL DEFAULT '0',
+  `Missing_Data_End` float NOT NULL DEFAULT '0',
+  `Missing_Data_Total` float NOT NULL DEFAULT '0',
+  `Commande_Mem` varchar(50) DEFAULT NULL,
+  `Statut` varchar(20) NOT NULL DEFAULT '0',
+  `date_calcul` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `Date_Heure_Demande_Mem` datetime DEFAULT NULL,
+  PRIMARY KEY (`Id`),
+  UNIQUE KEY `UX_tm_mesures_gso_count_mem` (`GSO_SN`,`Missing_Data_Begin`,`Missing_Data_End`,`Missing_Data_Total`,`date_calcul`),
+  KEY `IDX_tm_mesures_gso_count_mem_date` (`date_calcul`),
+  KEY `IDX_tm_mesures_gso_count_mem_statut` (`Statut`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+DROP TABLE IF EXISTS `tm_mesures_gso_commandes_mem`;
+CREATE TABLE `tm_mesures_gso_commandes_mem` (
+  `Id` bigint NOT NULL AUTO_INCREMENT,
+  `GSO_SN` varchar(32) NOT NULL,
+  `Port_Serie_Send_GSO` varchar(10) DEFAULT NULL,
+  `Commande_Globale_Begin` float NOT NULL DEFAULT '0',
+  `Commande_Globale_End` float NOT NULL DEFAULT '0',
+  `Missing_Data_Total` float NOT NULL DEFAULT '0',
+  `Commande_Mem_Globale` varchar(50) DEFAULT NULL,
+  `Date_Calcul` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `Statut` varchar(20) NOT NULL DEFAULT '0',
+  `Date_Heure_Demande_Mem` datetime DEFAULT NULL,
+  PRIMARY KEY (`Id`),
+  UNIQUE KEY `UX_tm_mesures_gso_commandes_mem` (`GSO_SN`,`Commande_Globale_Begin`,`Commande_Globale_End`,`Missing_Data_Total`),
+  KEY `IDX_tm_mesures_gso_commandes_mem_date` (`Date_Calcul`),
+  KEY `IDX_tm_mesures_gso_commandes_mem_statut` (`Statut`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+DROP TABLE IF EXISTS `tm_mesures_gso_build`;
+CREATE TABLE `tm_mesures_gso_build` (
+  `Id_GSO_Build` int NOT NULL AUTO_INCREMENT,
+  `Date_Heure_Mesure` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `Valeur` float DEFAULT NULL,
+  `Valeur_Brute` float DEFAULT NULL,
+  `Est_Valeur_Memoire` tinyint(1) NOT NULL DEFAULT '0',
+  `Planning_Regle_Existe` tinyint(1) NOT NULL DEFAULT '0',
+  `Planning_Actif` tinyint(1) NOT NULL DEFAULT '0',
+  `Consigne` float DEFAULT NULL,
+  `Consigne_Sup` float DEFAULT NULL,
+  `Consigne_Inf` float DEFAULT NULL,
+  `Unite` varchar(10) DEFAULT NULL,
+  `Sonde_Numero_Serie` varchar(50) DEFAULT NULL,
+  `Adresse_Sonde` varchar(50) DEFAULT NULL,
+  `COM_sonde` float DEFAULT NULL,
+  `Id_Lieu` int NOT NULL DEFAULT '0',
+  `Consigne_Inf_Pre_Alarme` float DEFAULT NULL,
+  `Consigne_Sup_Pre_Alarme` float DEFAULT NULL,
+  `Rssi` varchar(10) DEFAULT NULL,
+  `Tension` varchar(10) DEFAULT NULL,
+  `GSO_SN` varchar(50) DEFAULT NULL,
+  PRIMARY KEY (`Id_GSO_Build`),
+  KEY `IDX_tm_mesures_gso_build_date` (`Date_Heure_Mesure`),
+  KEY `IDX_tm_mesures_gso_build_gso` (`GSO_SN`),
+  KEY `IDX_tm_mesures_gso_build_lieu` (`Id_Lieu`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+DROP TABLE IF EXISTS `tm_mesures_gso_read_mem`;
+CREATE TABLE `tm_mesures_gso_read_mem` (
+  `Id` bigint NOT NULL AUTO_INCREMENT,
+  `GSO_SN` varchar(32) NOT NULL,
+  `Ecart` varchar(32) NOT NULL,
+  `Date_Heure_Read_Mem` datetime DEFAULT NULL,
+  PRIMARY KEY (`Id`),
+  UNIQUE KEY `UX_tm_mesures_gso_read_mem` (`GSO_SN`,`Ecart`),
+  KEY `IDX_tm_mesures_gso_read_mem_date` (`Date_Heure_Read_Mem`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+DROP TABLE IF EXISTS `tm_mesures_gso_read_metro`;
+CREATE TABLE `tm_mesures_gso_read_metro` (
+  `Id` bigint NOT NULL AUTO_INCREMENT,
+  `GSO_SN` varchar(32) NOT NULL,
+  `Commande_metro` varchar(32) NOT NULL,
+  `Commande_metro_envoyee` tinyint(1) NOT NULL DEFAULT '0',
+  `Metro_en_cours` tinyint(1) NOT NULL DEFAULT '0',
+  `Dernier_Date_MAJ` datetime DEFAULT NULL,
+  PRIMARY KEY (`Id`),
+  UNIQUE KEY `UX_tm_mesures_gso_read_metro` (`GSO_SN`,`Commande_metro`),
+  KEY `IDX_tm_mesures_gso_read_metro_date` (`Dernier_Date_MAJ`),
+  KEY `IDX_tm_mesures_gso_read_metro_gso` (`GSO_SN`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+DROP VIEW IF EXISTS `v_compteur_valeurs_gso`;
+CREATE VIEW `v_compteur_valeurs_gso` AS
+select `tm_mesures`.`Adresse_Sonde` AS `Adresse_Sonde`,
+sum((case when (`tm_mesures`.`Date_Heure_Mesure` >= (now() - interval 1 hour)) then 1 else 0 end)) AS `quart_0_4=4m`,
+sum((case when ((`tm_mesures`.`Date_Heure_Mesure` < (now() - interval 1 hour)) and (`tm_mesures`.`Date_Heure_Mesure` >= (now() - interval 2 hour))) then 1 else 0 end)) AS `quart_4_8=4m`,
+sum((case when ((`tm_mesures`.`Date_Heure_Mesure` < (now() - interval 2 hour)) and (`tm_mesures`.`Date_Heure_Mesure` >= (now() - interval 4 hour))) then 1 else 0 end)) AS `quart_8_16=8m`,
+sum((case when ((`tm_mesures`.`Date_Heure_Mesure` < (now() - interval 4 hour)) and (`tm_mesures`.`Date_Heure_Mesure` >= (now() - interval 8 hour))) then 1 else 0 end)) AS `quart_16_32=16m`,
+sum((case when ((`tm_mesures`.`Date_Heure_Mesure` < (now() - interval 8 hour)) and (`tm_mesures`.`Date_Heure_Mesure` >= (now() - interval 16 hour))) then 1 else 0 end)) AS `quart_32_64=32m`,
+sum((case when ((`tm_mesures`.`Date_Heure_Mesure` < (now() - interval 16 hour)) and (`tm_mesures`.`Date_Heure_Mesure` >= (now() - interval 32 hour))) then 1 else 0 end)) AS `quart_64_128=64m`,
+sum((case when ((`tm_mesures`.`Date_Heure_Mesure` < (now() - interval 32 hour)) and (`tm_mesures`.`Date_Heure_Mesure` >= (now() - interval 64 hour))) then 1 else 0 end)) AS `quart_128_256=128m`,
+sum((case when ((`tm_mesures`.`Date_Heure_Mesure` < (now() - interval 64 hour)) and (`tm_mesures`.`Date_Heure_Mesure` >= (now() - interval 128 hour))) then 1 else 0 end)) AS `quart_256_512=256m`,
+sum((case when ((`tm_mesures`.`Date_Heure_Mesure` < (now() - interval 128 hour)) and (`tm_mesures`.`Date_Heure_Mesure` >= (now() - interval 175 hour))) then 1 else 0 end)) AS `quart_512_700=188m`,
+sum((`tm_mesures`.`Date_Heure_Mesure` >= (now() - interval 10500 minute))) AS `Total`
+from `tm_mesures`
+where ((`tm_mesures`.`Adresse_Sonde` like '1__%') and (`tm_mesures`.`Date_Heure_Mesure` >= (now() - interval 175 hour)))
+group by `tm_mesures`.`Adresse_Sonde`;
+
+USE `vigi_main`;
+
+SET @has_tbl := (SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 't_sonde');
+SET @has_col := (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 't_sonde' AND column_name = 'Metrologie_en_cours');
+SET @sql := IF(@has_tbl = 1 AND @has_col = 0, 'ALTER TABLE `t_sonde` ADD COLUMN `Metrologie_en_cours` TINYINT(1) NOT NULL DEFAULT 0 AFTER `Sonde_Offset`', 'SELECT 1');
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+SET @has_col := (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 't_sonde' AND column_name = 'Metrologie_cmd_envoyee');
+SET @sql := IF(@has_tbl = 1 AND @has_col = 0, 'ALTER TABLE `t_sonde` ADD COLUMN `Metrologie_cmd_envoyee` TINYINT(1) NOT NULL DEFAULT 0 AFTER `Metrologie_en_cours`', 'SELECT 1');
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+USE `vigi_main`;
+
+DROP VIEW IF EXISTS `v_tm_mesures_dernier`;
+CREATE VIEW `v_tm_mesures_dernier` AS
+select `l`.`Id_Lieu` AS `Id_Lieu`,
+`l`.`Sonde_Numero_Serie` AS `Sonde_Numero_Serie`,
+`l`.`Adresse_Sonde` AS `Adresse_Sonde`,
+`l`.`Nom_Lieu` AS `Nom_Lieu`,
+`l`.`Id_Alarme` AS `Id_Alarme`,
+`l`.`Est_Lieu_En_Alarme` AS `Alarme_en_cours`,
+`m`.`Valeur` AS `Dernier_Releve`,
+`m`.`Unite` AS `Unite`,
+`m`.`Date_Heure_Mesure` AS `Date_Heure_Mesure`,
+`m`.`COM_sonde` AS `COM_Lecture`,
+`m`.`Rssi` AS `Signal_Radio`,
+`m`.`Tension` AS `Tension_Piles`,
+left(`l`.`Adresse_Sonde`,(length(`l`.`Adresse_Sonde`) - 2)) AS `GSO_SN`
+from `vigi_main`.`t_lieu` `l`
+left join `vigi_mesures`.`tm_mesures` `m`
+  on `m`.`Id_Lieu` = `l`.`Id_Lieu`
+ and `m`.`Date_Heure_Mesure` = (
+   select `m2`.`Date_Heure_Mesure`
+   from `vigi_mesures`.`tm_mesures` `m2`
+   where `m2`.`Id_Lieu` = `l`.`Id_Lieu`
+   order by `m2`.`Date_Heure_Mesure` desc
+   limit 1
+ )
+where ((`l`.`Lieu_Etat` = 'S') and (`l`.`Est_Lieu_GSO` = 1));
+
+USE `vigi_mesures`;
+
+DROP VIEW IF EXISTS `v_config_lieu_planning_consignes`;
+CREATE VIEW `v_config_lieu_planning_consignes` AS
+select `pl`.`Id_Lieu` AS `Id_Lieu`,
+`pl`.`Date_Heure_Debut_Changement` AS `Date_Heure_Debut_Changement`,
+`pl`.`Date_Heure_Fin_Changement` AS `Date_Heure_Fin_Changement`,
+`pl`.`Consigne_Apres` AS `Consigne_Apres`,
+`pl`.`Tolerance_Surveillance_Sup_Apres` AS `Tolerance_Surveillance_Sup_Apres`,
+`pl`.`Tolerance_Surveillance_Inf_Apres` AS `Tolerance_Surveillance_Inf_Apres`
+from `vigi_main`.`t_lieu_planning_audit` `pl`;
+
+DROP VIEW IF EXISTS `v_config_lieu_sonde`;
+CREATE VIEW `v_config_lieu_sonde` AS
+select `l`.`Id_Lieu` AS `Id_Lieu`,
+`l`.`Sonde_Numero_Serie` AS `Sonde_Numero_Serie`,
+left(`s`.`Adresse_Sonde`,(length(`s`.`Adresse_Sonde`) - 2)) AS `GSO_SN`,
+`s`.`Port_Serie` AS `Port_Serie`,
+`l`.`Adresse_Sonde` AS `Adresse_Sonde`,
+`l`.`Date_Heure_Surveillance_On` AS `Date_Heure_Surveillance_On`,
+`l`.`Planning_Actif` AS `Planning_Actif`,
+`l`.`Planning_Regle_Existe` AS `Planning_Regle_Existe`,
+`l`.`Consigne` AS `Consigne`,
+`l`.`Tolerance_Surveillance_Sup` AS `Consigne_Sup_Corr`,
+`l`.`Tolerance_Surveillance_Inf` AS `Consigne_Inf_Corr`,
+`l`.`Consigne_Sup_Pre_Alarme` AS `Consigne_Sup_Pre_Alarme`,
+`l`.`Consigne_Inf_Pre_Alarme` AS `Consigne_Inf_Pre_Alarme`,
+`l`.`Consigne_Base` AS `Consigne_Base`,
+`l`.`Tolerance_Surveillance_Sup_Base` AS `Tolerance_Surveillance_Sup_Base`,
+`l`.`Tolerance_Surveillance_Inf_Base` AS `Tolerance_Surveillance_Inf_Base`,
+`l`.`Retard_Alarme_Haut` AS `Retard_Haut`,
+`l`.`Retard_Alarme_Bas` AS `Retard_Bas`,
+`s`.`Sonde_Offset` AS `Sonde_Offset`,
+ifnull(`aj`.`Coeff_X`,1) AS `coeff_a`,
+ifnull(`aj`.`Coeff_Constant`,0) AS `coeff_b`,
+round(ifnull((case when (`l`.`Est_Correction_Ej` = 1) then -`l`.`Derniere_Erreur_Justesse` else 0 end),0),2) AS `-(EJ)`
+from `vigi_main`.`t_lieu` `l`
+left join `vigi_main`.`t_sonde` `s` on `s`.`Sonde_Numero_Serie` = `l`.`Sonde_Numero_Serie`
+left join (
+select `x`.`Sonde_Numero_Serie` AS `Sonde_Numero_Serie`,
+`x`.`Coeff_X` AS `Coeff_X`,
+`x`.`Coeff_Constant` AS `Coeff_Constant`
+from (
+select `vigi_main`.`t_ajustage`.`Sonde_Numero_Serie` AS `Sonde_Numero_Serie`,
+`vigi_main`.`t_ajustage`.`Coeff_X` AS `Coeff_X`,
+`vigi_main`.`t_ajustage`.`Coeff_Constant` AS `Coeff_Constant`,
+row_number() OVER (PARTITION BY `vigi_main`.`t_ajustage`.`Sonde_Numero_Serie` ORDER BY `vigi_main`.`t_ajustage`.`Date_Heure_Ajustage` desc )  AS `rn`
+from `vigi_main`.`t_ajustage`) `x`
+where (`x`.`rn` = 1)) `aj` on `aj`.`Sonde_Numero_Serie` = `s`.`Sonde_Numero_Serie`
+where ((`l`.`Est_Lieu_GSO` = 1) and (`l`.`Lieu_Etat` = 'S'));
+
+DROP VIEW IF EXISTS `v_config_sonde_com`;
+CREATE VIEW `v_config_sonde_com` AS
+select `s`.`Adresse_Sonde` AS `Adresse_Sonde`,
+left(`s`.`Adresse_Sonde`,(length(`s`.`Adresse_Sonde`) - 2)) AS `GSO_SN`,
+`s`.`Etat_Sonde` AS `Etat_Sonde`,
+`s`.`Metrologie_en_cours` AS `Metrologie_en_cours`,
+`s`.`Metrologie_cmd_envoyee` AS `Metrologie_cmd_envoyee`,
+`m`.`Port_Serie_Send_GSO` AS `Port_Serie_Send_GSO`,
+`m`.`Port_Serie` AS `Port_Serie_Real`,
+`s`.`Sonde_Offset` AS `Sonde_Offset`,
+ifnull(`aj`.`Coeff_X`,1) AS `coeff_a`,
+ifnull(`aj`.`Coeff_Constant`,0) AS `coeff_b`
+from `vigi_main`.`t_sonde` `s`
+join `vigi_main`.`t_module` `m` on `m`.`Port_Serie` = `s`.`Port_Serie`
+left join (
+select `x`.`Sonde_Numero_Serie` AS `Sonde_Numero_Serie`,
+`x`.`Coeff_X` AS `Coeff_X`,
+`x`.`Coeff_Constant` AS `Coeff_Constant`
+from (
+select `ta`.`Sonde_Numero_Serie` AS `Sonde_Numero_Serie`,
+`ta`.`Coeff_X` AS `Coeff_X`,
+`ta`.`Coeff_Constant` AS `Coeff_Constant`,
+row_number() OVER (PARTITION BY `ta`.`Sonde_Numero_Serie` ORDER BY `ta`.`Date_Heure_Ajustage` desc )  AS `rn`
+from `vigi_main`.`t_ajustage` `ta`) `x`
+where (`x`.`rn` = 1)) `aj` on `aj`.`Sonde_Numero_Serie` = `s`.`Sonde_Numero_Serie`
+where (`s`.`Est_Sonde_GSO` = 1);
+
+USE `vigi_mesures`;
+
+DROP EVENT IF EXISTS `evt_gso_refresh_lieux_from_last_measure`;
+DROP EVENT IF EXISTS `EVT_GSO_DERNIERVALEUR_LIEU`;
+DELIMITER $$
+CREATE EVENT `EVT_GSO_DERNIERVALEUR_LIEU`
+ON SCHEDULE EVERY 5 MINUTE
+DO
+BEGIN
+  UPDATE vigi_main.t_lieu
+  JOIN vigi_main.v_tm_mesures_dernier ON vigi_main.v_tm_mesures_dernier.Id_Lieu=vigi_main.t_lieu.Id_Lieu
+  SET
+  vigi_main.t_lieu.Derniere_Date_Heure=vigi_main.v_tm_mesures_dernier.Date_Heure_Mesure,
+  vigi_main.t_lieu.Derniere_Valeur=vigi_main.v_tm_mesures_dernier.Dernier_Releve,
+  vigi_main.t_lieu.Derniere_Unite=vigi_main.v_tm_mesures_dernier.Unite,
+  vigi_main.t_lieu.Date_Heure_Derniere_Reponse=vigi_main.v_tm_mesures_dernier.Date_Heure_Mesure,
+  vigi_main.t_lieu.Derniere_Val_Rssi=vigi_main.v_tm_mesures_dernier.Signal_Radio,
+  vigi_main.t_lieu.Derniere_Val_Tension=vigi_main.v_tm_mesures_dernier.Tension_Piles;
+
+  UPDATE vigi_main.t_lieu
+  SET vigi_main.t_lieu.Date_Heure_Derniere_Reponse_Recue_OK=vigi_main.t_lieu.Derniere_Date_Heure
+  WHERE (vigi_main.t_lieu.Derniere_Valeur <= vigi_main.t_lieu.Tolerance_Surveillance_Sup AND vigi_main.t_lieu.Derniere_Valeur >= vigi_main.t_lieu.Tolerance_Surveillance_Inf)
+  AND vigi_main.t_lieu.Est_Lieu_GSO=1 AND vigi_main.t_lieu.Lieu_Etat='S';
+
+  UPDATE vigi_main.t_lieu
+  SET vigi_main.t_lieu.Date_Heure_Derniere_Reponse_Recue_OK=vigi_main.t_lieu.Derniere_Date_Heure
+  WHERE vigi_main.t_lieu.Derniere_Valeur IS NOT NULL AND (vigi_main.t_lieu.Tolerance_Surveillance_Sup IS NULL OR vigi_main.t_lieu.Tolerance_Surveillance_Inf IS NULL)
+  AND vigi_main.t_lieu.Est_Lieu_GSO=1 AND vigi_main.t_lieu.Lieu_Etat='S';
+
+  UPDATE vigi_main.t_lieu
+  SET vigi_main.t_lieu.Date_Heure_Last_Update_EVT_GSO=NOW()
+  WHERE vigi_main.t_lieu.Est_Lieu_GSO=1 AND vigi_main.t_lieu.Lieu_Etat='S';
+
+  UPDATE vigi_main.t_parametre
+  SET vigi_main.t_parametre.Champ_DATETIME = (
+    SELECT vigi_main.v_tm_mesures_dernier.Date_Heure_Mesure
+    FROM vigi_main.v_tm_mesures_dernier
+    ORDER BY vigi_main.v_tm_mesures_dernier.Date_Heure_Mesure DESC
+    LIMIT 1
+  )
+  WHERE vigi_main.t_parametre.Mot_Cle='GSO_DERNIER_DATE_HEURE';
+
+  DELETE FROM vigi_main.t_lieu_planning_audit
+  WHERE (vigi_main.t_lieu_planning_audit.Date_Heure_Fin_Changement<DATE_SUB(NOW(), INTERVAL 240 HOUR));
+END$$
+DELIMITER ;
+
+DROP EVENT IF EXISTS `evt_gso_build_memory_commands`;
+DROP EVENT IF EXISTS `EVT_CALCUL_MESURE_MEM_GSO`;
+DELIMITER $$
+CREATE EVENT `EVT_CALCUL_MESURE_MEM_GSO`
+ON SCHEDULE EVERY 15 MINUTE
+DO
+BEGIN
+  DELETE FROM tm_mesures_gso_count_mem;
+
+  INSERT IGNORE INTO tm_mesures_gso_count_mem
+  (GSO_SN,Port_Serie_Send_GSO,Missing_Data_Begin,Missing_Data_End,Missing_Data_Total,Commande_Mem,date_calcul)
+  WITH RECURSIVE slots AS (
+      SELECT 1 AS slot_index
+      UNION ALL
+      SELECT slot_index + 1
+      FROM slots
+      WHERE slot_index < 699
+  ),
+  base_time AS (
+      SELECT FROM_UNIXTIME(FLOOR(UNIX_TIMESTAMP(NOW()) / 900) * 900) AS ref_time
+  ),
+  sondes_param AS (
+      SELECT
+          s.Adresse_Sonde,
+          c.Port_Serie_Send_GSO,
+          s.Date_Heure_Surveillance_On,
+          LEAST(
+              699,
+              FLOOR(
+                  TIMESTAMPDIFF(
+                      MINUTE,
+                      s.Date_Heure_Surveillance_On,
+                      b.ref_time
+                  ) / 15
+              )
+          ) AS max_slot
+      FROM vigi_mesures.v_config_lieu_sonde s
+      LEFT JOIN vigi_mesures.v_config_sonde_com c
+        ON c.GSO_SN = LEFT(s.Adresse_Sonde,(LENGTH(s.Adresse_Sonde) - 2))
+      CROSS JOIN base_time b
+      WHERE s.Adresse_Sonde IS NOT NULL
+        AND s.Date_Heure_Surveillance_On IS NOT NULL
+  ),
+  mesures_indexees AS (
+      SELECT
+          m.Adresse_Sonde,
+          FLOOR(
+              TIMESTAMPDIFF(
+                  MINUTE,
+                  m.Date_Heure_Mesure,
+                  b.ref_time
+              ) / 15
+          ) AS slot_index
+      FROM tm_mesures m
+      CROSS JOIN base_time b
+      WHERE m.Date_Heure_Mesure >= b.ref_time - INTERVAL 10500 MINUTE
+        AND m.Adresse_Sonde IS NOT NULL
+  ),
+  slots_sondes AS (
+      SELECT
+          sp.Adresse_Sonde,
+          sp.Port_Serie_Send_GSO,
+          sl.slot_index,
+          CAST(700 - sl.slot_index AS SIGNED) AS numero_releve
+      FROM sondes_param sp
+      JOIN slots sl
+        ON sl.slot_index <= sp.max_slot
+  ),
+  manquants AS (
+      SELECT
+          ss.Adresse_Sonde,
+          ss.Port_Serie_Send_GSO,
+          ss.slot_index,
+          ss.numero_releve
+      FROM slots_sondes ss
+      LEFT JOIN mesures_indexees mi
+          ON mi.Adresse_Sonde = ss.Adresse_Sonde
+         AND mi.slot_index = ss.slot_index
+      WHERE mi.slot_index IS NULL
+  ),
+  groupes AS (
+      SELECT
+          Adresse_Sonde,
+          Port_Serie_Send_GSO,
+          numero_releve,
+          CAST(numero_releve AS SIGNED) -
+          CAST(
+              ROW_NUMBER() OVER (
+                  PARTITION BY Adresse_Sonde
+                  ORDER BY numero_releve
+              ) AS SIGNED
+          ) AS grp
+      FROM manquants
+  )
+  SELECT
+      LEFT(Adresse_Sonde,(length(Adresse_Sonde) - 2)) AS GSO_SN,
+      MAX(Port_Serie_Send_GSO) AS Port_Serie_Send_GSO,
+      MIN(numero_releve) AS debut,
+      MAX(numero_releve) AS fin,
+      COUNT(*) AS taille,
+      CONCAT(
+          '$<EDDT:',
+          LEFT(Adresse_Sonde,(length(Adresse_Sonde) - 2)),
+          '(',
+          MIN(numero_releve),
+          '-',
+          MAX(numero_releve),
+          ')>'
+      ) AS commande,
+      NOW() AS Date_Heure_Requete
+  FROM groupes
+  GROUP BY Adresse_Sonde, grp
+  HAVING COUNT(*) >= 3;
+
+  INSERT IGNORE INTO tm_mesures_gso_commandes_mem
+  (GSO_SN,Port_Serie_Send_GSO,Commande_Globale_Begin,Commande_Globale_End,Missing_Data_Total,Commande_Mem_Globale,Date_Calcul)
+  SELECT GSO_SN, Port_Serie_Send_GSO,Missing_Data_Begin,Missing_Data_End,Missing_Data_Total,Commande_Mem,date_calcul
+  FROM tm_mesures_gso_count_mem;
+
+  DELETE FROM tm_mesures_gso_count_mem;
+END$$
+DELIMITER ;
+
+DROP EVENT IF EXISTS `evt_trim_measure_archives`;
+DROP EVENT IF EXISTS `EVT_CLEAN_GRAPH_MES_GSO`;
+DELIMITER $$
+CREATE EVENT `EVT_CLEAN_GRAPH_MES_GSO`
+ON SCHEDULE EVERY 1 HOUR
+DO
+BEGIN
+  DELETE FROM tm_graphique WHERE ((tm_graphique.Date_Heure_Mesure<DATE_SUB(NOW(), INTERVAL 72 HOUR)));
+  DELETE FROM tm_graphique WHERE ((tm_graphique.Date_Heure_Mesure>DATE_SUB(NOW(), INTERVAL -48 HOUR)));
+  DELETE FROM tm_mesures WHERE ((tm_mesures.Date_Heure_Mesure>DATE_SUB(NOW(), INTERVAL -48 HOUR)));
+  DELETE FROM tm_mesures_gso WHERE ((tm_mesures_gso.date_mesure<DATE_SUB(NOW(), INTERVAL 720 HOUR)));
+  DELETE FROM tm_mesures_gso_build WHERE ((tm_mesures_gso_build.Date_Heure_Mesure<DATE_SUB(NOW(), INTERVAL 720 HOUR)));
+  DELETE FROM tm_mesures_gso_commandes_mem WHERE ((tm_mesures_gso_commandes_mem.Date_Calcul<DATE_SUB(NOW(), INTERVAL 24 HOUR)));
+  DELETE FROM tm_mesures WHERE tm_mesures.Id_Lieu=0;
+  DELETE FROM tm_graphique WHERE tm_graphique.Id_Lieu=0;
+  DELETE FROM tm_mesures_ajustage WHERE ((tm_mesures_ajustage.Date_Heure_Mesure<DATE_SUB(NOW(), INTERVAL 24 HOUR)));
+  DELETE FROM tm_mesures_ajustage_etalon WHERE ((tm_mesures_ajustage_etalon.Date_Heure_Mesure<DATE_SUB(NOW(), INTERVAL 24 HOUR)));
+  DELETE FROM tm_mesures_etalonnage WHERE ((tm_mesures_etalonnage.Date_Heure_Mesure<DATE_SUB(NOW(), INTERVAL 24 HOUR)));
+  DELETE FROM tm_mesures_gso_read_metro WHERE ((tm_mesures_gso_read_metro.Dernier_Date_MAJ<DATE_SUB(NOW(), INTERVAL 2 HOUR)));
+END$$
+DELIMITER ;
+
+-- =====================================================================
+-- Triggers GSO integres depuis db/triggersvigisensys.sql
+-- =====================================================================
+DROP TRIGGER IF EXISTS `trg_alarme_to_histo`;
+DROP TRIGGER IF EXISTS `TRG_GSO_BEF_DEL_ALARME`;
+DELIMITER $$
+CREATE TRIGGER `TRG_GSO_BEF_DEL_ALARME`
+BEFORE DELETE ON `t_alarme`
+FOR EACH ROW
+BEGIN
+INSERT INTO t_alarme_histo
+(Id_Alarme,Date_Heure_Debut,Valeur,`Type`,Date_Heure_Fin,Id_Lieu,Sonde_Numero_Serie,Unite,Est_Acquittee,Date_Heure_Derniere_Mesure,Est_Alarme_Pour_VigiTel,Est_Mail_Envoye,Est_Tel_Acquittee,Date_Heure_Acquittement)
+VALUES
+(OLD.Id_Alarme, OLD.Date_Heure_Debut, OLD.Valeur, OLD.`Type`, OLD.Date_Heure_Fin, OLD.Id_Lieu, OLD.Sonde_Numero_Serie, OLD.Unite, OLD.Est_Acquittee, OLD.Date_Heure_Derniere_Mesure, OLD.Est_Alarme_Pour_VigiTel,
+OLD.Est_Mail_Envoye, OLD.Est_Tel_Acquittee, NOW());
+END$$
+DELIMITER ;
+
+DROP TRIGGER IF EXISTS `TRG_GSO_BEF_UPD_LIEU_ALARME`;
+DELIMITER $$
+CREATE TRIGGER `TRG_GSO_BEF_UPD_LIEU_ALARME`
+BEFORE UPDATE ON `t_lieu`
+FOR EACH ROW
+main_block: BEGIN
+
+    DECLARE v_Id_Alarme INT DEFAULT NULL;
+    DECLARE v_TypeAlarme CHAR(1);
+    
+    /* =========================================================================================
+       0. SKIP DE LA LOGIQUE SI ACQUITTEMENT D'ALARME
+       ========================================================================================= */
+    IF COALESCE(@SKIP_LIEU_ALARM_LOGIC, 0) = 1 THEN
+	  LEAVE main_block;
+	END IF;
+    
+    /* =========================================================================================
+       0b. SKIP DE LA LOGIQUE NON GSO POUR EVITER DE PASSER LES VERIFS
+       ========================================================================================= */
+	IF COALESCE(NEW.Est_Lieu_GSO, 0) <> 1 THEN
+	  LEAVE main_block;
+	END IF;
+
+
+    /* ==========================================================================================
+       1. BLOCAGE APRES ACQUITTEMENT ALARME EN COURS : ne pas redeclencher l'alarme immediatement
+       ========================================================================================== */
+    IF NEW.Est_Lieu_GSO=1 AND NEW.Date_Heure_Dernier_Acquittement_En_Cours IS NOT NULL
+       AND NEW.Derniere_Date_Heure <= NEW.Date_Heure_Dernier_Acquittement_En_Cours
+	   AND TIMESTAMPDIFF(SECOND, NEW.Date_Heure_Derniere_Reponse, NOW()) <= NEW.Retard_Non_Reponse * 60
+    THEN
+        SET NEW.Id_Alarme = 0;
+        SET NEW.Est_Lieu_En_Alarme = 0;
+		SET NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee = 0;
+        LEAVE main_block;
+    END IF;
+
+    /* ==========================================================
+       2. RECHERCHE ALARME B/H/N OUVERTE-EN COURS
+       ========================================================== */
+    SELECT Id_Alarme, Type
+    INTO v_Id_Alarme, v_TypeAlarme
+    FROM t_alarme
+    WHERE Id_Lieu = NEW.Id_Lieu AND NEW.Est_Lieu_GSO = 1
+      AND Type IN ('B','H','N')
+      AND Date_Heure_Fin IS NULL
+    LIMIT 1;	
+
+
+    /* ==========================================================
+       3. CAS : AUCUNE ALARME OUVERTE â†’ CREATION
+       ========================================================== */
+    IF v_Id_Alarme IS NULL THEN
+	
+	
+
+        /* --- ALARME BASSE --- */
+        IF NEW.Est_Lieu_GSO=1
+		AND NEW.Lieu_Etat = 'S'
+		AND TIMESTAMPDIFF(SECOND, NEW.Date_Heure_Derniere_Reponse, NOW()) <= NEW.Retard_Non_Reponse * 60
+		AND NEW.Derniere_Valeur < NEW.Tolerance_Surveillance_Inf
+		AND TIMESTAMPDIFF(SECOND,NEW.Date_Heure_Derniere_Reponse_Recue_OK,NEW.Derniere_Date_Heure) >= NEW.Retard_Alarme_Bas * 60
+        THEN
+            INSERT INTO t_alarme
+                (Date_Heure_Debut, Valeur, Type,
+                 Id_Lieu, Sonde_Numero_Serie, Date_Heure_Derniere_Mesure,Unite)
+            VALUES
+                (NEW.Date_Heure_Derniere_Reponse_Recue_OK,
+                 NEW.Derniere_Valeur,
+                 'B',
+                 NEW.Id_Lieu,
+                 NEW.Sonde_Numero_Serie,
+                 NEW.Derniere_Date_Heure,
+					  NEW.Derniere_Unite);
+
+            SET NEW.Id_Alarme = LAST_INSERT_ID();
+            SET NEW.Est_Lieu_En_Alarme = 1;
+            SET NEW.Est_Lieu_En_Pre_Alarme = 0;
+            SET NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee = 0;
+            SET NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee_T1 = 0;
+            LEAVE main_block;
+        END IF;
+
+        /* --- ALARME HAUTE --- */
+        IF NEW.Est_Lieu_GSO=1
+			AND NEW.Lieu_Etat = 'S'
+			AND TIMESTAMPDIFF(SECOND, NEW.Date_Heure_Derniere_Reponse, NOW()) <= NEW.Retard_Non_Reponse * 60
+			AND NEW.Derniere_Valeur > NEW.Tolerance_Surveillance_Sup
+			AND TIMESTAMPDIFF(SECOND, NEW.Date_Heure_Derniere_Reponse_Recue_OK, NEW.Derniere_Date_Heure) >= NEW.Retard_Alarme_Haut * 60
+        THEN
+            INSERT INTO t_alarme
+                (Date_Heure_Debut, Valeur, Type,
+                 Id_Lieu, Sonde_Numero_Serie, Date_Heure_Derniere_Mesure,Unite)
+            VALUES
+                (NEW.Date_Heure_Derniere_Reponse_Recue_OK,
+                 NEW.Derniere_Valeur,
+                 'H',
+                 NEW.Id_Lieu,
+                 NEW.Sonde_Numero_Serie,
+                 NEW.Derniere_Date_Heure,
+					  NEW.Derniere_Unite);
+
+            SET NEW.Id_Alarme = LAST_INSERT_ID();
+            SET NEW.Est_Lieu_En_Alarme = 1;
+            SET NEW.Est_Lieu_En_Pre_Alarme = 0;
+            SET NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee = 0;
+            SET NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee_T1 = 0;
+            LEAVE main_block;
+        END IF;
+		
+		/* --- ALARME NON REPONSE --- */
+		IF NEW.Est_Lieu_GSO=1
+			AND NEW.Lieu_Etat = 'S'
+			AND TIMESTAMPDIFF(SECOND, NEW.Date_Heure_Derniere_Reponse, NOW()) >= NEW.Retard_Non_Reponse * 60
+		THEN
+            INSERT INTO t_alarme
+                (Date_Heure_Debut, Valeur, Type,
+                 Id_Lieu, Sonde_Numero_Serie, Date_Heure_Derniere_Mesure,Unite)
+            VALUES
+                (NEW.Date_Heure_Derniere_Reponse,
+                 NULL,
+                 'N',
+                 NEW.Id_Lieu,
+                 NEW.Sonde_Numero_Serie,
+                 NEW.Date_Heure_Last_Update_EVT_GSO,
+					  NEW.Derniere_Unite);
+
+            SET NEW.Id_Alarme = LAST_INSERT_ID();
+			SET NEW.Derniere_Valeur = NULL;
+			SET NEW.Derniere_Date_Heure = NEW.Date_Heure_Last_Update_EVT_GSO;
+            SET NEW.Est_Lieu_En_Alarme = 1;
+            SET NEW.Est_Lieu_En_Pre_Alarme = 0;
+            SET NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee = 0;
+            SET NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee_T1 = 0;
+            LEAVE main_block;
+        END IF;
+		
+		
+
+    /* ==========================================================
+       4. CAS : ALARME OUVERTE â†’ SUIVI / TRANSITION / FIN
+       ========================================================== */
+    ELSE
+		
+		/* --- TRANSITION N > BAS --- */
+		IF  v_TypeAlarme = 'N'
+			AND NEW.Est_Lieu_GSO=1
+			AND NEW.Lieu_Etat = 'S'
+			AND TIMESTAMPDIFF(SECOND, NEW.Date_Heure_Derniere_Reponse, NOW()) <= NEW.Retard_Non_Reponse * 60
+			AND NEW.Derniere_Valeur < NEW.Tolerance_Surveillance_Inf
+		THEN
+			UPDATE t_alarme
+            SET Date_Heure_Fin = NEW.Derniere_Date_Heure,
+                Valeur = NEW.Derniere_Valeur,
+                Date_Heure_Derniere_Mesure = NEW.Derniere_Date_Heure
+            WHERE Id_Alarme = v_Id_Alarme;
+			
+			INSERT INTO t_alarme
+                (Date_Heure_Debut, Valeur, Type,
+                 Id_Lieu, Sonde_Numero_Serie, Date_Heure_Derniere_Mesure,Unite)
+            VALUES
+                (NEW.Derniere_Date_Heure,
+                 NEW.Derniere_Valeur,
+                 'B',
+                 NEW.Id_Lieu,
+                 NEW.Sonde_Numero_Serie,
+                 NEW.Derniere_Date_Heure,
+					  NEW.Derniere_Unite);
+
+            SET NEW.Id_Alarme = LAST_INSERT_ID();
+            SET NEW.Est_Lieu_En_Alarme = 1;
+            SET NEW.Est_Lieu_En_Pre_Alarme = 0;
+            SET NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee = 0;
+            SET NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee_T1 = 0;
+            LEAVE main_block;
+			
+		/* --- TRANSITION N > HAUT --- */
+		ELSEIF  v_TypeAlarme = 'N'
+			AND NEW.Est_Lieu_GSO=1
+			AND NEW.Lieu_Etat = 'S'
+			AND TIMESTAMPDIFF(SECOND, NEW.Date_Heure_Derniere_Reponse, NOW()) <= NEW.Retard_Non_Reponse * 60
+			AND NEW.Derniere_Valeur > NEW.Tolerance_Surveillance_Sup
+		THEN
+			UPDATE t_alarme
+            SET Date_Heure_Fin = NEW.Derniere_Date_Heure,
+                Valeur = NEW.Derniere_Valeur,
+                Date_Heure_Derniere_Mesure = NEW.Derniere_Date_Heure
+            WHERE Id_Alarme = v_Id_Alarme;
+			
+			INSERT INTO t_alarme
+                (Date_Heure_Debut, Valeur, Type,
+                 Id_Lieu, Sonde_Numero_Serie, Date_Heure_Derniere_Mesure,Unite)
+            VALUES
+                (NEW.Derniere_Date_Heure,
+                 NEW.Derniere_Valeur,
+                 'H',
+                 NEW.Id_Lieu,
+                 NEW.Sonde_Numero_Serie,
+                 NEW.Derniere_Date_Heure,
+					  NEW.Derniere_Unite);
+
+            SET NEW.Id_Alarme = LAST_INSERT_ID();
+            SET NEW.Est_Lieu_En_Alarme = 1;
+            SET NEW.Est_Lieu_En_Pre_Alarme = 0;
+            SET NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee = 0;	
+            SET NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee_T1 = 0;
+            LEAVE main_block;
+		
+		/* --- TRANSITION BAS â†’ N --- */
+		ELSEIF v_TypeAlarme = 'B'
+			AND NEW.Est_Lieu_GSO=1
+			AND NEW.Lieu_Etat = 'S'
+			AND TIMESTAMPDIFF(SECOND, NEW.Date_Heure_Derniere_Reponse, NOW()) >= NEW.Retard_Non_Reponse * 60
+		THEN
+            UPDATE t_alarme
+            SET Date_Heure_Fin = NEW.Derniere_Date_Heure,
+                Valeur = NEW.Derniere_Valeur,
+                Date_Heure_Derniere_Mesure = NEW.Derniere_Date_Heure
+            WHERE Id_Alarme = v_Id_Alarme;
+
+		INSERT INTO t_alarme
+                (Date_Heure_Debut, Valeur, Type,
+                 Id_Lieu, Sonde_Numero_Serie, Date_Heure_Derniere_Mesure,Unite)
+            VALUES
+                (NEW.Date_Heure_Derniere_Reponse,
+                 NULL,
+                 'N',
+                 NEW.Id_Lieu,
+                 NEW.Sonde_Numero_Serie,
+                 NEW.Date_Heure_Last_Update_EVT_GSO,
+					  NEW.Derniere_Unite);
+
+            SET NEW.Id_Alarme = LAST_INSERT_ID();
+			SET NEW.Derniere_Valeur = NULL;
+			SET NEW.Derniere_Date_Heure = NEW.Date_Heure_Last_Update_EVT_GSO;
+            SET NEW.Est_Lieu_En_Alarme = 1;
+            SET NEW.Est_Lieu_En_Pre_Alarme = 0;
+            SET NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee = 0;
+            SET NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee_T1 = 0;
+            LEAVE main_block;
+
+		/* --- TRANSITION HAUT â†’ N --- */
+		ELSEIF v_TypeAlarme = 'H'
+			AND NEW.Est_Lieu_GSO=1
+			AND NEW.Lieu_Etat = 'S'
+			AND TIMESTAMPDIFF(SECOND, NEW.Date_Heure_Derniere_Reponse, NOW()) >= NEW.Retard_Non_Reponse * 60
+		THEN
+            UPDATE t_alarme
+            SET Date_Heure_Fin = NEW.Derniere_Date_Heure,
+                Valeur = NEW.Derniere_Valeur,
+                Date_Heure_Derniere_Mesure = NEW.Derniere_Date_Heure
+            WHERE Id_Alarme = v_Id_Alarme;
+
+		INSERT INTO t_alarme
+                (Date_Heure_Debut, Valeur, Type,
+                 Id_Lieu, Sonde_Numero_Serie, Date_Heure_Derniere_Mesure,Unite)
+            VALUES
+                (NEW.Date_Heure_Derniere_Reponse,
+                 NULL,
+                 'N',
+                 NEW.Id_Lieu,
+                 NEW.Sonde_Numero_Serie,
+                 NEW.Date_Heure_Last_Update_EVT_GSO,
+					  NEW.Derniere_Unite);
+
+            SET NEW.Id_Alarme = LAST_INSERT_ID();
+			SET NEW.Derniere_Valeur = NULL;
+			SET NEW.Derniere_Date_Heure = NEW.Date_Heure_Last_Update_EVT_GSO;
+            SET NEW.Est_Lieu_En_Alarme = 1;
+            SET NEW.Est_Lieu_En_Pre_Alarme = 0;
+            SET NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee = 0;
+            SET NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee_T1 = 0;
+            LEAVE main_block;
+			
+		
+        /* --- TRANSITION BAS â†’ HAUT --- */
+        ELSEIF v_TypeAlarme = 'B'
+			AND NEW.Est_Lieu_GSO=1
+			AND NEW.Lieu_Etat = 'S'
+           AND NEW.Derniere_Valeur > NEW.Tolerance_Surveillance_Sup
+        THEN
+            UPDATE t_alarme
+            SET Date_Heure_Fin = NEW.Derniere_Date_Heure,
+                Valeur = NEW.Derniere_Valeur,
+                Date_Heure_Derniere_Mesure = NEW.Derniere_Date_Heure
+            WHERE Id_Alarme = v_Id_Alarme;
+
+            INSERT INTO t_alarme
+                (Date_Heure_Debut, Valeur, Type,
+                 Id_Lieu, Sonde_Numero_Serie, Date_Heure_Derniere_Mesure,Unite)
+            VALUES
+                (NEW.Derniere_Date_Heure,
+                 NEW.Derniere_Valeur,
+                 'H',
+                 NEW.Id_Lieu,
+                 NEW.Sonde_Numero_Serie,
+                 NEW.Derniere_Date_Heure,
+					  NEW.Derniere_Unite);
+
+            SET NEW.Id_Alarme = LAST_INSERT_ID();
+            SET NEW.Est_Lieu_En_Alarme = 1;
+            SET NEW.Est_Lieu_En_Pre_Alarme = 0;
+            SET NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee = 0;
+            SET NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee_T1 = 0;
+            LEAVE main_block;
+
+        /* --- TRANSITION HAUT â†’ BAS --- */
+        ELSEIF v_TypeAlarme = 'H'
+			AND NEW.Est_Lieu_GSO=1
+			AND NEW.Lieu_Etat = 'S'
+           AND NEW.Derniere_Valeur < NEW.Tolerance_Surveillance_Inf
+        THEN
+            UPDATE t_alarme
+            SET Date_Heure_Fin = NEW.Derniere_Date_Heure,
+                Valeur = NEW.Derniere_Valeur,
+                Date_Heure_Derniere_Mesure = NEW.Derniere_Date_Heure
+            WHERE Id_Alarme = v_Id_Alarme;
+
+            INSERT INTO t_alarme
+                (Date_Heure_Debut, Valeur, Type,
+                 Id_Lieu, Sonde_Numero_Serie, Date_Heure_Derniere_Mesure,Unite)
+            VALUES
+                (NEW.Derniere_Date_Heure,
+                 NEW.Derniere_Valeur,
+                 'B',
+                 NEW.Id_Lieu,
+                 NEW.Sonde_Numero_Serie,
+                 NEW.Derniere_Date_Heure,
+					  NEW.Derniere_Unite);
+
+            SET NEW.Id_Alarme = LAST_INSERT_ID();
+            SET NEW.Est_Lieu_En_Alarme = 1;
+            SET NEW.Est_Lieu_En_Pre_Alarme = 0;
+            SET NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee = 0;
+            SET NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee_T1 = 0;
+            LEAVE main_block;
+			
+			/* --- ALARME TOUJOURS ACTIVE N --- */
+		ELSEIF v_TypeAlarme = 'N'
+		AND TIMESTAMPDIFF(SECOND, NEW.Date_Heure_Derniere_Reponse, NOW()) > NEW.Retard_Non_Reponse * 60
+		THEN
+		UPDATE t_alarme
+		SET Valeur = NULL,
+			Date_Heure_Derniere_Mesure = NEW.Date_Heure_Last_Update_EVT_GSO
+		WHERE Id_Alarme = v_Id_Alarme;
+		
+		SET NEW.Id_Alarme = v_Id_Alarme;
+		SET NEW.Derniere_Valeur=NULL;
+		SET NEW.Derniere_Date_Heure = NEW.Date_Heure_Last_Update_EVT_GSO;
+		SET NEW.Est_Lieu_En_Alarme = 1;
+		SET NEW.Est_Lieu_En_Pre_Alarme = 0;
+      SET NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee = 0;
+      SET NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee_T1 = 0;
+		LEAVE main_block;
+
+        /* --- ALARME TOUJOURS ACTIVE B ou H --- */
+        ELSEIF v_TypeAlarme IN ('B','H')
+				AND (NEW.Derniere_Valeur < NEW.Tolerance_Surveillance_Inf
+					OR NEW.Derniere_Valeur > NEW.Tolerance_Surveillance_Sup)
+        THEN
+            UPDATE t_alarme
+            SET Valeur = NEW.Derniere_Valeur,
+                Date_Heure_Derniere_Mesure = NEW.Derniere_Date_Heure
+            WHERE Id_Alarme = v_Id_Alarme;
+
+            SET NEW.Id_Alarme = v_Id_Alarme;
+            SET NEW.Est_Lieu_En_Alarme = 1;
+            SET NEW.Est_Lieu_En_Pre_Alarme = 0;
+            SET NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee = 0;
+            SET NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee_T1 = 0;
+            LEAVE main_block;
+			
+        /* --- FIN Dâ€™ALARME N --- */
+		ELSEIF v_TypeAlarme = 'N'
+		AND TIMESTAMPDIFF(SECOND, NEW.Date_Heure_Derniere_Reponse, NOW()) < NEW.Retard_Non_Reponse * 60
+		THEN
+		UPDATE t_alarme
+		SET Date_Heure_Fin = NEW.Derniere_Date_Heure,
+        Date_Heure_Derniere_Mesure = NEW.Derniere_Date_Heure
+		WHERE Id_Alarme = v_Id_Alarme;
+
+		SET NEW.Id_Alarme = 0;
+		SET NEW.Est_Lieu_En_Alarme = 0;
+		SET NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee = 1;
+		SET NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee_T1 = 0;
+		LEAVE main_block;
+
+/* --- FIN Dâ€™ALARME B/H --- */
+	ELSEIF v_TypeAlarme IN('B','H') THEN 
+		UPDATE t_alarme
+		SET Date_Heure_Fin = NEW.Derniere_Date_Heure,
+        Valeur = NEW.Derniere_Valeur,
+        Date_Heure_Derniere_Mesure = NEW.Derniere_Date_Heure
+		WHERE Id_Alarme = v_Id_Alarme;
+
+		SET NEW.Id_Alarme = 0;
+		SET NEW.Est_Lieu_En_Alarme = 0;
+		SET NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee = 1;
+		SET NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee_T1 = 0;
+		LEAVE main_block;
+		
+		
+        END IF;
+
+    END IF;
+    
+    IF NEW.Est_Lieu_En_Alarme = 0 THEN
+    
+    /* =======================================================
+		5- CAS DES PRE-ALARMES (BASSE / HAUTE)
+	========================================================== */
+
+/* --- PRE-ALARME BASSE --- */
+IF NEW.Est_Consigne_Inf_Pre_Alarme_Active = 1 THEN
+
+    /* EntrÃ©e en prÃ©-alarme basse d'un lieu en alarme terminee non acquittee */
+    IF NEW.Derniere_Valeur < NEW.Consigne_Inf_Pre_Alarme AND NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee=1 THEN
+        SET NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee=0; SET NEW.Est_Lieu_En_Pre_Alarme = 1; SET NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee_T1 = 1;
+        
+       /* EntrÃ©e en prÃ©-alarme basse d'un lieu sans etat d'alarme */
+    ELSEIF NEW.Derniere_Valeur < NEW.Consigne_Inf_Pre_Alarme THEN
+        SET NEW.Est_Lieu_En_Pre_Alarme = 1;     
+
+    /* Sortie de prÃ©-alarme basse (retour zone normale) puis retour a TermineeNonAcquitee */
+    ELSEIF NEW.Derniere_Valeur >= NEW.Consigne_Inf_Pre_Alarme AND NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee_T1 = 1 THEN
+        SET NEW.Est_Lieu_En_Pre_Alarme = 0; SET NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee=1; SET NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee_T1 = 0;
+        
+     /* Sortie de prÃ©-alarme basse (retour zone normale) sans retour a TermineeNonAcquitee */
+    ELSEIF NEW.Derniere_Valeur >= NEW.Consigne_Inf_Pre_Alarme AND NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee_T1 = 0 THEN
+        SET NEW.Est_Lieu_En_Pre_Alarme = 0;    
+    END IF;
+
+END IF;
+
+
+/* --- PRE-ALARME HAUTE --- */
+IF NEW.Est_Consigne_Sup_Pre_Alarme_Active = 1 THEN
+
+    /* EntrÃ©e en prÃ©-alarme haute d'un lieu en alarme terminee non acquittee */
+    IF NEW.Derniere_Valeur > NEW.Consigne_Sup_Pre_Alarme AND NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee=1 THEN
+        SET NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee=0; SET NEW.Est_Lieu_En_Pre_Alarme = 1; SET NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee_T1 = 1;
+        
+       /* EntrÃ©e en prÃ©-alarme haute d'un lieu sans etat d'alarme */
+    ELSEIF NEW.Derniere_Valeur > NEW.Consigne_Sup_Pre_Alarme THEN
+        SET NEW.Est_Lieu_En_Pre_Alarme = 1;     
+
+    /* Sortie de prÃ©-alarme haute (retour zone normale) puis retour a TermineeNonAcquitee */
+    ELSEIF NEW.Derniere_Valeur <= NEW.Consigne_Sup_Pre_Alarme AND NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee_T1 = 1 THEN
+        SET NEW.Est_Lieu_En_Pre_Alarme = 0; SET NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee=1; SET NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee_T1 = 0;
+        
+     /* Sortie de prÃ©-alarme haute (retour zone normale) sans retour a TermineeNonAcquitee */
+    ELSEIF NEW.Derniere_Valeur <= NEW.Consigne_Sup_Pre_Alarme AND NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee_T1 = 0 THEN
+        SET NEW.Est_Lieu_En_Pre_Alarme = 0;    
+    END IF;
+
+END IF;
+
+END IF;
+
+    END
+
+
+/** vigi_mesures **/$$
+DELIMITER ;
+
+DROP TRIGGER IF EXISTS `TRG_AFT_INS_GSO_CMD_MEM`;
+DELIMITER $$
+CREATE TRIGGER `TRG_AFT_INS_GSO_CMD_MEM`
+BEFORE INSERT ON `tm_mesures_gso_commandes_mem`
+FOR EACH ROW
+BEGIN
+IF NEW.Port_Serie_Send_GSO IS NULL THEN
+SET NEW.Port_Serie_Send_GSO=(SELECT DISTINCT v_config_sonde_com.Port_Serie_Send_GSO FROM v_config_sonde_com
+WHERE v_config_sonde_com.GSO_SN = NEW.GSO_SN);
+END IF;
+END$$
+DELIMITER ;
+
+DROP TRIGGER IF EXISTS `TRG_AFT_INS_GSO_READ_MEM`;
+DELIMITER $$
+CREATE TRIGGER `TRG_AFT_INS_GSO_READ_MEM`
+AFTER INSERT ON `tm_mesures_gso_read_mem`
+FOR EACH ROW
+BEGIN
+IF NEW.Ecart='0-1' AND NEW.GSO_SN IN (SELECT v.GSO_SN FROM v_config_sonde_com v WHERE v.Metrologie_en_cours=1) THEN
+INSERT IGNORE INTO tm_mesures_gso_read_metro (GSO_SN, Commande_metro, Commande_metro_envoyee, Dernier_Date_MAJ)
+VALUES (NEW.GSO_SN, NEW.Ecart,1, NEW.Date_Heure_Read_Mem);
+END IF;
+END$$
+DELIMITER ;
+
+DROP TRIGGER IF EXISTS `TRG_AFT_INS_MES_GSO`;
+DELIMITER $$
+CREATE TRIGGER `TRG_AFT_INS_MES_GSO`
+AFTER INSERT ON `tm_mesures_gso`
+FOR EACH ROW
+BEGIN
+IF NEW.id_capteur IN(SELECT Adresse_Sonde from v_config_lieu_sonde) AND NEW.trame IN(00000000,00000001) AND NEW.date_mesure >= NOW() - INTERVAL 175 HOUR THEN
+        INSERT INTO tm_mesures_gso_build
+            (Date_Heure_Mesure, Valeur_Brute, Unite, Adresse_Sonde, Rssi, Tension,COM_sonde,Id_Lieu,Est_Valeur_Memoire,Planning_Actif,Planning_Regle_Existe)
+        VALUES
+            (NEW.date_mesure,
+             NEW.tep,
+             NEW.unite,
+             NEW.id_capteur,
+             NEW.rssi,
+             NEW.tension,
+				 NEW.COM_sonde,
+				 (SELECT Id_Lieu from v_config_lieu_sonde WHERE NEW.id_capteur=v_config_lieu_sonde.Adresse_Sonde),
+				 (IF (NEW.date_mesure <= NOW() - INTERVAL 45 MINUTE,1,0)),
+				 (SELECT Planning_Actif from v_config_lieu_sonde WHERE NEW.id_capteur=v_config_lieu_sonde.Adresse_Sonde),
+				 (SELECT Planning_Regle_Existe from v_config_lieu_sonde WHERE NEW.id_capteur=v_config_lieu_sonde.Adresse_Sonde)
+				 );
+END IF;
+
+IF NEW.id_capteur IN(SELECT Adresse_Sonde from v_config_sonde_com) AND NEW.trame=00000010 AND NEW.date_mesure >= NOW() - INTERVAL 2 HOUR THEN
+        INSERT INTO tm_mesures_ajustage
+            (Date_Heure_Mesure, Valeur_Brute, Unite, Adresse_Sonde)
+        VALUES
+            (NEW.date_mesure,
+             NEW.tep,
+             NEW.unite,
+             NEW.id_capteur);
+END IF;
+
+IF NEW.id_capteur IN(SELECT Adresse_Sonde from v_config_sonde_com) AND NEW.trame=00000010 AND NEW.date_mesure >= NOW() - INTERVAL 2 HOUR THEN
+        INSERT INTO tm_mesures_etalonnage
+            (Valeur,Date_Heure_Mesure, Valeur_Brute, Unite, Adresse_Sonde)
+        VALUES(
+        (ROUND(((NEW.tep) * (SELECT v_config_sonde_com.coeff_a FROM v_config_sonde_com WHERE NEW.id_capteur=v_config_sonde_com.Adresse_Sonde))
+		+ (SELECT v_config_sonde_com.coeff_b FROM v_config_sonde_com WHERE NEW.id_capteur=v_config_sonde_com.Adresse_Sonde),2)),			 
+			 NEW.date_mesure,
+             NEW.tep,
+             NEW.unite,
+             NEW.id_capteur			
+);
+END IF;
+
+
+IF NEW.trame=00000010 AND NEW.date_mesure >= NOW() - INTERVAL 2 HOUR THEN
+	UPDATE tm_mesures_gso_read_metro
+	SET
+	tm_mesures_gso_read_metro.Metro_en_cours=1,
+	tm_mesures_gso_read_metro.Dernier_Date_MAJ=NEW.date_mesure
+	WHERE tm_mesures_gso_read_metro.GSO_SN=left(NEW.id_capteur,(length(NEW.id_capteur)-2));
+END IF;
+
+END$$
+DELIMITER ;
+
+DROP TRIGGER IF EXISTS `TRG_AFT_INS_MES_GSO_BUILD`;
+DELIMITER $$
+CREATE TRIGGER `TRG_AFT_INS_MES_GSO_BUILD`
+AFTER INSERT ON `tm_mesures_gso_build`
+FOR EACH ROW
+BEGIN
+
+IF NEW.Id_Lieu IN (SELECT Id_Lieu FROM v_config_lieu_sonde) AND NEW.Planning_Actif=0 AND NEW.Est_Valeur_Memoire=0 AND (NEW.Planning_Regle_Existe=0 OR NEW.Planning_Regle_Existe=1) THEN
+INSERT INTO tm_mesures (Valeur,Sonde_Numero_Serie,Consigne,Consigne_Sup,Consigne_Inf,Consigne_Sup_Pre_Alarme,Consigne_Inf_Pre_Alarme,Date_Heure_Mesure,Valeur_Brute,Unite,Adresse_Sonde,COM_sonde,Id_Lieu,Rssi,Tension,Est_Valeur_Memoire,Planning_Actif,Planning_Regle_Existe)
+VALUES(
+(ROUND((((NEW.Valeur_Brute) * (SELECT v_config_lieu_sonde.coeff_a FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu))
++ (SELECT v_config_lieu_sonde.coeff_b FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu))
++ (SELECT Sonde_Offset FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu)
++ (SELECT `-(EJ)` FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),2)),
+(SELECT Sonde_Numero_Serie FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),
+(SELECT Consigne FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),
+(SELECT Consigne_Sup_Corr FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),
+(SELECT Consigne_Inf_Corr FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),
+(SELECT Consigne_Sup_Pre_Alarme FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),
+(SELECT Consigne_Inf_Pre_Alarme FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),
+NEW.Date_Heure_Mesure, NEW.Valeur_Brute, NEW.Unite, NEW.Adresse_Sonde, NEW.COM_sonde, NEW.Id_Lieu, NEW.Rssi, NEW.Tension, NEW.Est_Valeur_Memoire, NEW.Planning_Actif, NEW.Planning_Regle_Existe
+);
+END IF;
+
+IF NEW.Id_Lieu IN (SELECT Id_Lieu FROM v_config_lieu_sonde) AND NEW.Planning_Actif=0 AND NEW.Est_Valeur_Memoire=0 AND (NEW.Planning_Regle_Existe=0 OR NEW.Planning_Regle_Existe=1) THEN
+INSERT INTO tm_graphique (Valeur,Sonde_Numero_Serie,Consigne,Consigne_Sup,Consigne_Inf,Consigne_Sup_Pre_Alarme,Consigne_Inf_Pre_Alarme,Date_Heure_Mesure,Valeur_Brute,Unite,Adresse_Sonde,Id_Lieu)
+VALUES(
+(ROUND((((NEW.Valeur_Brute) * (SELECT v_config_lieu_sonde.coeff_a FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu))
++ (SELECT v_config_lieu_sonde.coeff_b FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu))
++ (SELECT Sonde_Offset FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu)
++ (SELECT `-(EJ)` FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),2)),
+(SELECT Sonde_Numero_Serie FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),
+(SELECT Consigne FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),
+(SELECT Consigne_Sup_Corr FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),
+(SELECT Consigne_Inf_Corr FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),
+(SELECT Consigne_Sup_Pre_Alarme FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),
+(SELECT Consigne_Inf_Pre_Alarme FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),
+NEW.Date_Heure_Mesure, NEW.Valeur_Brute, NEW.Unite, NEW.Adresse_Sonde, NEW.Id_Lieu
+);
+END IF;
+
+IF NEW.Id_Lieu IN (SELECT Id_Lieu FROM v_config_lieu_sonde) AND NEW.Planning_Actif=0 AND NEW.Est_Valeur_Memoire=1 AND NEW.Planning_Regle_Existe=0 THEN
+INSERT INTO tm_mesures (Valeur,Sonde_Numero_Serie,Consigne,Consigne_Sup,Consigne_Inf,Consigne_Sup_Pre_Alarme,Consigne_Inf_Pre_Alarme,Date_Heure_Mesure,Valeur_Brute,Unite,Adresse_Sonde,COM_sonde,Id_Lieu,Rssi,Tension,Est_Valeur_Memoire,Planning_Actif,Planning_Regle_Existe)
+VALUES(
+(ROUND((((NEW.Valeur_Brute) * (SELECT v_config_lieu_sonde.coeff_a FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu))
++ (SELECT v_config_lieu_sonde.coeff_b FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu))
++ (SELECT Sonde_Offset FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu)
++ (SELECT `-(EJ)` FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),2)),
+(SELECT Sonde_Numero_Serie FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),
+(SELECT Consigne FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),
+(SELECT Consigne_Sup_Corr FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),
+(SELECT Consigne_Inf_Corr FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),
+(SELECT Consigne_Sup_Pre_Alarme FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),
+(SELECT Consigne_Inf_Pre_Alarme FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),
+NEW.Date_Heure_Mesure, NEW.Valeur_Brute, NEW.Unite, NEW.Adresse_Sonde, NEW.COM_sonde, NEW.Id_Lieu, NEW.Rssi, NEW.Tension, NEW.Est_Valeur_Memoire, NEW.Planning_Actif, NEW.Planning_Regle_Existe
+);
+END IF;
+
+IF NEW.Id_Lieu IN (SELECT Id_Lieu FROM v_config_lieu_sonde) AND NEW.Planning_Actif=0 AND NEW.Est_Valeur_Memoire=1 AND NEW.Planning_Regle_Existe=0 THEN
+INSERT INTO tm_graphique (Valeur,Sonde_Numero_Serie,Consigne,Consigne_Sup,Consigne_Inf,Consigne_Sup_Pre_Alarme,Consigne_Inf_Pre_Alarme,Date_Heure_Mesure,Valeur_Brute,Unite,Adresse_Sonde,Id_Lieu)
+VALUES(
+(ROUND((((NEW.Valeur_Brute) * (SELECT v_config_lieu_sonde.coeff_a FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu))
++ (SELECT v_config_lieu_sonde.coeff_b FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu))
++ (SELECT Sonde_Offset FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu)
++ (SELECT `-(EJ)` FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),2)),
+(SELECT Sonde_Numero_Serie FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),
+(SELECT Consigne FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),
+(SELECT Consigne_Sup_Corr FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),
+(SELECT Consigne_Inf_Corr FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),
+(SELECT Consigne_Sup_Pre_Alarme FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),
+(SELECT Consigne_Inf_Pre_Alarme FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),
+NEW.Date_Heure_Mesure, NEW.Valeur_Brute, NEW.Unite, NEW.Adresse_Sonde, NEW.Id_Lieu
+);
+END IF;
+
+IF NEW.Id_Lieu IN (SELECT Id_Lieu FROM v_config_lieu_sonde) AND NEW.Planning_Actif=0 AND NEW.Est_Valeur_Memoire=1 AND NEW.Planning_Regle_Existe=1 THEN
+INSERT INTO tm_mesures (Valeur,Sonde_Numero_Serie,Consigne,Consigne_Sup,Consigne_Inf,Consigne_Sup_Pre_Alarme,Consigne_Inf_Pre_Alarme,Date_Heure_Mesure,Valeur_Brute,Unite,Adresse_Sonde,COM_sonde,Id_Lieu,Rssi,Tension,Est_Valeur_Memoire,Planning_Actif, Planning_Regle_Existe)
+VALUES(
+(ROUND((((NEW.Valeur_Brute) * (SELECT v_config_lieu_sonde.coeff_a FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu))
++ (SELECT v_config_lieu_sonde.coeff_b FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu))
++ (SELECT Sonde_Offset FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu)
++ (SELECT `-(EJ)` FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),2)),
+(SELECT Sonde_Numero_Serie FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),
+(SELECT IFNULL((SELECT Consigne_Apres FROM v_config_lieu_planning_consignes WHERE (NEW.Id_Lieu=v_config_lieu_planning_consignes.Id_Lieu)
+AND ((NEW.Date_Heure_Mesure BETWEEN v_config_lieu_planning_consignes.Date_Heure_Debut_Changement AND v_config_lieu_planning_consignes.Date_Heure_Fin_Changement)
+OR (NEW.Date_Heure_Mesure>v_config_lieu_planning_consignes.Date_Heure_Debut_Changement AND v_config_lieu_planning_consignes.Date_Heure_Fin_Changement IS NULL)))
+,(SELECT Consigne FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu))),
+(SELECT IFNULL((SELECT Tolerance_Surveillance_Sup_Apres FROM v_config_lieu_planning_consignes WHERE (NEW.Id_Lieu=v_config_lieu_planning_consignes.Id_Lieu)
+AND ((NEW.Date_Heure_Mesure BETWEEN v_config_lieu_planning_consignes.Date_Heure_Debut_Changement AND v_config_lieu_planning_consignes.Date_Heure_Fin_Changement)
+OR (NEW.Date_Heure_Mesure>v_config_lieu_planning_consignes.Date_Heure_Debut_Changement AND v_config_lieu_planning_consignes.Date_Heure_Fin_Changement IS NULL)))
+,(SELECT Consigne_Sup_Corr FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu))),
+(SELECT IFNULL((SELECT Tolerance_Surveillance_Inf_Apres FROM v_config_lieu_planning_consignes WHERE (NEW.Id_Lieu=v_config_lieu_planning_consignes.Id_Lieu)
+AND ((NEW.Date_Heure_Mesure BETWEEN v_config_lieu_planning_consignes.Date_Heure_Debut_Changement AND v_config_lieu_planning_consignes.Date_Heure_Fin_Changement)
+OR (NEW.Date_Heure_Mesure>v_config_lieu_planning_consignes.Date_Heure_Debut_Changement AND v_config_lieu_planning_consignes.Date_Heure_Fin_Changement IS NULL))),
+(SELECT Consigne_Inf_Corr FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu))),
+(SELECT Consigne_Sup_Pre_Alarme FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),
+(SELECT Consigne_Inf_Pre_Alarme FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),
+NEW.Date_Heure_Mesure, NEW.Valeur_Brute, NEW.Unite, NEW.Adresse_Sonde, NEW.COM_sonde, NEW.Id_Lieu, NEW.Rssi, NEW.Tension, NEW.Est_Valeur_Memoire, NEW.Planning_Actif, NEW.Planning_Regle_Existe
+);
+END IF;
+
+IF NEW.Id_Lieu IN (SELECT Id_Lieu FROM v_config_lieu_sonde) AND NEW.Planning_Actif=0 AND NEW.Est_Valeur_Memoire=1 AND NEW.Planning_Regle_Existe=1 THEN
+INSERT INTO tm_graphique (Valeur,Sonde_Numero_Serie,Consigne,Consigne_Sup,Consigne_Inf,Consigne_Sup_Pre_Alarme,Consigne_Inf_Pre_Alarme,Date_Heure_Mesure,Valeur_Brute,Unite,Adresse_Sonde,Id_Lieu)
+VALUES(
+(ROUND((((NEW.Valeur_Brute) * (SELECT v_config_lieu_sonde.coeff_a FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu))
++ (SELECT v_config_lieu_sonde.coeff_b FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu))
++ (SELECT Sonde_Offset FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu)
++ (SELECT `-(EJ)` FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),2)),
+(SELECT Sonde_Numero_Serie FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),
+(SELECT IFNULL((SELECT Consigne_Apres FROM v_config_lieu_planning_consignes WHERE (NEW.Id_Lieu=v_config_lieu_planning_consignes.Id_Lieu)
+AND ((NEW.Date_Heure_Mesure BETWEEN v_config_lieu_planning_consignes.Date_Heure_Debut_Changement AND v_config_lieu_planning_consignes.Date_Heure_Fin_Changement)
+OR (NEW.Date_Heure_Mesure>v_config_lieu_planning_consignes.Date_Heure_Debut_Changement AND v_config_lieu_planning_consignes.Date_Heure_Fin_Changement IS NULL)))
+,(SELECT Consigne FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu))),
+(SELECT IFNULL((SELECT Tolerance_Surveillance_Sup_Apres FROM v_config_lieu_planning_consignes WHERE (NEW.Id_Lieu=v_config_lieu_planning_consignes.Id_Lieu)
+AND ((NEW.Date_Heure_Mesure BETWEEN v_config_lieu_planning_consignes.Date_Heure_Debut_Changement AND v_config_lieu_planning_consignes.Date_Heure_Fin_Changement)
+OR (NEW.Date_Heure_Mesure>v_config_lieu_planning_consignes.Date_Heure_Debut_Changement AND v_config_lieu_planning_consignes.Date_Heure_Fin_Changement IS NULL)))
+,(SELECT Consigne_Sup_Corr FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu))),
+(SELECT IFNULL((SELECT Tolerance_Surveillance_Inf_Apres FROM v_config_lieu_planning_consignes WHERE (NEW.Id_Lieu=v_config_lieu_planning_consignes.Id_Lieu)
+AND ((NEW.Date_Heure_Mesure BETWEEN v_config_lieu_planning_consignes.Date_Heure_Debut_Changement AND v_config_lieu_planning_consignes.Date_Heure_Fin_Changement)
+OR (NEW.Date_Heure_Mesure>v_config_lieu_planning_consignes.Date_Heure_Debut_Changement AND v_config_lieu_planning_consignes.Date_Heure_Fin_Changement IS NULL))),
+(SELECT Consigne_Inf_Corr FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu))),
+(SELECT Consigne_Sup_Pre_Alarme FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),
+(SELECT Consigne_Inf_Pre_Alarme FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),
+NEW.Date_Heure_Mesure, NEW.Valeur_Brute, NEW.Unite, NEW.Adresse_Sonde, NEW.Id_Lieu
+);
+END IF;
+
+IF NEW.Id_Lieu IN (SELECT Id_Lieu FROM v_config_lieu_sonde) AND NEW.Planning_Actif=1 AND NEW.Est_Valeur_Memoire=0 THEN
+INSERT INTO tm_mesures (Valeur,Sonde_Numero_Serie,Consigne,Consigne_Sup,Consigne_Inf,Consigne_Sup_Pre_Alarme,Consigne_Inf_Pre_Alarme,Date_Heure_Mesure,Valeur_Brute,Unite,Adresse_Sonde,COM_sonde,Id_Lieu,Rssi,Tension,Est_Valeur_Memoire,Planning_Actif, Planning_Regle_Existe)
+VALUES(
+(ROUND((((NEW.Valeur_Brute) * (SELECT v_config_lieu_sonde.coeff_a FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu))
++ (SELECT v_config_lieu_sonde.coeff_b FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu))
++ (SELECT Sonde_Offset FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu)
++ (SELECT `-(EJ)` FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),2)),
+(SELECT Sonde_Numero_Serie FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),
+(SELECT Consigne_Apres FROM v_config_lieu_planning_consignes
+WHERE (NEW.Id_Lieu=v_config_lieu_planning_consignes.Id_Lieu)
+AND ((NEW.Date_Heure_Mesure BETWEEN v_config_lieu_planning_consignes.Date_Heure_Debut_Changement AND v_config_lieu_planning_consignes.Date_Heure_Fin_Changement)
+OR (NEW.Date_Heure_Mesure>v_config_lieu_planning_consignes.Date_Heure_Debut_Changement AND v_config_lieu_planning_consignes.Date_Heure_Fin_Changement IS NULL))),
+(SELECT Tolerance_Surveillance_Sup_Apres FROM v_config_lieu_planning_consignes
+WHERE (NEW.Id_Lieu=v_config_lieu_planning_consignes.Id_Lieu)
+AND ((NEW.Date_Heure_Mesure BETWEEN v_config_lieu_planning_consignes.Date_Heure_Debut_Changement AND v_config_lieu_planning_consignes.Date_Heure_Fin_Changement)
+OR (NEW.Date_Heure_Mesure>v_config_lieu_planning_consignes.Date_Heure_Debut_Changement AND v_config_lieu_planning_consignes.Date_Heure_Fin_Changement IS NULL))),
+(SELECT Tolerance_Surveillance_Inf_Apres FROM v_config_lieu_planning_consignes
+WHERE (NEW.Id_Lieu=v_config_lieu_planning_consignes.Id_Lieu)
+AND ((NEW.Date_Heure_Mesure BETWEEN v_config_lieu_planning_consignes.Date_Heure_Debut_Changement AND v_config_lieu_planning_consignes.Date_Heure_Fin_Changement)
+OR (NEW.Date_Heure_Mesure>v_config_lieu_planning_consignes.Date_Heure_Debut_Changement AND v_config_lieu_planning_consignes.Date_Heure_Fin_Changement IS NULL))),
+(SELECT Consigne_Sup_Pre_Alarme FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),
+(SELECT Consigne_Inf_Pre_Alarme FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),
+NEW.Date_Heure_Mesure, NEW.Valeur_Brute, NEW.Unite, NEW.Adresse_Sonde, NEW.COM_sonde, NEW.Id_Lieu, NEW.Rssi, NEW.Tension, NEW.Est_Valeur_Memoire, NEW.Planning_Actif, NEW.Planning_Regle_Existe
+);
+END IF;
+
+IF NEW.Id_Lieu IN (SELECT Id_Lieu FROM v_config_lieu_sonde) AND NEW.Planning_Actif=1 AND NEW.Est_Valeur_Memoire=0 THEN
+INSERT INTO tm_graphique (Valeur,Sonde_Numero_Serie,Consigne,Consigne_Sup,Consigne_Inf,Consigne_Sup_Pre_Alarme,Consigne_Inf_Pre_Alarme,Date_Heure_Mesure,Valeur_Brute,Unite,Adresse_Sonde,Id_Lieu)
+VALUES(
+(ROUND((((NEW.Valeur_Brute) * (SELECT v_config_lieu_sonde.coeff_a FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu))
++ (SELECT v_config_lieu_sonde.coeff_b FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu))
++ (SELECT Sonde_Offset FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu)
++ (SELECT `-(EJ)` FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),2)),
+(SELECT Sonde_Numero_Serie FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),
+(SELECT Consigne_Apres FROM v_config_lieu_planning_consignes
+WHERE (NEW.Id_Lieu=v_config_lieu_planning_consignes.Id_Lieu)
+AND ((NEW.Date_Heure_Mesure BETWEEN v_config_lieu_planning_consignes.Date_Heure_Debut_Changement AND v_config_lieu_planning_consignes.Date_Heure_Fin_Changement)
+OR (NEW.Date_Heure_Mesure>v_config_lieu_planning_consignes.Date_Heure_Debut_Changement AND v_config_lieu_planning_consignes.Date_Heure_Fin_Changement IS NULL))),
+(SELECT Tolerance_Surveillance_Sup_Apres FROM v_config_lieu_planning_consignes
+WHERE (NEW.Id_Lieu=v_config_lieu_planning_consignes.Id_Lieu)
+AND ((NEW.Date_Heure_Mesure BETWEEN v_config_lieu_planning_consignes.Date_Heure_Debut_Changement AND v_config_lieu_planning_consignes.Date_Heure_Fin_Changement)
+OR (NEW.Date_Heure_Mesure>v_config_lieu_planning_consignes.Date_Heure_Debut_Changement AND v_config_lieu_planning_consignes.Date_Heure_Fin_Changement IS NULL))),
+(SELECT Tolerance_Surveillance_Inf_Apres FROM v_config_lieu_planning_consignes
+WHERE (NEW.Id_Lieu=v_config_lieu_planning_consignes.Id_Lieu)
+AND ((NEW.Date_Heure_Mesure BETWEEN v_config_lieu_planning_consignes.Date_Heure_Debut_Changement AND v_config_lieu_planning_consignes.Date_Heure_Fin_Changement)
+OR (NEW.Date_Heure_Mesure>v_config_lieu_planning_consignes.Date_Heure_Debut_Changement AND v_config_lieu_planning_consignes.Date_Heure_Fin_Changement IS NULL))),
+(SELECT Consigne_Sup_Pre_Alarme FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),
+(SELECT Consigne_Inf_Pre_Alarme FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),
+NEW.Date_Heure_Mesure, NEW.Valeur_Brute, NEW.Unite, NEW.Adresse_Sonde, NEW.Id_Lieu
+);
+END IF;
+
+IF NEW.Id_Lieu IN (SELECT Id_Lieu FROM v_config_lieu_sonde) AND NEW.Planning_Actif=1 AND NEW.Est_Valeur_Memoire=1 THEN
+INSERT INTO tm_mesures (Valeur,Sonde_Numero_Serie,Consigne,Consigne_Sup,Consigne_Inf,Consigne_Sup_Pre_Alarme,Consigne_Inf_Pre_Alarme,Date_Heure_Mesure,Valeur_Brute,Unite,Adresse_Sonde,COM_sonde,Id_Lieu,Rssi,Tension,Est_Valeur_Memoire,Planning_Actif, Planning_Regle_Existe)
+VALUES(
+(ROUND((((NEW.Valeur_Brute) * (SELECT v_config_lieu_sonde.coeff_a FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu))
++ (SELECT v_config_lieu_sonde.coeff_b FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu))
++ (SELECT Sonde_Offset FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu)
++ (SELECT `-(EJ)` FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),2)),
+(SELECT Sonde_Numero_Serie FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),
+(SELECT IFNULL
+(
+(SELECT Consigne_Apres FROM v_config_lieu_planning_consignes
+WHERE (NEW.Id_Lieu=v_config_lieu_planning_consignes.Id_Lieu)
+AND ((NEW.Date_Heure_Mesure BETWEEN v_config_lieu_planning_consignes.Date_Heure_Debut_Changement AND v_config_lieu_planning_consignes.Date_Heure_Fin_Changement)
+OR (NEW.Date_Heure_Mesure>v_config_lieu_planning_consignes.Date_Heure_Debut_Changement AND v_config_lieu_planning_consignes.Date_Heure_Fin_Changement IS NULL))LIMIT 1)
+,(SELECT Consigne_Base FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu)
+)
+),
+(SELECT IFNULL
+(
+(SELECT Tolerance_Surveillance_Sup_Apres FROM v_config_lieu_planning_consignes
+WHERE (NEW.Id_Lieu=v_config_lieu_planning_consignes.Id_Lieu)
+AND ((NEW.Date_Heure_Mesure BETWEEN v_config_lieu_planning_consignes.Date_Heure_Debut_Changement AND v_config_lieu_planning_consignes.Date_Heure_Fin_Changement)
+OR (NEW.Date_Heure_Mesure>v_config_lieu_planning_consignes.Date_Heure_Debut_Changement AND v_config_lieu_planning_consignes.Date_Heure_Fin_Changement IS NULL))LIMIT 1)
+,(SELECT Tolerance_Surveillance_Sup_Base FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu)
+)
+),
+(SELECT IFNULL
+(
+(SELECT Tolerance_Surveillance_Inf_Apres FROM v_config_lieu_planning_consignes
+WHERE (NEW.Id_Lieu=v_config_lieu_planning_consignes.Id_Lieu)
+AND ((NEW.Date_Heure_Mesure BETWEEN v_config_lieu_planning_consignes.Date_Heure_Debut_Changement AND v_config_lieu_planning_consignes.Date_Heure_Fin_Changement)
+OR (NEW.Date_Heure_Mesure>v_config_lieu_planning_consignes.Date_Heure_Debut_Changement AND v_config_lieu_planning_consignes.Date_Heure_Fin_Changement IS NULL))LIMIT 1)
+,(SELECT Tolerance_Surveillance_Inf_Base FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu)
+)
+),
+(SELECT Consigne_Sup_Pre_Alarme FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),
+(SELECT Consigne_Inf_Pre_Alarme FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),
+NEW.Date_Heure_Mesure, NEW.Valeur_Brute, NEW.Unite, NEW.Adresse_Sonde, NEW.COM_sonde, NEW.Id_Lieu, NEW.Rssi, NEW.Tension, NEW.Est_Valeur_Memoire, NEW.Planning_Actif, NEW.Planning_Regle_Existe
+);
+END IF;
+
+IF NEW.Id_Lieu IN (SELECT Id_Lieu FROM v_config_lieu_sonde) AND NEW.Planning_Actif=1 AND NEW.Est_Valeur_Memoire=1 THEN
+INSERT INTO tm_graphique (Valeur,Sonde_Numero_Serie,Consigne,Consigne_Sup,Consigne_Inf,Consigne_Sup_Pre_Alarme,Consigne_Inf_Pre_Alarme,Date_Heure_Mesure,Valeur_Brute,Unite,Adresse_Sonde,Id_Lieu)
+VALUES(
+(ROUND((((NEW.Valeur_Brute) * (SELECT v_config_lieu_sonde.coeff_a FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu))
++ (SELECT v_config_lieu_sonde.coeff_b FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu))
++ (SELECT Sonde_Offset FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu)
++ (SELECT `-(EJ)` FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),2)),
+(SELECT Sonde_Numero_Serie FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),
+(SELECT IFNULL
+(
+(SELECT Consigne_Apres FROM v_config_lieu_planning_consignes
+WHERE (NEW.Id_Lieu=v_config_lieu_planning_consignes.Id_Lieu)
+AND ((NEW.Date_Heure_Mesure BETWEEN v_config_lieu_planning_consignes.Date_Heure_Debut_Changement AND v_config_lieu_planning_consignes.Date_Heure_Fin_Changement)
+OR (NEW.Date_Heure_Mesure>v_config_lieu_planning_consignes.Date_Heure_Debut_Changement AND v_config_lieu_planning_consignes.Date_Heure_Fin_Changement IS NULL))LIMIT 1)
+,(SELECT Consigne_Base FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu)
+)
+),
+(SELECT IFNULL
+(
+(SELECT Tolerance_Surveillance_Sup_Apres FROM v_config_lieu_planning_consignes
+WHERE (NEW.Id_Lieu=v_config_lieu_planning_consignes.Id_Lieu)
+AND ((NEW.Date_Heure_Mesure BETWEEN v_config_lieu_planning_consignes.Date_Heure_Debut_Changement AND v_config_lieu_planning_consignes.Date_Heure_Fin_Changement)
+OR (NEW.Date_Heure_Mesure>v_config_lieu_planning_consignes.Date_Heure_Debut_Changement AND v_config_lieu_planning_consignes.Date_Heure_Fin_Changement IS NULL))LIMIT 1)
+,(SELECT Tolerance_Surveillance_Sup_Base FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu)
+)
+),
+(SELECT IFNULL
+(
+(SELECT Tolerance_Surveillance_Inf_Apres FROM v_config_lieu_planning_consignes
+WHERE (NEW.Id_Lieu=v_config_lieu_planning_consignes.Id_Lieu)
+AND ((NEW.Date_Heure_Mesure BETWEEN v_config_lieu_planning_consignes.Date_Heure_Debut_Changement AND v_config_lieu_planning_consignes.Date_Heure_Fin_Changement)
+OR (NEW.Date_Heure_Mesure>v_config_lieu_planning_consignes.Date_Heure_Debut_Changement AND v_config_lieu_planning_consignes.Date_Heure_Fin_Changement IS NULL))LIMIT 1)
+,(SELECT Tolerance_Surveillance_Inf_Base FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu)
+)
+),
+(SELECT Consigne_Sup_Pre_Alarme FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),
+(SELECT Consigne_Inf_Pre_Alarme FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),
+NEW.Date_Heure_Mesure, NEW.Valeur_Brute, NEW.Unite, NEW.Adresse_Sonde, NEW.Id_Lieu
+);
+END IF;
+
+END$$
+DELIMITER ;
+
+DROP TRIGGER IF EXISTS `TRG_BEF_INS_GSO_COUNT`;
+DELIMITER $$
+CREATE TRIGGER `TRG_BEF_INS_GSO_COUNT`
+BEFORE INSERT ON `tm_mesures_gso_count_mem`
+FOR EACH ROW
+BEGIN
+SET NEW.Port_Serie_Send_GSO=(SELECT DISTINCT v_config_sonde_com.Port_Serie_Send_GSO FROM v_config_sonde_com
+WHERE v_config_sonde_com.GSO_SN = NEW.GSO_SN);
+END$$
+DELIMITER ;
 
 
 

@@ -1,10 +1,12 @@
-import { NextRequest, NextResponse } from "next/server"
+import { NextRequest } from "next/server"
 import fs from "fs/promises"
 import path from "path"
 import crypto from "crypto"
 import { withLogging } from "@/lib/api-logger"
 import { apiError, apiOk } from "@/lib/api-response"
 import { getAuthenticatedUser } from "@/lib/auth"
+import { isPack } from "@/lib/license-access"
+import { validateLicense } from "@/lib/license-server"
 import { log } from "@/lib/logger"
 import { getCompatEnv } from "@/lib/vigisensys-compat"
 import { appDataPath, firstExistingPath, legacyAppDataPath } from "@/lib/vigisensys-paths"
@@ -73,7 +75,7 @@ async function resolvePublicKeyPath() {
 
   return firstExistingPath(
     [DEFAULT_PUBLIC_KEY_PATH, LEGACY_DEFAULT_PUBLIC_KEY_PATH, FALLBACK_PUBLIC_KEY_PATH, LEGACY_FALLBACK_PUBLIC_KEY_PATH],
-    DEFAULT_PUBLIC_KEY_PATH
+    DEFAULT_PUBLIC_KEY_PATH,
   )
 }
 
@@ -125,7 +127,7 @@ async function readAgentSecret(): Promise<string | null> {
         padding: crypto.constants.RSA_PKCS1_OAEP_PADDING,
         oaepHash: "sha1",
       },
-      encrypted
+      encrypted,
     )
     return decrypted.toString("utf8")
   }
@@ -136,7 +138,12 @@ async function readAgentSecret(): Promise<string | null> {
 export const GET = withLogging(async (req: NextRequest) => {
   const user = getAuthenticatedUser(req)
   if (!user) {
-    return apiError(401, "unauthorized", "Non authentifié")
+    return apiError(401, "unauthorized", "Non authentifie")
+  }
+
+  const license = await validateLicense()
+  if (license.ok && isPack(license)) {
+    return apiOk({ secret: null, notRequired: true })
   }
 
   const configuredSecret = resolveConfiguredAgentSecret()

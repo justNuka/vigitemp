@@ -477,7 +477,7 @@ export function AlarmAcknowledgeDialog({
                 </div>
                 <div className="flex items-center gap-2">
                   <Select value={relatedTypeFilter} onValueChange={setRelatedTypeFilter}>
-                    <SelectTrigger className="h-8 w-[180px]">
+                    <SelectTrigger className="h-8 w-45">
                       <SelectValue placeholder={t("dialog.related_type_filter_placeholder")} />
                     </SelectTrigger>
                     <SelectContent>

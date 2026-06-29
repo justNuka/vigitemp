@@ -5,12 +5,12 @@ import { apiError, apiOk } from "@/lib/api-response"
 import { prisma } from "@/lib/prisma"
 import { log } from "@/lib/logger"
 import { getRequestContext } from "@/lib/api-logger"
+import { getDbNow } from "@/lib/sql-provider"
 
 export const POST = withAuthLogging(async (request: NextRequest, ctx: HandlerContext) => {
   try {
     const { ip } = getRequestContext(request)
-    const [dbNowRow] = await prisma.$queryRaw<Array<{ nowAt: Date }>>`SELECT NOW() AS nowAt`
-    const reactivatedAt = dbNowRow?.nowAt ?? new Date()
+    const reactivatedAt = await getDbNow(prisma)
 
     const result = await prisma.$transaction(async (tx) => {
       const alarmSnoozesToReactivate = await tx.t_lieu.findMany({

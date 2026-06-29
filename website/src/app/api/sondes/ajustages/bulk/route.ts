@@ -212,22 +212,36 @@ export const POST = withOneOrHigherAnyAuthorizationLogging(getPermissionAliases(
       }
 
       if (serialsToCreate.length > 0) {
-        await tx.t_sonde.createMany({
-          data: serialsToCreate.map((serial) => {
-            const gso = isGsoSerial(serial);
-            return {
-              Sonde_Numero_Serie: serial,
-              Sonde_Type: getSerialTypeCode(serial),
-              Adresse_Sonde: gso ? serial : extractProbeAddressFromSerial(serial, knownTypeCodes),
-              Est_Sonde_GSO: gso,
-              Surveillance_Etat: "D",
-              Sonde_Offset: 0,
-              Id_Module: selectedModule?.Id_Module ?? null,
-              Port_Serie: selectedModule?.Port_Serie ?? null,
-            };
-          }),
-          skipDuplicates: true,
+        const sensorsAlreadyPresentInTx = await tx.t_sonde.findMany({
+          where: { Sonde_Numero_Serie: { in: serialsToCreate } },
+          select: { Sonde_Numero_Serie: true },
         });
+
+        const existingSerialsInTx = new Set(
+          sensorsAlreadyPresentInTx
+            .map((sensor) => sensor.Sonde_Numero_Serie)
+            .filter((serial): serial is string => Boolean(serial)),
+        );
+
+        const serialsStillMissing = serialsToCreate.filter((serial) => !existingSerialsInTx.has(serial));
+
+        if (serialsStillMissing.length > 0) {
+          await tx.t_sonde.createMany({
+            data: serialsStillMissing.map((serial) => {
+              const gso = isGsoSerial(serial);
+              return {
+                Sonde_Numero_Serie: serial,
+                Sonde_Type: getSerialTypeCode(serial),
+                Adresse_Sonde: gso ? serial : extractProbeAddressFromSerial(serial, knownTypeCodes),
+                Est_Sonde_GSO: gso,
+                Surveillance_Etat: "D",
+                Sonde_Offset: 0,
+                Id_Module: selectedModule?.Id_Module ?? null,
+                Port_Serie: selectedModule?.Port_Serie ?? null,
+              };
+            }),
+          });
+        }
       }
 
       if (validated.confirmOverwrite && adjustmentSerials.length > 0) {

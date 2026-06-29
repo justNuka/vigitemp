@@ -2019,7 +2019,6 @@ export namespace Prisma {
      * The data used to create many t_conversations.
      */
     data: t_conversationCreateManyInput | t_conversationCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -3047,7 +3046,6 @@ export namespace Prisma {
      * The data used to create many t_conversation_participants.
      */
     data: t_conversation_participantCreateManyInput | t_conversation_participantCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -4051,7 +4049,6 @@ export namespace Prisma {
      * The data used to create many t_messages.
      */
     data: t_messageCreateManyInput | t_messageCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -5073,7 +5070,6 @@ export namespace Prisma {
      * The data used to create many t_message_attachments.
      */
     data: t_message_attachmentCreateManyInput | t_message_attachmentCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -5213,7 +5209,8 @@ export namespace Prisma {
     ReadUncommitted: 'ReadUncommitted',
     ReadCommitted: 'ReadCommitted',
     RepeatableRead: 'RepeatableRead',
-    Serializable: 'Serializable'
+    Serializable: 'Serializable',
+    Snapshot: 'Snapshot'
   };
 
   export type TransactionIsolationLevel = (typeof TransactionIsolationLevel)[keyof typeof TransactionIsolationLevel]
@@ -5283,31 +5280,6 @@ export namespace Prisma {
   export type NullsOrder = (typeof NullsOrder)[keyof typeof NullsOrder]
 
 
-  export const t_conversationOrderByRelevanceFieldEnum: {
-    Type: 'Type',
-    Titre: 'Titre',
-    DM_Key: 'DM_Key'
-  };
-
-  export type t_conversationOrderByRelevanceFieldEnum = (typeof t_conversationOrderByRelevanceFieldEnum)[keyof typeof t_conversationOrderByRelevanceFieldEnum]
-
-
-  export const t_messageOrderByRelevanceFieldEnum: {
-    Contenu: 'Contenu'
-  };
-
-  export type t_messageOrderByRelevanceFieldEnum = (typeof t_messageOrderByRelevanceFieldEnum)[keyof typeof t_messageOrderByRelevanceFieldEnum]
-
-
-  export const t_message_attachmentOrderByRelevanceFieldEnum: {
-    File_Name: 'File_Name',
-    File_Path: 'File_Path',
-    Mime_Type: 'Mime_Type'
-  };
-
-  export type t_message_attachmentOrderByRelevanceFieldEnum = (typeof t_message_attachmentOrderByRelevanceFieldEnum)[keyof typeof t_message_attachmentOrderByRelevanceFieldEnum]
-
-
   /**
    * Field references
    */
@@ -5365,7 +5337,6 @@ export namespace Prisma {
     Date_Creation?: SortOrder
     participants?: t_conversation_participantOrderByRelationAggregateInput
     messages?: t_messageOrderByRelationAggregateInput
-    _relevance?: t_conversationOrderByRelevanceInput
   }
 
   export type t_conversationWhereUniqueInput = Prisma.AtLeast<{
@@ -5488,7 +5459,6 @@ export namespace Prisma {
     Date_Suppression?: SortOrderInput | SortOrder
     conversation?: t_conversationOrderByWithRelationInput
     attachments?: t_message_attachmentOrderByRelationAggregateInput
-    _relevance?: t_messageOrderByRelevanceInput
   }
 
   export type t_messageWhereUniqueInput = Prisma.AtLeast<{
@@ -5557,7 +5527,6 @@ export namespace Prisma {
     Mime_Type?: SortOrder
     Date_Upload?: SortOrder
     message?: t_messageOrderByWithRelationInput
-    _relevance?: t_message_attachmentOrderByRelevanceInput
   }
 
   export type t_message_attachmentWhereUniqueInput = Prisma.AtLeast<{
@@ -5641,7 +5610,6 @@ export namespace Prisma {
   }
 
   export type t_conversationCreateManyInput = {
-    Id_Conversation?: number
     Type: string
     Titre?: string | null
     DM_Key?: string | null
@@ -5694,7 +5662,6 @@ export namespace Prisma {
   }
 
   export type t_conversation_participantCreateManyInput = {
-    Id_Participant?: number
     Id_Conversation: number
     Id_Utilisateur: number
     Last_Read_Msg_Id?: number | null
@@ -5758,7 +5725,6 @@ export namespace Prisma {
   }
 
   export type t_messageCreateManyInput = {
-    Id_Message?: number
     Id_Conversation: number
     Sender_Id: number
     Contenu: string
@@ -5824,7 +5790,6 @@ export namespace Prisma {
   }
 
   export type t_message_attachmentCreateManyInput = {
-    Id_Attachment?: number
     Id_Message: number
     File_Name: string
     File_Path: string
@@ -5873,7 +5838,6 @@ export namespace Prisma {
     contains?: string | StringFieldRefInput<$PrismaModel>
     startsWith?: string | StringFieldRefInput<$PrismaModel>
     endsWith?: string | StringFieldRefInput<$PrismaModel>
-    search?: string
     not?: NestedStringFilter<$PrismaModel> | string
   }
 
@@ -5888,7 +5852,6 @@ export namespace Prisma {
     contains?: string | StringFieldRefInput<$PrismaModel>
     startsWith?: string | StringFieldRefInput<$PrismaModel>
     endsWith?: string | StringFieldRefInput<$PrismaModel>
-    search?: string
     not?: NestedStringNullableFilter<$PrismaModel> | string | null
   }
 
@@ -5926,12 +5889,6 @@ export namespace Prisma {
 
   export type t_messageOrderByRelationAggregateInput = {
     _count?: SortOrder
-  }
-
-  export type t_conversationOrderByRelevanceInput = {
-    fields: t_conversationOrderByRelevanceFieldEnum | t_conversationOrderByRelevanceFieldEnum[]
-    sort: SortOrder
-    search: string
   }
 
   export type t_conversationCountOrderByAggregateInput = {
@@ -5993,7 +5950,6 @@ export namespace Prisma {
     contains?: string | StringFieldRefInput<$PrismaModel>
     startsWith?: string | StringFieldRefInput<$PrismaModel>
     endsWith?: string | StringFieldRefInput<$PrismaModel>
-    search?: string
     not?: NestedStringWithAggregatesFilter<$PrismaModel> | string
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedStringFilter<$PrismaModel>
@@ -6011,7 +5967,6 @@ export namespace Prisma {
     contains?: string | StringFieldRefInput<$PrismaModel>
     startsWith?: string | StringFieldRefInput<$PrismaModel>
     endsWith?: string | StringFieldRefInput<$PrismaModel>
-    search?: string
     not?: NestedStringNullableWithAggregatesFilter<$PrismaModel> | string | null
     _count?: NestedIntNullableFilter<$PrismaModel>
     _min?: NestedStringNullableFilter<$PrismaModel>
@@ -6128,12 +6083,6 @@ export namespace Prisma {
     _count?: SortOrder
   }
 
-  export type t_messageOrderByRelevanceInput = {
-    fields: t_messageOrderByRelevanceFieldEnum | t_messageOrderByRelevanceFieldEnum[]
-    sort: SortOrder
-    search: string
-  }
-
   export type t_messageCountOrderByAggregateInput = {
     Id_Message?: SortOrder
     Id_Conversation?: SortOrder
@@ -6193,12 +6142,6 @@ export namespace Prisma {
   export type T_messageScalarRelationFilter = {
     is?: t_messageWhereInput
     isNot?: t_messageWhereInput
-  }
-
-  export type t_message_attachmentOrderByRelevanceInput = {
-    fields: t_message_attachmentOrderByRelevanceFieldEnum | t_message_attachmentOrderByRelevanceFieldEnum[]
-    sort: SortOrder
-    search: string
   }
 
   export type t_message_attachmentCountOrderByAggregateInput = {
@@ -6465,7 +6408,6 @@ export namespace Prisma {
     contains?: string | StringFieldRefInput<$PrismaModel>
     startsWith?: string | StringFieldRefInput<$PrismaModel>
     endsWith?: string | StringFieldRefInput<$PrismaModel>
-    search?: string
     not?: NestedStringFilter<$PrismaModel> | string
   }
 
@@ -6480,7 +6422,6 @@ export namespace Prisma {
     contains?: string | StringFieldRefInput<$PrismaModel>
     startsWith?: string | StringFieldRefInput<$PrismaModel>
     endsWith?: string | StringFieldRefInput<$PrismaModel>
-    search?: string
     not?: NestedStringNullableFilter<$PrismaModel> | string | null
   }
 
@@ -6533,7 +6474,6 @@ export namespace Prisma {
     contains?: string | StringFieldRefInput<$PrismaModel>
     startsWith?: string | StringFieldRefInput<$PrismaModel>
     endsWith?: string | StringFieldRefInput<$PrismaModel>
-    search?: string
     not?: NestedStringWithAggregatesFilter<$PrismaModel> | string
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedStringFilter<$PrismaModel>
@@ -6551,7 +6491,6 @@ export namespace Prisma {
     contains?: string | StringFieldRefInput<$PrismaModel>
     startsWith?: string | StringFieldRefInput<$PrismaModel>
     endsWith?: string | StringFieldRefInput<$PrismaModel>
-    search?: string
     not?: NestedStringNullableWithAggregatesFilter<$PrismaModel> | string | null
     _count?: NestedIntNullableFilter<$PrismaModel>
     _min?: NestedStringNullableFilter<$PrismaModel>
@@ -6655,7 +6594,6 @@ export namespace Prisma {
 
   export type t_conversation_participantCreateManyConversationInputEnvelope = {
     data: t_conversation_participantCreateManyConversationInput | t_conversation_participantCreateManyConversationInput[]
-    skipDuplicates?: boolean
   }
 
   export type t_messageCreateWithoutConversationInput = {
@@ -6684,7 +6622,6 @@ export namespace Prisma {
 
   export type t_messageCreateManyConversationInputEnvelope = {
     data: t_messageCreateManyConversationInput | t_messageCreateManyConversationInput[]
-    skipDuplicates?: boolean
   }
 
   export type t_conversation_participantUpsertWithWhereUniqueWithoutConversationInput = {
@@ -6839,7 +6776,6 @@ export namespace Prisma {
 
   export type t_message_attachmentCreateManyMessageInputEnvelope = {
     data: t_message_attachmentCreateManyMessageInput | t_message_attachmentCreateManyMessageInput[]
-    skipDuplicates?: boolean
   }
 
   export type t_conversationUpsertWithoutMessagesInput = {
@@ -6954,14 +6890,12 @@ export namespace Prisma {
   }
 
   export type t_conversation_participantCreateManyConversationInput = {
-    Id_Participant?: number
     Id_Utilisateur: number
     Last_Read_Msg_Id?: number | null
     Date_Ajout?: Date | string
   }
 
   export type t_messageCreateManyConversationInput = {
-    Id_Message?: number
     Sender_Id: number
     Contenu: string
     Date_Creation?: Date | string
@@ -7018,7 +6952,6 @@ export namespace Prisma {
   }
 
   export type t_message_attachmentCreateManyMessageInput = {
-    Id_Attachment?: number
     File_Name: string
     File_Path: string
     File_Size: number

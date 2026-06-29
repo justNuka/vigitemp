@@ -4,12 +4,13 @@ generator client {
 }
 
 datasource db {
-  provider = "mysql"
+  provider     = "sqlserver"
+  relationMode = "prisma"
 }
 
 model tm_graphique {
   Id_Graphique            Int      @default(autoincrement())
-  Date_Heure_Mesure       DateTime @default(now()) @db.DateTime(0)
+  Date_Heure_Mesure       DateTime @default(now()) @db.DateTime
   Valeur                  Float?   @db.Float
   Valeur_Brute            Float?   @db.Float
   Nb_Decimal              Int?
@@ -39,12 +40,12 @@ model tm_journal {
   Id_Serveur_BDD          Int
   Id_Journal              Int       @default(autoincrement())
   Code_Journal            String?   @db.VarChar(50)
-  Commentaire             String?   @db.LongText
+  Commentaire             String?   @db.Text
   Nom_Utilisateur         String?   @db.VarChar(50)
   Profil_Utilisateur      String?   @db.VarChar(50)
-  Date_Heure_Journal      DateTime? @db.DateTime(0)
+  Date_Heure_Journal      DateTime? @db.DateTime
   Id_Lieu                 Int?
-  Commentaire_Utilisateur String?   @db.LongText
+  Commentaire_Utilisateur String?   @db.Text
 
   @@id([Id_Serveur_BDD, Id_Journal])
   @@index([Code_Journal], map: "IDX_Code_Journal")
@@ -71,7 +72,7 @@ model tm_compteur_id_table {
 model tm_mesures {
   Id_Serveur_BDD          Int      @default(0)
   Id_Mesure               Int      @default(autoincrement())
-  Date_Heure_Mesure       DateTime @db.DateTime(0)
+  Date_Heure_Mesure       DateTime @db.DateTime
   Valeur                  Float?   @db.Float
   Valeur_Brute            Float?   @db.Float
   Est_Valeur_Memoire      Boolean  @default(false)
@@ -107,7 +108,7 @@ model tm_mesures_gso {
   id_capteur     String   @default("") @db.VarChar(50)
   tep            Float?   @db.Float
   unite          String?  @default("") @db.VarChar(10)
-  date_mesure    DateTime @db.DateTime(0)
+  date_mesure    DateTime @db.DateTime
   rssi           String?  @db.VarChar(10)
   tension        String?  @db.VarChar(10)
 
@@ -120,12 +121,12 @@ model tm_journal_histo {
   Id_Serveur_BDD          Int       @default(0)
   Id_Journal              Int       @default(0)
   Code_Journal            String?   @default("") @db.VarChar(50)
-  Commentaire             String?   @db.LongText
+  Commentaire             String?   @db.Text
   Nom_Utilisateur         String?   @default("") @db.VarChar(50)
   Profil_Utilisateur      String?   @default("") @db.VarChar(50)
-  Date_Heure_Journal      DateTime? @db.DateTime(0)
+  Date_Heure_Journal      DateTime? @db.DateTime
   Id_Lieu                 Int?
-  Commentaire_Utilisateur String?   @db.LongText
+  Commentaire_Utilisateur String?   @db.Text
 
   @@id([Id_Journal_Histo, Id_Serveur_BDD, Id_Journal])
   @@index([Code_Journal], map: "IDX_Code_Journal")
@@ -141,7 +142,7 @@ model tm_mesure_calibrage {
   Valeur_Brute        Float    @default(0) @db.Float
   Sonde_Numero_Serie  String   @default("") @db.VarChar(50)
   Est_Valeur_Null     Int      @db.TinyInt
-  Date_Heure          DateTime @default(now()) @db.Timestamp(0)
+  Date_Heure          DateTime @default(now()) @db.DateTime
 
   @@id([Id_Mesure_Calibrage, Id_Serveur_BDD])
   @@index([Sonde_Numero_Serie], map: "IDX_Sonde_Numero_Serie")
@@ -158,7 +159,7 @@ model tm_mesure_calibrage_etalon {
   Valeur_Brute               Float    @default(0) @db.Float
   Etalon_Numero_Serie        String   @default("") @db.VarChar(50)
   Est_Valeur_Null            Int      @db.TinyInt
-  Date_Heure                 DateTime @default(now()) @db.Timestamp(0)
+  Date_Heure                 DateTime @default(now()) @db.DateTime
 
   @@id([Id_Mesure_Calibrage_Etalon, Id_Serveur_BDD])
   @@index([Etalon_Numero_Serie], map: "IDX_Etalon_Numero_Serie")
@@ -175,7 +176,7 @@ model tm_mesure_etalon {
   Valeur_Brute        Float    @db.Float
   Etalon_Numero_Serie String   @default("") @db.VarChar(50)
   Est_Valeur_Null     Int      @db.TinyInt
-  Date_Heure          DateTime @db.DateTime(0)
+  Date_Heure          DateTime @db.DateTime
   Message_Erreur      String   @default("") @db.VarChar(50)
 
   @@id([Id_Mesure_Etalon, Id_Serveur_BDD])
@@ -194,7 +195,7 @@ model tm_mesure_etalonnage {
   Numero_Ordre         Int?
   Mesure_Sonde         Float?    @db.Float
   Mesure_Etalon        Float?    @db.Float
-  Date_Heure           DateTime? @db.DateTime(0)
+  Date_Heure           DateTime? @db.DateTime
 
   @@id([Id_Mesure_Etalonnage, Id_Serveur_BDD])
   @@index([Sonde_Numero_serie], map: "IDX_Sonde_Numero_serie")
@@ -203,7 +204,7 @@ model tm_mesure_etalonnage {
 model tm_mesures_histo {
   Id_Mesure               Int      @default(autoincrement())
   Id_Serveur_BDD          Int      @default(0)
-  Date_Heure_Mesure       DateTime @default(now()) @db.DateTime(0)
+  Date_Heure_Mesure       DateTime @default(now()) @db.DateTime
   Valeur                  Float?   @db.Float
   Valeur_Brute            Float?   @db.Float
   Nb_decimal              Int?     @db.TinyInt
@@ -235,7 +236,7 @@ model tm_mesures_test {
   Valeur_Brute       Float    @db.Float
   Sonde_Numero_Serie String   @unique(map: "Sonde") @default("") @db.VarChar(50)
   Est_Valeur_Null    Int      @db.TinyInt
-  Date_Heure         DateTime @default(now()) @db.Timestamp(0)
+  Date_Heure         DateTime @default(now()) @db.DateTime
   Nombre_Total       Int      @default(0)
   Nombre_Recu        Int      @default(0)
 
@@ -252,7 +253,7 @@ model tm_mesures_test_etalon {
   Valeur_Brute          Float    @db.Float
   Etalon_Numero_Serie   String   @unique(map: "Etalon") @default("") @db.VarChar(50)
   Est_Valeur_Null       Int      @db.TinyInt
-  Date_Heure            DateTime @default(now()) @db.Timestamp(0)
+  Date_Heure            DateTime @default(now()) @db.DateTime
   Nombre_Total          Int      @default(0)
   Nombre_Recu           Int      @default(0)
 
@@ -266,10 +267,10 @@ model tm_mesures_test_etalon {
 model tm_mode_degrade {
   Id_Mode_Degrade     Int       @id @default(autoincrement())
   Id_Utilisateur      Int?
-  Date_Heure_Creation DateTime? @db.DateTime(0)
+  Date_Heure_Creation DateTime? @db.DateTime
   Requete_SQL         String?   @db.VarChar(500)
   Est_Archivee        Boolean   @default(false)
-  Date_Heure_Archive  DateTime? @db.DateTime(0)
+  Date_Heure_Archive  DateTime? @db.DateTime
 }
 
 model tm_parametre {
@@ -286,13 +287,13 @@ model tm_vigilog_mesure {
   Id_VigiLog_Mesure  Int      @id @default(autoincrement())
   Id_VigiLog_Tournee Int
   Numero_Ordre       Int?
-  Date_Heure_Mesure  DateTime @db.DateTime(0)
+  Date_Heure_Mesure  DateTime @db.DateTime
   Valeur             Decimal? @db.Decimal(10, 2)
   Est_Hors_Limites   Boolean  @default(false)
   Est_En_Alarme      Boolean  @default(false)
   Est_Marqueur       Boolean  @default(false)
   Details            String?  @db.VarChar(200)
-  Date_Heure_Import  DateTime @default(now()) @db.DateTime(0)
+  Date_Heure_Import  DateTime @default(now()) @db.DateTime
 
   @@unique([Id_VigiLog_Tournee, Date_Heure_Mesure, Numero_Ordre], map: "UK_tm_vigilog_mesure_unique")
   @@index([Est_En_Alarme], map: "IDX_tm_vigilog_mesure_alarm")
@@ -305,8 +306,8 @@ model tm_journal_commentaire_libre {
   Id_Commentaire_Journal Int       @id @default(autoincrement())
   Code_Journal           String    @db.VarChar(32)
   Commentaire            String    @db.Text
-  Date_Creation          DateTime  @default(now()) @db.DateTime(0)
-  Date_Modification      DateTime? @db.DateTime(0)
+  Date_Creation          DateTime  @default(now()) @db.DateTime
+  Date_Modification      DateTime? @db.DateTime
 
   @@index([Code_Journal], map: "IDX_tm_journal_commentaire_libre_code")
   @@index([Date_Creation], map: "IDX_tm_journal_commentaire_libre_date_creation")

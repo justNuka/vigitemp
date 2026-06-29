@@ -71,6 +71,40 @@ function Copy-SecurityArtifact([string]$sourcePath, [string]$destinationPath) {
     return $destinationPath
 }
 
+function Convert-Base64UrlToString([string]$value) {
+    if ([string]::IsNullOrWhiteSpace($value)) { return $null }
+    $base64 = $value.Replace('-', '+').Replace('_', '/')
+    switch ($base64.Length % 4) {
+        2 { $base64 += "==" }
+        3 { $base64 += "=" }
+    }
+    return [System.Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($base64))
+}
+
+function Get-LicenseEditionFromFile([string]$licenseFilePath) {
+    try {
+        if ([string]::IsNullOrWhiteSpace($licenseFilePath) -or -not (Test-Path -LiteralPath $licenseFilePath)) {
+            return $null
+        }
+
+        $token = (Get-Content -LiteralPath $licenseFilePath -Raw).Trim()
+        if ([string]::IsNullOrWhiteSpace($token)) { return $null }
+
+        $parts = $token.Split('.')
+        if ($parts.Length -ne 3) { return $null }
+
+        $payloadJson = Convert-Base64UrlToString $parts[1]
+        if ([string]::IsNullOrWhiteSpace($payloadJson)) { return $null }
+
+        $payload = $payloadJson | ConvertFrom-Json
+        $edition = [string]$payload.edition
+        if ([string]::IsNullOrWhiteSpace($edition)) { return $null }
+        return $edition.Trim().ToLowerInvariant()
+    } catch {
+        return $null
+    }
+}
+
 function Remove-InstallerArtifacts([string]$installPath) {
     foreach ($dirName in @("installer", "WebsiteInstallerBootstrapper", "shared-secrets")) {
         $targetDir = Join-Path $installPath $dirName
@@ -491,7 +525,14 @@ $cacheTtl = Read-InstallValue (T "Cache TTL (secondes)" "Cache TTL (seconds)") "
 $logsDir = Read-InstallValue (T "Dossier des logs" "Logs directory") (Join-Path $programData "VigiSensys\web-logs")
 $licensePath = Read-InstallValue (T "Chemin licence site (.vtlic)" "Website license path (.vtlic)") (Join-Path $programData "VigiSensys\licenses\license.vtlic")
 $licensePublicKeyPath = Read-InstallValue (T "Chemin cle publique licence (.pem)" "License public key path (.pem)") (Join-Path $programData "VigiSensys\license_keys\public_key.pem")
-$agentSecretPrivateKeyPath = Read-InstallValue (T "Chemin cle privee secret agent (.pem)" "Agent secret private key path (.pem)") (Join-Path $programData "VigiSensys\license_keys\agent_secret_private.pem")
+$licenseEdition = Get-LicenseEditionFromFile $licensePath
+$isPackLicense = ($licenseEdition -eq "pack")
+$agentSecretPrivateKeyPath = $null
+if ($isPackLicense) {
+    Write-Log (T "Licence Pack detectee : cle privee agent non requise." "Pack license detected: agent private key not required.")
+} else {
+    $agentSecretPrivateKeyPath = Read-InstallValue (T "Chemin cle privee secret agent (.pem)" "Agent secret private key path (.pem)") (Join-Path $programData "VigiSensys\license_keys\agent_secret_private.pem")
+}
 $agentPort = Read-InstallValue (T "Port agent local" "Local agent port") "8000"
 $agentTimeoutMs = Read-InstallValue (T "Timeout agent local (ms)" "Local agent timeout (ms)") "1500"
 $agentActiveWindowMinutes = Read-InstallValue (T "Fenetre active agent (minutes)" "Agent active window (minutes)") "15"
@@ -508,7 +549,7 @@ if ([string]::IsNullOrWhiteSpace($AlarmDispatchSecretFile)) {
 $dispatchSecret = Resolve-DispatchSecret -providedSecret $AlarmDispatchSecret -providedFilePath $AlarmDispatchSecretFile -interactiveMode (-not $Silent) -defaultSharedSecretPath $AlarmDispatchSecretFile
 $jwtSecret = Resolve-GeneratedSecretValue -label (T "JWT principal" "Primary JWT")
 $hotlineJwtSecret = Resolve-GeneratedSecretValue -label (T "JWT hotline" "Hotline JWT")
-$agentSharedSecret = Resolve-GeneratedSecretValue -label (T "Secret partage agent" "Agent shared secret")
+$agentSharedSecret = if ($isPackLicense) { $null } else { Resolve-GeneratedSecretValue -label (T "Secret partage agent" "Agent shared secret") }
 if (-not $PSBoundParameters.ContainsKey('ConfigureFirewall') -and -not $Silent) {
     $fwAnswer = Read-InstallValue (T "Configurer automatiquement les regles firewall Windows pour le site et l'agent ? (y/n)" "Automatically configure Windows firewall rules for website and agent? (y/n)") "y"
     $ConfigureFirewall = ($fwAnswer -eq "y")
@@ -517,7 +558,10 @@ if (-not $PSBoundParameters.ContainsKey('ConfigureFirewall') -and -not $Silent) 
 New-Item -ItemType Directory -Force -Path $logsDir | Out-Null
 $normalizedLicensePath = Copy-SecurityArtifact $licensePath (Join-Path $programData "VigiSensys\licenses\$(Split-Path -Leaf $licensePath)")
 $normalizedPublicKeyPath = Copy-SecurityArtifact $licensePublicKeyPath (Join-Path $programData "VigiSensys\license_keys\public_key.pem")
-$normalizedAgentPrivateKeyPath = Copy-SecurityArtifact $agentSecretPrivateKeyPath (Join-Path $programData "VigiSensys\license_keys\agent_secret_private.pem")
+$normalizedAgentPrivateKeyPath = $null
+if (-not $isPackLicense -and -not [string]::IsNullOrWhiteSpace($agentSecretPrivateKeyPath)) {
+    $normalizedAgentPrivateKeyPath = Copy-SecurityArtifact $agentSecretPrivateKeyPath (Join-Path $programData "VigiSensys\license_keys\agent_secret_private.pem")
+}
 Write-Log (T "Fichiers de securite copies dans ProgramData." "Security files copied into ProgramData.")
 
 if ($dbProvider -eq "mssql") {
@@ -543,6 +587,8 @@ if ($Standalone) {
     $standaloneEnvPath = Join-Path $InstallDir ".next\\standalone\\.env"
     $envPath = $standaloneEnvPath
 }
+$agentPrivateKeyEnvLine = if ($normalizedAgentPrivateKeyPath) { "VIGISENSYS_AGENT_SECRET_PRIVATE_KEY_PATH=""$normalizedAgentPrivateKeyPath""" } else { "" }
+$agentSecretEnvLine = if (-not $isPackLicense) { "VIGISENSYS_AGENT_SECRET=""$agentSharedSecret""" } else { "" }
 $envContent = @"
 DATABASE_URL="$databaseUrl"
 DATABASE_MESURES_URL="$databaseMesureUrl"
@@ -553,11 +599,11 @@ NEXT_PUBLIC_APP_URL="$appBaseUrl"
 NEXT_PUBLIC_CACHE_TTL=$cacheTtl
 VIGISENSYS_LICENSE_PATH="$normalizedLicensePath"
 VIGISENSYS_LICENSE_PUBLIC_KEY_PATH="$normalizedPublicKeyPath"
-VIGISENSYS_AGENT_SECRET_PRIVATE_KEY_PATH="$normalizedAgentPrivateKeyPath"
+$agentPrivateKeyEnvLine
 VIGISENSYS_AGENT_PORT=$agentPort
 VIGISENSYS_AGENT_TIMEOUT_MS=$agentTimeoutMs
 VIGISENSYS_AGENT_ACTIVE_WINDOW_MINUTES=$agentActiveWindowMinutes
-VIGISENSYS_AGENT_SECRET="$agentSharedSecret"
+$agentSecretEnvLine
 VIGISENSYS_ALARM_DISPATCH_SECRET="$dispatchSecret"
 VIGISENSYS_SURVEILLANCE_DISPATCH_SECRET="$dispatchSecret"
 VIGISENSYS_LOGS_DIR="$logsDir"

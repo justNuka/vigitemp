@@ -98,6 +98,8 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
   const [showNullNonResponse] = useState(initialShowNullNonResponse);
   const [groupToggleModal, setGroupToggleModal] = useState<MonitoringGroupModalState | null>(null);
   const [groupDisableDuration, setGroupDisableDuration] = useState("60");
+  const [groupActionComment, setGroupActionComment] = useState("");
+  const [groupActionCommentError, setGroupActionCommentError] = useState<string | null>(null);
   const [isRangeSelectionActive, setIsRangeSelectionActive] = useState(false);
   const [openDetailModalIds, setOpenDetailModalIds] = useState<number[]>([]);
   const [isAcknowledgeDialogOpen, setIsAcknowledgeDialogOpen] = useState(false);
@@ -433,6 +435,9 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
       ids: number[],
       lieuEtat: string | null | undefined,
       surveillanceDisabled: boolean,
+      surveillanceDisabledSince?: Date | null,
+      surveillanceDisabledBy?: string | null,
+      surveillanceDisabledComment?: string | null,
     ) => {
       queryClient.setQueriesData<PaginatedSensorsData>({ queryKey: ["capteurs", "paginated"] }, (data) =>
         updateSurveillanceStateInCache(data, ids, (sensor) => ({
@@ -441,6 +446,10 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
             ...sensor.location,
             lieuEtat: lieuEtat ?? sensor.location.lieuEtat,
             surveillanceDisabled,
+            surveillanceDisabledSince: surveillanceDisabledSince ?? sensor.location.surveillanceDisabledSince,
+            surveillanceDisabledBy: surveillanceDisabledBy ?? sensor.location.surveillanceDisabledBy,
+            surveillanceDisabledComment:
+              surveillanceDisabledComment ?? sensor.location.surveillanceDisabledComment,
           },
         })),
       );
@@ -535,6 +544,8 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
     (groupId: number, isCurrentlyDisabled: boolean) => {
       const groupName = groups.find((group) => group.id === groupId)?.name ?? `Groupe ${groupId}`;
       setGroupDisableDuration("60");
+      setGroupActionComment("");
+      setGroupActionCommentError(null);
       setGroupToggleModal({
         groupId,
         groupName,
@@ -547,6 +558,12 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
   const handleGroupSurveillanceToggleConfirm = useCallback(async () => {
     if (!groupToggleModal) return;
 
+    const normalizedActionComment = groupActionComment.trim();
+    if (requireActionComment && normalizedActionComment.length === 0) {
+      setGroupActionCommentError(t("action_comment.required_error"));
+      return;
+    }
+
     try {
       const disabled = groupToggleModal.isActive;
       const durationMinutes =
@@ -558,6 +575,7 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
         body: JSON.stringify({
           disabled,
           durationMinutes: Number.isFinite(durationMinutes ?? NaN) ? durationMinutes : null,
+          commentaireAction: normalizedActionComment || null,
         }),
       });
 
@@ -568,17 +586,25 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
       }
 
       if (payload?.ok && payload?.data?.lieuIds) {
+        const surveillanceDisabledSince = payload.data.surveillanceDisabledSince
+          ? parseDbDateTime(payload.data.surveillanceDisabledSince)
+          : null
         updateSensorsCache(
           payload.data.lieuIds as number[],
           payload.data.lieuEtat ?? (disabled ? "D" : "S"),
           Boolean(payload.data.surveillanceDisabled),
+          surveillanceDisabledSince,
+          payload.data.surveillanceDisabledBy ?? null,
+          payload.data.surveillanceDisabledComment ?? null,
         );
       }
+      setGroupActionComment("");
+      setGroupActionCommentError(null);
       setGroupToggleModal(null);
     } catch {
       toast.error(t("refresh.error"));
     }
-  }, [groupDisableDuration, groupToggleModal, t, updateSensorsCache]);
+  }, [groupActionComment, groupDisableDuration, groupToggleModal, requireActionComment, t, updateSensorsCache]);
 
 
 
@@ -741,8 +767,21 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
       <MonitoringGroupToggleDialog
         modal={groupToggleModal}
         disableDuration={groupDisableDuration}
+        actionComment={groupActionComment}
+        actionCommentError={groupActionCommentError}
+        requireActionComment={requireActionComment}
         onDisableDurationChange={setGroupDisableDuration}
-        onClose={() => setGroupToggleModal(null)}
+        onActionCommentChange={(value) => {
+          setGroupActionComment(value)
+          if (groupActionCommentError) {
+            setGroupActionCommentError(null)
+          }
+        }}
+        onClose={() => {
+          setGroupToggleModal(null)
+          setGroupActionComment("")
+          setGroupActionCommentError(null)
+        }}
         onConfirm={() => void handleGroupSurveillanceToggleConfirm()}
         t={(key, values) => t(key, values as Record<string, string | number>)}
       />

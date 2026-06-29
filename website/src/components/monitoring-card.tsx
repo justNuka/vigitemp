@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
 import { Chart as ChartJS, CategoryScale, Filler, Legend, LineElement, LinearScale, PointElement, Title, Tooltip } from 'chart.js'
-import { FileText, MapPin, Power, PowerOff, Settings } from 'lucide-react'
+import { BatteryWarning, FileText, MapPin, Power, PowerOff, Settings } from 'lucide-react'
 import { m } from 'motion/react'
 import { useQueryClient } from '@tanstack/react-query'
 
@@ -424,6 +424,7 @@ export default function MonitoringCard({
   const formattedConsigneInf = useMemo(() => formatMeasureValue(consigneInf, decimals, localeTag), [consigneInf, decimals, localeTag])
   const formattedLastValue = useMemo(() => formatMeasureValue(lastValue, decimals, localeTag), [lastValue, decimals, localeTag])
   const hasWirelessMetrics = Boolean(gsoRssi || gsoTension || batteryPercent !== null && batteryPercent !== undefined)
+  const isOnBatteryPower = effectiveAlarmType === 'S'
 
   const cardGlowClass = (() => {
     if (!isSurveillanceActive) return "opacity-75"
@@ -546,6 +547,14 @@ export default function MonitoringCard({
                         {gsoRssi ? <RssiBars value={gsoRssi} label={t('gso.rssi', { value: gsoRssi })} /> : null}
                         {batteryPercent !== null && batteryPercent !== undefined ? <span>{t('wireless.battery', { value: batteryPercent })}</span> : null}
                         {gsoTension ? <span>{t('gso.tension', { value: gsoTension })}</span> : null}
+                      </div>
+                    ) : null}
+                    {isOnBatteryPower ? (
+                      <div className="flex items-center justify-center">
+                        <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-1 text-[11px] font-medium text-amber-800 dark:bg-amber-500/15 dark:text-amber-200">
+                          <BatteryWarning className="h-3.5 w-3.5" />
+                          {t('wireless.on_battery')}
+                        </span>
                       </div>
                     ) : null}
                     <div className={`flex items-center justify-center gap-4 text-[11px] ${contentTextClassName}`}>

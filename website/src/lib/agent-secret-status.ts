@@ -150,6 +150,7 @@ export async function getAgentSecretStatus(): Promise<AgentSecretStatus> {
     const signature = base64UrlToBuffer(signaturePart)
 
     let payload: {
+      edition?: string
       agentSecret?: string
       agentSecretEnc?: { alg?: string; value?: string }
     }
@@ -165,6 +166,10 @@ export async function getAgentSecretStatus(): Promise<AgentSecretStatus> {
     const isValid = crypto.verify(null, data, publicKey, signature)
     if (!isValid) {
       return { status: "invalid_signature", scope: "configuration", message: "Signature de licence invalide." }
+    }
+
+    if ((payload.edition ?? "").trim().toLowerCase() === "pack") {
+      return { status: "ok", scope: "configuration", message: "Agent non requis pour la licence Pack." }
     }
 
     if (payload.agentSecretEnc?.value) {

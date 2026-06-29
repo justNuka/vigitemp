@@ -1,8 +1,8 @@
-import { useMemo } from "react"
+import { Fragment, useMemo } from "react"
 import type { ColumnDef } from "@tanstack/react-table"
 
 import { TanStackTable } from "@/components/data-table/tanstack-table"
-import { formatDbDateTime } from "@/lib/date-display"
+import { formatDbDateTime, parseDbDateTime } from "@/lib/date-display"
 
 import type { AuditLog } from "./types"
 
@@ -21,6 +21,25 @@ type AuditRow = {
   dateLabel: string
   user: string
   details: string
+  detailRows: Array<{ label: string; value: string }>
+  comment: string | null
+}
+
+const AUDIT_FIELD_LABELS: Record<string, string> = {
+  Nom_Lieu: "Nom du lieu",
+  Commentaire: "Commentaire",
+  Observations_Info: "Observations",
+  Id_Site: "Site",
+  Sonde_Numero_Serie: "Sonde",
+  Consigne: "Consigne",
+  Consigne_Sup: "Consigne sup.",
+  Consigne_Inf: "Consigne inf.",
+  Tolerance_Surveillance_Sup: "Tolerance sup.",
+  Tolerance_Surveillance_Inf: "Tolerance inf.",
+  Retard_Alarme_Haut: "Retard alarme haut",
+  Retard_Alarme_Bas: "Retard alarme bas",
+  Retard_Non_Reponse: "Retard non reponse",
+  Frequence: "Frequence",
 }
 
 function sanitizeAuditText(value: string | null | undefined) {
@@ -36,35 +55,56 @@ function sanitizeAuditText(value: string | null | undefined) {
   return normalized || "-"
 }
 
-function toHumanAuditJson(raw: string) {
-  const normalized = raw.trim()
-  if (!normalized.startsWith("{") || !normalized.endsWith("}")) return null
-  try {
-    const parsed = JSON.parse(normalized) as Record<string, unknown>
-    const entries = Object.entries(parsed)
-    if (entries.length === 0) return "-"
-
-    const labels: Record<string, string> = {
-      disabled: "Désactivé",
-      enabled: "Activé",
-      durationMinutes: "Durée (min)",
-      reactivationAt: "Réactivation",
-      comment: "Commentaire",
-      action: "Action",
-      source: "Source",
+function formatAuditValue(key: string, value: unknown) {
+  if (value === null || value === undefined || value === "") return "-"
+  if (typeof value === "boolean") return value ? "Oui" : "Non"
+  if (typeof value === "number") return String(value)
+  if (typeof value === "string") {
+    const lowered = key.toLowerCase()
+    if (lowered.endsWith("at") || lowered.includes("date") || lowered.includes("time")) {
+      const parsed = parseDbDateTime(value)
+      if (parsed && !Number.isNaN(parsed.getTime())) {
+        return formatDbDateTime(parsed)
+      }
     }
+    return value
+  }
+  return String(value)
+}
 
-    return entries
+function isFromToChange(value: unknown): value is { from?: unknown; to?: unknown } {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false
+  return Object.prototype.hasOwnProperty.call(value, "from") || Object.prototype.hasOwnProperty.call(value, "to")
+}
+
+function buildAuditRows(raw: string | null | undefined) {
+  const sanitized = sanitizeAuditText(raw)
+  if (sanitized === "-") return [] as Array<{ label: string; value: string }>
+
+  const jsonStart = sanitized.indexOf("{")
+  const jsonEnd = sanitized.lastIndexOf("}")
+  if (jsonStart < 0 || jsonEnd <= jsonStart) return []
+
+  try {
+    const parsed = JSON.parse(sanitized.slice(jsonStart, jsonEnd + 1)) as Record<string, unknown>
+    return Object.entries(parsed)
+      .filter(([key, value]) => key !== "action" && value !== null && value !== undefined)
       .map(([key, value]) => {
-        const label = labels[key] ?? key
-        let rendered = "-"
-        if (typeof value === "boolean") rendered = value ? "Oui" : "Non"
-        else if (value != null) rendered = String(value)
-        return `${label}: ${rendered}`
+        const label = AUDIT_FIELD_LABELS[key] ?? key
+        if (isFromToChange(value)) {
+          return {
+            label,
+            value: `Avant: ${formatAuditValue("from", value.from)} | Apres: ${formatAuditValue("to", value.to)}`,
+          }
+        }
+
+        return {
+          label,
+          value: formatAuditValue(key, value),
+        }
       })
-      .join("\n")
   } catch {
-    return null
+    return []
   }
 }
 
@@ -76,15 +116,9 @@ function formatAuditDetails(value: string | null | undefined) {
   const jsonEnd = sanitized.lastIndexOf("}")
   if (jsonStart >= 0 && jsonEnd > jsonStart) {
     const prefix = sanitized.slice(0, jsonStart).trim()
-    const jsonPart = sanitized.slice(jsonStart, jsonEnd + 1)
-    const humanJson = toHumanAuditJson(jsonPart)
-    if (humanJson) {
-      return prefix ? `${prefix}\n${humanJson}` : humanJson
-    }
+    return prefix || sanitized.slice(jsonStart, jsonEnd + 1)
   }
 
-  const pureJson = toHumanAuditJson(sanitized)
-  if (pureJson) return pureJson
   return sanitized
 }
 
@@ -97,7 +131,9 @@ export function MonitoringAuditTab({ logs, isLoading, error, t }: MonitoringAudi
       dateIso: log.timestamp ?? "",
       dateLabel: log.timestamp ? formatDbDateTime(log.timestamp) : "-",
       user: log.user || "-",
-      details: formatAuditDetails(log.commentaireUtilisateur || log.commentaire),
+      details: formatAuditDetails(log.commentaire || log.detailsSummary),
+      detailRows: buildAuditRows(log.commentaire),
+      comment: log.commentaireUtilisateur ? sanitizeAuditText(log.commentaireUtilisateur) : null,
     }))
   }, [logs])
 
@@ -126,7 +162,24 @@ export function MonitoringAuditTab({ logs, isLoading, error, t }: MonitoringAudi
     {
       accessorKey: "details",
       header: t("audit.columns.details"),
-      cell: ({ row }) => <span className="text-muted-foreground whitespace-pre-line wrap-break-word">{row.original.details}</span>,
+      cell: ({ row }) => (
+        <div className="space-y-2">
+          <span className="text-muted-foreground whitespace-pre-line wrap-break-word">{row.original.details}</span>
+          {row.original.detailRows.length > 0 ? (
+            <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 rounded border bg-muted/40 p-2">
+              {row.original.detailRows.map(({ label, value }) => (
+                <Fragment key={`${String(row.original.id)}-${label}`}>
+                  <dt className="text-xs text-muted-foreground whitespace-nowrap">{label}</dt>
+                  <dd className="text-xs font-medium whitespace-pre-line break-words">{value}</dd>
+                </Fragment>
+              ))}
+            </dl>
+          ) : null}
+          {row.original.comment ? (
+            <p className="text-xs italic text-muted-foreground">{row.original.comment}</p>
+          ) : null}
+        </div>
+      ),
     },
   ], [t])
 

@@ -8,6 +8,7 @@ import { withAnyAuthorizationLogging } from "@/lib/api-wrappers"
 import { log } from "@/lib/logger"
 import { isSurveillanceActionCommentRequired } from "@/lib/action-comment-policy"
 import { getPermissionAliases } from "@/lib/permissions"
+import { getDbDatePlusMinutes } from "@/lib/sql-provider"
 
 const alarmToggleSchema = z.object({
   disabled: z.boolean(),
@@ -39,11 +40,10 @@ export const PATCH = withAnyAuthorizationLogging(
         payload.disabled && payload.durationMinutes && payload.durationMinutes > 0
           ? payload.durationMinutes
           : null
-      const [reactivationRow] =
+      const reactivationAt =
         payload.disabled && durationMinutes
-          ? await prisma.$queryRaw<Array<{ reactivationAt: Date }>>`SELECT DATE_ADD(NOW(), INTERVAL ${durationMinutes} MINUTE) AS reactivationAt`
-          : [null]
-      const reactivationAt = reactivationRow?.reactivationAt ?? null
+          ? await getDbDatePlusMinutes(prisma, durationMinutes)
+          : null
 
       const updated = await prisma.t_lieu.update({
         where: { Id_Lieu: lieuId },

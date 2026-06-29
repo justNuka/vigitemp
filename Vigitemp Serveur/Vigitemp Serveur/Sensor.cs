@@ -380,6 +380,15 @@ namespace Vigitemp_Serveur
                     return;
                 }
 
+                if (!_sensorPowerAlarmStateByLieu.ContainsKey(m_idLieu))
+                {
+                    var persistedState = ths.GetDatabase().getPowerAlarmActiveState(m_idLieu);
+                    if (persistedState.HasValue)
+                    {
+                        _sensorPowerAlarmStateByLieu[m_idLieu] = persistedState.Value;
+                    }
+                }
+
                 if (isActive)
                 {
                     if (_sensorPowerAlarmStateByLieu.TryGetValue(m_idLieu, out var wasActive) && wasActive)

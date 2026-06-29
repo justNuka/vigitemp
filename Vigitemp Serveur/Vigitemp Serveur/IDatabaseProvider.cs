@@ -26,7 +26,9 @@ namespace Vigitemp_Serveur
         bool getLieuImmediateRetriggerFlag(int idLieu);
         bool setLieuImmediateRetriggerFlag(int idLieu, bool enabled);
         bool setLieuInfosModifiees(int idLieu, bool value);
+        bool setLieuGspRecoveryPending(int idLieu, bool value);
         bool setNonResponseAlarm(int idLieu, string sondeNumeroSerie, bool isActive);
+        bool? getPowerAlarmActiveState(int idLieu);
         bool setPowerAlarm(int idLieu, string sondeNumeroSerie, bool isActive);
         bool setModuleAlarm(int idLieu, string sondeNumeroSerie, bool isActive);
         string getParameterValue(string section, string motCle);

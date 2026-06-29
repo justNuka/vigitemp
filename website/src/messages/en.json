@@ -442,6 +442,7 @@
       "type": {
         "high": "High threshold",
         "low": "Low threshold",
+        "disabled_since": "Monitoring disabled since {date}",
         "no_response": "No response",
         "sector": "Power / mains",
         "module": "Module issue"
@@ -3158,7 +3159,8 @@
       "tension": "Voltage: {value}"
     },
     "wireless": {
-      "battery": "Battery: {value}%"
+      "battery": "Battery: {value}%",
+      "on_battery": "Running on battery"
     },
     "tabs": {
       "graph": "Chart",
