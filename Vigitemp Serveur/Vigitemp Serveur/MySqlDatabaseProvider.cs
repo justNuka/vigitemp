@@ -9,14 +9,14 @@ using System.Threading;
 
 namespace Vigitemp_Serveur
 {
-    class Database : IDatabaseProvider, IDisposable
+    internal sealed class MySqlDatabaseProvider : IDatabaseProvider, IDisposable
     {
         private readonly object _lock = new object();
         private MySqlConnection connection_vigitemp;
         private MySqlConnection connection_vigitemp_mesure;
 
         // Constructeur
-        public Database()
+        public MySqlDatabaseProvider()
         {
             //this.InitConnexion();
         }
@@ -769,7 +769,7 @@ namespace Vigitemp_Serveur
                             double.TryParse(p_resistance, NumberStyles.Any, CultureInfo.InvariantCulture, out resistance);
                         }
 
-                        CacheService.InsertMeasureToGraphique(
+                        MySqlCacheService.InsertMeasureToGraphique(
                             connection_vigitemp_mesure,
                             idSonde,
                             idLieu,
@@ -1018,7 +1018,7 @@ namespace Vigitemp_Serveur
                     cmd_vigitemp_mesure.Parameters.AddWithValue("@estEtatAlarme", estEtatAlarme);
                     cmd_vigitemp_mesure.ExecuteNonQuery();
 
-                    CacheService.InsertMeasureToGraphique(
+                    MySqlCacheService.InsertMeasureToGraphique(
                         connection_vigitemp_mesure,
                         idSonde,
                         idLieu,
@@ -1567,9 +1567,9 @@ namespace Vigitemp_Serveur
                     }
 
                     // NOTE: La sequence UPDATE+SELECT LAST_INSERT_ID() + INSERT est atomique
-                    // du point de vue de cette instance Database car toutes les methodes
-                    // utilisent le meme lock(_lock). En mode multi-serveur, chaque ThreadServeur
-                    // a sa propre instance Database, donc son propre lock.
+                    // du point de vue de cette instance MySqlDatabaseProvider car toutes les
+                    // methodes utilisent le meme lock(_lock). En mode multi-serveur, chaque
+                    // ThreadServeur a sa propre instance provider, donc son propre lock.
                     int nextId;
                     using (var updateCmd = this.connection_vigitemp_mesure.CreateCommand())
                     {

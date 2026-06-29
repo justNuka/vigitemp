@@ -12,7 +12,7 @@ namespace Vigitemp_Serveur
     /// Insère les dernières mesures dans tm_graphique pour un accès ultra-rapide aux graphs
     /// La table tm_graphique se vide régulièrement selon la politique de rétention
     /// </summary>
-    class CacheService
+    internal static class MySqlCacheService
     {
         private static readonly object _lock = new object();
 

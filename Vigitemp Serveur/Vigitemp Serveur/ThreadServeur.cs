@@ -326,7 +326,7 @@ namespace Vigitemp_Serveur
                 }
             }
             return m_database;
-            // return new Database();
+            // Le provider concret est selectionne par DatabaseFactory.
         }
 
         public LieuAlarmSettings GetLieuAlarmSettingsCached(int idLieu)
@@ -2289,6 +2289,5 @@ namespace Vigitemp_Serveur
         }
     }
 }
-
 
 

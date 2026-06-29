@@ -11,7 +11,7 @@ namespace Vigitemp_Serveur
             switch (provider)
             {
                 case "mysql":
-                    return new Database();
+                    return new MySqlDatabaseProvider();
                 case "mssql":
                     return new SqlServerDatabaseProvider();
                 default:
