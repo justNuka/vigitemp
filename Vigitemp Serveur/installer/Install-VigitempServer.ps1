@@ -266,6 +266,9 @@ if (-not (Test-Admin)) {
 $programData = [Environment]::GetFolderPath("CommonApplicationData")
 $defaultInstallDir = Join-Path $programData "VigiSensys\\server"
 $defaultServiceName = "VigiSensysServeur"
+$preferredLocalIpv4 = Get-PreferredLocalIpv4
+$websiteUrlDefault = if ([string]::IsNullOrWhiteSpace($preferredLocalIpv4)) { "http://<ip-machine>:3000" } else { "http://$preferredLocalIpv4`:3000" }
+$dbHostDefault = if ([string]::IsNullOrWhiteSpace($preferredLocalIpv4)) { "<ip-machine>" } else { $preferredLocalIpv4 }
 
 if ([string]::IsNullOrWhiteSpace($SourcePath)) {
     $SourcePath = Read-InstallValue (T "Chemin du build serveur (dossier contenant VigiSensysServeur.exe)" "Path to server build output (folder with VigiSensysServeur.exe)") $defaultSource.Path
@@ -311,16 +314,20 @@ if (-not (Test-Path $configPath)) {
     Write-Error (T "Fichier config introuvable : $configPath" "Config file not found: $configPath")
 }
 
-$websiteBaseUrl = Read-InstallValue (T "URL du site web (ex: http://127.0.0.1:3000)" "Website base URL (example: http://127.0.0.1:3000)") "http://127.0.0.1:3000"
-$dbHost = Read-InstallValue (T "H?te BDD" "DB host") "127.0.0.1"
+$websiteBaseUrl = Read-InstallValue (T "URL du site web (ex: http://192.168.1.10:3000)" "Website base URL (example: http://192.168.1.10:3000)") $websiteUrlDefault
+$dbHost = Read-InstallValue (T "H?te BDD" "DB host") $dbHostDefault
 $dbProvider = Read-InstallValue (T "Type de BDD (mysql/mssql)" "DB provider (mysql/mssql)") "mysql"
 $dbProvider = $dbProvider.ToLowerInvariant()
 if ($dbProvider -ne "mssql") { $dbProvider = "mysql" }
 $dbDefaultPort = if ($dbProvider -eq "mssql") { "1433" } else { "3306" }
-$dbDefaultUser = if ($dbProvider -eq "mssql") { "sa" } else { "root" }
+$dbDefaultUser = ""
 $dbPort = Read-InstallValue (T "Port BDD" "DB port") $dbDefaultPort
 $dbUser = Read-InstallValue (T "Utilisateur BDD" "DB user") $dbDefaultUser
 $dbPassword = Read-InstallSecret (T "Mot de passe BDD" "DB password") ""
+$dbUserTrimmed = $dbUser.Trim().ToLowerInvariant()
+if ($dbProvider -eq "mysql" -and $dbUserTrimmed -eq "root") {
+    Write-Error (T "Le compte MySQL root n'est pas supporte. Creez un compte SQL dedie." "MySQL root account is not supported. Create a dedicated SQL account.")
+}
 $dbMain = Read-InstallValue (T "Nom BDD principale" "Main DB name") "vigi_main"
 $dbMeasure = Read-InstallValue (T "Nom BDD mesures" "Measure DB name") "vigi_mesures"
 $dbConnectionTimeoutSeconds = Read-InstallValue (T "Timeout connexion BDD (secondes)" "DB connection timeout (seconds)") "5"
@@ -621,5 +628,16 @@ function Test-ServerInstall {
 }
 
 Test-ServerInstall
+
+foreach ($dirName in @("installer", "VigitempServerInstaller", "shared-secrets")) {
+    $targetDir = Join-Path $InstallDir $dirName
+    if (Test-Path $targetDir) {
+        Remove-Item -LiteralPath $targetDir -Recurse -Force -ErrorAction SilentlyContinue
+    }
+}
+foreach ($pattern in @("setup*.exe", "*installer*.exe", "VigiSensysServerSetup.exe", "VigiSensysServerSetup.pdb")) {
+    Get-ChildItem -Path $InstallDir -File -Filter $pattern -ErrorAction SilentlyContinue | Remove-Item -Force -ErrorAction SilentlyContinue
+}
+Write-Log (T "Artefacts d'installation supprimes du dossier installe." "Installation artifacts removed from installed folder.")
 
 Stop-Transcript | Out-Null

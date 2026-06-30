@@ -170,7 +170,7 @@ export function MonitoringAuditTab({ logs, isLoading, error, t }: MonitoringAudi
               {row.original.detailRows.map(({ label, value }) => (
                 <Fragment key={`${String(row.original.id)}-${label}`}>
                   <dt className="text-xs text-muted-foreground whitespace-nowrap">{label}</dt>
-                  <dd className="text-xs font-medium whitespace-pre-line break-words">{value}</dd>
+                  <dd className="text-xs font-medium whitespace-pre-line wrap-break-word">{value}</dd>
                 </Fragment>
               ))}
             </dl>

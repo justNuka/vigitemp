@@ -194,7 +194,11 @@ public sealed class MainForm : Form
         {
             var mssql = string.Equals(dbProvider.SelectedItem?.ToString(), "mssql", StringComparison.OrdinalIgnoreCase);
             if (string.IsNullOrWhiteSpace(dbPort.Text) || dbPort.Text is "3306" or "1433") dbPort.Text = mssql ? "1433" : "3306";
-            if (string.IsNullOrWhiteSpace(dbUser.Text) || dbUser.Text is "root" or "sa") dbUser.Text = mssql ? "sa" : string.Empty;
+            if (string.Equals(dbUser.Text, "root", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(dbUser.Text, "sa", StringComparison.OrdinalIgnoreCase))
+            {
+                dbUser.Text = string.Empty;
+            }
         };
 
         var general = StepPanel();
@@ -543,6 +547,8 @@ public sealed class MainForm : Form
             var uninstallScriptPath = InstallerHelpers.WriteServerUninstallScript(_s.InstallDir, _s.ServiceName);
             var displayIconPath = InstallerHelpers.WriteInstalledDisplayIcon(_s.InstallDir, "VigiSensysServer", installedExe) ?? installedExe;
             InstallerHelpers.WriteRegistryInfo(_s.InstallDir, version, licenseDestPath, publicKeyDestPath, _s.ServiceName, displayIconPath, uninstallScriptPath);
+            InstallerHelpers.RemoveInstallerArtifacts(_s.InstallDir);
+            AppendLog("[OK] Artefacts d'installation supprimes du dossier installe.");
 
             SetStatus("Etat : installation terminee avec succes");
             AppendLog("[OK] Installation terminee.");

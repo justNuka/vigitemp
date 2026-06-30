@@ -106,7 +106,11 @@ public sealed class MainForm : Form
         {
             var mssql = string.Equals(dbProvider.SelectedItem?.ToString(), "mssql", StringComparison.OrdinalIgnoreCase);
             if (string.IsNullOrWhiteSpace(dbPort.Text) || dbPort.Text is "3306" or "1433") dbPort.Text = mssql ? "1433" : "3306";
-            if (string.IsNullOrWhiteSpace(dbUser.Text) || dbUser.Text == "sa") dbUser.Text = mssql ? "sa" : string.Empty;
+            if (string.Equals(dbUser.Text, "root", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(dbUser.Text, "sa", StringComparison.OrdinalIgnoreCase))
+            {
+                dbUser.Text = string.Empty;
+            }
         };
 
         var general = StepPanel(); foreach (var c in new Control[] { Field("Dossier d'installation", installDir, BrowseFolder(installDir)), Field("Nom du service Windows", serviceName), Field("Port HTTP", port), Field("URL publique du site", websiteBaseUrl), Field("URL applicative publique", appBaseUrl) }) general.Controls.Add(c);

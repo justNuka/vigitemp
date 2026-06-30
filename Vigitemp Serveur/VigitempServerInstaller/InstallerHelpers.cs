@@ -136,6 +136,27 @@ internal static class InstallerHelpers
             return null;
         }
     }
+
+    public static void RemoveInstallerArtifacts(string installPath)
+    {
+        foreach (var dirName in new[] { "installer", "VigitempServerInstaller", "shared-secrets" })
+        {
+            var targetDir = Path.Combine(installPath, dirName);
+            if (Directory.Exists(targetDir))
+            {
+                try { Directory.Delete(targetDir, true); } catch { }
+            }
+        }
+
+        foreach (var pattern in new[] { "setup*.exe", "*installer*.exe", "VigiSensysServerSetup.exe", "VigiSensysServerSetup.pdb" })
+        {
+            foreach (var file in Directory.GetFiles(installPath, pattern, SearchOption.TopDirectoryOnly))
+            {
+                try { File.Delete(file); } catch { }
+            }
+        }
+    }
+
     public static string GenerateSecret(int byteLength = 32)
     {
         var bytes = new byte[byteLength];
