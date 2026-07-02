@@ -1,4 +1,4 @@
-﻿Param(
+Param(
     [string]$VcRedistPath,
     [string]$MySqlMsiPath,
     [string]$MainSeedPath,
@@ -182,7 +182,7 @@ if (-not (Test-Path $MySqlMsiPath)) {
  }
 
 Write-Log "Lancer le configurateur MySQL et terminer la configuration (port, mot de passe root, service...)."
-$null = Read-Host "Appuyez sur Entrée quand la configuration MySQL est terminée"
+$null = Read-Host "Appuyez sur Entreee quand la configuration MySQL est terminee"
 
 if ($skipSeedImport) {
     Write-Log "Import SQL ignore: bases existantes conservees."

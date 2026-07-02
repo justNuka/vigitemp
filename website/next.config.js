@@ -11,8 +11,7 @@ const withNextIntl = createNextIntlPlugin(
   "./src/i18n/request.ts"
 );
 
-function parseListEnv(name, fallback = []) {
-  const raw = process.env[name];
+function parseListValue(raw, fallback = []) {
   if (!raw) {
     return fallback;
   }
@@ -21,6 +20,21 @@ function parseListEnv(name, fallback = []) {
     .split(/[\r\n,;]+/)
     .map((value) => value.trim())
     .filter(Boolean);
+}
+
+function parseListEnv(name, fallback = []) {
+  return parseListValue(process.env[name], fallback);
+}
+
+function parseListEnvAliases(names, fallback = []) {
+  for (const name of names) {
+    const values = parseListValue(process.env[name], []);
+    if (values.length > 0) {
+      return values;
+    }
+  }
+
+  return fallback;
 }
 
 const defaultAllowedDevOrigins = [
@@ -38,17 +52,33 @@ const defaultAllowedDevOrigins = [
   "https://test.vigitemp",
 ];
 
-const allowedDevOrigins = parseListEnv(
-  "VIGITEMP_ALLOWED_DEV_ORIGINS",
+const allowedDevOrigins = parseListEnvAliases(
+  [
+    "VIGISENSYS_ALLOWED_DEV_ORIGINS",
+    "VIGITEMP_ALLOWED_DEV_ORIGINS",
+  ],
   defaultAllowedDevOrigins
 );
 
+const serverActionsAllowedOrigins = parseListEnvAliases([
+  "VIGISENSYS_SERVER_ACTIONS_ALLOWED_ORIGINS",
+  "VIGITEMP_SERVER_ACTIONS_ALLOWED_ORIGINS",
+  "VIGISENSYS_ALLOWED_DEV_ORIGINS",
+  "VIGITEMP_ALLOWED_DEV_ORIGINS",
+]);
+
 const connectSrcValues = [
   "'self'",
-  ...parseListEnv("VIGITEMP_CSP_CONNECT_SRC", [
-    "http://127.0.0.1:8000",
-    "http://localhost:8000",
-  ]),
+  ...parseListEnvAliases(
+    [
+      "VIGISENSYS_CSP_CONNECT_SRC",
+      "VIGITEMP_CSP_CONNECT_SRC",
+    ],
+    [
+      "http://127.0.0.1:8000",
+      "http://localhost:8000",
+    ]
+  ),
 ];
 
 /** @type {import('next').NextConfig} */
@@ -72,6 +102,11 @@ const nextConfig = {
         ],
     },
     allowedDevOrigins,
+    experimental: {
+        serverActions: serverActionsAllowedOrigins.length > 0
+            ? { allowedOrigins: serverActionsAllowedOrigins }
+            : {},
+    },
     onDemandEntries: {
         maxInactiveAge: 15 * 60 * 1000,
         pagesBufferLength: 5,

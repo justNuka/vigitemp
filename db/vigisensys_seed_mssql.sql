@@ -12,16 +12,6 @@ GO
 USE [vigi_main];
 GO
 
--- Compatibilite schema legacy: Id_Serveur devient Id_Worker pour l'affectation des workers.
--- Id_Serveur_BDD des tables mesures/journal reste volontairement inchange.
-IF OBJECT_ID(N'dbo.t_actionneur', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_actionneur', N'Id_Serveur') IS NOT NULL AND COL_LENGTH(N'dbo.t_actionneur', N'Id_Worker') IS NULL EXEC sp_rename N'dbo.t_actionneur.Id_Serveur', N'Id_Worker', N'COLUMN';
-IF OBJECT_ID(N'dbo.t_etalon', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_etalon', N'Id_Serveur') IS NOT NULL AND COL_LENGTH(N'dbo.t_etalon', N'Id_Worker') IS NULL EXEC sp_rename N'dbo.t_etalon.Id_Serveur', N'Id_Worker', N'COLUMN';
-IF OBJECT_ID(N'dbo.t_module', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_module', N'Id_Serveur') IS NOT NULL AND COL_LENGTH(N'dbo.t_module', N'Id_Worker') IS NULL EXEC sp_rename N'dbo.t_module.Id_Serveur', N'Id_Worker', N'COLUMN';
-IF OBJECT_ID(N'dbo.t_sonde', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_sonde', N'Id_Serveur') IS NOT NULL AND COL_LENGTH(N'dbo.t_sonde', N'Id_Worker') IS NULL EXEC sp_rename N'dbo.t_sonde.Id_Serveur', N'Id_Worker', N'COLUMN';
-IF OBJECT_ID(N'dbo.t_actionneur', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_actionneur', N'Id_Serveur') IS NOT NULL AND COL_LENGTH(N'dbo.t_actionneur', N'Id_Worker') IS NOT NULL EXEC(N'UPDATE dbo.[t_actionneur] SET [Id_Worker] = [Id_Serveur] WHERE [Id_Worker] IS NULL');
-IF OBJECT_ID(N'dbo.t_etalon', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_etalon', N'Id_Serveur') IS NOT NULL AND COL_LENGTH(N'dbo.t_etalon', N'Id_Worker') IS NOT NULL EXEC(N'UPDATE dbo.[t_etalon] SET [Id_Worker] = [Id_Serveur] WHERE [Id_Worker] IS NULL');
-IF OBJECT_ID(N'dbo.t_module', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_module', N'Id_Serveur') IS NOT NULL AND COL_LENGTH(N'dbo.t_module', N'Id_Worker') IS NOT NULL EXEC(N'UPDATE dbo.[t_module] SET [Id_Worker] = [Id_Serveur] WHERE [Id_Worker] IS NULL');
-IF OBJECT_ID(N'dbo.t_sonde', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_sonde', N'Id_Serveur') IS NOT NULL AND COL_LENGTH(N'dbo.t_sonde', N'Id_Worker') IS NOT NULL EXEC(N'UPDATE dbo.[t_sonde] SET [Id_Worker] = [Id_Serveur] WHERE [Id_Worker] IS NULL');
 GO
 
 IF OBJECT_ID(N'dbo.t_actionneur', N'U') IS NULL
@@ -50,25 +40,6 @@ BEGIN
   );
 END;
 GO
-IF OBJECT_ID(N'dbo.t_actionneur', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_actionneur', N'Id_Actionneur') IS NULL ALTER TABLE dbo.[t_actionneur] ADD [Id_Actionneur] INT NULL;
-IF OBJECT_ID(N'dbo.t_actionneur', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_actionneur', N'Num_Serie') IS NULL ALTER TABLE dbo.[t_actionneur] ADD [Num_Serie] VARCHAR(50) NULL;
-IF OBJECT_ID(N'dbo.t_actionneur', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_actionneur', N'Type') IS NULL ALTER TABLE dbo.[t_actionneur] ADD [Type] INT NULL;
-IF OBJECT_ID(N'dbo.t_actionneur', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_actionneur', N'Est_Etat') IS NULL ALTER TABLE dbo.[t_actionneur] ADD [Est_Etat] BIT NULL;
-IF OBJECT_ID(N'dbo.t_actionneur', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_actionneur', N'Est_Demande') IS NULL ALTER TABLE dbo.[t_actionneur] ADD [Est_Demande] BIT NULL;
-IF OBJECT_ID(N'dbo.t_actionneur', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_actionneur', N'Commentaire') IS NULL ALTER TABLE dbo.[t_actionneur] ADD [Commentaire] VARCHAR(255) NULL;
-IF OBJECT_ID(N'dbo.t_actionneur', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_actionneur', N'Port_Serie') IS NULL ALTER TABLE dbo.[t_actionneur] ADD [Port_Serie] INT NULL;
-IF OBJECT_ID(N'dbo.t_actionneur', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_actionneur', N'Id_Module') IS NULL ALTER TABLE dbo.[t_actionneur] ADD [Id_Module] INT NULL;
-IF OBJECT_ID(N'dbo.t_actionneur', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_actionneur', N'Relai_1') IS NULL ALTER TABLE dbo.[t_actionneur] ADD [Relai_1] VARCHAR(50) NULL;
-IF OBJECT_ID(N'dbo.t_actionneur', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_actionneur', N'Relai_2') IS NULL ALTER TABLE dbo.[t_actionneur] ADD [Relai_2] VARCHAR(50) NULL;
-IF OBJECT_ID(N'dbo.t_actionneur', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_actionneur', N'Relai_3') IS NULL ALTER TABLE dbo.[t_actionneur] ADD [Relai_3] VARCHAR(50) NULL;
-IF OBJECT_ID(N'dbo.t_actionneur', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_actionneur', N'Relai_4') IS NULL ALTER TABLE dbo.[t_actionneur] ADD [Relai_4] VARCHAR(50) NULL;
-IF OBJECT_ID(N'dbo.t_actionneur', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_actionneur', N'Est_Test') IS NULL ALTER TABLE dbo.[t_actionneur] ADD [Est_Test] BIT NULL;
-IF OBJECT_ID(N'dbo.t_actionneur', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_actionneur', N'Libelle_Erreur') IS NULL ALTER TABLE dbo.[t_actionneur] ADD [Libelle_Erreur] VARCHAR(50) NULL;
-IF OBJECT_ID(N'dbo.t_actionneur', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_actionneur', N'Id_Plan') IS NULL ALTER TABLE dbo.[t_actionneur] ADD [Id_Plan] INT NULL;
-IF OBJECT_ID(N'dbo.t_actionneur', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_actionneur', N'Position_Plan_X') IS NULL ALTER TABLE dbo.[t_actionneur] ADD [Position_Plan_X] BIGINT NULL;
-IF OBJECT_ID(N'dbo.t_actionneur', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_actionneur', N'Position_Plan_Y') IS NULL ALTER TABLE dbo.[t_actionneur] ADD [Position_Plan_Y] BIGINT NULL;
-IF OBJECT_ID(N'dbo.t_actionneur', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_actionneur', N'Est_Archive') IS NULL ALTER TABLE dbo.[t_actionneur] ADD [Est_Archive] BIT NULL;
-IF OBJECT_ID(N'dbo.t_actionneur', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_actionneur', N'Id_Worker') IS NULL ALTER TABLE dbo.[t_actionneur] ADD [Id_Worker] INT NULL;
 GO
 
 IF OBJECT_ID(N'dbo.t_alarme', N'U') IS NULL
@@ -91,19 +62,6 @@ BEGIN
   );
 END;
 GO
-IF OBJECT_ID(N'dbo.t_alarme', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_alarme', N'Id_Alarme') IS NULL ALTER TABLE dbo.[t_alarme] ADD [Id_Alarme] INT NULL;
-IF OBJECT_ID(N'dbo.t_alarme', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_alarme', N'Date_Heure_Debut') IS NULL ALTER TABLE dbo.[t_alarme] ADD [Date_Heure_Debut] DATETIME NULL;
-IF OBJECT_ID(N'dbo.t_alarme', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_alarme', N'Valeur') IS NULL ALTER TABLE dbo.[t_alarme] ADD [Valeur] FLOAT NULL;
-IF OBJECT_ID(N'dbo.t_alarme', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_alarme', N'Type') IS NULL ALTER TABLE dbo.[t_alarme] ADD [Type] VARCHAR(1) NULL;
-IF OBJECT_ID(N'dbo.t_alarme', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_alarme', N'Date_Heure_Fin') IS NULL ALTER TABLE dbo.[t_alarme] ADD [Date_Heure_Fin] DATETIME NULL;
-IF OBJECT_ID(N'dbo.t_alarme', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_alarme', N'Id_Lieu') IS NULL ALTER TABLE dbo.[t_alarme] ADD [Id_Lieu] INT NULL;
-IF OBJECT_ID(N'dbo.t_alarme', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_alarme', N'Sonde_Numero_Serie') IS NULL ALTER TABLE dbo.[t_alarme] ADD [Sonde_Numero_Serie] VARCHAR(50) NULL;
-IF OBJECT_ID(N'dbo.t_alarme', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_alarme', N'Unite') IS NULL ALTER TABLE dbo.[t_alarme] ADD [Unite] VARCHAR(10) NULL;
-IF OBJECT_ID(N'dbo.t_alarme', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_alarme', N'Est_Acquittee') IS NULL ALTER TABLE dbo.[t_alarme] ADD [Est_Acquittee] BIT NULL;
-IF OBJECT_ID(N'dbo.t_alarme', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_alarme', N'Date_Heure_Derniere_Mesure') IS NULL ALTER TABLE dbo.[t_alarme] ADD [Date_Heure_Derniere_Mesure] DATETIME NULL;
-IF OBJECT_ID(N'dbo.t_alarme', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_alarme', N'Est_Alarme_Pour_VigiTel') IS NULL ALTER TABLE dbo.[t_alarme] ADD [Est_Alarme_Pour_VigiTel] BIT NULL;
-IF OBJECT_ID(N'dbo.t_alarme', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_alarme', N'Est_Mail_Envoye') IS NULL ALTER TABLE dbo.[t_alarme] ADD [Est_Mail_Envoye] BIT NULL;
-IF OBJECT_ID(N'dbo.t_alarme', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_alarme', N'Est_Tel_Acquittee') IS NULL ALTER TABLE dbo.[t_alarme] ADD [Est_Tel_Acquittee] BIT NULL;
 GO
 
 IF OBJECT_ID(N'dbo.t_alarme_histo', N'U') IS NULL
@@ -128,21 +86,6 @@ BEGIN
   );
 END;
 GO
-IF OBJECT_ID(N'dbo.t_alarme_histo', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_alarme_histo', N'Id_Alarme_Histo') IS NULL ALTER TABLE dbo.[t_alarme_histo] ADD [Id_Alarme_Histo] INT NULL;
-IF OBJECT_ID(N'dbo.t_alarme_histo', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_alarme_histo', N'Id_Alarme') IS NULL ALTER TABLE dbo.[t_alarme_histo] ADD [Id_Alarme] INT NULL;
-IF OBJECT_ID(N'dbo.t_alarme_histo', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_alarme_histo', N'Date_Heure_Debut') IS NULL ALTER TABLE dbo.[t_alarme_histo] ADD [Date_Heure_Debut] DATETIME NULL;
-IF OBJECT_ID(N'dbo.t_alarme_histo', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_alarme_histo', N'Valeur') IS NULL ALTER TABLE dbo.[t_alarme_histo] ADD [Valeur] FLOAT NULL;
-IF OBJECT_ID(N'dbo.t_alarme_histo', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_alarme_histo', N'Type') IS NULL ALTER TABLE dbo.[t_alarme_histo] ADD [Type] VARCHAR(1) NULL;
-IF OBJECT_ID(N'dbo.t_alarme_histo', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_alarme_histo', N'Date_Heure_Fin') IS NULL ALTER TABLE dbo.[t_alarme_histo] ADD [Date_Heure_Fin] DATETIME NULL;
-IF OBJECT_ID(N'dbo.t_alarme_histo', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_alarme_histo', N'Id_Lieu') IS NULL ALTER TABLE dbo.[t_alarme_histo] ADD [Id_Lieu] INT NULL;
-IF OBJECT_ID(N'dbo.t_alarme_histo', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_alarme_histo', N'Sonde_Numero_Serie') IS NULL ALTER TABLE dbo.[t_alarme_histo] ADD [Sonde_Numero_Serie] VARCHAR(50) NULL;
-IF OBJECT_ID(N'dbo.t_alarme_histo', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_alarme_histo', N'Unite') IS NULL ALTER TABLE dbo.[t_alarme_histo] ADD [Unite] VARCHAR(10) NULL;
-IF OBJECT_ID(N'dbo.t_alarme_histo', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_alarme_histo', N'Est_Acquittee') IS NULL ALTER TABLE dbo.[t_alarme_histo] ADD [Est_Acquittee] BIT NULL;
-IF OBJECT_ID(N'dbo.t_alarme_histo', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_alarme_histo', N'Date_Heure_Derniere_Mesure') IS NULL ALTER TABLE dbo.[t_alarme_histo] ADD [Date_Heure_Derniere_Mesure] DATETIME NULL;
-IF OBJECT_ID(N'dbo.t_alarme_histo', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_alarme_histo', N'Est_Alarme_Pour_VigiTel') IS NULL ALTER TABLE dbo.[t_alarme_histo] ADD [Est_Alarme_Pour_VigiTel] BIT NULL;
-IF OBJECT_ID(N'dbo.t_alarme_histo', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_alarme_histo', N'Est_Mail_Envoye') IS NULL ALTER TABLE dbo.[t_alarme_histo] ADD [Est_Mail_Envoye] BIT NULL;
-IF OBJECT_ID(N'dbo.t_alarme_histo', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_alarme_histo', N'Est_Tel_Acquittee') IS NULL ALTER TABLE dbo.[t_alarme_histo] ADD [Est_Tel_Acquittee] BIT NULL;
-IF OBJECT_ID(N'dbo.t_alarme_histo', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_alarme_histo', N'Date_Heure_Acquittement') IS NULL ALTER TABLE dbo.[t_alarme_histo] ADD [Date_Heure_Acquittement] DATETIME NULL;
 GO
 
 IF OBJECT_ID(N'dbo.t_alarme_message', N'U') IS NULL
@@ -156,10 +99,6 @@ BEGIN
   );
 END;
 GO
-IF OBJECT_ID(N'dbo.t_alarme_message', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_alarme_message', N'Id_Alarme_Message') IS NULL ALTER TABLE dbo.[t_alarme_message] ADD [Id_Alarme_Message] INT NULL;
-IF OBJECT_ID(N'dbo.t_alarme_message', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_alarme_message', N'Code_Alarme_Message') IS NULL ALTER TABLE dbo.[t_alarme_message] ADD [Code_Alarme_Message] VARCHAR(20) NULL;
-IF OBJECT_ID(N'dbo.t_alarme_message', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_alarme_message', N'Type') IS NULL ALTER TABLE dbo.[t_alarme_message] ADD [Type] VARCHAR(1) NULL;
-IF OBJECT_ID(N'dbo.t_alarme_message', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_alarme_message', N'Texte_Message') IS NULL ALTER TABLE dbo.[t_alarme_message] ADD [Texte_Message] NVARCHAR(MAX) NULL;
 GO
 IF OBJECT_ID(N'dbo.t_alarme_message', N'U') IS NOT NULL AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'UX_t_alarme_message_Code_Alarme_Message' AND object_id = OBJECT_ID(N'dbo.t_alarme_message')) CREATE UNIQUE INDEX [UX_t_alarme_message_Code_Alarme_Message] ON dbo.[t_alarme_message]([Code_Alarme_Message]) WHERE [Code_Alarme_Message] IS NOT NULL;
 GO
@@ -173,17 +112,6 @@ BEGIN
     [Commentaire] VARCHAR(200) NULL,
     CONSTRAINT [PK_t_autorisation] PRIMARY KEY ([Id_Autorisation])
   );
-END;
-GO
-IF OBJECT_ID(N'dbo.t_autorisation', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_autorisation', N'Id_Autorisation') IS NULL ALTER TABLE dbo.[t_autorisation] ADD [Id_Autorisation] INT NULL;
-IF OBJECT_ID(N'dbo.t_autorisation', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_autorisation', N'Code_Autorisation') IS NULL ALTER TABLE dbo.[t_autorisation] ADD [Code_Autorisation] VARCHAR(50) NULL;
-IF OBJECT_ID(N'dbo.t_autorisation', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_autorisation', N'Libelle_Autorisation') IS NULL ALTER TABLE dbo.[t_autorisation] ADD [Libelle_Autorisation] VARCHAR(50) NULL;
-IF OBJECT_ID(N'dbo.t_autorisation', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_autorisation', N'Commentaire') IS NULL ALTER TABLE dbo.[t_autorisation] ADD [Commentaire] VARCHAR(200) NULL;
-GO
-
-IF OBJECT_ID(N'dbo.t_milieu_inter', N'U') IS NULL AND OBJECT_ID(N'dbo.t_milieu', N'U') IS NOT NULL
-BEGIN
-  EXEC sp_rename N'dbo.t_milieu', N't_milieu_inter';
 END;
 GO
 IF OBJECT_ID(N'dbo.t_milieu_inter', N'U') IS NULL
@@ -201,14 +129,6 @@ BEGIN
   );
 END;
 GO
-IF OBJECT_ID(N'dbo.t_milieu_inter', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_milieu_inter', N'Id_Milieu') IS NULL ALTER TABLE dbo.[t_milieu_inter] ADD [Id_Milieu] INT NULL;
-IF OBJECT_ID(N'dbo.t_milieu_inter', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_milieu_inter', N'Model') IS NULL ALTER TABLE dbo.[t_milieu_inter] ADD [Model] VARCHAR(50) NULL;
-IF OBJECT_ID(N'dbo.t_milieu_inter', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_milieu_inter', N'Reference') IS NULL ALTER TABLE dbo.[t_milieu_inter] ADD [Reference] VARCHAR(50) NULL;
-IF OBJECT_ID(N'dbo.t_milieu_inter', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_milieu_inter', N'Stabilite') IS NULL ALTER TABLE dbo.[t_milieu_inter] ADD [Stabilite] FLOAT NULL;
-IF OBJECT_ID(N'dbo.t_milieu_inter', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_milieu_inter', N'Homogeneite') IS NULL ALTER TABLE dbo.[t_milieu_inter] ADD [Homogeneite] FLOAT NULL;
-IF OBJECT_ID(N'dbo.t_milieu_inter', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_milieu_inter', N'Contenu') IS NULL ALTER TABLE dbo.[t_milieu_inter] ADD [Contenu] VARCHAR(50) NULL;
-IF OBJECT_ID(N'dbo.t_milieu_inter', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_milieu_inter', N'Est_Reserve_MC2') IS NULL ALTER TABLE dbo.[t_milieu_inter] ADD [Est_Reserve_MC2] BIT NULL;
-IF OBJECT_ID(N'dbo.t_milieu_inter', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_milieu_inter', N'Est_Archive') IS NULL ALTER TABLE dbo.[t_milieu_inter] ADD [Est_Archive] BIT NULL;
 GO
 
 IF OBJECT_ID(N'dbo.t_ajustage', N'U') IS NULL
@@ -240,28 +160,6 @@ BEGIN
   );
 END;
 GO
-IF OBJECT_ID(N'dbo.t_ajustage', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_ajustage', N'Id_Ajustage') IS NULL ALTER TABLE dbo.[t_ajustage] ADD [Id_Ajustage] INT NULL;
-IF OBJECT_ID(N'dbo.t_ajustage', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_ajustage', N'Date_Heure_Ajustage') IS NULL ALTER TABLE dbo.[t_ajustage] ADD [Date_Heure_Ajustage] DATETIME NULL;
-IF OBJECT_ID(N'dbo.t_ajustage', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_ajustage', N'Sonde_Numero_Serie') IS NULL ALTER TABLE dbo.[t_ajustage] ADD [Sonde_Numero_Serie] VARCHAR(50) NULL;
-IF OBJECT_ID(N'dbo.t_ajustage', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_ajustage', N'Coeff_X2') IS NULL ALTER TABLE dbo.[t_ajustage] ADD [Coeff_X2] FLOAT NULL;
-IF OBJECT_ID(N'dbo.t_ajustage', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_ajustage', N'Coeff_X') IS NULL ALTER TABLE dbo.[t_ajustage] ADD [Coeff_X] FLOAT NULL;
-IF OBJECT_ID(N'dbo.t_ajustage', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_ajustage', N'Coeff_Constant') IS NULL ALTER TABLE dbo.[t_ajustage] ADD [Coeff_Constant] FLOAT NULL;
-IF OBJECT_ID(N'dbo.t_ajustage', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_ajustage', N'Unite') IS NULL ALTER TABLE dbo.[t_ajustage] ADD [Unite] VARCHAR(10) NULL;
-IF OBJECT_ID(N'dbo.t_ajustage', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_ajustage', N'Nb_Decimale') IS NULL ALTER TABLE dbo.[t_ajustage] ADD [Nb_Decimale] INT NULL;
-IF OBJECT_ID(N'dbo.t_ajustage', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_ajustage', N'Operateur') IS NULL ALTER TABLE dbo.[t_ajustage] ADD [Operateur] VARCHAR(255) NULL;
-IF OBJECT_ID(N'dbo.t_ajustage', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_ajustage', N'SE_Numero') IS NULL ALTER TABLE dbo.[t_ajustage] ADD [SE_Numero] VARCHAR(50) NULL;
-IF OBJECT_ID(N'dbo.t_ajustage', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_ajustage', N'SE_Organisme') IS NULL ALTER TABLE dbo.[t_ajustage] ADD [SE_Organisme] VARCHAR(50) NULL;
-IF OBJECT_ID(N'dbo.t_ajustage', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_ajustage', N'SE_Date_Certif') IS NULL ALTER TABLE dbo.[t_ajustage] ADD [SE_Date_Certif] DATE NULL;
-IF OBJECT_ID(N'dbo.t_ajustage', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_ajustage', N'SE_Numero_Certif') IS NULL ALTER TABLE dbo.[t_ajustage] ADD [SE_Numero_Certif] VARCHAR(50) NULL;
-IF OBJECT_ID(N'dbo.t_ajustage', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_ajustage', N'Mesure_Etalon1') IS NULL ALTER TABLE dbo.[t_ajustage] ADD [Mesure_Etalon1] FLOAT NULL;
-IF OBJECT_ID(N'dbo.t_ajustage', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_ajustage', N'Mesure_Etalon2') IS NULL ALTER TABLE dbo.[t_ajustage] ADD [Mesure_Etalon2] FLOAT NULL;
-IF OBJECT_ID(N'dbo.t_ajustage', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_ajustage', N'Valeur_Brute1') IS NULL ALTER TABLE dbo.[t_ajustage] ADD [Valeur_Brute1] FLOAT NULL;
-IF OBJECT_ID(N'dbo.t_ajustage', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_ajustage', N'Valeur_Brute2') IS NULL ALTER TABLE dbo.[t_ajustage] ADD [Valeur_Brute2] FLOAT NULL;
-IF OBJECT_ID(N'dbo.t_ajustage', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_ajustage', N'Ancienne_Mesure1') IS NULL ALTER TABLE dbo.[t_ajustage] ADD [Ancienne_Mesure1] FLOAT NULL;
-IF OBJECT_ID(N'dbo.t_ajustage', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_ajustage', N'Ancienne_Mesure2') IS NULL ALTER TABLE dbo.[t_ajustage] ADD [Ancienne_Mesure2] FLOAT NULL;
-IF OBJECT_ID(N'dbo.t_ajustage', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_ajustage', N'Nouvelle_Mesure1') IS NULL ALTER TABLE dbo.[t_ajustage] ADD [Nouvelle_Mesure1] FLOAT NULL;
-IF OBJECT_ID(N'dbo.t_ajustage', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_ajustage', N'Nouvelle_Mesure2') IS NULL ALTER TABLE dbo.[t_ajustage] ADD [Nouvelle_Mesure2] FLOAT NULL;
-IF OBJECT_ID(N'dbo.t_ajustage', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_ajustage', N'Id_Milieu') IS NULL ALTER TABLE dbo.[t_ajustage] ADD [Id_Milieu] INT NULL;
 GO
 
 IF OBJECT_ID(N'dbo.t_certif', N'U') IS NULL
@@ -278,13 +176,6 @@ BEGIN
   );
 END;
 GO
-IF OBJECT_ID(N'dbo.t_certif', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_certif', N'Id_Certif') IS NULL ALTER TABLE dbo.[t_certif] ADD [Id_Certif] INT NULL;
-IF OBJECT_ID(N'dbo.t_certif', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_certif', N'Numero') IS NULL ALTER TABLE dbo.[t_certif] ADD [Numero] VARCHAR(50) NULL;
-IF OBJECT_ID(N'dbo.t_certif', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_certif', N'Organisme') IS NULL ALTER TABLE dbo.[t_certif] ADD [Organisme] VARCHAR(50) NULL;
-IF OBJECT_ID(N'dbo.t_certif', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_certif', N'Date') IS NULL ALTER TABLE dbo.[t_certif] ADD [Date] DATE NULL;
-IF OBJECT_ID(N'dbo.t_certif', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_certif', N'Etalon_Numero_Serie') IS NULL ALTER TABLE dbo.[t_certif] ADD [Etalon_Numero_Serie] VARCHAR(50) NULL;
-IF OBJECT_ID(N'dbo.t_certif', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_certif', N'Unite') IS NULL ALTER TABLE dbo.[t_certif] ADD [Unite] VARCHAR(10) NULL;
-IF OBJECT_ID(N'dbo.t_certif', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_certif', N'Id_PDF') IS NULL ALTER TABLE dbo.[t_certif] ADD [Id_PDF] INT NULL;
 GO
 
 IF OBJECT_ID(N'dbo.t_certif_mesure', N'U') IS NULL
@@ -300,12 +191,6 @@ BEGIN
   );
 END;
 GO
-IF OBJECT_ID(N'dbo.t_certif_mesure', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_certif_mesure', N'Id_Certif_Mesure') IS NULL ALTER TABLE dbo.[t_certif_mesure] ADD [Id_Certif_Mesure] INT NULL;
-IF OBJECT_ID(N'dbo.t_certif_mesure', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_certif_mesure', N'Id_Certif') IS NULL ALTER TABLE dbo.[t_certif_mesure] ADD [Id_Certif] INT NULL;
-IF OBJECT_ID(N'dbo.t_certif_mesure', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_certif_mesure', N'Numero_Ordre') IS NULL ALTER TABLE dbo.[t_certif_mesure] ADD [Numero_Ordre] INT NULL;
-IF OBJECT_ID(N'dbo.t_certif_mesure', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_certif_mesure', N'Temperature_Vraie') IS NULL ALTER TABLE dbo.[t_certif_mesure] ADD [Temperature_Vraie] VARCHAR(50) NULL;
-IF OBJECT_ID(N'dbo.t_certif_mesure', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_certif_mesure', N'Temperature_Reference') IS NULL ALTER TABLE dbo.[t_certif_mesure] ADD [Temperature_Reference] VARCHAR(50) NULL;
-IF OBJECT_ID(N'dbo.t_certif_mesure', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_certif_mesure', N'Incertitude') IS NULL ALTER TABLE dbo.[t_certif_mesure] ADD [Incertitude] FLOAT NULL;
 GO
 
 IF OBJECT_ID(N'dbo.t_etalon', N'U') IS NULL
@@ -331,22 +216,6 @@ BEGIN
   );
 END;
 GO
-IF OBJECT_ID(N'dbo.t_etalon', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_etalon', N'Id_Etalon') IS NULL ALTER TABLE dbo.[t_etalon] ADD [Id_Etalon] INT NULL;
-IF OBJECT_ID(N'dbo.t_etalon', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_etalon', N'Etalon_Numero_Serie') IS NULL ALTER TABLE dbo.[t_etalon] ADD [Etalon_Numero_Serie] VARCHAR(50) NULL;
-IF OBJECT_ID(N'dbo.t_etalon', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_etalon', N'Est_Archive') IS NULL ALTER TABLE dbo.[t_etalon] ADD [Est_Archive] BIT NULL;
-IF OBJECT_ID(N'dbo.t_etalon', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_etalon', N'Etat_Etalon') IS NULL ALTER TABLE dbo.[t_etalon] ADD [Etat_Etalon] VARCHAR(1) NULL;
-IF OBJECT_ID(N'dbo.t_etalon', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_etalon', N'Port_Serie') IS NULL ALTER TABLE dbo.[t_etalon] ADD [Port_Serie] VARCHAR(10) NULL;
-IF OBJECT_ID(N'dbo.t_etalon', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_etalon', N'Est_Sonde_Externe') IS NULL ALTER TABLE dbo.[t_etalon] ADD [Est_Sonde_Externe] BIT NULL;
-IF OBJECT_ID(N'dbo.t_etalon', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_etalon', N'Resolution') IS NULL ALTER TABLE dbo.[t_etalon] ADD [Resolution] VARCHAR(50) NULL;
-IF OBJECT_ID(N'dbo.t_etalon', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_etalon', N'Incertitude') IS NULL ALTER TABLE dbo.[t_etalon] ADD [Incertitude] VARCHAR(50) NULL;
-IF OBJECT_ID(N'dbo.t_etalon', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_etalon', N'Nb_Decimale') IS NULL ALTER TABLE dbo.[t_etalon] ADD [Nb_Decimale] INT NULL;
-IF OBJECT_ID(N'dbo.t_etalon', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_etalon', N'Coeff_A') IS NULL ALTER TABLE dbo.[t_etalon] ADD [Coeff_A] FLOAT NULL;
-IF OBJECT_ID(N'dbo.t_etalon', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_etalon', N'Coeff_B') IS NULL ALTER TABLE dbo.[t_etalon] ADD [Coeff_B] FLOAT NULL;
-IF OBJECT_ID(N'dbo.t_etalon', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_etalon', N'Coeff_C') IS NULL ALTER TABLE dbo.[t_etalon] ADD [Coeff_C] FLOAT NULL;
-IF OBJECT_ID(N'dbo.t_etalon', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_etalon', N'Incertitude_Max') IS NULL ALTER TABLE dbo.[t_etalon] ADD [Incertitude_Max] FLOAT NULL;
-IF OBJECT_ID(N'dbo.t_etalon', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_etalon', N'Reserve_MC2') IS NULL ALTER TABLE dbo.[t_etalon] ADD [Reserve_MC2] VARCHAR(50) NULL;
-IF OBJECT_ID(N'dbo.t_etalon', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_etalon', N'Id_Worker') IS NULL ALTER TABLE dbo.[t_etalon] ADD [Id_Worker] INT NULL;
-IF OBJECT_ID(N'dbo.t_etalon', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_etalon', N'Id_Module') IS NULL ALTER TABLE dbo.[t_etalon] ADD [Id_Module] INT NULL;
 GO
 IF OBJECT_ID(N'dbo.t_etalon', N'U') IS NOT NULL AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'UX_t_etalon_Etalon_Numero_Serie' AND object_id = OBJECT_ID(N'dbo.t_etalon')) CREATE UNIQUE INDEX [UX_t_etalon_Etalon_Numero_Serie] ON dbo.[t_etalon]([Etalon_Numero_Serie]) WHERE [Etalon_Numero_Serie] IS NOT NULL;
 GO
@@ -377,25 +246,6 @@ BEGIN
   );
 END;
 GO
-IF OBJECT_ID(N'dbo.t_etalonnage', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_etalonnage', N'Id_Etalonnage') IS NULL ALTER TABLE dbo.[t_etalonnage] ADD [Id_Etalonnage] INT NULL;
-IF OBJECT_ID(N'dbo.t_etalonnage', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_etalonnage', N'Date_Heure_Etalonnage') IS NULL ALTER TABLE dbo.[t_etalonnage] ADD [Date_Heure_Etalonnage] DATETIME NULL;
-IF OBJECT_ID(N'dbo.t_etalonnage', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_etalonnage', N'Sonde_Numero_Serie') IS NULL ALTER TABLE dbo.[t_etalonnage] ADD [Sonde_Numero_Serie] VARCHAR(50) NULL;
-IF OBJECT_ID(N'dbo.t_etalonnage', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_etalonnage', N'Nom_Etalonnage') IS NULL ALTER TABLE dbo.[t_etalonnage] ADD [Nom_Etalonnage] VARCHAR(255) NULL;
-IF OBJECT_ID(N'dbo.t_etalonnage', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_etalonnage', N'Date_Validite') IS NULL ALTER TABLE dbo.[t_etalonnage] ADD [Date_Validite] DATE NULL;
-IF OBJECT_ID(N'dbo.t_etalonnage', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_etalonnage', N'Duree_Validite_Jours') IS NULL ALTER TABLE dbo.[t_etalonnage] ADD [Duree_Validite_Jours] INT NULL;
-IF OBJECT_ID(N'dbo.t_etalonnage', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_etalonnage', N'Valide') IS NULL ALTER TABLE dbo.[t_etalonnage] ADD [Valide] DATETIME NULL;
-IF OBJECT_ID(N'dbo.t_etalonnage', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_etalonnage', N'Operateur') IS NULL ALTER TABLE dbo.[t_etalonnage] ADD [Operateur] VARCHAR(255) NULL;
-IF OBJECT_ID(N'dbo.t_etalonnage', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_etalonnage', N'Etalon_Numero_Serie') IS NULL ALTER TABLE dbo.[t_etalonnage] ADD [Etalon_Numero_Serie] VARCHAR(50) NULL;
-IF OBJECT_ID(N'dbo.t_etalonnage', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_etalonnage', N'Date_Certif') IS NULL ALTER TABLE dbo.[t_etalonnage] ADD [Date_Certif] DATE NULL;
-IF OBJECT_ID(N'dbo.t_etalonnage', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_etalonnage', N'Organisme') IS NULL ALTER TABLE dbo.[t_etalonnage] ADD [Organisme] VARCHAR(50) NULL;
-IF OBJECT_ID(N'dbo.t_etalonnage', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_etalonnage', N'Num_Certif') IS NULL ALTER TABLE dbo.[t_etalonnage] ADD [Num_Certif] VARCHAR(50) NULL;
-IF OBJECT_ID(N'dbo.t_etalonnage', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_etalonnage', N'Unite') IS NULL ALTER TABLE dbo.[t_etalonnage] ADD [Unite] VARCHAR(10) NULL;
-IF OBJECT_ID(N'dbo.t_etalonnage', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_etalonnage', N'Incertitude') IS NULL ALTER TABLE dbo.[t_etalonnage] ADD [Incertitude] FLOAT NULL;
-IF OBJECT_ID(N'dbo.t_etalonnage', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_etalonnage', N'Moyenne_Etalon') IS NULL ALTER TABLE dbo.[t_etalonnage] ADD [Moyenne_Etalon] FLOAT NULL;
-IF OBJECT_ID(N'dbo.t_etalonnage', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_etalonnage', N'Moyenne_Sonde') IS NULL ALTER TABLE dbo.[t_etalonnage] ADD [Moyenne_Sonde] FLOAT NULL;
-IF OBJECT_ID(N'dbo.t_etalonnage', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_etalonnage', N'Repetabilite') IS NULL ALTER TABLE dbo.[t_etalonnage] ADD [Repetabilite] VARCHAR(50) NULL;
-IF OBJECT_ID(N'dbo.t_etalonnage', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_etalonnage', N'Id_Bain') IS NULL ALTER TABLE dbo.[t_etalonnage] ADD [Id_Bain] INT NULL;
-IF OBJECT_ID(N'dbo.t_etalonnage', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_etalonnage', N'Err_Justesse') IS NULL ALTER TABLE dbo.[t_etalonnage] ADD [Err_Justesse] FLOAT NULL;
 GO
 
 IF OBJECT_ID(N'dbo.t_etalonnage_mesure', N'U') IS NULL
@@ -410,11 +260,6 @@ BEGIN
   );
 END;
 GO
-IF OBJECT_ID(N'dbo.t_etalonnage_mesure', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_etalonnage_mesure', N'Id_Etalonnage_Mesure_Sonde') IS NULL ALTER TABLE dbo.[t_etalonnage_mesure] ADD [Id_Etalonnage_Mesure_Sonde] INT NULL;
-IF OBJECT_ID(N'dbo.t_etalonnage_mesure', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_etalonnage_mesure', N'Id_Etalonnage') IS NULL ALTER TABLE dbo.[t_etalonnage_mesure] ADD [Id_Etalonnage] INT NULL;
-IF OBJECT_ID(N'dbo.t_etalonnage_mesure', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_etalonnage_mesure', N'Numero_Ordre') IS NULL ALTER TABLE dbo.[t_etalonnage_mesure] ADD [Numero_Ordre] INT NULL;
-IF OBJECT_ID(N'dbo.t_etalonnage_mesure', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_etalonnage_mesure', N'Mesure_Sonde') IS NULL ALTER TABLE dbo.[t_etalonnage_mesure] ADD [Mesure_Sonde] FLOAT NULL;
-IF OBJECT_ID(N'dbo.t_etalonnage_mesure', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_etalonnage_mesure', N'Mesure_Etalon') IS NULL ALTER TABLE dbo.[t_etalonnage_mesure] ADD [Mesure_Etalon] FLOAT NULL;
 GO
 
 IF OBJECT_ID(N'dbo.t_groupe', N'U') IS NULL
@@ -428,10 +273,6 @@ BEGIN
   );
 END;
 GO
-IF OBJECT_ID(N'dbo.t_groupe', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_groupe', N'Id_Groupe') IS NULL ALTER TABLE dbo.[t_groupe] ADD [Id_Groupe] INT NULL;
-IF OBJECT_ID(N'dbo.t_groupe', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_groupe', N'Nom_Groupe') IS NULL ALTER TABLE dbo.[t_groupe] ADD [Nom_Groupe] VARCHAR(64) NULL;
-IF OBJECT_ID(N'dbo.t_groupe', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_groupe', N'Numero_Regroupement') IS NULL ALTER TABLE dbo.[t_groupe] ADD [Numero_Regroupement] VARCHAR(1) NULL;
-IF OBJECT_ID(N'dbo.t_groupe', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_groupe', N'Est_Archive') IS NULL ALTER TABLE dbo.[t_groupe] ADD [Est_Archive] BIT NULL;
 GO
 IF OBJECT_ID(N'dbo.t_groupe', N'U') IS NOT NULL AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'UX_t_groupe_Nom_Groupe' AND object_id = OBJECT_ID(N'dbo.t_groupe')) CREATE UNIQUE INDEX [UX_t_groupe_Nom_Groupe] ON dbo.[t_groupe]([Nom_Groupe]) WHERE [Nom_Groupe] IS NOT NULL;
 GO
@@ -445,8 +286,6 @@ BEGIN
   );
 END;
 GO
-IF OBJECT_ID(N'dbo.t_liaison_profil_autorisation', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_liaison_profil_autorisation', N'Id_Profil') IS NULL ALTER TABLE dbo.[t_liaison_profil_autorisation] ADD [Id_Profil] INT NULL;
-IF OBJECT_ID(N'dbo.t_liaison_profil_autorisation', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_liaison_profil_autorisation', N'Id_Autorisation') IS NULL ALTER TABLE dbo.[t_liaison_profil_autorisation] ADD [Id_Autorisation] INT NULL;
 GO
 
 IF OBJECT_ID(N'dbo.t_liaison_utilisateur_groupe', N'U') IS NULL
@@ -459,9 +298,6 @@ BEGIN
   );
 END;
 GO
-IF OBJECT_ID(N'dbo.t_liaison_utilisateur_groupe', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_liaison_utilisateur_groupe', N'Id_Liaison_u_g') IS NULL ALTER TABLE dbo.[t_liaison_utilisateur_groupe] ADD [Id_Liaison_u_g] INT NULL;
-IF OBJECT_ID(N'dbo.t_liaison_utilisateur_groupe', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_liaison_utilisateur_groupe', N'Id_Utilisateur') IS NULL ALTER TABLE dbo.[t_liaison_utilisateur_groupe] ADD [Id_Utilisateur] INT NULL;
-IF OBJECT_ID(N'dbo.t_liaison_utilisateur_groupe', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_liaison_utilisateur_groupe', N'Id_Groupe') IS NULL ALTER TABLE dbo.[t_liaison_utilisateur_groupe] ADD [Id_Groupe] INT NULL;
 GO
 
 IF OBJECT_ID(N'dbo.t_liaison_utilisateur_site', N'U') IS NULL
@@ -475,10 +311,6 @@ BEGIN
   );
 END;
 GO
-IF OBJECT_ID(N'dbo.t_liaison_utilisateur_site', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_liaison_utilisateur_site', N'Id_Liaison') IS NULL ALTER TABLE dbo.[t_liaison_utilisateur_site] ADD [Id_Liaison] INT NULL;
-IF OBJECT_ID(N'dbo.t_liaison_utilisateur_site', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_liaison_utilisateur_site', N'Id_Utilisateur') IS NULL ALTER TABLE dbo.[t_liaison_utilisateur_site] ADD [Id_Utilisateur] INT NULL;
-IF OBJECT_ID(N'dbo.t_liaison_utilisateur_site', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_liaison_utilisateur_site', N'Id_Site') IS NULL ALTER TABLE dbo.[t_liaison_utilisateur_site] ADD [Id_Site] INT NULL;
-IF OBJECT_ID(N'dbo.t_liaison_utilisateur_site', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_liaison_utilisateur_site', N'Date_Affectation') IS NULL ALTER TABLE dbo.[t_liaison_utilisateur_site] ADD [Date_Affectation] DATETIME NULL;
 GO
 IF OBJECT_ID(N'dbo.t_liaison_utilisateur_site', N'U') IS NOT NULL AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'UK_USER_SITE' AND object_id = OBJECT_ID(N'dbo.t_liaison_utilisateur_site')) CREATE UNIQUE INDEX [UK_USER_SITE] ON dbo.[t_liaison_utilisateur_site]([Id_Utilisateur], [Id_Site]);
 GO
@@ -492,8 +324,6 @@ BEGIN
   );
 END;
 GO
-IF OBJECT_ID(N'dbo.t_lieu_groupe', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu_groupe', N'Id_Lieu') IS NULL ALTER TABLE dbo.[t_lieu_groupe] ADD [Id_Lieu] INT NULL;
-IF OBJECT_ID(N'dbo.t_lieu_groupe', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu_groupe', N'Id_Groupe') IS NULL ALTER TABLE dbo.[t_lieu_groupe] ADD [Id_Groupe] INT NULL;
 GO
 
 IF OBJECT_ID(N'dbo.t_lieu', N'U') IS NULL
@@ -588,91 +418,6 @@ BEGIN
   );
 END;
 GO
-IF OBJECT_ID(N'dbo.t_lieu', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu', N'Id_Lieu') IS NULL ALTER TABLE dbo.[t_lieu] ADD [Id_Lieu] INT NULL;
-IF OBJECT_ID(N'dbo.t_lieu', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu', N'Id_Site') IS NULL ALTER TABLE dbo.[t_lieu] ADD [Id_Site] INT NULL;
-IF OBJECT_ID(N'dbo.t_lieu', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu', N'Nom_Lieu') IS NULL ALTER TABLE dbo.[t_lieu] ADD [Nom_Lieu] VARCHAR(30) NULL;
-IF OBJECT_ID(N'dbo.t_lieu', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu', N'Sonde_Numero_Serie') IS NULL ALTER TABLE dbo.[t_lieu] ADD [Sonde_Numero_Serie] VARCHAR(50) NULL;
-IF OBJECT_ID(N'dbo.t_lieu', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu', N'Adresse_Sonde') IS NULL ALTER TABLE dbo.[t_lieu] ADD [Adresse_Sonde] VARCHAR(50) NULL;
-IF OBJECT_ID(N'dbo.t_lieu', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu', N'Consigne') IS NULL ALTER TABLE dbo.[t_lieu] ADD [Consigne] FLOAT NULL;
-IF OBJECT_ID(N'dbo.t_lieu', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu', N'Consigne_Base') IS NULL ALTER TABLE dbo.[t_lieu] ADD [Consigne_Base] FLOAT NULL;
-IF OBJECT_ID(N'dbo.t_lieu', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu', N'Observations_Info') IS NULL ALTER TABLE dbo.[t_lieu] ADD [Observations_Info] NVARCHAR(MAX) NULL;
-IF OBJECT_ID(N'dbo.t_lieu', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu', N'Consigne_Sup') IS NULL ALTER TABLE dbo.[t_lieu] ADD [Consigne_Sup] FLOAT NULL;
-IF OBJECT_ID(N'dbo.t_lieu', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu', N'Consigne_Sup_Base') IS NULL ALTER TABLE dbo.[t_lieu] ADD [Consigne_Sup_Base] FLOAT NULL;
-IF OBJECT_ID(N'dbo.t_lieu', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu', N'Tolerance_Surveillance_Sup') IS NULL ALTER TABLE dbo.[t_lieu] ADD [Tolerance_Surveillance_Sup] FLOAT NULL;
-IF OBJECT_ID(N'dbo.t_lieu', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu', N'Tolerance_Surveillance_Sup_Base') IS NULL ALTER TABLE dbo.[t_lieu] ADD [Tolerance_Surveillance_Sup_Base] FLOAT NULL;
-IF OBJECT_ID(N'dbo.t_lieu', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu', N'Est_Consigne_Sup_Active') IS NULL ALTER TABLE dbo.[t_lieu] ADD [Est_Consigne_Sup_Active] BIT NULL;
-IF OBJECT_ID(N'dbo.t_lieu', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu', N'Consigne_Sup_Pre_Alarme') IS NULL ALTER TABLE dbo.[t_lieu] ADD [Consigne_Sup_Pre_Alarme] FLOAT NULL;
-IF OBJECT_ID(N'dbo.t_lieu', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu', N'Est_Consigne_Sup_Pre_Alarme_Active') IS NULL ALTER TABLE dbo.[t_lieu] ADD [Est_Consigne_Sup_Pre_Alarme_Active] BIT NULL;
-IF OBJECT_ID(N'dbo.t_lieu', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu', N'Consigne_Inf') IS NULL ALTER TABLE dbo.[t_lieu] ADD [Consigne_Inf] FLOAT NULL;
-IF OBJECT_ID(N'dbo.t_lieu', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu', N'Consigne_Inf_Base') IS NULL ALTER TABLE dbo.[t_lieu] ADD [Consigne_Inf_Base] FLOAT NULL;
-IF OBJECT_ID(N'dbo.t_lieu', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu', N'Tolerance_Surveillance_Inf') IS NULL ALTER TABLE dbo.[t_lieu] ADD [Tolerance_Surveillance_Inf] FLOAT NULL;
-IF OBJECT_ID(N'dbo.t_lieu', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu', N'Tolerance_Surveillance_Inf_Base') IS NULL ALTER TABLE dbo.[t_lieu] ADD [Tolerance_Surveillance_Inf_Base] FLOAT NULL;
-IF OBJECT_ID(N'dbo.t_lieu', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu', N'Est_Consigne_Inf_Active') IS NULL ALTER TABLE dbo.[t_lieu] ADD [Est_Consigne_Inf_Active] BIT NULL;
-IF OBJECT_ID(N'dbo.t_lieu', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu', N'Consigne_Inf_Pre_Alarme') IS NULL ALTER TABLE dbo.[t_lieu] ADD [Consigne_Inf_Pre_Alarme] FLOAT NULL;
-IF OBJECT_ID(N'dbo.t_lieu', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu', N'Est_Consigne_Inf_Pre_Alarme_Active') IS NULL ALTER TABLE dbo.[t_lieu] ADD [Est_Consigne_Inf_Pre_Alarme_Active] BIT NULL;
-IF OBJECT_ID(N'dbo.t_lieu', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu', N'Frequence') IS NULL ALTER TABLE dbo.[t_lieu] ADD [Frequence] INT NULL;
-IF OBJECT_ID(N'dbo.t_lieu', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu', N'Lieu_Etat') IS NULL ALTER TABLE dbo.[t_lieu] ADD [Lieu_Etat] VARCHAR(1) NULL;
-IF OBJECT_ID(N'dbo.t_lieu', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu', N'Retard_Alarme_Haut') IS NULL ALTER TABLE dbo.[t_lieu] ADD [Retard_Alarme_Haut] INT NULL;
-IF OBJECT_ID(N'dbo.t_lieu', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu', N'Retard_Alarme_Bas') IS NULL ALTER TABLE dbo.[t_lieu] ADD [Retard_Alarme_Bas] INT NULL;
-IF OBJECT_ID(N'dbo.t_lieu', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu', N'Id_Plan') IS NULL ALTER TABLE dbo.[t_lieu] ADD [Id_Plan] INT NULL;
-IF OBJECT_ID(N'dbo.t_lieu', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu', N'Position_Plan_X') IS NULL ALTER TABLE dbo.[t_lieu] ADD [Position_Plan_X] BIGINT NULL;
-IF OBJECT_ID(N'dbo.t_lieu', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu', N'Position_Plan_Y') IS NULL ALTER TABLE dbo.[t_lieu] ADD [Position_Plan_Y] BIGINT NULL;
-IF OBJECT_ID(N'dbo.t_lieu', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu', N'Date_Creation') IS NULL ALTER TABLE dbo.[t_lieu] ADD [Date_Creation] DATE NULL;
-IF OBJECT_ID(N'dbo.t_lieu', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu', N'Est_Archive') IS NULL ALTER TABLE dbo.[t_lieu] ADD [Est_Archive] BIT NULL;
-IF OBJECT_ID(N'dbo.t_lieu', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu', N'Est_Tel_Actif') IS NULL ALTER TABLE dbo.[t_lieu] ADD [Est_Tel_Actif] BIT NULL;
-IF OBJECT_ID(N'dbo.t_lieu', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu', N'Tel_Code') IS NULL ALTER TABLE dbo.[t_lieu] ADD [Tel_Code] VARCHAR(4) NULL;
-IF OBJECT_ID(N'dbo.t_lieu', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu', N'Tel_Son_Lieu') IS NULL ALTER TABLE dbo.[t_lieu] ADD [Tel_Son_Lieu] VARCHAR(260) NULL;
-IF OBJECT_ID(N'dbo.t_lieu', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu', N'Id_Actionneur') IS NULL ALTER TABLE dbo.[t_lieu] ADD [Id_Actionneur] INT NULL;
-IF OBJECT_ID(N'dbo.t_lieu', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu', N'Est_Mode_Serotheque') IS NULL ALTER TABLE dbo.[t_lieu] ADD [Est_Mode_Serotheque] BIT NULL;
-IF OBJECT_ID(N'dbo.t_lieu', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu', N'Coef_Sensibilite') IS NULL ALTER TABLE dbo.[t_lieu] ADD [Coef_Sensibilite] INT NULL;
-IF OBJECT_ID(N'dbo.t_lieu', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu', N'Id_PDF') IS NULL ALTER TABLE dbo.[t_lieu] ADD [Id_PDF] INT NULL;
-IF OBJECT_ID(N'dbo.t_lieu', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu', N'Est_DataLogger') IS NULL ALTER TABLE dbo.[t_lieu] ADD [Est_DataLogger] BIT NULL;
-IF OBJECT_ID(N'dbo.t_lieu', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu', N'EMT') IS NULL ALTER TABLE dbo.[t_lieu] ADD [EMT] FLOAT NULL;
-IF OBJECT_ID(N'dbo.t_lieu', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu', N'EMT_Choix_Mode') IS NULL ALTER TABLE dbo.[t_lieu] ADD [EMT_Choix_Mode] INT NULL;
-IF OBJECT_ID(N'dbo.t_lieu', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu', N'EMT_Sonde') IS NULL ALTER TABLE dbo.[t_lieu] ADD [EMT_Sonde] FLOAT NULL;
-IF OBJECT_ID(N'dbo.t_lieu', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu', N'Retard_Alarme_Changement_Consigne') IS NULL ALTER TABLE dbo.[t_lieu] ADD [Retard_Alarme_Changement_Consigne] INT NULL;
-IF OBJECT_ID(N'dbo.t_lieu', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu', N'Derniere_Date_Heure') IS NULL ALTER TABLE dbo.[t_lieu] ADD [Derniere_Date_Heure] DATETIME NULL;
-IF OBJECT_ID(N'dbo.t_lieu', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu', N'Derniere_Valeur') IS NULL ALTER TABLE dbo.[t_lieu] ADD [Derniere_Valeur] FLOAT NULL;
-IF OBJECT_ID(N'dbo.t_lieu', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu', N'Derniere_Unite') IS NULL ALTER TABLE dbo.[t_lieu] ADD [Derniere_Unite] VARCHAR(10) NULL;
-IF OBJECT_ID(N'dbo.t_lieu', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu', N'Derniere_Nb_Decimal') IS NULL ALTER TABLE dbo.[t_lieu] ADD [Derniere_Nb_Decimal] INT NULL;
-IF OBJECT_ID(N'dbo.t_lieu', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu', N'Est_Lieu_En_Alarme') IS NULL ALTER TABLE dbo.[t_lieu] ADD [Est_Lieu_En_Alarme] TINYINT NULL;
-IF OBJECT_ID(N'dbo.t_lieu', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu', N'Est_Lieu_Alarme_Terminee_Non_Acquittee') IS NULL ALTER TABLE dbo.[t_lieu] ADD [Est_Lieu_Alarme_Terminee_Non_Acquittee] TINYINT NULL;
-IF OBJECT_ID(N'dbo.t_lieu', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu', N'Est_Lieu_Alarme_Terminee_Non_Acquittee_T1') IS NULL ALTER TABLE dbo.[t_lieu] ADD [Est_Lieu_Alarme_Terminee_Non_Acquittee_T1] TINYINT NULL;
-IF OBJECT_ID(N'dbo.t_lieu', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu', N'Est_Lieu_En_Pre_Alarme') IS NULL ALTER TABLE dbo.[t_lieu] ADD [Est_Lieu_En_Pre_Alarme] TINYINT NULL;
-IF OBJECT_ID(N'dbo.t_lieu', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu', N'Id_Alarme') IS NULL ALTER TABLE dbo.[t_lieu] ADD [Id_Alarme] INT NULL;
-IF OBJECT_ID(N'dbo.t_lieu', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu', N'Lieu_Etat_N1') IS NULL ALTER TABLE dbo.[t_lieu] ADD [Lieu_Etat_N1] VARCHAR(50) NULL;
-IF OBJECT_ID(N'dbo.t_lieu', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu', N'Derniere_Date_Etalonnage') IS NULL ALTER TABLE dbo.[t_lieu] ADD [Derniere_Date_Etalonnage] DATE NULL;
-IF OBJECT_ID(N'dbo.t_lieu', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu', N'Derniere_Erreur_Justesse') IS NULL ALTER TABLE dbo.[t_lieu] ADD [Derniere_Erreur_Justesse] FLOAT NULL;
-IF OBJECT_ID(N'dbo.t_lieu', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu', N'Derniere_Incertitude') IS NULL ALTER TABLE dbo.[t_lieu] ADD [Derniere_Incertitude] FLOAT NULL;
-IF OBJECT_ID(N'dbo.t_lieu', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu', N'Retard_Non_Reponse') IS NULL ALTER TABLE dbo.[t_lieu] ADD [Retard_Non_Reponse] INT NULL;
-IF OBJECT_ID(N'dbo.t_lieu', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu', N'Date_Heure_Derniere_Reponse') IS NULL ALTER TABLE dbo.[t_lieu] ADD [Date_Heure_Derniere_Reponse] DATETIME NULL;
-IF OBJECT_ID(N'dbo.t_lieu', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu', N'Date_Heure_Derniere_Reponse_Recue_OK') IS NULL ALTER TABLE dbo.[t_lieu] ADD [Date_Heure_Derniere_Reponse_Recue_OK] DATETIME NULL;
-IF OBJECT_ID(N'dbo.t_lieu', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu', N'Est_Correction_Ej') IS NULL ALTER TABLE dbo.[t_lieu] ADD [Est_Correction_Ej] TINYINT NULL;
-IF OBJECT_ID(N'dbo.t_lieu', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu', N'Derive') IS NULL ALTER TABLE dbo.[t_lieu] ADD [Derive] FLOAT NULL;
-IF OBJECT_ID(N'dbo.t_lieu', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu', N'Est_Correction_derive') IS NULL ALTER TABLE dbo.[t_lieu] ADD [Est_Correction_derive] BIT NULL;
-IF OBJECT_ID(N'dbo.t_lieu', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu', N'Derniere_Valeur_Null') IS NULL ALTER TABLE dbo.[t_lieu] ADD [Derniere_Valeur_Null] INT NULL;
-IF OBJECT_ID(N'dbo.t_lieu', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu', N'Type_Lieu') IS NULL ALTER TABLE dbo.[t_lieu] ADD [Type_Lieu] VARCHAR(20) NULL;
-IF OBJECT_ID(N'dbo.t_lieu', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu', N'Date_Heure_Dernier_Acquittement_En_Cours') IS NULL ALTER TABLE dbo.[t_lieu] ADD [Date_Heure_Dernier_Acquittement_En_Cours] DATETIME NULL;
-IF OBJECT_ID(N'dbo.t_lieu', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu', N'Date_Heure_Last_Update_EVT_GSO') IS NULL ALTER TABLE dbo.[t_lieu] ADD [Date_Heure_Last_Update_EVT_GSO] DATETIME NULL;
-IF OBJECT_ID(N'dbo.t_lieu', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu', N'Date_Heure_Reactivation_Alarme') IS NULL ALTER TABLE dbo.[t_lieu] ADD [Date_Heure_Reactivation_Alarme] DATETIME NULL;
-IF OBJECT_ID(N'dbo.t_lieu', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu', N'Notification_Active') IS NULL ALTER TABLE dbo.[t_lieu] ADD [Notification_Active] BIT NULL DEFAULT(1);
-IF OBJECT_ID(N'dbo.t_lieu', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu', N'Commentaire') IS NULL ALTER TABLE dbo.[t_lieu] ADD [Commentaire] VARCHAR(200) NULL;
-IF OBJECT_ID(N'dbo.t_lieu', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu', N'Infos_Modifiees_Depuis_Derniere_Mesure') IS NULL ALTER TABLE dbo.[t_lieu] ADD [Infos_Modifiees_Depuis_Derniere_Mesure] BIT NULL DEFAULT(1);
-IF OBJECT_ID(N'dbo.t_lieu', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu', N'Est_Remontee_Memoire_A_Faire') IS NULL ALTER TABLE dbo.[t_lieu] ADD [Est_Remontee_Memoire_A_Faire] BIT NULL DEFAULT(0);
-IF OBJECT_ID(N'dbo.t_lieu', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu', N'Date_Heure_Reactivation_Surveillance') IS NULL ALTER TABLE dbo.[t_lieu] ADD [Date_Heure_Reactivation_Surveillance] DATETIME NULL;
-IF OBJECT_ID(N'dbo.t_lieu', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu', N'Date_Heure_Surveillance_On') IS NULL ALTER TABLE dbo.[t_lieu] ADD [Date_Heure_Surveillance_On] DATETIME NULL;
-IF OBJECT_ID(N'dbo.t_lieu', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu', N'Date_Heure_Surveillance_Off') IS NULL ALTER TABLE dbo.[t_lieu] ADD [Date_Heure_Surveillance_Off] DATETIME NULL;
-IF OBJECT_ID(N'dbo.t_lieu', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu', N'Derniere_Val_Rssi') IS NULL ALTER TABLE dbo.[t_lieu] ADD [Derniere_Val_Rssi] VARCHAR(10) NULL;
-IF OBJECT_ID(N'dbo.t_lieu', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu', N'Derniere_Val_Batterie') IS NULL ALTER TABLE dbo.[t_lieu] ADD [Derniere_Val_Batterie] INT NULL;
-IF OBJECT_ID(N'dbo.t_lieu', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu', N'Derniere_Val_Tension') IS NULL ALTER TABLE dbo.[t_lieu] ADD [Derniere_Val_Tension] VARCHAR(10) NULL;
-IF OBJECT_ID(N'dbo.t_lieu', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu', N'Est_Lieu_GSO') IS NULL ALTER TABLE dbo.[t_lieu] ADD [Est_Lieu_GSO] BIT NULL;
-IF OBJECT_ID(N'dbo.t_lieu', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu', N'Est_Son_Alarme_Active') IS NULL ALTER TABLE dbo.[t_lieu] ADD [Est_Son_Alarme_Active] BIT NULL DEFAULT(1);
-IF OBJECT_ID(N'dbo.t_lieu', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu', N'Planning_Actif') IS NULL ALTER TABLE dbo.[t_lieu] ADD [Planning_Actif] BIT NULL DEFAULT(0);
-IF OBJECT_ID(N'dbo.t_lieu', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu', N'Planning_Regle_Existe') IS NULL ALTER TABLE dbo.[t_lieu] ADD [Planning_Regle_Existe] BIT NULL;
-IF OBJECT_ID(N'dbo.t_lieu', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu', N'Planning_Source_Regle_Id') IS NULL ALTER TABLE dbo.[t_lieu] ADD [Planning_Source_Regle_Id] INT NULL;
-IF OBJECT_ID(N'dbo.t_lieu', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu', N'Planning_Derniere_Maj') IS NULL ALTER TABLE dbo.[t_lieu] ADD [Planning_Derniere_Maj] DATETIME NULL;
-IF OBJECT_ID(N'dbo.t_lieu', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu', N'Est_Redeclenchement_Immediat') IS NULL ALTER TABLE dbo.[t_lieu] ADD [Est_Redeclenchement_Immediat] BIT NULL DEFAULT(0);
-IF OBJECT_ID(N'dbo.t_lieu', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu', N'Nb_Mesures_Temporisation_Redeclenchement') IS NULL ALTER TABLE dbo.[t_lieu] ADD [Nb_Mesures_Temporisation_Redeclenchement] INT NULL;
 GO
 
 IF OBJECT_ID(N'dbo.t_lieu_template', N'U') IS NULL
@@ -711,35 +456,6 @@ BEGIN
   );
 END;
 GO
-IF OBJECT_ID(N'dbo.t_lieu_template', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu_template', N'Id_Lieu_Template') IS NULL ALTER TABLE dbo.[t_lieu_template] ADD [Id_Lieu_Template] INT NULL;
-IF OBJECT_ID(N'dbo.t_lieu_template', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu_template', N'Nom_Template') IS NULL ALTER TABLE dbo.[t_lieu_template] ADD [Nom_Template] VARCHAR(80) NULL;
-IF OBJECT_ID(N'dbo.t_lieu_template', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu_template', N'Description') IS NULL ALTER TABLE dbo.[t_lieu_template] ADD [Description] VARCHAR(255) NULL;
-IF OBJECT_ID(N'dbo.t_lieu_template', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu_template', N'Lieu_Etat') IS NULL ALTER TABLE dbo.[t_lieu_template] ADD [Lieu_Etat] VARCHAR(1) NULL;
-IF OBJECT_ID(N'dbo.t_lieu_template', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu_template', N'Frequence') IS NULL ALTER TABLE dbo.[t_lieu_template] ADD [Frequence] INT NULL;
-IF OBJECT_ID(N'dbo.t_lieu_template', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu_template', N'Retard_Alarme_Haut') IS NULL ALTER TABLE dbo.[t_lieu_template] ADD [Retard_Alarme_Haut] INT NULL;
-IF OBJECT_ID(N'dbo.t_lieu_template', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu_template', N'Retard_Alarme_Bas') IS NULL ALTER TABLE dbo.[t_lieu_template] ADD [Retard_Alarme_Bas] INT NULL;
-IF OBJECT_ID(N'dbo.t_lieu_template', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu_template', N'Retard_Non_Reponse') IS NULL ALTER TABLE dbo.[t_lieu_template] ADD [Retard_Non_Reponse] INT NULL;
-IF OBJECT_ID(N'dbo.t_lieu_template', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu_template', N'Retard_Alarme_Changement_Consigne') IS NULL ALTER TABLE dbo.[t_lieu_template] ADD [Retard_Alarme_Changement_Consigne] INT NULL;
-IF OBJECT_ID(N'dbo.t_lieu_template', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu_template', N'Consigne') IS NULL ALTER TABLE dbo.[t_lieu_template] ADD [Consigne] DECIMAL(10,2) NULL;
-IF OBJECT_ID(N'dbo.t_lieu_template', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu_template', N'Consigne_Sup') IS NULL ALTER TABLE dbo.[t_lieu_template] ADD [Consigne_Sup] DECIMAL(10,2) NULL;
-IF OBJECT_ID(N'dbo.t_lieu_template', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu_template', N'Consigne_Inf') IS NULL ALTER TABLE dbo.[t_lieu_template] ADD [Consigne_Inf] DECIMAL(10,2) NULL;
-IF OBJECT_ID(N'dbo.t_lieu_template', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu_template', N'Tolerance_Surveillance_Sup') IS NULL ALTER TABLE dbo.[t_lieu_template] ADD [Tolerance_Surveillance_Sup] DECIMAL(10,2) NULL;
-IF OBJECT_ID(N'dbo.t_lieu_template', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu_template', N'Tolerance_Surveillance_Inf') IS NULL ALTER TABLE dbo.[t_lieu_template] ADD [Tolerance_Surveillance_Inf] DECIMAL(10,2) NULL;
-IF OBJECT_ID(N'dbo.t_lieu_template', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu_template', N'Consigne_Sup_Pre_Alarme') IS NULL ALTER TABLE dbo.[t_lieu_template] ADD [Consigne_Sup_Pre_Alarme] DECIMAL(10,2) NULL;
-IF OBJECT_ID(N'dbo.t_lieu_template', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu_template', N'Consigne_Inf_Pre_Alarme') IS NULL ALTER TABLE dbo.[t_lieu_template] ADD [Consigne_Inf_Pre_Alarme] DECIMAL(10,2) NULL;
-IF OBJECT_ID(N'dbo.t_lieu_template', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu_template', N'Est_Consigne_Sup_Active') IS NULL ALTER TABLE dbo.[t_lieu_template] ADD [Est_Consigne_Sup_Active] BIT NULL DEFAULT(0);
-IF OBJECT_ID(N'dbo.t_lieu_template', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu_template', N'Est_Consigne_Inf_Active') IS NULL ALTER TABLE dbo.[t_lieu_template] ADD [Est_Consigne_Inf_Active] BIT NULL DEFAULT(0);
-IF OBJECT_ID(N'dbo.t_lieu_template', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu_template', N'Est_Consigne_Sup_Pre_Alarme_Active') IS NULL ALTER TABLE dbo.[t_lieu_template] ADD [Est_Consigne_Sup_Pre_Alarme_Active] BIT NULL DEFAULT(0);
-IF OBJECT_ID(N'dbo.t_lieu_template', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu_template', N'Est_Consigne_Inf_Pre_Alarme_Active') IS NULL ALTER TABLE dbo.[t_lieu_template] ADD [Est_Consigne_Inf_Pre_Alarme_Active] BIT NULL DEFAULT(0);
-IF OBJECT_ID(N'dbo.t_lieu_template', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu_template', N'Est_Son_Alarme_Active') IS NULL ALTER TABLE dbo.[t_lieu_template] ADD [Est_Son_Alarme_Active] BIT NULL DEFAULT(1);
-IF OBJECT_ID(N'dbo.t_lieu_template', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu_template', N'Est_Redeclenchement_Immediat') IS NULL ALTER TABLE dbo.[t_lieu_template] ADD [Est_Redeclenchement_Immediat] BIT NULL DEFAULT(0);
-IF OBJECT_ID(N'dbo.t_lieu_template', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu_template', N'Nb_Mesures_Temporisation_Redeclenchement') IS NULL ALTER TABLE dbo.[t_lieu_template] ADD [Nb_Mesures_Temporisation_Redeclenchement] INT NULL;
-IF OBJECT_ID(N'dbo.t_lieu_template', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu_template', N'Observations_Info') IS NULL ALTER TABLE dbo.[t_lieu_template] ADD [Observations_Info] NVARCHAR(MAX) NULL;
-IF OBJECT_ID(N'dbo.t_lieu_template', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu_template', N'Est_Archive') IS NULL ALTER TABLE dbo.[t_lieu_template] ADD [Est_Archive] BIT NULL DEFAULT(0);
-IF OBJECT_ID(N'dbo.t_lieu_template', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu_template', N'Date_Creation') IS NULL ALTER TABLE dbo.[t_lieu_template] ADD [Date_Creation] DATETIME NULL DEFAULT(GETDATE());
-IF OBJECT_ID(N'dbo.t_lieu_template', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu_template', N'Date_Maj') IS NULL ALTER TABLE dbo.[t_lieu_template] ADD [Date_Maj] DATETIME NULL DEFAULT(GETDATE());
-IF OBJECT_ID(N'dbo.t_lieu_template', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu_template', N'Id_Utilisateur_Creation') IS NULL ALTER TABLE dbo.[t_lieu_template] ADD [Id_Utilisateur_Creation] INT NULL;
-IF OBJECT_ID(N'dbo.t_lieu_template', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu_template', N'Id_Utilisateur_Maj') IS NULL ALTER TABLE dbo.[t_lieu_template] ADD [Id_Utilisateur_Maj] INT NULL;
 GO
 IF OBJECT_ID(N'dbo.t_lieu_template', N'U') IS NOT NULL AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'UX_t_lieu_template_Nom_Template' AND object_id = OBJECT_ID(N'dbo.t_lieu_template')) CREATE UNIQUE INDEX [UX_t_lieu_template_Nom_Template] ON dbo.[t_lieu_template]([Nom_Template]) WHERE [Nom_Template] IS NOT NULL;
 GO
@@ -765,20 +481,6 @@ BEGIN
   );
 END;
 GO
-IF OBJECT_ID(N'dbo.t_module', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_module', N'Id_Module') IS NULL ALTER TABLE dbo.[t_module] ADD [Id_Module] INT NULL;
-IF OBJECT_ID(N'dbo.t_module', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_module', N'Module_Numero_Serie') IS NULL ALTER TABLE dbo.[t_module] ADD [Module_Numero_Serie] VARCHAR(50) NULL;
-IF OBJECT_ID(N'dbo.t_module', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_module', N'Type_Module') IS NULL ALTER TABLE dbo.[t_module] ADD [Type_Module] INT NULL;
-IF OBJECT_ID(N'dbo.t_module', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_module', N'Port_Serie') IS NULL ALTER TABLE dbo.[t_module] ADD [Port_Serie] VARCHAR(10) NULL;
-IF OBJECT_ID(N'dbo.t_module', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_module', N'Position_Plan_X') IS NULL ALTER TABLE dbo.[t_module] ADD [Position_Plan_X] BIGINT NULL;
-IF OBJECT_ID(N'dbo.t_module', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_module', N'Position_Plan_Y') IS NULL ALTER TABLE dbo.[t_module] ADD [Position_Plan_Y] BIGINT NULL;
-IF OBJECT_ID(N'dbo.t_module', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_module', N'Id_Plan') IS NULL ALTER TABLE dbo.[t_module] ADD [Id_Plan] INT NULL;
-IF OBJECT_ID(N'dbo.t_module', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_module', N'Adresse_IP') IS NULL ALTER TABLE dbo.[t_module] ADD [Adresse_IP] VARCHAR(50) NULL;
-IF OBJECT_ID(N'dbo.t_module', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_module', N'Delai_Reseau') IS NULL ALTER TABLE dbo.[t_module] ADD [Delai_Reseau] INT NULL;
-IF OBJECT_ID(N'dbo.t_module', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_module', N'Emplacement') IS NULL ALTER TABLE dbo.[t_module] ADD [Emplacement] VARCHAR(50) NULL;
-IF OBJECT_ID(N'dbo.t_module', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_module', N'Archive') IS NULL ALTER TABLE dbo.[t_module] ADD [Archive] TINYINT NULL;
-IF OBJECT_ID(N'dbo.t_module', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_module', N'Id_Worker') IS NULL ALTER TABLE dbo.[t_module] ADD [Id_Worker] INT NULL;
-IF OBJECT_ID(N'dbo.t_module', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_module', N'Est_Module_GSO') IS NULL ALTER TABLE dbo.[t_module] ADD [Est_Module_GSO] BIT NULL DEFAULT(0);
-IF OBJECT_ID(N'dbo.t_module', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_module', N'Port_Serie_Send_GSO') IS NULL ALTER TABLE dbo.[t_module] ADD [Port_Serie_Send_GSO] VARCHAR(10) NULL;
 GO
 IF OBJECT_ID(N'dbo.t_module', N'U') IS NOT NULL AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'Identifiant_Module' AND object_id = OBJECT_ID(N'dbo.t_module')) CREATE UNIQUE INDEX [Identifiant_Module] ON dbo.[t_module]([Type_Module], [Module_Numero_Serie]);
 GO
@@ -794,10 +496,6 @@ BEGIN
   );
 END;
 GO
-IF OBJECT_ID(N'dbo.t_module_type', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_module_type', N'Id_Module_Type') IS NULL ALTER TABLE dbo.[t_module_type] ADD [Id_Module_Type] INT NULL;
-IF OBJECT_ID(N'dbo.t_module_type', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_module_type', N'Libelle_Type_Module') IS NULL ALTER TABLE dbo.[t_module_type] ADD [Libelle_Type_Module] VARCHAR(50) NULL;
-IF OBJECT_ID(N'dbo.t_module_type', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_module_type', N'Libelle_Module') IS NULL ALTER TABLE dbo.[t_module_type] ADD [Libelle_Module] VARCHAR(100) NULL;
-IF OBJECT_ID(N'dbo.t_module_type', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_module_type', N'Est_Flag_Affiche_Plan') IS NULL ALTER TABLE dbo.[t_module_type] ADD [Est_Flag_Affiche_Plan] BIT NULL;
 GO
 
 IF OBJECT_ID(N'dbo.t_parametre', N'U') IS NULL
@@ -812,11 +510,6 @@ BEGIN
   );
 END;
 GO
-IF OBJECT_ID(N'dbo.t_parametre', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_parametre', N'Section') IS NULL ALTER TABLE dbo.[t_parametre] ADD [Section] VARCHAR(100) NULL;
-IF OBJECT_ID(N'dbo.t_parametre', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_parametre', N'Mot_Cle') IS NULL ALTER TABLE dbo.[t_parametre] ADD [Mot_Cle] VARCHAR(100) NULL;
-IF OBJECT_ID(N'dbo.t_parametre', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_parametre', N'Valeur') IS NULL ALTER TABLE dbo.[t_parametre] ADD [Valeur] NVARCHAR(MAX) NULL;
-IF OBJECT_ID(N'dbo.t_parametre', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_parametre', N'Commentaire') IS NULL ALTER TABLE dbo.[t_parametre] ADD [Commentaire] NVARCHAR(MAX) NULL;
-IF OBJECT_ID(N'dbo.t_parametre', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_parametre', N'Champ_DATETIME') IS NULL ALTER TABLE dbo.[t_parametre] ADD [Champ_DATETIME] DATETIME NULL;
 GO
 
 IF OBJECT_ID(N'dbo.t_pdf', N'U') IS NULL
@@ -829,9 +522,6 @@ BEGIN
   );
 END;
 GO
-IF OBJECT_ID(N'dbo.t_pdf', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_pdf', N'Id_PDF') IS NULL ALTER TABLE dbo.[t_pdf] ADD [Id_PDF] INT NULL;
-IF OBJECT_ID(N'dbo.t_pdf', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_pdf', N'Nom_PDF') IS NULL ALTER TABLE dbo.[t_pdf] ADD [Nom_PDF] VARCHAR(50) NULL;
-IF OBJECT_ID(N'dbo.t_pdf', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_pdf', N'Contenu_PDF') IS NULL ALTER TABLE dbo.[t_pdf] ADD [Contenu_PDF] VARBINARY(MAX) NULL;
 GO
 
 IF OBJECT_ID(N'dbo.t_plan', N'U') IS NULL
@@ -845,10 +535,6 @@ BEGIN
   );
 END;
 GO
-IF OBJECT_ID(N'dbo.t_plan', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_plan', N'Id_Plan') IS NULL ALTER TABLE dbo.[t_plan] ADD [Id_Plan] INT NULL;
-IF OBJECT_ID(N'dbo.t_plan', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_plan', N'Image') IS NULL ALTER TABLE dbo.[t_plan] ADD [Image] VARBINARY(MAX) NULL;
-IF OBJECT_ID(N'dbo.t_plan', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_plan', N'Titre') IS NULL ALTER TABLE dbo.[t_plan] ADD [Titre] VARCHAR(50) NULL;
-IF OBJECT_ID(N'dbo.t_plan', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_plan', N'Est_Archive') IS NULL ALTER TABLE dbo.[t_plan] ADD [Est_Archive] BIT NULL;
 GO
 IF OBJECT_ID(N'dbo.t_plan', N'U') IS NOT NULL AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'UX_t_plan_Titre' AND object_id = OBJECT_ID(N'dbo.t_plan')) CREATE UNIQUE INDEX [UX_t_plan_Titre] ON dbo.[t_plan]([Titre]) WHERE [Titre] IS NOT NULL;
 GO
@@ -867,13 +553,6 @@ BEGIN
   );
 END;
 GO
-IF OBJECT_ID(N'dbo.t_postes_clients', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_postes_clients', N'Id_Poste') IS NULL ALTER TABLE dbo.[t_postes_clients] ADD [Id_Poste] INT NULL;
-IF OBJECT_ID(N'dbo.t_postes_clients', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_postes_clients', N'Nom_Machine_Connexion') IS NULL ALTER TABLE dbo.[t_postes_clients] ADD [Nom_Machine_Connexion] VARCHAR(255) NULL;
-IF OBJECT_ID(N'dbo.t_postes_clients', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_postes_clients', N'Adresse_IP_Connexion') IS NULL ALTER TABLE dbo.[t_postes_clients] ADD [Adresse_IP_Connexion] VARCHAR(50) NULL;
-IF OBJECT_ID(N'dbo.t_postes_clients', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_postes_clients', N'Login') IS NULL ALTER TABLE dbo.[t_postes_clients] ADD [Login] VARCHAR(64) NULL;
-IF OBJECT_ID(N'dbo.t_postes_clients', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_postes_clients', N'Nom') IS NULL ALTER TABLE dbo.[t_postes_clients] ADD [Nom] VARCHAR(50) NULL;
-IF OBJECT_ID(N'dbo.t_postes_clients', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_postes_clients', N'Prenom') IS NULL ALTER TABLE dbo.[t_postes_clients] ADD [Prenom] VARCHAR(50) NULL;
-IF OBJECT_ID(N'dbo.t_postes_clients', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_postes_clients', N'Date_Heure_Derniere_Connexion') IS NULL ALTER TABLE dbo.[t_postes_clients] ADD [Date_Heure_Derniere_Connexion] DATETIME NULL;
 GO
 IF OBJECT_ID(N'dbo.t_postes_clients', N'U') IS NOT NULL AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'UX_t_postes_clients_Nom_Machine_Connexion' AND object_id = OBJECT_ID(N'dbo.t_postes_clients')) CREATE UNIQUE INDEX [UX_t_postes_clients_Nom_Machine_Connexion] ON dbo.[t_postes_clients]([Nom_Machine_Connexion]) WHERE [Nom_Machine_Connexion] IS NOT NULL;
 GO
@@ -890,11 +569,6 @@ BEGIN
   );
 END;
 GO
-IF OBJECT_ID(N'dbo.t_profil', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_profil', N'Id_Profil') IS NULL ALTER TABLE dbo.[t_profil] ADD [Id_Profil] INT NULL;
-IF OBJECT_ID(N'dbo.t_profil', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_profil', N'Profil_Utilisateur') IS NULL ALTER TABLE dbo.[t_profil] ADD [Profil_Utilisateur] VARCHAR(50) NULL;
-IF OBJECT_ID(N'dbo.t_profil', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_profil', N'Commentaire') IS NULL ALTER TABLE dbo.[t_profil] ADD [Commentaire] VARCHAR(100) NULL;
-IF OBJECT_ID(N'dbo.t_profil', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_profil', N'Est_MC2') IS NULL ALTER TABLE dbo.[t_profil] ADD [Est_MC2] BIT NULL;
-IF OBJECT_ID(N'dbo.t_profil', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_profil', N'Est_Archive') IS NULL ALTER TABLE dbo.[t_profil] ADD [Est_Archive] BIT NULL;
 GO
 IF OBJECT_ID(N'dbo.t_profil', N'U') IS NOT NULL AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'UX_t_profil_Profil_Utilisateur' AND object_id = OBJECT_ID(N'dbo.t_profil')) CREATE UNIQUE INDEX [UX_t_profil_Profil_Utilisateur] ON dbo.[t_profil]([Profil_Utilisateur]) WHERE [Profil_Utilisateur] IS NOT NULL;
 GO
@@ -910,10 +584,6 @@ BEGIN
   );
 END;
 GO
-IF OBJECT_ID(N'dbo.t_site', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_site', N'Id_Site') IS NULL ALTER TABLE dbo.[t_site] ADD [Id_Site] INT NULL;
-IF OBJECT_ID(N'dbo.t_site', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_site', N'Libelle_Site') IS NULL ALTER TABLE dbo.[t_site] ADD [Libelle_Site] VARCHAR(50) NULL;
-IF OBJECT_ID(N'dbo.t_site', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_site', N'Commentaire') IS NULL ALTER TABLE dbo.[t_site] ADD [Commentaire] VARCHAR(200) NULL;
-IF OBJECT_ID(N'dbo.t_site', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_site', N'Est_Archive') IS NULL ALTER TABLE dbo.[t_site] ADD [Est_Archive] BIT NULL;
 GO
 
 IF OBJECT_ID(N'dbo.t_sonde', N'U') IS NULL
@@ -942,25 +612,6 @@ BEGIN
   );
 END;
 GO
-IF OBJECT_ID(N'dbo.t_sonde', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_sonde', N'Id_Sonde') IS NULL ALTER TABLE dbo.[t_sonde] ADD [Id_Sonde] INT NULL;
-IF OBJECT_ID(N'dbo.t_sonde', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_sonde', N'Adresse_Sonde') IS NULL ALTER TABLE dbo.[t_sonde] ADD [Adresse_Sonde] VARCHAR(50) NULL;
-IF OBJECT_ID(N'dbo.t_sonde', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_sonde', N'Sonde_Numero_Serie') IS NULL ALTER TABLE dbo.[t_sonde] ADD [Sonde_Numero_Serie] VARCHAR(50) NULL;
-IF OBJECT_ID(N'dbo.t_sonde', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_sonde', N'Sonde_Type') IS NULL ALTER TABLE dbo.[t_sonde] ADD [Sonde_Type] VARCHAR(50) NULL;
-IF OBJECT_ID(N'dbo.t_sonde', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_sonde', N'Est_Sonde_GSO') IS NULL ALTER TABLE dbo.[t_sonde] ADD [Est_Sonde_GSO] BIT NULL DEFAULT(0);
-IF OBJECT_ID(N'dbo.t_sonde', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_sonde', N'Port_Serie') IS NULL ALTER TABLE dbo.[t_sonde] ADD [Port_Serie] VARCHAR(10) NULL;
-IF OBJECT_ID(N'dbo.t_sonde', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_sonde', N'Surveillance_Etat') IS NULL ALTER TABLE dbo.[t_sonde] ADD [Surveillance_Etat] VARCHAR(1) NULL DEFAULT(N'D');
-IF OBJECT_ID(N'dbo.t_sonde', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_sonde', N'Id_Module') IS NULL ALTER TABLE dbo.[t_sonde] ADD [Id_Module] INT NULL;
-IF OBJECT_ID(N'dbo.t_sonde', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_sonde', N'Relai_1') IS NULL ALTER TABLE dbo.[t_sonde] ADD [Relai_1] VARCHAR(50) NULL;
-IF OBJECT_ID(N'dbo.t_sonde', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_sonde', N'Relai_2') IS NULL ALTER TABLE dbo.[t_sonde] ADD [Relai_2] VARCHAR(50) NULL;
-IF OBJECT_ID(N'dbo.t_sonde', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_sonde', N'Relai_3') IS NULL ALTER TABLE dbo.[t_sonde] ADD [Relai_3] VARCHAR(50) NULL;
-IF OBJECT_ID(N'dbo.t_sonde', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_sonde', N'Relai_4') IS NULL ALTER TABLE dbo.[t_sonde] ADD [Relai_4] VARCHAR(50) NULL;
-IF OBJECT_ID(N'dbo.t_sonde', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_sonde', N'Frequence_Mesure') IS NULL ALTER TABLE dbo.[t_sonde] ADD [Frequence_Mesure] INT NULL;
-IF OBJECT_ID(N'dbo.t_sonde', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_sonde', N'Frequence_Recup') IS NULL ALTER TABLE dbo.[t_sonde] ADD [Frequence_Recup] INT NULL;
-IF OBJECT_ID(N'dbo.t_sonde', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_sonde', N'Est_Sonde_Reformee') IS NULL ALTER TABLE dbo.[t_sonde] ADD [Est_Sonde_Reformee] BIT NULL;
-IF OBJECT_ID(N'dbo.t_sonde', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_sonde', N'Etat_Sonde_N1') IS NULL ALTER TABLE dbo.[t_sonde] ADD [Etat_Sonde_N1] VARCHAR(1) NULL;
-IF OBJECT_ID(N'dbo.t_sonde', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_sonde', N'Id_Worker') IS NULL ALTER TABLE dbo.[t_sonde] ADD [Id_Worker] INT NULL;
-IF OBJECT_ID(N'dbo.t_sonde', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_sonde', N'Id_Sonde_Etat') IS NULL ALTER TABLE dbo.[t_sonde] ADD [Id_Sonde_Etat] INT NULL;
-IF OBJECT_ID(N'dbo.t_sonde', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_sonde', N'Sonde_Offset') IS NULL ALTER TABLE dbo.[t_sonde] ADD [Sonde_Offset] FLOAT NULL DEFAULT(0);
 GO
 IF OBJECT_ID(N'dbo.t_sonde', N'U') IS NOT NULL AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'UX_t_sonde_Sonde_Numero_Serie' AND object_id = OBJECT_ID(N'dbo.t_sonde')) CREATE UNIQUE INDEX [UX_t_sonde_Sonde_Numero_Serie] ON dbo.[t_sonde]([Sonde_Numero_Serie]) WHERE [Sonde_Numero_Serie] IS NOT NULL;
 GO
@@ -975,9 +626,6 @@ BEGIN
   );
 END;
 GO
-IF OBJECT_ID(N'dbo.t_etat_surveillance', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_etat_surveillance', N'Id_Surveillance_Etat') IS NULL ALTER TABLE dbo.[t_etat_surveillance] ADD [Id_Surveillance_Etat] INT NULL;
-IF OBJECT_ID(N'dbo.t_etat_surveillance', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_etat_surveillance', N'Surveillance_Etat') IS NULL ALTER TABLE dbo.[t_etat_surveillance] ADD [Surveillance_Etat] VARCHAR(1) NULL;
-IF OBJECT_ID(N'dbo.t_etat_surveillance', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_etat_surveillance', N'Surveillance_Etat_Libelle') IS NULL ALTER TABLE dbo.[t_etat_surveillance] ADD [Surveillance_Etat_Libelle] VARCHAR(50) NULL;
 GO
 IF OBJECT_ID(N'dbo.t_etat_surveillance', N'U') IS NOT NULL AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'UX_t_etat_surveillance_Surveillance_Etat' AND object_id = OBJECT_ID(N'dbo.t_etat_surveillance')) CREATE UNIQUE INDEX [UX_t_etat_surveillance_Surveillance_Etat] ON dbo.[t_etat_surveillance]([Surveillance_Etat]) WHERE [Surveillance_Etat] IS NOT NULL;
 GO
@@ -995,12 +643,6 @@ BEGIN
   );
 END;
 GO
-IF OBJECT_ID(N'dbo.t_sonde_type', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_sonde_type', N'Id_Sonde_Type') IS NULL ALTER TABLE dbo.[t_sonde_type] ADD [Id_Sonde_Type] INT NULL;
-IF OBJECT_ID(N'dbo.t_sonde_type', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_sonde_type', N'Sonde_Type') IS NULL ALTER TABLE dbo.[t_sonde_type] ADD [Sonde_Type] VARCHAR(50) NULL;
-IF OBJECT_ID(N'dbo.t_sonde_type', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_sonde_type', N'Libelle_Sonde_Type') IS NULL ALTER TABLE dbo.[t_sonde_type] ADD [Libelle_Sonde_Type] VARCHAR(50) NULL;
-IF OBJECT_ID(N'dbo.t_sonde_type', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_sonde_type', N'Est_Gestion_Relais') IS NULL ALTER TABLE dbo.[t_sonde_type] ADD [Est_Gestion_Relais] BIT NULL;
-IF OBJECT_ID(N'dbo.t_sonde_type', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_sonde_type', N'Est_Double_Capteur') IS NULL ALTER TABLE dbo.[t_sonde_type] ADD [Est_Double_Capteur] BIT NULL DEFAULT(0);
-IF OBJECT_ID(N'dbo.t_sonde_type', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_sonde_type', N'Famille_Sonde') IS NULL ALTER TABLE dbo.[t_sonde_type] ADD [Famille_Sonde] VARCHAR(16) NULL;
 GO
 IF OBJECT_ID(N'dbo.t_sonde_type', N'U') IS NOT NULL AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'UX_t_sonde_type_Sonde_Type' AND object_id = OBJECT_ID(N'dbo.t_sonde_type')) CREATE UNIQUE INDEX [UX_t_sonde_type_Sonde_Type] ON dbo.[t_sonde_type]([Sonde_Type]) WHERE [Sonde_Type] IS NOT NULL;
 GO
@@ -1033,27 +675,6 @@ BEGIN
   );
 END;
 GO
-IF OBJECT_ID(N'dbo.t_utilisateur', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_utilisateur', N'Id_Utilisateur') IS NULL ALTER TABLE dbo.[t_utilisateur] ADD [Id_Utilisateur] INT NULL;
-IF OBJECT_ID(N'dbo.t_utilisateur', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_utilisateur', N'Login') IS NULL ALTER TABLE dbo.[t_utilisateur] ADD [Login] VARCHAR(64) NULL;
-IF OBJECT_ID(N'dbo.t_utilisateur', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_utilisateur', N'Mot_De_Passe') IS NULL ALTER TABLE dbo.[t_utilisateur] ADD [Mot_De_Passe] VARCHAR(60) NULL;
-IF OBJECT_ID(N'dbo.t_utilisateur', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_utilisateur', N'Date_Validite') IS NULL ALTER TABLE dbo.[t_utilisateur] ADD [Date_Validite] DATE NULL;
-IF OBJECT_ID(N'dbo.t_utilisateur', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_utilisateur', N'Date_Creation') IS NULL ALTER TABLE dbo.[t_utilisateur] ADD [Date_Creation] DATE NULL;
-IF OBJECT_ID(N'dbo.t_utilisateur', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_utilisateur', N'Est_Archive') IS NULL ALTER TABLE dbo.[t_utilisateur] ADD [Est_Archive] BIT NULL;
-IF OBJECT_ID(N'dbo.t_utilisateur', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_utilisateur', N'Profil_Utilisateur') IS NULL ALTER TABLE dbo.[t_utilisateur] ADD [Profil_Utilisateur] VARCHAR(50) NULL;
-IF OBJECT_ID(N'dbo.t_utilisateur', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_utilisateur', N'Date_Heure_Derniere_Connexion') IS NULL ALTER TABLE dbo.[t_utilisateur] ADD [Date_Heure_Derniere_Connexion] DATETIME NULL;
-IF OBJECT_ID(N'dbo.t_utilisateur', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_utilisateur', N'Adresse_IP_Connexion') IS NULL ALTER TABLE dbo.[t_utilisateur] ADD [Adresse_IP_Connexion] VARCHAR(50) NULL;
-IF OBJECT_ID(N'dbo.t_utilisateur', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_utilisateur', N'Nom_Machine_Connexion') IS NULL ALTER TABLE dbo.[t_utilisateur] ADD [Nom_Machine_Connexion] VARCHAR(50) NULL;
-IF OBJECT_ID(N'dbo.t_utilisateur', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_utilisateur', N'Id_Site') IS NULL ALTER TABLE dbo.[t_utilisateur] ADD [Id_Site] INT NULL;
-IF OBJECT_ID(N'dbo.t_utilisateur', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_utilisateur', N'Nom') IS NULL ALTER TABLE dbo.[t_utilisateur] ADD [Nom] VARCHAR(50) NULL;
-IF OBJECT_ID(N'dbo.t_utilisateur', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_utilisateur', N'Prenom') IS NULL ALTER TABLE dbo.[t_utilisateur] ADD [Prenom] VARCHAR(50) NULL;
-IF OBJECT_ID(N'dbo.t_utilisateur', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_utilisateur', N'Tel_Num_Fixe') IS NULL ALTER TABLE dbo.[t_utilisateur] ADD [Tel_Num_Fixe] VARCHAR(50) NULL;
-IF OBJECT_ID(N'dbo.t_utilisateur', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_utilisateur', N'Tel_Num_Mobile') IS NULL ALTER TABLE dbo.[t_utilisateur] ADD [Tel_Num_Mobile] VARCHAR(50) NULL;
-IF OBJECT_ID(N'dbo.t_utilisateur', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_utilisateur', N'Adresse_Email') IS NULL ALTER TABLE dbo.[t_utilisateur] ADD [Adresse_Email] VARCHAR(100) NULL;
-IF OBJECT_ID(N'dbo.t_utilisateur', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_utilisateur', N'Date_Derniere_Modification_MDP') IS NULL ALTER TABLE dbo.[t_utilisateur] ADD [Date_Derniere_Modification_MDP] DATETIME NULL;
-IF OBJECT_ID(N'dbo.t_utilisateur', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_utilisateur', N'Reset_Password_Token') IS NULL ALTER TABLE dbo.[t_utilisateur] ADD [Reset_Password_Token] VARCHAR(255) NULL;
-IF OBJECT_ID(N'dbo.t_utilisateur', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_utilisateur', N'Reset_Password_Expires') IS NULL ALTER TABLE dbo.[t_utilisateur] ADD [Reset_Password_Expires] DATETIME NULL;
-IF OBJECT_ID(N'dbo.t_utilisateur', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_utilisateur', N'Est_Mot_De_Passe_Temporaire') IS NULL ALTER TABLE dbo.[t_utilisateur] ADD [Est_Mot_De_Passe_Temporaire] BIT NULL;
-IF OBJECT_ID(N'dbo.t_utilisateur', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_utilisateur', N'Avatar_Utilisateur') IS NULL ALTER TABLE dbo.[t_utilisateur] ADD [Avatar_Utilisateur] VARCHAR(512) NULL;
 GO
 IF OBJECT_ID(N'dbo.t_utilisateur', N'U') IS NOT NULL AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'UX_t_utilisateur_Login' AND object_id = OBJECT_ID(N'dbo.t_utilisateur')) CREATE UNIQUE INDEX [UX_t_utilisateur_Login] ON dbo.[t_utilisateur]([Login]) WHERE [Login] IS NOT NULL;
 GO
@@ -1074,15 +695,6 @@ BEGIN
   );
 END;
 GO
-IF OBJECT_ID(N'dbo.t_notification', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_notification', N'Id_Notification') IS NULL ALTER TABLE dbo.[t_notification] ADD [Id_Notification] INT NULL;
-IF OBJECT_ID(N'dbo.t_notification', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_notification', N'Type') IS NULL ALTER TABLE dbo.[t_notification] ADD [Type] VARCHAR(32) NULL;
-IF OBJECT_ID(N'dbo.t_notification', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_notification', N'Id_Alarme') IS NULL ALTER TABLE dbo.[t_notification] ADD [Id_Alarme] INT NULL;
-IF OBJECT_ID(N'dbo.t_notification', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_notification', N'Titre') IS NULL ALTER TABLE dbo.[t_notification] ADD [Titre] VARCHAR(128) NULL;
-IF OBJECT_ID(N'dbo.t_notification', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_notification', N'Message') IS NULL ALTER TABLE dbo.[t_notification] ADD [Message] VARCHAR(512) NULL;
-IF OBJECT_ID(N'dbo.t_notification', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_notification', N'Payload_Json') IS NULL ALTER TABLE dbo.[t_notification] ADD [Payload_Json] NVARCHAR(MAX) NULL;
-IF OBJECT_ID(N'dbo.t_notification', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_notification', N'Priorite') IS NULL ALTER TABLE dbo.[t_notification] ADD [Priorite] INT NULL;
-IF OBJECT_ID(N'dbo.t_notification', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_notification', N'Date_Creation') IS NULL ALTER TABLE dbo.[t_notification] ADD [Date_Creation] DATETIME NULL DEFAULT(GETDATE());
-IF OBJECT_ID(N'dbo.t_notification', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_notification', N'Est_Archive') IS NULL ALTER TABLE dbo.[t_notification] ADD [Est_Archive] BIT NULL DEFAULT(0);
 GO
 
 IF OBJECT_ID(N'dbo.t_notification_delivery', N'U') IS NULL
@@ -1104,18 +716,6 @@ BEGIN
   );
 END;
 GO
-IF OBJECT_ID(N'dbo.t_notification_delivery', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_notification_delivery', N'Id_Delivery') IS NULL ALTER TABLE dbo.[t_notification_delivery] ADD [Id_Delivery] INT NULL;
-IF OBJECT_ID(N'dbo.t_notification_delivery', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_notification_delivery', N'Id_Notification') IS NULL ALTER TABLE dbo.[t_notification_delivery] ADD [Id_Notification] INT NULL;
-IF OBJECT_ID(N'dbo.t_notification_delivery', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_notification_delivery', N'Id_Poste') IS NULL ALTER TABLE dbo.[t_notification_delivery] ADD [Id_Poste] INT NULL;
-IF OBJECT_ID(N'dbo.t_notification_delivery', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_notification_delivery', N'Id_Utilisateur') IS NULL ALTER TABLE dbo.[t_notification_delivery] ADD [Id_Utilisateur] INT NULL;
-IF OBJECT_ID(N'dbo.t_notification_delivery', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_notification_delivery', N'Statut') IS NULL ALTER TABLE dbo.[t_notification_delivery] ADD [Statut] VARCHAR(32) NULL;
-IF OBJECT_ID(N'dbo.t_notification_delivery', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_notification_delivery', N'Nb_Tentatives') IS NULL ALTER TABLE dbo.[t_notification_delivery] ADD [Nb_Tentatives] INT NULL DEFAULT(0);
-IF OBJECT_ID(N'dbo.t_notification_delivery', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_notification_delivery', N'Derniere_Erreur') IS NULL ALTER TABLE dbo.[t_notification_delivery] ADD [Derniere_Erreur] VARCHAR(255) NULL;
-IF OBJECT_ID(N'dbo.t_notification_delivery', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_notification_delivery', N'Date_Queue') IS NULL ALTER TABLE dbo.[t_notification_delivery] ADD [Date_Queue] DATETIME NULL DEFAULT(GETDATE());
-IF OBJECT_ID(N'dbo.t_notification_delivery', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_notification_delivery', N'Date_Envoi') IS NULL ALTER TABLE dbo.[t_notification_delivery] ADD [Date_Envoi] DATETIME NULL;
-IF OBJECT_ID(N'dbo.t_notification_delivery', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_notification_delivery', N'Date_Ack_Agent') IS NULL ALTER TABLE dbo.[t_notification_delivery] ADD [Date_Ack_Agent] DATETIME NULL;
-IF OBJECT_ID(N'dbo.t_notification_delivery', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_notification_delivery', N'Date_Dernier_Event') IS NULL ALTER TABLE dbo.[t_notification_delivery] ADD [Date_Dernier_Event] DATETIME NULL;
-IF OBJECT_ID(N'dbo.t_notification_delivery', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_notification_delivery', N'Correlation_Id') IS NULL ALTER TABLE dbo.[t_notification_delivery] ADD [Correlation_Id] VARCHAR(64) NULL;
 GO
 IF OBJECT_ID(N'dbo.t_notification_delivery', N'U') IS NOT NULL AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'UK_NOTIFICATION_POSTE' AND object_id = OBJECT_ID(N'dbo.t_notification_delivery')) CREATE UNIQUE INDEX [UK_NOTIFICATION_POSTE] ON dbo.[t_notification_delivery]([Id_Notification], [Id_Poste]);
 GO
@@ -1132,11 +732,6 @@ BEGIN
   );
 END;
 GO
-IF OBJECT_ID(N'dbo.t_notification_event', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_notification_event', N'Id_Event') IS NULL ALTER TABLE dbo.[t_notification_event] ADD [Id_Event] INT NULL;
-IF OBJECT_ID(N'dbo.t_notification_event', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_notification_event', N'Id_Delivery') IS NULL ALTER TABLE dbo.[t_notification_event] ADD [Id_Delivery] INT NULL;
-IF OBJECT_ID(N'dbo.t_notification_event', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_notification_event', N'Event_Type') IS NULL ALTER TABLE dbo.[t_notification_event] ADD [Event_Type] VARCHAR(32) NULL;
-IF OBJECT_ID(N'dbo.t_notification_event', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_notification_event', N'Event_Data') IS NULL ALTER TABLE dbo.[t_notification_event] ADD [Event_Data] NVARCHAR(MAX) NULL;
-IF OBJECT_ID(N'dbo.t_notification_event', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_notification_event', N'Date_Event') IS NULL ALTER TABLE dbo.[t_notification_event] ADD [Date_Event] DATETIME NULL DEFAULT(GETDATE());
 GO
 
 IF OBJECT_ID(N'dbo.liste_clients', N'U') IS NULL
@@ -1151,11 +746,6 @@ BEGIN
   );
 END;
 GO
-IF OBJECT_ID(N'dbo.liste_clients', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.liste_clients', N'Id_Client') IS NULL ALTER TABLE dbo.[liste_clients] ADD [Id_Client] INT NULL;
-IF OBJECT_ID(N'dbo.liste_clients', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.liste_clients', N'Nom') IS NULL ALTER TABLE dbo.[liste_clients] ADD [Nom] VARCHAR(100) NULL;
-IF OBJECT_ID(N'dbo.liste_clients', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.liste_clients', N'Num_Compte') IS NULL ALTER TABLE dbo.[liste_clients] ADD [Num_Compte] VARCHAR(50) NULL;
-IF OBJECT_ID(N'dbo.liste_clients', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.liste_clients', N'VigiServ_Derniere_Date_Heure') IS NULL ALTER TABLE dbo.[liste_clients] ADD [VigiServ_Derniere_Date_Heure] DATETIME NULL;
-IF OBJECT_ID(N'dbo.liste_clients', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.liste_clients', N'Vigitel_Derniere_Date_Heure') IS NULL ALTER TABLE dbo.[liste_clients] ADD [Vigitel_Derniere_Date_Heure] DATETIME NULL;
 GO
 IF OBJECT_ID(N'dbo.liste_clients', N'U') IS NOT NULL AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'UX_liste_clients_Num_Compte' AND object_id = OBJECT_ID(N'dbo.liste_clients')) CREATE UNIQUE INDEX [UX_liste_clients_Num_Compte] ON dbo.[liste_clients]([Num_Compte]) WHERE [Num_Compte] IS NOT NULL;
 GO
@@ -1171,10 +761,6 @@ BEGIN
   );
 END;
 GO
-IF OBJECT_ID(N'dbo.t_actionneur_type', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_actionneur_type', N'Id_Actionneur_Type') IS NULL ALTER TABLE dbo.[t_actionneur_type] ADD [Id_Actionneur_Type] INT NULL;
-IF OBJECT_ID(N'dbo.t_actionneur_type', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_actionneur_type', N'Type') IS NULL ALTER TABLE dbo.[t_actionneur_type] ADD [Type] INT NULL;
-IF OBJECT_ID(N'dbo.t_actionneur_type', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_actionneur_type', N'Description') IS NULL ALTER TABLE dbo.[t_actionneur_type] ADD [Description] VARCHAR(50) NULL;
-IF OBJECT_ID(N'dbo.t_actionneur_type', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_actionneur_type', N'Gere_Relais') IS NULL ALTER TABLE dbo.[t_actionneur_type] ADD [Gere_Relais] BIT NULL;
 GO
 IF OBJECT_ID(N'dbo.t_actionneur_type', N'U') IS NOT NULL AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'UX_t_actionneur_type_Type' AND object_id = OBJECT_ID(N'dbo.t_actionneur_type')) CREATE UNIQUE INDEX [UX_t_actionneur_type_Type] ON dbo.[t_actionneur_type]([Type]) WHERE [Type] IS NOT NULL;
 GO
@@ -1190,10 +776,6 @@ BEGIN
   );
 END;
 GO
-IF OBJECT_ID(N'dbo.t_ancien_mot_de_passe', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_ancien_mot_de_passe', N'Id_Ancien_Mot_De_Passe') IS NULL ALTER TABLE dbo.[t_ancien_mot_de_passe] ADD [Id_Ancien_Mot_De_Passe] INT NULL;
-IF OBJECT_ID(N'dbo.t_ancien_mot_de_passe', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_ancien_mot_de_passe', N'Id_Utilisateur') IS NULL ALTER TABLE dbo.[t_ancien_mot_de_passe] ADD [Id_Utilisateur] INT NULL;
-IF OBJECT_ID(N'dbo.t_ancien_mot_de_passe', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_ancien_mot_de_passe', N'Mot_De_Passe') IS NULL ALTER TABLE dbo.[t_ancien_mot_de_passe] ADD [Mot_De_Passe] VARCHAR(100) NULL;
-IF OBJECT_ID(N'dbo.t_ancien_mot_de_passe', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_ancien_mot_de_passe', N'Est_Premiere_Connexion') IS NULL ALTER TABLE dbo.[t_ancien_mot_de_passe] ADD [Est_Premiere_Connexion] BIT NULL;
 GO
 
 IF OBJECT_ID(N'dbo.t_commentaire_acquittement_alarme', N'U') IS NULL
@@ -1206,9 +788,6 @@ BEGIN
   );
 END;
 GO
-IF OBJECT_ID(N'dbo.t_commentaire_acquittement_alarme', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_commentaire_acquittement_alarme', N'Id_Commentaire') IS NULL ALTER TABLE dbo.[t_commentaire_acquittement_alarme] ADD [Id_Commentaire] INT NULL;
-IF OBJECT_ID(N'dbo.t_commentaire_acquittement_alarme', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_commentaire_acquittement_alarme', N'Type_Commentaire') IS NULL ALTER TABLE dbo.[t_commentaire_acquittement_alarme] ADD [Type_Commentaire] VARCHAR(50) NULL;
-IF OBJECT_ID(N'dbo.t_commentaire_acquittement_alarme', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_commentaire_acquittement_alarme', N'Texte') IS NULL ALTER TABLE dbo.[t_commentaire_acquittement_alarme] ADD [Texte] VARCHAR(255) NULL;
 GO
 
 IF OBJECT_ID(N'dbo.t_etalon_type', N'U') IS NULL
@@ -1224,12 +803,6 @@ BEGIN
   );
 END;
 GO
-IF OBJECT_ID(N'dbo.t_etalon_type', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_etalon_type', N'Type_Etalon') IS NULL ALTER TABLE dbo.[t_etalon_type] ADD [Type_Etalon] VARCHAR(4) NULL;
-IF OBJECT_ID(N'dbo.t_etalon_type', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_etalon_type', N'Nom') IS NULL ALTER TABLE dbo.[t_etalon_type] ADD [Nom] VARCHAR(30) NULL;
-IF OBJECT_ID(N'dbo.t_etalon_type', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_etalon_type', N'Descriptif') IS NULL ALTER TABLE dbo.[t_etalon_type] ADD [Descriptif] VARCHAR(100) NULL;
-IF OBJECT_ID(N'dbo.t_etalon_type', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_etalon_type', N'Est_Saisie_Module') IS NULL ALTER TABLE dbo.[t_etalon_type] ADD [Est_Saisie_Module] BIT NULL;
-IF OBJECT_ID(N'dbo.t_etalon_type', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_etalon_type', N'Est_Sonde_Externe') IS NULL ALTER TABLE dbo.[t_etalon_type] ADD [Est_Sonde_Externe] BIT NULL;
-IF OBJECT_ID(N'dbo.t_etalon_type', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_etalon_type', N'Resolution') IS NULL ALTER TABLE dbo.[t_etalon_type] ADD [Resolution] FLOAT NULL;
 GO
 IF NOT EXISTS (SELECT 1 FROM dbo.[t_etalon_type] WHERE [Type_Etalon] = N'ES') INSERT INTO dbo.[t_etalon_type] ([Type_Etalon], [Nom], [Descriptif], [Est_Saisie_Module], [Est_Sonde_Externe], [Resolution]) VALUES (N'ES', N'VigiTemp Type ES', N'Sonde talon radio type E', 1, 0, 0.05);
 IF NOT EXISTS (SELECT 1 FROM dbo.[t_etalon_type] WHERE [Type_Etalon] = N'EX') INSERT INTO dbo.[t_etalon_type] ([Type_Etalon], [Nom], [Descriptif], [Est_Saisie_Module], [Est_Sonde_Externe], [Resolution]) VALUES (N'EX', N'Externe', N'Sonde externe', 1, 1, 0);
@@ -1247,9 +820,6 @@ BEGIN
   );
 END;
 GO
-IF OBJECT_ID(N'dbo.t_sonde_etat', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_sonde_etat', N'Id_Sonde_Etat') IS NULL ALTER TABLE dbo.[t_sonde_etat] ADD [Id_Sonde_Etat] INT NULL;
-IF OBJECT_ID(N'dbo.t_sonde_etat', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_sonde_etat', N'Etat_Sonde') IS NULL ALTER TABLE dbo.[t_sonde_etat] ADD [Etat_Sonde] VARCHAR(1) NULL;
-IF OBJECT_ID(N'dbo.t_sonde_etat', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_sonde_etat', N'Etat_Libelle') IS NULL ALTER TABLE dbo.[t_sonde_etat] ADD [Etat_Libelle] VARCHAR(50) NULL;
 GO
 IF OBJECT_ID(N'dbo.t_sonde_etat', N'U') IS NOT NULL AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'UX_t_sonde_etat_Etat_Sonde' AND object_id = OBJECT_ID(N'dbo.t_sonde_etat')) CREATE UNIQUE INDEX [UX_t_sonde_etat_Etat_Sonde] ON dbo.[t_sonde_etat]([Etat_Sonde]) WHERE [Etat_Sonde] IS NOT NULL;
 GO
@@ -1267,12 +837,6 @@ BEGIN
   );
 END;
 GO
-IF OBJECT_ID(N'dbo.t_lieu_mail_tel', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu_mail_tel', N'Id_Mail_Tel') IS NULL ALTER TABLE dbo.[t_lieu_mail_tel] ADD [Id_Mail_Tel] INT NULL;
-IF OBJECT_ID(N'dbo.t_lieu_mail_tel', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu_mail_tel', N'Id_Lieu') IS NULL ALTER TABLE dbo.[t_lieu_mail_tel] ADD [Id_Lieu] INT NULL;
-IF OBJECT_ID(N'dbo.t_lieu_mail_tel', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu_mail_tel', N'Ordre_Contact') IS NULL ALTER TABLE dbo.[t_lieu_mail_tel] ADD [Ordre_Contact] INT NULL;
-IF OBJECT_ID(N'dbo.t_lieu_mail_tel', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu_mail_tel', N'Id_Utilisateur') IS NULL ALTER TABLE dbo.[t_lieu_mail_tel] ADD [Id_Utilisateur] INT NULL;
-IF OBJECT_ID(N'dbo.t_lieu_mail_tel', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu_mail_tel', N'Est_Via_Telephone') IS NULL ALTER TABLE dbo.[t_lieu_mail_tel] ADD [Est_Via_Telephone] BIT NULL;
-IF OBJECT_ID(N'dbo.t_lieu_mail_tel', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu_mail_tel', N'Est_Via_Email') IS NULL ALTER TABLE dbo.[t_lieu_mail_tel] ADD [Est_Via_Email] BIT NULL;
 GO
 
 IF OBJECT_ID(N'dbo.t_lieu_planning', N'U') IS NULL
@@ -1292,14 +856,6 @@ BEGIN
   CREATE INDEX [IDX_t_lieu_planning_Id_Lieu] ON dbo.[t_lieu_planning]([Id_Lieu]);
 END;
 GO
-IF OBJECT_ID(N'dbo.t_lieu_planning', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu_planning', N'Id_Lieu_Planning') IS NULL ALTER TABLE dbo.[t_lieu_planning] ADD [Id_Lieu_Planning] INT NULL;
-IF OBJECT_ID(N'dbo.t_lieu_planning', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu_planning', N'Id_Lieu') IS NULL ALTER TABLE dbo.[t_lieu_planning] ADD [Id_Lieu] INT NULL;
-IF OBJECT_ID(N'dbo.t_lieu_planning', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu_planning', N'Est_Id_Jour') IS NULL ALTER TABLE dbo.[t_lieu_planning] ADD [Est_Id_Jour] TINYINT NULL;
-IF OBJECT_ID(N'dbo.t_lieu_planning', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu_planning', N'Est_Actif') IS NULL ALTER TABLE dbo.[t_lieu_planning] ADD [Est_Actif] BIT NULL DEFAULT(1);
-IF OBJECT_ID(N'dbo.t_lieu_planning', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu_planning', N'Heure_Debut_Periode1') IS NULL ALTER TABLE dbo.[t_lieu_planning] ADD [Heure_Debut_Periode1] VARCHAR(4) NULL DEFAULT('0000');
-IF OBJECT_ID(N'dbo.t_lieu_planning', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu_planning', N'Heure_Fin_Periode1') IS NULL ALTER TABLE dbo.[t_lieu_planning] ADD [Heure_Fin_Periode1] VARCHAR(4) NULL DEFAULT('0000');
-IF OBJECT_ID(N'dbo.t_lieu_planning', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu_planning', N'Heure_Debut_Periode2') IS NULL ALTER TABLE dbo.[t_lieu_planning] ADD [Heure_Debut_Periode2] VARCHAR(4) NULL DEFAULT('0000');
-IF OBJECT_ID(N'dbo.t_lieu_planning', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu_planning', N'Heure_Fin_Periode2') IS NULL ALTER TABLE dbo.[t_lieu_planning] ADD [Heure_Fin_Periode2] VARCHAR(4) NULL DEFAULT('0000');
 GO
 
 IF OBJECT_ID(N'dbo.t_lieu_planning_audit', N'U') IS NULL
@@ -1322,19 +878,6 @@ BEGIN
   );
 END;
 GO
-IF OBJECT_ID(N'dbo.t_lieu_planning_audit', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu_planning_audit', N'Id_Audit') IS NULL ALTER TABLE dbo.[t_lieu_planning_audit] ADD [Id_Audit] INT NULL;
-IF OBJECT_ID(N'dbo.t_lieu_planning_audit', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu_planning_audit', N'Id_Lieu') IS NULL ALTER TABLE dbo.[t_lieu_planning_audit] ADD [Id_Lieu] INT NULL;
-IF OBJECT_ID(N'dbo.t_lieu_planning_audit', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu_planning_audit', N'Timestamp') IS NULL ALTER TABLE dbo.[t_lieu_planning_audit] ADD [Timestamp] DATETIME NULL DEFAULT(GETDATE());
-IF OBJECT_ID(N'dbo.t_lieu_planning_audit', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu_planning_audit', N'Date_Heure_Debut_Changement') IS NULL ALTER TABLE dbo.[t_lieu_planning_audit] ADD [Date_Heure_Debut_Changement] DATETIME NULL;
-IF OBJECT_ID(N'dbo.t_lieu_planning_audit', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu_planning_audit', N'Date_Heure_Fin_Changement') IS NULL ALTER TABLE dbo.[t_lieu_planning_audit] ADD [Date_Heure_Fin_Changement] DATETIME NULL;
-IF OBJECT_ID(N'dbo.t_lieu_planning_audit', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu_planning_audit', N'Type') IS NULL ALTER TABLE dbo.[t_lieu_planning_audit] ADD [Type] VARCHAR(64) NULL;
-IF OBJECT_ID(N'dbo.t_lieu_planning_audit', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu_planning_audit', N'Planning_Regle_Id') IS NULL ALTER TABLE dbo.[t_lieu_planning_audit] ADD [Planning_Regle_Id] INT NULL;
-IF OBJECT_ID(N'dbo.t_lieu_planning_audit', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu_planning_audit', N'Consigne_Avant') IS NULL ALTER TABLE dbo.[t_lieu_planning_audit] ADD [Consigne_Avant] FLOAT NULL;
-IF OBJECT_ID(N'dbo.t_lieu_planning_audit', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu_planning_audit', N'Tolerance_Surveillance_Sup_Avant') IS NULL ALTER TABLE dbo.[t_lieu_planning_audit] ADD [Tolerance_Surveillance_Sup_Avant] FLOAT NULL;
-IF OBJECT_ID(N'dbo.t_lieu_planning_audit', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu_planning_audit', N'Tolerance_Surveillance_Inf_Avant') IS NULL ALTER TABLE dbo.[t_lieu_planning_audit] ADD [Tolerance_Surveillance_Inf_Avant] FLOAT NULL;
-IF OBJECT_ID(N'dbo.t_lieu_planning_audit', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu_planning_audit', N'Consigne_Apres') IS NULL ALTER TABLE dbo.[t_lieu_planning_audit] ADD [Consigne_Apres] FLOAT NULL;
-IF OBJECT_ID(N'dbo.t_lieu_planning_audit', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu_planning_audit', N'Tolerance_Surveillance_Sup_Apres') IS NULL ALTER TABLE dbo.[t_lieu_planning_audit] ADD [Tolerance_Surveillance_Sup_Apres] FLOAT NULL;
-IF OBJECT_ID(N'dbo.t_lieu_planning_audit', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu_planning_audit', N'Tolerance_Surveillance_Inf_Apres') IS NULL ALTER TABLE dbo.[t_lieu_planning_audit] ADD [Tolerance_Surveillance_Inf_Apres] FLOAT NULL;
 GO
 
 IF OBJECT_ID(N'dbo.t_lieu_planning_regle', N'U') IS NULL
@@ -1360,22 +903,6 @@ BEGIN
   );
 END;
 GO
-IF OBJECT_ID(N'dbo.t_lieu_planning_regle', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu_planning_regle', N'Id_Regle') IS NULL ALTER TABLE dbo.[t_lieu_planning_regle] ADD [Id_Regle] INT NULL;
-IF OBJECT_ID(N'dbo.t_lieu_planning_regle', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu_planning_regle', N'Id_Lieu') IS NULL ALTER TABLE dbo.[t_lieu_planning_regle] ADD [Id_Lieu] INT NULL;
-IF OBJECT_ID(N'dbo.t_lieu_planning_regle', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu_planning_regle', N'Actif') IS NULL ALTER TABLE dbo.[t_lieu_planning_regle] ADD [Actif] BIT NULL DEFAULT(1);
-IF OBJECT_ID(N'dbo.t_lieu_planning_regle', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu_planning_regle', N'Jour_Debut') IS NULL ALTER TABLE dbo.[t_lieu_planning_regle] ADD [Jour_Debut] TINYINT NULL;
-IF OBJECT_ID(N'dbo.t_lieu_planning_regle', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu_planning_regle', N'Heure_Debut') IS NULL ALTER TABLE dbo.[t_lieu_planning_regle] ADD [Heure_Debut] TIME NULL;
-IF OBJECT_ID(N'dbo.t_lieu_planning_regle', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu_planning_regle', N'Jour_Fin') IS NULL ALTER TABLE dbo.[t_lieu_planning_regle] ADD [Jour_Fin] TINYINT NULL;
-IF OBJECT_ID(N'dbo.t_lieu_planning_regle', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu_planning_regle', N'Heure_Fin') IS NULL ALTER TABLE dbo.[t_lieu_planning_regle] ADD [Heure_Fin] TIME NULL;
-IF OBJECT_ID(N'dbo.t_lieu_planning_regle', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu_planning_regle', N'Consigne') IS NULL ALTER TABLE dbo.[t_lieu_planning_regle] ADD [Consigne] FLOAT NULL;
-IF OBJECT_ID(N'dbo.t_lieu_planning_regle', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu_planning_regle', N'Consigne_Sup') IS NULL ALTER TABLE dbo.[t_lieu_planning_regle] ADD [Consigne_Sup] FLOAT NULL;
-IF OBJECT_ID(N'dbo.t_lieu_planning_regle', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu_planning_regle', N'Consigne_Inf') IS NULL ALTER TABLE dbo.[t_lieu_planning_regle] ADD [Consigne_Inf] FLOAT NULL;
-IF OBJECT_ID(N'dbo.t_lieu_planning_regle', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu_planning_regle', N'Priorite') IS NULL ALTER TABLE dbo.[t_lieu_planning_regle] ADD [Priorite] INT NULL DEFAULT(0);
-IF OBJECT_ID(N'dbo.t_lieu_planning_regle', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu_planning_regle', N'Tolerance_Sup_Calc') IS NULL ALTER TABLE dbo.[t_lieu_planning_regle] ADD [Tolerance_Sup_Calc] FLOAT NULL;
-IF OBJECT_ID(N'dbo.t_lieu_planning_regle', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu_planning_regle', N'Tolerance_Inf_Calc') IS NULL ALTER TABLE dbo.[t_lieu_planning_regle] ADD [Tolerance_Inf_Calc] FLOAT NULL;
-IF OBJECT_ID(N'dbo.t_lieu_planning_regle', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu_planning_regle', N'Date_Creation') IS NULL ALTER TABLE dbo.[t_lieu_planning_regle] ADD [Date_Creation] DATETIME NULL DEFAULT(GETDATE());
-IF OBJECT_ID(N'dbo.t_lieu_planning_regle', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu_planning_regle', N'Date_Maj') IS NULL ALTER TABLE dbo.[t_lieu_planning_regle] ADD [Date_Maj] DATETIME NULL;
-IF OBJECT_ID(N'dbo.t_lieu_planning_regle', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_lieu_planning_regle', N'Retard_Alarme_Changement_Consigne') IS NULL ALTER TABLE dbo.[t_lieu_planning_regle] ADD [Retard_Alarme_Changement_Consigne] INT NULL;
 GO
 
 IF OBJECT_ID(N'dbo.t_materiel', N'U') IS NULL
@@ -1392,13 +919,6 @@ BEGIN
   );
 END;
 GO
-IF OBJECT_ID(N'dbo.t_materiel', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_materiel', N'Id_Materiel') IS NULL ALTER TABLE dbo.[t_materiel] ADD [Id_Materiel] INT NULL;
-IF OBJECT_ID(N'dbo.t_materiel', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_materiel', N'Ref_Commercial') IS NULL ALTER TABLE dbo.[t_materiel] ADD [Ref_Commercial] VARCHAR(50) NULL;
-IF OBJECT_ID(N'dbo.t_materiel', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_materiel', N'Designation') IS NULL ALTER TABLE dbo.[t_materiel] ADD [Designation] VARCHAR(100) NULL;
-IF OBJECT_ID(N'dbo.t_materiel', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_materiel', N'Descriptif') IS NULL ALTER TABLE dbo.[t_materiel] ADD [Descriptif] VARCHAR(1000) NULL;
-IF OBJECT_ID(N'dbo.t_materiel', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_materiel', N'Gamme') IS NULL ALTER TABLE dbo.[t_materiel] ADD [Gamme] VARCHAR(10) NULL;
-IF OBJECT_ID(N'dbo.t_materiel', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_materiel', N'Type') IS NULL ALTER TABLE dbo.[t_materiel] ADD [Type] VARCHAR(10) NULL;
-IF OBJECT_ID(N'dbo.t_materiel', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_materiel', N'Chemin_Image') IS NULL ALTER TABLE dbo.[t_materiel] ADD [Chemin_Image] VARCHAR(500) NULL;
 GO
 
 IF OBJECT_ID(N'dbo.t_commande_materiel', N'U') IS NULL
@@ -1420,18 +940,6 @@ BEGIN
   );
 END;
 GO
-IF OBJECT_ID(N'dbo.t_commande_materiel', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_commande_materiel', N'Id_Commande_Materiel') IS NULL ALTER TABLE dbo.[t_commande_materiel] ADD [Id_Commande_Materiel] INT NULL;
-IF OBJECT_ID(N'dbo.t_commande_materiel', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_commande_materiel', N'Reference_Commande') IS NULL ALTER TABLE dbo.[t_commande_materiel] ADD [Reference_Commande] VARCHAR(64) NULL;
-IF OBJECT_ID(N'dbo.t_commande_materiel', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_commande_materiel', N'Id_Utilisateur') IS NULL ALTER TABLE dbo.[t_commande_materiel] ADD [Id_Utilisateur] INT NULL;
-IF OBJECT_ID(N'dbo.t_commande_materiel', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_commande_materiel', N'Nom_Demandeur') IS NULL ALTER TABLE dbo.[t_commande_materiel] ADD [Nom_Demandeur] VARCHAR(255) NULL;
-IF OBJECT_ID(N'dbo.t_commande_materiel', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_commande_materiel', N'Email_Demandeur') IS NULL ALTER TABLE dbo.[t_commande_materiel] ADD [Email_Demandeur] VARCHAR(255) NULL;
-IF OBJECT_ID(N'dbo.t_commande_materiel', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_commande_materiel', N'Email_Commercial') IS NULL ALTER TABLE dbo.[t_commande_materiel] ADD [Email_Commercial] VARCHAR(255) NULL;
-IF OBJECT_ID(N'dbo.t_commande_materiel', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_commande_materiel', N'Commentaire') IS NULL ALTER TABLE dbo.[t_commande_materiel] ADD [Commentaire] NVARCHAR(MAX) NULL;
-IF OBJECT_ID(N'dbo.t_commande_materiel', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_commande_materiel', N'Mode_Transmission') IS NULL ALTER TABLE dbo.[t_commande_materiel] ADD [Mode_Transmission] VARCHAR(64) NULL;
-IF OBJECT_ID(N'dbo.t_commande_materiel', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_commande_materiel', N'Statut_Commande') IS NULL ALTER TABLE dbo.[t_commande_materiel] ADD [Statut_Commande] VARCHAR(64) NULL DEFAULT(N'BROUILLON');
-IF OBJECT_ID(N'dbo.t_commande_materiel', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_commande_materiel', N'Date_Creation') IS NULL ALTER TABLE dbo.[t_commande_materiel] ADD [Date_Creation] DATETIME NULL DEFAULT(GETDATE());
-IF OBJECT_ID(N'dbo.t_commande_materiel', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_commande_materiel', N'Date_Envoi') IS NULL ALTER TABLE dbo.[t_commande_materiel] ADD [Date_Envoi] DATETIME NULL;
-IF OBJECT_ID(N'dbo.t_commande_materiel', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_commande_materiel', N'Id_Pdf') IS NULL ALTER TABLE dbo.[t_commande_materiel] ADD [Id_Pdf] INT NULL;
 GO
 IF OBJECT_ID(N'dbo.t_commande_materiel', N'U') IS NOT NULL AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'UX_t_commande_materiel_Reference_Commande' AND object_id = OBJECT_ID(N'dbo.t_commande_materiel')) CREATE UNIQUE INDEX [UX_t_commande_materiel_Reference_Commande] ON dbo.[t_commande_materiel]([Reference_Commande]) WHERE [Reference_Commande] IS NOT NULL;
 GO
@@ -1452,15 +960,6 @@ BEGIN
   );
 END;
 GO
-IF OBJECT_ID(N'dbo.t_commande_materiel_ligne', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_commande_materiel_ligne', N'Id_Commande_Materiel_Ligne') IS NULL ALTER TABLE dbo.[t_commande_materiel_ligne] ADD [Id_Commande_Materiel_Ligne] INT NULL;
-IF OBJECT_ID(N'dbo.t_commande_materiel_ligne', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_commande_materiel_ligne', N'Id_Commande_Materiel') IS NULL ALTER TABLE dbo.[t_commande_materiel_ligne] ADD [Id_Commande_Materiel] INT NULL;
-IF OBJECT_ID(N'dbo.t_commande_materiel_ligne', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_commande_materiel_ligne', N'Id_Materiel') IS NULL ALTER TABLE dbo.[t_commande_materiel_ligne] ADD [Id_Materiel] INT NULL;
-IF OBJECT_ID(N'dbo.t_commande_materiel_ligne', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_commande_materiel_ligne', N'Ref_Commercial') IS NULL ALTER TABLE dbo.[t_commande_materiel_ligne] ADD [Ref_Commercial] VARCHAR(100) NULL;
-IF OBJECT_ID(N'dbo.t_commande_materiel_ligne', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_commande_materiel_ligne', N'Designation') IS NULL ALTER TABLE dbo.[t_commande_materiel_ligne] ADD [Designation] VARCHAR(255) NULL;
-IF OBJECT_ID(N'dbo.t_commande_materiel_ligne', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_commande_materiel_ligne', N'Descriptif') IS NULL ALTER TABLE dbo.[t_commande_materiel_ligne] ADD [Descriptif] NVARCHAR(MAX) NULL;
-IF OBJECT_ID(N'dbo.t_commande_materiel_ligne', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_commande_materiel_ligne', N'Gamme') IS NULL ALTER TABLE dbo.[t_commande_materiel_ligne] ADD [Gamme] VARCHAR(50) NULL;
-IF OBJECT_ID(N'dbo.t_commande_materiel_ligne', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_commande_materiel_ligne', N'Type') IS NULL ALTER TABLE dbo.[t_commande_materiel_ligne] ADD [Type] VARCHAR(50) NULL;
-IF OBJECT_ID(N'dbo.t_commande_materiel_ligne', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_commande_materiel_ligne', N'Quantite') IS NULL ALTER TABLE dbo.[t_commande_materiel_ligne] ADD [Quantite] INT NULL;
 GO
 
 IF OBJECT_ID(N'dbo.t_vigilog_configuration', N'U') IS NULL
@@ -1488,24 +987,6 @@ BEGIN
   );
 END;
 GO
-IF OBJECT_ID(N'dbo.t_vigilog_configuration', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_vigilog_configuration', N'Id_VigiLog_Configuration') IS NULL ALTER TABLE dbo.[t_vigilog_configuration] ADD [Id_VigiLog_Configuration] INT NULL;
-IF OBJECT_ID(N'dbo.t_vigilog_configuration', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_vigilog_configuration', N'Nom_Configuration') IS NULL ALTER TABLE dbo.[t_vigilog_configuration] ADD [Nom_Configuration] VARCHAR(100) NULL;
-IF OBJECT_ID(N'dbo.t_vigilog_configuration', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_vigilog_configuration', N'Description_Configuration') IS NULL ALTER TABLE dbo.[t_vigilog_configuration] ADD [Description_Configuration] VARCHAR(255) NULL;
-IF OBJECT_ID(N'dbo.t_vigilog_configuration', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_vigilog_configuration', N'Consigne') IS NULL ALTER TABLE dbo.[t_vigilog_configuration] ADD [Consigne] DECIMAL(10,2) NULL;
-IF OBJECT_ID(N'dbo.t_vigilog_configuration', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_vigilog_configuration', N'Limite_Basse_Active') IS NULL ALTER TABLE dbo.[t_vigilog_configuration] ADD [Limite_Basse_Active] BIT NULL DEFAULT(0);
-IF OBJECT_ID(N'dbo.t_vigilog_configuration', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_vigilog_configuration', N'Limite_Basse') IS NULL ALTER TABLE dbo.[t_vigilog_configuration] ADD [Limite_Basse] DECIMAL(10,2) NULL;
-IF OBJECT_ID(N'dbo.t_vigilog_configuration', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_vigilog_configuration', N'Limite_Haute_Active') IS NULL ALTER TABLE dbo.[t_vigilog_configuration] ADD [Limite_Haute_Active] BIT NULL DEFAULT(0);
-IF OBJECT_ID(N'dbo.t_vigilog_configuration', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_vigilog_configuration', N'Limite_Haute') IS NULL ALTER TABLE dbo.[t_vigilog_configuration] ADD [Limite_Haute] DECIMAL(10,2) NULL;
-IF OBJECT_ID(N'dbo.t_vigilog_configuration', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_vigilog_configuration', N'Frequence_Min') IS NULL ALTER TABLE dbo.[t_vigilog_configuration] ADD [Frequence_Min] INT NULL;
-IF OBJECT_ID(N'dbo.t_vigilog_configuration', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_vigilog_configuration', N'Retard_Alarme_Min') IS NULL ALTER TABLE dbo.[t_vigilog_configuration] ADD [Retard_Alarme_Min] INT NULL;
-IF OBJECT_ID(N'dbo.t_vigilog_configuration', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_vigilog_configuration', N'Delai_Demarrage_Min') IS NULL ALTER TABLE dbo.[t_vigilog_configuration] ADD [Delai_Demarrage_Min] INT NULL DEFAULT(0);
-IF OBJECT_ID(N'dbo.t_vigilog_configuration', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_vigilog_configuration', N'Autorise_Arret_Bouton_Stop') IS NULL ALTER TABLE dbo.[t_vigilog_configuration] ADD [Autorise_Arret_Bouton_Stop] BIT NULL DEFAULT(1);
-IF OBJECT_ID(N'dbo.t_vigilog_configuration', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_vigilog_configuration', N'Reinitialise_Avec_Bouton_Start') IS NULL ALTER TABLE dbo.[t_vigilog_configuration] ADD [Reinitialise_Avec_Bouton_Start] BIT NULL DEFAULT(1);
-IF OBJECT_ID(N'dbo.t_vigilog_configuration', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_vigilog_configuration', N'Actif') IS NULL ALTER TABLE dbo.[t_vigilog_configuration] ADD [Actif] BIT NULL DEFAULT(1);
-IF OBJECT_ID(N'dbo.t_vigilog_configuration', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_vigilog_configuration', N'Id_Utilisateur_Creation') IS NULL ALTER TABLE dbo.[t_vigilog_configuration] ADD [Id_Utilisateur_Creation] INT NULL;
-IF OBJECT_ID(N'dbo.t_vigilog_configuration', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_vigilog_configuration', N'Date_Heure_Creation') IS NULL ALTER TABLE dbo.[t_vigilog_configuration] ADD [Date_Heure_Creation] DATETIME NULL DEFAULT(GETDATE());
-IF OBJECT_ID(N'dbo.t_vigilog_configuration', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_vigilog_configuration', N'Id_Utilisateur_Maj') IS NULL ALTER TABLE dbo.[t_vigilog_configuration] ADD [Id_Utilisateur_Maj] INT NULL;
-IF OBJECT_ID(N'dbo.t_vigilog_configuration', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_vigilog_configuration', N'Date_Heure_Maj') IS NULL ALTER TABLE dbo.[t_vigilog_configuration] ADD [Date_Heure_Maj] DATETIME NULL;
 GO
 IF OBJECT_ID(N'dbo.t_vigilog_configuration', N'U') IS NOT NULL AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'UX_t_vigilog_configuration_Nom_Configuration' AND object_id = OBJECT_ID(N'dbo.t_vigilog_configuration')) CREATE UNIQUE INDEX [UX_t_vigilog_configuration_Nom_Configuration] ON dbo.[t_vigilog_configuration]([Nom_Configuration]) WHERE [Nom_Configuration] IS NOT NULL;
 GO
@@ -1531,20 +1012,6 @@ BEGIN
   );
 END;
 GO
-IF OBJECT_ID(N'dbo.t_vigilog', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_vigilog', N'Id_VigiLog') IS NULL ALTER TABLE dbo.[t_vigilog] ADD [Id_VigiLog] INT NULL;
-IF OBJECT_ID(N'dbo.t_vigilog', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_vigilog', N'Numero_Serie') IS NULL ALTER TABLE dbo.[t_vigilog] ADD [Numero_Serie] VARCHAR(30) NULL;
-IF OBJECT_ID(N'dbo.t_vigilog', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_vigilog', N'Modele') IS NULL ALTER TABLE dbo.[t_vigilog] ADD [Modele] VARCHAR(50) NULL;
-IF OBJECT_ID(N'dbo.t_vigilog', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_vigilog', N'Libelle') IS NULL ALTER TABLE dbo.[t_vigilog] ADD [Libelle] VARCHAR(100) NULL;
-IF OBJECT_ID(N'dbo.t_vigilog', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_vigilog', N'Actif') IS NULL ALTER TABLE dbo.[t_vigilog] ADD [Actif] BIT NULL DEFAULT(1);
-IF OBJECT_ID(N'dbo.t_vigilog', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_vigilog', N'Date_Etalonnage') IS NULL ALTER TABLE dbo.[t_vigilog] ADD [Date_Etalonnage] DATETIME NULL;
-IF OBJECT_ID(N'dbo.t_vigilog', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_vigilog', N'Date_Validite') IS NULL ALTER TABLE dbo.[t_vigilog] ADD [Date_Validite] DATE NULL;
-IF OBJECT_ID(N'dbo.t_vigilog', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_vigilog', N'Duree_Validite_Jours') IS NULL ALTER TABLE dbo.[t_vigilog] ADD [Duree_Validite_Jours] INT NULL;
-IF OBJECT_ID(N'dbo.t_vigilog', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_vigilog', N'Err_Justesse') IS NULL ALTER TABLE dbo.[t_vigilog] ADD [Err_Justesse] FLOAT NULL;
-IF OBJECT_ID(N'dbo.t_vigilog', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_vigilog', N'Commentaire') IS NULL ALTER TABLE dbo.[t_vigilog] ADD [Commentaire] NVARCHAR(MAX) NULL;
-IF OBJECT_ID(N'dbo.t_vigilog', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_vigilog', N'Id_Utilisateur_Creation') IS NULL ALTER TABLE dbo.[t_vigilog] ADD [Id_Utilisateur_Creation] INT NULL;
-IF OBJECT_ID(N'dbo.t_vigilog', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_vigilog', N'Date_Heure_Creation') IS NULL ALTER TABLE dbo.[t_vigilog] ADD [Date_Heure_Creation] DATETIME NULL DEFAULT(GETDATE());
-IF OBJECT_ID(N'dbo.t_vigilog', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_vigilog', N'Id_Utilisateur_Maj') IS NULL ALTER TABLE dbo.[t_vigilog] ADD [Id_Utilisateur_Maj] INT NULL;
-IF OBJECT_ID(N'dbo.t_vigilog', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_vigilog', N'Date_Heure_Maj') IS NULL ALTER TABLE dbo.[t_vigilog] ADD [Date_Heure_Maj] DATETIME NULL;
 GO
 IF OBJECT_ID(N'dbo.t_vigilog', N'U') IS NOT NULL AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'UX_t_vigilog_Numero_Serie' AND object_id = OBJECT_ID(N'dbo.t_vigilog')) CREATE UNIQUE INDEX [UX_t_vigilog_Numero_Serie] ON dbo.[t_vigilog]([Numero_Serie]) WHERE [Numero_Serie] IS NOT NULL;
 GO
@@ -1572,22 +1039,6 @@ BEGIN
   );
 END;
 GO
-IF OBJECT_ID(N'dbo.t_vigilog_usage_ponctuel', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_vigilog_usage_ponctuel', N'Id_VigiLog_Usage_Ponctuel') IS NULL ALTER TABLE dbo.[t_vigilog_usage_ponctuel] ADD [Id_VigiLog_Usage_Ponctuel] INT NULL;
-IF OBJECT_ID(N'dbo.t_vigilog_usage_ponctuel', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_vigilog_usage_ponctuel', N'Reference_Usage') IS NULL ALTER TABLE dbo.[t_vigilog_usage_ponctuel] ADD [Reference_Usage] VARCHAR(50) NULL;
-IF OBJECT_ID(N'dbo.t_vigilog_usage_ponctuel', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_vigilog_usage_ponctuel', N'Id_VigiLog_Configuration') IS NULL ALTER TABLE dbo.[t_vigilog_usage_ponctuel] ADD [Id_VigiLog_Configuration] INT NULL;
-IF OBJECT_ID(N'dbo.t_vigilog_usage_ponctuel', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_vigilog_usage_ponctuel', N'Id_VigiLog') IS NULL ALTER TABLE dbo.[t_vigilog_usage_ponctuel] ADD [Id_VigiLog] INT NULL;
-IF OBJECT_ID(N'dbo.t_vigilog_usage_ponctuel', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_vigilog_usage_ponctuel', N'Nom_Configuration') IS NULL ALTER TABLE dbo.[t_vigilog_usage_ponctuel] ADD [Nom_Configuration] VARCHAR(100) NULL;
-IF OBJECT_ID(N'dbo.t_vigilog_usage_ponctuel', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_vigilog_usage_ponctuel', N'Numero_Serie_VigiLog') IS NULL ALTER TABLE dbo.[t_vigilog_usage_ponctuel] ADD [Numero_Serie_VigiLog] VARCHAR(30) NULL;
-IF OBJECT_ID(N'dbo.t_vigilog_usage_ponctuel', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_vigilog_usage_ponctuel', N'Nom_Lieu_Temporaire') IS NULL ALTER TABLE dbo.[t_vigilog_usage_ponctuel] ADD [Nom_Lieu_Temporaire] VARCHAR(120) NULL;
-IF OBJECT_ID(N'dbo.t_vigilog_usage_ponctuel', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_vigilog_usage_ponctuel', N'Statut') IS NULL ALTER TABLE dbo.[t_vigilog_usage_ponctuel] ADD [Statut] VARCHAR(30) NULL;
-IF OBJECT_ID(N'dbo.t_vigilog_usage_ponctuel', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_vigilog_usage_ponctuel', N'Id_Utilisateur_Demarrage') IS NULL ALTER TABLE dbo.[t_vigilog_usage_ponctuel] ADD [Id_Utilisateur_Demarrage] INT NULL;
-IF OBJECT_ID(N'dbo.t_vigilog_usage_ponctuel', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_vigilog_usage_ponctuel', N'Date_Heure_Demarrage') IS NULL ALTER TABLE dbo.[t_vigilog_usage_ponctuel] ADD [Date_Heure_Demarrage] DATETIME NULL;
-IF OBJECT_ID(N'dbo.t_vigilog_usage_ponctuel', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_vigilog_usage_ponctuel', N'Commentaire_Demarrage') IS NULL ALTER TABLE dbo.[t_vigilog_usage_ponctuel] ADD [Commentaire_Demarrage] NVARCHAR(MAX) NULL;
-IF OBJECT_ID(N'dbo.t_vigilog_usage_ponctuel', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_vigilog_usage_ponctuel', N'Id_Utilisateur_Arret') IS NULL ALTER TABLE dbo.[t_vigilog_usage_ponctuel] ADD [Id_Utilisateur_Arret] INT NULL;
-IF OBJECT_ID(N'dbo.t_vigilog_usage_ponctuel', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_vigilog_usage_ponctuel', N'Date_Heure_Arret') IS NULL ALTER TABLE dbo.[t_vigilog_usage_ponctuel] ADD [Date_Heure_Arret] DATETIME NULL;
-IF OBJECT_ID(N'dbo.t_vigilog_usage_ponctuel', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_vigilog_usage_ponctuel', N'Commentaire_Arret') IS NULL ALTER TABLE dbo.[t_vigilog_usage_ponctuel] ADD [Commentaire_Arret] NVARCHAR(MAX) NULL;
-IF OBJECT_ID(N'dbo.t_vigilog_usage_ponctuel', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_vigilog_usage_ponctuel', N'Date_Heure_Creation') IS NULL ALTER TABLE dbo.[t_vigilog_usage_ponctuel] ADD [Date_Heure_Creation] DATETIME NULL DEFAULT(GETDATE());
-IF OBJECT_ID(N'dbo.t_vigilog_usage_ponctuel', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_vigilog_usage_ponctuel', N'Date_Heure_Maj') IS NULL ALTER TABLE dbo.[t_vigilog_usage_ponctuel] ADD [Date_Heure_Maj] DATETIME NULL;
 GO
 IF OBJECT_ID(N'dbo.t_vigilog_usage_ponctuel', N'U') IS NOT NULL AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'UX_t_vigilog_usage_ponctuel_Reference_Usage' AND object_id = OBJECT_ID(N'dbo.t_vigilog_usage_ponctuel')) CREATE UNIQUE INDEX [UX_t_vigilog_usage_ponctuel_Reference_Usage] ON dbo.[t_vigilog_usage_ponctuel]([Reference_Usage]) WHERE [Reference_Usage] IS NOT NULL;
 GO
@@ -1638,45 +1089,6 @@ BEGIN
   );
 END;
 GO
-IF OBJECT_ID(N'dbo.t_vigilog_tournee', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_vigilog_tournee', N'Id_VigiLog_Tournee') IS NULL ALTER TABLE dbo.[t_vigilog_tournee] ADD [Id_VigiLog_Tournee] INT NULL;
-IF OBJECT_ID(N'dbo.t_vigilog_tournee', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_vigilog_tournee', N'Reference_Tournee') IS NULL ALTER TABLE dbo.[t_vigilog_tournee] ADD [Reference_Tournee] VARCHAR(50) NULL;
-IF OBJECT_ID(N'dbo.t_vigilog_tournee', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_vigilog_tournee', N'Id_VigiLog_Configuration') IS NULL ALTER TABLE dbo.[t_vigilog_tournee] ADD [Id_VigiLog_Configuration] INT NULL;
-IF OBJECT_ID(N'dbo.t_vigilog_tournee', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_vigilog_tournee', N'Id_VigiLog') IS NULL ALTER TABLE dbo.[t_vigilog_tournee] ADD [Id_VigiLog] INT NULL;
-IF OBJECT_ID(N'dbo.t_vigilog_tournee', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_vigilog_tournee', N'Nom_Configuration') IS NULL ALTER TABLE dbo.[t_vigilog_tournee] ADD [Nom_Configuration] VARCHAR(100) NULL;
-IF OBJECT_ID(N'dbo.t_vigilog_tournee', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_vigilog_tournee', N'Id_Site_Depart') IS NULL ALTER TABLE dbo.[t_vigilog_tournee] ADD [Id_Site_Depart] INT NULL;
-IF OBJECT_ID(N'dbo.t_vigilog_tournee', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_vigilog_tournee', N'Id_Site_Arrivee') IS NULL ALTER TABLE dbo.[t_vigilog_tournee] ADD [Id_Site_Arrivee] INT NULL;
-IF OBJECT_ID(N'dbo.t_vigilog_tournee', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_vigilog_tournee', N'Numero_Serie_VigiLog') IS NULL ALTER TABLE dbo.[t_vigilog_tournee] ADD [Numero_Serie_VigiLog] VARCHAR(30) NULL;
-IF OBJECT_ID(N'dbo.t_vigilog_tournee', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_vigilog_tournee', N'Statut') IS NULL ALTER TABLE dbo.[t_vigilog_tournee] ADD [Statut] VARCHAR(30) NULL;
-IF OBJECT_ID(N'dbo.t_vigilog_tournee', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_vigilog_tournee', N'Resultat_Feu') IS NULL ALTER TABLE dbo.[t_vigilog_tournee] ADD [Resultat_Feu] VARCHAR(10) NULL;
-IF OBJECT_ID(N'dbo.t_vigilog_tournee', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_vigilog_tournee', N'Id_Utilisateur_Depart') IS NULL ALTER TABLE dbo.[t_vigilog_tournee] ADD [Id_Utilisateur_Depart] INT NULL;
-IF OBJECT_ID(N'dbo.t_vigilog_tournee', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_vigilog_tournee', N'Date_Heure_Depart') IS NULL ALTER TABLE dbo.[t_vigilog_tournee] ADD [Date_Heure_Depart] DATETIME NULL;
-IF OBJECT_ID(N'dbo.t_vigilog_tournee', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_vigilog_tournee', N'Id_Utilisateur_Arrivee') IS NULL ALTER TABLE dbo.[t_vigilog_tournee] ADD [Id_Utilisateur_Arrivee] INT NULL;
-IF OBJECT_ID(N'dbo.t_vigilog_tournee', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_vigilog_tournee', N'Date_Heure_Arrivee') IS NULL ALTER TABLE dbo.[t_vigilog_tournee] ADD [Date_Heure_Arrivee] DATETIME NULL;
-IF OBJECT_ID(N'dbo.t_vigilog_tournee', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_vigilog_tournee', N'Consigne') IS NULL ALTER TABLE dbo.[t_vigilog_tournee] ADD [Consigne] DECIMAL(10,2) NULL;
-IF OBJECT_ID(N'dbo.t_vigilog_tournee', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_vigilog_tournee', N'Limite_Basse_Active') IS NULL ALTER TABLE dbo.[t_vigilog_tournee] ADD [Limite_Basse_Active] BIT NULL DEFAULT(0);
-IF OBJECT_ID(N'dbo.t_vigilog_tournee', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_vigilog_tournee', N'Limite_Basse') IS NULL ALTER TABLE dbo.[t_vigilog_tournee] ADD [Limite_Basse] DECIMAL(10,2) NULL;
-IF OBJECT_ID(N'dbo.t_vigilog_tournee', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_vigilog_tournee', N'Limite_Haute_Active') IS NULL ALTER TABLE dbo.[t_vigilog_tournee] ADD [Limite_Haute_Active] BIT NULL DEFAULT(0);
-IF OBJECT_ID(N'dbo.t_vigilog_tournee', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_vigilog_tournee', N'Limite_Haute') IS NULL ALTER TABLE dbo.[t_vigilog_tournee] ADD [Limite_Haute] DECIMAL(10,2) NULL;
-IF OBJECT_ID(N'dbo.t_vigilog_tournee', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_vigilog_tournee', N'Frequence_Min') IS NULL ALTER TABLE dbo.[t_vigilog_tournee] ADD [Frequence_Min] INT NULL;
-IF OBJECT_ID(N'dbo.t_vigilog_tournee', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_vigilog_tournee', N'Retard_Alarme_Min') IS NULL ALTER TABLE dbo.[t_vigilog_tournee] ADD [Retard_Alarme_Min] INT NULL;
-IF OBJECT_ID(N'dbo.t_vigilog_tournee', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_vigilog_tournee', N'Delai_Demarrage_Min') IS NULL ALTER TABLE dbo.[t_vigilog_tournee] ADD [Delai_Demarrage_Min] INT NULL DEFAULT(0);
-IF OBJECT_ID(N'dbo.t_vigilog_tournee', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_vigilog_tournee', N'Autorise_Arret_Bouton_Stop') IS NULL ALTER TABLE dbo.[t_vigilog_tournee] ADD [Autorise_Arret_Bouton_Stop] BIT NULL DEFAULT(1);
-IF OBJECT_ID(N'dbo.t_vigilog_tournee', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_vigilog_tournee', N'Reinitialise_Avec_Bouton_Start') IS NULL ALTER TABLE dbo.[t_vigilog_tournee] ADD [Reinitialise_Avec_Bouton_Start] BIT NULL DEFAULT(1);
-IF OBJECT_ID(N'dbo.t_vigilog_tournee', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_vigilog_tournee', N'Nb_Mesures') IS NULL ALTER TABLE dbo.[t_vigilog_tournee] ADD [Nb_Mesures] INT NULL DEFAULT(0);
-IF OBJECT_ID(N'dbo.t_vigilog_tournee', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_vigilog_tournee', N'Temperature_Min') IS NULL ALTER TABLE dbo.[t_vigilog_tournee] ADD [Temperature_Min] DECIMAL(10,2) NULL;
-IF OBJECT_ID(N'dbo.t_vigilog_tournee', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_vigilog_tournee', N'Temperature_Moyenne') IS NULL ALTER TABLE dbo.[t_vigilog_tournee] ADD [Temperature_Moyenne] DECIMAL(10,2) NULL;
-IF OBJECT_ID(N'dbo.t_vigilog_tournee', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_vigilog_tournee', N'Temperature_Max') IS NULL ALTER TABLE dbo.[t_vigilog_tournee] ADD [Temperature_Max] DECIMAL(10,2) NULL;
-IF OBJECT_ID(N'dbo.t_vigilog_tournee', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_vigilog_tournee', N'Duree_Hors_Limites_Secondes') IS NULL ALTER TABLE dbo.[t_vigilog_tournee] ADD [Duree_Hors_Limites_Secondes] INT NULL DEFAULT(0);
-IF OBJECT_ID(N'dbo.t_vigilog_tournee', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_vigilog_tournee', N'Duree_Alarme_Secondes') IS NULL ALTER TABLE dbo.[t_vigilog_tournee] ADD [Duree_Alarme_Secondes] INT NULL DEFAULT(0);
-IF OBJECT_ID(N'dbo.t_vigilog_tournee', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_vigilog_tournee', N'Est_Depassement_Limites') IS NULL ALTER TABLE dbo.[t_vigilog_tournee] ADD [Est_Depassement_Limites] BIT NULL DEFAULT(0);
-IF OBJECT_ID(N'dbo.t_vigilog_tournee', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_vigilog_tournee', N'Est_Alarme') IS NULL ALTER TABLE dbo.[t_vigilog_tournee] ADD [Est_Alarme] BIT NULL DEFAULT(0);
-IF OBJECT_ID(N'dbo.t_vigilog_tournee', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_vigilog_tournee', N'Est_Acquittee') IS NULL ALTER TABLE dbo.[t_vigilog_tournee] ADD [Est_Acquittee] BIT NULL DEFAULT(0);
-IF OBJECT_ID(N'dbo.t_vigilog_tournee', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_vigilog_tournee', N'Commentaire') IS NULL ALTER TABLE dbo.[t_vigilog_tournee] ADD [Commentaire] NVARCHAR(MAX) NULL;
-IF OBJECT_ID(N'dbo.t_vigilog_tournee', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_vigilog_tournee', N'Commentaire_Acquittement') IS NULL ALTER TABLE dbo.[t_vigilog_tournee] ADD [Commentaire_Acquittement] NVARCHAR(MAX) NULL;
-IF OBJECT_ID(N'dbo.t_vigilog_tournee', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_vigilog_tournee', N'Id_Utilisateur_Acquittement') IS NULL ALTER TABLE dbo.[t_vigilog_tournee] ADD [Id_Utilisateur_Acquittement] INT NULL;
-IF OBJECT_ID(N'dbo.t_vigilog_tournee', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_vigilog_tournee', N'Date_Heure_Acquittement') IS NULL ALTER TABLE dbo.[t_vigilog_tournee] ADD [Date_Heure_Acquittement] DATETIME NULL;
-IF OBJECT_ID(N'dbo.t_vigilog_tournee', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_vigilog_tournee', N'Date_Heure_Creation') IS NULL ALTER TABLE dbo.[t_vigilog_tournee] ADD [Date_Heure_Creation] DATETIME NULL DEFAULT(GETDATE());
-IF OBJECT_ID(N'dbo.t_vigilog_tournee', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_vigilog_tournee', N'Date_Heure_Maj') IS NULL ALTER TABLE dbo.[t_vigilog_tournee] ADD [Date_Heure_Maj] DATETIME NULL;
 GO
 IF OBJECT_ID(N'dbo.t_vigilog_tournee', N'U') IS NOT NULL AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'UX_t_vigilog_tournee_Reference_Tournee' AND object_id = OBJECT_ID(N'dbo.t_vigilog_tournee')) CREATE UNIQUE INDEX [UX_t_vigilog_tournee_Reference_Tournee] ON dbo.[t_vigilog_tournee]([Reference_Tournee]) WHERE [Reference_Tournee] IS NOT NULL;
 GO
@@ -1714,24 +1126,6 @@ BEGIN
   );
 END;
 GO
-IF OBJECT_ID(N'dbo.tm_graphique', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_graphique', N'Id_Graphique') IS NULL ALTER TABLE dbo.[tm_graphique] ADD [Id_Graphique] INT NULL;
-IF OBJECT_ID(N'dbo.tm_graphique', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_graphique', N'Date_Heure_Mesure') IS NULL ALTER TABLE dbo.[tm_graphique] ADD [Date_Heure_Mesure] DATETIME NULL DEFAULT(GETDATE());
-IF OBJECT_ID(N'dbo.tm_graphique', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_graphique', N'Valeur') IS NULL ALTER TABLE dbo.[tm_graphique] ADD [Valeur] FLOAT NULL;
-IF OBJECT_ID(N'dbo.tm_graphique', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_graphique', N'Valeur_Brute') IS NULL ALTER TABLE dbo.[tm_graphique] ADD [Valeur_Brute] FLOAT NULL;
-IF OBJECT_ID(N'dbo.tm_graphique', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_graphique', N'Nb_Decimal') IS NULL ALTER TABLE dbo.[tm_graphique] ADD [Nb_Decimal] INT NULL;
-IF OBJECT_ID(N'dbo.tm_graphique', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_graphique', N'Consigne') IS NULL ALTER TABLE dbo.[tm_graphique] ADD [Consigne] FLOAT NULL;
-IF OBJECT_ID(N'dbo.tm_graphique', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_graphique', N'Consigne_Sup') IS NULL ALTER TABLE dbo.[tm_graphique] ADD [Consigne_Sup] FLOAT NULL;
-IF OBJECT_ID(N'dbo.tm_graphique', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_graphique', N'Consigne_Inf') IS NULL ALTER TABLE dbo.[tm_graphique] ADD [Consigne_Inf] FLOAT NULL;
-IF OBJECT_ID(N'dbo.tm_graphique', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_graphique', N'Unite') IS NULL ALTER TABLE dbo.[tm_graphique] ADD [Unite] VARCHAR(10) NULL;
-IF OBJECT_ID(N'dbo.tm_graphique', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_graphique', N'Sonde_Numero_Serie') IS NULL ALTER TABLE dbo.[tm_graphique] ADD [Sonde_Numero_Serie] VARCHAR(50) NULL;
-IF OBJECT_ID(N'dbo.tm_graphique', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_graphique', N'Adresse_Sonde') IS NULL ALTER TABLE dbo.[tm_graphique] ADD [Adresse_Sonde] VARCHAR(50) NULL;
-IF OBJECT_ID(N'dbo.tm_graphique', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_graphique', N'Id_Sonde') IS NULL ALTER TABLE dbo.[tm_graphique] ADD [Id_Sonde] INT NULL;
-IF OBJECT_ID(N'dbo.tm_graphique', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_graphique', N'Id_Lieu') IS NULL ALTER TABLE dbo.[tm_graphique] ADD [Id_Lieu] INT NULL;
-IF OBJECT_ID(N'dbo.tm_graphique', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_graphique', N'Est_Valeur_Null') IS NULL ALTER TABLE dbo.[tm_graphique] ADD [Est_Valeur_Null] BIT NULL DEFAULT(0);
-IF OBJECT_ID(N'dbo.tm_graphique', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_graphique', N'Frequence') IS NULL ALTER TABLE dbo.[tm_graphique] ADD [Frequence] INT NULL;
-IF OBJECT_ID(N'dbo.tm_graphique', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_graphique', N'Est_Etat_Alarme') IS NULL ALTER TABLE dbo.[tm_graphique] ADD [Est_Etat_Alarme] TINYINT NULL DEFAULT(0);
-IF OBJECT_ID(N'dbo.tm_graphique', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_graphique', N'Consigne_Inf_Pre_Alarme') IS NULL ALTER TABLE dbo.[tm_graphique] ADD [Consigne_Inf_Pre_Alarme] FLOAT NULL;
-IF OBJECT_ID(N'dbo.tm_graphique', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_graphique', N'Consigne_Sup_Pre_Alarme') IS NULL ALTER TABLE dbo.[tm_graphique] ADD [Consigne_Sup_Pre_Alarme] FLOAT NULL;
 GO
 
 IF OBJECT_ID(N'dbo.tm_journal', N'U') IS NULL
@@ -1750,15 +1144,6 @@ BEGIN
   );
 END;
 GO
-IF OBJECT_ID(N'dbo.tm_journal', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_journal', N'Id_Serveur_BDD') IS NULL ALTER TABLE dbo.[tm_journal] ADD [Id_Serveur_BDD] INT NULL;
-IF OBJECT_ID(N'dbo.tm_journal', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_journal', N'Id_Journal') IS NULL ALTER TABLE dbo.[tm_journal] ADD [Id_Journal] INT NULL;
-IF OBJECT_ID(N'dbo.tm_journal', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_journal', N'Code_Journal') IS NULL ALTER TABLE dbo.[tm_journal] ADD [Code_Journal] VARCHAR(50) NULL;
-IF OBJECT_ID(N'dbo.tm_journal', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_journal', N'Commentaire') IS NULL ALTER TABLE dbo.[tm_journal] ADD [Commentaire] NVARCHAR(MAX) NULL;
-IF OBJECT_ID(N'dbo.tm_journal', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_journal', N'Nom_Utilisateur') IS NULL ALTER TABLE dbo.[tm_journal] ADD [Nom_Utilisateur] VARCHAR(50) NULL;
-IF OBJECT_ID(N'dbo.tm_journal', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_journal', N'Profil_Utilisateur') IS NULL ALTER TABLE dbo.[tm_journal] ADD [Profil_Utilisateur] VARCHAR(50) NULL;
-IF OBJECT_ID(N'dbo.tm_journal', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_journal', N'Date_Heure_Journal') IS NULL ALTER TABLE dbo.[tm_journal] ADD [Date_Heure_Journal] DATETIME NULL;
-IF OBJECT_ID(N'dbo.tm_journal', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_journal', N'Id_Lieu') IS NULL ALTER TABLE dbo.[tm_journal] ADD [Id_Lieu] INT NULL;
-IF OBJECT_ID(N'dbo.tm_journal', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_journal', N'Commentaire_Utilisateur') IS NULL ALTER TABLE dbo.[tm_journal] ADD [Commentaire_Utilisateur] NVARCHAR(MAX) NULL;
 GO
 
 IF OBJECT_ID(N'dbo.tm_journal_code', N'U') IS NULL
@@ -1770,8 +1155,6 @@ BEGIN
   );
 END;
 GO
-IF OBJECT_ID(N'dbo.tm_journal_code', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_journal_code', N'Code_Journal') IS NULL ALTER TABLE dbo.[tm_journal_code] ADD [Code_Journal] VARCHAR(50) NULL;
-IF OBJECT_ID(N'dbo.tm_journal_code', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_journal_code', N'Commentaire') IS NULL ALTER TABLE dbo.[tm_journal_code] ADD [Commentaire] VARCHAR(200) NULL;
 GO
 
 IF OBJECT_ID(N'dbo.tm_compteur_id_table', N'U') IS NULL
@@ -1784,9 +1167,6 @@ BEGIN
   );
 END;
 GO
-IF OBJECT_ID(N'dbo.tm_compteur_id_table', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_compteur_id_table', N'Id_Serveur_BDD') IS NULL ALTER TABLE dbo.[tm_compteur_id_table] ADD [Id_Serveur_BDD] INT NULL;
-IF OBJECT_ID(N'dbo.tm_compteur_id_table', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_compteur_id_table', N'Nom_Table') IS NULL ALTER TABLE dbo.[tm_compteur_id_table] ADD [Nom_Table] VARCHAR(100) NULL;
-IF OBJECT_ID(N'dbo.tm_compteur_id_table', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_compteur_id_table', N'Compteur_Id') IS NULL ALTER TABLE dbo.[tm_compteur_id_table] ADD [Compteur_Id] INT NULL;
 GO
 
 IF OBJECT_ID(N'dbo.tm_mesures', N'U') IS NULL
@@ -1821,31 +1201,6 @@ BEGIN
   );
 END;
 GO
-IF OBJECT_ID(N'dbo.tm_mesures', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures', N'Id_Serveur_BDD') IS NULL ALTER TABLE dbo.[tm_mesures] ADD [Id_Serveur_BDD] INT NULL DEFAULT(0);
-IF OBJECT_ID(N'dbo.tm_mesures', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures', N'Id_Mesure') IS NULL ALTER TABLE dbo.[tm_mesures] ADD [Id_Mesure] INT NULL;
-IF OBJECT_ID(N'dbo.tm_mesures', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures', N'Date_Heure_Mesure') IS NULL ALTER TABLE dbo.[tm_mesures] ADD [Date_Heure_Mesure] DATETIME NULL;
-IF OBJECT_ID(N'dbo.tm_mesures', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures', N'Valeur') IS NULL ALTER TABLE dbo.[tm_mesures] ADD [Valeur] FLOAT NULL;
-IF OBJECT_ID(N'dbo.tm_mesures', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures', N'Valeur_Brute') IS NULL ALTER TABLE dbo.[tm_mesures] ADD [Valeur_Brute] FLOAT NULL;
-IF OBJECT_ID(N'dbo.tm_mesures', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures', N'Est_Valeur_Memoire') IS NULL ALTER TABLE dbo.[tm_mesures] ADD [Est_Valeur_Memoire] BIT NULL DEFAULT(0);
-IF OBJECT_ID(N'dbo.tm_mesures', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures', N'Nb_Decimal') IS NULL ALTER TABLE dbo.[tm_mesures] ADD [Nb_Decimal] INT NULL;
-IF OBJECT_ID(N'dbo.tm_mesures', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures', N'Consigne') IS NULL ALTER TABLE dbo.[tm_mesures] ADD [Consigne] FLOAT NULL;
-IF OBJECT_ID(N'dbo.tm_mesures', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures', N'Consigne_Sup') IS NULL ALTER TABLE dbo.[tm_mesures] ADD [Consigne_Sup] FLOAT NULL;
-IF OBJECT_ID(N'dbo.tm_mesures', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures', N'Consigne_Inf') IS NULL ALTER TABLE dbo.[tm_mesures] ADD [Consigne_Inf] FLOAT NULL;
-IF OBJECT_ID(N'dbo.tm_mesures', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures', N'Unite') IS NULL ALTER TABLE dbo.[tm_mesures] ADD [Unite] VARCHAR(10) NULL;
-IF OBJECT_ID(N'dbo.tm_mesures', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures', N'Sonde_Numero_Serie') IS NULL ALTER TABLE dbo.[tm_mesures] ADD [Sonde_Numero_Serie] VARCHAR(50) NULL;
-IF OBJECT_ID(N'dbo.tm_mesures', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures', N'Adresse_Sonde') IS NULL ALTER TABLE dbo.[tm_mesures] ADD [Adresse_Sonde] VARCHAR(50) NULL;
-IF OBJECT_ID(N'dbo.tm_mesures', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures', N'COM_sonde') IS NULL ALTER TABLE dbo.[tm_mesures] ADD [COM_sonde] FLOAT NULL;
-IF OBJECT_ID(N'dbo.tm_mesures', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures', N'Id_Lieu') IS NULL ALTER TABLE dbo.[tm_mesures] ADD [Id_Lieu] INT NULL DEFAULT(0);
-IF OBJECT_ID(N'dbo.tm_mesures', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures', N'Est_Valeur_Null') IS NULL ALTER TABLE dbo.[tm_mesures] ADD [Est_Valeur_Null] TINYINT NULL DEFAULT(0);
-IF OBJECT_ID(N'dbo.tm_mesures', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures', N'Frequence') IS NULL ALTER TABLE dbo.[tm_mesures] ADD [Frequence] INT NULL;
-IF OBJECT_ID(N'dbo.tm_mesures', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures', N'Est_Etat_Alarme') IS NULL ALTER TABLE dbo.[tm_mesures] ADD [Est_Etat_Alarme] BIT NULL DEFAULT(0);
-IF OBJECT_ID(N'dbo.tm_mesures', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures', N'Consigne_Inf_Pre_Alarme') IS NULL ALTER TABLE dbo.[tm_mesures] ADD [Consigne_Inf_Pre_Alarme] FLOAT NULL;
-IF OBJECT_ID(N'dbo.tm_mesures', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures', N'Consigne_Sup_Pre_Alarme') IS NULL ALTER TABLE dbo.[tm_mesures] ADD [Consigne_Sup_Pre_Alarme] FLOAT NULL;
-IF OBJECT_ID(N'dbo.tm_mesures', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures', N'Moyenne') IS NULL ALTER TABLE dbo.[tm_mesures] ADD [Moyenne] FLOAT NULL;
-IF OBJECT_ID(N'dbo.tm_mesures', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures', N'Rssi') IS NULL ALTER TABLE dbo.[tm_mesures] ADD [Rssi] VARCHAR(10) NULL;
-IF OBJECT_ID(N'dbo.tm_mesures', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures', N'Tension') IS NULL ALTER TABLE dbo.[tm_mesures] ADD [Tension] VARCHAR(10) NULL;
-IF OBJECT_ID(N'dbo.tm_mesures', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures', N'Planning_Regle_Existe') IS NULL ALTER TABLE dbo.[tm_mesures] ADD [Planning_Regle_Existe] BIT NOT NULL CONSTRAINT [DF_tm_mesures_Planning_Regle_Existe_patch] DEFAULT(0);
-IF OBJECT_ID(N'dbo.tm_mesures', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures', N'Planning_Actif') IS NULL ALTER TABLE dbo.[tm_mesures] ADD [Planning_Actif] BIT NOT NULL CONSTRAINT [DF_tm_mesures_Planning_Actif_patch] DEFAULT(0);
 GO
 
 IF OBJECT_ID(N'dbo.tm_mesures_gso', N'U') IS NULL
@@ -1864,15 +1219,6 @@ BEGIN
   );
 END;
 GO
-IF OBJECT_ID(N'dbo.tm_mesures_gso', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_gso', N'Id_mesures_gso') IS NULL ALTER TABLE dbo.[tm_mesures_gso] ADD [Id_mesures_gso] INT NULL;
-IF OBJECT_ID(N'dbo.tm_mesures_gso', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_gso', N'id_capteur') IS NULL ALTER TABLE dbo.[tm_mesures_gso] ADD [id_capteur] VARCHAR(50) NULL;
-IF OBJECT_ID(N'dbo.tm_mesures_gso', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_gso', N'tep') IS NULL ALTER TABLE dbo.[tm_mesures_gso] ADD [tep] FLOAT NULL;
-IF OBJECT_ID(N'dbo.tm_mesures_gso', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_gso', N'unite') IS NULL ALTER TABLE dbo.[tm_mesures_gso] ADD [unite] VARCHAR(10) NULL;
-IF OBJECT_ID(N'dbo.tm_mesures_gso', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_gso', N'date_mesure') IS NULL ALTER TABLE dbo.[tm_mesures_gso] ADD [date_mesure] DATETIME NULL;
-IF OBJECT_ID(N'dbo.tm_mesures_gso', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_gso', N'trame') IS NULL ALTER TABLE dbo.[tm_mesures_gso] ADD [trame] BINARY(8) NULL;
-IF OBJECT_ID(N'dbo.tm_mesures_gso', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_gso', N'rssi') IS NULL ALTER TABLE dbo.[tm_mesures_gso] ADD [rssi] VARCHAR(10) NULL;
-IF OBJECT_ID(N'dbo.tm_mesures_gso', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_gso', N'tension') IS NULL ALTER TABLE dbo.[tm_mesures_gso] ADD [tension] VARCHAR(10) NULL;
-IF OBJECT_ID(N'dbo.tm_mesures_gso', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_gso', N'COM_sonde') IS NULL ALTER TABLE dbo.[tm_mesures_gso] ADD [COM_sonde] FLOAT NULL;
 GO
 
 IF OBJECT_ID(N'dbo.tm_journal_histo', N'U') IS NULL
@@ -1892,34 +1238,6 @@ BEGIN
   );
 END;
 GO
-IF OBJECT_ID(N'dbo.tm_journal_histo', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_journal_histo', N'Id_Journal_Histo') IS NULL ALTER TABLE dbo.[tm_journal_histo] ADD [Id_Journal_Histo] INT NULL;
-IF OBJECT_ID(N'dbo.tm_journal_histo', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_journal_histo', N'Id_Serveur_BDD') IS NULL ALTER TABLE dbo.[tm_journal_histo] ADD [Id_Serveur_BDD] INT NULL DEFAULT(0);
-IF OBJECT_ID(N'dbo.tm_journal_histo', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_journal_histo', N'Id_Journal') IS NULL ALTER TABLE dbo.[tm_journal_histo] ADD [Id_Journal] INT NULL DEFAULT(0);
-IF OBJECT_ID(N'dbo.tm_journal_histo', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_journal_histo', N'Code_Journal') IS NULL ALTER TABLE dbo.[tm_journal_histo] ADD [Code_Journal] VARCHAR(50) NULL;
-IF OBJECT_ID(N'dbo.tm_journal_histo', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_journal_histo', N'Commentaire') IS NULL ALTER TABLE dbo.[tm_journal_histo] ADD [Commentaire] NVARCHAR(MAX) NULL;
-IF OBJECT_ID(N'dbo.tm_journal_histo', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_journal_histo', N'Nom_Utilisateur') IS NULL ALTER TABLE dbo.[tm_journal_histo] ADD [Nom_Utilisateur] VARCHAR(50) NULL;
-IF OBJECT_ID(N'dbo.tm_journal_histo', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_journal_histo', N'Profil_Utilisateur') IS NULL ALTER TABLE dbo.[tm_journal_histo] ADD [Profil_Utilisateur] VARCHAR(50) NULL;
-IF OBJECT_ID(N'dbo.tm_journal_histo', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_journal_histo', N'Date_Heure_Journal') IS NULL ALTER TABLE dbo.[tm_journal_histo] ADD [Date_Heure_Journal] DATETIME NULL;
-IF OBJECT_ID(N'dbo.tm_journal_histo', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_journal_histo', N'Id_Lieu') IS NULL ALTER TABLE dbo.[tm_journal_histo] ADD [Id_Lieu] INT NULL;
-IF OBJECT_ID(N'dbo.tm_journal_histo', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_journal_histo', N'Commentaire_Utilisateur') IS NULL ALTER TABLE dbo.[tm_journal_histo] ADD [Commentaire_Utilisateur] NVARCHAR(MAX) NULL;
-GO
-
-IF OBJECT_ID(N'dbo.tm_mesures_ajustage', N'U') IS NULL AND OBJECT_ID(N'dbo.tm_mesure_calibrage', N'U') IS NOT NULL
-BEGIN
-  EXEC sp_rename N'dbo.tm_mesure_calibrage', N'tm_mesures_ajustage';
-END;
-GO
-IF OBJECT_ID(N'dbo.tm_mesures_ajustage_etalon', N'U') IS NULL AND OBJECT_ID(N'dbo.tm_mesure_calibrage_etalon', N'U') IS NOT NULL
-BEGIN
-  EXEC sp_rename N'dbo.tm_mesure_calibrage_etalon', N'tm_mesures_ajustage_etalon';
-END;
-GO
-IF OBJECT_ID(N'dbo.tm_mesures_etalonnage', N'U') IS NULL AND OBJECT_ID(N'dbo.tm_mesure_etalonnage', N'U') IS NOT NULL
-BEGIN
-  EXEC sp_rename N'dbo.tm_mesure_etalonnage', N'tm_mesures_etalonnage';
-END;
-GO
-
 IF OBJECT_ID(N'dbo.tm_mesures_ajustage', N'U') IS NULL
 BEGIN
   CREATE TABLE dbo.[tm_mesures_ajustage] (
@@ -1936,15 +1254,6 @@ BEGIN
   );
 END;
 GO
-IF OBJECT_ID(N'dbo.tm_mesures_ajustage', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_ajustage', N'Id_Mesure_Ajustage') IS NULL ALTER TABLE dbo.[tm_mesures_ajustage] ADD [Id_Mesure_Ajustage] INT NULL;
-IF OBJECT_ID(N'dbo.tm_mesures_ajustage', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_ajustage', N'Id_Serveur_BDD') IS NULL ALTER TABLE dbo.[tm_mesures_ajustage] ADD [Id_Serveur_BDD] INT NULL DEFAULT(0);
-IF OBJECT_ID(N'dbo.tm_mesures_ajustage', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_ajustage', N'Valeur') IS NULL ALTER TABLE dbo.[tm_mesures_ajustage] ADD [Valeur] FLOAT NULL;
-IF OBJECT_ID(N'dbo.tm_mesures_ajustage', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_ajustage', N'Valeur_Brute') IS NULL ALTER TABLE dbo.[tm_mesures_ajustage] ADD [Valeur_Brute] FLOAT NULL;
-IF OBJECT_ID(N'dbo.tm_mesures_ajustage', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_ajustage', N'Unite') IS NULL ALTER TABLE dbo.[tm_mesures_ajustage] ADD [Unite] VARCHAR(10) NULL;
-IF OBJECT_ID(N'dbo.tm_mesures_ajustage', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_ajustage', N'Date_Heure_Mesure') IS NULL ALTER TABLE dbo.[tm_mesures_ajustage] ADD [Date_Heure_Mesure] DATETIME NULL;
-IF OBJECT_ID(N'dbo.tm_mesures_ajustage', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_ajustage', N'Sonde_Numero_Serie') IS NULL ALTER TABLE dbo.[tm_mesures_ajustage] ADD [Sonde_Numero_Serie] VARCHAR(50) NULL;
-IF OBJECT_ID(N'dbo.tm_mesures_ajustage', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_ajustage', N'Adresse_Sonde') IS NULL ALTER TABLE dbo.[tm_mesures_ajustage] ADD [Adresse_Sonde] VARCHAR(50) NULL;
-IF OBJECT_ID(N'dbo.tm_mesures_ajustage', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_ajustage', N'Est_Valeur_Null') IS NULL ALTER TABLE dbo.[tm_mesures_ajustage] ADD [Est_Valeur_Null] TINYINT NULL;
 GO
 
 IF OBJECT_ID(N'dbo.tm_mesures_ajustage_etalon', N'U') IS NULL
@@ -1963,15 +1272,6 @@ BEGIN
   );
 END;
 GO
-IF OBJECT_ID(N'dbo.tm_mesures_ajustage_etalon', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_ajustage_etalon', N'Id_Mesure_Ajustage_Etalon') IS NULL ALTER TABLE dbo.[tm_mesures_ajustage_etalon] ADD [Id_Mesure_Ajustage_Etalon] INT NULL;
-IF OBJECT_ID(N'dbo.tm_mesures_ajustage_etalon', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_ajustage_etalon', N'Id_Serveur_BDD') IS NULL ALTER TABLE dbo.[tm_mesures_ajustage_etalon] ADD [Id_Serveur_BDD] INT NULL DEFAULT(0);
-IF OBJECT_ID(N'dbo.tm_mesures_ajustage_etalon', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_ajustage_etalon', N'Valeur') IS NULL ALTER TABLE dbo.[tm_mesures_ajustage_etalon] ADD [Valeur] FLOAT NULL;
-IF OBJECT_ID(N'dbo.tm_mesures_ajustage_etalon', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_ajustage_etalon', N'Valeur_Brute') IS NULL ALTER TABLE dbo.[tm_mesures_ajustage_etalon] ADD [Valeur_Brute] FLOAT NULL;
-IF OBJECT_ID(N'dbo.tm_mesures_ajustage_etalon', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_ajustage_etalon', N'Unite') IS NULL ALTER TABLE dbo.[tm_mesures_ajustage_etalon] ADD [Unite] VARCHAR(10) NULL;
-IF OBJECT_ID(N'dbo.tm_mesures_ajustage_etalon', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_ajustage_etalon', N'Date_Heure_Mesure') IS NULL ALTER TABLE dbo.[tm_mesures_ajustage_etalon] ADD [Date_Heure_Mesure] DATETIME NULL;
-IF OBJECT_ID(N'dbo.tm_mesures_ajustage_etalon', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_ajustage_etalon', N'Etalon_Numero_Serie') IS NULL ALTER TABLE dbo.[tm_mesures_ajustage_etalon] ADD [Etalon_Numero_Serie] VARCHAR(50) NULL;
-IF OBJECT_ID(N'dbo.tm_mesures_ajustage_etalon', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_ajustage_etalon', N'Adresse_Sonde') IS NULL ALTER TABLE dbo.[tm_mesures_ajustage_etalon] ADD [Adresse_Sonde] VARCHAR(50) NULL;
-IF OBJECT_ID(N'dbo.tm_mesures_ajustage_etalon', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_ajustage_etalon', N'Est_Valeur_Null') IS NULL ALTER TABLE dbo.[tm_mesures_ajustage_etalon] ADD [Est_Valeur_Null] TINYINT NULL;
 GO
 
 IF OBJECT_ID(N'dbo.tm_mesure_etalon', N'U') IS NULL
@@ -1988,13 +1288,6 @@ BEGIN
   );
 END;
 GO
-IF OBJECT_ID(N'dbo.tm_mesure_etalon', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesure_etalon', N'Id_Mesure_Etalon') IS NULL ALTER TABLE dbo.[tm_mesure_etalon] ADD [Id_Mesure_Etalon] INT NULL;
-IF OBJECT_ID(N'dbo.tm_mesure_etalon', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesure_etalon', N'Id_Serveur_BDD') IS NULL ALTER TABLE dbo.[tm_mesure_etalon] ADD [Id_Serveur_BDD] INT NULL DEFAULT(0);
-IF OBJECT_ID(N'dbo.tm_mesure_etalon', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesure_etalon', N'Valeur_Brute') IS NULL ALTER TABLE dbo.[tm_mesure_etalon] ADD [Valeur_Brute] FLOAT NULL;
-IF OBJECT_ID(N'dbo.tm_mesure_etalon', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesure_etalon', N'Etalon_Numero_Serie') IS NULL ALTER TABLE dbo.[tm_mesure_etalon] ADD [Etalon_Numero_Serie] VARCHAR(50) NULL;
-IF OBJECT_ID(N'dbo.tm_mesure_etalon', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesure_etalon', N'Est_Valeur_Null') IS NULL ALTER TABLE dbo.[tm_mesure_etalon] ADD [Est_Valeur_Null] TINYINT NULL;
-IF OBJECT_ID(N'dbo.tm_mesure_etalon', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesure_etalon', N'Date_Heure') IS NULL ALTER TABLE dbo.[tm_mesure_etalon] ADD [Date_Heure] DATETIME NULL;
-IF OBJECT_ID(N'dbo.tm_mesure_etalon', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesure_etalon', N'Message_Erreur') IS NULL ALTER TABLE dbo.[tm_mesure_etalon] ADD [Message_Erreur] VARCHAR(50) NULL;
 GO
 
 IF OBJECT_ID(N'dbo.tm_mesures_etalonnage', N'U') IS NULL
@@ -2015,17 +1308,6 @@ BEGIN
   );
 END;
 GO
-IF OBJECT_ID(N'dbo.tm_mesures_etalonnage', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_etalonnage', N'Id_Mesure_Etalonnage') IS NULL ALTER TABLE dbo.[tm_mesures_etalonnage] ADD [Id_Mesure_Etalonnage] INT NULL;
-IF OBJECT_ID(N'dbo.tm_mesures_etalonnage', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_etalonnage', N'Id_Serveur_BDD') IS NULL ALTER TABLE dbo.[tm_mesures_etalonnage] ADD [Id_Serveur_BDD] INT NULL DEFAULT(0);
-IF OBJECT_ID(N'dbo.tm_mesures_etalonnage', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_etalonnage', N'Valeur') IS NULL ALTER TABLE dbo.[tm_mesures_etalonnage] ADD [Valeur] FLOAT NULL;
-IF OBJECT_ID(N'dbo.tm_mesures_etalonnage', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_etalonnage', N'Valeur_Brute') IS NULL ALTER TABLE dbo.[tm_mesures_etalonnage] ADD [Valeur_Brute] FLOAT NULL;
-IF OBJECT_ID(N'dbo.tm_mesures_etalonnage', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_etalonnage', N'Unite') IS NULL ALTER TABLE dbo.[tm_mesures_etalonnage] ADD [Unite] VARCHAR(10) NULL;
-IF OBJECT_ID(N'dbo.tm_mesures_etalonnage', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_etalonnage', N'Date_Heure_Mesure') IS NULL ALTER TABLE dbo.[tm_mesures_etalonnage] ADD [Date_Heure_Mesure] DATETIME NULL;
-IF OBJECT_ID(N'dbo.tm_mesures_etalonnage', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_etalonnage', N'Sonde_Numero_serie') IS NULL ALTER TABLE dbo.[tm_mesures_etalonnage] ADD [Sonde_Numero_serie] VARCHAR(50) NULL;
-IF OBJECT_ID(N'dbo.tm_mesures_etalonnage', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_etalonnage', N'Adresse_Sonde') IS NULL ALTER TABLE dbo.[tm_mesures_etalonnage] ADD [Adresse_Sonde] VARCHAR(50) NULL;
-IF OBJECT_ID(N'dbo.tm_mesures_etalonnage', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_etalonnage', N'Numero_Ordre') IS NULL ALTER TABLE dbo.[tm_mesures_etalonnage] ADD [Numero_Ordre] INT NULL;
-IF OBJECT_ID(N'dbo.tm_mesures_etalonnage', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_etalonnage', N'Mesure_Sonde') IS NULL ALTER TABLE dbo.[tm_mesures_etalonnage] ADD [Mesure_Sonde] FLOAT NULL;
-IF OBJECT_ID(N'dbo.tm_mesures_etalonnage', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_etalonnage', N'Mesure_Etalon') IS NULL ALTER TABLE dbo.[tm_mesures_etalonnage] ADD [Mesure_Etalon] FLOAT NULL;
 GO
 
 IF OBJECT_ID(N'dbo.tm_mesures_histo', N'U') IS NULL
@@ -2053,24 +1335,6 @@ BEGIN
   );
 END;
 GO
-IF OBJECT_ID(N'dbo.tm_mesures_histo', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_histo', N'Id_Mesure') IS NULL ALTER TABLE dbo.[tm_mesures_histo] ADD [Id_Mesure] INT NULL;
-IF OBJECT_ID(N'dbo.tm_mesures_histo', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_histo', N'Id_Serveur_BDD') IS NULL ALTER TABLE dbo.[tm_mesures_histo] ADD [Id_Serveur_BDD] INT NULL DEFAULT(0);
-IF OBJECT_ID(N'dbo.tm_mesures_histo', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_histo', N'Date_Heure_Mesure') IS NULL ALTER TABLE dbo.[tm_mesures_histo] ADD [Date_Heure_Mesure] DATETIME NULL DEFAULT(GETDATE());
-IF OBJECT_ID(N'dbo.tm_mesures_histo', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_histo', N'Valeur') IS NULL ALTER TABLE dbo.[tm_mesures_histo] ADD [Valeur] FLOAT NULL;
-IF OBJECT_ID(N'dbo.tm_mesures_histo', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_histo', N'Valeur_Brute') IS NULL ALTER TABLE dbo.[tm_mesures_histo] ADD [Valeur_Brute] FLOAT NULL;
-IF OBJECT_ID(N'dbo.tm_mesures_histo', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_histo', N'Nb_decimal') IS NULL ALTER TABLE dbo.[tm_mesures_histo] ADD [Nb_decimal] TINYINT NULL;
-IF OBJECT_ID(N'dbo.tm_mesures_histo', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_histo', N'Consigne') IS NULL ALTER TABLE dbo.[tm_mesures_histo] ADD [Consigne] FLOAT NULL;
-IF OBJECT_ID(N'dbo.tm_mesures_histo', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_histo', N'Consigne_Sup') IS NULL ALTER TABLE dbo.[tm_mesures_histo] ADD [Consigne_Sup] FLOAT NULL;
-IF OBJECT_ID(N'dbo.tm_mesures_histo', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_histo', N'Consigne_Inf') IS NULL ALTER TABLE dbo.[tm_mesures_histo] ADD [Consigne_Inf] FLOAT NULL;
-IF OBJECT_ID(N'dbo.tm_mesures_histo', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_histo', N'Unite') IS NULL ALTER TABLE dbo.[tm_mesures_histo] ADD [Unite] VARCHAR(10) NULL;
-IF OBJECT_ID(N'dbo.tm_mesures_histo', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_histo', N'Sonde_Numero_Serie') IS NULL ALTER TABLE dbo.[tm_mesures_histo] ADD [Sonde_Numero_Serie] VARCHAR(50) NULL;
-IF OBJECT_ID(N'dbo.tm_mesures_histo', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_histo', N'Id_Lieu') IS NULL ALTER TABLE dbo.[tm_mesures_histo] ADD [Id_Lieu] INT NULL DEFAULT(0);
-IF OBJECT_ID(N'dbo.tm_mesures_histo', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_histo', N'Est_Valeur_Null') IS NULL ALTER TABLE dbo.[tm_mesures_histo] ADD [Est_Valeur_Null] TINYINT NULL DEFAULT(0);
-IF OBJECT_ID(N'dbo.tm_mesures_histo', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_histo', N'Frequence') IS NULL ALTER TABLE dbo.[tm_mesures_histo] ADD [Frequence] INT NULL;
-IF OBJECT_ID(N'dbo.tm_mesures_histo', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_histo', N'Est_En_Alarme') IS NULL ALTER TABLE dbo.[tm_mesures_histo] ADD [Est_En_Alarme] BIT NULL;
-IF OBJECT_ID(N'dbo.tm_mesures_histo', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_histo', N'Consigne_Inf_Pre_Alarme') IS NULL ALTER TABLE dbo.[tm_mesures_histo] ADD [Consigne_Inf_Pre_Alarme] FLOAT NULL;
-IF OBJECT_ID(N'dbo.tm_mesures_histo', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_histo', N'Consigne_Sup_Pre_Alarme') IS NULL ALTER TABLE dbo.[tm_mesures_histo] ADD [Consigne_Sup_Pre_Alarme] FLOAT NULL;
-IF OBJECT_ID(N'dbo.tm_mesures_histo', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_histo', N'Moyenne') IS NULL ALTER TABLE dbo.[tm_mesures_histo] ADD [Moyenne] FLOAT NULL;
 GO
 
 IF OBJECT_ID(N'dbo.tm_mesures_test', N'U') IS NULL
@@ -2088,14 +1352,6 @@ BEGIN
   );
 END;
 GO
-IF OBJECT_ID(N'dbo.tm_mesures_test', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_test', N'Id_Mesure_Test') IS NULL ALTER TABLE dbo.[tm_mesures_test] ADD [Id_Mesure_Test] INT NULL;
-IF OBJECT_ID(N'dbo.tm_mesures_test', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_test', N'Id_Serveur_BDD') IS NULL ALTER TABLE dbo.[tm_mesures_test] ADD [Id_Serveur_BDD] INT NULL DEFAULT(0);
-IF OBJECT_ID(N'dbo.tm_mesures_test', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_test', N'Valeur_Brute') IS NULL ALTER TABLE dbo.[tm_mesures_test] ADD [Valeur_Brute] FLOAT NULL;
-IF OBJECT_ID(N'dbo.tm_mesures_test', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_test', N'Sonde_Numero_Serie') IS NULL ALTER TABLE dbo.[tm_mesures_test] ADD [Sonde_Numero_Serie] VARCHAR(50) NULL;
-IF OBJECT_ID(N'dbo.tm_mesures_test', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_test', N'Est_Valeur_Null') IS NULL ALTER TABLE dbo.[tm_mesures_test] ADD [Est_Valeur_Null] TINYINT NULL;
-IF OBJECT_ID(N'dbo.tm_mesures_test', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_test', N'Date_Heure') IS NULL ALTER TABLE dbo.[tm_mesures_test] ADD [Date_Heure] DATETIME NULL DEFAULT(GETDATE());
-IF OBJECT_ID(N'dbo.tm_mesures_test', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_test', N'Nombre_Total') IS NULL ALTER TABLE dbo.[tm_mesures_test] ADD [Nombre_Total] INT NULL DEFAULT(0);
-IF OBJECT_ID(N'dbo.tm_mesures_test', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_test', N'Nombre_Recu') IS NULL ALTER TABLE dbo.[tm_mesures_test] ADD [Nombre_Recu] INT NULL DEFAULT(0);
 GO
 IF OBJECT_ID(N'dbo.tm_mesures_test', N'U') IS NOT NULL AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'UX_tm_mesures_test_Sonde_Numero_Serie' AND object_id = OBJECT_ID(N'dbo.tm_mesures_test')) CREATE UNIQUE INDEX [UX_tm_mesures_test_Sonde_Numero_Serie] ON dbo.[tm_mesures_test]([Sonde_Numero_Serie]) WHERE [Sonde_Numero_Serie] IS NOT NULL;
 GO
@@ -2115,14 +1371,6 @@ BEGIN
   );
 END;
 GO
-IF OBJECT_ID(N'dbo.tm_mesures_test_etalon', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_test_etalon', N'Id_Mesure_Test_Etalon') IS NULL ALTER TABLE dbo.[tm_mesures_test_etalon] ADD [Id_Mesure_Test_Etalon] INT NULL;
-IF OBJECT_ID(N'dbo.tm_mesures_test_etalon', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_test_etalon', N'Id_Serveur_BDD') IS NULL ALTER TABLE dbo.[tm_mesures_test_etalon] ADD [Id_Serveur_BDD] INT NULL DEFAULT(0);
-IF OBJECT_ID(N'dbo.tm_mesures_test_etalon', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_test_etalon', N'Valeur_Brute') IS NULL ALTER TABLE dbo.[tm_mesures_test_etalon] ADD [Valeur_Brute] FLOAT NULL;
-IF OBJECT_ID(N'dbo.tm_mesures_test_etalon', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_test_etalon', N'Etalon_Numero_Serie') IS NULL ALTER TABLE dbo.[tm_mesures_test_etalon] ADD [Etalon_Numero_Serie] VARCHAR(50) NULL;
-IF OBJECT_ID(N'dbo.tm_mesures_test_etalon', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_test_etalon', N'Est_Valeur_Null') IS NULL ALTER TABLE dbo.[tm_mesures_test_etalon] ADD [Est_Valeur_Null] TINYINT NULL;
-IF OBJECT_ID(N'dbo.tm_mesures_test_etalon', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_test_etalon', N'Date_Heure') IS NULL ALTER TABLE dbo.[tm_mesures_test_etalon] ADD [Date_Heure] DATETIME NULL DEFAULT(GETDATE());
-IF OBJECT_ID(N'dbo.tm_mesures_test_etalon', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_test_etalon', N'Nombre_Total') IS NULL ALTER TABLE dbo.[tm_mesures_test_etalon] ADD [Nombre_Total] INT NULL DEFAULT(0);
-IF OBJECT_ID(N'dbo.tm_mesures_test_etalon', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_test_etalon', N'Nombre_Recu') IS NULL ALTER TABLE dbo.[tm_mesures_test_etalon] ADD [Nombre_Recu] INT NULL DEFAULT(0);
 GO
 IF OBJECT_ID(N'dbo.tm_mesures_test_etalon', N'U') IS NOT NULL AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'UX_tm_mesures_test_etalon_Etalon_Numero_Serie' AND object_id = OBJECT_ID(N'dbo.tm_mesures_test_etalon')) CREATE UNIQUE INDEX [UX_tm_mesures_test_etalon_Etalon_Numero_Serie] ON dbo.[tm_mesures_test_etalon]([Etalon_Numero_Serie]) WHERE [Etalon_Numero_Serie] IS NOT NULL;
 GO
@@ -2140,12 +1388,6 @@ BEGIN
   );
 END;
 GO
-IF OBJECT_ID(N'dbo.tm_mode_degrade', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mode_degrade', N'Id_Mode_Degrade') IS NULL ALTER TABLE dbo.[tm_mode_degrade] ADD [Id_Mode_Degrade] INT NULL;
-IF OBJECT_ID(N'dbo.tm_mode_degrade', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mode_degrade', N'Id_Utilisateur') IS NULL ALTER TABLE dbo.[tm_mode_degrade] ADD [Id_Utilisateur] INT NULL;
-IF OBJECT_ID(N'dbo.tm_mode_degrade', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mode_degrade', N'Date_Heure_Creation') IS NULL ALTER TABLE dbo.[tm_mode_degrade] ADD [Date_Heure_Creation] DATETIME NULL;
-IF OBJECT_ID(N'dbo.tm_mode_degrade', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mode_degrade', N'Requete_SQL') IS NULL ALTER TABLE dbo.[tm_mode_degrade] ADD [Requete_SQL] VARCHAR(500) NULL;
-IF OBJECT_ID(N'dbo.tm_mode_degrade', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mode_degrade', N'Est_Archivee') IS NULL ALTER TABLE dbo.[tm_mode_degrade] ADD [Est_Archivee] BIT NULL DEFAULT(0);
-IF OBJECT_ID(N'dbo.tm_mode_degrade', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mode_degrade', N'Date_Heure_Archive') IS NULL ALTER TABLE dbo.[tm_mode_degrade] ADD [Date_Heure_Archive] DATETIME NULL;
 GO
 
 IF OBJECT_ID(N'dbo.tm_parametre', N'U') IS NULL
@@ -2160,11 +1402,6 @@ BEGIN
   );
 END;
 GO
-IF OBJECT_ID(N'dbo.tm_parametre', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_parametre', N'Id_Parametre') IS NULL ALTER TABLE dbo.[tm_parametre] ADD [Id_Parametre] INT NULL;
-IF OBJECT_ID(N'dbo.tm_parametre', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_parametre', N'Cle_Parametre') IS NULL ALTER TABLE dbo.[tm_parametre] ADD [Cle_Parametre] VARCHAR(20) NULL;
-IF OBJECT_ID(N'dbo.tm_parametre', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_parametre', N'Valeur_Parametre') IS NULL ALTER TABLE dbo.[tm_parametre] ADD [Valeur_Parametre] VARCHAR(50) NULL;
-IF OBJECT_ID(N'dbo.tm_parametre', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_parametre', N'Groupe_Parametre') IS NULL ALTER TABLE dbo.[tm_parametre] ADD [Groupe_Parametre] VARCHAR(50) NULL;
-IF OBJECT_ID(N'dbo.tm_parametre', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_parametre', N'Commentaire_Parametre') IS NULL ALTER TABLE dbo.[tm_parametre] ADD [Commentaire_Parametre] VARCHAR(100) NULL;
 GO
 
 IF OBJECT_ID(N'dbo.tm_vigilog_mesure', N'U') IS NULL
@@ -2184,16 +1421,6 @@ BEGIN
   );
 END;
 GO
-IF OBJECT_ID(N'dbo.tm_vigilog_mesure', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_vigilog_mesure', N'Id_VigiLog_Mesure') IS NULL ALTER TABLE dbo.[tm_vigilog_mesure] ADD [Id_VigiLog_Mesure] INT NULL;
-IF OBJECT_ID(N'dbo.tm_vigilog_mesure', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_vigilog_mesure', N'Id_VigiLog_Tournee') IS NULL ALTER TABLE dbo.[tm_vigilog_mesure] ADD [Id_VigiLog_Tournee] INT NULL;
-IF OBJECT_ID(N'dbo.tm_vigilog_mesure', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_vigilog_mesure', N'Numero_Ordre') IS NULL ALTER TABLE dbo.[tm_vigilog_mesure] ADD [Numero_Ordre] INT NULL;
-IF OBJECT_ID(N'dbo.tm_vigilog_mesure', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_vigilog_mesure', N'Date_Heure_Mesure') IS NULL ALTER TABLE dbo.[tm_vigilog_mesure] ADD [Date_Heure_Mesure] DATETIME NULL;
-IF OBJECT_ID(N'dbo.tm_vigilog_mesure', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_vigilog_mesure', N'Valeur') IS NULL ALTER TABLE dbo.[tm_vigilog_mesure] ADD [Valeur] DECIMAL(10,2) NULL;
-IF OBJECT_ID(N'dbo.tm_vigilog_mesure', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_vigilog_mesure', N'Est_Hors_Limites') IS NULL ALTER TABLE dbo.[tm_vigilog_mesure] ADD [Est_Hors_Limites] BIT NULL DEFAULT(0);
-IF OBJECT_ID(N'dbo.tm_vigilog_mesure', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_vigilog_mesure', N'Est_En_Alarme') IS NULL ALTER TABLE dbo.[tm_vigilog_mesure] ADD [Est_En_Alarme] BIT NULL DEFAULT(0);
-IF OBJECT_ID(N'dbo.tm_vigilog_mesure', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_vigilog_mesure', N'Est_Marqueur') IS NULL ALTER TABLE dbo.[tm_vigilog_mesure] ADD [Est_Marqueur] BIT NULL DEFAULT(0);
-IF OBJECT_ID(N'dbo.tm_vigilog_mesure', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_vigilog_mesure', N'Details') IS NULL ALTER TABLE dbo.[tm_vigilog_mesure] ADD [Details] VARCHAR(200) NULL;
-IF OBJECT_ID(N'dbo.tm_vigilog_mesure', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_vigilog_mesure', N'Date_Heure_Import') IS NULL ALTER TABLE dbo.[tm_vigilog_mesure] ADD [Date_Heure_Import] DATETIME NULL DEFAULT(GETDATE());
 GO
 IF OBJECT_ID(N'dbo.tm_vigilog_mesure', N'U') IS NOT NULL AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'UK_tm_vigilog_mesure_unique' AND object_id = OBJECT_ID(N'dbo.tm_vigilog_mesure')) CREATE UNIQUE INDEX [UK_tm_vigilog_mesure_unique] ON dbo.[tm_vigilog_mesure]([Id_VigiLog_Tournee], [Date_Heure_Mesure], [Numero_Ordre]);
 GO
@@ -2210,11 +1437,6 @@ BEGIN
   );
 END;
 GO
-IF OBJECT_ID(N'dbo.tm_journal_commentaire_libre', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_journal_commentaire_libre', N'Id_Commentaire_Journal') IS NULL ALTER TABLE dbo.[tm_journal_commentaire_libre] ADD [Id_Commentaire_Journal] INT NULL;
-IF OBJECT_ID(N'dbo.tm_journal_commentaire_libre', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_journal_commentaire_libre', N'Code_Journal') IS NULL ALTER TABLE dbo.[tm_journal_commentaire_libre] ADD [Code_Journal] VARCHAR(32) NULL;
-IF OBJECT_ID(N'dbo.tm_journal_commentaire_libre', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_journal_commentaire_libre', N'Commentaire') IS NULL ALTER TABLE dbo.[tm_journal_commentaire_libre] ADD [Commentaire] NVARCHAR(MAX) NULL;
-IF OBJECT_ID(N'dbo.tm_journal_commentaire_libre', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_journal_commentaire_libre', N'Date_Creation') IS NULL ALTER TABLE dbo.[tm_journal_commentaire_libre] ADD [Date_Creation] DATETIME NULL DEFAULT(GETDATE());
-IF OBJECT_ID(N'dbo.tm_journal_commentaire_libre', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_journal_commentaire_libre', N'Date_Modification') IS NULL ALTER TABLE dbo.[tm_journal_commentaire_libre] ADD [Date_Modification] DATETIME NULL;
 GO
 
 IF DB_ID(N'vigi_chat') IS NULL
@@ -2237,11 +1459,6 @@ BEGIN
   );
 END;
 GO
-IF OBJECT_ID(N'dbo.t_conversation', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_conversation', N'Id_Conversation') IS NULL ALTER TABLE dbo.[t_conversation] ADD [Id_Conversation] INT NULL;
-IF OBJECT_ID(N'dbo.t_conversation', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_conversation', N'Type') IS NULL ALTER TABLE dbo.[t_conversation] ADD [Type] VARCHAR(10) NULL;
-IF OBJECT_ID(N'dbo.t_conversation', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_conversation', N'Titre') IS NULL ALTER TABLE dbo.[t_conversation] ADD [Titre] VARCHAR(128) NULL;
-IF OBJECT_ID(N'dbo.t_conversation', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_conversation', N'DM_Key') IS NULL ALTER TABLE dbo.[t_conversation] ADD [DM_Key] VARCHAR(64) NULL;
-IF OBJECT_ID(N'dbo.t_conversation', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_conversation', N'Date_Creation') IS NULL ALTER TABLE dbo.[t_conversation] ADD [Date_Creation] DATETIME NULL DEFAULT(GETDATE());
 GO
 IF OBJECT_ID(N'dbo.t_conversation', N'U') IS NOT NULL AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'UX_t_conversation_DM_Key' AND object_id = OBJECT_ID(N'dbo.t_conversation')) CREATE UNIQUE INDEX [UX_t_conversation_DM_Key] ON dbo.[t_conversation]([DM_Key]) WHERE [DM_Key] IS NOT NULL;
 GO
@@ -2258,11 +1475,6 @@ BEGIN
   );
 END;
 GO
-IF OBJECT_ID(N'dbo.t_conversation_participant', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_conversation_participant', N'Id_Participant') IS NULL ALTER TABLE dbo.[t_conversation_participant] ADD [Id_Participant] INT NULL;
-IF OBJECT_ID(N'dbo.t_conversation_participant', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_conversation_participant', N'Id_Conversation') IS NULL ALTER TABLE dbo.[t_conversation_participant] ADD [Id_Conversation] INT NULL;
-IF OBJECT_ID(N'dbo.t_conversation_participant', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_conversation_participant', N'Id_Utilisateur') IS NULL ALTER TABLE dbo.[t_conversation_participant] ADD [Id_Utilisateur] INT NULL;
-IF OBJECT_ID(N'dbo.t_conversation_participant', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_conversation_participant', N'Last_Read_Msg_Id') IS NULL ALTER TABLE dbo.[t_conversation_participant] ADD [Last_Read_Msg_Id] INT NULL;
-IF OBJECT_ID(N'dbo.t_conversation_participant', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_conversation_participant', N'Date_Ajout') IS NULL ALTER TABLE dbo.[t_conversation_participant] ADD [Date_Ajout] DATETIME NULL DEFAULT(GETDATE());
 GO
 IF OBJECT_ID(N'dbo.t_conversation_participant', N'U') IS NOT NULL AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'UK_t_conversation_participant_1' AND object_id = OBJECT_ID(N'dbo.t_conversation_participant')) CREATE UNIQUE INDEX [UK_t_conversation_participant_1] ON dbo.[t_conversation_participant]([Id_Conversation], [Id_Utilisateur]);
 GO
@@ -2281,13 +1493,6 @@ BEGIN
   );
 END;
 GO
-IF OBJECT_ID(N'dbo.t_message', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_message', N'Id_Message') IS NULL ALTER TABLE dbo.[t_message] ADD [Id_Message] INT NULL;
-IF OBJECT_ID(N'dbo.t_message', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_message', N'Id_Conversation') IS NULL ALTER TABLE dbo.[t_message] ADD [Id_Conversation] INT NULL;
-IF OBJECT_ID(N'dbo.t_message', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_message', N'Sender_Id') IS NULL ALTER TABLE dbo.[t_message] ADD [Sender_Id] INT NULL;
-IF OBJECT_ID(N'dbo.t_message', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_message', N'Contenu') IS NULL ALTER TABLE dbo.[t_message] ADD [Contenu] NVARCHAR(MAX) NULL;
-IF OBJECT_ID(N'dbo.t_message', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_message', N'Date_Creation') IS NULL ALTER TABLE dbo.[t_message] ADD [Date_Creation] DATETIME NULL DEFAULT(GETDATE());
-IF OBJECT_ID(N'dbo.t_message', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_message', N'Date_Modification') IS NULL ALTER TABLE dbo.[t_message] ADD [Date_Modification] DATETIME NULL;
-IF OBJECT_ID(N'dbo.t_message', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_message', N'Date_Suppression') IS NULL ALTER TABLE dbo.[t_message] ADD [Date_Suppression] DATETIME NULL;
 GO
 
 IF OBJECT_ID(N'dbo.t_message_attachment', N'U') IS NULL
@@ -2304,13 +1509,6 @@ BEGIN
   );
 END;
 GO
-IF OBJECT_ID(N'dbo.t_message_attachment', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_message_attachment', N'Id_Attachment') IS NULL ALTER TABLE dbo.[t_message_attachment] ADD [Id_Attachment] INT NULL;
-IF OBJECT_ID(N'dbo.t_message_attachment', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_message_attachment', N'Id_Message') IS NULL ALTER TABLE dbo.[t_message_attachment] ADD [Id_Message] INT NULL;
-IF OBJECT_ID(N'dbo.t_message_attachment', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_message_attachment', N'File_Name') IS NULL ALTER TABLE dbo.[t_message_attachment] ADD [File_Name] VARCHAR(255) NULL;
-IF OBJECT_ID(N'dbo.t_message_attachment', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_message_attachment', N'File_Path') IS NULL ALTER TABLE dbo.[t_message_attachment] ADD [File_Path] VARCHAR(512) NULL;
-IF OBJECT_ID(N'dbo.t_message_attachment', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_message_attachment', N'File_Size') IS NULL ALTER TABLE dbo.[t_message_attachment] ADD [File_Size] INT NULL;
-IF OBJECT_ID(N'dbo.t_message_attachment', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_message_attachment', N'Mime_Type') IS NULL ALTER TABLE dbo.[t_message_attachment] ADD [Mime_Type] VARCHAR(128) NULL;
-IF OBJECT_ID(N'dbo.t_message_attachment', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.t_message_attachment', N'Date_Upload') IS NULL ALTER TABLE dbo.[t_message_attachment] ADD [Date_Upload] DATETIME NULL DEFAULT(GETDATE());
 GO
 
 USE [vigi_main];
@@ -2367,27 +1565,9 @@ GO
 -- =====================================================================
 
 -- t_autorisation: suppression anciens flags
-IF COL_LENGTH('dbo.t_autorisation', 'A_Acces_Admin') IS NOT NULL ALTER TABLE dbo.t_autorisation DROP COLUMN A_Acces_Admin;
-IF COL_LENGTH('dbo.t_autorisation', 'A_Acces_Metrologie') IS NOT NULL ALTER TABLE dbo.t_autorisation DROP COLUMN A_Acces_Metrologie;
-IF COL_LENGTH('dbo.t_autorisation', 'A_Acces_Surveillance') IS NOT NULL ALTER TABLE dbo.t_autorisation DROP COLUMN A_Acces_Surveillance;
-IF COL_LENGTH('dbo.t_autorisation', 'A_Acces_VigiLog') IS NOT NULL ALTER TABLE dbo.t_autorisation DROP COLUMN A_Acces_VigiLog;
 GO
 
 -- t_lieu
-IF COL_LENGTH('dbo.t_lieu', 'Consigne_Base') IS NULL ALTER TABLE dbo.t_lieu ADD Consigne_Base FLOAT NULL;
-IF COL_LENGTH('dbo.t_lieu', 'Consigne_Sup_Base') IS NULL ALTER TABLE dbo.t_lieu ADD Consigne_Sup_Base FLOAT NULL;
-IF COL_LENGTH('dbo.t_lieu', 'Consigne_Inf_Base') IS NULL ALTER TABLE dbo.t_lieu ADD Consigne_Inf_Base FLOAT NULL;
-IF COL_LENGTH('dbo.t_lieu', 'Tolerance_Surveillance_Sup_Base') IS NULL ALTER TABLE dbo.t_lieu ADD Tolerance_Surveillance_Sup_Base FLOAT NULL;
-IF COL_LENGTH('dbo.t_lieu', 'Tolerance_Surveillance_Inf_Base') IS NULL ALTER TABLE dbo.t_lieu ADD Tolerance_Surveillance_Inf_Base FLOAT NULL;
-IF COL_LENGTH('dbo.t_lieu', 'Planning_Actif') IS NULL ALTER TABLE dbo.t_lieu ADD Planning_Actif BIT NOT NULL CONSTRAINT DF_t_lieu_Planning_Actif DEFAULT(0);
-IF COL_LENGTH('dbo.t_lieu', 'Planning_Regle_Existe') IS NULL ALTER TABLE dbo.t_lieu ADD Planning_Regle_Existe BIT NOT NULL CONSTRAINT DF_t_lieu_Planning_Regle_Existe DEFAULT(0);
-IF COL_LENGTH('dbo.t_lieu', 'Planning_Source_Regle_Id') IS NULL ALTER TABLE dbo.t_lieu ADD Planning_Source_Regle_Id INT NULL;
-IF COL_LENGTH('dbo.t_lieu', 'Planning_Derniere_Maj') IS NULL ALTER TABLE dbo.t_lieu ADD Planning_Derniere_Maj DATETIME NULL;
-IF COL_LENGTH('dbo.t_lieu', 'Est_Redeclenchement_Immediat') IS NULL ALTER TABLE dbo.t_lieu ADD Est_Redeclenchement_Immediat BIT NOT NULL CONSTRAINT DF_t_lieu_Est_Redeclenchement_Immediat DEFAULT(0);
-IF COL_LENGTH('dbo.t_lieu', 'Nb_Mesures_Temporisation_Redeclenchement') IS NULL ALTER TABLE dbo.t_lieu ADD Nb_Mesures_Temporisation_Redeclenchement INT NULL CONSTRAINT DF_t_lieu_Nb_Mesures_Temporisation_Redeclenchement DEFAULT(0);
-IF COL_LENGTH('dbo.t_lieu', 'Surveillance_Etat') IS NOT NULL ALTER TABLE dbo.t_lieu DROP COLUMN Surveillance_Etat;
-IF COL_LENGTH('dbo.t_lieu', 'Consigne_Sup_Corrigee') IS NOT NULL ALTER TABLE dbo.t_lieu DROP COLUMN Consigne_Sup_Corrigee;
-IF COL_LENGTH('dbo.t_lieu', 'Consigne_Inf_Corrigee') IS NOT NULL ALTER TABLE dbo.t_lieu DROP COLUMN Consigne_Inf_Corrigee;
 IF OBJECT_ID('dbo.t_lieu_planning_regle', 'U') IS NOT NULL
 BEGIN
   UPDATE l
@@ -2400,23 +1580,15 @@ END;
 GO
 
 -- t_module / t_parametre / t_utilisateur
-IF COL_LENGTH('dbo.t_module', 'Est_Module_GSO') IS NULL ALTER TABLE dbo.t_module ADD Est_Module_GSO BIT NOT NULL CONSTRAINT DF_t_module_Est_Module_GSO DEFAULT(0);
-IF COL_LENGTH('dbo.t_module', 'Port_Serie_Send_GSO') IS NULL ALTER TABLE dbo.t_module ADD Port_Serie_Send_GSO VARCHAR(10) NULL;
-IF COL_LENGTH('dbo.t_parametre', 'Champ_DATETIME') IS NULL ALTER TABLE dbo.t_parametre ADD Champ_DATETIME DATETIME NULL;
-IF COL_LENGTH('dbo.t_utilisateur', 'Avatar_Utilisateur') IS NULL ALTER TABLE dbo.t_utilisateur ADD Avatar_Utilisateur VARCHAR(512) NULL;
 GO
 
 -- t_sonde / t_sonde_type
 IF OBJECT_ID('dbo.t_sonde', 'U') IS NOT NULL
 BEGIN
-  IF COL_LENGTH('dbo.t_sonde', 'Sonde_Type') IS NULL ALTER TABLE dbo.t_sonde ADD Sonde_Type VARCHAR(50) NULL;
-  IF COL_LENGTH('dbo.t_sonde', 'Est_Sonde_GSO') IS NULL ALTER TABLE dbo.t_sonde ADD Est_Sonde_GSO BIT NOT NULL CONSTRAINT DF_t_sonde_Est_Sonde_GSO DEFAULT(0);
 END;
 GO
 IF OBJECT_ID('dbo.t_sonde_type', 'U') IS NOT NULL
 BEGIN
-  IF COL_LENGTH('dbo.t_sonde_type', 'Est_Double_Capteur') IS NULL ALTER TABLE dbo.t_sonde_type ADD Est_Double_Capteur BIT NOT NULL CONSTRAINT DF_t_sonde_type_Est_Double_Capteur DEFAULT(0);
-  IF COL_LENGTH('dbo.t_sonde_type', 'Famille_Sonde') IS NULL ALTER TABLE dbo.t_sonde_type ADD Famille_Sonde VARCHAR(16) NOT NULL CONSTRAINT DF_t_sonde_type_Famille_Sonde DEFAULT('CLASSIC');
 
   MERGE dbo.t_sonde_type AS target
   USING (VALUES
@@ -2650,9 +1822,6 @@ BEGIN
   CREATE INDEX [IDX_tm_mesures_gso_count_mem_statut] ON dbo.[tm_mesures_gso_count_mem]([Statut]);
 END;
 GO
-IF OBJECT_ID(N'dbo.tm_mesures_gso_count_mem', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_gso_count_mem', N'Id') IS NULL ALTER TABLE dbo.[tm_mesures_gso_count_mem] ADD [Id] BIGINT NULL;
-IF OBJECT_ID(N'dbo.tm_mesures_gso_count_mem', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_gso_count_mem', N'Statut') IS NULL ALTER TABLE dbo.[tm_mesures_gso_count_mem] ADD [Statut] VARCHAR(20) NOT NULL CONSTRAINT [DF_tm_mesures_gso_count_mem_statut_patch] DEFAULT('0');
-IF OBJECT_ID(N'dbo.tm_mesures_gso_count_mem', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_gso_count_mem', N'Date_Heure_Demande_Mem') IS NULL ALTER TABLE dbo.[tm_mesures_gso_count_mem] ADD [Date_Heure_Demande_Mem] DATETIME NULL;
 GO
 
 IF OBJECT_ID(N'dbo.tm_mesures_gso_commandes_mem', N'U') IS NULL
@@ -2674,9 +1843,6 @@ BEGIN
   CREATE INDEX [IDX_tm_mesures_gso_commandes_mem_statut] ON dbo.[tm_mesures_gso_commandes_mem]([Statut]);
 END;
 GO
-IF OBJECT_ID(N'dbo.tm_mesures_gso_commandes_mem', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_gso_commandes_mem', N'Id') IS NULL ALTER TABLE dbo.[tm_mesures_gso_commandes_mem] ADD [Id] BIGINT NULL;
-IF OBJECT_ID(N'dbo.tm_mesures_gso_commandes_mem', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_gso_commandes_mem', N'Statut') IS NULL ALTER TABLE dbo.[tm_mesures_gso_commandes_mem] ADD [Statut] VARCHAR(20) NOT NULL CONSTRAINT [DF_tm_mesures_gso_commandes_mem_statut_patch] DEFAULT('0');
-IF OBJECT_ID(N'dbo.tm_mesures_gso_commandes_mem', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_gso_commandes_mem', N'Date_Heure_Demande_Mem') IS NULL ALTER TABLE dbo.[tm_mesures_gso_commandes_mem] ADD [Date_Heure_Demande_Mem] DATETIME NULL;
 GO
 
 IF OBJECT_ID(N'dbo.tm_mesures_gso_build', N'U') IS NULL
@@ -2707,21 +1873,6 @@ BEGIN
   CREATE INDEX [IDX_tm_mesures_gso_build_Id_Lieu] ON dbo.[tm_mesures_gso_build]([Id_Lieu]);
 END;
 GO
-IF OBJECT_ID(N'dbo.tm_mesures_gso_build', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_gso_build', N'Valeur_Brute') IS NULL ALTER TABLE dbo.[tm_mesures_gso_build] ADD [Valeur_Brute] FLOAT NULL;
-IF OBJECT_ID(N'dbo.tm_mesures_gso_build', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_gso_build', N'Est_Valeur_Memoire') IS NULL ALTER TABLE dbo.[tm_mesures_gso_build] ADD [Est_Valeur_Memoire] BIT NOT NULL CONSTRAINT [DF_tm_mesures_gso_build_Est_Valeur_Memoire_patch] DEFAULT(0);
-IF OBJECT_ID(N'dbo.tm_mesures_gso_build', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_gso_build', N'Planning_Regle_Existe') IS NULL ALTER TABLE dbo.[tm_mesures_gso_build] ADD [Planning_Regle_Existe] BIT NOT NULL CONSTRAINT [DF_tm_mesures_gso_build_Planning_Regle_Existe_patch] DEFAULT(0);
-IF OBJECT_ID(N'dbo.tm_mesures_gso_build', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_gso_build', N'Planning_Actif') IS NULL ALTER TABLE dbo.[tm_mesures_gso_build] ADD [Planning_Actif] BIT NOT NULL CONSTRAINT [DF_tm_mesures_gso_build_Planning_Actif_patch] DEFAULT(0);
-IF OBJECT_ID(N'dbo.tm_mesures_gso_build', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_gso_build', N'Consigne') IS NULL ALTER TABLE dbo.[tm_mesures_gso_build] ADD [Consigne] FLOAT NULL;
-IF OBJECT_ID(N'dbo.tm_mesures_gso_build', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_gso_build', N'Consigne_Sup') IS NULL ALTER TABLE dbo.[tm_mesures_gso_build] ADD [Consigne_Sup] FLOAT NULL;
-IF OBJECT_ID(N'dbo.tm_mesures_gso_build', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_gso_build', N'Consigne_Inf') IS NULL ALTER TABLE dbo.[tm_mesures_gso_build] ADD [Consigne_Inf] FLOAT NULL;
-IF OBJECT_ID(N'dbo.tm_mesures_gso_build', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_gso_build', N'Sonde_Numero_Serie') IS NULL ALTER TABLE dbo.[tm_mesures_gso_build] ADD [Sonde_Numero_Serie] VARCHAR(50) NULL;
-IF OBJECT_ID(N'dbo.tm_mesures_gso_build', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_gso_build', N'COM_sonde') IS NULL ALTER TABLE dbo.[tm_mesures_gso_build] ADD [COM_sonde] FLOAT NULL;
-IF OBJECT_ID(N'dbo.tm_mesures_gso_build', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_gso_build', N'Id_Lieu') IS NULL ALTER TABLE dbo.[tm_mesures_gso_build] ADD [Id_Lieu] INT NOT NULL CONSTRAINT [DF_tm_mesures_gso_build_Id_Lieu_patch] DEFAULT(0);
-IF OBJECT_ID(N'dbo.tm_mesures_gso_build', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_gso_build', N'Consigne_Inf_Pre_Alarme') IS NULL ALTER TABLE dbo.[tm_mesures_gso_build] ADD [Consigne_Inf_Pre_Alarme] FLOAT NULL;
-IF OBJECT_ID(N'dbo.tm_mesures_gso_build', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_gso_build', N'Consigne_Sup_Pre_Alarme') IS NULL ALTER TABLE dbo.[tm_mesures_gso_build] ADD [Consigne_Sup_Pre_Alarme] FLOAT NULL;
-IF OBJECT_ID(N'dbo.tm_mesures_gso_build', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_gso_build', N'Rssi') IS NULL ALTER TABLE dbo.[tm_mesures_gso_build] ADD [Rssi] VARCHAR(10) NULL;
-IF OBJECT_ID(N'dbo.tm_mesures_gso_build', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_gso_build', N'Tension') IS NULL ALTER TABLE dbo.[tm_mesures_gso_build] ADD [Tension] VARCHAR(10) NULL;
-IF OBJECT_ID(N'dbo.tm_mesures_gso_build', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_gso_build', N'GSO_SN') IS NULL ALTER TABLE dbo.[tm_mesures_gso_build] ADD [GSO_SN] VARCHAR(50) NULL;
 GO
 
 IF OBJECT_ID(N'dbo.tm_mesures_gso_read_mem', N'U') IS NULL
@@ -2751,10 +1902,6 @@ BEGIN
   CREATE INDEX [IDX_tm_mesures_gso_read_metro_Dernier_Date_MAJ] ON dbo.[tm_mesures_gso_read_metro]([Dernier_Date_MAJ]);
 END;
 GO
-IF OBJECT_ID(N'dbo.tm_mesures_gso_read_metro', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_gso_read_metro', N'Id') IS NULL ALTER TABLE dbo.[tm_mesures_gso_read_metro] ADD [Id] BIGINT NULL;
-IF OBJECT_ID(N'dbo.tm_mesures_gso_read_metro', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_gso_read_metro', N'Commande_metro') IS NULL ALTER TABLE dbo.[tm_mesures_gso_read_metro] ADD [Commande_metro] VARCHAR(32) NULL;
-IF OBJECT_ID(N'dbo.tm_mesures_gso_read_metro', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_gso_read_metro', N'Commande_metro_envoyee') IS NULL ALTER TABLE dbo.[tm_mesures_gso_read_metro] ADD [Commande_metro_envoyee] BIT NOT NULL CONSTRAINT [DF_tm_mesures_gso_read_metro_CommandeEnvoyee_patch] DEFAULT(0);
-IF OBJECT_ID(N'dbo.tm_mesures_gso_read_metro', N'U') IS NOT NULL AND COL_LENGTH(N'dbo.tm_mesures_gso_read_metro', N'Metro_en_cours') IS NULL ALTER TABLE dbo.[tm_mesures_gso_read_metro] ADD [Metro_en_cours] BIT NOT NULL CONSTRAINT [DF_tm_mesures_gso_read_metro_MetroEnCours_patch] DEFAULT(0);
 GO
 
 CREATE OR ALTER VIEW dbo.[v_compteur_valeurs_gso]
@@ -2780,9 +1927,6 @@ GO
 USE [vigi_main];
 GO
 
-IF COL_LENGTH('dbo.t_sonde', 'Metrologie_en_cours') IS NULL ALTER TABLE dbo.t_sonde ADD Metrologie_en_cours BIT NOT NULL CONSTRAINT DF_t_sonde_Metrologie_en_cours DEFAULT(0);
-IF COL_LENGTH('dbo.t_sonde', 'Metrologie_cmd_envoyee') IS NULL ALTER TABLE dbo.t_sonde ADD Metrologie_cmd_envoyee BIT NOT NULL CONSTRAINT DF_t_sonde_Metrologie_cmd_envoyee DEFAULT(0);
-IF COL_LENGTH('dbo.t_sonde', 'Etat_Sonde') IS NULL ALTER TABLE dbo.t_sonde ADD Etat_Sonde VARCHAR(1) NULL CONSTRAINT DF_t_sonde_Etat_Sonde DEFAULT('D');
 GO
 
 USE [vigi_main];

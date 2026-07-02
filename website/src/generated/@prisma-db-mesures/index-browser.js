@@ -117,8 +117,7 @@ exports.Prisma.TransactionIsolationLevel = makeStrictEnum({
   ReadUncommitted: 'ReadUncommitted',
   ReadCommitted: 'ReadCommitted',
   RepeatableRead: 'RepeatableRead',
-  Serializable: 'Serializable',
-  Snapshot: 'Snapshot'
+  Serializable: 'Serializable'
 });
 
 exports.Prisma.Tm_graphiqueScalarFieldEnum = {
@@ -342,6 +341,102 @@ exports.Prisma.SortOrder = {
 exports.Prisma.NullsOrder = {
   first: 'first',
   last: 'last'
+};
+
+exports.Prisma.tm_graphiqueOrderByRelevanceFieldEnum = {
+  Unite: 'Unite',
+  Sonde_Numero_Serie: 'Sonde_Numero_Serie',
+  Adresse_Sonde: 'Adresse_Sonde'
+};
+
+exports.Prisma.tm_journalOrderByRelevanceFieldEnum = {
+  Code_Journal: 'Code_Journal',
+  Commentaire: 'Commentaire',
+  Nom_Utilisateur: 'Nom_Utilisateur',
+  Profil_Utilisateur: 'Profil_Utilisateur',
+  Commentaire_Utilisateur: 'Commentaire_Utilisateur'
+};
+
+exports.Prisma.tm_journal_codeOrderByRelevanceFieldEnum = {
+  Code_Journal: 'Code_Journal',
+  Commentaire: 'Commentaire'
+};
+
+exports.Prisma.tm_compteur_id_tableOrderByRelevanceFieldEnum = {
+  Nom_Table: 'Nom_Table'
+};
+
+exports.Prisma.tm_mesuresOrderByRelevanceFieldEnum = {
+  Unite: 'Unite',
+  Sonde_Numero_Serie: 'Sonde_Numero_Serie',
+  Adresse_Sonde: 'Adresse_Sonde',
+  Rssi: 'Rssi',
+  Tension: 'Tension'
+};
+
+exports.Prisma.tm_mesures_gsoOrderByRelevanceFieldEnum = {
+  id_capteur: 'id_capteur',
+  unite: 'unite',
+  rssi: 'rssi',
+  tension: 'tension'
+};
+
+exports.Prisma.tm_journal_histoOrderByRelevanceFieldEnum = {
+  Code_Journal: 'Code_Journal',
+  Commentaire: 'Commentaire',
+  Nom_Utilisateur: 'Nom_Utilisateur',
+  Profil_Utilisateur: 'Profil_Utilisateur',
+  Commentaire_Utilisateur: 'Commentaire_Utilisateur'
+};
+
+exports.Prisma.tm_mesure_calibrageOrderByRelevanceFieldEnum = {
+  Sonde_Numero_Serie: 'Sonde_Numero_Serie'
+};
+
+exports.Prisma.tm_mesure_calibrage_etalonOrderByRelevanceFieldEnum = {
+  Etalon_Numero_Serie: 'Etalon_Numero_Serie'
+};
+
+exports.Prisma.tm_mesure_etalonOrderByRelevanceFieldEnum = {
+  Etalon_Numero_Serie: 'Etalon_Numero_Serie',
+  Message_Erreur: 'Message_Erreur'
+};
+
+exports.Prisma.tm_mesure_etalonnageOrderByRelevanceFieldEnum = {
+  Sonde_Numero_serie: 'Sonde_Numero_serie'
+};
+
+exports.Prisma.tm_mesures_histoOrderByRelevanceFieldEnum = {
+  Unite: 'Unite',
+  Sonde_Numero_Serie: 'Sonde_Numero_Serie'
+};
+
+exports.Prisma.tm_mesures_testOrderByRelevanceFieldEnum = {
+  Sonde_Numero_Serie: 'Sonde_Numero_Serie'
+};
+
+exports.Prisma.tm_mesures_test_etalonOrderByRelevanceFieldEnum = {
+  Etalon_Numero_Serie: 'Etalon_Numero_Serie'
+};
+
+exports.Prisma.tm_mode_degradeOrderByRelevanceFieldEnum = {
+  Requete_SQL: 'Requete_SQL'
+};
+
+exports.Prisma.tm_parametreOrderByRelevanceFieldEnum = {
+  Cle_Parametre: 'Cle_Parametre',
+  Valeur_Parametre: 'Valeur_Parametre',
+  Groupe_Parametre: 'Groupe_Parametre',
+  Commentaire_Parametre: 'Commentaire_Parametre'
+};
+
+exports.Prisma.tm_vigilog_mesureOrderByRelevanceFieldEnum = {
+  Details: 'Details'
+};
+
+exports.Prisma.tm_journal_commentaire_libreOrderByRelevanceFieldEnum = {
+  Code_Journal: 'Code_Journal',
+  Commentaire: 'Commentaire'
 };
 
 

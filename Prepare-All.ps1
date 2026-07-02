@@ -1,4 +1,7 @@
 Param(
+    [ValidateSet("mysql", "mssql")]
+    [string]$DatabaseProvider = "mysql",
+
     [string]$WebSourcePath,
     [string]$WebOutputDir,
     [switch]$SkipWebInstall,
@@ -109,6 +112,7 @@ $results = @()
 $webArgs = @{}
 if (-not [string]::IsNullOrWhiteSpace($WebSourcePath)) { $webArgs.SourcePath = $WebSourcePath }
 if (-not [string]::IsNullOrWhiteSpace($WebOutputDir)) { $webArgs.OutputDir = $WebOutputDir }
+if (-not [string]::IsNullOrWhiteSpace($DatabaseProvider)) { $webArgs.DatabaseProvider = $DatabaseProvider }
 if ($SkipWebInstall) { $webArgs.SkipInstall = $true }
 if ($SkipWebApproveBuilds) { $webArgs.SkipApproveBuilds = $true }
 if ($SkipWebGenerate) { $webArgs.SkipGenerate = $true }

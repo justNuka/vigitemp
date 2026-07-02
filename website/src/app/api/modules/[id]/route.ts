@@ -62,6 +62,18 @@ export const PATCH = withOneOrHigherAnyAuthorizationLogging(
         }
       }
 
+      const moduleType = await prisma.t_module_type.findUnique({
+        where: { Id_Module_Type: validatedData.Type_Module },
+      })
+      const normalizedSerial = String(validatedData.Module_Numero_Serie ?? "").trim().toUpperCase()
+      const normalizedTypeLabel = String(moduleType?.Libelle_Type_Module ?? "").trim().toUpperCase()
+      const normalizedModuleLabel = String(moduleType?.Libelle_Module ?? "").trim().toUpperCase()
+      const estModuleGso =
+        validatedData.Est_Module_GSO === true ||
+        normalizedSerial.startsWith("GSO") ||
+        normalizedTypeLabel.includes("GSO") ||
+        normalizedModuleLabel.includes("GSO")
+
       const updatedModule = await prisma.t_module.update({
         where: { Id_Module: id },
         data: {
@@ -72,7 +84,7 @@ export const PATCH = withOneOrHigherAnyAuthorizationLogging(
           Adresse_IP: validatedData.Adresse_IP || null,
           Id_Worker: idWorker,
           Delai_Reseau: validatedData.Delai_Reseau || null,
-          Est_Module_GSO: validatedData.Est_Module_GSO ?? existingModule.Est_Module_GSO,
+          Est_Module_GSO: estModuleGso,
         },
       })
 
@@ -104,10 +116,6 @@ export const PATCH = withOneOrHigherAnyAuthorizationLogging(
           Est_Module_GSO: updatedModule.Est_Module_GSO,
         },
         reason: `Modification module ${existingModule.Module_Numero_Serie}`,
-      })
-
-      const moduleType = await prisma.t_module_type.findUnique({
-        where: { Id_Module_Type: validatedData.Type_Module },
       })
 
       return apiOk(

@@ -456,6 +456,7 @@ export const POST = withLogging(async (req: NextRequest) => {
           ? { Derniere_Date_Etalonnage: appliedCalibrationDate }
           : {}),
         Est_Archive: false,
+        ...(lieuEtat === "S" ? { Date_Heure_Derniere_Reponse: null } : {}),
         Date_Heure_Surveillance_On: surveillanceOnAt,
         Date_Heure_Surveillance_Off: surveillanceOffAt,
         Est_Lieu_GSO: estLieuGso,

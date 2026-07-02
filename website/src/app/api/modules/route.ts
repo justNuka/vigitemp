@@ -36,6 +36,9 @@ export const POST = withOneOrHigherAnyAuthorizationLogging(MODULE_ACCESS_CODES, 
   try {
     const body = await req.json()
     const validData = createModuleSchema.parse(body)
+    const estModuleGso =
+      validData.Est_Module_GSO === true ||
+      (await ModuleRepository.shouldForceGsoFlag(validData.Type_Module, validData.Module_Numero_Serie))
 
     const isDuplicate = await ModuleRepository.isDuplicateSerialNumber(validData.Module_Numero_Serie)
     if (isDuplicate) {
@@ -50,7 +53,7 @@ export const POST = withOneOrHigherAnyAuthorizationLogging(MODULE_ACCESS_CODES, 
       Adresse_IP: validData.Adresse_IP,
       Id_Worker: validData.Id_Worker ?? null,
       Delai_Reseau: validData.Delai_Reseau,
-      Est_Module_GSO: validData.Est_Module_GSO,
+      Est_Module_GSO: estModuleGso,
     })
 
     log.data.create("Module", newModule.Id_Module, ctx.user.username, ctx.user.userId, getClientIp(req), validData)

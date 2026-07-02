@@ -19,6 +19,12 @@ export type ModuleWorkerSummary = {
   manualWorkerIds: number[]
 }
 
+function normalizeModuleFlagValue(value: string | null | undefined): string {
+  return String(value ?? "")
+    .trim()
+    .toUpperCase()
+}
+
 export const ModuleRepository = {
   /**
    * Returns all modules with sonde count and type label.
@@ -84,6 +90,34 @@ export const ModuleRepository = {
       where: { Module_Numero_Serie: serialNumber },
     })
     return !!existing
+  },
+
+  async shouldForceGsoFlag(typeModuleId: number | null | undefined, moduleSerial?: string | null): Promise<boolean> {
+    const normalizedSerial = normalizeModuleFlagValue(moduleSerial)
+    if (normalizedSerial.startsWith("GSO")) {
+      return true
+    }
+
+    if (!typeModuleId) {
+      return false
+    }
+
+    const moduleType = await prisma.t_module_type.findUnique({
+      where: { Id_Module_Type: typeModuleId },
+      select: {
+        Libelle_Type_Module: true,
+        Libelle_Module: true,
+      } as any,
+    })
+
+    if (!moduleType) {
+      return false
+    }
+
+    const normalizedTypeLabel = normalizeModuleFlagValue(moduleType.Libelle_Type_Module)
+    const normalizedModuleLabel = normalizeModuleFlagValue(moduleType.Libelle_Module)
+
+    return normalizedTypeLabel.includes("GSO") || normalizedModuleLabel.includes("GSO")
   },
 
   async getWorkerSummary(): Promise<ModuleWorkerSummary> {

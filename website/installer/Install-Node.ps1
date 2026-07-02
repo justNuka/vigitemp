@@ -1,4 +1,4 @@
-﻿Param(
+Param(
     [string]$InstallerPath,
     [switch]$Interactive,
     [switch]$Force

@@ -1,6 +1,8 @@
 Param(
     [string]$SourcePath,
     [string]$OutputDir,
+    [ValidateSet("mysql", "mssql")]
+    [string]$DatabaseProvider = "mysql",
     [switch]$SkipInstall,
     [switch]$SkipApproveBuilds,
     [switch]$SkipGenerate,
@@ -181,6 +183,12 @@ if (-not $SkipApproveBuilds) {
 }
 
 if (-not $SkipGenerate) {
+    Write-Log "Running pnpm prisma:prepare for provider '$DatabaseProvider'..."
+    $prepareResult = Invoke-Pnpm -Arguments @("prisma:prepare", "--provider", $DatabaseProvider)
+    if ($prepareResult.ExitCode -ne 0) {
+        Write-Error "pnpm prisma:prepare failed (code $($prepareResult.ExitCode))."
+    }
+
     Write-Log "Running pnpm prisma:generate..."
     $generateResult = Invoke-Pnpm -Arguments @("prisma:generate")
     if ($generateResult.ExitCode -ne 0) {
@@ -200,7 +208,7 @@ if (-not $SkipBuild) {
     $env:NEXT_DISABLE_TURBOPACK = "1"
     try {
         if (Test-Path $projectLogsDir) {
-            Write-Log "Cleaning project logs folder before build..."
+            Write-Log "Cleeaning project logs folder before build..."
             Remove-Item -Path $projectLogsDir -Recurse -Force -ErrorAction SilentlyContinue
         }
         if (-not (Test-Path $buildLogsDir)) {

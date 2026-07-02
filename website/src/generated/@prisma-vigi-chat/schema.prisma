@@ -4,8 +4,7 @@ generator client {
 }
 
 datasource db {
-  provider     = "sqlserver"
-  relationMode = "prisma"
+  provider = "mysql"
 }
 
 model t_conversation {
@@ -13,7 +12,7 @@ model t_conversation {
   Type            String                       @db.VarChar(10)
   Titre           String?                      @db.VarChar(128)
   DM_Key          String?                      @unique @db.VarChar(64)
-  Date_Creation   DateTime                     @default(now()) @db.DateTime
+  Date_Creation   DateTime                     @default(now()) @db.DateTime(0)
   participants    t_conversation_participant[]
   messages        t_message[]
 
@@ -26,7 +25,7 @@ model t_conversation_participant {
   Id_Conversation  Int
   Id_Utilisateur   Int
   Last_Read_Msg_Id Int?
-  Date_Ajout       DateTime       @default(now()) @db.DateTime
+  Date_Ajout       DateTime       @default(now()) @db.DateTime(0)
   conversation     t_conversation @relation(fields: [Id_Conversation], references: [Id_Conversation], onDelete: Cascade)
 
   @@unique([Id_Conversation, Id_Utilisateur])
@@ -38,9 +37,9 @@ model t_message {
   Id_Conversation   Int
   Sender_Id         Int
   Contenu           String                 @db.Text
-  Date_Creation     DateTime               @default(now()) @db.DateTime
-  Date_Modification DateTime?              @db.DateTime
-  Date_Suppression  DateTime?              @db.DateTime
+  Date_Creation     DateTime               @default(now()) @db.DateTime(0)
+  Date_Modification DateTime?              @db.DateTime(0)
+  Date_Suppression  DateTime?              @db.DateTime(0)
   conversation      t_conversation         @relation(fields: [Id_Conversation], references: [Id_Conversation], onDelete: Cascade)
   attachments       t_message_attachment[]
 
@@ -55,7 +54,7 @@ model t_message_attachment {
   File_Path     String    @db.VarChar(512)
   File_Size     Int
   Mime_Type     String    @db.VarChar(128)
-  Date_Upload   DateTime  @default(now()) @db.DateTime
+  Date_Upload   DateTime  @default(now()) @db.DateTime(0)
   message       t_message @relation(fields: [Id_Message], references: [Id_Message], onDelete: Cascade)
 
   @@index([Id_Message])

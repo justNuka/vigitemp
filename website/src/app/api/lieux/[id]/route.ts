@@ -656,6 +656,9 @@ export const PATCH = withAnyAuthorizationLogging(
                   effectiveLieuEtat === "D" ? surveillanceReactivationAt : null,
                 ...(surveillanceStateHasChanged
                   ? {
+                      ...(effectiveLieuEtat === "S"
+                        ? { Date_Heure_Derniere_Reponse: null }
+                        : {}),
                       Date_Heure_Surveillance_On: effectiveLieuEtat === "S" ? surveillanceStateChangedAt : current?.Date_Heure_Surveillance_On,
                       Date_Heure_Surveillance_Off: effectiveLieuEtat === "D" ? surveillanceStateChangedAt : null,
                     }

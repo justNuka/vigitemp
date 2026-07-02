@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
@@ -263,8 +264,188 @@ internal static class InstallerHelpers
     {
         if (exitCode != 0)
         {
-            throw new InvalidOperationException($"{step} a échoué avec le code {exitCode}.");
+            throw new InvalidOperationException($"{step} a chou avec le code {exitCode}.");
         }
+    }
+
+    public static string ValidateDatabaseSeedFiles(string startupDir, string provider)
+    {
+        var dbDir = FindDatabaseScriptsDirectory(startupDir);
+        if (string.IsNullOrWhiteSpace(dbDir))
+        {
+            return "Dossier db introuvable. Impossible de vrifier les seeds.";
+        }
+
+        if (string.Equals(provider, "mssql", StringComparison.OrdinalIgnoreCase))
+        {
+            var missing = new[]
+            {
+                Path.Combine(dbDir, "vigisensys_seed_mssql.sql"),
+                Path.Combine(dbDir, "vigisensys_sqlserver_events.sql")
+            }.Where(path => !File.Exists(path)).ToArray();
+
+            if (missing.Length > 0)
+            {
+                return "Seeds SQL Server manquantes : " + string.Join(", ", missing.Select(Path.GetFileName));
+            }
+
+            return null;
+        }
+
+        var mysqlSeed = Path.Combine(dbDir, "vigisensys_seed.sql");
+        return File.Exists(mysqlSeed) ? null : "Seed MySQL manquante : vigisensys_seed.sql";
+    }
+
+    public static void ProvisionDatabases(
+        string startupDir,
+        string provider,
+        string host,
+        string port,
+        string user,
+        string password,
+        Action<string> log)
+    {
+        var validationError = ValidateDatabaseSeedFiles(startupDir, provider);
+        if (!string.IsNullOrWhiteSpace(validationError))
+        {
+            throw new InvalidOperationException(validationError);
+        }
+
+        var dbDir = FindDatabaseScriptsDirectory(startupDir)
+            ?? throw new InvalidOperationException("Dossier db introuvable.");
+
+        if (string.Equals(provider, "mssql", StringComparison.OrdinalIgnoreCase))
+        {
+            ProvisionSqlServerDatabases(dbDir, host, port, user, password, log);
+            return;
+        }
+
+        ProvisionMySqlDatabases(dbDir, host, port, user, password, log);
+    }
+
+    private static string FindDatabaseScriptsDirectory(string startupDir)
+    {
+        var current = new DirectoryInfo(Path.GetFullPath(startupDir));
+        while (current != null)
+        {
+            var candidate = Path.Combine(current.FullName, "db");
+            if (Directory.Exists(candidate))
+            {
+                return candidate;
+            }
+
+            current = current.Parent;
+        }
+
+        return null;
+    }
+
+    private static void ProvisionMySqlDatabases(string dbDir, string host, string port, string user, string password, Action<string> log)
+    {
+        var mysqlExe = FindMySqlExecutable()
+            ?? throw new InvalidOperationException("mysql.exe introuvable. Ajoutez MySQL au PATH ou installez le client MySQL sur cette machine.");
+        var seedPath = Path.Combine(dbDir, "vigisensys_seed.sql");
+        log($"[INFO] Seed MySQL: {seedPath}");
+        var arguments = $"--host=\"{host}\" --port={port} --user=\"{user}\" --password=\"{password}\" --default-character-set=utf8mb4";
+        EnsureSuccess(RunProcessWithInputFile(mysqlExe, arguments, dbDir, seedPath, log), "mysql seed");
+    }
+
+    private static void ProvisionSqlServerDatabases(string dbDir, string host, string port, string user, string password, Action<string> log)
+    {
+        var sqlcmdExe = FindSqlCmdExecutable()
+            ?? throw new InvalidOperationException("sqlcmd.exe introuvable. Installez les outils SQL Server en ligne de commande ou ajoutez sqlcmd au PATH.");
+        var server = string.IsNullOrWhiteSpace(port) ? host : $"{host},{port}";
+        var seedPath = Path.Combine(dbDir, "vigisensys_seed_mssql.sql");
+        var eventsPath = Path.Combine(dbDir, "vigisensys_sqlserver_events.sql");
+        log($"[INFO] Seed SQL Server: {seedPath}");
+        EnsureSuccess(RunProcess(sqlcmdExe, $"-S \"{server}\" -U \"{user}\" -P \"{password}\" -b -i \"{seedPath}\"", dbDir, log), "sqlcmd seed mssql");
+        log($"[INFO] Jobs SQL Server: {eventsPath}");
+        EnsureSuccess(RunProcess(sqlcmdExe, $"-S \"{server}\" -U \"{user}\" -P \"{password}\" -b -i \"{eventsPath}\"", dbDir, log), "sqlcmd events mssql");
+    }
+
+    private static int RunProcessWithInputFile(string fileName, string arguments, string workingDirectory, string inputFilePath, Action<string> log)
+    {
+        var psi = new ProcessStartInfo
+        {
+            FileName = fileName,
+            Arguments = arguments,
+            WorkingDirectory = workingDirectory,
+            UseShellExecute = false,
+            RedirectStandardInput = true,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            CreateNoWindow = true,
+            StandardOutputEncoding = Encoding.UTF8,
+            StandardErrorEncoding = Encoding.UTF8,
+        };
+
+        using var process = new Process { StartInfo = psi };
+        process.OutputDataReceived += (_, e) => { if (!string.IsNullOrEmpty(e.Data)) log(e.Data); };
+        process.ErrorDataReceived += (_, e) => { if (!string.IsNullOrEmpty(e.Data)) log("[ERR] " + e.Data); };
+        process.Start();
+        process.BeginOutputReadLine();
+        process.BeginErrorReadLine();
+        using (var reader = new StreamReader(inputFilePath, Encoding.UTF8))
+        {
+            process.StandardInput.Write(reader.ReadToEnd());
+        }
+        process.StandardInput.Close();
+        process.WaitForExit();
+        return process.ExitCode;
+    }
+
+    private static string FindMySqlExecutable()
+    {
+        return FindExecutable("mysql.exe", new[]
+        {
+            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "MySQL"),
+            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "MySQL")
+        });
+    }
+
+    private static string FindSqlCmdExecutable()
+    {
+        return FindExecutable("sqlcmd.exe", new[]
+        {
+            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "Microsoft SQL Server"),
+            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "Microsoft SQL Server")
+        });
+    }
+
+    private static string FindExecutable(string executableName, IEnumerable<string> searchRoots)
+    {
+        var pathEnv = Environment.GetEnvironmentVariable("PATH") ?? string.Empty;
+        foreach (var pathEntry in pathEnv.Split(Path.PathSeparator).Where(entry => !string.IsNullOrWhiteSpace(entry)))
+        {
+            try
+            {
+                var candidate = Path.Combine(pathEntry.Trim(), executableName);
+                if (File.Exists(candidate))
+                {
+                    return candidate;
+                }
+            }
+            catch
+            {
+            }
+        }
+
+        foreach (var root in searchRoots.Where(Directory.Exists))
+        {
+            try
+            {
+                var candidate = Directory.EnumerateFiles(root, executableName, SearchOption.AllDirectories).FirstOrDefault();
+                if (!string.IsNullOrWhiteSpace(candidate))
+                {
+                    return candidate;
+                }
+            }
+            catch
+            {
+            }
+        }
+
+        return null;
     }
 
     public static string WriteServerUninstallScript(string installPath, string serviceName)

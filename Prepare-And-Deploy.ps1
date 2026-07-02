@@ -2,6 +2,9 @@ Param(
     [ValidateSet("All", "Server", "Web")]
     [string]$Target = "All",
 
+    [ValidateSet("mysql", "mssql")]
+    [string]$DatabaseProvider = "mysql",
+
     [string]$DeployHost = "192.168.63.189",
 
     [string]$ServerPackageDir,
@@ -111,8 +114,8 @@ function Invoke-Prepare {
         default { "All" }
     }
 
-    Write-Step "Preparation locale demarree (Only=$only)..."
-    & $prepareScript -Only $only
+    Write-Step "Preparation locale demarree (Only=$only, DatabaseProvider=$DatabaseProvider)..."
+    & $prepareScript -Only $only -DatabaseProvider $DatabaseProvider
     if (-not $?) {
         $exitCode = if ($null -ne $LASTEXITCODE) { $LASTEXITCODE } else { -1 }
         throw "Prepare-All a echoue (code $exitCode)."

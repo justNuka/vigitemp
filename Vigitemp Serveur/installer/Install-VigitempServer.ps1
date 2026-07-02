@@ -170,7 +170,7 @@ function Resolve-DispatchSecret([string]$providedSecret, [string]$providedFilePa
     }
 
     if ([string]::IsNullOrWhiteSpace($secret)) {
-        $typedSecret = Read-InstallSecret (T "Secret dispatch alarmes (laisser vide pour g?n?ration auto)" "Alarm dispatch secret (leave empty for auto generation)") ""
+        $typedSecret = Read-InstallSecret (T "Secret dispatch alarmes (laisser vide pour generation auto)" "Alarm dispatch secret (leave empty for auto generation)") ""
         if (-not [string]::IsNullOrWhiteSpace($typedSecret)) {
             $secret = $typedSecret.Trim()
         }
@@ -178,7 +178,7 @@ function Resolve-DispatchSecret([string]$providedSecret, [string]$providedFilePa
 
     if ([string]::IsNullOrWhiteSpace($secret)) {
         $secret = New-RandomSecret
-        Write-Log (T "Secret dispatch g?n?r? automatiquement." "Dispatch secret generated automatically.")
+        Write-Log (T "Secret dispatch gener? automatiquement." "Dispatch secret generated automatically.")
     }
 
     if (-not [string]::IsNullOrWhiteSpace($secretFile)) {
@@ -444,7 +444,7 @@ if ([string]::IsNullOrWhiteSpace($publicKeySourcePath) -and -not [string]::IsNul
     $publicKeySourcePath = $publicKeyDefault
 }
 if (-not (Test-Path $publicKeySourcePath)) {
-    Write-Error (T "Clé publique introuvable : $publicKeySourcePath" "Public key file not found: $publicKeySourcePath")
+    Write-Error (T "Clee publique introuvable : $publicKeySourcePath" "Public key file not found: $publicKeySourcePath")
 }
 
 $licensePayload = Read-LicensePayload $licenseSourcePath
@@ -459,17 +459,17 @@ if ($null -ne $licensePayload) {
     if ($expiresProp -and $expiresProp.Value) {
         Write-Log ("  expiresAt: {0}" -f $expiresProp.Value)
     } else {
-        Write-Log (T "  expiration: illimitée" "  expiration: unlimited")
+        Write-Log (T "  expiration: illimitee" "  expiration: unlimited")
     }
     if ($licensePayload.PSObject.Properties.Match("bind").Count -gt 0 -and $licensePayload.bind -and $licensePayload.bind.instancePublicKey) {
         Write-Log ("  bind.instancePublicKey: {0}" -f $licensePayload.bind.instancePublicKey)
     }
 }
 
-$instancePublicKey = Read-InstallValue (T "Clé publique instance (optionnel)" "Instance public key (optional)") ""
+$instancePublicKey = Read-InstallValue (T "Clee publique instance (optionnel)" "Instance public key (optional)") ""
 if ($licensePayload -and $licensePayload.PSObject.Properties.Match("bind").Count -gt 0 -and $licensePayload.bind -and $licensePayload.bind.instancePublicKey) {
     if ([string]::IsNullOrWhiteSpace($instancePublicKey)) {
-        Write-Warning (T "La licence exige un binding d'instance. Renseignez la clé pour éviter un refus." "License requires instance binding. Provide instance public key to avoid mismatch.")
+        Write-Warning (T "La licence exige un binding d'instance. Renseignez la cl pour viter un refus." "License requires instance binding. Provide instance public key to avoid mismatch.")
     }
 }
 
@@ -524,9 +524,9 @@ try {
 
 $existingService = Get-Service -Name $ServiceName -ErrorAction SilentlyContinue
 if ($null -ne $existingService) {
-    $answer = Read-InstallValue (T "Le service $ServiceName existe. Arréter et réinstaller ? (y/n)" "Service $ServiceName exists. Stop and reinstall? (y/n)") "y"
+    $answer = Read-InstallValue (T "Le service $ServiceName existe. Arreter et reinstaller ? (y/n)" "Service $ServiceName exists. Stop and reinstall? (y/n)") "y"
     if ($answer -ne "y") {
-        Write-Error (T "Installation annulée par l'utilisateur." "Installation cancelled by user.")
+        Write-Error (T "Installation annule par l'utilisateur." "Installation cancelled by user.")
     }
     try { Stop-Service -Name $ServiceName -Force -ErrorAction SilentlyContinue } catch { }
     & sc.exe delete $ServiceName | Out-Null
@@ -542,7 +542,7 @@ $binPath = '"' + $serviceExePath + '"'
 try {
     Start-Service -Name $ServiceName
 } catch {
-    Write-Log (T "Impossible de démarrer le service : $ServiceName" "Failed to start service: $ServiceName")
+    Write-Log (T "Impossible de demarrer le service : $ServiceName" "Failed to start service: $ServiceName")
     try {
         $events = Get-WinEvent -LogName System -MaxEvents 5 |
             Where-Object { $_.ProviderName -eq "Service Control Manager" } |
@@ -583,14 +583,14 @@ if (-not [string]::IsNullOrWhiteSpace($version)) {
     Write-Log (T "  Version: $version" "  Version: $version")
 }
 Write-Log (T "  LastInstalledUtc: $([DateTime]::UtcNow.ToString('o'))" "  LastInstalledUtc: $([DateTime]::UtcNow.ToString('o'))")
-Write-Log (T "Installation terminée. Service : $ServiceName" "Install complete. Service: $ServiceName")
+Write-Log (T "Installation terminee. Service : $ServiceName" "Install complete. Service: $ServiceName")
 if (-not [string]::IsNullOrWhiteSpace($version)) {
     Write-Log (T "Version : $version" "Version: $version")
 }
 Write-Log (T "Config : $configPath" "Config: $configPath")
 Write-Log (T "Workers : $workerCount" "Workers: $workerCount")
 Write-Log (T "Licence : $licenseDestPath" "License: $licenseDestPath")
-Write-Log (T "Clé publique : $publicKeyDestPath" "Public key: $publicKeyDestPath")
+Write-Log (T "Clee publique : $publicKeyDestPath" "Public key: $publicKeyDestPath")
 Write-Log (T "Log : $logPath" "Log: $logPath")
 
 function Test-ServerInstall {

@@ -1,12 +1,13 @@
 CREATE DATABASE IF NOT EXISTS `vigi_main` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci */ /*!80016 DEFAULT ENCRYPTION='N' */;
 USE `vigi_main`;
 
+SET SQL_SAFE_UPDATES = 0;
 SET FOREIGN_KEY_CHECKS=0;
 
-/*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `t_actionneur`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
+
 CREATE TABLE `t_actionneur` (
   `Id_Actionneur` int NOT NULL AUTO_INCREMENT,
   `Num_Serie` varchar(50) DEFAULT NULL,
@@ -163,11 +164,11 @@ CREATE TABLE `t_autorisation` (
   KEY `IDX_Code_Autorisation` (`Code_Autorisation`)
 ) ENGINE=InnoDB AUTO_INCREMENT=20 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
-DROP TABLE IF EXISTS `t_bain`;
+DROP TABLE IF EXISTS `t_milieu_inter`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `t_bain` (
-  `Id_Bain` int NOT NULL AUTO_INCREMENT,
+CREATE TABLE `t_milieu_inter` (
+  `Id_Milieu` int NOT NULL AUTO_INCREMENT,
   `Model` varchar(50) DEFAULT NULL,
   `Reference` varchar(50) DEFAULT NULL,
   `Stabilite` float DEFAULT NULL,
@@ -175,19 +176,19 @@ CREATE TABLE `t_bain` (
   `Contenu` varchar(50) DEFAULT NULL,
   `Est_Reserve_MC2` tinyint(1) DEFAULT '0',
   `Est_Archive` tinyint(1) DEFAULT '0',
-  PRIMARY KEY (`Id_Bain`),
+  PRIMARY KEY (`Id_Milieu`),
   KEY `IDX_Model` (`Model`),
   KEY `IDX_Reference` (`Reference`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
-DROP TABLE IF EXISTS `t_calibrage`;
+DROP TABLE IF EXISTS `t_ajustage`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `t_calibrage` (
-  `Id_Calibrage` int NOT NULL AUTO_INCREMENT,
-  `Date_Heure_Calibrage` datetime DEFAULT NULL,
+CREATE TABLE `t_ajustage` (
+  `Id_Ajustage` int NOT NULL AUTO_INCREMENT,
+  `Date_Heure_Ajustage` datetime DEFAULT NULL,
   `Sonde_Numero_Serie` varchar(50) DEFAULT NULL,
-  `Coeff_X2` float DEFAULT NULL,
+  `Coeff_X2` float DEFAULT '0',
   `Coeff_X` float DEFAULT NULL,
   `Coeff_Constant` float DEFAULT NULL,
   `Unite` varchar(10) DEFAULT NULL,
@@ -205,13 +206,14 @@ CREATE TABLE `t_calibrage` (
   `Ancienne_Mesure2` float DEFAULT NULL,
   `Nouvelle_Mesure1` float DEFAULT NULL,
   `Nouvelle_Mesure2` float DEFAULT NULL,
-  `Id_Bain` int DEFAULT NULL,
-  PRIMARY KEY (`Id_Calibrage`),
-  KEY `IDX_Date_Heure_Calibrage` (`Date_Heure_Calibrage`),
+  `Id_Milieu` int DEFAULT NULL,
+  PRIMARY KEY (`Id_Ajustage`),
   KEY `IDX_Sonde_Numero_Serie` (`Sonde_Numero_Serie`),
   KEY `IDX_SE_Numero` (`SE_Numero`),
-  KEY `IDX_Id_Bain` (`Id_Bain`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+  KEY `IDX_Date_Heure_Calibrage` (`Date_Heure_Ajustage`),
+  KEY `IDX_Id_Bain` (`Id_Milieu`),
+  KEY `idx_ajustage_sonde_date` (`Sonde_Numero_Serie`, `Date_Heure_Ajustage`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `t_certif`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
@@ -456,18 +458,19 @@ CREATE TABLE `t_etalonnage` (
   `Sonde_Numero_Serie` varchar(50) DEFAULT NULL,
   `Nom_Etalonnage` varchar(255) DEFAULT NULL,
   `Date_Validite` date DEFAULT NULL,
+  `Duree_Validite_Jours` int DEFAULT NULL,
   `Operateur` varchar(255) DEFAULT NULL,
   `Etalon_Numero_Serie` varchar(50) DEFAULT NULL,
   `Date_Certif` date DEFAULT NULL,
   `Organisme` varchar(50) DEFAULT NULL,
   `Num_Certif` varchar(50) DEFAULT NULL,
   `Unite` varchar(10) DEFAULT NULL,
-  `Incertitude` varchar(50) DEFAULT NULL,
+  `Incertitude` float DEFAULT NULL,
   `Moyenne_Etalon` float DEFAULT NULL,
   `Moyenne_Sonde` float DEFAULT NULL,
   `Repetabilite` varchar(50) DEFAULT NULL,
-  `Id_Bain` int DEFAULT NULL,
-  `Err_Justesse` varchar(50) DEFAULT NULL,
+  `Id_Milieu` int DEFAULT NULL,
+  `Err_Justesse` float DEFAULT NULL,
   PRIMARY KEY (`Id_Etalonnage`),
   KEY `IDX_Date_Heure_Etalonnage` (`Date_Heure_Etalonnage`),
   KEY `IDX_Sonde_Numero_Serie` (`Sonde_Numero_Serie`),
@@ -480,7 +483,7 @@ CREATE TABLE `t_etalonnage` (
   KEY `IDX_Moyenne_Etalon` (`Moyenne_Etalon`),
   KEY `IDX_Moyenne_Sonde` (`Moyenne_Sonde`),
   KEY `IDX_Repetabilite` (`Repetabilite`),
-  KEY `IDX_Id_Bain` (`Id_Bain`)
+  KEY `IDX_Id_Milieu` (`Id_Milieu`)
 ) ENGINE=InnoDB AUTO_INCREMENT=9461 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `t_etalonnage_mesure`;
@@ -571,16 +574,18 @@ CREATE TABLE `t_etat_surveillance` (
 CREATE TABLE `t_lieu` (
   `Id_Lieu` int NOT NULL AUTO_INCREMENT,
   `Id_Site` int DEFAULT NULL,
-  `Nom_Lieu` varchar(20) DEFAULT NULL,
+  `Nom_Lieu` varchar(30) DEFAULT NULL,
   `Sonde_Numero_Serie` varchar(50) DEFAULT NULL,
+  `Adresse_Sonde` varchar(50) DEFAULT NULL,
   `Consigne` float DEFAULT NULL,
+  `Observations_Info` tinytext,
   `Consigne_Sup` float DEFAULT NULL,
-  `Consigne_Sup_Corrigee` float DEFAULT NULL,
+  `Tolerance_Surveillance_Sup` float DEFAULT NULL,
   `Est_Consigne_Sup_Active` tinyint(1) DEFAULT '1',
   `Consigne_Sup_Pre_Alarme` float DEFAULT NULL,
   `Est_Consigne_Sup_Pre_Alarme_Active` tinyint(1) DEFAULT NULL,
   `Consigne_Inf` float DEFAULT NULL,
-  `Consigne_Inf_Corrigee` float DEFAULT NULL,
+  `Tolerance_Surveillance_Inf` float DEFAULT NULL,
   `Est_Consigne_Inf_Active` tinyint(1) DEFAULT '1',
   `Consigne_Inf_Pre_Alarme` float DEFAULT NULL,
   `Est_Consigne_Inf_Pre_Alarme_Active` tinyint(1) DEFAULT NULL,
@@ -590,6 +595,7 @@ CREATE TABLE `t_lieu` (
   `Retard_Alarme_Haut` int DEFAULT NULL,
   `Retard_Alarme_Bas` int DEFAULT NULL,
   `Nb_Mesures_Temporisation_Redeclenchement` int DEFAULT '0',
+  `Est_Redeclenchement_Immediat` tinyint(1) NOT NULL DEFAULT '0',
   `Id_Plan` int DEFAULT NULL,
   `Position_Plan_X` bigint DEFAULT NULL,
   `Position_Plan_Y` bigint DEFAULT NULL,
@@ -597,7 +603,10 @@ CREATE TABLE `t_lieu` (
   `Est_Archive` tinyint(1) DEFAULT '0',
   `Est_Tel_Actif` tinyint(1) DEFAULT '0',
   `Notification_Active` tinyint(1) DEFAULT '1',
+  `Commentaire` varchar(200) DEFAULT NULL,
+  `Infos_Modifiees_Depuis_Derniere_Mesure` tinyint(1) NOT NULL DEFAULT '1',
   `Date_Heure_Reactivation_Alarme` datetime DEFAULT NULL,
+  `Date_Heure_Reactivation_Surveillance` datetime DEFAULT NULL,
   `Tel_Code` varchar(4) DEFAULT NULL,
   `Tel_Son_Lieu` varchar(260) DEFAULT NULL,
   `Id_Actionneur` int DEFAULT NULL,
@@ -619,8 +628,8 @@ CREATE TABLE `t_lieu` (
   `Id_Alarme` int DEFAULT NULL,
   `Lieu_Etat_N1` varchar(50) DEFAULT NULL,
   `Derniere_Date_Etalonnage` date DEFAULT NULL,
-  `Derniere_Erreur_Justesse` varchar(50) DEFAULT NULL,
-  `Derniere_Incertitude` varchar(50) DEFAULT NULL,
+  `Derniere_Erreur_Justesse` float DEFAULT NULL,
+  `Derniere_Incertitude` float DEFAULT NULL,
   `Retard_Non_Reponse` int DEFAULT NULL,
   `Date_Heure_Derniere_Reponse` datetime DEFAULT NULL,
   `Date_Heure_Derniere_Reponse_Recue_OK` datetime DEFAULT NULL,
@@ -633,6 +642,21 @@ CREATE TABLE `t_lieu` (
   `Date_Heure_Last_Update_EVT_GSO` datetime DEFAULT NULL,
   `Est_Remontee_Memoire_A_Faire` tinyint(1) NOT NULL DEFAULT '0',
   `Est_Lieu_Alarme_Terminee_Non_Acquittee_T1` tinyint DEFAULT NULL,
+  `Derniere_Val_Rssi` varchar(10) DEFAULT NULL,
+  `Derniere_Val_Batterie` varchar(10) DEFAULT NULL,
+  `Derniere_Val_Tension` varchar(10) DEFAULT NULL,
+  `Est_Lieu_GSO` tinyint(1) DEFAULT '0',
+  `Planning_Actif` tinyint(1) NOT NULL DEFAULT '0',
+  `Planning_Regle_Existe` tinyint(1) NOT NULL DEFAULT '0',
+  `Planning_Source_Regle_Id` int DEFAULT NULL,
+  `Planning_Derniere_Maj` datetime DEFAULT NULL,
+  `Consigne_Base` float DEFAULT NULL,
+  `Consigne_Sup_Base` float DEFAULT NULL,
+  `Consigne_Inf_Base` float DEFAULT NULL,
+  `Tolerance_Surveillance_Sup_Base` float DEFAULT NULL,
+  `Tolerance_Surveillance_Inf_Base` float DEFAULT NULL,
+  `Date_Heure_Surveillance_On` datetime DEFAULT NULL,
+  `Date_Heure_Surveillance_Off` datetime DEFAULT NULL,
   PRIMARY KEY (`Id_Lieu`),
   KEY `IDX_Lieu_Etat` (`Lieu_Etat`),
   KEY `IDX_Surveillance_Etat` (`Surveillance_Etat`),
@@ -647,6 +671,7 @@ CREATE TABLE `t_lieu` (
   KEY `IDX_Id_Site` (`Id_Site`),
   KEY `IDX_Id_PDF` (`Id_PDF`),
   KEY `IDX_Nom_Lieu` (`Nom_Lieu`),
+  KEY `idx_lieu_gso_etat` (`Est_Lieu_GSO`,`Lieu_Etat`),
   CONSTRAINT `FK_LIEU_ETAT_SURVEILLANCE` FOREIGN KEY (`Surveillance_Etat`) REFERENCES `t_etat_surveillance` (`Surveillance_Etat`),
   CONSTRAINT `FK_PDF_LIEU` FOREIGN KEY (`Id_PDF`) REFERENCES `t_pdf` (`Id_PDF`),
   CONSTRAINT `FK_PLAN_LIEU` FOREIGN KEY (`Id_Plan`) REFERENCES `t_plan` (`Id_Plan`),
@@ -685,21 +710,46 @@ CREATE TABLE `t_lieu_planning` (
   CONSTRAINT `FK_LIEU_PLANNING` FOREIGN KEY (`Id_Lieu`) REFERENCES `t_lieu` (`Id_Lieu`)
 ) ENGINE=InnoDB AUTO_INCREMENT=67777 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
-DROP TABLE IF EXISTS `t_lieu_tel_num`;
+DROP TABLE IF EXISTS `t_lieu_planning_audit`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `t_lieu_tel_num` (
-  `Id_Tel_Num` int NOT NULL AUTO_INCREMENT,
+CREATE TABLE `t_lieu_planning_audit` (
+  `Id_Audit` int NOT NULL AUTO_INCREMENT,
+  `Id_Lieu` int NOT NULL,
+  `Timestamp` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `Date_Heure_Debut_Changement` datetime DEFAULT NULL,
+  `Date_Heure_Fin_Changement` datetime DEFAULT NULL,
+  `Type` enum('PLAN_APPLY') NOT NULL,
+  `Planning_Regle_Id` int DEFAULT NULL,
+  `Consigne_Avant` float DEFAULT NULL,
+  `Tolerance_Surveillance_Sup_Avant` float DEFAULT NULL,
+  `Tolerance_Surveillance_Inf_Avant` float DEFAULT NULL,
+  `Consigne_Apres` float DEFAULT NULL,
+  `Tolerance_Surveillance_Sup_Apres` float DEFAULT NULL,
+  `Tolerance_Surveillance_Inf_Apres` float DEFAULT NULL,
+  PRIMARY KEY (`Id_Audit`),
+  KEY `IDX_t_lieu_planning_audit_Id_Lieu` (`Id_Lieu`),
+  KEY `IDX_t_lieu_planning_audit_Date_Heure_Debut_Changement` (`Date_Heure_Debut_Changement`),
+  KEY `IDX_t_lieu_planning_audit_Date_Heure_Fin_Changement` (`Date_Heure_Fin_Changement`),
+  KEY `IDX_t_lieu_planning_audit_Type` (`Type`),
+  KEY `IDX_t_lieu_planning_audit_Planning_Regle_Id` (`Planning_Regle_Id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+DROP TABLE IF EXISTS `t_lieu_mail_tel`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `t_lieu_mail_tel` (
+  `Id_Mail_Tel` int NOT NULL AUTO_INCREMENT,
   `Id_Lieu` int DEFAULT NULL,
-  `Numero_Ordre` int DEFAULT NULL,
+  `Ordre_Contact` int DEFAULT NULL,
   `Id_Utilisateur` int DEFAULT NULL,
   `Est_Via_Telephone` tinyint(1) DEFAULT NULL,
   `Est_Via_Email` tinyint(1) DEFAULT NULL,
-  PRIMARY KEY (`Id_Tel_Num`),
+  PRIMARY KEY (`Id_Mail_Tel`),
   KEY `IDX_Id_Lieu` (`Id_Lieu`),
   KEY `IDX_Id_Utilisateur` (`Id_Utilisateur`),
   CONSTRAINT `FK_LIEU_TEL_NUM` FOREIGN KEY (`Id_Lieu`) REFERENCES `t_lieu` (`Id_Lieu`)
-) ENGINE=InnoDB AUTO_INCREMENT=28817 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `t_module`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
@@ -717,6 +767,8 @@ CREATE TABLE `t_module` (
   `Emplacement` varchar(50) DEFAULT NULL,
   `Archive` tinyint DEFAULT '0',
   `Id_Worker` int DEFAULT '1',
+  `Est_Module_GSO` tinyint(1) NOT NULL DEFAULT '0',
+  `Port_Serie_Send_GSO` varchar(10) DEFAULT NULL,
   PRIMARY KEY (`Id_Module`),
   UNIQUE KEY `Identifiant_Module` (`Type_Module`,`Module_Numero_Serie`),
   KEY `IDX_Module_Numero_Serie` (`Module_Numero_Serie`),
@@ -902,6 +954,7 @@ CREATE TABLE `t_sonde` (
   `Est_Sonde_GSO` tinyint(1) NOT NULL DEFAULT '0',
   `Port_Serie` varchar(10) DEFAULT NULL,
   `Surveillance_Etat` varchar(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `Etat_Sonde` varchar(1) DEFAULT 'D',
   `Id_Module` int DEFAULT NULL,
   `Relai_1` varchar(50) DEFAULT NULL,
   `Relai_2` varchar(50) DEFAULT NULL,
@@ -912,12 +965,18 @@ CREATE TABLE `t_sonde` (
   `Est_Sonde_Reformee` tinyint(1) DEFAULT NULL,
   `Etat_Sonde_N1` varchar(1) DEFAULT NULL,
   `Id_Worker` int DEFAULT NULL,
+  `Id_Sonde_Etat` int DEFAULT NULL,
+  `Sonde_Offset` float NOT NULL DEFAULT '0',
+  `Metrologie_en_cours` tinyint(1) NOT NULL DEFAULT '0',
+  `Metrologie_cmd_envoyee` tinyint(1) NOT NULL DEFAULT '0',
   PRIMARY KEY (`Id_Sonde`),
   UNIQUE KEY `Numero_serie` (`Sonde_Numero_Serie`),
   KEY `IDX_Id_Module` (`Id_Module`),
   KEY `IDX_Adresse_Sonde` (`Adresse_Sonde`),
   KEY `IDX_Port_Serie` (`Port_Serie`),
   KEY `IDX_Surveillance_Etat` (`Surveillance_Etat`),
+  KEY `IDX_Etat_Sonde` (`Etat_Sonde`),
+  KEY `IDX_Id_Sonde_Etat` (`Id_Sonde_Etat`),
   CONSTRAINT `FK_SONDE_ETAT_SURVEILLANCE` FOREIGN KEY (`Surveillance_Etat`) REFERENCES `t_etat_surveillance` (`Surveillance_Etat`)
 ) ENGINE=InnoDB AUTO_INCREMENT=3771 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -982,7 +1041,7 @@ INSERT INTO `t_profil` (`Id_Profil`, `Profil_Utilisateur`, `Commentaire`, `Est_M
 (8,'ADMINistrateurs +','',0,0),
 (9,'Consultation + Acquittement + Desactivation','',0,0),
 (12,'Test ajout',NULL,0,0);
-INSERT INTO `t_etat_surveillance` VALUES (1,'C','En calibrage'),(2,'D','Surveillance desactivee'),(3,'E','En etalonnage'),(4,'S','Utilisee en surveillance'),(5,'T','En test');
+INSERT INTO `t_etat_surveillance` VALUES (1,'A','En ajustage'),(2,'D','Surveillance desactivee'),(3,'E','En etalonnage'),(4,'S','Utilisee en surveillance'),(5,'T','En test');
 INSERT INTO `t_sonde_type` (`Id_Sonde_Type`,`Sonde_Type`,`Libelle_Sonde_Type`,`Est_Gestion_Relais`,`Est_Double_Capteur`,`Famille_Sonde`) VALUES
 (1,'E','Sonde radio relais type E',1,0,'CLASSIC'),
 (2,'G','Sonde radio relais type G',1,0,'CLASSIC'),
@@ -1020,12 +1079,6 @@ INSERT INTO `t_sonde_type` (`Id_Sonde_Type`,`Sonde_Type`,`Libelle_Sonde_Type`,`E
 INSERT INTO `t_utilisateur` (Login, Mot_De_Passe, Est_Archive, Profil_Utilisateur, Est_Mot_De_Passe_Temporaire, Date_Creation, Date_Derniere_Modification_MDP) VALUES ('admin', '$2b$10$p794ptDulNuN5Md2j3Y6Ge2wEYRjaG3Er8CexJ8RkrD4er1A2AhXS', 0, 'Administrateurs', 1, NOW(), NOW());
 SET FOREIGN_KEY_CHECKS=1;
 
-
--- =====================================================================
--- Alignement seed <-> schema Prisma (compatibilite install recente)
--- Version safe MariaDB/MySQL (checks information_schema)
--- =====================================================================
-
 INSERT INTO `t_parametre` (`Section`, `Mot_Cle`, `Valeur`, `Commentaire`)
 VALUES ('dashboard', 'surveillance_refresh', '15', 'Delai auto de rafraichissement de la surveillance (secondes)')
 ON DUPLICATE KEY UPDATE
@@ -1049,1476 +1102,6 @@ VALUES ('notifications', 'alarm_email_recipients', '', 'Liste des destinataires 
 ON DUPLICATE KEY UPDATE
   `Valeur` = VALUES(`Valeur`),
   `Commentaire` = VALUES(`Commentaire`);
-
--- Migration legacy calibrage -> ajustage (table + colonnes)
-SET @has_t_calibrage := (
-  SELECT COUNT(*) FROM information_schema.tables
-  WHERE table_schema = DATABASE() AND table_name = 't_calibrage'
-);
-SET @has_t_ajustage := (
-  SELECT COUNT(*) FROM information_schema.tables
-  WHERE table_schema = DATABASE() AND table_name = 't_ajustage'
-);
-SET @sql := IF(@has_t_calibrage = 1 AND @has_t_ajustage = 0,
-  'RENAME TABLE `t_calibrage` TO `t_ajustage`',
-  'SELECT 1');
-PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-
-SET @has_col_old := (
-  SELECT COUNT(*) FROM information_schema.columns
-  WHERE table_schema = DATABASE() AND table_name = 't_ajustage' AND column_name = 'Id_Calibrage'
-);
-SET @has_col_new := (
-  SELECT COUNT(*) FROM information_schema.columns
-  WHERE table_schema = DATABASE() AND table_name = 't_ajustage' AND column_name = 'Id_Ajustage'
-);
-SET @sql := IF(@has_col_old = 1 AND @has_col_new = 0,
-  'ALTER TABLE `t_ajustage` CHANGE COLUMN `Id_Calibrage` `Id_Ajustage` INT NOT NULL AUTO_INCREMENT',
-  'SELECT 1');
-PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-
-SET @has_col_old := (
-  SELECT COUNT(*) FROM information_schema.columns
-  WHERE table_schema = DATABASE() AND table_name = 't_ajustage' AND column_name = 'Date_Heure_Calibrage'
-);
-SET @has_col_new := (
-  SELECT COUNT(*) FROM information_schema.columns
-  WHERE table_schema = DATABASE() AND table_name = 't_ajustage' AND column_name = 'Date_Heure_Ajustage'
-);
-SET @sql := IF(@has_col_old = 1 AND @has_col_new = 0,
-  'ALTER TABLE `t_ajustage` CHANGE COLUMN `Date_Heure_Calibrage` `Date_Heure_Ajustage` DATETIME NULL',
-  'SELECT 1');
-PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-
-SET @has_col_old := (
-  SELECT COUNT(*) FROM information_schema.columns
-  WHERE table_schema = DATABASE() AND table_name = 't_ajustage' AND column_name = 'Id_Bain'
-);
-SET @has_col_new := (
-  SELECT COUNT(*) FROM information_schema.columns
-  WHERE table_schema = DATABASE() AND table_name = 't_ajustage' AND column_name = 'Id_Milieu'
-);
-SET @sql := IF(@has_col_old = 1 AND @has_col_new = 0,
-  'ALTER TABLE `t_ajustage` CHANGE COLUMN `Id_Bain` `Id_Milieu` INT NULL',
-  'SELECT 1');
-PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-
-SET @has_idx := (
-  SELECT COUNT(*) FROM information_schema.statistics
-  WHERE table_schema = DATABASE() AND table_name = 't_ajustage' AND index_name = 'idx_ajustage_sonde_date'
-);
-SET @has_tbl := (
-  SELECT COUNT(*) FROM information_schema.tables
-  WHERE table_schema = DATABASE() AND table_name = 't_ajustage'
-);
-SET @sql := IF(@has_tbl = 1 AND @has_idx = 0,
-  'CREATE INDEX `idx_ajustage_sonde_date` ON `t_ajustage` (`Sonde_Numero_Serie`, `Date_Heure_Ajustage`)',
-  'SELECT 1');
-PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-
--- t_etalonnage
-SET @has_tbl := (SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 't_etalonnage');
-SET @has_col := (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 't_etalonnage' AND column_name = 'Duree_Validite_Jours');
-SET @sql := IF(@has_tbl = 1 AND @has_col = 0,
-  'ALTER TABLE `t_etalonnage` ADD COLUMN `Duree_Validite_Jours` INT NULL AFTER `Date_Validite`',
-  'SELECT 1');
-PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-SET @has_col := (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 't_etalonnage' AND column_name = 'Nom_Etalonnage');
-SET @sql := IF(@has_tbl = 1 AND @has_col = 0,
-  'ALTER TABLE `t_etalonnage` ADD COLUMN `Nom_Etalonnage` VARCHAR(255) NULL AFTER `Sonde_Numero_Serie`',
-  'SELECT 1');
-PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-SET @sql := IF(@has_tbl = 1,
-  'ALTER TABLE `t_etalonnage` MODIFY COLUMN `Incertitude` FLOAT NULL, MODIFY COLUMN `Err_Justesse` FLOAT NULL',
-  'SELECT 1');
-PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-
--- t_sonde_type
-SET @has_tbl := (SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 't_sonde_type');
-SET @has_col := (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 't_sonde_type' AND column_name = 'Est_Double_Capteur');
-SET @sql := IF(@has_tbl = 1 AND @has_col = 0,
-  'ALTER TABLE `t_sonde_type` ADD COLUMN `Est_Double_Capteur` TINYINT(1) NOT NULL DEFAULT 0 AFTER `Est_Gestion_Relais`',
-  'SELECT 1');
-PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-SET @has_col := (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 't_sonde_type' AND column_name = 'Famille_Sonde');
-SET @sql := IF(@has_tbl = 1 AND @has_col = 0,
-  'ALTER TABLE `t_sonde_type` ADD COLUMN `Famille_Sonde` VARCHAR(16) NOT NULL DEFAULT ''CLASSIC'' AFTER `Est_Double_Capteur`',
-  'SELECT 1');
-PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-
--- Compatibilite schema legacy: Id_Serveur devient Id_Worker pour l'affectation des workers.
--- Id_Serveur_BDD des tables mesures/journal reste volontairement inchange.
-SET @has_tbl := (SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 't_actionneur');
-SET @has_old := (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 't_actionneur' AND column_name = 'Id_Serveur');
-SET @has_new := (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 't_actionneur' AND column_name = 'Id_Worker');
-SET @sql := IF(@has_tbl = 1 AND @has_old = 1 AND @has_new = 0, 'ALTER TABLE `t_actionneur` CHANGE COLUMN `Id_Serveur` `Id_Worker` INT NULL DEFAULT 1', 'SELECT 1');
-PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-SET @has_old := (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 't_actionneur' AND column_name = 'Id_Serveur');
-SET @has_new := (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 't_actionneur' AND column_name = 'Id_Worker');
-SET @sql := IF(@has_tbl = 1 AND @has_old = 1 AND @has_new = 1, 'UPDATE `t_actionneur` SET `Id_Worker` = `Id_Serveur` WHERE `Id_Worker` IS NULL', 'SELECT 1');
-PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-
-SET @has_tbl := (SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 't_etalon');
-SET @has_old := (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 't_etalon' AND column_name = 'Id_Serveur');
-SET @has_new := (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 't_etalon' AND column_name = 'Id_Worker');
-SET @sql := IF(@has_tbl = 1 AND @has_old = 1 AND @has_new = 0, 'ALTER TABLE `t_etalon` CHANGE COLUMN `Id_Serveur` `Id_Worker` INT NULL DEFAULT 1', 'SELECT 1');
-PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-SET @has_old := (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 't_etalon' AND column_name = 'Id_Serveur');
-SET @has_new := (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 't_etalon' AND column_name = 'Id_Worker');
-SET @sql := IF(@has_tbl = 1 AND @has_old = 1 AND @has_new = 1, 'UPDATE `t_etalon` SET `Id_Worker` = `Id_Serveur` WHERE `Id_Worker` IS NULL', 'SELECT 1');
-PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-SET @sql := IF(@has_tbl = 1 AND (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 't_etalon' AND column_name = 'Coeff_A') = 0, 'ALTER TABLE `t_etalon` ADD COLUMN `Coeff_A` FLOAT NULL AFTER `Nb_Decimale`', 'SELECT 1');
-PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-SET @sql := IF(@has_tbl = 1 AND (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 't_etalon' AND column_name = 'Coeff_B') = 0, 'ALTER TABLE `t_etalon` ADD COLUMN `Coeff_B` FLOAT NULL AFTER `Coeff_A`', 'SELECT 1');
-PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-SET @sql := IF(@has_tbl = 1 AND (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 't_etalon' AND column_name = 'Coeff_C') = 0, 'ALTER TABLE `t_etalon` ADD COLUMN `Coeff_C` FLOAT NULL AFTER `Coeff_B`', 'SELECT 1');
-PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-SET @sql := IF(@has_tbl = 1 AND (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 't_etalon' AND column_name = 'Incertitude_Max') = 0, 'ALTER TABLE `t_etalon` ADD COLUMN `Incertitude_Max` FLOAT NULL AFTER `Coeff_C`', 'SELECT 1');
-PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-
--- t_etalon_type
-SET @has_tbl := (SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 't_etalon_type');
-SET @sql := IF(@has_tbl = 1, 'ALTER TABLE `t_etalon_type` MODIFY COLUMN `Type_Etalon` VARCHAR(4) NOT NULL', 'SELECT 1');
-PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-INSERT INTO `t_etalon_type` (`Type_Etalon`, `Nom`, `Descriptif`, `Est_Saisie_Module`, `Est_Sonde_Externe`, `Resolution`)
-SELECT 'SPET', 'Sonde etalon platine', 'Sonde etalon GSP platine', 1, 0, 0.02
-WHERE NOT EXISTS (
-  SELECT 1 FROM `t_etalon_type` WHERE `Type_Etalon` = 'SPET'
-);
-
-SET @has_tbl := (SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 't_module');
-SET @has_old := (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 't_module' AND column_name = 'Id_Serveur');
-SET @has_new := (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 't_module' AND column_name = 'Id_Worker');
-SET @sql := IF(@has_tbl = 1 AND @has_old = 1 AND @has_new = 0, 'ALTER TABLE `t_module` CHANGE COLUMN `Id_Serveur` `Id_Worker` INT NULL DEFAULT 1', 'SELECT 1');
-PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-SET @has_old := (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 't_module' AND column_name = 'Id_Serveur');
-SET @has_new := (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 't_module' AND column_name = 'Id_Worker');
-SET @sql := IF(@has_tbl = 1 AND @has_old = 1 AND @has_new = 1, 'UPDATE `t_module` SET `Id_Worker` = `Id_Serveur` WHERE `Id_Worker` IS NULL', 'SELECT 1');
-PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-
-SET @has_tbl := (SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 't_sonde');
-SET @has_old := (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 't_sonde' AND column_name = 'Id_Serveur');
-SET @has_new := (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 't_sonde' AND column_name = 'Id_Worker');
-SET @sql := IF(@has_tbl = 1 AND @has_old = 1 AND @has_new = 0, 'ALTER TABLE `t_sonde` CHANGE COLUMN `Id_Serveur` `Id_Worker` INT NULL DEFAULT NULL', 'SELECT 1');
-PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-SET @has_old := (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 't_sonde' AND column_name = 'Id_Serveur');
-SET @has_new := (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 't_sonde' AND column_name = 'Id_Worker');
-SET @sql := IF(@has_tbl = 1 AND @has_old = 1 AND @has_new = 1, 'UPDATE `t_sonde` SET `Id_Worker` = `Id_Serveur` WHERE `Id_Worker` IS NULL', 'SELECT 1');
-PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-
--- t_sonde
-SET @has_tbl := (SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 't_sonde');
-SET @has_col := (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 't_sonde' AND column_name = 'Sonde_Type');
-SET @sql := IF(@has_tbl = 1 AND @has_col = 0, 'ALTER TABLE `t_sonde` ADD COLUMN `Sonde_Type` VARCHAR(50) NULL AFTER `Sonde_Numero_Serie`', 'SELECT 1');
-PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-SET @has_col := (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 't_sonde' AND column_name = 'Est_Sonde_GSO');
-SET @sql := IF(@has_tbl = 1 AND @has_col = 0, 'ALTER TABLE `t_sonde` ADD COLUMN `Est_Sonde_GSO` TINYINT(1) NOT NULL DEFAULT 0 AFTER `Sonde_Numero_Serie`', 'SELECT 1');
-PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-SET @has_col := (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 't_sonde' AND column_name = 'Etat_Sonde');
-SET @sql := IF(@has_tbl = 1 AND @has_col = 0, 'ALTER TABLE `t_sonde` ADD COLUMN `Etat_Sonde` VARCHAR(1) NULL DEFAULT ''D'' AFTER `Port_Serie`', 'SELECT 1');
-PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-SET @has_col := (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 't_sonde' AND column_name = 'Id_Sonde_Etat');
-SET @sql := IF(@has_tbl = 1 AND @has_col = 0, 'ALTER TABLE `t_sonde` ADD COLUMN `Id_Sonde_Etat` INT NULL AFTER `Id_Worker`', 'SELECT 1');
-PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-SET @has_col := (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 't_sonde' AND column_name = 'Sonde_Offset');
-SET @sql := IF(@has_tbl = 1 AND @has_col = 0, 'ALTER TABLE `t_sonde` ADD COLUMN `Sonde_Offset` FLOAT NOT NULL DEFAULT 0 AFTER `Id_Sonde_Etat`', 'SELECT 1');
-PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-SET @has_col_etat := (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 't_sonde' AND column_name = 'Etat_Sonde');
-SET @has_col_surv := (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 't_sonde' AND column_name = 'Surveillance_Etat');
-SET @sql := IF(@has_tbl = 1 AND @has_col_etat = 1 AND @has_col_surv = 1,
-  'UPDATE `t_sonde` SET `Etat_Sonde` = COALESCE(`Etat_Sonde`, `Surveillance_Etat`, ''D'') WHERE `Etat_Sonde` IS NULL OR `Etat_Sonde` = ''''',
-  'SELECT 1');
-PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-SET @has_idx := (SELECT COUNT(*) FROM information_schema.statistics WHERE table_schema = DATABASE() AND table_name = 't_sonde' AND index_name = 'IDX_Etat_Sonde');
-SET @sql := IF(@has_tbl = 1 AND @has_idx = 0, 'CREATE INDEX `IDX_Etat_Sonde` ON `t_sonde` (`Etat_Sonde`)', 'SELECT 1');
-PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-SET @has_idx := (SELECT COUNT(*) FROM information_schema.statistics WHERE table_schema = DATABASE() AND table_name = 't_sonde' AND index_name = 'IDX_Id_Sonde_Etat');
-SET @sql := IF(@has_tbl = 1 AND @has_idx = 0, 'CREATE INDEX `IDX_Id_Sonde_Etat` ON `t_sonde` (`Id_Sonde_Etat`)', 'SELECT 1');
-PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-
-INSERT INTO `t_sonde_type` (`Id_Sonde_Type`,`Sonde_Type`,`Libelle_Sonde_Type`,`Est_Gestion_Relais`,`Est_Double_Capteur`,`Famille_Sonde`) VALUES
-(1,'E','Sonde radio relais type E',1,0,'CLASSIC'),
-(2,'G','Sonde radio relais type G',1,0,'CLASSIC'),
-(3,'H','Sonde radio relais type H',1,0,'CLASSIC'),
-(4,'I','Sonde radio de type I',0,0,'CLASSIC'),
-(5,'R','Sonde radio',0,0,'CLASSIC'),
-(6,'V','Sonde filaire',0,0,'CLASSIC'),
-(9,'SOIT','Gemsense One Temperature interne',0,0,'GSO'),
-(10,'SOIH','Gemsense One Temperature & humidite interne',0,1,'GSO'),
-(11,'SOET','Gemsense One Temperature externe',0,0,'GSO'),
-(12,'SOEH','Gemsense One Temperature & humidite externe',0,1,'GSO'),
-(13,'SPNB','Gemsense Pro Numerique blanc',0,0,'GSP'),
-(14,'SPNG','Gemsense Pro Numerique gris',0,0,'GSP'),
-(15,'SPPS','Gemsense Pro platine',0,0,'GSP'),
-(16,'SPAL','Gemsense Pro platine alimentaire',0,0,'GSP'),
-(17,'SPPC','Gemsense Pro platine contact',0,0,'GSP'),
-(18,'SPAU','Gemsense Pro platine autoclave',0,0,'GSP'),
-(19,'SPCF','Gemsense Pro platine chambre froide',0,0,'GSP'),
-(20,'SPMI','Gemsense Pro platine micro-capteur',0,0,'GSP'),
-(21,'SPCO','Gemsense Pro CO2',0,0,'GSP'),
-(22,'SPHY','Gemsense Pro hygrometrie',0,0,'GSP'),
-(23,'SPTH','Gemsense Pro thermocouple',0,0,'GSP'),
-(24,'SPDI','Gemsense Pro pression differentielle',0,0,'GSP'),
-(25,'SPAT','Gemsense Pro pression atmospherique',0,0,'GSP'),
-(26,'SPLU','Gemsense Pro lumiere',0,0,'GSP'),
-(27,'SP01','Gemsense Pro 0-1 Volt',0,0,'GSP'),
-(28,'SP42','Gemsense Pro 4-20 mA',0,0,'GSP'),
-(29,'SPOF','Gemsense Pro NO NF',0,0,'GSP'),
-(30,'SPXB','Gemsense Pro Ethernet numerique blanc',0,0,'GSP'),
-(31,'SPXG','Gemsense Pro Ethernet numerique gris',0,0,'GSP'),
-(32,'SPXP','Gemsense Pro Ethernet platine',0,0,'GSP'),
-(33,'SPFB','Gemsense Pro filaire numerique blanc',0,0,'GSP'),
-(34,'SPFG','Gemsense Pro filaire numerique gris',0,0,'GSP'),
-(35,'SPFP','Gemsense Pro filaire platine',0,0,'GSP')
-ON DUPLICATE KEY UPDATE
-  `Libelle_Sonde_Type` = VALUES(`Libelle_Sonde_Type`),
-  `Est_Gestion_Relais` = VALUES(`Est_Gestion_Relais`),
-  `Est_Double_Capteur` = VALUES(`Est_Double_Capteur`),
-  `Famille_Sonde` = VALUES(`Famille_Sonde`);
-
--- t_lieu
-SET @has_tbl := (SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 't_lieu');
-SET @has_col := (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 't_lieu' AND column_name = 'Nom_Lieu');
-SET @sql := IF(@has_tbl = 1 AND @has_col = 1, 'ALTER TABLE `t_lieu` MODIFY COLUMN `Nom_Lieu` VARCHAR(30) NULL', 'SELECT 1');
-PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-SET @has_col := (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 't_lieu' AND column_name = 'Derniere_Erreur_Justesse');
-SET @sql := IF(@has_tbl = 1 AND @has_col = 1, 'ALTER TABLE `t_lieu` MODIFY COLUMN `Derniere_Erreur_Justesse` FLOAT NULL', 'SELECT 1');
-PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-SET @has_col := (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 't_lieu' AND column_name = 'Derniere_Incertitude');
-SET @sql := IF(@has_tbl = 1 AND @has_col = 1, 'ALTER TABLE `t_lieu` MODIFY COLUMN `Derniere_Incertitude` FLOAT NULL', 'SELECT 1');
-PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-SET @has_col := (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 't_lieu' AND column_name = 'Adresse_Sonde');
-SET @sql := IF(@has_tbl = 1 AND @has_col = 0, 'ALTER TABLE `t_lieu` ADD COLUMN `Adresse_Sonde` VARCHAR(50) NULL AFTER `Sonde_Numero_Serie`', 'SELECT 1');
-PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-SET @has_col := (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 't_lieu' AND column_name = 'Observations_Info');
-SET @sql := IF(@has_tbl = 1 AND @has_col = 0, 'ALTER TABLE `t_lieu` ADD COLUMN `Observations_Info` TINYTEXT NULL AFTER `Consigne`', 'SELECT 1');
-PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-SET @has_col := (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 't_lieu' AND column_name = 'Tolerance_Surveillance_Sup');
-SET @sql := IF(@has_tbl = 1 AND @has_col = 0, 'ALTER TABLE `t_lieu` ADD COLUMN `Tolerance_Surveillance_Sup` FLOAT NULL AFTER `Consigne_Sup`', 'SELECT 1');
-PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-SET @has_col := (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 't_lieu' AND column_name = 'Tolerance_Surveillance_Inf');
-SET @sql := IF(@has_tbl = 1 AND @has_col = 0, 'ALTER TABLE `t_lieu` ADD COLUMN `Tolerance_Surveillance_Inf` FLOAT NULL AFTER `Consigne_Inf`', 'SELECT 1');
-PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-SET @has_col := (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 't_lieu' AND column_name = 'Commentaire');
-SET @sql := IF(@has_tbl = 1 AND @has_col = 0, 'ALTER TABLE `t_lieu` ADD COLUMN `Commentaire` VARCHAR(200) NULL AFTER `Notification_Active`', 'SELECT 1');
-PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-SET @has_col := (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 't_lieu' AND column_name = 'Infos_Modifiees_Depuis_Derniere_Mesure');
-SET @sql := IF(@has_tbl = 1 AND @has_col = 0, 'ALTER TABLE `t_lieu` ADD COLUMN `Infos_Modifiees_Depuis_Derniere_Mesure` TINYINT(1) NOT NULL DEFAULT 1 AFTER `Commentaire`', 'SELECT 1');
-PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-SET @has_col := (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 't_lieu' AND column_name = 'Date_Heure_Reactivation_Surveillance');
-SET @sql := IF(@has_tbl = 1 AND @has_col = 0, 'ALTER TABLE `t_lieu` ADD COLUMN `Date_Heure_Reactivation_Surveillance` DATETIME NULL AFTER `Date_Heure_Reactivation_Alarme`', 'SELECT 1');
-PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-SET @has_col := (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 't_lieu' AND column_name = 'Derniere_Val_Rssi');
-SET @sql := IF(@has_tbl = 1 AND @has_col = 0, 'ALTER TABLE `t_lieu` ADD COLUMN `Derniere_Val_Rssi` VARCHAR(10) NULL AFTER `Date_Heure_Reactivation_Surveillance`', 'SELECT 1');
-PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-SET @has_col := (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 't_lieu' AND column_name = 'Derniere_Val_Tension');
-SET @sql := IF(@has_tbl = 1 AND @has_col = 0, 'ALTER TABLE `t_lieu` ADD COLUMN `Derniere_Val_Tension` VARCHAR(10) NULL AFTER `Derniere_Val_Rssi`', 'SELECT 1');
-PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-SET @has_col := (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 't_lieu' AND column_name = 'Est_Lieu_GSO');
-SET @sql := IF(@has_tbl = 1 AND @has_col = 0, 'ALTER TABLE `t_lieu` ADD COLUMN `Est_Lieu_GSO` TINYINT(1) NULL DEFAULT 0 AFTER `Derniere_Val_Tension`', 'SELECT 1');
-PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-SET @has_col_adr_l := (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 't_lieu' AND column_name = 'Adresse_Sonde');
-SET @has_col_adr_s := (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 't_sonde' AND column_name = 'Adresse_Sonde');
-SET @sql := IF(@has_tbl = 1 AND @has_col_adr_l = 1 AND @has_col_adr_s = 1,
-  'UPDATE `t_lieu` l JOIN `t_sonde` s ON s.`Sonde_Numero_Serie` = l.`Sonde_Numero_Serie` SET l.`Adresse_Sonde` = s.`Adresse_Sonde` WHERE l.`Adresse_Sonde` IS NULL OR l.`Adresse_Sonde` = ''''',
-  'SELECT 1');
-PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-SET @has_idx := (SELECT COUNT(*) FROM information_schema.statistics WHERE table_schema = DATABASE() AND table_name = 't_lieu' AND index_name = 'idx_lieu_gso_etat');
-SET @sql := IF(@has_tbl = 1 AND @has_idx = 0, 'CREATE INDEX `idx_lieu_gso_etat` ON `t_lieu` (`Est_Lieu_GSO`, `Lieu_Etat`)', 'SELECT 1');
-PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-
-
--- =====================================================================
--- ALIGNEMENT SEED <-> SCHEMA PRISMA (Mise a jour 2026-02)
--- =====================================================================
-
--- t_autorisation: suppression anciens flags sectionnels
-SET @has_tbl := (SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 't_autorisation');
-SET @has_col := (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 't_autorisation' AND column_name = 'A_Acces_Admin');
-SET @sql := IF(@has_tbl = 1 AND @has_col = 1, 'ALTER TABLE `t_autorisation` DROP COLUMN `A_Acces_Admin`', 'SELECT 1');
-PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-SET @has_col := (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 't_autorisation' AND column_name = 'A_Acces_Metrologie');
-SET @sql := IF(@has_tbl = 1 AND @has_col = 1, 'ALTER TABLE `t_autorisation` DROP COLUMN `A_Acces_Metrologie`', 'SELECT 1');
-PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-SET @has_col := (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 't_autorisation' AND column_name = 'A_Acces_Surveillance');
-SET @sql := IF(@has_tbl = 1 AND @has_col = 1, 'ALTER TABLE `t_autorisation` DROP COLUMN `A_Acces_Surveillance`', 'SELECT 1');
-PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-SET @has_col := (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 't_autorisation' AND column_name = 'A_Acces_VigiLog');
-SET @sql := IF(@has_tbl = 1 AND @has_col = 1, 'ALTER TABLE `t_autorisation` DROP COLUMN `A_Acces_VigiLog`', 'SELECT 1');
-PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-
--- t_lieu: nouveaux champs + nettoyage anciens champs
-SET @has_tbl := (SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 't_lieu');
-SET @has_col := (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 't_lieu' AND column_name = 'Consigne_Base');
-SET @sql := IF(@has_tbl = 1 AND @has_col = 0, 'ALTER TABLE `t_lieu` ADD COLUMN `Consigne_Base` FLOAT NULL AFTER `Consigne`', 'SELECT 1');
-PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-SET @has_col := (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 't_lieu' AND column_name = 'Consigne_Sup_Base');
-SET @sql := IF(@has_tbl = 1 AND @has_col = 0, 'ALTER TABLE `t_lieu` ADD COLUMN `Consigne_Sup_Base` FLOAT NULL AFTER `Consigne_Sup`', 'SELECT 1');
-PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-SET @has_col := (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 't_lieu' AND column_name = 'Consigne_Inf_Base');
-SET @sql := IF(@has_tbl = 1 AND @has_col = 0, 'ALTER TABLE `t_lieu` ADD COLUMN `Consigne_Inf_Base` FLOAT NULL AFTER `Consigne_Inf`', 'SELECT 1');
-PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-SET @has_col := (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 't_lieu' AND column_name = 'Tolerance_Surveillance_Sup_Base');
-SET @sql := IF(@has_tbl = 1 AND @has_col = 0, 'ALTER TABLE `t_lieu` ADD COLUMN `Tolerance_Surveillance_Sup_Base` FLOAT NULL AFTER `Tolerance_Surveillance_Sup`', 'SELECT 1');
-PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-SET @has_col := (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 't_lieu' AND column_name = 'Tolerance_Surveillance_Inf_Base');
-SET @sql := IF(@has_tbl = 1 AND @has_col = 0, 'ALTER TABLE `t_lieu` ADD COLUMN `Tolerance_Surveillance_Inf_Base` FLOAT NULL AFTER `Tolerance_Surveillance_Inf`', 'SELECT 1');
-PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-SET @has_col := (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 't_lieu' AND column_name = 'Planning_Actif');
-SET @sql := IF(@has_tbl = 1 AND @has_col = 0, 'ALTER TABLE `t_lieu` ADD COLUMN `Planning_Actif` TINYINT(1) NOT NULL DEFAULT 0 AFTER `Est_Lieu_GSO`', 'SELECT 1');
-PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-SET @has_col := (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 't_lieu' AND column_name = 'Planning_Regle_Existe');
-SET @sql := IF(@has_tbl = 1 AND @has_col = 0, 'ALTER TABLE `t_lieu` ADD COLUMN `Planning_Regle_Existe` TINYINT(1) NOT NULL DEFAULT 0 AFTER `Planning_Actif`', 'SELECT 1');
-PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-SET @has_col := (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 't_lieu' AND column_name = 'Planning_Source_Regle_Id');
-SET @sql := IF(@has_tbl = 1 AND @has_col = 0, 'ALTER TABLE `t_lieu` ADD COLUMN `Planning_Source_Regle_Id` INT NULL AFTER `Planning_Regle_Existe`', 'SELECT 1');
-PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-SET @has_col := (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 't_lieu' AND column_name = 'Planning_Derniere_Maj');
-SET @sql := IF(@has_tbl = 1 AND @has_col = 0, 'ALTER TABLE `t_lieu` ADD COLUMN `Planning_Derniere_Maj` DATETIME NULL AFTER `Planning_Source_Regle_Id`', 'SELECT 1');
-PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-SET @has_col := (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 't_lieu' AND column_name = 'Est_Redeclenchement_Immediat');
-SET @sql := IF(@has_tbl = 1 AND @has_col = 0, 'ALTER TABLE `t_lieu` ADD COLUMN `Est_Redeclenchement_Immediat` TINYINT(1) NOT NULL DEFAULT 0 AFTER `Planning_Derniere_Maj`', 'SELECT 1');
-PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-SET @has_col := (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 't_lieu' AND column_name = 'Nb_Mesures_Temporisation_Redeclenchement');
-SET @sql := IF(@has_tbl = 1 AND @has_col = 0, 'ALTER TABLE `t_lieu` ADD COLUMN `Nb_Mesures_Temporisation_Redeclenchement` INT NULL DEFAULT 0 AFTER `Est_Redeclenchement_Immediat`', 'SELECT 1');
-PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-SET @has_col := (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 't_lieu' AND column_name = 'Surveillance_Etat');
-SET @sql := IF(@has_tbl = 1 AND @has_col = 1, 'ALTER TABLE `t_lieu` DROP COLUMN `Surveillance_Etat`', 'SELECT 1');
-PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-SET @has_col := (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 't_lieu' AND column_name = 'Consigne_Sup_Corrigee');
-SET @sql := IF(@has_tbl = 1 AND @has_col = 1, 'ALTER TABLE `t_lieu` DROP COLUMN `Consigne_Sup_Corrigee`', 'SELECT 1');
-PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-SET @has_col := (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 't_lieu' AND column_name = 'Consigne_Inf_Corrigee');
-SET @sql := IF(@has_tbl = 1 AND @has_col = 1, 'ALTER TABLE `t_lieu` DROP COLUMN `Consigne_Inf_Corrigee`', 'SELECT 1');
-PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-SET @has_col := (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 't_lieu' AND column_name = 'Planning_Regle_Existe');
-SET @sql := IF(@has_tbl = 1 AND @has_col = 1, 'UPDATE `t_lieu` l SET `Planning_Regle_Existe` = EXISTS (SELECT 1 FROM `t_lieu_planning_regle` r WHERE r.`Id_Lieu` = l.`Id_Lieu`)', 'SELECT 1');
-PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-
--- t_module
-SET @has_tbl := (SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 't_module');
-SET @has_col := (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 't_module' AND column_name = 'Est_Module_GSO');
-SET @sql := IF(@has_tbl = 1 AND @has_col = 0, 'ALTER TABLE `t_module` ADD COLUMN `Est_Module_GSO` TINYINT(1) NOT NULL DEFAULT 0 AFTER `Id_Worker`', 'SELECT 1');
-PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-SET @has_col := (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 't_module' AND column_name = 'Port_Serie_Send_GSO');
-SET @sql := IF(@has_tbl = 1 AND @has_col = 0, 'ALTER TABLE `t_module` ADD COLUMN `Port_Serie_Send_GSO` VARCHAR(10) NULL AFTER `Est_Module_GSO`', 'SELECT 1');
-PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-
--- t_parametre
-SET @has_tbl := (SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 't_parametre');
-SET @has_col := (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 't_parametre' AND column_name = 'Champ_DATETIME');
-SET @sql := IF(@has_tbl = 1 AND @has_col = 0, 'ALTER TABLE `t_parametre` ADD COLUMN `Champ_DATETIME` DATETIME NULL AFTER `Commentaire`', 'SELECT 1');
-PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-
--- t_utilisateur
-SET @has_tbl := (SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 't_utilisateur');
-SET @has_col := (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 't_utilisateur' AND column_name = 'Avatar_Utilisateur');
-SET @sql := IF(@has_tbl = 1 AND @has_col = 0, 'ALTER TABLE `t_utilisateur` ADD COLUMN `Avatar_Utilisateur` VARCHAR(512) NULL AFTER `Est_Mot_De_Passe_Temporaire`', 'SELECT 1');
-PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-
--- t_lieu_mail_tel (rename depuis t_lieu_tel_num si necessaire)
-SET @has_old := (SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 't_lieu_tel_num');
-SET @has_new := (SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 't_lieu_mail_tel');
-SET @sql := IF(@has_old = 1 AND @has_new = 0, 'RENAME TABLE `t_lieu_tel_num` TO `t_lieu_mail_tel`', 'SELECT 1');
-PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-SET @has_new := (SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 't_lieu_mail_tel');
-SET @sql := IF(@has_new = 0,
-  'CREATE TABLE `t_lieu_mail_tel` (\
-    `Id_Mail_Tel` INT NOT NULL AUTO_INCREMENT,\
-    `Id_Lieu` INT NULL,\
-    `Ordre_Contact` INT NULL,\
-    `Id_Utilisateur` INT NULL,\
-    `Est_Via_Telephone` TINYINT(1) NULL,\
-    `Est_Via_Email` TINYINT(1) NULL,\
-    PRIMARY KEY (`Id_Mail_Tel`),\
-    KEY `IDX_Id_Lieu` (`Id_Lieu`),\
-    KEY `IDX_Id_Utilisateur` (`Id_Utilisateur`),\
-    CONSTRAINT `FK_LIEU_TEL_NUM` FOREIGN KEY (`Id_Lieu`) REFERENCES `t_lieu` (`Id_Lieu`)\
-  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4',
-  'SELECT 1');
-PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-SET @has_col := (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 't_lieu_mail_tel' AND column_name = 'Id_Tel_Num');
-SET @sql := IF(@has_new = 1 AND @has_col = 1, 'ALTER TABLE `t_lieu_mail_tel` CHANGE COLUMN `Id_Tel_Num` `Id_Mail_Tel` INT NOT NULL AUTO_INCREMENT', 'SELECT 1');
-PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-SET @has_col := (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 't_lieu_mail_tel' AND column_name = 'Numero_Ordre');
-SET @sql := IF(@has_new = 1 AND @has_col = 1, 'ALTER TABLE `t_lieu_mail_tel` CHANGE COLUMN `Numero_Ordre` `Ordre_Contact` INT NULL', 'SELECT 1');
-PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-SET @has_col := (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 't_lieu_mail_tel' AND column_name = 'Id_Utilisation');
-SET @sql := IF(@has_new = 1 AND @has_col = 1, 'ALTER TABLE `t_lieu_mail_tel` CHANGE COLUMN `Id_Utilisation` `Id_Utilisateur` INT NULL', 'SELECT 1');
-PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-SET @has_col := (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 't_lieu_mail_tel' AND column_name = 'Est_Via_Mail');
-SET @sql := IF(@has_new = 1 AND @has_col = 1, 'ALTER TABLE `t_lieu_mail_tel` CHANGE COLUMN `Est_Via_Mail` `Est_Via_Email` TINYINT(1) NULL', 'SELECT 1');
-PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-
--- t_ajustage / t_milieu (legacy t_calibrage / t_bain)
-SET @has_old := (SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 't_calibrage');
-SET @has_new := (SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 't_ajustage');
-SET @sql := IF(@has_old = 1 AND @has_new = 0, 'RENAME TABLE `t_calibrage` TO `t_ajustage`', 'SELECT 1');
-PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-SET @has_old := (SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'tm_mesure_calibrage');
-SET @has_new := (SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'tm_mesures_ajustage');
-SET @sql := IF(@has_old = 1 AND @has_new = 0, 'RENAME TABLE `tm_mesure_calibrage` TO `tm_mesures_ajustage`', 'SELECT 1');
-PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-SET @has_old := (SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'tm_mesure_calibrage_etalon');
-SET @has_new := (SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'tm_mesures_ajustage_etalon');
-SET @sql := IF(@has_old = 1 AND @has_new = 0, 'RENAME TABLE `tm_mesure_calibrage_etalon` TO `tm_mesures_ajustage_etalon`', 'SELECT 1');
-PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-SET @has_old := (SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'tm_mesure_etalonnage');
-SET @has_new := (SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'tm_mesures_etalonnage');
-SET @sql := IF(@has_old = 1 AND @has_new = 0, 'RENAME TABLE `tm_mesure_etalonnage` TO `tm_mesures_etalonnage`', 'SELECT 1');
-PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-SET @has_new := (SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 't_ajustage');
-SET @sql := IF(@has_new = 0,
-  'CREATE TABLE `t_ajustage` (\
-    `Id_Ajustage` INT NOT NULL AUTO_INCREMENT,\
-    `Date_Heure_Ajustage` DATETIME NULL,\
-    `Sonde_Numero_Serie` VARCHAR(50) NULL,\
-    `Coeff_X2` FLOAT NULL DEFAULT 0,\
-    `Coeff_X` FLOAT NULL,\
-    `Coeff_Constant` FLOAT NULL,\
-    `Unite` VARCHAR(10) NULL,\
-    `Nb_Decimale` INT NULL,\
-    `Operateur` VARCHAR(255) NULL,\
-    `SE_Numero` VARCHAR(50) NULL,\
-    `SE_Organisme` VARCHAR(50) NULL,\
-    `SE_Date_Certif` DATE NULL,\
-    `SE_Numero_Certif` VARCHAR(50) NULL,\
-    `Mesure_Etalon1` FLOAT NULL,\
-    `Mesure_Etalon2` FLOAT NULL,\
-    `Valeur_Brute1` FLOAT NULL,\
-    `Valeur_Brute2` FLOAT NULL,\
-    `Ancienne_Mesure1` FLOAT NULL,\
-    `Ancienne_Mesure2` FLOAT NULL,\
-    `Nouvelle_Mesure1` FLOAT NULL,\
-    `Nouvelle_Mesure2` FLOAT NULL,\
-    `Id_Milieu` INT NULL,\
-    PRIMARY KEY (`Id_Ajustage`),\
-    KEY `IDX_Sonde_Numero_Serie` (`Sonde_Numero_Serie`),\
-    KEY `IDX_SE_Numero` (`SE_Numero`),\
-    KEY `IDX_Date_Heure_Calibrage` (`Date_Heure_Ajustage`),\
-    KEY `IDX_Id_Bain` (`Id_Milieu`),\
-    KEY `idx_ajustage_sonde_date` (`Sonde_Numero_Serie`, `Date_Heure_Ajustage`)\
-  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4',
-  'SELECT 1');
-PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-SET @has_old := (SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 't_bain');
-SET @has_new := (SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 't_milieu_inter');
-SET @sql := IF(@has_old = 1 AND @has_new = 0, 'RENAME TABLE `t_bain` TO `t_milieu_inter`', 'SELECT 1');
-PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-SET @has_old := (SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 't_milieu');
-SET @has_new := (SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 't_milieu_inter');
-SET @sql := IF(@has_old = 1 AND @has_new = 0, 'RENAME TABLE `t_milieu` TO `t_milieu_inter`', 'SELECT 1');
-PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-SET @has_new := (SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 't_milieu_inter');
-SET @sql := IF(@has_new = 0,
-  'CREATE TABLE `t_milieu_inter` (\
-    `Id_Milieu` INT NOT NULL AUTO_INCREMENT,\
-    `Model` VARCHAR(50) NULL,\
-    `Reference` VARCHAR(50) NULL,\
-    `Stabilite` FLOAT NULL,\
-    `Homogeneite` FLOAT NULL,\
-    `Contenu` VARCHAR(50) NULL,\
-    `Est_Reserve_MC2` TINYINT(1) NULL DEFAULT 0,\
-    `Est_Archive` TINYINT(1) NULL DEFAULT 0,\
-    PRIMARY KEY (`Id_Milieu`),\
-    KEY `IDX_Model` (`Model`),\
-    KEY `IDX_Reference` (`Reference`)\
-  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4',
-  'SELECT 1');
-PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-
--- t_sonde_etat
-SET @has_tbl := (SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 't_sonde_etat');
-SET @sql := IF(@has_tbl = 0,
-  'CREATE TABLE `t_sonde_etat` (\
-    `Id_Sonde_Etat` INT NOT NULL AUTO_INCREMENT,\
-    `Etat_Sonde` VARCHAR(1) NULL,\
-    `Etat_Libelle` VARCHAR(50) NULL,\
-    PRIMARY KEY (`Id_Sonde_Etat`),\
-    UNIQUE KEY `Etat_Sonde` (`Etat_Sonde`)\
-  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4',
-  'SELECT 1');
-PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-INSERT INTO `t_sonde_etat` (`Etat_Sonde`,`Etat_Libelle`)
-SELECT 'D','DESACTIVE' FROM DUAL
-WHERE NOT EXISTS (SELECT 1 FROM `t_sonde_etat` WHERE `Etat_Sonde`='D');
-INSERT INTO `t_sonde_etat` (`Etat_Sonde`,`Etat_Libelle`)
-SELECT 'S','SURVEILLANCE ACTIVE' FROM DUAL
-WHERE NOT EXISTS (SELECT 1 FROM `t_sonde_etat` WHERE `Etat_Sonde`='S');
-
--- tables notifications
-SET @has_tbl := (SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 't_notification');
-SET @sql := IF(@has_tbl = 0,
-  'CREATE TABLE `t_notification` (\
-    `Id_Notification` INT NOT NULL AUTO_INCREMENT,\
-    `Type` VARCHAR(32) NOT NULL,\
-    `Id_Alarme` INT NULL,\
-    `Titre` VARCHAR(128) NULL,\
-    `Message` VARCHAR(512) NOT NULL,\
-    `Payload_Json` LONGTEXT NULL,\
-    `Priorite` INT NULL DEFAULT 0,\
-    `Date_Creation` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,\
-    `Est_Archive` TINYINT(1) NOT NULL DEFAULT 0,\
-    PRIMARY KEY (`Id_Notification`),\
-    KEY `IDX_Id_Alarme_Notification` (`Id_Alarme`),\
-    KEY `IDX_Date_Creation_Notification` (`Date_Creation`),\
-    CONSTRAINT `FK_ALARME_NOTIFICATION` FOREIGN KEY (`Id_Alarme`) REFERENCES `t_alarme` (`Id_Alarme`)\
-  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4',
-  'SELECT 1');
-PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-SET @has_tbl := (SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 't_notification_delivery');
-SET @sql := IF(@has_tbl = 0,
-  'CREATE TABLE `t_notification_delivery` (\
-    `Id_Delivery` INT NOT NULL AUTO_INCREMENT,\
-    `Id_Notification` INT NOT NULL,\
-    `Id_Poste` INT NOT NULL,\
-    `Id_Utilisateur` INT NULL,\
-    `Statut` VARCHAR(32) NOT NULL,\
-    `Nb_Tentatives` INT NOT NULL DEFAULT 0,\
-    `Derniere_Erreur` VARCHAR(255) NULL,\
-    `Date_Queue` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,\
-    `Date_Envoi` DATETIME NULL,\
-    `Date_Ack_Agent` DATETIME NULL,\
-    `Date_Dernier_Event` DATETIME NULL,\
-    `Correlation_Id` VARCHAR(64) NULL,\
-    PRIMARY KEY (`Id_Delivery`),\
-    UNIQUE KEY `UK_NOTIFICATION_POSTE` (`Id_Notification`,`Id_Poste`),\
-    KEY `IDX_STATUT_DELIVERY` (`Statut`),\
-    KEY `IDX_Date_Envoi_Delivery` (`Date_Envoi`),\
-    CONSTRAINT `FK_NOTIFICATION_DELIVERY` FOREIGN KEY (`Id_Notification`) REFERENCES `t_notification` (`Id_Notification`) ON DELETE CASCADE,\
-    CONSTRAINT `FK_POSTE_DELIVERY` FOREIGN KEY (`Id_Poste`) REFERENCES `t_postes_clients` (`Id_Poste`) ON DELETE CASCADE,\
-    CONSTRAINT `FK_UTILISATEUR_DELIVERY` FOREIGN KEY (`Id_Utilisateur`) REFERENCES `t_utilisateur` (`Id_Utilisateur`)\
-  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4',
-  'SELECT 1');
-PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-SET @has_tbl := (SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 't_notification_event');
-SET @sql := IF(@has_tbl = 0,
-  'CREATE TABLE `t_notification_event` (\
-    `Id_Event` INT NOT NULL AUTO_INCREMENT,\
-    `Id_Delivery` INT NOT NULL,\
-    `Event_Type` VARCHAR(32) NOT NULL,\
-    `Event_Data` LONGTEXT NULL,\
-    `Date_Event` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,\
-    PRIMARY KEY (`Id_Event`),\
-    KEY `IDX_Id_Delivery_Event` (`Id_Delivery`),\
-    KEY `IDX_Date_Event` (`Date_Event`),\
-    CONSTRAINT `FK_DELIVERY_EVENT` FOREIGN KEY (`Id_Delivery`) REFERENCES `t_notification_delivery` (`Id_Delivery`) ON DELETE CASCADE\
-  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4',
-  'SELECT 1');
-PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-
--- t_vigilog_usage_ponctuel
-SET @has_tbl := (SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 't_vigilog_usage_ponctuel');
-SET @sql := IF(@has_tbl = 0,
-  'CREATE TABLE `t_vigilog_usage_ponctuel` (\
-    `Id_VigiLog_Usage_Ponctuel` INT NOT NULL AUTO_INCREMENT,\
-    `Reference_Usage` VARCHAR(50) NOT NULL,\
-    `Id_VigiLog_Configuration` INT NULL,\
-    `Id_VigiLog` INT NULL,\
-    `Nom_Configuration` VARCHAR(100) NOT NULL,\
-    `Numero_Serie_VigiLog` VARCHAR(30) NOT NULL,\
-    `Nom_Lieu_Temporaire` VARCHAR(120) NOT NULL,\
-    `Statut` VARCHAR(30) NOT NULL,\
-    `Id_Utilisateur_Demarrage` INT NOT NULL,\
-    `Date_Heure_Demarrage` DATETIME NOT NULL,\
-    `Commentaire_Demarrage` TEXT NULL,\
-    `Id_Utilisateur_Arret` INT NULL,\
-    `Date_Heure_Arret` DATETIME NULL,\
-    `Commentaire_Arret` TEXT NULL,\
-    `Date_Heure_Creation` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,\
-    `Date_Heure_Maj` DATETIME NULL,\
-    PRIMARY KEY (`Id_VigiLog_Usage_Ponctuel`),\
-    UNIQUE KEY `UK_t_vigilog_usage_ponctuel_reference` (`Reference_Usage`),\
-    KEY `IDX_t_vigilog_usage_ponctuel_statut` (`Statut`),\
-    KEY `IDX_t_vigilog_usage_ponctuel_logger` (`Numero_Serie_VigiLog`),\
-    KEY `IDX_t_vigilog_usage_ponctuel_started_by` (`Id_Utilisateur_Demarrage`),\
-    KEY `IDX_t_vigilog_usage_ponctuel_stopped_by` (`Id_Utilisateur_Arret`),\
-    CONSTRAINT `FK_t_vigilog_usage_ponctuel_configuration` FOREIGN KEY (`Id_VigiLog_Configuration`) REFERENCES `t_vigilog_configuration` (`Id_VigiLog_Configuration`),\
-    CONSTRAINT `FK_t_vigilog_usage_ponctuel_logger` FOREIGN KEY (`Id_VigiLog`) REFERENCES `t_vigilog` (`Id_VigiLog`),\
-    CONSTRAINT `FK_t_vigilog_usage_ponctuel_user_start` FOREIGN KEY (`Id_Utilisateur_Demarrage`) REFERENCES `t_utilisateur` (`Id_Utilisateur`),\
-    CONSTRAINT `FK_t_vigilog_usage_ponctuel_user_stop` FOREIGN KEY (`Id_Utilisateur_Arret`) REFERENCES `t_utilisateur` (`Id_Utilisateur`)\
-  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4',
-  'SELECT 1');
-PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-
--- planning
-SET @has_tbl := (SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 't_lieu_planning_regle');
-SET @sql := IF(@has_tbl = 0,
-  'CREATE TABLE `t_lieu_planning_regle` (\
-    `Id_Regle` INT NOT NULL AUTO_INCREMENT,\
-    `Id_Lieu` INT NOT NULL,\
-    `Actif` TINYINT(1) NOT NULL DEFAULT 1,\
-    `Jour_Debut` TINYINT NOT NULL,\
-    `Heure_Debut` TIME NOT NULL,\
-    `Jour_Fin` TINYINT NOT NULL,\
-    `Heure_Fin` TIME NOT NULL,\
-    `Consigne` FLOAT NULL,\
-    `Consigne_Sup` FLOAT NULL,\
-    `Consigne_Inf` FLOAT NULL,\
-    `Priorite` INT NOT NULL DEFAULT 0,\
-    `Tolerance_Sup_Calc` FLOAT NULL,\
-    `Tolerance_Inf_Calc` FLOAT NULL,\
-    `Date_Creation` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,\
-    `Date_Maj` DATETIME NULL,\
-    PRIMARY KEY (`Id_Regle`),\
-    KEY `IDX_Actif_Lieu` (`Actif`,`Id_Lieu`),\
-    KEY `IDX_Id_Lieu` (`Id_Lieu`),\
-    CONSTRAINT `FK_PLANNING_REGLE_LIEU` FOREIGN KEY (`Id_Lieu`) REFERENCES `t_lieu` (`Id_Lieu`) ON DELETE CASCADE\
-  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4',
-  'SELECT 1');
-PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-SET @has_tbl := (SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 't_lieu_planning_audit');
-SET @sql := IF(@has_tbl = 0,
-  'CREATE TABLE `t_lieu_planning_audit` (\
-    `Id_Audit` INT NOT NULL AUTO_INCREMENT,\
-    `Id_Lieu` INT NOT NULL,\
-    `Timestamp` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,\
-    `Date_Heure_Debut_Changement` DATETIME NULL,\
-    `Date_Heure_Fin_Changement` DATETIME NULL,\
-    `Type` ENUM(''PLAN_APPLY'') NOT NULL,\
-    `Planning_Regle_Id` INT NULL,\
-    `Consigne_Avant` FLOAT NULL,\
-    `Tolerance_Surveillance_Sup_Avant` FLOAT NULL,\
-    `Tolerance_Surveillance_Inf_Avant` FLOAT NULL,\
-    `Consigne_Apres` FLOAT NULL,\
-    `Tolerance_Surveillance_Sup_Apres` FLOAT NULL,\
-    `Tolerance_Surveillance_Inf_Apres` FLOAT NULL,\
-    PRIMARY KEY (`Id_Audit`),\
-    KEY `IDX_Id_Lieu_Timestamp` (`Id_Lieu`,`Timestamp`)\
-  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4',
-  'SELECT 1');
-PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-
-
-
--- event planning consignes
-DROP EVENT IF EXISTS `EVT_PLANNING_CONSIGNE`;
-DELIMITER $$
-CREATE DEFINER=`root`@`%` EVENT `EVT_PLANNING_CONSIGNE`
-ON SCHEDULE EVERY 1 MINUTE
-STARTS CURRENT_TIMESTAMP
-ON COMPLETION NOT PRESERVE ENABLE
-COMMENT 'Applique les regles de planning de consignes chaque minute'
-DO
-BEGIN
-  DECLARE v_now_day TINYINT;
-  DECLARE v_now_time TIME;
-
-  SET v_now_day = IF(DAYOFWEEK(NOW()) = 1, 7, DAYOFWEEK(NOW()) - 1);
-  SET v_now_time = TIME(NOW());
-
-  DROP TEMPORARY TABLE IF EXISTS tmp_planning_best;
-  CREATE TEMPORARY TABLE tmp_planning_best AS
-  SELECT r.Id_Lieu,
-         r.Id_Regle,
-         r.Consigne,
-         r.Tolerance_Sup_Calc,
-         r.Tolerance_Inf_Calc,
-         r.Retard_Alarme_Changement_Consigne
-  FROM t_lieu_planning_regle r
-  INNER JOIN (
-    SELECT Id_Lieu, MAX(Priorite) AS max_prio
-    FROM t_lieu_planning_regle
-    WHERE Actif = 1
-      AND (
-        (Jour_Debut = Jour_Fin AND
-          v_now_day = Jour_Debut AND
-          v_now_time >= Heure_Debut AND
-          v_now_time <  Heure_Fin)
-        OR
-        (Jour_Debut < Jour_Fin AND (
-          (v_now_day > Jour_Debut AND v_now_day < Jour_Fin)
-          OR (v_now_day = Jour_Debut AND v_now_time >= Heure_Debut)
-          OR (v_now_day = Jour_Fin   AND v_now_time <  Heure_Fin)
-        ))
-        OR
-        (Jour_Debut > Jour_Fin AND (
-          (v_now_day = Jour_Debut AND v_now_time >= Heure_Debut)
-          OR (v_now_day = Jour_Fin   AND v_now_time <  Heure_Fin)
-          OR (v_now_day > Jour_Debut)
-          OR (v_now_day < Jour_Fin)
-        ))
-      )
-    GROUP BY Id_Lieu
-  ) best_prio ON best_prio.Id_Lieu = r.Id_Lieu AND best_prio.max_prio = r.Priorite
-  WHERE r.Actif = 1
-    AND (
-      (r.Jour_Debut = r.Jour_Fin AND
-        v_now_day = r.Jour_Debut AND
-        v_now_time >= r.Heure_Debut AND
-        v_now_time <  r.Heure_Fin)
-      OR
-      (r.Jour_Debut < r.Jour_Fin AND (
-        (v_now_day > r.Jour_Debut AND v_now_day < r.Jour_Fin)
-        OR (v_now_day = r.Jour_Debut AND v_now_time >= r.Heure_Debut)
-        OR (v_now_day = r.Jour_Fin   AND v_now_time <  r.Heure_Fin)
-      ))
-      OR
-      (r.Jour_Debut > r.Jour_Fin AND (
-        (v_now_day = r.Jour_Debut AND v_now_time >= r.Heure_Debut)
-        OR (v_now_day = r.Jour_Fin   AND v_now_time <  r.Heure_Fin)
-        OR (v_now_day > r.Jour_Debut)
-        OR (v_now_day < r.Jour_Fin)
-      ))
-    );
-
-  DROP TEMPORARY TABLE IF EXISTS tmp_planning_apply;
-  CREATE TEMPORARY TABLE tmp_planning_apply AS
-  SELECT l.Id_Lieu,
-         best.Id_Regle AS Planning_Regle_Id,
-         l.Consigne AS Consigne_Avant,
-         l.Tolerance_Surveillance_Sup AS Tolerance_Surveillance_Sup_Avant,
-         l.Tolerance_Surveillance_Inf AS Tolerance_Surveillance_Inf_Avant,
-         best.Consigne AS Consigne_Apres,
-         best.Tolerance_Sup_Calc AS Tolerance_Surveillance_Sup_Apres,
-         best.Tolerance_Inf_Calc AS Tolerance_Surveillance_Inf_Apres,
-         best.Retard_Alarme_Changement_Consigne
-  FROM t_lieu l
-  INNER JOIN tmp_planning_best best ON best.Id_Lieu = l.Id_Lieu
-  WHERE l.Planning_Source_Regle_Id <> best.Id_Regle
-     OR l.Planning_Source_Regle_Id IS NULL
-     OR l.Planning_Actif = 0
-     OR IFNULL(l.Consigne, -999999) <> IFNULL(best.Consigne, -999999)
-     OR IFNULL(l.Tolerance_Surveillance_Sup, -999999) <> IFNULL(best.Tolerance_Sup_Calc, -999999)
-     OR IFNULL(l.Tolerance_Surveillance_Inf, -999999) <> IFNULL(best.Tolerance_Inf_Calc, -999999);
-
-  UPDATE t_lieu_planning_audit a
-  INNER JOIN tmp_planning_apply c ON c.Id_Lieu = a.Id_Lieu
-  SET a.Date_Heure_Fin_Changement = NOW()
-  WHERE a.Type = 'PLAN_APPLY'
-    AND a.Date_Heure_Fin_Changement IS NULL;
-
-  UPDATE t_lieu l
-  INNER JOIN tmp_planning_apply c ON c.Id_Lieu = l.Id_Lieu
-  SET l.Consigne                          = c.Consigne_Apres,
-      l.Consigne_Sup                      = c.Tolerance_Surveillance_Sup_Apres,
-      l.Consigne_Inf                      = c.Tolerance_Surveillance_Inf_Apres,
-      l.Tolerance_Surveillance_Sup        = c.Tolerance_Surveillance_Sup_Apres,
-      l.Tolerance_Surveillance_Inf        = c.Tolerance_Surveillance_Inf_Apres,
-      l.Retard_Alarme_Changement_Consigne = c.Retard_Alarme_Changement_Consigne,
-      l.Planning_Actif                    = 1,
-      l.Planning_Regle_Existe             = 1,
-      l.Planning_Source_Regle_Id          = c.Planning_Regle_Id,
-      l.Planning_Derniere_Maj             = NOW();
-
-  INSERT INTO t_lieu_planning_audit
-    (Id_Lieu, Timestamp, Date_Heure_Debut_Changement, Date_Heure_Fin_Changement, Type,
-     Planning_Regle_Id,
-     Consigne_Avant, Tolerance_Surveillance_Sup_Avant, Tolerance_Surveillance_Inf_Avant,
-     Consigne_Apres, Tolerance_Surveillance_Sup_Apres, Tolerance_Surveillance_Inf_Apres)
-  SELECT c.Id_Lieu,
-         NOW(),
-         NOW(),
-         NULL,
-         'PLAN_APPLY',
-         c.Planning_Regle_Id,
-         c.Consigne_Avant,
-         c.Tolerance_Surveillance_Sup_Avant,
-         c.Tolerance_Surveillance_Inf_Avant,
-         c.Consigne_Apres,
-         c.Tolerance_Surveillance_Sup_Apres,
-         c.Tolerance_Surveillance_Inf_Apres
-  FROM tmp_planning_apply c;
-
-  DROP TEMPORARY TABLE IF EXISTS tmp_planning_return;
-  CREATE TEMPORARY TABLE tmp_planning_return AS
-  SELECT l.Id_Lieu
-  FROM t_lieu l
-  WHERE l.Planning_Actif = 1
-    AND NOT EXISTS (
-      SELECT 1
-      FROM tmp_planning_best best
-      WHERE best.Id_Lieu = l.Id_Lieu
-    );
-
-  UPDATE t_lieu_planning_audit a
-  INNER JOIN tmp_planning_return r ON r.Id_Lieu = a.Id_Lieu
-  SET a.Date_Heure_Fin_Changement = NOW()
-  WHERE a.Type = 'PLAN_APPLY'
-    AND a.Date_Heure_Fin_Changement IS NULL;
-
-  UPDATE t_lieu l
-  INNER JOIN tmp_planning_return r ON r.Id_Lieu = l.Id_Lieu
-  SET l.Consigne                          = l.Consigne_Base,
-      l.Consigne_Sup                      = l.Consigne_Sup_Base,
-      l.Consigne_Inf                      = l.Consigne_Inf_Base,
-      l.Tolerance_Surveillance_Sup        = l.Tolerance_Surveillance_Sup_Base,
-      l.Tolerance_Surveillance_Inf        = l.Tolerance_Surveillance_Inf_Base,
-      l.Retard_Alarme_Changement_Consigne = NULL,
-      l.Planning_Actif                    = 0,
-      l.Planning_Regle_Existe             = EXISTS (SELECT 1 FROM t_lieu_planning_regle pr WHERE pr.Id_Lieu = l.Id_Lieu),
-      l.Planning_Source_Regle_Id          = NULL,
-      l.Planning_Derniere_Maj             = NOW();
-
-  DROP TEMPORARY TABLE IF EXISTS tmp_planning_return;
-  DROP TEMPORARY TABLE IF EXISTS tmp_planning_apply;
-  DROP TEMPORARY TABLE IF EXISTS tmp_planning_best;
-END$$
-DELIMITER ;
-
--- tables techniques legacy
-CREATE TABLE IF NOT EXISTS `liste_clients` (
-  `Id_Client` INT NOT NULL AUTO_INCREMENT,
-  `Nom` VARCHAR(100) NOT NULL,
-  `Num_Compte` VARCHAR(50) NULL,
-  `VigiServ_Derniere_Date_Heure` DATETIME NULL,
-  `Vigitel_Derniere_Date_Heure` DATETIME NULL,
-  PRIMARY KEY (`Id_Client`),
-  UNIQUE KEY `UK_Num_Compte` (`Num_Compte`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
-INSERT INTO `t_parametre` (`Section`, `Mot_Cle`, `Valeur`, `Commentaire`)
-SELECT 'GENERAL','GLOBAL_LANGUAGE','fr','Langue globale de l''application (mails et futurs modules)'
-FROM DUAL WHERE NOT EXISTS (
-  SELECT 1 FROM `t_parametre` WHERE `Section`='GENERAL' AND `Mot_Cle`='GLOBAL_LANGUAGE'
-);
-INSERT INTO `t_parametre` (`Section`, `Mot_Cle`, `Valeur`, `Commentaire`)
-SELECT 'DASHBOARD','SHOW_NULL_NON_RESPONSE','0','Afficher les mesures null (non-reponse) dans les graphiques'
-FROM DUAL WHERE NOT EXISTS (
-  SELECT 1 FROM `t_parametre` WHERE `Section`='DASHBOARD' AND `Mot_Cle`='SHOW_NULL_NON_RESPONSE'
-);
-INSERT INTO `t_parametre` (`Section`, `Mot_Cle`, `Valeur`, `Commentaire`)
-SELECT 'DASHBOARD','SURVEILLANCE_REFRESH','15','Rafraichissement surveillance en secondes'
-FROM DUAL WHERE NOT EXISTS (
-  SELECT 1 FROM `t_parametre` WHERE `Section`='DASHBOARD' AND `Mot_Cle`='SURVEILLANCE_REFRESH'
-);
-INSERT INTO `t_parametre` (`Section`, `Mot_Cle`, `Valeur`, `Commentaire`)
-SELECT 'NOTIFICATIONS','EMAIL_CC_RECIPIENTS','','Destinataires en copie sur tous les emails'
-FROM DUAL WHERE NOT EXISTS (
-  SELECT 1 FROM `t_parametre` WHERE `Section`='NOTIFICATIONS' AND `Mot_Cle`='EMAIL_CC_RECIPIENTS'
-);
-INSERT INTO `t_parametre` (`Section`, `Mot_Cle`, `Valeur`, `Commentaire`)
-SELECT 'NOTIFICATIONS','EMAIL_SEND_ACK','1','Activer envoi email lors acquittement alarme'
-FROM DUAL WHERE NOT EXISTS (
-  SELECT 1 FROM `t_parametre` WHERE `Section`='NOTIFICATIONS' AND `Mot_Cle`='EMAIL_SEND_ACK'
-);
-INSERT INTO `t_parametre` (`Section`, `Mot_Cle`, `Valeur`, `Commentaire`)
-SELECT 'NOTIFICATIONS','EMAIL_SEND_RESOLVED','1','Activer envoi email lors fin alarme'
-FROM DUAL WHERE NOT EXISTS (
-  SELECT 1 FROM `t_parametre` WHERE `Section`='NOTIFICATIONS' AND `Mot_Cle`='EMAIL_SEND_RESOLVED'
-);
-INSERT INTO `t_parametre` (`Section`, `Mot_Cle`, `Valeur`, `Commentaire`)
-SELECT 'NOTIFICATIONS','GSP_BATTERY_NOTIFY_PERCENT','50','Seuil (%) notification batterie faible sonde GSP'
-FROM DUAL WHERE NOT EXISTS (
-  SELECT 1 FROM `t_parametre` WHERE `Section`='NOTIFICATIONS' AND `Mot_Cle`='GSP_BATTERY_NOTIFY_PERCENT'
-);
-INSERT INTO `t_parametre` (`Section`, `Mot_Cle`, `Valeur`, `Commentaire`)
-SELECT 'NOTIFICATIONS','GSP_BATTERY_EMAIL_PERCENT','25','Seuil (%) envoi email batterie faible sonde GSP'
-FROM DUAL WHERE NOT EXISTS (
-  SELECT 1 FROM `t_parametre` WHERE `Section`='NOTIFICATIONS' AND `Mot_Cle`='GSP_BATTERY_EMAIL_PERCENT'
-);
-
--- =====================================================================
--- TEMPLATES DE LIEU
--- =====================================================================
-CREATE TABLE IF NOT EXISTS `t_lieu_template` (
-  `Id_Lieu_Template` int NOT NULL AUTO_INCREMENT,
-  `Nom_Template` varchar(80) NOT NULL,
-  `Description` varchar(255) DEFAULT NULL,
-  `Lieu_Etat` varchar(1) NOT NULL DEFAULT 'D',
-  `Frequence` int DEFAULT NULL,
-  `Retard_Alarme_Haut` int DEFAULT NULL,
-  `Retard_Alarme_Bas` int DEFAULT NULL,
-  `Retard_Non_Reponse` int DEFAULT '60',
-  `Retard_Alarme_Changement_Consigne` int DEFAULT NULL,
-  `Consigne` decimal(10,2) DEFAULT NULL,
-  `Consigne_Sup` decimal(10,2) DEFAULT NULL,
-  `Consigne_Inf` decimal(10,2) DEFAULT NULL,
-  `Tolerance_Surveillance_Sup` decimal(10,2) DEFAULT NULL,
-  `Tolerance_Surveillance_Inf` decimal(10,2) DEFAULT NULL,
-  `Consigne_Sup_Pre_Alarme` decimal(10,2) DEFAULT NULL,
-  `Consigne_Inf_Pre_Alarme` decimal(10,2) DEFAULT NULL,
-  `Est_Consigne_Sup_Active` tinyint(1) NOT NULL DEFAULT '0',
-  `Est_Consigne_Inf_Active` tinyint(1) NOT NULL DEFAULT '0',
-  `Est_Consigne_Sup_Pre_Alarme_Active` tinyint(1) NOT NULL DEFAULT '0',
-  `Est_Consigne_Inf_Pre_Alarme_Active` tinyint(1) NOT NULL DEFAULT '0',
-  `Est_Son_Alarme_Active` tinyint(1) NOT NULL DEFAULT '1',
-  `Est_Redeclenchement_Immediat` tinyint(1) NOT NULL DEFAULT '0',
-  `Nb_Mesures_Temporisation_Redeclenchement` int DEFAULT '0',
-  `Observations_Info` text,
-  `Est_Archive` tinyint(1) NOT NULL DEFAULT '0',
-  `Date_Creation` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `Date_Maj` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  `Id_Utilisateur_Creation` int DEFAULT NULL,
-  `Id_Utilisateur_Maj` int DEFAULT NULL,
-  PRIMARY KEY (`Id_Lieu_Template`),
-  UNIQUE KEY `UK_t_lieu_template_nom` (`Nom_Template`),
-  KEY `IDX_t_lieu_template_archive` (`Est_Archive`),
-  KEY `IDX_t_lieu_template_user_create` (`Id_Utilisateur_Creation`),
-  KEY `IDX_t_lieu_template_user_update` (`Id_Utilisateur_Maj`),
-  CONSTRAINT `FK_t_lieu_template_user_create` FOREIGN KEY (`Id_Utilisateur_Creation`) REFERENCES `t_utilisateur` (`Id_Utilisateur`) ON DELETE SET NULL ON UPDATE NO ACTION,
-  CONSTRAINT `FK_t_lieu_template_user_update` FOREIGN KEY (`Id_Utilisateur_Maj`) REFERENCES `t_utilisateur` (`Id_Utilisateur`) ON DELETE SET NULL ON UPDATE NO ACTION
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-INSERT INTO `t_parametre` (`Section`, `Mot_Cle`, `Valeur`, `Commentaire`)
-SELECT 'STATISTICS_MONTHLY_REPORT','ENABLED','0','Activation envoi recap mensuel stats'
-FROM DUAL WHERE NOT EXISTS (
-  SELECT 1 FROM `t_parametre` WHERE `Section`='STATISTICS_MONTHLY_REPORT' AND `Mot_Cle`='ENABLED'
-);
-INSERT INTO `t_parametre` (`Section`, `Mot_Cle`, `Valeur`, `Commentaire`)
-SELECT 'STATISTICS_MONTHLY_REPORT','RECIPIENTS','','Destinataires separes par ; ou ,'
-FROM DUAL WHERE NOT EXISTS (
-  SELECT 1 FROM `t_parametre` WHERE `Section`='STATISTICS_MONTHLY_REPORT' AND `Mot_Cle`='RECIPIENTS'
-);
-INSERT INTO `t_parametre` (`Section`, `Mot_Cle`, `Valeur`, `Commentaire`)
-SELECT 'STATISTICS_MONTHLY_REPORT','DAY_OF_MONTH','1','Jour du mois (1..31, replie au dernier jour du mois si necessaire)'
-FROM DUAL WHERE NOT EXISTS (
-  SELECT 1 FROM `t_parametre` WHERE `Section`='STATISTICS_MONTHLY_REPORT' AND `Mot_Cle`='DAY_OF_MONTH'
-);
-INSERT INTO `t_parametre` (`Section`, `Mot_Cle`, `Valeur`, `Commentaire`)
-SELECT 'STATISTICS_MONTHLY_REPORT','HOUR_LOCAL','8','Heure locale (0..23)'
-FROM DUAL WHERE NOT EXISTS (
-  SELECT 1 FROM `t_parametre` WHERE `Section`='STATISTICS_MONTHLY_REPORT' AND `Mot_Cle`='HOUR_LOCAL'
-);
-INSERT INTO `t_parametre` (`Section`, `Mot_Cle`, `Valeur`, `Commentaire`)
-SELECT 'STATISTICS_MONTHLY_REPORT','INCLUDE_LOCATION_SUMMARY','1','Inclure lieu/site/groupe'
-FROM DUAL WHERE NOT EXISTS (
-  SELECT 1 FROM `t_parametre` WHERE `Section`='STATISTICS_MONTHLY_REPORT' AND `Mot_Cle`='INCLUDE_LOCATION_SUMMARY'
-);
-INSERT INTO `t_parametre` (`Section`, `Mot_Cle`, `Valeur`, `Commentaire`)
-SELECT 'STATISTICS_MONTHLY_REPORT','INCLUDE_SETTINGS_SUMMARY','1','Inclure consignes/tolerances/frequence/retards'
-FROM DUAL WHERE NOT EXISTS (
-  SELECT 1 FROM `t_parametre` WHERE `Section`='STATISTICS_MONTHLY_REPORT' AND `Mot_Cle`='INCLUDE_SETTINGS_SUMMARY'
-);
-INSERT INTO `t_parametre` (`Section`, `Mot_Cle`, `Valeur`, `Commentaire`)
-SELECT 'STATISTICS_MONTHLY_REPORT','INCLUDE_MAX','1','Inclure mesure max'
-FROM DUAL WHERE NOT EXISTS (
-  SELECT 1 FROM `t_parametre` WHERE `Section`='STATISTICS_MONTHLY_REPORT' AND `Mot_Cle`='INCLUDE_MAX'
-);
-INSERT INTO `t_parametre` (`Section`, `Mot_Cle`, `Valeur`, `Commentaire`)
-SELECT 'STATISTICS_MONTHLY_REPORT','INCLUDE_MIN','1','Inclure mesure min'
-FROM DUAL WHERE NOT EXISTS (
-  SELECT 1 FROM `t_parametre` WHERE `Section`='STATISTICS_MONTHLY_REPORT' AND `Mot_Cle`='INCLUDE_MIN'
-);
-INSERT INTO `t_parametre` (`Section`, `Mot_Cle`, `Valeur`, `Commentaire`)
-SELECT 'STATISTICS_MONTHLY_REPORT','INCLUDE_AVG','1','Inclure moyenne'
-FROM DUAL WHERE NOT EXISTS (
-  SELECT 1 FROM `t_parametre` WHERE `Section`='STATISTICS_MONTHLY_REPORT' AND `Mot_Cle`='INCLUDE_AVG'
-);
-INSERT INTO `t_parametre` (`Section`, `Mot_Cle`, `Valeur`, `Commentaire`)
-SELECT 'STATISTICS_MONTHLY_REPORT','INCLUDE_ALARM_COUNT','1','Inclure nombre alarmes'
-FROM DUAL WHERE NOT EXISTS (
-  SELECT 1 FROM `t_parametre` WHERE `Section`='STATISTICS_MONTHLY_REPORT' AND `Mot_Cle`='INCLUDE_ALARM_COUNT'
-);
-INSERT INTO `t_parametre` (`Section`, `Mot_Cle`, `Valeur`, `Commentaire`)
-SELECT 'STATISTICS_MONTHLY_REPORT','INCLUDE_ALARM_HIGH_DURATION','1','Inclure duree alarme haute'
-FROM DUAL WHERE NOT EXISTS (
-  SELECT 1 FROM `t_parametre` WHERE `Section`='STATISTICS_MONTHLY_REPORT' AND `Mot_Cle`='INCLUDE_ALARM_HIGH_DURATION'
-);
-INSERT INTO `t_parametre` (`Section`, `Mot_Cle`, `Valeur`, `Commentaire`)
-SELECT 'STATISTICS_MONTHLY_REPORT','INCLUDE_ALARM_LOW_DURATION','1','Inclure duree alarme basse'
-FROM DUAL WHERE NOT EXISTS (
-  SELECT 1 FROM `t_parametre` WHERE `Section`='STATISTICS_MONTHLY_REPORT' AND `Mot_Cle`='INCLUDE_ALARM_LOW_DURATION'
-);
-INSERT INTO `t_parametre` (`Section`, `Mot_Cle`, `Valeur`, `Commentaire`)
-SELECT 'STATISTICS_MONTHLY_REPORT','INCLUDE_OVER_HIGH_NO_ALARM','1','Inclure depassement haut sans alarme'
-FROM DUAL WHERE NOT EXISTS (
-  SELECT 1 FROM `t_parametre` WHERE `Section`='STATISTICS_MONTHLY_REPORT' AND `Mot_Cle`='INCLUDE_OVER_HIGH_NO_ALARM'
-);
-INSERT INTO `t_parametre` (`Section`, `Mot_Cle`, `Valeur`, `Commentaire`)
-SELECT 'STATISTICS_MONTHLY_REPORT','INCLUDE_OVER_LOW_NO_ALARM','1','Inclure depassement bas sans alarme'
-FROM DUAL WHERE NOT EXISTS (
-  SELECT 1 FROM `t_parametre` WHERE `Section`='STATISTICS_MONTHLY_REPORT' AND `Mot_Cle`='INCLUDE_OVER_LOW_NO_ALARM'
-);
-INSERT INTO `t_parametre` (`Section`, `Mot_Cle`, `Valeur`, `Commentaire`)
-SELECT 'STATISTICS_MONTHLY_REPORT','LAST_SENT_MONTH','','Dernier mois envoye au format YYYY-MM'
-FROM DUAL WHERE NOT EXISTS (
-  SELECT 1 FROM `t_parametre` WHERE `Section`='STATISTICS_MONTHLY_REPORT' AND `Mot_Cle`='LAST_SENT_MONTH'
-);
-
-INSERT IGNORE INTO `t_parametre` (`Section`, `Mot_Cle`, `Valeur`, `Commentaire`) VALUES
-('GENERAL','TIMEZONE','Europe/Paris','Fuseau horaire par defaut'),
-('DASHBOARD','AUDIT_GRAPH_OPENINGS','false','Activer l audit trail a l ouverture des graphiques'),
-('DASHBOARD','ETALONNAGE_WARNING_DAYS','90','Delai alerte validite etalonnage en jours'),
-('DASHBOARD','REFRESH','30','Intervalle de rafraichissement dashboard en secondes'),
-('DASHBOARD','REQUIRE_ACTION_COMMENT','false','Exiger un commentaire pour les actions de surveillance'),
-('NOTIFICATIONS','EMAIL','true','Activation globale des emails systeme'),
-('NOTIFICATIONS','ALARM_EMAIL_RECIPIENTS','','Emails systeme utilises en copie ou fallback selon configuration'),
-('NOTIFICATIONS','ALARM_EMAIL_FALLBACK_TO_SYSTEM','false','Envoyer aux emails systeme si aucun contact lieu n est renseigne'),
-('NOTIFICATIONS','ALARM_EMAIL_ACKNOWLEDGED','true','Envoyer les emails d acquittement'),
-('NOTIFICATIONS','ALARM_EMAIL_ENDED','true','Envoyer les emails d alarme terminee'),
-('NOTIFICATIONS_TEAMS','ENABLED','false','Active les notifications Teams via webhook Workflows'),
-('NOTIFICATIONS_TEAMS','WEBHOOK_URL','','URL du webhook Teams Workflows. Secret a proteger'),
-('NOTIFICATIONS_TEAMS','CHANNEL_LABEL','','Nom lisible du canal Teams cible'),
-('NOTIFICATIONS_TEAMS','NOTIFY_ON_TRIGGER','true','Envoie un message Teams au declenchement alarme'),
-('NOTIFICATIONS_TEAMS','NOTIFY_ON_END','true','Envoie un message Teams a la fin alarme'),
-('NOTIFICATIONS_TEAMS','NOTIFY_ON_ACK','false','Envoie un message Teams a l acquittement'),
-('NOTIFICATIONS_TEAMS','TIMEOUT_MS','5000','Timeout HTTP du webhook Teams en millisecondes'),
-('NOTIFICATIONS_TEAMS','DEDUPE_WINDOW_MINUTES','10','Fenetre anti-doublon Teams par alarme/evenement'),
-('SERVICE','GSO_DERNIER_DATE_HEURE',NULL,'Date et heure de derniere mesure inscrite par la boucle GSO dans tm_mesures'),
-('SERVICES','COMMERCIAL_CONTACT_EMAIL','','Adresse email du service commercial utilisee pour les demandes de devis materiel'),
-('messaging','enabled','true','Active la messagerie interne'),
-('TELEPHONIE','ENABLED','false','Activation globale de la telephonie VoIP'),
-('TELEPHONIE','PROVIDER','none','Fournisseur VoIP selectionne'),
-('TELEPHONIE','CALLER_ID','','Numero presente / caller ID'),
-('TELEPHONIE','NOTES','','Notes d integration telephonie'),
-('TELEPHONIE','TWILIO_AUTH_MODE','api_key','Mode authentification Twilio'),
-('TELEPHONIE','TWILIO_ACCOUNT_SID','','Compte Twilio'),
-('TELEPHONIE','TWILIO_API_KEY_SID','','API Key SID Twilio'),
-('TELEPHONIE','TWILIO_API_KEY_SECRET','','API Key Secret Twilio'),
-('TELEPHONIE','TWILIO_AUTH_TOKEN','','Auth Token Twilio'),
-('TELEPHONIE','TWILIO_FROM_NUMBER','','Numero expediteur Twilio'),
-('TELEPHONIE','OVH_ENDPOINT','ovh-eu','Point d acces API OVH'),
-('TELEPHONIE','OVH_APPLICATION_KEY','','Application Key OVH'),
-('TELEPHONIE','OVH_APPLICATION_SECRET','','Application Secret OVH'),
-('TELEPHONIE','OVH_CONSUMER_KEY','','Consumer Key OVH'),
-('TELEPHONIE','OVH_BILLING_ACCOUNT','','Compte de facturation OVH'),
-('TELEPHONIE','OVH_SERVICE_NAME','','Nom du service / ligne OVH'),
-('TELEPHONIE','OVH_CLICK2CALL_USER_ID','','Identifiant utilisateur Click2Call OVH'),
-('TELEPHONIE','OVH_CLICK2CALL_LOGIN','','Login utilisateur Click2Call OVH'),
-('TELEPHONIE','OVH_CLICK2CALL_PASSWORD','','Mot de passe utilisateur Click2Call OVH'),
-('TELEPHONIE','KEYYO_CLIENT_ID','','Client ID Keyyo'),
-('TELEPHONIE','KEYYO_CLIENT_SECRET','','Client Secret Keyyo'),
-('TELEPHONIE','KEYYO_ACCESS_TOKEN','','Access token Keyyo'),
-('TELEPHONIE','KEYYO_REFRESH_TOKEN','','Refresh token Keyyo'),
-('TELEPHONIE','KEYYO_LINE_ID','','Identifiant ligne Keyyo'),
-('TELEPHONIE','ASTERISK_BASE_URL','http://127.0.0.1:8088/ari','URL ARI Asterisk'),
-('TELEPHONIE','ASTERISK_USERNAME','','Utilisateur Asterisk ARI'),
-('TELEPHONIE','ASTERISK_PASSWORD','','Mot de passe Asterisk ARI'),
-('TELEPHONIE','ASTERISK_APP_NAME','vigitemp','Nom application Asterisk ARI');
-
--- =====================================================================
--- NETTOYAGE AUTORISATIONS LEGACY NON UTILISEES (2026-04-13)
--- =====================================================================
-SET @has_tbl_aut := (SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 't_autorisation');
-SET @has_tbl_link := (SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 't_liaison_profil_autorisation');
-
-DROP TEMPORARY TABLE IF EXISTS tmp_codes_aut_legacy_remove;
-CREATE TEMPORARY TABLE tmp_codes_aut_legacy_remove (
-  code VARCHAR(50) PRIMARY KEY
-);
-
-INSERT INTO tmp_codes_aut_legacy_remove (code) VALUES
-('PARAM_EDITION_STATISTIQUES'),
-('MATERIEL_MESURE_GERER'),
-('MATERIEL_MESURE_VISUALISER'),
-('MATERIEL_ALARME_GERER'),
-('APPLICATION_QUITTER_ADMIN'),
-('MATERIEL_METROLOGIE_GERER'),
-('METROLOGIE_REALISER'),
-('METROLOGIE_VISUALISER'),
-('APPLICATION_QUITTER_METRO'),
-('APPLICATION_QUITTER_SURV'),
-('APPLICATION_QUITTER_VIGILOG'),
-('TELE_ASSISTANCE'),
-('SUPERPOSITION_COURBE');
-
-SET @sql := IF(
-  @has_tbl_aut = 1 AND @has_tbl_link = 1,
-  'DELETE l FROM `t_liaison_profil_autorisation` l JOIN `t_autorisation` a ON a.`Id_Autorisation` = l.`Id_Autorisation` JOIN tmp_codes_aut_legacy_remove c ON c.code = a.`Code_Autorisation`',
-  'SELECT 1'
-);
-PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-
-SET @sql := IF(
-  @has_tbl_aut = 1,
-  'DELETE a FROM `t_autorisation` a JOIN tmp_codes_aut_legacy_remove c ON c.code = a.`Code_Autorisation`',
-  'SELECT 1'
-);
-PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-
--- =====================================================================
--- CONSOLIDATION FULL SEED MYSQL: vigi_mesures + vigi_chat
--- Ce fichier devient le seed unique VigiSensys MySQL: main, mesures, chat.
--- Les seeds separes restent conserves pour compatibilite/outillage.
--- =====================================================================
-
-CREATE DATABASE IF NOT EXISTS `vigi_mesures` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci */ /*!80016 DEFAULT ENCRYPTION='N' */;
-USE `vigi_mesures`;
-
--- Active l'event scheduler pour le nettoyage du cache tm_graphique.
--- Requiert les droits SUPER/ADMIN sur MySQL.
-SET GLOBAL event_scheduler = ON;
-
-SET FOREIGN_KEY_CHECKS=0;
-DROP TABLE IF EXISTS `tm_compteur_id_table`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `tm_compteur_id_table` (
-  `Id_Serveur_BDD` int NOT NULL,
-  `Nom_Table` varchar(100) NOT NULL,
-  `Compteur_Id` int DEFAULT NULL,
-  PRIMARY KEY (`Id_Serveur_BDD`,`Nom_Table`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-DROP TABLE IF EXISTS `tm_datalogger_mesures`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `tm_datalogger_mesures` (
-  `Id_Datalogger_Mesures` int NOT NULL,
-  `Id_Reception` int DEFAULT NULL,
-  `Date_Heure_Mesure` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `Valeur` float DEFAULT NULL,
-  `Est_Hors_Consignes` tinyint DEFAULT NULL,
-  `Est_En_Alarme` tinyint DEFAULT NULL,
-  `Est_Marqueur` tinyint DEFAULT NULL,
-  `Details` varchar(200) DEFAULT NULL,
-  PRIMARY KEY (`Id_Datalogger_Mesures`),
-  KEY `IDX_Id_Reception` (`Id_Reception`),
-  KEY `IDX_Date_Heure_Mesure` (`Date_Heure_Mesure`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
-/*!40101 SET character_set_client = @saved_cs_client */;
-DROP TABLE IF EXISTS `tm_graphique`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `tm_graphique` (
-  `Id_Graphique` int NOT NULL,
-  `Date_Heure_Mesure` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `Valeur` float DEFAULT NULL,
-  `Valeur_Brute` float DEFAULT NULL,
-  `Nb_Decimal` int DEFAULT NULL,
-  `Consigne` float DEFAULT NULL,
-  `Consigne_Sup` float DEFAULT NULL,
-  `Consigne_Inf` float DEFAULT NULL,
-  `Unite` varchar(10) DEFAULT NULL,
-  `Sonde_Numero_Serie` varchar(50) DEFAULT NULL,
-  `Id_Sonde` int DEFAULT NULL,
-  `Id_Lieu` int NOT NULL,
-  `Est_Valeur_Null` tinyint(1) NOT NULL DEFAULT '0',
-  `Frequence` int DEFAULT NULL,
-  `Est_Etat_Alarme` tinyint NOT NULL DEFAULT '0',
-  `Consigne_Inf_Pre_Alarme` float DEFAULT NULL,
-  `Consigne_Sup_Pre_Alarme` float DEFAULT NULL,
-  PRIMARY KEY (`Id_Graphique`,`Date_Heure_Mesure`,`Id_Lieu`,`Est_Valeur_Null`,`Est_Etat_Alarme`),
-  KEY `IDX_Date_Heure_Mesure` (`Date_Heure_Mesure`),
-  KEY `IDX_Id_Lieu` (`Id_Lieu`),
-  KEY `IDX_Etat_Alarme` (`Est_Etat_Alarme`),
-  KEY `IDX_Valeur_Null` (`Est_Valeur_Null`),
-  KEY `IDX_Id_Sonde_Date_Heure_Mesure` (`Id_Sonde`,`Date_Heure_Mesure` DESC)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
-/*!40101 SET character_set_client = @saved_cs_client */;
-DROP TABLE IF EXISTS `tm_journal`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `tm_journal` (
-  `Id_Serveur_BDD` int NOT NULL,
-  `Id_Journal` int NOT NULL,
-  `Code_Journal` varchar(50) DEFAULT NULL,
-  `Commentaire` longtext,
-  `Nom_Utilisateur` varchar(50) DEFAULT NULL,
-  `Profil_Utilisateur` varchar(50) DEFAULT NULL,
-  `Date_Heure_Journal` datetime DEFAULT NULL,
-  `Id_Lieu` int DEFAULT NULL,
-  `Commentaire_Utilisateur` longtext,
-  PRIMARY KEY (`Id_Serveur_BDD`,`Id_Journal`),
-  KEY `IDX_Code_Journal` (`Code_Journal`),
-  KEY `IDX_Nom_Utilisateur` (`Nom_Utilisateur`),
-  KEY `IDX_Profil_Utilisateur` (`Profil_Utilisateur`),
-  KEY `IDX_Date_Heure_Journal` (`Date_Heure_Journal`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
-/*!40101 SET character_set_client = @saved_cs_client */;
-DROP TABLE IF EXISTS `tm_journal_code`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `tm_journal_code` (
-  `Code_Journal` varchar(50) NOT NULL,
-  `Commentaire` varchar(200) DEFAULT NULL,
-  PRIMARY KEY (`Code_Journal`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
-/*!40101 SET character_set_client = @saved_cs_client */;
-DROP TABLE IF EXISTS `tm_journal_histo`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `tm_journal_histo` (
-  `Id_Journal_Histo` int NOT NULL AUTO_INCREMENT,
-  `Id_Serveur_BDD` int NOT NULL DEFAULT '0',
-  `Id_Journal` int NOT NULL DEFAULT '0',
-  `Code_Journal` varchar(50) DEFAULT '',
-  `Commentaire` longtext,
-  `Nom_Utilisateur` varchar(50) DEFAULT '',
-  `Profil_Utilisateur` varchar(50) DEFAULT '',
-  `Date_Heure_Journal` datetime DEFAULT NULL,
-  `Id_Lieu` int DEFAULT NULL,
-  `Commentaire_Utilisateur` longtext,
-  PRIMARY KEY (`Id_Journal_Histo`,`Id_Serveur_BDD`,`Id_Journal`),
-  KEY `IDX_Code_Journal` (`Code_Journal`),
-  KEY `IDX_Nom_Utilisateur` (`Nom_Utilisateur`),
-  KEY `IDX_Profil_Utilisateur` (`Profil_Utilisateur`),
-  KEY `IDX_Date_Heure_Journal` (`Date_Heure_Journal`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
-/*!40101 SET character_set_client = @saved_cs_client */;
-DROP TABLE IF EXISTS `tm_mesures_ajustage`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `tm_mesures_ajustage` (
-  `Id_Mesure_Ajustage` int NOT NULL AUTO_INCREMENT,
-  `Id_Serveur_BDD` int NOT NULL DEFAULT '0',
-  `Valeur` float DEFAULT NULL,
-  `Valeur_Brute` float DEFAULT NULL,
-  `Unite` varchar(10) DEFAULT NULL,
-  `Date_Heure_Mesure` datetime NOT NULL,
-  `Sonde_Numero_Serie` varchar(50) NOT NULL DEFAULT '',
-  `Adresse_Sonde` varchar(50) NOT NULL DEFAULT '',
-  `Est_Valeur_Null` tinyint NOT NULL DEFAULT '0',
-  PRIMARY KEY (`Id_Mesure_Ajustage`,`Id_Serveur_BDD`),
-  KEY `IDX_Valeur` (`Valeur`),
-  KEY `IDX_Valeur_Brute` (`Valeur_Brute`),
-  KEY `IDX_Est_Valeur_Null` (`Est_Valeur_Null`),
-  KEY `IDX_Date_Heure_Mesure` (`Date_Heure_Mesure`),
-  KEY `IDX_Sonde_Numero_Serie` (`Sonde_Numero_Serie`),
-  KEY `IDX_Adresse_Sonde` (`Adresse_Sonde`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
-/*!40101 SET character_set_client = @saved_cs_client */;
-DROP TABLE IF EXISTS `tm_mesures_ajustage_etalon`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `tm_mesures_ajustage_etalon` (
-  `Id_Mesure_Ajustage_Etalon` int NOT NULL AUTO_INCREMENT,
-  `Id_Serveur_BDD` int NOT NULL DEFAULT '0',
-  `Valeur` float DEFAULT NULL,
-  `Valeur_Brute` float DEFAULT NULL,
-  `Unite` varchar(10) DEFAULT NULL,
-  `Date_Heure_Mesure` datetime NOT NULL,
-  `Etalon_Numero_Serie` varchar(50) NOT NULL DEFAULT '',
-  `Adresse_Sonde` varchar(50) DEFAULT NULL,
-  `Est_Valeur_Null` tinyint NOT NULL DEFAULT '0',
-  PRIMARY KEY (`Id_Mesure_Ajustage_Etalon`,`Id_Serveur_BDD`),
-  KEY `IDX_Valeur` (`Valeur`),
-  KEY `IDX_Valeur_Brute` (`Valeur_Brute`),
-  KEY `IDX_Est_Valeur_Null` (`Est_Valeur_Null`),
-  KEY `IDX_Date_Heure_Mesure` (`Date_Heure_Mesure`),
-  KEY `IDX_Etalon_Numero_Serie` (`Etalon_Numero_Serie`),
-  KEY `IDX_Adresse_Sonde` (`Adresse_Sonde`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
-/*!40101 SET character_set_client = @saved_cs_client */;
-DROP TABLE IF EXISTS `tm_mesure_etalon`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
--- Mesures brutes remontees par un etalon de reference.
-CREATE TABLE `tm_mesure_etalon` (
-  `Id_Mesure_Etalon` int NOT NULL AUTO_INCREMENT,
-  `Id_Serveur_BDD` int NOT NULL DEFAULT '0',
-  `Valeur_Brute` float NOT NULL,
-  `Etalon_Numero_Serie` varchar(50) NOT NULL DEFAULT '',
-  `Est_Valeur_Null` tinyint NOT NULL,
-  `Date_Heure` datetime NOT NULL,
-  `Message_Erreur` varchar(50) NOT NULL DEFAULT '',
-  PRIMARY KEY (`Id_Mesure_Etalon`,`Id_Serveur_BDD`),
-  KEY `IDX_Valeur_Brute` (`Valeur_Brute`),
-  KEY `IDX_Etalon_Numero_Serie` (`Etalon_Numero_Serie`),
-  KEY `IDX_Est_Valeur_Null` (`Est_Valeur_Null`),
-  KEY `IDX_Date_Heure` (`Date_Heure`),
-  KEY `IDX_Message_Erreur` (`Message_Erreur`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
-/*!40101 SET character_set_client = @saved_cs_client */;
-DROP TABLE IF EXISTS `tm_mesures_etalonnage`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
--- Mesures de campagne d'etalonnage d'une sonde (sonde etalonnee vs etalon).
-CREATE TABLE `tm_mesures_etalonnage` (
-  `Id_Mesure_Etalonnage` int NOT NULL AUTO_INCREMENT,
-  `Id_Serveur_BDD` int NOT NULL DEFAULT '0',
-  `Valeur` float DEFAULT NULL,
-  `Valeur_Brute` float DEFAULT NULL,
-  `Unite` varchar(10) DEFAULT NULL,
-  `Date_Heure_Mesure` datetime NOT NULL,
-  `Sonde_Numero_serie` varchar(50) DEFAULT NULL,
-  `Adresse_Sonde` varchar(50) DEFAULT NULL,
-  `Numero_Ordre` int DEFAULT NULL,
-  `Mesure_Sonde` float DEFAULT NULL,
-  `Mesure_Etalon` float DEFAULT NULL,
-  PRIMARY KEY (`Id_Mesure_Etalonnage`,`Id_Serveur_BDD`),
-  KEY `IDX_Sonde_Numero_serie` (`Sonde_Numero_serie`),
-  KEY `IDX_Date_Heure_Mesure` (`Date_Heure_Mesure`),
-  KEY `IDX_Adresse_Sonde` (`Adresse_Sonde`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
-/*!40101 SET character_set_client = @saved_cs_client */;
-DROP TABLE IF EXISTS `tm_mesures`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `tm_mesures` (
-  `Id_Serveur_BDD` int NOT NULL DEFAULT '0',
-  `Id_Mesure` int NOT NULL DEFAULT '0',
-  `Date_Heure_Mesure` datetime NOT NULL,
-  `Valeur` float DEFAULT NULL,
-  `Valeur_Brute` float DEFAULT NULL,
-  `Nb_Decimal` int DEFAULT NULL,
-  `Consigne` float DEFAULT NULL,
-  `Consigne_Sup` float DEFAULT NULL,
-  `Consigne_Inf` float DEFAULT NULL,
-  `Unite` varchar(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT '',
-  `Sonde_Numero_Serie` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT '',
-  `Id_Lieu` int NOT NULL DEFAULT '0',
-  `Est_Valeur_Null` tinyint(1) NOT NULL DEFAULT '0',
-  `Est_Valeur_Memoire` tinyint(1) NOT NULL DEFAULT '0',
-  `Frequence` int DEFAULT NULL,
-  `Est_Etat_Alarme` tinyint(1) NOT NULL DEFAULT '0',
-  `Consigne_Inf_Pre_Alarme` float DEFAULT NULL,
-  `Consigne_Sup_Pre_Alarme` float DEFAULT NULL,
-  `Moyenne` float DEFAULT NULL,
-  `Rssi` int DEFAULT NULL,
-  `Tension` float DEFAULT NULL,
-  PRIMARY KEY (`Id_Serveur_BDD`,`Id_Mesure`,`Date_Heure_Mesure`,`Id_Lieu`,`Est_Valeur_Null`),
-  KEY `IDX_Date_Heure_Mesure` (`Date_Heure_Mesure`),
-  KEY `IDX_Est_Etat_Alarme` (`Est_Etat_Alarme`),
-  KEY `Mesure_Numero_lieu_IDX` (`Id_Lieu`),
-  KEY `IDX_Est_Valeur_Null` (`Est_Valeur_Null`),
-  KEY `Mesure_lieu` (`Id_Lieu`),
-  KEY `IDX_Date_Heure_Mesure_Id_Lieu` (`Date_Heure_Mesure`,`Id_Lieu`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
-/*!40101 SET character_set_client = @saved_cs_client */;
-DROP TABLE IF EXISTS `tm_mesures_gso`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `tm_mesures_gso` (
-  `Id_mesures_gso` int NOT NULL AUTO_INCREMENT,
-  `id_capteur` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
-  `tep` double DEFAULT NULL,
-  `unite` varchar(10) COLLATE utf8mb4_unicode_ci DEFAULT '',
-  `date_mesure` datetime NOT NULL,
-  `trame` binary(8) DEFAULT NULL,
-  `rssi` varchar(10) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `tension` varchar(10) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `COM_sonde` float DEFAULT NULL,
-  PRIMARY KEY (`id_capteur`,`date_mesure`),
-  KEY `Id_mesures_gso` (`Id_mesures_gso`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-DROP TABLE IF EXISTS `tm_mesures_histo`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `tm_mesures_histo` (
-  `Id_Mesure` int NOT NULL AUTO_INCREMENT,
-  `Id_Serveur_BDD` int NOT NULL DEFAULT '0',
-  `Date_Heure_Mesure` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `Valeur` float DEFAULT NULL,
-  `Valeur_Brute` float DEFAULT NULL,
-  `Nb_decimal` tinyint DEFAULT NULL,
-  `Consigne` float DEFAULT NULL,
-  `Consigne_Sup` float DEFAULT NULL,
-  `Consigne_Inf` float DEFAULT NULL,
-  `Unite` varchar(10) DEFAULT '',
-  `Sonde_Numero_Serie` varchar(50) DEFAULT '',
-  `Id_Lieu` int NOT NULL DEFAULT '0',
-  `Est_Valeur_Null` tinyint NOT NULL DEFAULT '0',
-  `Frequence` int DEFAULT NULL,
-  `Est_En_Alarme` tinyint(1) DEFAULT '0',
-  `Consigne_Inf_Pre_Alarme` float DEFAULT NULL,
-  `Consigne_Sup_Pre_Alarme` float DEFAULT NULL,
-  `Moyenne` float DEFAULT NULL,
-  PRIMARY KEY (`Id_Mesure`,`Id_Serveur_BDD`,`Date_Heure_Mesure`,`Id_Lieu`,`Est_Valeur_Null`),
-  KEY `IDX_Date_Heure_Mesure` (`Date_Heure_Mesure`),
-  KEY `IDX_Est_En_Alarme` (`Est_En_Alarme`),
-  KEY `Mesure_Numero_lieu_IDX` (`Id_Lieu`),
-  KEY `IDX_Date_Heure_Mesure_Id_Lieu` (`Date_Heure_Mesure`,`Id_Lieu`),
-  KEY `Mesure_lieu` (`Id_Lieu`),
-  KEY `IDX_Est_Valeur_Null` (`Est_Valeur_Null`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
-/*!40101 SET character_set_client = @saved_cs_client */;
-DROP TABLE IF EXISTS `tm_mesures_test`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `tm_mesures_test` (
-  `Id_Mesure_Test` int NOT NULL AUTO_INCREMENT,
-  `Id_Serveur_BDD` int NOT NULL DEFAULT '0',
-  `Valeur_Brute` float NOT NULL,
-  `Sonde_Numero_Serie` varchar(50) NOT NULL DEFAULT '',
-  `Est_Valeur_Null` tinyint NOT NULL,
-  `Date_Heure` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `Nombre_Total` int NOT NULL DEFAULT '0',
-  `Nombre_Recu` int NOT NULL DEFAULT '0',
-  PRIMARY KEY (`Id_Mesure_Test`,`Id_Serveur_BDD`),
-  UNIQUE KEY `Sonde` (`Sonde_Numero_Serie`),
-  KEY `IDX_Est_Valeur_Null` (`Est_Valeur_Null`),
-  KEY `IDX_Date_Heure` (`Date_Heure`),
-  KEY `IDX_Nombre_Total` (`Nombre_Total`),
-  KEY `IDX_Nombre_Recu` (`Nombre_Recu`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
-/*!40101 SET character_set_client = @saved_cs_client */;
-DROP TABLE IF EXISTS `tm_mesures_test_etalon`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `tm_mesures_test_etalon` (
-  `Id_Mesure_Test_Etalon` int NOT NULL AUTO_INCREMENT,
-  `Id_Serveur_BDD` int NOT NULL DEFAULT '0',
-  `Valeur_Brute` float NOT NULL,
-  `Etalon_Numero_Serie` varchar(50) NOT NULL DEFAULT '',
-  `Est_Valeur_Null` tinyint NOT NULL,
-  `Date_Heure` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `Nombre_Total` int NOT NULL DEFAULT '0',
-  `Nombre_Recu` int NOT NULL DEFAULT '0',
-  PRIMARY KEY (`Id_Mesure_Test_Etalon`,`Id_Serveur_BDD`),
-  UNIQUE KEY `Etalon` (`Etalon_Numero_Serie`),
-  KEY `IDX_Est_Valeur_Null` (`Est_Valeur_Null`),
-  KEY `IDX_Date_Heure` (`Date_Heure`),
-  KEY `IDX_Nombre_Total` (`Nombre_Total`),
-  KEY `IDX_Nombre_Recu` (`Nombre_Recu`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
-/*!40101 SET character_set_client = @saved_cs_client */;
-DROP TABLE IF EXISTS `tm_mode_degrade`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `tm_mode_degrade` (
-  `Id_Mode_Degrade` int NOT NULL AUTO_INCREMENT,
-  `Id_Utilisateur` int DEFAULT NULL,
-  `Date_Heure_Creation` datetime DEFAULT NULL,
-  `Requete_SQL` varchar(500) DEFAULT NULL,
-  `Est_Archivee` tinyint(1) NOT NULL DEFAULT '0',
-  `Date_Heure_Archive` datetime DEFAULT NULL,
-  PRIMARY KEY (`Id_Mode_Degrade`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
-/*!40101 SET character_set_client = @saved_cs_client */;
-DROP TABLE IF EXISTS `tm_parametre`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `tm_parametre` (
-  `Id_Parametre` int NOT NULL AUTO_INCREMENT,
-  `Cle_Parametre` varchar(20) NOT NULL DEFAULT '',
-  `Valeur_Parametre` varchar(50) DEFAULT NULL,
-  `Groupe_Parametre` varchar(50) DEFAULT NULL,
-  `Commentaire_Parametre` varchar(100) DEFAULT NULL,
-  PRIMARY KEY (`Id_Parametre`,`Cle_Parametre`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
-DROP TABLE IF EXISTS `tm_journal_commentaire_libre`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `tm_journal_commentaire_libre` (
-  `Id_Commentaire_Journal` int NOT NULL AUTO_INCREMENT,
-  `Code_Journal` varchar(32) NOT NULL,
-  `Commentaire` text NOT NULL,
-  `Date_Creation` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `Date_Modification` datetime DEFAULT NULL,
-  PRIMARY KEY (`Id_Commentaire_Journal`),
-  KEY `IDX_tm_journal_commentaire_libre_code` (`Code_Journal`),
-  KEY `IDX_tm_journal_commentaire_libre_date_creation` (`Date_Creation`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-SET FOREIGN_KEY_CHECKS=1;
-
-SET FOREIGN_KEY_CHECKS=0;
-INSERT INTO `tm_journal_code` VALUES ('AACT','Association d\'un module d\'alarme %1'),('ACQ','Acquitter les alarmes'),('ACT','Activer la surveillance'),('ACTU','Reactivation de l\'utilisateur %1'),('AJE','Ajoute evÃƒÆ’Ã‚Â¨nement manuel'),('ARC','Archivage des donnees %1 %2'),('AS','ArrÃƒÆ’Ã‚Âªt de la surveillance'),('AT','Activation de la surveillance telephonique %1'),('CA','Demarrage d\'un calibrage pour la sonde'),('CC','Changement sur un element %1'),('CDA','Changement d\'etat du datalogger %1'),('CF','Changement de frequence %1'),('CONNEXION','Connexion de l\'utilisateur %1'),('CR','Changement de retard d\'alarme %1'),('CS','Changement de sonde %1'),('DECONNEXION','Deconnexion de l\'utilisateur %1'),('DES','Desactiver la surveillance'),('DS','Demarrage de la surveillance'),('DT','Desactivation de la surveillance telephonique %1'),('ET','Demarrage d\'un etalonnage pour la sonde'),('FERMSURV','Fermeture de la fenÃƒÆ’Ã‚Âªtre de surveillance'),('MDP','Changement fiche utilisateur %1'),('PS','Le gestionnaire de port serie virtuel ÃƒÆ’Ã‚Â  ete relance'),('SACT','Suppression du module d\'alarme associe %1'),('TC','Test de connexion de la sonde'),('TEL','SystÃƒÆ’Ã‚Â¨me'),('UT','');
-SET FOREIGN_KEY_CHECKS=1;
-
--- =====================================================================
--- Alignement seed <-> schema Prisma (compatibilite install recente)
--- Version safe MariaDB/MySQL (checks information_schema)
--- =====================================================================
-SET @has_tbl := (SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'tm_graphique');
-SET @has_col := (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'tm_graphique' AND column_name = 'Adresse_Sonde');
-SET @sql := IF(@has_tbl = 1 AND @has_col = 0,
-  'ALTER TABLE `tm_graphique` ADD COLUMN `Adresse_Sonde` VARCHAR(50) NULL AFTER `Sonde_Numero_Serie`',
-  'SELECT 1');
-PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-
-SET @has_tbl := (SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'tm_mesures');
-SET @has_col := (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'tm_mesures' AND column_name = 'Adresse_Sonde');
-SET @sql := IF(@has_tbl = 1 AND @has_col = 0,
-  'ALTER TABLE `tm_mesures` ADD COLUMN `Adresse_Sonde` VARCHAR(50) NULL AFTER `Sonde_Numero_Serie`',
-  'SELECT 1');
-PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-
-SET @has_col_rssi := (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'tm_mesures' AND column_name = 'Rssi');
-SET @has_col_tension := (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'tm_mesures' AND column_name = 'Tension');
-SET @sql := IF(@has_tbl = 1 AND @has_col_rssi = 1,
-  'ALTER TABLE `tm_mesures` MODIFY COLUMN `Rssi` VARCHAR(10) NULL',
-  'SELECT 1');
-PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-SET @sql := IF(@has_tbl = 1 AND @has_col_tension = 1,
-  'ALTER TABLE `tm_mesures` MODIFY COLUMN `Tension` VARCHAR(10) NULL',
-  'SELECT 1');
-PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 
 -- =====================================================================
 -- vigi_chat (messagerie)
@@ -2587,7 +1170,310 @@ SET FOREIGN_KEY_CHECKS=1;
 -- =====================================================================
 -- GSO / GSP memory recovery helpers, views and events
 -- =====================================================================
+CREATE DATABASE IF NOT EXISTS `vigi_mesures` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci */ /*!80016 DEFAULT ENCRYPTION='N' */;
+
 USE `vigi_mesures`;
+
+DROP TABLE IF EXISTS `tm_graphique`;
+CREATE TABLE `tm_graphique` (
+  `Id_Graphique` int NOT NULL AUTO_INCREMENT,
+  `Date_Heure_Mesure` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `Valeur` float DEFAULT NULL,
+  `Valeur_Brute` float DEFAULT NULL,
+  `Nb_Decimal` int DEFAULT NULL,
+  `Consigne` float DEFAULT NULL,
+  `Consigne_Sup` float DEFAULT NULL,
+  `Consigne_Inf` float DEFAULT NULL,
+  `Unite` varchar(10) DEFAULT NULL,
+  `Sonde_Numero_Serie` varchar(50) DEFAULT NULL,
+  `Adresse_Sonde` varchar(50) DEFAULT NULL,
+  `Id_Sonde` int DEFAULT NULL,
+  `Id_Lieu` int NOT NULL DEFAULT '0',
+  `Est_Valeur_Null` tinyint(1) NOT NULL DEFAULT '0',
+  `Frequence` int DEFAULT NULL,
+  `Est_Etat_Alarme` tinyint NOT NULL DEFAULT '0',
+  `Consigne_Inf_Pre_Alarme` float DEFAULT NULL,
+  `Consigne_Sup_Pre_Alarme` float DEFAULT NULL,
+  PRIMARY KEY (`Id_Graphique`,`Date_Heure_Mesure`,`Id_Lieu`,`Est_Valeur_Null`,`Est_Etat_Alarme`),
+  KEY `IDX_tm_graphique_lieu` (`Id_Lieu`),
+  KEY `IDX_tm_graphique_date` (`Date_Heure_Mesure`),
+  KEY `IDX_tm_graphique_sonde` (`Sonde_Numero_Serie`),
+  KEY `IDX_tm_graphique_adresse` (`Adresse_Sonde`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+DROP TABLE IF EXISTS `tm_journal`;
+CREATE TABLE `tm_journal` (
+  `Id_Journal` int NOT NULL AUTO_INCREMENT,
+  `Id_Serveur_BDD` int NOT NULL,
+  `Code_Journal` varchar(50) DEFAULT NULL,
+  `Commentaire` longtext,
+  `Nom_Utilisateur` varchar(50) DEFAULT NULL,
+  `Profil_Utilisateur` varchar(50) DEFAULT NULL,
+  `Date_Heure_Journal` datetime DEFAULT NULL,
+  `Id_Lieu` int DEFAULT NULL,
+  `Commentaire_Utilisateur` longtext,
+  PRIMARY KEY (`Id_Serveur_BDD`,`Id_Journal`),
+  KEY `Id_Journal` (`Id_Journal`),
+  KEY `IDX_Code_Journal` (`Code_Journal`),
+  KEY `IDX_Nom_Utilisateur` (`Nom_Utilisateur`),
+  KEY `IDX_Profil_Utilisateur` (`Profil_Utilisateur`),
+  KEY `IDX_Date_Heure_Journal` (`Date_Heure_Journal`),
+  KEY `IDX_Id_Lieu` (`Id_Lieu`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+DROP TABLE IF EXISTS `tm_journal_code`;
+CREATE TABLE `tm_journal_code` (
+  `Code_Journal` varchar(50) NOT NULL,
+  `Commentaire` varchar(200) DEFAULT NULL,
+  PRIMARY KEY (`Code_Journal`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+DROP TABLE IF EXISTS `tm_compteur_id_table`;
+CREATE TABLE `tm_compteur_id_table` (
+  `Id_Serveur_BDD` int NOT NULL,
+  `Nom_Table` varchar(100) NOT NULL,
+  `Compteur_Id` int DEFAULT NULL,
+  PRIMARY KEY (`Id_Serveur_BDD`,`Nom_Table`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+DROP TABLE IF EXISTS `tm_mesures`;
+CREATE TABLE `tm_mesures` (
+  `Id_Serveur_BDD` int NOT NULL DEFAULT '0',
+  `Id_Mesure` int NOT NULL AUTO_INCREMENT,
+  `Date_Heure_Mesure` datetime NOT NULL,
+  `Valeur` float DEFAULT NULL,
+  `Valeur_Brute` float DEFAULT NULL,
+  `Est_Valeur_Memoire` tinyint(1) NOT NULL DEFAULT '0',
+  `Nb_Decimal` int DEFAULT NULL,
+  `Consigne` float DEFAULT NULL,
+  `Consigne_Sup` float DEFAULT NULL,
+  `Consigne_Inf` float DEFAULT NULL,
+  `Unite` varchar(10) DEFAULT NULL,
+  `Sonde_Numero_Serie` varchar(50) DEFAULT NULL,
+  `Adresse_Sonde` varchar(50) DEFAULT NULL,
+  `COM_sonde` float DEFAULT NULL,
+  `Id_Lieu` int NOT NULL DEFAULT '0',
+  `Est_Valeur_Null` tinyint NOT NULL DEFAULT '0',
+  `Frequence` int DEFAULT NULL,
+  `Est_Etat_Alarme` tinyint(1) NOT NULL DEFAULT '0',
+  `Consigne_Inf_Pre_Alarme` float DEFAULT NULL,
+  `Consigne_Sup_Pre_Alarme` float DEFAULT NULL,
+  `Moyenne` float DEFAULT NULL,
+  `Rssi` varchar(10) DEFAULT NULL,
+  `Tension` varchar(10) DEFAULT NULL,
+  `Planning_Regle_Existe` tinyint(1) NOT NULL DEFAULT '0',
+  `Planning_Actif` tinyint(1) NOT NULL DEFAULT '0',
+  PRIMARY KEY (`Id_Serveur_BDD`,`Id_Mesure`,`Date_Heure_Mesure`,`Id_Lieu`,`Est_Valeur_Null`),
+  KEY `Id_Mesure` (`Id_Mesure`),
+  KEY `IDX_tm_mesures_lieu` (`Id_Lieu`),
+  KEY `IDX_tm_mesures_date` (`Date_Heure_Mesure`),
+  KEY `IDX_tm_mesures_sonde` (`Sonde_Numero_Serie`),
+  KEY `IDX_tm_mesures_adresse` (`Adresse_Sonde`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+DROP TABLE IF EXISTS `tm_mesures_gso`;
+CREATE TABLE `tm_mesures_gso` (
+  `Id_mesures_gso` int NOT NULL AUTO_INCREMENT,
+  `id_capteur` varchar(50) NOT NULL,
+  `tep` float DEFAULT NULL,
+  `unite` varchar(10) DEFAULT NULL,
+  `date_mesure` datetime NOT NULL,
+  `trame` binary(8) DEFAULT NULL,
+  `rssi` varchar(10) DEFAULT NULL,
+  `tension` varchar(10) DEFAULT NULL,
+  `COM_sonde` float DEFAULT NULL,
+  PRIMARY KEY (`id_capteur`,`date_mesure`),
+  KEY `IDX_tm_mesures_gso_id` (`Id_mesures_gso`),
+  KEY `IDX_tm_mesures_gso_date` (`date_mesure`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+DROP TABLE IF EXISTS `tm_journal_histo`;
+CREATE TABLE `tm_journal_histo` (
+  `Id_Journal_Histo` int NOT NULL AUTO_INCREMENT,
+  `Id_Serveur_BDD` int NOT NULL DEFAULT '0',
+  `Id_Journal` int NOT NULL DEFAULT '0',
+  `Code_Journal` varchar(50) DEFAULT NULL,
+  `Commentaire` longtext,
+  `Nom_Utilisateur` varchar(50) DEFAULT NULL,
+  `Profil_Utilisateur` varchar(50) DEFAULT NULL,
+  `Date_Heure_Journal` datetime DEFAULT NULL,
+  `Id_Lieu` int DEFAULT NULL,
+  `Commentaire_Utilisateur` longtext,
+  PRIMARY KEY (`Id_Journal_Histo`,`Id_Serveur_BDD`,`Id_Journal`),
+  KEY `IDX_tm_journal_histo_code` (`Code_Journal`),
+  KEY `IDX_tm_journal_histo_date` (`Date_Heure_Journal`),
+  KEY `IDX_tm_journal_histo_lieu` (`Id_Lieu`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+DROP TABLE IF EXISTS `tm_mesures_ajustage`;
+CREATE TABLE `tm_mesures_ajustage` (
+  `Id_Mesure_Ajustage` int NOT NULL AUTO_INCREMENT,
+  `Id_Serveur_BDD` int NOT NULL DEFAULT '0',
+  `Valeur` float DEFAULT NULL,
+  `Valeur_Brute` float DEFAULT NULL,
+  `Unite` varchar(10) DEFAULT NULL,
+  `Date_Heure_Mesure` datetime NOT NULL,
+  `Sonde_Numero_Serie` varchar(50) NOT NULL DEFAULT '',
+  `Adresse_Sonde` varchar(50) NOT NULL DEFAULT '',
+  `Est_Valeur_Null` tinyint NOT NULL DEFAULT '0',
+  PRIMARY KEY (`Id_Mesure_Ajustage`,`Id_Serveur_BDD`),
+  KEY `IDX_tm_mesures_ajustage_date` (`Date_Heure_Mesure`),
+  KEY `IDX_tm_mesures_ajustage_sonde` (`Sonde_Numero_Serie`),
+  KEY `IDX_tm_mesures_ajustage_adresse` (`Adresse_Sonde`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+DROP TABLE IF EXISTS `tm_mesures_ajustage_etalon`;
+CREATE TABLE `tm_mesures_ajustage_etalon` (
+  `Id_Mesure_Ajustage_Etalon` int NOT NULL AUTO_INCREMENT,
+  `Id_Serveur_BDD` int NOT NULL DEFAULT '0',
+  `Valeur` float DEFAULT NULL,
+  `Valeur_Brute` float DEFAULT NULL,
+  `Unite` varchar(10) DEFAULT NULL,
+  `Date_Heure_Mesure` datetime NOT NULL,
+  `Etalon_Numero_Serie` varchar(50) NOT NULL DEFAULT '',
+  `Adresse_Sonde` varchar(50) DEFAULT NULL,
+  `Est_Valeur_Null` tinyint NOT NULL DEFAULT '0',
+  PRIMARY KEY (`Id_Mesure_Ajustage_Etalon`,`Id_Serveur_BDD`),
+  KEY `IDX_tm_mesures_ajustage_etalon_date` (`Date_Heure_Mesure`),
+  KEY `IDX_tm_mesures_ajustage_etalon_serie` (`Etalon_Numero_Serie`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+DROP TABLE IF EXISTS `tm_mesure_etalon`;
+CREATE TABLE `tm_mesure_etalon` (
+  `Id_Mesure_Etalon` int NOT NULL AUTO_INCREMENT,
+  `Id_Serveur_BDD` int NOT NULL DEFAULT '0',
+  `Valeur_Brute` float NOT NULL,
+  `Etalon_Numero_Serie` varchar(50) NOT NULL DEFAULT '',
+  `Est_Valeur_Null` tinyint NOT NULL,
+  `Date_Heure` datetime NOT NULL,
+  `Message_Erreur` varchar(50) NOT NULL DEFAULT '',
+  PRIMARY KEY (`Id_Mesure_Etalon`,`Id_Serveur_BDD`),
+  KEY `IDX_tm_mesure_etalon_date` (`Date_Heure`),
+  KEY `IDX_tm_mesure_etalon_serie` (`Etalon_Numero_Serie`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+DROP TABLE IF EXISTS `tm_mesures_etalonnage`;
+CREATE TABLE `tm_mesures_etalonnage` (
+  `Id_Mesure_Etalonnage` int NOT NULL AUTO_INCREMENT,
+  `Id_Serveur_BDD` int NOT NULL DEFAULT '0',
+  `Valeur` float DEFAULT NULL,
+  `Valeur_Brute` float DEFAULT NULL,
+  `Unite` varchar(10) DEFAULT NULL,
+  `Date_Heure_Mesure` datetime NOT NULL,
+  `Sonde_Numero_serie` varchar(50) DEFAULT NULL,
+  `Adresse_Sonde` varchar(50) DEFAULT NULL,
+  `Numero_Ordre` int DEFAULT NULL,
+  `Mesure_Sonde` float DEFAULT NULL,
+  `Mesure_Etalon` float DEFAULT NULL,
+  PRIMARY KEY (`Id_Mesure_Etalonnage`,`Id_Serveur_BDD`),
+  KEY `IDX_tm_mesures_etalonnage_date` (`Date_Heure_Mesure`),
+  KEY `IDX_tm_mesures_etalonnage_sonde` (`Sonde_Numero_serie`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+DROP TABLE IF EXISTS `tm_mesures_histo`;
+CREATE TABLE `tm_mesures_histo` (
+  `Id_Mesure` int NOT NULL AUTO_INCREMENT,
+  `Id_Serveur_BDD` int NOT NULL DEFAULT '0',
+  `Date_Heure_Mesure` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `Valeur` float DEFAULT NULL,
+  `Valeur_Brute` float DEFAULT NULL,
+  `Nb_decimal` tinyint DEFAULT NULL,
+  `Consigne` float DEFAULT NULL,
+  `Consigne_Sup` float DEFAULT NULL,
+  `Consigne_Inf` float DEFAULT NULL,
+  `Unite` varchar(10) DEFAULT NULL,
+  `Sonde_Numero_Serie` varchar(50) DEFAULT NULL,
+  `Id_Lieu` int NOT NULL DEFAULT '0',
+  `Est_Valeur_Null` tinyint NOT NULL DEFAULT '0',
+  `Frequence` int DEFAULT NULL,
+  `Est_En_Alarme` tinyint(1) DEFAULT '0',
+  `Consigne_Inf_Pre_Alarme` float DEFAULT NULL,
+  `Consigne_Sup_Pre_Alarme` float DEFAULT NULL,
+  `Moyenne` float DEFAULT NULL,
+  PRIMARY KEY (`Id_Mesure`,`Id_Serveur_BDD`,`Date_Heure_Mesure`,`Id_Lieu`,`Est_Valeur_Null`),
+  KEY `IDX_tm_mesures_histo_lieu` (`Id_Lieu`),
+  KEY `IDX_tm_mesures_histo_date` (`Date_Heure_Mesure`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+DROP TABLE IF EXISTS `tm_mesures_test`;
+CREATE TABLE `tm_mesures_test` (
+  `Id_Mesure_Test` int NOT NULL AUTO_INCREMENT,
+  `Id_Serveur_BDD` int NOT NULL DEFAULT '0',
+  `Valeur_Brute` float NOT NULL,
+  `Sonde_Numero_Serie` varchar(50) NOT NULL DEFAULT '',
+  `Est_Valeur_Null` tinyint NOT NULL,
+  `Date_Heure` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `Nombre_Total` int NOT NULL DEFAULT '0',
+  `Nombre_Recu` int NOT NULL DEFAULT '0',
+  PRIMARY KEY (`Id_Mesure_Test`,`Id_Serveur_BDD`),
+  UNIQUE KEY `UX_tm_mesures_test_Sonde_Numero_Serie` (`Sonde_Numero_Serie`),
+  KEY `IDX_tm_mesures_test_date` (`Date_Heure`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+DROP TABLE IF EXISTS `tm_mesures_test_etalon`;
+CREATE TABLE `tm_mesures_test_etalon` (
+  `Id_Mesure_Test_Etalon` int NOT NULL AUTO_INCREMENT,
+  `Id_Serveur_BDD` int NOT NULL DEFAULT '0',
+  `Valeur_Brute` float NOT NULL,
+  `Etalon_Numero_Serie` varchar(50) NOT NULL DEFAULT '',
+  `Est_Valeur_Null` tinyint NOT NULL,
+  `Date_Heure` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `Nombre_Total` int NOT NULL DEFAULT '0',
+  `Nombre_Recu` int NOT NULL DEFAULT '0',
+  PRIMARY KEY (`Id_Mesure_Test_Etalon`,`Id_Serveur_BDD`),
+  UNIQUE KEY `UX_tm_mesures_test_etalon_Etalon_Numero_Serie` (`Etalon_Numero_Serie`),
+  KEY `IDX_tm_mesures_test_etalon_date` (`Date_Heure`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+DROP TABLE IF EXISTS `tm_mode_degrade`;
+CREATE TABLE `tm_mode_degrade` (
+  `Id_Mode_Degrade` int NOT NULL AUTO_INCREMENT,
+  `Id_Utilisateur` int DEFAULT NULL,
+  `Date_Heure_Creation` datetime DEFAULT NULL,
+  `Requete_SQL` varchar(500) DEFAULT NULL,
+  `Est_Archivee` tinyint(1) NOT NULL DEFAULT '0',
+  `Date_Heure_Archive` datetime DEFAULT NULL,
+  PRIMARY KEY (`Id_Mode_Degrade`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+DROP TABLE IF EXISTS `tm_parametre`;
+CREATE TABLE `tm_parametre` (
+  `Id_Parametre` int NOT NULL AUTO_INCREMENT,
+  `Cle_Parametre` varchar(20) NOT NULL,
+  `Valeur_Parametre` varchar(50) DEFAULT NULL,
+  `Groupe_Parametre` varchar(50) DEFAULT NULL,
+  `Commentaire_Parametre` varchar(100) DEFAULT NULL,
+  PRIMARY KEY (`Id_Parametre`,`Cle_Parametre`),
+  KEY `IDX_tm_parametre_cle` (`Cle_Parametre`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+DROP TABLE IF EXISTS `tm_vigilog_mesure`;
+CREATE TABLE `tm_vigilog_mesure` (
+  `Id_VigiLog_Mesure` int NOT NULL AUTO_INCREMENT,
+  `Id_VigiLog_Tournee` int NOT NULL,
+  `Numero_Ordre` int DEFAULT NULL,
+  `Date_Heure_Mesure` datetime NOT NULL,
+  `Valeur` decimal(10,2) DEFAULT NULL,
+  `Est_Hors_Limites` tinyint(1) NOT NULL DEFAULT '0',
+  `Est_En_Alarme` tinyint(1) NOT NULL DEFAULT '0',
+  `Est_Marqueur` tinyint(1) NOT NULL DEFAULT '0',
+  `Details` varchar(200) DEFAULT NULL,
+  `Date_Heure_Import` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`Id_VigiLog_Mesure`),
+  UNIQUE KEY `UK_tm_vigilog_mesure_unique` (`Id_VigiLog_Tournee`,`Date_Heure_Mesure`,`Numero_Ordre`),
+  KEY `IDX_tm_vigilog_mesure_tournee` (`Id_VigiLog_Tournee`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+DROP TABLE IF EXISTS `tm_journal_commentaire_libre`;
+CREATE TABLE `tm_journal_commentaire_libre` (
+  `Id_Commentaire_Journal` int NOT NULL AUTO_INCREMENT,
+  `Code_Journal` varchar(32) NOT NULL,
+  `Commentaire` longtext NOT NULL,
+  `Date_Creation` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `Date_Modification` datetime DEFAULT NULL,
+  PRIMARY KEY (`Id_Commentaire_Journal`),
+  KEY `IDX_tm_journal_commentaire_libre_code` (`Code_Journal`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 DROP TABLE IF EXISTS `tm_mesures_gso_count_mem`;
 CREATE TABLE `tm_mesures_gso_count_mem` (
@@ -2697,16 +1583,6 @@ group by `tm_mesures`.`Adresse_Sonde`;
 
 USE `vigi_main`;
 
-SET @has_tbl := (SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 't_sonde');
-SET @has_col := (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 't_sonde' AND column_name = 'Metrologie_en_cours');
-SET @sql := IF(@has_tbl = 1 AND @has_col = 0, 'ALTER TABLE `t_sonde` ADD COLUMN `Metrologie_en_cours` TINYINT(1) NOT NULL DEFAULT 0 AFTER `Sonde_Offset`', 'SELECT 1');
-PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-SET @has_col := (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 't_sonde' AND column_name = 'Metrologie_cmd_envoyee');
-SET @sql := IF(@has_tbl = 1 AND @has_col = 0, 'ALTER TABLE `t_sonde` ADD COLUMN `Metrologie_cmd_envoyee` TINYINT(1) NOT NULL DEFAULT 0 AFTER `Metrologie_en_cours`', 'SELECT 1');
-PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-
-USE `vigi_main`;
-
 DROP VIEW IF EXISTS `v_tm_mesures_dernier`;
 CREATE VIEW `v_tm_mesures_dernier` AS
 select `l`.`Id_Lieu` AS `Id_Lieu`,
@@ -2812,24 +1688,27 @@ from `vigi_main`.`t_ajustage` `ta`) `x`
 where (`x`.`rn` = 1)) `aj` on `aj`.`Sonde_Numero_Serie` = `s`.`Sonde_Numero_Serie`
 where (`s`.`Est_Sonde_GSO` = 1);
 
-USE `vigi_mesures`;
+USE `vigi_main`;
 
-DROP EVENT IF EXISTS `evt_gso_refresh_lieux_from_last_measure`;
 DROP EVENT IF EXISTS `EVT_GSO_DERNIERVALEUR_LIEU`;
 DELIMITER $$
 CREATE EVENT `EVT_GSO_DERNIERVALEUR_LIEU`
-ON SCHEDULE EVERY 5 MINUTE
-DO
-BEGIN
+ON SCHEDULE
+		EVERY 2 MINUTE STARTS '2026-03-24 16:11:55'
+	ON COMPLETION NOT PRESERVE
+  ENABLE
+  COMMENT ''
+  DO BEGIN
   UPDATE vigi_main.t_lieu
-  JOIN vigi_main.v_tm_mesures_dernier ON vigi_main.v_tm_mesures_dernier.Id_Lieu=vigi_main.t_lieu.Id_Lieu
+  JOIN v_tm_mesures_dernier ON v_tm_mesures_dernier.Id_Lieu=vigi_main.t_lieu.Id_Lieu
   SET
-  vigi_main.t_lieu.Derniere_Date_Heure=vigi_main.v_tm_mesures_dernier.Date_Heure_Mesure,
-  vigi_main.t_lieu.Derniere_Valeur=vigi_main.v_tm_mesures_dernier.Dernier_Releve,
-  vigi_main.t_lieu.Derniere_Unite=vigi_main.v_tm_mesures_dernier.Unite,
-  vigi_main.t_lieu.Date_Heure_Derniere_Reponse=vigi_main.v_tm_mesures_dernier.Date_Heure_Mesure,
-  vigi_main.t_lieu.Derniere_Val_Rssi=vigi_main.v_tm_mesures_dernier.Signal_Radio,
-  vigi_main.t_lieu.Derniere_Val_Tension=vigi_main.v_tm_mesures_dernier.Tension_Piles;
+  vigi_main.t_lieu.Derniere_Date_Heure=v_tm_mesures_dernier.Date_Heure_Mesure,
+  vigi_main.t_lieu.Derniere_Valeur=v_tm_mesures_dernier.Dernier_Releve,
+  vigi_main.t_lieu.Derniere_Unite=v_tm_mesures_dernier.Unite,
+  vigi_main.t_lieu.Date_Heure_Derniere_Reponse=v_tm_mesures_dernier.Date_Heure_Mesure,
+  vigi_main.t_lieu.Derniere_Val_Rssi=v_tm_mesures_dernier.Signal_Radio,
+  vigi_main.t_lieu.Derniere_Val_Tension=v_tm_mesures_dernier.Tension_Piles;
+
 
   UPDATE vigi_main.t_lieu
   SET vigi_main.t_lieu.Date_Heure_Derniere_Reponse_Recue_OK=vigi_main.t_lieu.Derniere_Date_Heure
@@ -2841,28 +1720,186 @@ BEGIN
   WHERE vigi_main.t_lieu.Derniere_Valeur IS NOT NULL AND (vigi_main.t_lieu.Tolerance_Surveillance_Sup IS NULL OR vigi_main.t_lieu.Tolerance_Surveillance_Inf IS NULL)
   AND vigi_main.t_lieu.Est_Lieu_GSO=1 AND vigi_main.t_lieu.Lieu_Etat='S';
 
-  UPDATE vigi_main.t_lieu
-  SET vigi_main.t_lieu.Date_Heure_Last_Update_EVT_GSO=NOW()
-  WHERE vigi_main.t_lieu.Est_Lieu_GSO=1 AND vigi_main.t_lieu.Lieu_Etat='S';
+  UPDATE vigi_main.t_lieu SET vigi_main.t_lieu.Date_Heure_Last_Update_EVT_GSO=NOW() WHERE vigi_main.t_lieu.Est_Lieu_GSO=1 AND vigi_main.t_lieu.Lieu_Etat='S';
 
   UPDATE vigi_main.t_parametre
-  SET vigi_main.t_parametre.Champ_DATETIME = (
-    SELECT vigi_main.v_tm_mesures_dernier.Date_Heure_Mesure
-    FROM vigi_main.v_tm_mesures_dernier
-    ORDER BY vigi_main.v_tm_mesures_dernier.Date_Heure_Mesure DESC
-    LIMIT 1
-  )
+  SET vigi_main.t_parametre.Champ_DATETIME = (SELECT v_tm_mesures_dernier.Date_Heure_Mesure FROM v_tm_mesures_dernier ORDER BY v_tm_mesures_dernier.Date_Heure_Mesure DESC LIMIT 1)
   WHERE vigi_main.t_parametre.Mot_Cle='GSO_DERNIER_DATE_HEURE';
 
-  DELETE FROM vigi_main.t_lieu_planning_audit
-  WHERE (vigi_main.t_lieu_planning_audit.Date_Heure_Fin_Changement<DATE_SUB(NOW(), INTERVAL 240 HOUR));
+  DELETE FROM t_lieu_planning_audit WHERE ((t_lieu_planning_audit.Date_Heure_Fin_Changement<DATE_SUB(NOW(), INTERVAL 240 HOUR)));
+
 END$$
 DELIMITER ;
 
-DROP EVENT IF EXISTS `evt_gso_build_memory_commands`;
-DROP EVENT IF EXISTS `EVT_CALCUL_MESURE_MEM_GSO`;
+
+DROP EVENT IF EXISTS `EVT_PLANNING_CONSIGNE`;
 DELIMITER $$
-CREATE EVENT `EVT_CALCUL_MESURE_MEM_GSO`
+CREATE EVENT `EVT_PLANNING_CONSIGNE`
+ON SCHEDULE
+		EVERY 1 MINUTE STARTS '2026-03-24 16:11:55'
+	ON COMPLETION NOT PRESERVE
+	ENABLE
+	COMMENT 'Applique les regles de planning de consignes chaque minute'
+	DO BEGIN
+  DECLARE v_now_day TINYINT;
+  DECLARE v_now_time TIME;
+
+  SET v_now_day = IF(DAYOFWEEK(NOW()) = 1, 7, DAYOFWEEK(NOW()) - 1);
+  SET v_now_time = TIME(NOW());
+
+  DROP TEMPORARY TABLE IF EXISTS tmp_planning_best;
+  CREATE TEMPORARY TABLE tmp_planning_best AS
+  SELECT r.Id_Lieu,
+         r.Id_Regle,
+         r.Consigne,
+         r.Tolerance_Sup_Calc,
+         r.Tolerance_Inf_Calc,
+         r.Retard_Alarme_Changement_Consigne
+  FROM t_lieu_planning_regle r
+  INNER JOIN (
+    SELECT Id_Lieu, MAX(Priorite) AS max_prio
+    FROM t_lieu_planning_regle
+    WHERE Actif = 1
+      AND (
+        (Jour_Debut = Jour_Fin AND
+          v_now_day = Jour_Debut AND
+          v_now_time >= Heure_Debut AND
+          v_now_time <  Heure_Fin)
+        OR
+        (Jour_Debut < Jour_Fin AND (
+          (v_now_day > Jour_Debut AND v_now_day < Jour_Fin)
+          OR (v_now_day = Jour_Debut AND v_now_time >= Heure_Debut)
+          OR (v_now_day = Jour_Fin   AND v_now_time <  Heure_Fin)
+        ))
+        OR
+        (Jour_Debut > Jour_Fin AND (
+          (v_now_day = Jour_Debut AND v_now_time >= Heure_Debut)
+          OR (v_now_day = Jour_Fin   AND v_now_time <  Heure_Fin)
+          OR (v_now_day > Jour_Debut)
+          OR (v_now_day < Jour_Fin)
+        ))
+      )
+    GROUP BY Id_Lieu
+  ) best_prio ON best_prio.Id_Lieu = r.Id_Lieu AND best_prio.max_prio = r.Priorite
+  WHERE r.Actif = 1
+    AND (
+      (r.Jour_Debut = r.Jour_Fin AND
+        v_now_day = r.Jour_Debut AND
+        v_now_time >= r.Heure_Debut AND
+        v_now_time <  r.Heure_Fin)
+      OR
+      (r.Jour_Debut < r.Jour_Fin AND (
+        (v_now_day > r.Jour_Debut AND v_now_day < r.Jour_Fin)
+        OR (v_now_day = r.Jour_Debut AND v_now_time >= r.Heure_Debut)
+        OR (v_now_day = r.Jour_Fin   AND v_now_time <  r.Heure_Fin)
+      ))
+      OR
+      (r.Jour_Debut > r.Jour_Fin AND (
+        (v_now_day = r.Jour_Debut AND v_now_time >= r.Heure_Debut)
+        OR (v_now_day = r.Jour_Fin   AND v_now_time <  r.Heure_Fin)
+        OR (v_now_day > r.Jour_Debut)
+        OR (v_now_day < r.Jour_Fin)
+      ))
+    );
+
+  DROP TEMPORARY TABLE IF EXISTS tmp_planning_apply;
+  CREATE TEMPORARY TABLE tmp_planning_apply AS
+  SELECT l.Id_Lieu,
+         best.Id_Regle AS Planning_Regle_Id,
+         l.Consigne AS Consigne_Avant,
+         l.Tolerance_Surveillance_Sup AS Tolerance_Surveillance_Sup_Avant,
+         l.Tolerance_Surveillance_Inf AS Tolerance_Surveillance_Inf_Avant,
+         best.Consigne AS Consigne_Apres,
+         best.Tolerance_Sup_Calc AS Tolerance_Surveillance_Sup_Apres,
+         best.Tolerance_Inf_Calc AS Tolerance_Surveillance_Inf_Apres,
+         best.Retard_Alarme_Changement_Consigne
+  FROM t_lieu l
+  INNER JOIN tmp_planning_best best ON best.Id_Lieu = l.Id_Lieu
+  WHERE l.Planning_Source_Regle_Id <> best.Id_Regle
+     OR l.Planning_Source_Regle_Id IS NULL
+     OR l.Planning_Actif = 0
+     OR IFNULL(l.Consigne, -999999) <> IFNULL(best.Consigne, -999999)
+     OR IFNULL(l.Tolerance_Surveillance_Sup, -999999) <> IFNULL(best.Tolerance_Sup_Calc, -999999)
+     OR IFNULL(l.Tolerance_Surveillance_Inf, -999999) <> IFNULL(best.Tolerance_Inf_Calc, -999999);
+
+  UPDATE t_lieu_planning_audit a
+  INNER JOIN tmp_planning_apply c ON c.Id_Lieu = a.Id_Lieu
+  SET a.Date_Heure_Fin_Changement = NOW()
+  WHERE a.Type = 'PLAN_APPLY'
+    AND a.Date_Heure_Fin_Changement IS NULL;
+
+  UPDATE t_lieu l
+  INNER JOIN tmp_planning_apply c ON c.Id_Lieu = l.Id_Lieu
+  SET l.Consigne                          = c.Consigne_Apres,
+      l.Consigne_Sup                      = c.Tolerance_Surveillance_Sup_Apres,
+      l.Consigne_Inf                      = c.Tolerance_Surveillance_Inf_Apres,
+      l.Tolerance_Surveillance_Sup        = c.Tolerance_Surveillance_Sup_Apres,
+      l.Tolerance_Surveillance_Inf        = c.Tolerance_Surveillance_Inf_Apres,
+      l.Retard_Alarme_Changement_Consigne = c.Retard_Alarme_Changement_Consigne,
+      l.Planning_Actif                    = 1,
+      l.Planning_Source_Regle_Id          = c.Planning_Regle_Id,
+      l.Planning_Derniere_Maj             = NOW();
+
+  INSERT INTO t_lieu_planning_audit
+    (Id_Lieu, Timestamp, Date_Heure_Debut_Changement, Date_Heure_Fin_Changement, Type,
+     Planning_Regle_Id,
+     Consigne_Avant, Tolerance_Surveillance_Sup_Avant, Tolerance_Surveillance_Inf_Avant,
+     Consigne_Apres, Tolerance_Surveillance_Sup_Apres, Tolerance_Surveillance_Inf_Apres)
+  SELECT c.Id_Lieu,
+         NOW(),
+         NOW(),
+         NULL,
+         'PLAN_APPLY',
+         c.Planning_Regle_Id,
+         c.Consigne_Avant,
+         c.Tolerance_Surveillance_Sup_Avant,
+         c.Tolerance_Surveillance_Inf_Avant,
+         c.Consigne_Apres,
+         c.Tolerance_Surveillance_Sup_Apres,
+         c.Tolerance_Surveillance_Inf_Apres
+  FROM tmp_planning_apply c;
+
+  DROP TEMPORARY TABLE IF EXISTS tmp_planning_return;
+  CREATE TEMPORARY TABLE tmp_planning_return AS
+  SELECT l.Id_Lieu
+  FROM t_lieu l
+  WHERE l.Planning_Actif = 1
+    AND NOT EXISTS (
+      SELECT 1
+      FROM tmp_planning_best best
+      WHERE best.Id_Lieu = l.Id_Lieu
+    );
+
+  UPDATE t_lieu_planning_audit a
+  INNER JOIN tmp_planning_return r ON r.Id_Lieu = a.Id_Lieu
+  SET a.Date_Heure_Fin_Changement = NOW()
+  WHERE a.Type = 'PLAN_APPLY'
+    AND a.Date_Heure_Fin_Changement IS NULL;
+
+  UPDATE t_lieu l
+  INNER JOIN tmp_planning_return r ON r.Id_Lieu = l.Id_Lieu
+  SET l.Consigne                          = l.Consigne_Base,
+      l.Consigne_Sup                      = l.Consigne_Sup_Base,
+      l.Consigne_Inf                      = l.Consigne_Inf_Base,
+      l.Tolerance_Surveillance_Sup        = l.Tolerance_Surveillance_Sup_Base,
+      l.Tolerance_Surveillance_Inf        = l.Tolerance_Surveillance_Inf_Base,
+      l.Retard_Alarme_Changement_Consigne = NULL,
+      l.Planning_Actif                    = 0,
+      l.Planning_Source_Regle_Id          = NULL,
+      l.Planning_Derniere_Maj             = NOW();
+
+  DROP TEMPORARY TABLE IF EXISTS tmp_planning_return;
+  DROP TEMPORARY TABLE IF EXISTS tmp_planning_apply;
+  DROP TEMPORARY TABLE IF EXISTS tmp_planning_best;
+END$$
+DELIMITER ;
+
+USE `vigi_mesures`;
+
+DROP EVENT IF EXISTS `vigi_mesures`.`evt_gso_build_memory_commands`;
+DROP EVENT IF EXISTS `vigi_mesures`.`EVT_CALCUL_MESURE_MEM_GSO`;
+DELIMITER $$
+CREATE EVENT `vigi_mesures`.`EVT_CALCUL_MESURE_MEM_GSO`
 ON SCHEDULE EVERY 15 MINUTE
 DO
 BEGIN
@@ -2982,10 +2019,10 @@ BEGIN
 END$$
 DELIMITER ;
 
-DROP EVENT IF EXISTS `evt_trim_measure_archives`;
-DROP EVENT IF EXISTS `EVT_CLEAN_GRAPH_MES_GSO`;
+DROP EVENT IF EXISTS `vigi_mesures`.`evt_trim_measure_archives`;
+DROP EVENT IF EXISTS `vigi_mesures`.`EVT_CLEAN_GRAPH_MES_GSO`;
 DELIMITER $$
-CREATE EVENT `EVT_CLEAN_GRAPH_MES_GSO`
+CREATE EVENT `vigi_mesures`.`EVT_CLEAN_GRAPH_MES_GSO`
 ON SCHEDULE EVERY 1 HOUR
 DO
 BEGIN
@@ -3007,6 +2044,8 @@ DELIMITER ;
 -- =====================================================================
 -- Triggers GSO integres depuis db/triggersvigisensys.sql
 -- =====================================================================
+USE `vigi_main`;
+
 DROP TRIGGER IF EXISTS `trg_alarme_to_histo`;
 DROP TRIGGER IF EXISTS `TRG_GSO_BEF_DEL_ALARME`;
 DELIMITER $$
@@ -3046,7 +2085,6 @@ main_block: BEGIN
 	  LEAVE main_block;
 	END IF;
 
-
     /* ==========================================================================================
        1. BLOCAGE APRES ACQUITTEMENT ALARME EN COURS : ne pas redeclencher l'alarme immediatement
        ========================================================================================== */
@@ -3070,7 +2108,6 @@ main_block: BEGIN
       AND Type IN ('B','H','N')
       AND Date_Heure_Fin IS NULL
     LIMIT 1;	
-
 
     /* ==========================================================
        3. CAS : AUCUNE ALARME OUVERTE â†’ CREATION
@@ -3457,7 +2494,6 @@ IF NEW.Est_Consigne_Inf_Pre_Alarme_Active = 1 THEN
 
 END IF;
 
-
 /* --- PRE-ALARME HAUTE --- */
 IF NEW.Est_Consigne_Sup_Pre_Alarme_Active = 1 THEN
 
@@ -3484,9 +2520,10 @@ END IF;
 
     END
 
-
 /** vigi_mesures **/$$
 DELIMITER ;
+
+USE `vigi_mesures`;
 
 DROP TRIGGER IF EXISTS `TRG_AFT_INS_GSO_CMD_MEM`;
 DELIMITER $$
@@ -3560,7 +2597,6 @@ IF NEW.id_capteur IN(SELECT Adresse_Sonde from v_config_sonde_com) AND NEW.trame
              NEW.id_capteur			
 );
 END IF;
-
 
 IF NEW.trame=00000010 AND NEW.date_mesure >= NOW() - INTERVAL 2 HOUR THEN
 	UPDATE tm_mesures_gso_read_metro
@@ -3848,5 +2884,5 @@ WHERE v_config_sonde_com.GSO_SN = NEW.GSO_SN);
 END$$
 DELIMITER ;
 
-
-
+SET FOREIGN_KEY_CHECKS = 1;
+SET SQL_SAFE_UPDATES = 1;

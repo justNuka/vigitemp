@@ -41,7 +41,7 @@ cd "Vigitemp Serveur\\installer"
 
 ## Fichiers
 - Licence : `C:\ProgramData\VigiSensys\licenses\<license>.vtlic`
-- Cle publique : `C:\ProgramData\VigiSensys\license_keys\public_key.pem`
+- Clee publique : `C:\ProgramData\VigiSensys\license_keys\public_key.pem`
 - Logs install : `C:\ProgramData\VigiSensys\install-logs\install-server-*.log`
 
 ## Rollback

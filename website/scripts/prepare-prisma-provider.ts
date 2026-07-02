@@ -22,7 +22,36 @@ const schemas = [
   },
 ] as const;
 
+function parseProviderArg(): Provider | null {
+  const rawArgs = process.argv.slice(2);
+
+  for (let index = 0; index < rawArgs.length; index += 1) {
+    const arg = rawArgs[index]?.trim().toLowerCase();
+    if (!arg) continue;
+
+    if (arg === "mysql") return "mysql";
+    if (arg === "mssql" || arg === "sqlserver") return "mssql";
+
+    if (arg.startsWith("--provider=")) {
+      const value = arg.split("=", 2)[1];
+      if (value === "mysql") return "mysql";
+      if (value === "mssql" || value === "sqlserver") return "mssql";
+    }
+
+    if (arg === "--provider") {
+      const value = rawArgs[index + 1]?.trim().toLowerCase();
+      if (value === "mysql") return "mysql";
+      if (value === "mssql" || value === "sqlserver") return "mssql";
+    }
+  }
+
+  return null;
+}
+
 function detectProvider(): Provider {
+  const cliProvider = parseProviderArg();
+  if (cliProvider) return cliProvider;
+
   const configured = process.env.DATABASE_PROVIDER?.trim().toLowerCase();
   if (configured === "mssql" || configured === "sqlserver") return "mssql";
 

@@ -44,6 +44,7 @@ public sealed class MainForm : Form
     private readonly TextBox dbPassword;
     private readonly TextBox dbMain;
     private readonly TextBox dbMeasure;
+    private readonly CheckBox createDatabases;
     private readonly TextBox dbConnectionTimeoutSeconds;
     private readonly TextBox dbCommandTimeoutSeconds;
     private readonly ComboBox sqlServerEncrypt;
@@ -170,10 +171,19 @@ public sealed class MainForm : Form
         dbProvider.SelectedItem = _s.DbProvider;
         dbHost = T(_s.DbHost, placeholder: genericIpPlaceholder);
         dbPort = T(_s.DbPort, placeholder: "3306");
-        dbUser = T(_s.DbUser, placeholder: "Compte SQL dédié (pas root)");
+        dbUser = T(_s.DbUser, placeholder: "Compte SQL dedie (pas root)");
         dbPassword = T(_s.DbPassword, true, placeholder: "Mot de passe BDD");
         dbMain = T(_s.DbMain, placeholder: "vigi_main");
         dbMeasure = T(_s.DbMeasure, placeholder: "vigi_mesures");
+        createDatabases = new CheckBox
+        {
+            Dock = DockStyle.Fill,
+            Text = "Creer / initialiser les bases avec les seeds",
+            Checked = _s.CreateDatabases,
+            ForeColor = TextPrimary,
+            BackColor = CardBackground,
+            AutoSize = true
+        };
         dbConnectionTimeoutSeconds = T(_s.DbConnectionTimeoutSeconds, placeholder: "5");
         dbCommandTimeoutSeconds = T(_s.DbCommandTimeoutSeconds, placeholder: "30");
         sqlServerEncrypt = BoolBox(_s.SqlServerEncrypt);
@@ -182,7 +192,7 @@ public sealed class MainForm : Form
         publicKeyPath = T(_s.PublicKeyPath, placeholder: "Chemin de public_key.pem");
         instancePublicKey = T(_s.InstancePublicKey, placeholder: "Optionnel");
         dispatchSecret = T(_s.DispatchSecret, placeholder: "Laisser vide pour reprise automatique");
-        detectFilesButton = SecondaryButton("Détecter les fichiers", 170);
+        detectFilesButton = SecondaryButton("Detecter les fichiers", 170);
         detectFilesButton.Click += (_, _) => DetectSecurityFiles();
         licenseHysteresisDelta = T(_s.LicenseHysteresisDelta, placeholder: "0");
         licenseDebounceSeconds = T(_s.LicenseDebounceSeconds, placeholder: "0");
@@ -200,6 +210,8 @@ public sealed class MainForm : Form
                 dbUser.Text = string.Empty;
             }
         };
+
+        installMode.SelectedIndexChanged += (_, _) => UpdateDatabaseProvisioningState();
 
         var general = StepPanel();
         foreach (var c in new Control[]
@@ -220,6 +232,7 @@ public sealed class MainForm : Form
                      Field("Mot de passe BDD", dbPassword),
                      Field("BDD principale", dbMain),
                      Field("BDD mesures", dbMeasure),
+                     Field("Provisionnement BDD", createDatabases),
                      Field("Timeout connexion BDD (secondes)", dbConnectionTimeoutSeconds),
                      Field("Timeout requete BDD (secondes)", dbCommandTimeoutSeconds),
                      Field("SQL Server encrypt", sqlServerEncrypt),
@@ -229,10 +242,10 @@ public sealed class MainForm : Form
         var security = StepPanel();
         foreach (var c in new Control[]
                  {
-                     Field("Détection automatique", detectFilesButton),
+                     Field("Dtection automatique", detectFilesButton),
                      Field("Fichier licence (.vtlic)", licensePath, BrowseFile(licensePath, "Licence (*.vtlic)|*.vtlic|Tous les fichiers (*.*)|*.*")),
-                     Field("Cle publique licence (.pem)", publicKeyPath, BrowseFile(publicKeyPath, "PEM (*.pem)|*.pem|Tous les fichiers (*.*)|*.*")),
-                     Field("Cle publique instance (optionnel)", instancePublicKey),
+                     Field("Clee publique licence (.pem)", publicKeyPath, BrowseFile(publicKeyPath, "PEM (*.pem)|*.pem|Tous les fichiers (*.*)|*.*")),
+                     Field("Clee publique instance (optionnel)", instancePublicKey),
                      Field("Secret dispatch alarmes", dispatchSecret)
                  }) security.Controls.Add(c);
 
@@ -277,6 +290,7 @@ public sealed class MainForm : Form
         _install.Click += async (_, _) => await RunInstallAsync();
         _close.Click += (_, _) => Close();
         DetectSecurityFiles();
+        UpdateDatabaseProvisioningState();
         Go(0);
     }
 
@@ -305,7 +319,7 @@ public sealed class MainForm : Form
         }
 
         var sharedDir = InstallerHelpers.GetSharedArtifactsDirectory(startupDir);
-        AppendLog($"[INFO] Secrets partag?s: {sharedDir}");
+        AppendLog($"[INFO] Secrets partages: {sharedDir}");
     }
 
     private static string FindFirstByPattern(string startupDir, string pattern)
@@ -334,6 +348,7 @@ public sealed class MainForm : Form
         _s.DbPassword = dbPassword.Text;
         _s.DbMain = dbMain.Text.Trim();
         _s.DbMeasure = dbMeasure.Text.Trim();
+        _s.CreateDatabases = createDatabases.Checked;
         _s.DbConnectionTimeoutSeconds = dbConnectionTimeoutSeconds.Text.Trim();
         _s.DbCommandTimeoutSeconds = dbCommandTimeoutSeconds.Text.Trim();
         _s.SqlServerEncrypt = sqlServerEncrypt.SelectedItem?.ToString() ?? "false";
@@ -364,9 +379,14 @@ public sealed class MainForm : Form
             if (string.IsNullOrWhiteSpace(_s.DbHost)) m = "L'hete BDD est obligatoire.";
             else if (string.IsNullOrWhiteSpace(_s.DbPort)) m = "Le port BDD est obligatoire.";
             else if (string.IsNullOrWhiteSpace(_s.DbUser)) m = "L'utilisateur BDD est obligatoire.";
-            else if (string.Equals(_s.DbProvider, "mysql", StringComparison.OrdinalIgnoreCase) && string.Equals(_s.DbUser, "root", StringComparison.OrdinalIgnoreCase)) m = "Le compte MySQL root n'est pas supporté. Créez un compte SQL dédié.";
+            else if (string.Equals(_s.DbProvider, "mysql", StringComparison.OrdinalIgnoreCase) && string.Equals(_s.DbUser, "root", StringComparison.OrdinalIgnoreCase)) m = "Le compte MySQL root n'est pas support. Creez un compte SQL dedie.";
             else if (string.IsNullOrWhiteSpace(_s.DbMain) || string.IsNullOrWhiteSpace(_s.DbMeasure)) m = "Les noms de bases sont obligatoires.";
             else if (string.IsNullOrWhiteSpace(_s.DbConnectionTimeoutSeconds) || string.IsNullOrWhiteSpace(_s.DbCommandTimeoutSeconds)) m = "Les timeouts BDD sont obligatoires.";
+            else if (_s.CreateDatabases)
+            {
+                var seedError = InstallerHelpers.ValidateDatabaseSeedFiles(AppContext.BaseDirectory, _s.DbProvider);
+                if (!string.IsNullOrWhiteSpace(seedError)) m = seedError;
+            }
         }
         else if (idx == 2)
         {
@@ -425,12 +445,13 @@ public sealed class MainForm : Form
         sb.AppendLine($"- Utilisateur : {_s.DbUser}");
         sb.AppendLine($"- BDD principale : {_s.DbMain}");
         sb.AppendLine($"- BDD mesures : {_s.DbMeasure}");
+        sb.AppendLine($"- Provisionnement des bases : {(_s.CreateDatabases ? "oui" : "non")}");
         sb.AppendLine($"- Timeouts : connexion {_s.DbConnectionTimeoutSeconds}s / requete {_s.DbCommandTimeoutSeconds}s");
         sb.AppendLine();
         sb.AppendLine("Licence et securite");
         sb.AppendLine($"- Licence : {_s.LicensePath}");
-        sb.AppendLine($"- Cle publique : {_s.PublicKeyPath}");
-        sb.AppendLine($"- Cle publique instance : {(string.IsNullOrWhiteSpace(_s.InstancePublicKey) ? "vide" : "renseignee")}");
+        sb.AppendLine($"- Clee publique : {_s.PublicKeyPath}");
+        sb.AppendLine($"- Clee publique instance : {(string.IsNullOrWhiteSpace(_s.InstancePublicKey) ? "vide" : "renseignee")}");
         sb.AppendLine($"- Secret dispatch : {(string.IsNullOrWhiteSpace(_s.DispatchSecret) ? "genere / repris automatiquement" : "fourni manuellement")}");
         sb.AppendLine();
         sb.AppendLine("Parametres avances");
@@ -475,7 +496,7 @@ public sealed class MainForm : Form
 
             var programData = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
             var sharedSecretsDir = InstallerHelpers.GetSharedArtifactsDirectory(startupDir);
-            AppendLog($"[INFO] Secrets partag?s utilis?s: {sharedSecretsDir}");
+            AppendLog($"[INFO] Secrets partages utilis?s: {sharedSecretsDir}");
             if (_s.InstallMode == "update")
             {
                 AppendLog("[INFO] Mode migration Vigitemp -> VigiSensys: aucune seed SQL n'est appliquee, les bases existantes sont conservees.");
@@ -487,7 +508,16 @@ public sealed class MainForm : Form
             Directory.CreateDirectory(publicKeyDir);
             var licenseDestPath = Path.Combine(licenseDir, Path.GetFileName(_s.LicensePath));
             var publicKeyDestPath = Path.Combine(publicKeyDir, "public_key.pem");
-            if (!File.Exists(licenseDestPath))
+            var normalizedLicenseSource = Path.GetFullPath(_s.LicensePath).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+            var normalizedLicenseDest = Path.GetFullPath(licenseDestPath).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+            var normalizedPublicKeySource = Path.GetFullPath(_s.PublicKeyPath).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+            var normalizedPublicKeyDest = Path.GetFullPath(publicKeyDestPath).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+
+            if (string.Equals(normalizedLicenseSource, normalizedLicenseDest, StringComparison.OrdinalIgnoreCase))
+            {
+                AppendLog("[OK] Licence deja au bon emplacement, aucune copie necessaire.");
+            }
+            else if (!File.Exists(licenseDestPath))
             {
                 File.Copy(_s.LicensePath, licenseDestPath, false);
                 AppendLog("[OK] Licence copiee.");
@@ -497,14 +527,18 @@ public sealed class MainForm : Form
                 AppendLog("[OK] Licence deje presente, conservation du fichier existant.");
             }
 
-            if (!File.Exists(publicKeyDestPath))
+            if (string.Equals(normalizedPublicKeySource, normalizedPublicKeyDest, StringComparison.OrdinalIgnoreCase))
+            {
+                AppendLog("[OK] Clee publique deja au bon emplacement, aucune copie necessaire.");
+            }
+            else if (!File.Exists(publicKeyDestPath))
             {
                 File.Copy(_s.PublicKeyPath, publicKeyDestPath, false);
-                AppendLog("[OK] Cle publique copiee.");
+                AppendLog("[OK] Clee publique copiee.");
             }
             else
             {
-                AppendLog("[OK] Cle publique deje presente, conservation du fichier existant.");
+                AppendLog("[OK] Clee publique deje presente, conservation du fichier existant.");
             }
 
             InstallerHelpers.SetAppSetting(configPath, "Vigi.WebsiteBaseUrl", _s.WebsiteBaseUrl);
@@ -534,6 +568,24 @@ public sealed class MainForm : Form
             InstallerHelpers.SetAppSetting(configPath, "Vigi.License.InstancePublicKey", _s.InstancePublicKey);
             AppendLog("[OK] Configuration mise e jour.");
 
+            if (_s.CreateDatabases)
+            {
+                AppendLog($"[INFO] Provisionnement BDD active ({_s.DbProvider}).");
+                InstallerHelpers.ProvisionDatabases(
+                    startupDir,
+                    _s.DbProvider,
+                    _s.DbHost,
+                    _s.DbPort,
+                    _s.DbUser,
+                    _s.DbPassword,
+                    AppendLog);
+                AppendLog("[OK] Bases initialisees avec les seeds.");
+            }
+            else
+            {
+                AppendLog("[INFO] Provisionnement BDD desactive. Les bases existantes sont conservees.");
+            }
+
             if (InstallerHelpers.ServiceExists(_s.ServiceName))
             {
                 var confirm = MessageBox.Show($"Le service {_s.ServiceName} existe deje. Le reinstaller ?", "Service existant", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
@@ -551,7 +603,7 @@ public sealed class MainForm : Form
             AppendLog("[OK] Artefacts d'installation supprimes du dossier installe.");
 
             SetStatus("Etat : installation terminee avec succes");
-            AppendLog("[OK] Installation terminee.");
+            AppendLog("[OK] Installation termineee.");
         }
         catch (Exception ex)
         {
@@ -578,6 +630,21 @@ public sealed class MainForm : Form
         _status.Text = status;
     }
 
+    private void UpdateDatabaseProvisioningState()
+    {
+        var isUpdateMode = string.Equals(installMode.SelectedItem?.ToString(), InstallModeUpdateLabel, StringComparison.OrdinalIgnoreCase);
+        if (isUpdateMode)
+        {
+            createDatabases.Checked = false;
+            createDatabases.Enabled = false;
+            createDatabases.Text = "Creer / initialiser les bases avec les seeds (desactive en mode migration)";
+            return;
+        }
+
+        createDatabases.Enabled = true;
+        createDatabases.Text = "Creer / initialiser les bases avec les seeds";
+    }
+
     private void AppendLog(string line)
     {
         if (InvokeRequired)
@@ -602,6 +669,7 @@ public sealed class MainForm : Form
         public string DbPassword = string.Empty;
         public string DbMain = string.Empty;
         public string DbMeasure = string.Empty;
+        public bool CreateDatabases;
         public string DbConnectionTimeoutSeconds = string.Empty;
         public string DbCommandTimeoutSeconds = string.Empty;
         public string SqlServerEncrypt = string.Empty;
@@ -632,6 +700,7 @@ public sealed class MainForm : Form
                 DbPassword = string.Empty,
                 DbMain = "vigi_main",
                 DbMeasure = "vigi_mesures",
+                CreateDatabases = false,
                 DbConnectionTimeoutSeconds = "5",
                 DbCommandTimeoutSeconds = "30",
                 SqlServerEncrypt = "false",
@@ -649,6 +718,5 @@ public sealed class MainForm : Form
         }
     }
 }
-
 
 

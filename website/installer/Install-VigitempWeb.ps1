@@ -131,7 +131,7 @@ function Invoke-RobocopySafe {
 
     & robocopy $Source $Destination /MIR /NFL /NDL /NJH /NJS /NC /NS | Out-Null
     if ($LASTEXITCODE -ge 8) {
-        throw (T "robocopy a échoué (code $LASTEXITCODE) source='$Source' destination='$Destination'" "robocopy failed (exit code $LASTEXITCODE) source='$Source' destination='$Destination'")
+        throw (T "robocopy a chou (code $LASTEXITCODE) source='$Source' destination='$Destination'" "robocopy failed (exit code $LASTEXITCODE) source='$Source' destination='$Destination'")
     }
 }
 
@@ -144,7 +144,7 @@ function Test-Admin {
 function Read-InstallValue($label, $defaultValue = $null) {
     if ($Silent) {
         if ([string]::IsNullOrWhiteSpace($defaultValue)) {
-            throw (T "Paramètre requis manquant en mode silencieux : $label" "Missing required parameter in silent mode: $label")
+            throw (T "Paramtre requis manquant en mode silencieux : $label" "Missing required parameter in silent mode: $label")
         }
         return $defaultValue
     }
@@ -169,7 +169,7 @@ function Convert-SecureStringToPlainText([Security.SecureString]$secureValue) {
 function Read-InstallSecret($label, $defaultValue = $null) {
     if ($Silent) {
         if ([string]::IsNullOrWhiteSpace($defaultValue)) {
-            throw (T "Paramètre requis manquant en mode silencieux : $label" "Missing required parameter in silent mode: $label")
+            throw (T "Paramtre requis manquant en mode silencieux : $label" "Missing required parameter in silent mode: $label")
         }
         return $defaultValue
     }
@@ -195,11 +195,11 @@ function New-RandomSecret([int]$byteLength = 32) {
 function Resolve-GeneratedSecretValue([string]$label, [string]$defaultValue = "") {
     $secret = $defaultValue
     if (-not $Silent) {
-        $secret = Read-InstallSecret "$label ($(T "laisser vide pour g?n?ration auto" "leave blank for auto generation"))" $defaultValue
+        $secret = Read-InstallSecret "$label ($(T "laisser vide pour generation auto" "leave blank for auto generation"))" $defaultValue
     }
     if ([string]::IsNullOrWhiteSpace($secret)) {
         $secret = New-RandomSecret
-        Write-Log (T "Secret g?n?r? automatiquement pour: $label" "Secret generated automatically for: $label")
+        Write-Log (T "Secret gener? automatiquement pour: $label" "Secret generated automatically for: $label")
     }
     return $secret.Trim()
 }
@@ -228,7 +228,7 @@ function Resolve-DispatchSecret([string]$providedSecret, [string]$providedFilePa
     }
 
     if ([string]::IsNullOrWhiteSpace($secret) -and $interactiveMode) {
-        $typedSecret = Read-InstallSecret (T "Secret dispatch alarmes (laisser vide pour g?n?ration auto)" "Alarm dispatch secret (leave empty for auto generation)") ""
+        $typedSecret = Read-InstallSecret (T "Secret dispatch alarmes (laisser vide pour generation auto)" "Alarm dispatch secret (leave empty for auto generation)") ""
         if (-not [string]::IsNullOrWhiteSpace($typedSecret)) {
             $secret = $typedSecret.Trim()
         }
@@ -236,7 +236,7 @@ function Resolve-DispatchSecret([string]$providedSecret, [string]$providedFilePa
 
     if ([string]::IsNullOrWhiteSpace($secret)) {
         $secret = New-RandomSecret
-        Write-Log (T "Secret dispatch g?n?r? automatiquement." "Dispatch secret generated automatically.")
+        Write-Log (T "Secret dispatch gener? automatiquement." "Dispatch secret generated automatically.")
     }
 
     if (-not [string]::IsNullOrWhiteSpace($secretFile)) {
@@ -269,9 +269,9 @@ function Ensure-ServiceStoppedAndRemoved([string]$serviceName) {
         return
     }
 
-    $answer = Read-InstallValue (T "Le service $serviceName existe. Arrêter et réinstaller ? (y/n)" "Service $serviceName exists. Stop and reinstall? (y/n)") "y"
+    $answer = Read-InstallValue (T "Le service $serviceName existe. Arreter et reinstaller ? (y/n)" "Service $serviceName exists. Stop and reinstall? (y/n)") "y"
     if ($answer -ne "y") {
-        throw (T "Installation annulée par l'utilisateur." "Installation cancelled by user.")
+        throw (T "Installation annule par l'utilisateur." "Installation cancelled by user.")
     }
 
     try { Stop-Service -Name $serviceName -Force -ErrorAction SilentlyContinue } catch { }
@@ -428,7 +428,7 @@ if ($Offline -and $Standalone) {
     ) + $excludeArgs
     & robocopy @robocopyArgs | Out-Null
     if ($LASTEXITCODE -ge 8) {
-        throw (T "robocopy a échoué (code $LASTEXITCODE) vers '$InstallDir'" "robocopy failed (exit code $LASTEXITCODE) to '$InstallDir'")
+        throw (T "robocopy a chou (code $LASTEXITCODE) vers '$InstallDir'" "robocopy failed (exit code $LASTEXITCODE) to '$InstallDir'")
     }
 }
 
@@ -541,8 +541,8 @@ $hotlineServerPort = Read-InstallValue (T "Port serveur hotline" "Hotline server
 $hotlineServerTimeoutMs = Read-InstallValue (T "Timeout hotline (ms)" "Hotline timeout (ms)") "10000"
 $hotlineAccessTokenTtl = Read-InstallValue (T "TTL access hotline (minutes)" "Hotline access token TTL (minutes)") "15"
 $hotlineRefreshTokenTtl = Read-InstallValue (T "TTL refresh hotline (minutes)" "Hotline refresh token TTL (minutes)") "120"
-$cspConnectSrc = Read-InstallValue (T "CSP connect-src supplementaires (CSV, optionnel)" "Additional CSP connect-src values (CSV, optional)") $cspConnectSrcPlaceholder
-$allowedDevOrigins = Read-InstallValue (T "Origins dev autorisees (CSV, optionnel)" "Allowed dev origins (CSV, optional)") ""
+$cspConnectSrc = Read-InstallValue (T "CSP connect-src supplementaires (CSV, optionnel)" "Adedietional CSP connect-src values (CSV, optional)") $cspConnectSrcPlaceholder
+$allowedDevOrigins = Read-InstallValue (T "Origins reverse proxy / Server Actions (CSV, optionnel)" "Reverse proxy / Server Actions origins (CSV, optional)") ""
 if ([string]::IsNullOrWhiteSpace($AlarmDispatchSecretFile)) {
     $AlarmDispatchSecretFile = Join-Path $programData "VigiSensys\shared-secrets\alarm-dispatch-secret.txt"
 }
@@ -608,6 +608,7 @@ VIGISENSYS_ALARM_DISPATCH_SECRET="$dispatchSecret"
 VIGISENSYS_SURVEILLANCE_DISPATCH_SECRET="$dispatchSecret"
 VIGISENSYS_LOGS_DIR="$logsDir"
 VIGISENSYS_ALLOWED_DEV_ORIGINS="$allowedDevOrigins"
+VIGISENSYS_SERVER_ACTIONS_ALLOWED_ORIGINS="$allowedDevOrigins"
 VIGISENSYS_CSP_CONNECT_SRC="$cspConnectSrc"
 JWT_SECRET="$jwtSecret"
 HOTLINE_SERVER_HOST="$hotlineServerHost"
@@ -627,23 +628,23 @@ if ($dbProvider -eq "mssql") {
 
 Push-Location $InstallDir
 if (-not $Offline) {
-    Write-Log (T "Installation des dépendances..." "Installing dependencies...")
+    Write-Log (T "Installation des dpendances..." "Installing dependencies...")
     & $pnpmCmd.Source install | Out-Null
 
-    Write-Log (T "Génération des clients Prisma..." "Generating Prisma clients...")
+    Write-Log (T "Gnration des clients Prisma..." "Generating Prisma clients...")
     & $pnpmCmd.Source prisma:generate | Out-Null
 
     Write-Log (T "Build de l'app Next.js..." "Building Next.js app...")
     & $pnpmCmd.Source build | Out-Null
 } else {
-    Write-Log (T "Mode offline : aucune installation ni build, utilisation des fichiers copiés." "Offline mode: skipping install/build, using copied files.")
+    Write-Log (T "Mode offline : aucune installation ni build, utilisation des fichiers copies." "Offline mode: skipping install/build, using copied files.")
 }
 Pop-Location
 
 if ($Standalone) {
     $standaloneEntry = Join-Path $InstallDir ".next\\standalone\\server.js"
     if (-not (Test-Path $standaloneEntry)) {
-        Write-Error (T "Entrée standalone introuvable : $standaloneEntry" "Standalone entry not found: $standaloneEntry")
+        Write-Error (T "Entre standalone introuvable : $standaloneEntry" "Standalone entry not found: $standaloneEntry")
     }
 } else {
     $nextBin = Join-Path $InstallDir "node_modules\\next\\dist\\bin\\next"
@@ -655,11 +656,11 @@ if ($Standalone) {
 if ($Offline) {
     if ($Standalone) {
         if (-not (Test-Path (Join-Path $InstallDir ".next\\standalone"))) {
-            Write-Log (T "Attention : dossier .next\\standalone absent. Le site ne démarrera pas." "Warning: .next\\standalone missing. The site will not start.")
+            Write-Log (T "Attention : dossier .next\\standalone absent. Le site ne demarrera pas." "Warning: .next\\standalone missing. The site will not start.")
         }
     } else {
         if (-not (Test-Path (Join-Path $InstallDir ".next"))) {
-            Write-Log (T "Attention : dossier .next absent. Le site ne démarrera pas sans build." "Warning: .next folder missing. The site will not start without a build.")
+            Write-Log (T "Attention : dossier .next absent. Le site ne demarrera pas sans build." "Warning: .next folder missing. The site will not start without a build.")
         }
     }
 }
@@ -707,7 +708,7 @@ $xml = @"
 
 $xml | Set-Content -Path $winswConfig -Encoding UTF8
 
-Write-Log (T "Création du service Windows (WinSW)..." "Creating Windows service (WinSW)...")
+Write-Log (T "Cration du service Windows (WinSW)..." "Creating Windows service (WinSW)...")
 & $winswExe install | Out-Null
 & $winswExe start | Out-Null
 

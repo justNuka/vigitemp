@@ -72,6 +72,7 @@ export const PATCH = withAnyAuthorizationLogging(
           where: { Id_Lieu: { in: lieuIds } },
           data: {
             Lieu_Etat: nextLieuEtat,
+            ...(nextLieuEtat === "S" ? { Date_Heure_Derniere_Reponse: null } : {}),
             Date_Heure_Reactivation_Surveillance: payload.disabled ? reactivationAt : null,
             Date_Heure_Surveillance_On: payload.disabled ? null : changedAt,
             Date_Heure_Surveillance_Off: payload.disabled ? changedAt : null,

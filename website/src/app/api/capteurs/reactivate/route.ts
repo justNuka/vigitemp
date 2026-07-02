@@ -60,6 +60,7 @@ export const POST = withAuthLogging(async (request: NextRequest, ctx: HandlerCon
           where: { Id_Lieu: { in: ids } },
           data: {
             Lieu_Etat: "S",
+            Date_Heure_Derniere_Reponse: null,
             Date_Heure_Reactivation_Surveillance: null,
             Date_Heure_Surveillance_On: reactivatedAt,
             Date_Heure_Surveillance_Off: null,

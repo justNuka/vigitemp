@@ -1,16 +1,16 @@
-ï»¿ï»¿# Installateur site web Vigitemp
+i??i??# Installateur site web Vigitemp
 
-Ce script installe le site Next.js, écrit le fichier env, puis crée un service Windows.
+Ce script installe le site Next.js, ecrit le fichier env, puis cree un service Windows.
 
-## Prérequis
+## Prerequis
 - Lancer PowerShell en tant qu'administrateur.
-- Node.js LTS installé (node dans PATH ou `-NodePath`).
+- Node.js LTS installe (node dans PATH ou `-NodePath`).
 - pnpm disponible si mode online (le script tente Corepack sinon `-PnpmPath`).
 
-## Mode standalone (recommandé)
-Le build produit un bundle autonome (`.next/standalone`) qui évite de copier `node_modules`.
+## Mode standalone (recommande)
+Le build produit un bundle autonome (`.next/standalone`) qui evite de copier `node_modules`.
 
-### Préparer le build (machine connectée)
+### Preparer le build (machine connectee)
 ```
 cd website
 pnpm install
@@ -18,7 +18,7 @@ pnpm prisma:generate
 pnpm build
 ```
 
-### Copier vers une clé USB
+### Copier vers une cle USB
 Copier le dossier `website/` (au minimum : `.next/standalone`, `.next/static`, `public`, `package.json`).
 
 ### Installer en offline (machine client)
@@ -28,7 +28,7 @@ cd "website\installer"
 ```
 
 ## Mode offline classique (sans standalone)
-- Nécessite de copier `node_modules` et `.next`.
+- Necessite de copier `node_modules` et `.next`.
 ```
 .\Install-VigitempWeb.ps1 -Offline
 ```
@@ -54,12 +54,12 @@ cd "website\installer"
 
 ## Ce que fait le script
 - Copie le site dans le dossier d'installation
-- Écrit le fichier env avec DB + secrets
-- Crée un service Windows qui lance le serveur
+- Ecrit le fichier env avec DB + secrets
+- Cree un service Windows qui lance le serveur
 
 ## Fichiers
 - Logs install : `C:\ProgramData\VigiSensys\install-logs\install-web-*.log`
-- Logs app : (demandé pendant l'install, défaut `C:\ProgramData\VigiSensys\web-logs`)
+- Logs app : (demande pendant l'install, defaut `C:\ProgramData\VigiSensys\web-logs`)
 
 ## Rollback
 ```

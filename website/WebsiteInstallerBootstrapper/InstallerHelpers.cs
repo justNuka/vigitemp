@@ -143,14 +143,24 @@ internal static class InstallerHelpers
 
     public static string CopySecurityArtifact(string sourcePath, string destinationPath)
     {
+        var normalizedSource = Path.GetFullPath(sourcePath)
+            .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+        var normalizedDestination = Path.GetFullPath(destinationPath)
+            .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+
         var parent = Path.GetDirectoryName(destinationPath);
         if (!string.IsNullOrWhiteSpace(parent))
         {
             Directory.CreateDirectory(parent);
         }
 
-        File.Copy(sourcePath, destinationPath, true);
-        return destinationPath;
+        if (string.Equals(normalizedSource, normalizedDestination, StringComparison.OrdinalIgnoreCase))
+        {
+            return normalizedDestination;
+        }
+
+        File.Copy(normalizedSource, normalizedDestination, true);
+        return normalizedDestination;
     }
 
     public static void RemoveInstallerArtifacts(string installPath)

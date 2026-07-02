@@ -90,11 +90,31 @@ export function ModuleModal({ open, onOpenChange, module, onSuccess }: ModuleMod
     defaultValues,
   });
 
+  const watchedTypeModule = form.watch("Type_Module");
+  const selectedModuleType = useMemo(
+    () => moduleTypes?.find((type) => String(type.Id_Module_Type) === watchedTypeModule) ?? null,
+    [moduleTypes, watchedTypeModule],
+  );
+  const isKnownGsoType = useMemo(() => {
+    const typeLabel = String(selectedModuleType?.Libelle_Type_Module ?? "").trim().toUpperCase();
+    const moduleLabel = String((selectedModuleType as { Libelle_Module?: string | null } | null)?.Libelle_Module ?? "")
+      .trim()
+      .toUpperCase();
+
+    return typeLabel.includes("GSO") || moduleLabel.includes("GSO");
+  }, [selectedModuleType]);
+
   useEffect(() => {
     if (!open) return;
     form.reset(defaultValues);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, defaultValues]);
+
+  useEffect(() => {
+    if (isKnownGsoType && form.getValues("Est_Module_GSO") !== true) {
+      form.setValue("Est_Module_GSO", true, { shouldDirty: true, shouldValidate: true });
+    }
+  }, [form, isKnownGsoType]);
 
   const onSubmit = async (data: ModuleFormData) => {
     if (isEditing && !module) return;
@@ -201,7 +221,11 @@ export function ModuleModal({ open, onOpenChange, module, onSuccess }: ModuleMod
                     <FormDescription>{t('fields.gso_help')}</FormDescription>
                   </div>
                   <FormControl>
-                    <Checkbox checked={!!field.value} onCheckedChange={(checked) => field.onChange(!!checked)} />
+                    <Checkbox
+                      checked={!!field.value}
+                      disabled={isKnownGsoType}
+                      onCheckedChange={(checked) => field.onChange(!!checked)}
+                    />
                   </FormControl>
                 </FormItem>
               )}
