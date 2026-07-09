@@ -45,6 +45,7 @@ export async function prefetchNextSensorsPage(
     siteIds?: number[]
     groupIds?: number[]
     surveillanceDisabled?: boolean
+    searchTerm?: string
   },
 ) {
   queryClient.prefetchQuery({
@@ -59,6 +60,9 @@ export async function prefetchNextSensorsPage(
       }
       if (typeof filters?.surveillanceDisabled === "boolean") {
         params.set("surveillanceDisabled", filters.surveillanceDisabled ? "1" : "0")
+      }
+      if (filters?.searchTerm?.trim()) {
+        params.set("searchTerm", filters.searchTerm.trim())
       }
       return getJson(`/api/capteurs/paginated?${params}`)
     },

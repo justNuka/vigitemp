@@ -7,6 +7,7 @@ import { apiError, apiOk } from "@/lib/api-response"
 import { log } from "@/lib/logger"
 import { prisma } from "@/lib/prisma"
 import { serializeDbDateTime } from "@/lib/date-display"
+import { normalizeMeasureNumber } from "@/lib/measurements"
 
 const updateSensorSchema = z.object({
   name: z.string().optional(),
@@ -68,15 +69,15 @@ export const GET = withAuthLogging(
         id: lieu.Id_Lieu.toString(),
         name: lieu.Nom_Lieu,
         status,
-        value: lieu.Derniere_Valeur !== null ? parseFloat(lieu.Derniere_Valeur.toString()) : null,
+        value: normalizeMeasureNumber(lieu.Derniere_Valeur, lieu.Derniere_Nb_Decimal ?? 2),
         unit: lieu.Derniere_Unite || "°C",
         lastUpdate: serializeDbDateTime(lieu.Derniere_Date_Heure) || serializeDbDateTime(new Date()) || null,
         location: {
           id: lieu.Id_Site || 0,
           name: lieu.t_site?.Libelle_Site || "Unknown",
         },
-        minThreshold: lieu.Tolerance_Surveillance_Inf ?? lieu.Consigne_Inf,
-        maxThreshold: lieu.Tolerance_Surveillance_Sup ?? lieu.Consigne_Sup,
+        minThreshold: normalizeMeasureNumber(lieu.Tolerance_Surveillance_Inf ?? lieu.Consigne_Inf, 2),
+        maxThreshold: normalizeMeasureNumber(lieu.Tolerance_Surveillance_Sup ?? lieu.Consigne_Sup, 2),
       })
     } catch (error) {
       log.error("capteurs", "get_sensor_error", { error: error });

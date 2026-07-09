@@ -6,7 +6,14 @@ import { Switch } from "@/components/ui/switch"
 import { Line } from "react-chartjs-2"
 import type { Chart as ChartJS } from "chart.js"
 
-import { formatTimeAxisLabel, getTimeAxisSpanMs, type MeasureData } from "@/lib/measurements"
+import { formatDbDateTime } from "@/lib/date-display"
+import {
+  formatMeasureValue,
+  formatTimeAxisLabel,
+  getTimeAxisSpanMs,
+  normalizeMeasureNumber,
+  type MeasureData,
+} from "@/lib/measurements"
 import type { AuditLog, ZoomBounds } from "./types"
 
 type GuidePositions = {
@@ -42,6 +49,42 @@ interface MonitoringGraphTabProps {
   t: (key: string, values?: Record<string, string | number>) => string
 }
 
+function normalizeGuideValue(value: number | null): number | null {
+  return normalizeMeasureNumber(value, 2)
+}
+
+function isMemoryMeasure(point: MeasureData) {
+  return typeof point.Est_Valeur_Memoire === "number"
+    ? point.Est_Valeur_Memoire !== 0
+    : Boolean(point.Est_Valeur_Memoire)
+}
+
+function buildRanges(
+  orderedData: MeasureData[],
+  predicate: (point: MeasureData) => boolean,
+): Array<{ start: number; end: number }> {
+  const ranges: Array<{ start: number; end: number }> = []
+  let start = -1
+
+  for (let index = 0; index < orderedData.length; index += 1) {
+    if (predicate(orderedData[index])) {
+      if (start < 0) start = index
+      continue
+    }
+
+    if (start >= 0) {
+      ranges.push({ start, end: index - 1 })
+      start = -1
+    }
+  }
+
+  if (start >= 0) {
+    ranges.push({ start, end: orderedData.length - 1 })
+  }
+
+  return ranges
+}
+
 export function MonitoringGraphTab({
   chartRef,
   orderedData,
@@ -68,12 +111,93 @@ export function MonitoringGraphTab({
 }: MonitoringGraphTabProps) {
   const localeTag = locale === "fr" ? "fr-FR" : locale
   const auditMarkerLabel = t("chart.audit_markers")
-  const upperLine = orderedData.map((point) => point.Consigne_Sup)
-  const lowerLine = orderedData.map((point) => point.Consigne_Inf)
-  const targetLine = orderedData.map((point) => point.Consigne)
+  const normalizedConsigneSup = normalizeGuideValue(consigneSup)
+  const normalizedConsigneInf = normalizeGuideValue(consigneInf)
+  const normalizedConsigne = normalizeGuideValue(consigne)
+  const normalizedPreAlarmSup = normalizeGuideValue(preAlarmSup)
+  const normalizedPreAlarmInf = normalizeGuideValue(preAlarmInf)
+  const formattedConsigneSup = normalizedConsigneSup === null ? null : formatMeasureValue(normalizedConsigneSup, null, localeTag)
+  const formattedConsigneInf = normalizedConsigneInf === null ? null : formatMeasureValue(normalizedConsigneInf, null, localeTag)
+  const formattedConsigne = normalizedConsigne === null ? null : formatMeasureValue(normalizedConsigne, null, localeTag)
+  const formattedPreAlarmSup = normalizedPreAlarmSup === null ? null : formatMeasureValue(normalizedPreAlarmSup, null, localeTag)
+  const formattedPreAlarmInf = normalizedPreAlarmInf === null ? null : formatMeasureValue(normalizedPreAlarmInf, null, localeTag)
+  const upperLine = orderedData.map((point) => normalizeGuideValue(point.Consigne_Sup))
+  const lowerLine = orderedData.map((point) => normalizeGuideValue(point.Consigne_Inf))
+  const targetLine = orderedData.map((point) => normalizeGuideValue(point.Consigne))
   const timeAxisSpanMs = getTimeAxisSpanMs(orderedData)
   const xAxisLabels = orderedData.map((point) => point.DateHeureMesureIso ?? point.DateHeureMesure)
-  const tightRedDash = "repeating-linear-gradient(to right, rgb(239 68 68) 0 6px, transparent 6px 9px)"
+  const measureSeries = orderedData.map((point) => (typeof point.Valeur === "number" ? point.Valeur : null))
+  const memoryMeasureRanges = useMemo(
+    () =>
+      buildRanges(
+        orderedData,
+        (point) => isMemoryMeasure(point) && typeof point.Valeur === "number",
+      ),
+    [orderedData],
+  )
+  const shortNoResponseConnectorDatasets = useMemo(() => {
+    const ranges = buildRanges(
+      orderedData,
+      (point) =>
+        point.Valeur === null &&
+        !isMemoryMeasure(point) &&
+        (typeof point.Est_Valeur_Null === "number" ? point.Est_Valeur_Null !== 0 : Boolean(point.Est_Valeur_Null)),
+    )
+
+    return ranges
+      .filter((range) => range.end - range.start + 1 < 5)
+      .map((range, connectorIndex) => {
+        const beforeIndex = range.start - 1
+        const afterIndex = range.end + 1
+        const beforeValue = beforeIndex >= 0 ? orderedData[beforeIndex]?.Valeur : null
+        const afterValue = afterIndex < orderedData.length ? orderedData[afterIndex]?.Valeur : null
+
+        if (typeof beforeValue !== "number" || typeof afterValue !== "number") return null
+
+        return {
+          label: connectorIndex === 0 ? "__gap_connector__" : "",
+          data: orderedData.map((_, index) => {
+            if (index === beforeIndex) return beforeValue
+            if (index === afterIndex) return afterValue
+            return null
+          }),
+          borderColor: "#3b82f6",
+          borderWidth: 2,
+          pointRadius: 0,
+          pointHoverRadius: 0,
+          pointHitRadius: 0,
+          fill: false,
+          tension: 0,
+          spanGaps: true,
+          order: 1,
+        }
+      })
+      .filter((dataset): dataset is NonNullable<typeof dataset> => dataset !== null)
+  }, [orderedData])
+  const memoryRangeDatasets = useMemo(
+    () =>
+      memoryMeasureRanges.map((range, rangeIndex) => ({
+        label: rangeIndex === 0 ? t("table.legend.memory") : "",
+        data: orderedData.map((point, index) =>
+          index >= range.start && index <= range.end && typeof point.Valeur === "number" ? point.Valeur : null,
+        ),
+        borderColor: "#d97706",
+        backgroundColor: "#d97706",
+        borderWidth: 2.5,
+        pointRadius: 3,
+        pointHoverRadius: 6,
+        pointHitRadius: 12,
+        pointStyle: "circle" as const,
+        pointBackgroundColor: "#d97706",
+        pointBorderColor: "#fffbeb",
+        pointBorderWidth: 2,
+        fill: false,
+        tension: 0,
+        spanGaps: false,
+        order: 2,
+      })),
+    [memoryMeasureRanges, orderedData, t],
+  )
 
   const { auditMarkerSeries, auditMarkerDetailsByIndex } = useMemo(() => {
     const series = Array.from({ length: orderedData.length }, () => null as number | null)
@@ -146,7 +270,16 @@ export function MonitoringGraphTab({
         <span className="text-sm text-muted-foreground">
           {t("chart.measure_count", { count: graphMeasureCount })}
         </span>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center justify-end gap-2">
+          {memoryMeasureRanges.length > 0 ? (
+            <span
+              className="inline-flex items-center gap-2 rounded-md border border-amber-300 bg-amber-50 px-2.5 py-1.5 text-xs text-amber-800 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-300"
+              title={t("table.legend.memory_tooltip")}
+            >
+              <span className="h-2.5 w-2.5 rounded-full bg-amber-600" />
+              <span>{t("table.legend.memory")}</span>
+            </span>
+          ) : null}
           <label className="inline-flex items-center gap-2 rounded-md border px-2.5 py-1.5 text-xs text-muted-foreground">
             <Switch checked={showAuditMarkers} onCheckedChange={onShowAuditMarkersChange} disabled={!hasPlottedMeasures} />
             <span>{t("chart.show_audit_markers")}</span>
@@ -206,7 +339,7 @@ export function MonitoringGraphTab({
                   }]
                 : []),
               {
-                label: t("guides.max", { value: consigneSup ?? "-", unit: unite }),
+                label: t("guides.max", { value: formattedConsigneSup ?? "-", unit: unite }),
                 data: upperLine,
                 borderColor: "#ef4444",
                 borderWidth: 2,
@@ -218,7 +351,7 @@ export function MonitoringGraphTab({
                 order: 1,
               },
               {
-                label: t("guides.target", { value: consigne ?? "-", unit: unite }),
+                label: t("guides.target", { value: formattedConsigne ?? "-", unit: unite }),
                 data: targetLine,
                 borderColor: "#111827",
                 borderWidth: 2,
@@ -230,7 +363,7 @@ export function MonitoringGraphTab({
                 order: 1,
               },
               {
-                label: t("guides.min", { value: consigneInf ?? "-", unit: unite }),
+                label: t("guides.min", { value: formattedConsigneInf ?? "-", unit: unite }),
                 data: lowerLine,
                 borderColor: "#ef4444",
                 borderWidth: 2,
@@ -243,22 +376,24 @@ export function MonitoringGraphTab({
               },
               {
                 label: measuresLabel,
-                data: orderedData.map((point) => (typeof point.Valeur === "number" ? point.Valeur : null)),
+                data: measureSeries,
                 borderColor: "#3b82f6",
                 backgroundColor: "rgba(59, 130, 246, 0.2)",
                 borderWidth: 2,
                 fill: false,
-                tension: 0.4,
-                pointRadius: 1,
+                tension: 0,
+                pointRadius: orderedData.map((point) => (isMemoryMeasure(point) ? 0 : 2)),
                 pointHoverRadius: 6,
                 pointHitRadius: 12,
                 pointStyle: "circle",
                 hoverBorderWidth: 2,
-                pointBackgroundColor: "#3b82f6",
-                pointBorderColor: "#fff",
-                pointBorderWidth: 2,
+                pointBackgroundColor: orderedData.map((point) => (isMemoryMeasure(point) ? "rgba(0,0,0,0)" : "#3b82f6")),
+                pointBorderColor: orderedData.map((point) => (isMemoryMeasure(point) ? "rgba(0,0,0,0)" : "#fff")),
+                pointBorderWidth: orderedData.map((point) => (isMemoryMeasure(point) ? 0 : 2)),
                 order: 1,
               },
+              ...shortNoResponseConnectorDatasets,
+              ...memoryRangeDatasets,
               ...(showAuditMarkers && hasAuditMarkers
                 ? [
                     {
@@ -268,11 +403,11 @@ export function MonitoringGraphTab({
                       backgroundColor: "#7c3aed",
                       borderWidth: 0,
                       showLine: false,
-                      pointRadius: 4,
-                      pointHoverRadius: 5,
-                      pointHitRadius: 12,
+                      pointRadius: 6,
+                      pointHoverRadius: 7,
+                      pointHitRadius: 16,
                       pointStyle: "rectRot" as const,
-                      order: 2,
+                      order: 3,
                     },
                   ]
                 : []),
@@ -289,7 +424,12 @@ export function MonitoringGraphTab({
                   usePointStyle: true,
                   padding: 20,
                   font: { size: 12 },
-                  filter: (legendItem) => ![t("chart.over_high"), t("chart.over_low")].includes(legendItem.text ?? ""),
+                  filter: (legendItem) => {
+                    const text = legendItem.text ?? ""
+                    if (!text) return false
+                    if (text === "__gap_connector__") return false
+                    return ![t("chart.over_high"), t("chart.over_low")].includes(text)
+                  },
                 },
               },
               tooltip: {
@@ -306,12 +446,16 @@ export function MonitoringGraphTab({
                   if (typeof context.dataIndex !== "number") return false
                   const label = context?.dataset?.label
                   if (label === measuresLabel) return true
+                  if (label === t("table.legend.memory")) return true
                   return showAuditMarkers && label === auditMarkerLabel
                 },
                 callbacks: {
                   title: (context) => {
                     const index = context?.[0]?.dataIndex
-                    return typeof index === "number" ? orderedData[index]?.DateHeureMesure || "" : ""
+                    const dateValue = typeof index === "number"
+                      ? orderedData[index]?.DateHeureMesureIso ?? orderedData[index]?.DateHeureMesure
+                      : ""
+                    return dateValue ? formatDbDateTime(dateValue) : ""
                   },
                   label: (context) => {
                     const index = context?.dataIndex
@@ -324,8 +468,17 @@ export function MonitoringGraphTab({
                     if (!measure || measure.Valeur === null) {
                       return t("table.status.no_response")
                     }
+                    if (context.dataset.label === t("table.legend.memory")) {
+                      return `${t("table.legend.memory")} - ${t("tooltip.value", {
+                        value: formatMeasureValue(measure.Valeur, measure.Nb_Decimal ?? null, localeTag),
+                        unit: unite,
+                      })}`
+                    }
                     if (context.dataset.label === measuresLabel) {
-                      return t("tooltip.value", { value: measure.Valeur, unit: unite })
+                      return t("tooltip.value", {
+                        value: formatMeasureValue(measure.Valeur, measure.Nb_Decimal ?? null, localeTag),
+                        unit: unite,
+                      })
                     }
                     return `${context.dataset.label}`
                   },
@@ -383,7 +536,7 @@ export function MonitoringGraphTab({
                 grid: { display: true, color: "rgba(0, 0, 0, 0.1)" },
                 ticks: {
                   font: { size: 11 },
-                  callback: (value) => `${value}${unite}`,
+                  callback: (value) => `${formatMeasureValue(Number(value), null, localeTag)}${unite}`,
                 },
                 title: {
                   display: true,
@@ -404,67 +557,36 @@ export function MonitoringGraphTab({
         <div className="absolute inset-0 z-0 pointer-events-none">
           {preAlarmSup !== null && guidePositions.preSup !== null && (
             <>
-              <div
-                className={`absolute z-0 w-full border-red-500/70 ${isRangeSelected ? "border-t-2 border-solid" : "border-t border-dotted"}`}
-                style={{ top: `${guidePositions.preSup}px` }}
-              />
-              <div className="absolute z-20 right-4 text-[11px] font-medium text-red-500 bg-white/95 dark:bg-popover/95 px-2 py-1 rounded shadow-sm" style={{ top: `${guidePositions.preSup}px`, transform: "translateY(-50%)" }}>
-                {locale === "fr" ? `Pre-sup: ${preAlarmSup}${unite}` : `Pre-high: ${preAlarmSup}${unite}`}
+                <div className="absolute z-20 left-4 text-[11px] font-medium text-red-500 bg-white/95 dark:bg-popover/95 px-2 py-1 rounded shadow-sm" style={{ top: `${guidePositions.preSup}px`, transform: "translateY(-50%)" }}>
+                {locale === "fr" ? `Pre-sup: ${formattedPreAlarmSup}${unite}` : `Pre-high: ${formattedPreAlarmSup}${unite}`}
               </div>
             </>
           )}
           {consigneSup !== null && guidePositions.sup !== null && (
             <>
-              {isRangeSelected ? (
-                <div
-                  className="absolute z-0 w-full border-t-2 border-red-500 border-solid"
-                  style={{ top: `${guidePositions.sup}px` }}
-                />
-              ) : (
-                <div
-                  className="absolute z-0 w-full h-0.5"
-                  style={{ top: `${guidePositions.sup}px`, backgroundImage: tightRedDash }}
-                />
-              )}
-              <div className="absolute z-20 right-4 text-xs font-medium text-red-600 dark:text-red-400 bg-white/95 dark:bg-popover/95 px-2 py-1 rounded shadow-md" style={{ top: `${guidePositions.sup}px`, transform: "translateY(-50%)" }}>
-                {t("guides.max", { value: consigneSup, unit: unite })}
+                <div className="absolute z-20 left-4 text-xs font-medium text-red-600 dark:text-red-400 bg-white/95 dark:bg-popover/95 px-2 py-1 rounded shadow-md" style={{ top: `${guidePositions.sup}px`, transform: "translateY(-50%)" }}>
+                {t("guides.max", { value: formattedConsigneSup ?? "-", unit: unite })}
               </div>
             </>
           )}
           {consigne !== null && guidePositions.consigne !== null && (
             <>
-              <div className="absolute z-0 w-full border-t-2 border-gray-900 dark:border-white" style={{ top: `${guidePositions.consigne}px` }} />
-              <div className="absolute z-20 right-4 text-xs font-medium text-gray-900 dark:text-popover-foreground bg-white/95 dark:bg-popover/95 px-2 py-1 rounded shadow-md" style={{ top: `${guidePositions.consigne}px`, transform: "translateY(-50%)" }}>
-                {t("guides.target", { value: consigne, unit: unite })}
+                <div className="absolute z-20 left-4 text-xs font-medium text-gray-900 dark:text-popover-foreground bg-white/95 dark:bg-popover/95 px-2 py-1 rounded shadow-md" style={{ top: `${guidePositions.consigne}px`, transform: "translateY(-50%)" }}>
+                {t("guides.target", { value: formattedConsigne ?? "-", unit: unite })}
               </div>
             </>
           )}
           {preAlarmInf !== null && guidePositions.preInf !== null && (
             <>
-              <div
-                className={`absolute z-0 w-full border-blue-500/70 ${isRangeSelected ? "border-t-2 border-solid" : "border-t border-dotted"}`}
-                style={{ top: `${guidePositions.preInf}px` }}
-              />
-              <div className="absolute z-20 right-4 text-[11px] font-medium text-blue-600 dark:text-blue-300 bg-white/95 dark:bg-popover/95 px-2 py-1 rounded shadow-sm" style={{ top: `${guidePositions.preInf}px`, transform: "translateY(-50%)" }}>
-                {locale === "fr" ? `Pre-inf: ${preAlarmInf}${unite}` : `Pre-low: ${preAlarmInf}${unite}`}
+                <div className="absolute z-20 left-4 text-[11px] font-medium text-blue-600 dark:text-blue-300 bg-white/95 dark:bg-popover/95 px-2 py-1 rounded shadow-sm" style={{ top: `${guidePositions.preInf}px`, transform: "translateY(-50%)" }}>
+                {locale === "fr" ? `Pre-inf: ${formattedPreAlarmInf}${unite}` : `Pre-low: ${formattedPreAlarmInf}${unite}`}
               </div>
             </>
           )}
           {consigneInf !== null && guidePositions.inf !== null && (
             <>
-              {isRangeSelected ? (
-                <div
-                  className="absolute z-0 w-full border-t-2 border-red-500 border-solid"
-                  style={{ top: `${guidePositions.inf}px` }}
-                />
-              ) : (
-                <div
-                  className="absolute z-0 w-full h-0.5"
-                  style={{ top: `${guidePositions.inf}px`, backgroundImage: tightRedDash }}
-                />
-              )}
-              <div className="absolute z-20 right-4 text-xs font-medium text-red-600 dark:text-red-400 bg-white/95 dark:bg-popover/95 px-2 py-1 rounded shadow-md" style={{ top: `${guidePositions.inf}px`, transform: "translateY(-50%)" }}>
-                {t("guides.min", { value: consigneInf, unit: unite })}
+                <div className="absolute z-20 left-4 text-xs font-medium text-red-600 dark:text-red-400 bg-white/95 dark:bg-popover/95 px-2 py-1 rounded shadow-md" style={{ top: `${guidePositions.inf}px`, transform: "translateY(-50%)" }}>
+                {t("guides.min", { value: formattedConsigneInf ?? "-", unit: unite })}
               </div>
             </>
           )}

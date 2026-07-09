@@ -74,22 +74,22 @@ export function MonitoringCardChartPreview({
         />
       </div>
 
-      <div className="absolute right-0 top-0 bottom-0 flex flex-col justify-between py-2 pointer-events-none pr-1">
+      <div className="absolute left-0 top-0 bottom-0 flex flex-col justify-between py-2 pointer-events-none pl-1">
         {consigneSup !== null ? (
-          <div className="text-[9px] font-medium text-red-600 dark:text-red-200 bg-white/92 dark:bg-popover/95 px-1 rounded shadow-sm whitespace-nowrap" style={{ position: 'absolute', top: `${yMax === yMin ? 0 : ((yMax - consigneSup) / (yMax - yMin)) * 100}%`, transform: 'translateY(-50%)', right: '4px' }}>
-            {formattedConsigneSup || consigneSup}
+          <div className="text-[9px] font-medium text-red-600 dark:text-red-200 bg-white/92 dark:bg-popover/95 px-1 rounded shadow-sm whitespace-nowrap" style={{ position: 'absolute', top: `${yMax === yMin ? 0 : ((yMax - consigneSup) / (yMax - yMin)) * 100}%`, transform: 'translateY(-50%)', left: '4px' }}>
+            {formattedConsigneSup || "-"}
             {unite}
           </div>
         ) : null}
         {consigneInf !== null ? (
-          <div className="text-[9px] font-medium text-red-600 dark:text-red-200 bg-white/92 dark:bg-popover/95 px-1 rounded shadow-sm whitespace-nowrap" style={{ position: 'absolute', top: `${yMax === yMin ? 0 : ((yMax - consigneInf) / (yMax - yMin)) * 100}%`, transform: 'translateY(-50%)', right: '4px' }}>
-            {formattedConsigneInf || consigneInf}
+          <div className="text-[9px] font-medium text-red-600 dark:text-red-200 bg-white/92 dark:bg-popover/95 px-1 rounded shadow-sm whitespace-nowrap" style={{ position: 'absolute', top: `${yMax === yMin ? 0 : ((yMax - consigneInf) / (yMax - yMin)) * 100}%`, transform: 'translateY(-50%)', left: '4px' }}>
+            {formattedConsigneInf || "-"}
             {unite}
           </div>
         ) : null}
         {consigne !== null ? (
-          <div className="text-[9px] font-medium text-gray-900 dark:text-popover-foreground bg-white/92 dark:bg-popover/95 px-1 rounded shadow-sm whitespace-nowrap" style={{ position: 'absolute', top: `${yMax === yMin ? 0 : ((yMax - consigne) / (yMax - yMin)) * 100}%`, transform: 'translateY(-50%)', right: '4px' }}>
-            {formattedConsigne || consigne}
+          <div className="text-[9px] font-medium text-gray-900 dark:text-popover-foreground bg-white/92 dark:bg-popover/95 px-1 rounded shadow-sm whitespace-nowrap" style={{ position: 'absolute', top: `${yMax === yMin ? 0 : ((yMax - consigne) / (yMax - yMin)) * 100}%`, transform: 'translateY(-50%)', left: '4px' }}>
+            {formattedConsigne || "-"}
             {unite}
           </div>
         ) : null}

@@ -8,6 +8,8 @@ type GspConfigSyncInput = {
   highLimit?: number | null
   lowLimit?: number | null
   frequencySeconds?: number | null
+  highDelayMinutes?: number | null
+  lowDelayMinutes?: number | null
   source: "create" | "update"
   idLieu?: number | null
 }
@@ -34,7 +36,9 @@ export async function syncGspLocationConfiguration(input: GspConfigSyncInput) {
   const hasPayload =
     isFiniteNumber(input.highLimit) ||
     isFiniteNumber(input.lowLimit) ||
-    isFiniteNumber(frequencySeconds)
+    isFiniteNumber(frequencySeconds) ||
+    isFiniteNumber(input.lowDelayMinutes) ||
+    isFiniteNumber(input.highDelayMinutes)
 
   if (!hasPayload) return { skipped: "no_payload" as const }
 
@@ -61,6 +65,8 @@ export async function syncGspLocationConfiguration(input: GspConfigSyncInput) {
       highLimit: isFiniteNumber(input.highLimit) ? input.highLimit : null,
       lowLimit: isFiniteNumber(input.lowLimit) ? input.lowLimit : null,
       frequencySeconds,
+      alarmDelayLowMinutes: isFiniteNumber(input.lowDelayMinutes) ? Math.max(0, Math.round(input.lowDelayMinutes)) : null,
+      alarmDelayHighMinutes: isFiniteNumber(input.highDelayMinutes) ? Math.max(0, Math.round(input.highDelayMinutes)) : null,
       listenWindowMs: 500,
     },
   }

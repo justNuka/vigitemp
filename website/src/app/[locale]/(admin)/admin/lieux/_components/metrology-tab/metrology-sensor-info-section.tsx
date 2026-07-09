@@ -3,6 +3,7 @@
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { formatDbDateTime } from '@/lib/date-display'
+import { formatMeasureValue } from '@/lib/measurements'
 import { useTranslations } from 'next-intl'
 
 import type { LocationFormData } from '../location-form-types'
@@ -12,12 +13,17 @@ export function MetrologySensorInfoSection({
   formData,
   latestAdjustment,
   latestCalibration,
+  appliedAccuracyCorrection,
 }: {
   formData: LocationFormData
   latestAdjustment: { Date_Heure_Ajustage?: string | null } | null
   latestCalibration: { Date_Heure_Etalonnage?: string | null } | null
+  appliedAccuracyCorrection: number | null
 }) {
   const t = useTranslations('locationsForm.metrology')
+  const correctionExample = appliedAccuracyCorrection === null
+    ? null
+    : formatMeasureValue(appliedAccuracyCorrection, 2)
 
   return (
     <div className="border p-4 rounded-lg space-y-4">
@@ -61,6 +67,11 @@ export function MetrologySensorInfoSection({
         <div className="space-y-2">
           <Label>{t('labels.accuracy_error')}</Label>
           <Input type="number" step="0.01" disabled value={formData.Erreur_Justesse || ''} className="bg-muted" />
+          {correctionExample ? (
+            <p className="text-xs text-muted-foreground">
+              {t('labels.accuracy_correction_example', { value: correctionExample })}
+            </p>
+          ) : null}
         </div>
         <div className="space-y-2">
           <Label>{t('labels.uncertainty')}</Label>

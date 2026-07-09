@@ -15,5 +15,9 @@ export function formatAlarmes(count: number) {
 }
 
 export function formatPreAlarmes(count: number) {
-  return `${count} ${pluralizeFr(count, "pré-alarme", "pré-alarmes")}`
+  return `${count} ${pluralizeFr(count, "pre-alarme", "pre-alarmes")}`
+}
+
+export function formatAlarmesTerminees(count: number) {
+  return `${count} ${pluralizeFr(count, "alarme terminee", "alarmes terminees")}`
 }

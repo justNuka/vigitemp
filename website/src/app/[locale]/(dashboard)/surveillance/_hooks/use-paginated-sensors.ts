@@ -20,12 +20,13 @@ type Filters = {
   siteIds?: number[]
   groupIds?: number[]
   surveillanceDisabled?: boolean
+  searchTerm?: string
 }
 
 export const paginatedSensorsPageKey = (
   limit: number,
   page: number,
-  { siteIds = [], groupIds = [], surveillanceDisabled }: Filters = {},
+  { siteIds = [], groupIds = [], surveillanceDisabled, searchTerm = "" }: Filters = {},
 ) =>
   [
     "capteurs",
@@ -37,6 +38,8 @@ export const paginatedSensorsPageKey = (
     groupIds.join(","),
     "surveillanceDisabled",
     surveillanceDisabled === undefined ? "all" : surveillanceDisabled ? "1" : "0",
+    "search",
+    searchTerm.trim().toLocaleLowerCase("fr"),
     "page",
     page,
   ] as const
@@ -47,6 +50,7 @@ export function usePaginatedSensors({
   siteIds = [],
   groupIds = [],
   surveillanceDisabled,
+  searchTerm = "",
 }: { limit?: number; enabled?: boolean } & Filters = {}) {
   const queryClient = useQueryClient()
   const queryKey = [
@@ -59,28 +63,20 @@ export function usePaginatedSensors({
     groupIds.join(","),
     "surveillanceDisabled",
     surveillanceDisabled === undefined ? "all" : surveillanceDisabled ? "1" : "0",
+    "search",
+    searchTerm.trim().toLocaleLowerCase("fr"),
   ] as const
   const bypassCacheRef = useRef(false)
 
-  // Hardening: when the page subtree is re-rendered/remounted by App Router, avoid re-fetching
-  // the heavy paginated list if we already have it in React Query cache.
-  const hasCachedData = queryClient.getQueryData(queryKey) !== undefined
-  const effectiveEnabled = enabled && !hasCachedData
-
-  const query = useInfiniteQuery({
-    queryKey,
-    enabled: effectiveEnabled,
-    queryFn: async ({ pageParam }) => {
-      const page = Number(pageParam ?? 1)
+  const fetchPage = useCallback(
+    async (page: number) => {
       if (!bypassCacheRef.current) {
         const cached = queryClient.getQueryData<PaginatedResponse>(
-          paginatedSensorsPageKey(limit, page, { siteIds, groupIds, surveillanceDisabled }),
+          paginatedSensorsPageKey(limit, page, { siteIds, groupIds, surveillanceDisabled, searchTerm }),
         )
         if (cached) return cached
       }
 
-      // Fire-and-forget: trigger snooze reactivation on first page load only.
-      // This replaces the side-effect that was previously embedded in the GET handler.
       if (page === 1) {
         fetch("/api/capteurs/reactivate", { method: "POST" }).catch(() => undefined)
       }
@@ -98,14 +94,32 @@ export function usePaginatedSensors({
       if (typeof surveillanceDisabled === "boolean") {
         params.set("surveillanceDisabled", surveillanceDisabled ? "1" : "0")
       }
+      if (searchTerm.trim().length > 0) {
+        params.set("searchTerm", searchTerm.trim())
+      }
       if (bypassCacheRef.current) {
         params.set("fresh", "true")
       }
 
       const response = await getJson<PaginatedResponse>(`/api/capteurs/paginated?${params}`)
-      queryClient.setQueryData(paginatedSensorsPageKey(limit, page, { siteIds, groupIds, surveillanceDisabled }), response)
+      queryClient.setQueryData(
+        paginatedSensorsPageKey(limit, page, { siteIds, groupIds, surveillanceDisabled, searchTerm }),
+        response,
+      )
       return response
     },
+    [groupIds, limit, queryClient, searchTerm, siteIds, surveillanceDisabled],
+  )
+
+  // Hardening: when the page subtree is re-rendered/remounted by App Router, avoid re-fetching
+  // the heavy paginated list if we already have it in React Query cache.
+  const hasCachedData = queryClient.getQueryData(queryKey) !== undefined
+  const effectiveEnabled = enabled && !hasCachedData
+
+  const query = useInfiniteQuery({
+    queryKey,
+    enabled: effectiveEnabled,
+    queryFn: async ({ pageParam }) => fetchPage(Number(pageParam ?? 1)),
     initialPageParam: 1,
     getNextPageParam: (lastPage: PaginatedResponse) => {
       if (!lastPage?.page || !lastPage?.totalPages) return undefined
@@ -121,11 +135,19 @@ export function usePaginatedSensors({
     refetchInterval: false,
     retry: false,
   })
-  const { refetch } = query
-
-  const forceRefresh = useCallback(async () => {
+  const forceRefresh = useCallback(async (options?: { fetchAllPages?: boolean; pagesToFetch?: number }) => {
     bypassCacheRef.current = true
     try {
+      const fetchAllPages = options?.fetchAllPages === true
+      const explicitPagesToFetch = Number.isFinite(options?.pagesToFetch)
+        ? Math.max(Number(options?.pagesToFetch), 1)
+        : null
+      const currentData = queryClient.getQueryData<{
+        pages?: PaginatedResponse[]
+        pageParams?: unknown[]
+      }>(queryKey)
+      const loadedPagesCount = Math.max(currentData?.pages?.length ?? 1, 1)
+
       await queryClient.removeQueries({
         queryKey: [
           "capteurs",
@@ -137,14 +159,32 @@ export function usePaginatedSensors({
           groupIds.join(","),
           "surveillanceDisabled",
           surveillanceDisabled === undefined ? "all" : surveillanceDisabled ? "1" : "0",
+          "search",
+          searchTerm.trim().toLocaleLowerCase("fr"),
           "page",
         ],
       })
-      await refetch()
+      const firstPage = await fetchPage(1)
+      const totalPagesToFetch = fetchAllPages
+        ? Math.max(firstPage?.totalPages ?? 1, 1)
+        : explicitPagesToFetch ?? loadedPagesCount
+      const pages =
+        totalPagesToFetch <= 1
+          ? [firstPage]
+          : [
+              firstPage,
+              ...(await Promise.all(
+                Array.from({ length: totalPagesToFetch - 1 }, (_, index) => fetchPage(index + 2)),
+              )),
+            ]
+      queryClient.setQueryData(queryKey, {
+        pages,
+        pageParams: pages.map((page) => page.page),
+      })
     } finally {
       bypassCacheRef.current = false
     }
-  }, [groupIds, limit, queryClient, refetch, siteIds, surveillanceDisabled])
+  }, [fetchPage, groupIds, limit, queryClient, queryKey, searchTerm, siteIds, surveillanceDisabled])
 
   return {
     ...query,

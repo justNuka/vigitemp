@@ -11,8 +11,10 @@ export type FilterState = {
 
 export type Stats = {
   total: number
+  disabled: number
   ok: number
-  warning: number
+  preAlarm: number
+  ended: number
   critical: number
   activeAlarms: number
 }
@@ -136,12 +138,14 @@ export function computeSurveillanceStats({
   }
 
   const locations = Array.from(locationStates.values())
+  const disabled = locations.filter((location) => !location.isActive).length
   const activeLocations = locations.filter((location) => location.isActive)
   const ok = activeLocations.filter((location) => location.status === "ok").length
-  const warning = activeLocations.filter((location) => location.status === "warning").length
+  const preAlarm = activeLocations.filter((location) => location.status === "warning").length
+  const ended = activeLocations.filter((location) => location.status === "ended").length
   const critical = activeLocations.filter((location) => location.status === "critical" || location.status === "technical").length
 
-  return { total, ok, warning, critical, activeAlarms }
+  return { total, disabled, ok, preAlarm, ended, critical, activeAlarms }
 }
 
 export function sortSensorsByStatus(sensors: SensorWithLocation[]) {

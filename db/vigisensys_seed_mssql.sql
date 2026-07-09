@@ -1,4 +1,4 @@
-﻿-- =====================================================================
+-- =====================================================================
 -- BOOTSTRAP SQL SERVER VigiSensys
 -- Cree les 3 bases et les tables absentes avant le seed/alignement.
 -- Genere depuis les schemas Prisma, sans FK bloquantes pour rester idempotent.
@@ -1756,6 +1756,136 @@ WHERE NOT EXISTS (
   WHERE existing.Section = p.Section
     AND existing.Mot_Cle = p.Mot_Cle
 );
+GO
+
+-- DONNEES COMPLEMENTAIRES (missing_data.sql)
+SET IDENTITY_INSERT dbo.t_materiel ON;
+MERGE dbo.t_materiel AS target
+USING (VALUES
+  (1, N'M-GSO-U', N'Module de réception pour sondes GemSense One USB', N'USB' + CHAR(13) + '' + CHAR(10) + 'Led d’activité' + CHAR(13) + '' + CHAR(10) + 'Alimentation sur secteur', N'GSO', N'RADIO', NULL),
+  (2, N'M-GSO-E', N'Module de réception pour sondes GemSense One Ethernet', N'Ethernet RJ 45' + CHAR(13) + '' + CHAR(10) + 'Led activité' + CHAR(13) + '' + CHAR(10) + 'Alimentation sur secteur', N'GSO', N'RADIO', NULL),
+  (3, N'GSO-IT', N'Gemsense One Température interne', N'Fréquence de mesure 15 min fixe ' + CHAR(13) + '' + CHAR(10) + 'Fonction mémoire (700 valeurs)' + CHAR(13) + '' + CHAR(10) + 'Piles AAA*2 (2 ans selon utilisation)' + CHAR(13) + '' + CHAR(10) + 'Température d''utilisation : -20°C à 40°C', N'GSO', N'RADIO', NULL),
+  (4, N'GSO-ITH', N'Gemsense One Température & humidité interne', N'Fréquence de mesure 15 min fixe ' + CHAR(13) + '' + CHAR(10) + 'Fonction mémoire (700 valeurs)' + CHAR(13) + '' + CHAR(10) + 'Piles AAA*2 (2 ans selon utilisation)' + CHAR(13) + '' + CHAR(10) + 'Température d''utilisation : 10°C à 40°C' + CHAR(13) + '' + CHAR(10) + 'Domaine d''utilisation : 10%Hr à 90%Hr', N'GSO', N'RADIO', NULL),
+  (5, N'GSO-ET', N'Gemsense One Température externe', N'Fréquence de mesure 15 min fixe ' + CHAR(13) + '' + CHAR(10) + 'Fonction mémoire (700 valeurs)' + CHAR(13) + '' + CHAR(10) + 'Piles AAA*2 (2 ans selon utilisation)' + CHAR(13) + '' + CHAR(10) + 'Protection : inox 316 L Ø 6 x 40 mm' + CHAR(13) + '' + CHAR(10) + 'Température d''utilisation : -40°C à 125°C', N'GSO', N'RADIO', NULL),
+  (6, N'GSO-ETH', N'Gemsense One Température & humidité externe', N'Fréquence de mesure 15 min fixe ' + CHAR(13) + '' + CHAR(10) + 'Fonction mémoire (700 valeurs)' + CHAR(13) + '' + CHAR(10) + 'Piles AAA*2 (2 ans selon utilisation)' + CHAR(13) + '' + CHAR(10) + 'Température d''utilisation : 10°C à 80°C' + CHAR(13) + '' + CHAR(10) + 'Domaine d''utilisation : 10%Hr à 90%Hr', N'GSO', N'RADIO', NULL),
+  (7, N'M-GSP', N'Module de réception pour sondes GemSense Pro Ethernet', N'Interface 10Base-T ou 100Base-TX' + CHAR(13) + '' + CHAR(10) + 'Connecteur RJ45' + CHAR(13) + '' + CHAR(10) + 'Led Link & activité' + CHAR(13) + '' + CHAR(10) + 'Sécurisé par mot de passe' + CHAR(13) + '' + CHAR(10) + 'CPU : DSTni-EX' + CHAR(13) + '' + CHAR(10) + 'Mémoire : 256k SRAM 512Kb flash' + CHAR(13) + '' + CHAR(10) + 'Alimentation sur secteur', N'GSP', N'RADIO', NULL),
+  (8, N'GSP-RN-BL', N'Gemsense Pro Numérique blanc', N'Sonde GemSense Pro avec écran 2,9" ' + CHAR(13) + '' + CHAR(10) + 'Fonction mémoire (5300 valeurs)' + CHAR(13) + '' + CHAR(10) + 'Batterie de secours (15 jours)' + CHAR(13) + '' + CHAR(10) + 'Gamme pro avec portée étendue' + CHAR(13) + '' + CHAR(10) + 'Capteur numérique' + CHAR(13) + '' + CHAR(10) + 'Température d''utilisation : -30°C à 125°C' + CHAR(13) + '' + CHAR(10) + 'Capteur numérique Ø 6mm l, 50mm  / -30°C à 125 °C Câble long 3 m BLANC', N'GSP', N'RADIO', NULL),
+  (9, N'GSP-RN-GR', N'Gemsense Pro Numérique gris', N'Sonde GemSense Pro avec écran 2,9" ' + CHAR(13) + '' + CHAR(10) + 'Fonction mémoire (5300 valeurs)' + CHAR(13) + '' + CHAR(10) + 'Batterie de secours (15 jours)' + CHAR(13) + '' + CHAR(10) + 'Gamme pro avec portée étendue' + CHAR(13) + '' + CHAR(10) + 'Capteur numérique' + CHAR(13) + '' + CHAR(10) + 'Température d''utilisation : -30°C à 70°C' + CHAR(13) + '' + CHAR(10) + 'Capteur numérique Ø 6mm l, 50mm  / -30°C à 70 °C  Câble long 3 m GRIS PLAT', N'GSP', N'RADIO', NULL),
+  (10, N'GSP-RP', N'Gemsense Pro platine', N'Sonde GemSense Pro avec écran 2,9" ' + CHAR(13) + '' + CHAR(10) + 'Fonction mémoire (5300 valeurs)' + CHAR(13) + '' + CHAR(10) + 'Batterie de secours (15 jours)' + CHAR(13) + '' + CHAR(10) + 'Gamme pro avec portée étendue' + CHAR(13) + '' + CHAR(10) + 'Gaine de protection : acier inox 316 L, Ø 6 ' + CHAR(13) + '' + CHAR(10) + 'Température d''utilisation : -200 à 200°C' + CHAR(13) + '' + CHAR(10) + 'Sonde : Pt 100 céramique CEI 60751 classe A, en montage 4 fils' + CHAR(13) + '' + CHAR(10) + 'Câble de raccordement : PFA/PFA', N'GSP', N'RADIO', NULL),
+  (11, N'GSP-RP-ALIM', N'Gemsense Pro platine alimentaire', N'Sonde GemSense Pro avec écran 2,9" ' + CHAR(13) + '' + CHAR(10) + 'Fonction mémoire (5300 valeurs)' + CHAR(13) + '' + CHAR(10) + 'Batterie de secours (15 jours)' + CHAR(13) + '' + CHAR(10) + 'Gamme pro avec portée étendue' + CHAR(13) + '' + CHAR(10) + 'Gaine de protection : acier inox 316 L - Ø 5 mm, ' + CHAR(13) + '' + CHAR(10) + 'longueur utile : 150 mm' + CHAR(13) + '' + CHAR(10) + 'Poignée : surmoulée silicone THT 250 °C - couleur rouge brique, longueur 130 mm' + CHAR(13) + '' + CHAR(10) + 'Sonde : Pt1000 céramique DIN IEC 60751 classe B, simple en montage A' + CHAR(13) + '' + CHAR(10) + 'Câble de raccordement : silicone atoxique THT 250 °C continu - Alimentaire couleur rouge brique' + CHAR(13) + '' + CHAR(10) + 'Température d''utilisation : -50 à + 250 °C', N'GSP', N'RADIO', NULL),
+  (12, N'GSP-RP-CONT', N'Gemsense Pro platine contact', N'Sonde GemSense Pro avec écran 2,9" ' + CHAR(13) + '' + CHAR(10) + 'Fonction mémoire (5300 valeurs)' + CHAR(13) + '' + CHAR(10) + 'Batterie de secours (15 jours)' + CHAR(13) + '' + CHAR(10) + 'Gamme pro avec portée étendue' + CHAR(13) + '' + CHAR(10) + 'Capteur de température' + CHAR(13) + '' + CHAR(10) + 'Sonde : Pt 100 CEI 60751 classe A, ' + CHAR(13) + '' + CHAR(10) + 'simple enroulement, élément de mesure couche mince sous rétractable PFA' + CHAR(13) + '' + CHAR(10) + 'Sous film polyester ' + CHAR(13) + '' + CHAR(10) + 'Température d''utilisation : -80+160 °C' + CHAR(13) + '' + CHAR(10) + 'Fixation par colle silicone sur surface dégraissée' + CHAR(13) + '' + CHAR(10) + 'Câble de raccordement : PFA/PFA, section 0,09 mm², longueur 2 mètres, 3 conducteurs', N'GSP', N'RADIO', NULL),
+  (13, N'GSP-RP-AU', N'Gemsense Pro platine autoclave', N'Sonde GemSense Pro avec écran 2,9" ' + CHAR(13) + '' + CHAR(10) + 'Fonction mémoire (5300 valeurs)' + CHAR(13) + '' + CHAR(10) + 'Batterie de secours (15 jours)' + CHAR(13) + '' + CHAR(10) + 'Gamme pro avec portée étendue' + CHAR(13) + '' + CHAR(10) + 'Capteur de température' + CHAR(13) + '' + CHAR(10) + 'Gaine de protection : acier inox 316 L - Ø 6 x 200 mm, ' + CHAR(13) + '' + CHAR(10) + 'prolongée par câble PFA/silicone protégé par flexible inox Ø 7 mm, longueur 1,5 mètres puis gaine étanche Ø 6 x 100 mm pour passage de cloison' + CHAR(13) + '' + CHAR(10) + 'Sonde : Pt 100 céramique CEI 60751 classe A, simple ou double enroulement en montage 3 fils' + CHAR(13) + '' + CHAR(10) + 'Câble de raccordement : PFA/silicone, longueur 2 mètres' + CHAR(13) + '' + CHAR(10) + 'Température maximale d''utilisation : +180 °C' + CHAR(13) + '' + CHAR(10) + 'Exécution étanche', N'GSP', N'RADIO', NULL),
+  (14, N'GSP-RP-CF', N'Gemsense Pro platine chambre froide', N'Sonde GemSense Pro avec écran 2,9" ' + CHAR(13) + '' + CHAR(10) + 'Fonction mémoire (5300 valeurs)' + CHAR(13) + '' + CHAR(10) + 'Batterie de secours (15 jours)' + CHAR(13) + '' + CHAR(10) + 'Gamme pro avec portée étendue' + CHAR(13) + '' + CHAR(10) + 'Capteur de température' + CHAR(13) + '' + CHAR(10) + 'Capteur muni à l''extrémité d''une ogive inox diamètre 6 mm ' + CHAR(13) + '' + CHAR(10) + 'sertie sur 15 mètres de câble silicone.' + CHAR(13) + '' + CHAR(10) + 'Configuration 3 fils' + CHAR(13) + '' + CHAR(10) + 'Elément sensible Pt100 suivant NF EN 60751 classe B' + CHAR(13) + '' + CHAR(10) + 'Ogive inox diamètre 6 mm, longueur 50 mm' + CHAR(13) + '' + CHAR(10) + 'Température d''utilisation : -50°C à + 100°C' + CHAR(13) + '' + CHAR(10) + 'Sortie sur 15 mètres de câble : Conducteurs souples 7 brins ' + CHAR(13) + '' + CHAR(10) + 'de ø 0.2 mm isolés PFA sous gaine caoutchouc de silicone. ' + CHAR(13) + '' + CHAR(10) + '2 conducteurs rouges, 1 conducteur blanc', N'GSP', N'RADIO', NULL),
+  (15, N'GSP-RP-MICRO', N'Gemsense Pro platine micro-capteur', N'Sonde GemSense Pro avec écran 2,9" ' + CHAR(13) + '' + CHAR(10) + 'Fonction mémoire (5300 valeurs)' + CHAR(13) + '' + CHAR(10) + 'Batterie de secours (15 jours)' + CHAR(13) + '' + CHAR(10) + 'Gamme pro avec portée étendue' + CHAR(13) + '' + CHAR(10) + 'Capteur de temperature platine' + CHAR(13) + '' + CHAR(10) + 'Capteur micro ø 2,18mm L 4,75m : -70°C à + 250°C', N'GSP', N'RADIO', NULL),
+  (16, N'GSP-RQ-CO2', N'Gemsense Pro CO2', N'Sonde GemSense Pro avec écran 2,9" ' + CHAR(13) + '' + CHAR(10) + 'Fonction mémoire (5300 valeurs)' + CHAR(13) + '' + CHAR(10) + 'Gamme pro avec portée étendue' + CHAR(13) + '' + CHAR(10) + 'Le capteur de dioxyde de carbone Vaisala CARBOCAP® GMP251 est une sonde intelligente et autonome.' + CHAR(13) + '' + CHAR(10) + 'La plage de température de fonctionnement va de -40 à +60 °C, ' + CHAR(13) + '' + CHAR(10) + 'et la plage de mesure est comprise entre 0 et 20 % de CO2' + CHAR(13) + '' + CHAR(10) + 'Le capteur GMP251 fait appel à la technologie unique de deuxième génération Vaisala CARBOCAP® qui offre une stabilité exceptionnelle. ' + CHAR(13) + '' + CHAR(10) + 'La durée de vie de la GMP251 est prolongée grâce à un nouveau type de source de lumière infrarouge (IR) qui remplace l''ampoule à incandescence traditionnelle. Elle bénéficie de compensations complètes de température et de pression de la mesure du COCO2 - mesure de température intégrée pour la compensation.', N'GSP', N'RADIO', NULL),
+  (17, N'GSP-RQ-HYG', N'Gemsense Pro hygrométrie', N'Sonde GemSense Pro avec écran 2,9" ' + CHAR(13) + '' + CHAR(10) + 'Fonction mémoire (5300 valeurs)' + CHAR(13) + '' + CHAR(10) + 'Gamme pro avec portée étendue' + CHAR(13) + '' + CHAR(10) + 'Plage de mesure de 0% à 100 %hr' + CHAR(13) + '' + CHAR(10) + 'Température d''utilisation de 10°C à +60°C' + CHAR(13) + '' + CHAR(10) + 'Capteur de diamètre 12 mm longueur 71 mm', N'GSP', N'RADIO', NULL),
+  (18, N'GSP-RQ-THE', N'Gemsense Pro thermocouple', N'Sonde GemSense Pro avec écran 2,9" ' + CHAR(13) + '' + CHAR(10) + 'Fonction mémoire (5300 valeurs)' + CHAR(13) + '' + CHAR(10) + 'Batterie de secours (15 jours)' + CHAR(13) + '' + CHAR(10) + 'Gamme pro avec portée étendue' + CHAR(13) + '' + CHAR(10) + 'Capteur de température' + CHAR(13) + '' + CHAR(10) + 'Capteur thermocouple J chemise (déformable) :' + CHAR(13) + '' + CHAR(10) + 'ø 3 mm longueur 50 cm' + CHAR(13) + '' + CHAR(10) + 'Température d''utilisation  : 100°C à + 1500°C' + CHAR(13) + '' + CHAR(10) + 'Sortie sur câble tresse inox 1m', N'GSP', N'RADIO', NULL),
+  (19, N'GSP-RQ-PRES', N'Gemsense Pro pression différentielle', N'Sonde GemSense Pro avec écran 2,9" ' + CHAR(13) + '' + CHAR(10) + 'Fonction mémoire (5300 valeurs)' + CHAR(13) + '' + CHAR(10) + 'Batterie de secours (10 jours)' + CHAR(13) + '' + CHAR(10) + 'Gamme pro avec portée étendue' + CHAR(13) + '' + CHAR(10) + 'Capteur de pression ' + CHAR(13) + '' + CHAR(10) + 'Capteur piézoélectique' + CHAR(13) + '' + CHAR(10) + 'Domaine d''utilisation  : 0 à 250 Pa' + CHAR(13) + '' + CHAR(10) + 'Sortie sur câble tresse inox 1m', N'GSP', N'RADIO', NULL),
+  (20, N'GSP-RQ-ATMO', N'Gemsense Pro pression atmosphérique', N'Sonde GemSense Pro avec écran 2,9" ' + CHAR(13) + '' + CHAR(10) + 'Fonction mémoire (5300 valeurs)' + CHAR(13) + '' + CHAR(10) + 'Batterie de secours (10 jours)' + CHAR(13) + '' + CHAR(10) + 'Gamme pro avec portée étendue' + CHAR(13) + '' + CHAR(10) + 'Capteur de pression  ' + CHAR(13) + '' + CHAR(10) + 'Capteur ratiométrique' + CHAR(13) + '' + CHAR(10) + 'Domaine d''utilisation : atmosphère ambiante', N'GSP', N'RADIO', NULL),
+  (21, N'GSP-RQ-LUM', N'Gemsense Pro lumière', N'Sonde GemSense Pro avec écran 2,9" ' + CHAR(13) + '' + CHAR(10) + 'Fonction mémoire (5300 valeurs)' + CHAR(13) + '' + CHAR(10) + 'Batterie de secours (10 jours)' + CHAR(13) + '' + CHAR(10) + 'Gamme pro avec portée étendue' + CHAR(13) + '' + CHAR(10) + 'Capteur de lumière ' + CHAR(13) + '' + CHAR(10) + 'Capteur photorésistif' + CHAR(13) + '' + CHAR(10) + 'Domaine d''utilisation : lumière ambiante', N'GSP', N'RADIO', NULL),
+  (22, N'GSP-RQ-01V', N'Gemsense Pro 0-1 Volt', N'Sonde GemSense Pro avec écran 2,9" ' + CHAR(13) + '' + CHAR(10) + 'Fonction mémoire (5300 valeurs)' + CHAR(13) + '' + CHAR(10) + 'Batterie de secours (10 jours)' + CHAR(13) + '' + CHAR(10) + 'Gamme pro avec portée étendue' + CHAR(13) + '' + CHAR(10) + 'Capteur de tension ' + CHAR(13) + '' + CHAR(10) + 'Entrée 0-1Volt', N'GSP', N'RADIO', NULL),
+  (23, N'GSP-RQ-420MA', N'Gemsense Pro 4-20 mA', N'Sonde GemSense Pro avec écran 2,9" ' + CHAR(13) + '' + CHAR(10) + 'Fonction mémoire (5300 valeurs)' + CHAR(13) + '' + CHAR(10) + 'Batterie de secours (10 jours)' + CHAR(13) + '' + CHAR(10) + 'Gamme pro avec portée étendue' + CHAR(13) + '' + CHAR(10) + 'Capteur de courant ' + CHAR(13) + '' + CHAR(10) + 'Entrée 4-20mA', N'GSP', N'RADIO', NULL),
+  (24, N'GSP-RQ-NONF', N'Gemsense Pro NO NF', N'Sonde GemSense Pro avec écran 2,9" ' + CHAR(13) + '' + CHAR(10) + 'Fonction mémoire (5300 valeurs)' + CHAR(13) + '' + CHAR(10) + 'Batterie de secours (10 jours)' + CHAR(13) + '' + CHAR(10) + 'Gamme pro avec portée étendue' + CHAR(13) + '' + CHAR(10) + 'Capteur TOR ' + CHAR(13) + '' + CHAR(10) + 'Entrée récuperation de contact NO ou NF' + CHAR(13) + '' + CHAR(10) + 'Domaine d''utilisation : reprise de contact', N'GSP', N'RADIO', NULL),
+  (25, N'GSP-RP-ETAL', N'Gemsense Pro Etalon', N'Sonde GemSense Pro avec écran 2,9" ' + CHAR(13) + '' + CHAR(10) + 'Lecture écran sous forme de liste pour des étalonnages ' + CHAR(13) + '' + CHAR(10) + 'plus faciles' + CHAR(13) + '' + CHAR(10) + 'Batterie de secours (15 jours)' + CHAR(13) + '' + CHAR(10) + 'Gamme pro avec portée étendue' + CHAR(13) + '' + CHAR(10) + 'Gaine de protection : acier inox 316 L, Ø 3,5 longueur utile 150 mm ' + CHAR(13) + '' + CHAR(10) + 'Température d''utilisation : -200 à 200°C' + CHAR(13) + '' + CHAR(10) + 'Sonde : Pt 100 céramique CEI 60751 classe 1/3DIN, ' + CHAR(13) + '' + CHAR(10) + 'en montage 4 fils' + CHAR(13) + '' + CHAR(10) + 'Câble de raccordement : PFA/PFA ' + CHAR(13) + '' + CHAR(10) + 'Résolution d’affichage : 0,01°C ' + CHAR(13) + '' + CHAR(10) + 'Résolution de mesure : 0,003°C', N'GSP', N'ETALON', NULL),
+  (26, N'GSP-XN-BL', N'Gemsense Pro Ethernet numérique blanc', N'Liaison Ethernet RJ45 ' + CHAR(13) + '' + CHAR(10) + 'Capteur numérique' + CHAR(13) + '' + CHAR(10) + 'Température d''utilisation : -30°C à 125°C' + CHAR(13) + '' + CHAR(10) + 'Capteur numérique Ø 6mm l, 50mm  / -30°C à 125 °C | Câble long 3 m BLANC', N'GSP', N'ETHERNET', NULL),
+  (27, N'GSP-XN-GR', N'Gemsense Pro Ethernet numérique gris', N'Liaison Ethernet RJ45 ' + CHAR(13) + '' + CHAR(10) + 'Capteur numérique' + CHAR(13) + '' + CHAR(10) + 'Température d''utilisation : -30°C à 70°C' + CHAR(13) + '' + CHAR(10) + 'Capteur numérique Ø 6mm l, 50mm  / -30°C à 70 °C | Câble long 3 m GRIS PLAT', N'GSP', N'ETHERNET', NULL),
+  (28, N'GSP-XP', N'Gemsense Pro Ethernet platine', N'Liaison Ethernet RJ45 ' + CHAR(13) + '' + CHAR(10) + 'Gaine de protection : acier inox 316 L, Ø 6 ' + CHAR(13) + '' + CHAR(10) + 'Température d''utilisation : -200 à 200°C' + CHAR(13) + '' + CHAR(10) + 'Sonde : Pt 100 céramique CEI 60751 classe A, en montage 4 fils' + CHAR(13) + '' + CHAR(10) + 'Câble de raccordement : PFA/PFA', N'GSP', N'ETHERNET', NULL),
+  (29, N'M-GSP-F', N'Module de réception pour sondes GemSense Pro Filaire', N'Ethernet RJ 45' + CHAR(13) + '' + CHAR(10) + 'Led activité' + CHAR(13) + '' + CHAR(10) + 'Alimentation sur secteur', N'GSP', N'FILAIRE', NULL),
+  (30, N'M-GSP-F-ALS', N'Alimentation supplémentaire pour sondes GemSense Pro Filaire', N'', N'GSP', N'FILAIRE', NULL),
+  (31, N'GSP-FN-BL', N'Gemsense Pro filaire numérique blanc', N'Bus d’alimentation de data RS485' + CHAR(13) + '' + CHAR(10) + 'Capteur numérique' + CHAR(13) + '' + CHAR(10) + 'Température d''utilisation : -30°C à 125°C' + CHAR(13) + '' + CHAR(10) + 'Capteur numérique Ø 6mm l, 50mm  / -30°C à 125 °C | Câble long 3 m BLANC', N'GSP', N'FILAIRE', NULL),
+  (32, N'GSP-FN-GR', N'Gemsense Pro filaire numérique gris', N'Bus d’alimentation de data RS485' + CHAR(13) + '' + CHAR(10) + 'Capteur numérique' + CHAR(13) + '' + CHAR(10) + 'Température d''utilisation : -30°C à 70°C' + CHAR(13) + '' + CHAR(10) + 'Capteur numérique Ø 6mm l, 50mm  / -30°C à 70 °C | Câble long 3 m GRIS PLAT', N'GSP', N'FILAIRE', NULL),
+  (33, N'GSP-FP', N'Gemsense Pro Filaire platine', N'Bus d’alimentation de data RS485' + CHAR(13) + '' + CHAR(10) + 'Gaine de protection : acier inox 316 L, Ø 6 ' + CHAR(13) + '' + CHAR(10) + 'Température d''utilisation : -200 à 200°C' + CHAR(13) + '' + CHAR(10) + 'Sonde : Pt 100 céramique CEI 60751 classe A, en montage 4 fils' + CHAR(13) + '' + CHAR(10) + 'Câble de raccordement : PFA/PFA', N'GSP', N'FILAIRE', NULL)
+) AS source (Id_Materiel, Ref_Materiel, Nom_Materiel, Descriptif, Type_Materiel, Famille_Materiel, Archive)
+ON target.Id_Materiel = source.Id_Materiel
+WHEN MATCHED THEN UPDATE SET Ref_Materiel = source.Ref_Materiel, Nom_Materiel = source.Nom_Materiel, Descriptif = source.Descriptif, Type_Materiel = source.Type_Materiel, Famille_Materiel = source.Famille_Materiel, Archive = source.Archive
+WHEN NOT MATCHED THEN INSERT (Id_Materiel, Ref_Materiel, Nom_Materiel, Descriptif, Type_Materiel, Famille_Materiel, Archive) VALUES (source.Id_Materiel, source.Ref_Materiel, source.Nom_Materiel, source.Descriptif, source.Type_Materiel, source.Famille_Materiel, source.Archive);
+SET IDENTITY_INSERT dbo.t_materiel OFF;
+GO
+
+SET IDENTITY_INSERT dbo.t_sonde_etat ON;
+MERGE dbo.t_sonde_etat AS target
+USING (VALUES
+  (1, N'A', N'En ajustage'),
+  (2, N'D', N'Surveillance désactivée'),
+  (3, N'E', N'En étalonnage'),
+  (4, N'S', N'Utilisée en surveillance'),
+  (5, N'T', N'En test')
+) AS source (Id_Sonde_Etat, Etat_Sonde, Etat_Libelle)
+ON target.Id_Sonde_Etat = source.Id_Sonde_Etat
+WHEN MATCHED THEN UPDATE SET Etat_Sonde = source.Etat_Sonde, Etat_Libelle = source.Etat_Libelle
+WHEN NOT MATCHED THEN INSERT (Id_Sonde_Etat, Etat_Sonde, Etat_Libelle) VALUES (source.Id_Sonde_Etat, source.Etat_Sonde, source.Etat_Libelle);
+SET IDENTITY_INSERT dbo.t_sonde_etat OFF;
+GO
+
+MERGE dbo.t_parametre AS target
+USING (VALUES
+  (N'CFR21', N'ACTIVATION_EXPIRATION_MOT_DE_PASSE', N'true', N'Activer l''expiration des mots de passe (CFR21)', NULL),
+  (N'CFR21', N'ACTIVATION_NORME_CFR21', N'0', N'Activer la conformite CFR21 (saisie des configurations)', NULL),
+  (N'CFR21', N'EVENEMENTS', N'1', N'Activation des evenements', NULL),
+  (N'CFR21', N'JOURS_VALIDITE_MOT_DE_PASSE', N'0', NULL, NULL),
+  (N'CFR21', N'MOT_DE_PASSE_PERMANENT', N'1', N'Le mot de passe ne peut pas etre change par l''utilisateur', NULL),
+  (N'CFR21', N'MOT_DE_PASSE_REUTILISABLE', N'0', N'L''utilisateur ne peut pas reutiliser un ancien mot de passe', NULL),
+  (N'CFR21', N'NOMBRE_TENTATIVES_MOT_DE_PASSE', N'3', N'Nombre de tentatives autorisees avant verrouillage du compte', NULL),
+  (N'CFR21', N'REACTIVATION_ALARME_SONORE', N'500', N'Delai de reactivation de l''alarme sonore en millisecondes', NULL),
+  (N'CFR21', N'SECURITE', N'0', N'Mode securite renforcee', NULL),
+  (N'CFR21', N'TEMPS_DECONNEXION_MINUTES', N'20', N'Temps d''inactivite avant deconnexion automatique en minutes', NULL),
+  (N'CFR21', N'VALIDITE_MOT_DE_PASSE_JOURS', N'90', N'Duree de validite du mot de passe en jours', NULL),
+  (N'DASHBOARD', N'AUDIT_GRAPH_OPENINGS', N'false', N'Activer l''audit trail a l''ouverture des graphiques', NULL),
+  (N'DASHBOARD', N'ETALONNAGE_WARNING_DAYS', N'90', NULL, NULL),
+  (N'DASHBOARD', N'REFRESH', N'30', N'Intervalle de rafraichissement dashboard (secondes)', NULL),
+  (N'DASHBOARD', N'REQUIRE_ACTION_COMMENT', N'false', NULL, NULL),
+  (N'DASHBOARD', N'SHOW_NULL_NON_RESPONSE', N'true', N'Afficher les non-reponses (valeurs null) sur les graphes', NULL),
+  (N'DASHBOARD', N'SURVEILLANCE_REFRESH', N'30', N'Delai auto de rafraichissement de la surveillance (secondes)', NULL),
+  (N'GENERAL', N'TIMEZONE', N'Europe/Paris', N'Fuseau horaire par defaut', NULL),
+  (N'LICENCE', N'CLIENT', N'', N'Numero client de licence', NULL),
+  (N'LICENCE', N'VIGITEL', N'', N'Cle de licence VigiTel', NULL),
+  (N'LICENCE', N'VIGITEMP', N'', N'Cle de licence VigiTemp', NULL),
+  (N'NOTIFICATIONS', N'ALARM_EMAIL_ACKNOWLEDGED', N'true', N'Envoyer les emails d acquittement', NULL),
+  (N'NOTIFICATIONS', N'ALARM_EMAIL_ENDED', N'true', N'Envoyer les emails d alarme terminee', NULL),
+  (N'NOTIFICATIONS', N'ALARM_EMAIL_FALLBACK_TO_SYSTEM', N'true', N'Envoyer les emails d alarme aux destinataires systeme si aucun contact mail lieu n est configure', NULL),
+  (N'NOTIFICATIONS', N'ALARM_EMAIL_RECIPIENTS', N'', N'Emails en copie sur tous les emails systeme', NULL),
+  (N'NOTIFICATIONS', N'EMAIL', N'true', N'Activation globale des emails systeme', NULL),
+  (N'NOTIFICATIONS', N'GSP_BATTERY_EMAIL_PERCENT', N'25', N'Seuil (%) envoi email batterie faible sonde GSP', NULL),
+  (N'NOTIFICATIONS', N'GSP_BATTERY_NOTIFY_PERCENT', N'50', N'Seuil (%) notification batterie faible sonde GSP', NULL),
+  (N'NOTIFICATIONS_TEAMS', N'CHANNEL_LABEL', N'', N'Nom lisible du canal Teams cible.', NULL),
+  (N'NOTIFICATIONS_TEAMS', N'ENABLED', N'false', N'Active les notifications Teams via webhook Workflows.', NULL),
+  (N'NOTIFICATIONS_TEAMS', N'NOTIFY_ON_ACK', N'false', N'Envoie un message Teams a l acquittement.', NULL),
+  (N'NOTIFICATIONS_TEAMS', N'NOTIFY_ON_END', N'true', N'Envoie un message Teams a la fin alarme.', NULL),
+  (N'NOTIFICATIONS_TEAMS', N'NOTIFY_ON_TRIGGER', N'true', N'Envoie un message Teams au declenchement alarme.', NULL),
+  (N'NOTIFICATIONS_TEAMS', N'TIMEOUT_MS', N'5000', N'Timeout HTTP du webhook Teams en millisecondes.', NULL),
+  (N'NOTIFICATIONS_TEAMS', N'WEBHOOK_URL', N'', N'URL du webhook Teams Workflows. Secret a proteger.', NULL),
+  (N'SECURITE_EMAIL', N'SMTP_ACTIVATION', N'false', N'Activer l''envoi d''emails', NULL),
+  (N'SECURITE_EMAIL', N'SMTP_EXPEDITEUR', N'', N'Adresse email expediteur (doit correspondre au domaine SMTP)', NULL),
+  (N'SECURITE_EMAIL', N'SMTP_MOT_DE_PASSE', N'', N'Mot de passe SMTP', NULL),
+  (N'SECURITE_EMAIL', N'SMTP_PORT', N'587', N'Port SMTP (587 pour TLS, 465 pour SSL)', NULL),
+  (N'SECURITE_EMAIL', N'SMTP_SERVEUR', N'', N'Serveur SMTP pour l''envoi d''emails', NULL),
+  (N'SECURITE_EMAIL', N'SMTP_UTILISATEUR', N'', N'Utilisateur SMTP', NULL),
+  (N'SECURITE_MOT_DE_PASSE', N'LONGUEUR_MINIMALE', N'4', N'Longueur minimale du mot de passe', NULL),
+  (N'SECURITE_MOT_DE_PASSE', N'MIN_CARACTERES_SPECIAUX', N'0', N'Nombre minimum de caracteres speciaux', NULL),
+  (N'SECURITE_MOT_DE_PASSE', N'MIN_CHIFFRES', N'0', N'Nombre minimum de chiffres', NULL),
+  (N'SECURITE_MOT_DE_PASSE', N'MIN_LETTRES_MAJUSCULES', N'0', N'Nombre minimum de majuscules', NULL),
+  (N'SECURITE_MOT_DE_PASSE', N'MIN_LETTRES_MINUSCULES', N'0', N'Nombre minimum de minuscules', NULL),
+  (N'SERVICE', N'GSO_DERNIER_DATE_HEURE', NULL, N'Date et heure de derniere mesure inscrite par la boucle GSO dans tm_mesures', NULL),
+  (N'SERVICES', N'COMMERCIAL_CONTACT_EMAIL', N'', N'Adresse email du service commercial utilisee pour les demandes de devis materiel', NULL),
+  (N'STATISTICS_MONTHLY_REPORT', N'DAY_OF_MONTH', N'1', N'Jour du mois (1..31, replie au dernier jour du mois si necessaire)', NULL),
+  (N'STATISTICS_MONTHLY_REPORT', N'ENABLED', N'0', N'Activation envoi recap mensuel stats', NULL),
+  (N'STATISTICS_MONTHLY_REPORT', N'HOUR_LOCAL', N'8', N'Heure locale (0..23)', NULL),
+  (N'STATISTICS_MONTHLY_REPORT', N'INCLUDE_ALARM_COUNT', N'1', N'Inclure nombre alarmes', NULL),
+  (N'STATISTICS_MONTHLY_REPORT', N'INCLUDE_ALARM_HIGH_DURATION', N'1', N'Inclure duree alarme haute', NULL),
+  (N'STATISTICS_MONTHLY_REPORT', N'INCLUDE_ALARM_LOW_DURATION', N'1', N'Inclure duree alarme basse', NULL),
+  (N'STATISTICS_MONTHLY_REPORT', N'INCLUDE_AVG', N'1', N'Inclure moyenne', NULL),
+  (N'STATISTICS_MONTHLY_REPORT', N'INCLUDE_LOCATION_SUMMARY', N'1', N'Inclure lieu/site/groupe', NULL),
+  (N'STATISTICS_MONTHLY_REPORT', N'INCLUDE_MAX', N'1', N'Inclure mesure max', NULL),
+  (N'STATISTICS_MONTHLY_REPORT', N'INCLUDE_MIN', N'1', N'Inclure mesure min', NULL),
+  (N'STATISTICS_MONTHLY_REPORT', N'INCLUDE_OVER_HIGH_NO_ALARM', N'1', N'Inclure depassement haut sans alarme', NULL),
+  (N'STATISTICS_MONTHLY_REPORT', N'INCLUDE_OVER_LOW_NO_ALARM', N'1', N'Inclure depassement bas sans alarme', NULL),
+  (N'STATISTICS_MONTHLY_REPORT', N'INCLUDE_SETTINGS_SUMMARY', N'1', N'Inclure consignes/tolerances/frequence/retards', NULL),
+  (N'STATISTICS_MONTHLY_REPORT', N'LAST_SENT_MONTH', N'', N'Dernier mois envoye au format YYYY-MM', NULL),
+  (N'STATISTICS_MONTHLY_REPORT', N'RECIPIENTS', N'', N'Destinataires separes par ; ou ,', NULL)
+) AS source (Section, Mot_Cle, Valeur, Commentaire, Champ_DATETIME)
+ON target.Section = source.Section AND target.Mot_Cle = source.Mot_Cle
+WHEN MATCHED THEN UPDATE SET Valeur = source.Valeur, Commentaire = source.Commentaire, Champ_DATETIME = source.Champ_DATETIME
+WHEN NOT MATCHED THEN INSERT (Section, Mot_Cle, Valeur, Commentaire, Champ_DATETIME) VALUES (source.Section, source.Mot_Cle, source.Valeur, source.Commentaire, source.Champ_DATETIME);
 GO
 
 -- =====================================================================

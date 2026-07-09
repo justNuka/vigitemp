@@ -11,7 +11,6 @@ import {
   BookOpen,
   Clock,
   Cpu,
-  Database,
   Globe,
   MapPin,
   Radio,
@@ -38,13 +37,14 @@ import {
 import { useUnassignedSensors } from "@/hooks/useSensors"
 import { ExpertAdminDashboard } from "./_components/expert-admin-dashboard"
 import { staggerContainer, fadeInUp } from "@/lib/motion-variants"
+import { formatDbDateTime } from "@/lib/date-display"
 
 type SummaryCardProps = {
   title: string
   description: string
   value: string
-  href: string
-  hrefLabel: string
+  href?: string
+  hrefLabel?: string
   icon: React.ReactNode
   badge?: React.ReactNode
   helper?: string
@@ -78,13 +78,15 @@ function SummaryCard({
         <CardContent className="space-y-2 pt-4">
           <div className="text-3xl font-bold tabular-nums">{value}</div>
           {helper ? <p className="whitespace-pre-line break-all text-sm text-muted-foreground">{helper}</p> : null}
-          <Link
-            href={href as any}
-            className="inline-flex items-center gap-1 text-sm font-medium text-primary transition-colors hover:text-primary/80"
-          >
-            {hrefLabel}
-            <ArrowRight className="h-4 w-4" />
-          </Link>
+          {href && hrefLabel ? (
+            <Link
+              href={href as any}
+              className="inline-flex items-center gap-1 text-sm font-medium text-primary transition-colors hover:text-primary/80"
+            >
+              {hrefLabel}
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+          ) : null}
         </CardContent>
       </Card>
     </m.div>
@@ -123,14 +125,40 @@ export default function AdminDashboard() {
   const backupsTotal = backupsQuery.data?.summary.archiveCount ?? 0
   const backupStoragePath = backupsQuery.data?.summary.storagePath ?? "-"
   const backupLogFilePath = backupsQuery.data?.summary.logFilePath ?? "-"
-
-  const lastBackupDate = backupsQuery.data?.data?.[0]?.dateHeure
-  const lastBackupLabel = lastBackupDate
-    ? new Date(lastBackupDate).toLocaleString(locale, { timeZone: timezone })
+  const latestBackup = backupsQuery.data?.data?.[0]
+  const lastBackupLabel = latestBackup?.dateHeure
+    ? new Intl.DateTimeFormat(locale, {
+        dateStyle: "short",
+        timeStyle: "medium",
+        timeZone: timezone,
+      }).format(new Date(latestBackup.dateHeure))
     : t("backup.last.none")
-  const backupHelper = `${t("backup.last.label")}: ${lastBackupLabel}\n${backupLogFilePath !== "-" ? backupLogFilePath : backupStoragePath}`
+  const latestBackupStatus = latestBackup
+    ? t(`backups.status.${latestBackup.etat}`)
+    : t("backup.last.none")
+  const latestBackupBadge = latestBackup ? (
+    <Badge
+      variant={
+        latestBackup.etat === "success"
+          ? "default"
+          : latestBackup.etat === "failed"
+            ? "destructive"
+            : "secondary"
+      }
+      className={
+        latestBackup.etat === "success"
+          ? "bg-emerald-600 text-white hover:bg-emerald-600"
+          : latestBackup.etat === "in_progress"
+            ? "bg-amber-100 text-amber-800 hover:bg-amber-100 dark:bg-amber-950 dark:text-amber-300"
+            : undefined
+      }
+    >
+      {latestBackupStatus}
+    </Badge>
+  ) : undefined
 
-  const latestAck = acknowledgmentsQuery.data?.data?.[0]?.dateHeure || "-"
+  const latestAckRaw = acknowledgmentsQuery.data?.data?.[0]?.dateHeure || null
+  const latestAck = latestAckRaw ? formatDbDateTime(latestAckRaw) : "-"
   const latestAuditAction = systemLogsQuery.data?.data?.[0]?.action || "-"
   const latestConnectedUsers = connectedUsersQuery.data?.data?.slice(0, 3) ?? []
   const latestConnectedLabel =
@@ -156,9 +184,9 @@ export default function AdminDashboard() {
     activeAlarmsQuery.isLoading,
     alarmsActiveCountQuery.isLoading,
     alarmsResolvedCountQuery.isLoading,
-    backupsQuery.isLoading,
     connectedUsersQuery.isLoading,
     systemLogsQuery.isLoading,
+    backupsQuery.isLoading,
     unassignedSensorsQuery.isLoading,
   ])
 
@@ -220,6 +248,15 @@ export default function AdminDashboard() {
                 icon={card.icon}
               />
             ))}
+
+              <SummaryCard
+                title={t("backup.title")}
+                description={t("backup.description", { total: backupsTotal })}
+                value={latestBackupStatus}
+                helper={`${t("backup.last.label")}: ${lastBackupLabel}\n${backupStoragePath}`}
+                icon={<BookOpen className="h-5 w-5 text-violet-600" />}
+                badge={latestBackupBadge}
+              />
           </m.div>
         </LazyMotion>
       </div>
@@ -244,6 +281,8 @@ export default function AdminDashboard() {
             latestAuditAction,
             latestConnectedLabel,
             lastBackupLabel,
+            latestBackupStatus,
+            latestBackupEtat: latestBackup?.etat ?? null,
             backupStoragePath,
             backupLogFilePath,
             hideStandards,
@@ -327,12 +366,11 @@ export default function AdminDashboard() {
 
           <SummaryCard
             title={t("backup.title")}
-            description={t("backup.description")}
-            value={String(backupsTotal)}
-            helper={backupHelper}
-            href={`/admin/outils`}
-            hrefLabel={accessLabel}
-            icon={<Database className="h-5 w-5 text-violet-600" />}
+            description={t("backup.description", { total: backupsTotal })}
+            value={latestBackupStatus}
+            helper={`${t("backup.last.label")}: ${lastBackupLabel}\n${backupStoragePath}`}
+            icon={<BookOpen className="h-5 w-5 text-violet-600" />}
+            badge={latestBackupBadge}
           />
 
           <SummaryCard

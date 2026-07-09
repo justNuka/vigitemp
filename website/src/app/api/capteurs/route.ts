@@ -8,6 +8,7 @@ import { log } from "@/lib/logger"
 import { prisma } from "@/lib/prisma"
 import { applyAccessFilter, buildLieuAccessFilter, getUserLocationScope } from "@/lib/location-access-scope"
 import { serializeDbDateTime } from "@/lib/date-display"
+import { normalizeMeasureNumber } from "@/lib/measurements"
 
 const createSensorSchema = z.object({
   name: z.string().min(1, "Name required"),
@@ -62,7 +63,7 @@ export const GET = withAuthLogging(async (req: NextRequest, ctx: HandlerContext)
       id: lieu.Id_Lieu.toString(),
       name: lieu.Nom_Lieu || "Lieu sans nom",
       status: lieu.Est_Lieu_En_Alarme === 1 ? "critical" : lieu.Est_Lieu_En_Pre_Alarme === 1 ? "warning" : "ok",
-      value: lieu.Derniere_Valeur !== null ? parseFloat(lieu.Derniere_Valeur.toString()) : null,
+      value: normalizeMeasureNumber(lieu.Derniere_Valeur, lieu.Derniere_Nb_Decimal ?? 2),
       unit: lieu.Derniere_Unite || "°C",
       lastUpdate: serializeDbDateTime(lieu.Derniere_Date_Heure) || serializeDbDateTime(new Date()) || null,
       location: {
@@ -70,8 +71,8 @@ export const GET = withAuthLogging(async (req: NextRequest, ctx: HandlerContext)
         name: lieu.t_site?.Libelle_Site || "Unknown",
         siteGroup: lieu.t_site?.Libelle_Site || null,
       },
-      minThreshold: lieu.Tolerance_Surveillance_Inf ?? lieu.Consigne_Inf,
-      maxThreshold: lieu.Tolerance_Surveillance_Sup ?? lieu.Consigne_Sup,
+      minThreshold: normalizeMeasureNumber(lieu.Tolerance_Surveillance_Inf ?? lieu.Consigne_Inf, 2),
+      maxThreshold: normalizeMeasureNumber(lieu.Tolerance_Surveillance_Sup ?? lieu.Consigne_Sup, 2),
     }))
 
     return apiOk(formatted)

@@ -13,6 +13,8 @@ const gspSchema = z.object({
   lowLimit: z.number().nullable().optional(),
   frequencySeconds: z.number().int().nullable().optional(),
   alarmDelayMinutes: z.number().int().nullable().optional(),
+  alarmDelayLowMinutes: z.number().int().nullable().optional(),
+  alarmDelayHighMinutes: z.number().int().nullable().optional(),
   channel: z.string().optional(),
   memoryCount: z.number().int().nullable().optional(),
   memoryOffset: z.number().int().nullable().optional(),

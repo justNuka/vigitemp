@@ -57,7 +57,13 @@ export function buildLieuAccessFilter(scope: UserLocationScope): WhereInput | nu
 export function buildAlarmAccessFilter(scope: UserLocationScope): WhereInput | null {
   const lieuAccess = buildLieuAccessFilter(scope)
   if (!lieuAccess) return null
-  return { t_lieu: lieuAccess }
+  return { t_lieu: { is: lieuAccess } }
+}
+
+export function buildPlanningAuditAccessFilter(scope: UserLocationScope): WhereInput | null {
+  const lieuAccess = buildLieuAccessFilter(scope)
+  if (!lieuAccess) return null
+  return { t_lieu: { is: lieuAccess } }
 }
 
 export function applyAccessFilter(baseWhere: WhereInput, accessFilter: WhereInput | null): WhereInput {

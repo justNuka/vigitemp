@@ -3,6 +3,7 @@ import type { ColumnDef } from "@tanstack/react-table"
 
 import { TanStackTable } from "@/components/data-table/tanstack-table"
 import { formatDbDateTime, parseDbDateTime } from "@/lib/date-display"
+import { formatMeasureValue } from "@/lib/measurements"
 
 import type { AuditLog } from "./types"
 
@@ -11,6 +12,7 @@ interface MonitoringAuditTabProps {
   isLoading: boolean
   error: string | null
   t: (key: string) => string
+  maxHeight?: string
 }
 
 type AuditRow = {
@@ -58,7 +60,7 @@ function sanitizeAuditText(value: string | null | undefined) {
 function formatAuditValue(key: string, value: unknown) {
   if (value === null || value === undefined || value === "") return "-"
   if (typeof value === "boolean") return value ? "Oui" : "Non"
-  if (typeof value === "number") return String(value)
+  if (typeof value === "number") return formatMeasureValue(value)
   if (typeof value === "string") {
     const lowered = key.toLowerCase()
     if (lowered.endsWith("at") || lowered.includes("date") || lowered.includes("time")) {
@@ -66,6 +68,10 @@ function formatAuditValue(key: string, value: unknown) {
       if (parsed && !Number.isNaN(parsed.getTime())) {
         return formatDbDateTime(parsed)
       }
+    }
+    const asNumber = Number(value)
+    if (value.trim() !== "" && Number.isFinite(asNumber) && /^-?\d+(?:[.,]\d+)?$/.test(value.trim())) {
+      return formatMeasureValue(asNumber)
     }
     return value
   }
@@ -122,7 +128,7 @@ function formatAuditDetails(value: string | null | undefined) {
   return sanitized
 }
 
-export function MonitoringAuditTab({ logs, isLoading, error, t }: MonitoringAuditTabProps) {
+export function MonitoringAuditTab({ logs, isLoading, error, t, maxHeight = "calc(100vh - 26rem)" }: MonitoringAuditTabProps) {
   const data = useMemo<AuditRow[]>(() => {
     return logs.map((log) => ({
       id: log.id,
@@ -200,7 +206,7 @@ export function MonitoringAuditTab({ logs, isLoading, error, t }: MonitoringAudi
         headerClassName="!bg-sidebar !text-sidebar-foreground"
         headerCellClassName="!bg-sidebar !text-sidebar-foreground !border-r !border-white/25 hover:!bg-sidebar-accent/80"
         tableClassName="border-separate border-spacing-0 [&_thead_th]:!border-r [&_thead_th]:!border-white/25 [&_tbody_td]:!border-b [&_tbody_td]:!border-border"
-        maxHeight="24rem"
+        maxHeight={maxHeight}
       />
     </div>
   )

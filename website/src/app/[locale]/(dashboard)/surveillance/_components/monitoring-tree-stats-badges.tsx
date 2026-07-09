@@ -23,6 +23,7 @@ export function SurveillanceTreeStatsBadges({ stats, compact = false }: Props) {
   const className = compact ? "text-xs px-2 py-0" : undefined
   const criticalTheme = getStatusTheme("critical", true, statusLabels)
   const warningTheme = getStatusTheme("warning", true, statusLabels)
+  const endedTheme = getStatusTheme("ended", true, statusLabels)
   const okTheme = getStatusTheme("ok", true, statusLabels)
   const inactiveTheme = getStatusTheme("ok", false, statusLabels)
 
@@ -41,6 +42,13 @@ export function SurveillanceTreeStatsBadges({ stats, compact = false }: Props) {
           className={[warningTheme.badgeClassName, className].filter(Boolean).join(" ")}
         >
           {stats.warning}
+        </Badge>
+      )}
+      {stats.ended > 0 && (
+        <Badge
+          className={[endedTheme.badgeClassName, className].filter(Boolean).join(" ")}
+        >
+          {stats.ended}
         </Badge>
       )}
       {stats.ok > 0 && (

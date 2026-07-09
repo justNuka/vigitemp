@@ -1,27 +1,28 @@
 import { NextRequest } from "next/server"
-import { prisma } from "@/lib/prisma"
+import { prismaMesure } from "@/lib/prisma"
 import { withAuthLogging } from "@/lib/api-wrappers"
 import { apiError, apiOk } from "@/lib/api-response"
 import { log } from "@/lib/logger"
 
 export const GET = withAuthLogging(async (_req: NextRequest) => {
   try {
-    const comments = await prisma.t_commentaire_acquittement_alarme.findMany({
+    const comments = await prismaMesure.tm_journal_commentaire_libre.findMany({
+      where: {
+        Code_Journal: "ACQ",
+      },
       select: {
-        Id_Commentaire: true,
-        Type_Commentaire: true,
-        Texte: true,
+        Id_Commentaire_Journal: true,
+        Code_Journal: true,
+        Commentaire: true,
       },
-      orderBy: {
-        Texte: "asc",
-      },
+      orderBy: [{ Commentaire: "asc" }, { Id_Commentaire_Journal: "desc" }],
     })
 
     const payload = comments
       .map((comment) => ({
-        id: comment.Id_Commentaire,
-        type: comment.Type_Commentaire ?? null,
-        text: comment.Texte?.trim() ?? "",
+        id: comment.Id_Commentaire_Journal,
+        type: comment.Code_Journal?.trim() ?? null,
+        text: comment.Commentaire?.trim() ?? "",
       }))
       .filter((comment) => comment.text.length > 0)
 

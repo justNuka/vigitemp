@@ -4,7 +4,9 @@ import { normalizeUnitLabel } from "@/lib/measurements"
 import { unstable_noStore } from "next/cache"
 import { getTranslations } from "next-intl/server"
 
-export async function ServerAlarms() {
+export type ServerAlarmStatus = "active" | "acknowledged" | "resolved"
+
+export async function ServerAlarms(status: ServerAlarmStatus = "active") {
   unstable_noStore()
   const t = await getTranslations("alarmsPage")
   const { prisma } = await import("@/lib/prisma")
@@ -12,13 +14,23 @@ export async function ServerAlarms() {
   const userId = await getServerAuthenticatedUserId()
   if (!userId) return []
 
-  const where: Record<string, unknown> = {}
+  const baseWhere: Record<string, unknown> = {}
+
+  if (status === "active") {
+    baseWhere.Est_Acquittee = false
+    baseWhere.Date_Heure_Fin = null
+  } else if (status === "acknowledged") {
+    baseWhere.Est_Acquittee = true
+  } else {
+    baseWhere.Est_Acquittee = false
+    baseWhere.Date_Heure_Fin = { not: null }
+  }
 
   const scope = await getUserLocationScope(userId)
   const alarmAccessFilter = buildAlarmAccessFilter(scope)
 
   const alarms = await prisma.t_alarme.findMany({
-    where: applyAccessFilter(where, alarmAccessFilter),
+    where: applyAccessFilter(baseWhere, alarmAccessFilter),
     include: {
       t_lieu: {
         select: {
@@ -35,7 +47,6 @@ export async function ServerAlarms() {
       },
     },
     orderBy: { Date_Heure_Debut: "desc" },
-    take: 100,
   })
 
   return alarms.map((alarm) => {

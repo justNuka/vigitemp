@@ -84,6 +84,7 @@ export function AlarmsClient({ alarms, statusFilter, initialLocationId = null, s
   const [showGraph, setShowGraph] = useState(false);
   const [alarmCount30, setAlarmCount30] = useState<number | null>(null);
   const [isStatsLoading, setIsStatsLoading] = useState(false);
+  const [visibleRowCount, setVisibleRowCount] = useState<number>(0);
   const formatTzDateTime = (value: string | Date) => formatDbDateTime(value);
   const normalizeCommentOptions = useCallback((raw: unknown): { id: number; type: string | null; text: string }[] => {
     if (!Array.isArray(raw)) return [];
@@ -234,9 +235,6 @@ export function AlarmsClient({ alarms, statusFilter, initialLocationId = null, s
         if (type === "sector") {
           return <div className="p-1.5 rounded-md w-fit bg-amber-100"><PowerOff className="h-4 w-4 text-amber-700" /></div>;
         }
-        if (type === "ended") {
-          return <div className="p-1.5 rounded-md w-fit bg-violet-100"><AlertTriangle className="h-4 w-4 text-violet-700" /></div>;
-        }
         const isHigh = type === "high";
         return <div className={cn("p-1.5 rounded-md w-fit", isHigh ? "bg-destructive/10" : "bg-[#26A5DA]/10")}>{isHigh ? <ArrowUp className="h-4 w-4 text-destructive" /> : <ArrowDown className="h-4 w-4 text-[#26A5DA]" />}</div>;
       },
@@ -312,7 +310,6 @@ export function AlarmsClient({ alarms, statusFilter, initialLocationId = null, s
     () =>
       localAlarms.filter((alarm) => {
         if (statusFilter === "active") return alarm.status === "active";
-        if (statusFilter === "acknowledged") return alarm.status === "acknowledged";
         return alarm.status === "resolved";
       }),
     [localAlarms, statusFilter],
@@ -322,10 +319,7 @@ export function AlarmsClient({ alarms, statusFilter, initialLocationId = null, s
     .filter((alarm) => {
       if (locationFilterId && alarm.locationId !== locationFilterId) return false;
       if (typeFilters.length === 0) return true;
-      return typeFilters.some((type) => {
-        if (type === "ended") return alarm.status === "resolved";
-        return alarm.type === type;
-      });
+      return typeFilters.some((type) => alarm.type === type);
     })
     .map((alarm) => ({
       id: alarm.id,
@@ -338,6 +332,12 @@ export function AlarmsClient({ alarms, statusFilter, initialLocationId = null, s
       status: alarm.status,
       comment: alarm.comment,
     }));
+
+  useEffect(() => {
+    setVisibleRowCount(tableData.length);
+  }, [tableData.length]);
+
+  const statsForTabs = stats;
 
   const handleDialogAcknowledge = async (values: CommentFormValues) => {
     if (!selectedAlarm) return;
@@ -380,7 +380,7 @@ export function AlarmsClient({ alarms, statusFilter, initialLocationId = null, s
     return { from: new Date(start.getTime() - padMs), to: new Date(end.getTime() + padMs) };
   }, [selectedAlarm]);
 
-  const cardTitle = statusFilter === "active" ? t("titles.active") : statusFilter === "acknowledged" ? t("titles.acknowledged") : t("titles.resolved");
+  const cardTitle = statusFilter === "active" ? t("titles.active") : t("titles.resolved");
   const handleCloseDialog = useCallback(() => {
     setSelectedAlarm(null);
     setSelectedCommentId("");
@@ -411,7 +411,7 @@ export function AlarmsClient({ alarms, statusFilter, initialLocationId = null, s
           {cardTitle}
         </CardTitle>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <AlarmStatusTabs statusFilter={statusFilter} stats={stats} onStatusChange={onStatusChange} t={t} />
+          <AlarmStatusTabs statusFilter={statusFilter} stats={statsForTabs} onStatusChange={onStatusChange} t={t} />
           <div className="flex justify-end gap-2">
             <AlarmTypeFilter
               typeFilters={typeFilters}
@@ -424,7 +424,7 @@ export function AlarmsClient({ alarms, statusFilter, initialLocationId = null, s
         </div>
       </CardHeader>
       <CardContent>
-        <EmptyState icon={AlertTriangle} title={statusFilter === "active" ? t("empty_state.active_title") : statusFilter === "acknowledged" ? t("empty_state.acknowledged_title") : t("empty_state.resolved_title")} description={statusFilter === "active" ? t("empty_state.active_description") : t("empty_state.other_description")} />
+        <EmptyState icon={AlertTriangle} title={statusFilter === "active" ? t("empty_state.active_title") : t("empty_state.resolved_title")} description={statusFilter === "active" ? t("empty_state.active_description") : t("empty_state.other_description")} />
       </CardContent>
     </Card>
   ) : (
@@ -437,15 +437,15 @@ export function AlarmsClient({ alarms, statusFilter, initialLocationId = null, s
           {cardTitle}
         </CardTitle>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <AlarmStatusTabs statusFilter={statusFilter} stats={stats} onStatusChange={onStatusChange} t={t} />
+          <AlarmStatusTabs statusFilter={statusFilter} stats={statsForTabs} onStatusChange={onStatusChange} t={t} />
         </div>
       </CardHeader>
       <CardContent>
-        <TanStackTable<AlarmRow>
-          columns={columns}
-          data={tableData}
+          <TanStackTable<AlarmRow>
+            columns={columns}
+            data={tableData}
           searchPlaceholder={t("table.search_placeholder")}
-          pageSize={200}
+          pageSize={500}
           isLoading={isRefreshing}
           emptyMessage={t("table.empty")}
           selectedRowId={selectedAlarm?.id}
@@ -453,12 +453,13 @@ export function AlarmsClient({ alarms, statusFilter, initialLocationId = null, s
             const fullAlarm = localAlarms.find((item) => item.id === row.id);
             if (fullAlarm && canAcknowledgeAlarm) setSelectedAlarm(fullAlarm);
           }}
-          toolbarRight={<div className="flex items-center gap-2"><AlarmTypeFilter typeFilters={typeFilters} onToggleType={toggleTypeFilter} onReset={() => setTypeFilters([])} t={t} />{refreshButton}</div>}
-          maxHeight="calc(100dvh - 25rem)"
-          headerClassName="!bg-sidebar !text-sidebar-foreground"
-          headerCellClassName="!bg-sidebar !text-sidebar-foreground !border-r !border-white/25 hover:!bg-sidebar-accent/80"
-          tableClassName="border-separate border-spacing-0 [&_thead_th]:!border-r [&_thead_th]:!border-white/25 [&_thead_th:last-child]:!border-r-0 [&_tbody_tr]:transition-colors [&_tbody_tr]:duration-150"
-        />
+            toolbarRight={<div className="flex items-center gap-2"><AlarmTypeFilter typeFilters={typeFilters} onToggleType={toggleTypeFilter} onReset={() => setTypeFilters([])} t={t} />{refreshButton}</div>}
+            onFilteredRowCountChange={setVisibleRowCount}
+            maxHeight="calc(100dvh - 25rem)"
+            headerClassName="!bg-sidebar !text-sidebar-foreground"
+            headerCellClassName="!bg-sidebar !text-sidebar-foreground !border-r !border-white/25 hover:!bg-sidebar-accent/80"
+            tableClassName="border-separate border-spacing-0 [&_thead_th]:!border-r [&_thead_th]:!border-white/25 [&_thead_th:last-child]:!border-r-0 [&_tbody_tr]:transition-colors [&_tbody_tr]:duration-150"
+          />
       </CardContent>
     </Card>
   );
@@ -466,7 +467,7 @@ export function AlarmsClient({ alarms, statusFilter, initialLocationId = null, s
   return (
     <main className="flex-1 p-4 md:p-6 space-y-6 animate-fade-in">
       {content}
-      <AlarmDetailsDialog
+        <AlarmDetailsDialog
         selectedAlarm={selectedAlarm}
         open={!!selectedAlarm}
         showGraph={showGraph}

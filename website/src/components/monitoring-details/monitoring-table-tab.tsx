@@ -6,6 +6,7 @@ import { TanStackTable } from "@/components/data-table/tanstack-table"
 import { Button } from "@/components/ui/button"
 import type { MeasureData } from "@/lib/measurements"
 import { formatMeasureValue } from "@/lib/measurements"
+import { cn } from "@/lib/utils"
 
 type PresentationExportRow = {
   label: string
@@ -31,6 +32,7 @@ interface MonitoringTableTabProps {
   rangeEnabled: boolean
   presentationRows: PresentationExportRow[]
   t: (key: string) => string
+  maxHeight?: string
 }
 
 type TableRow = {
@@ -42,6 +44,7 @@ type TableRow = {
   unit: string
   consigneInf: number | null
   consigneSup: number | null
+  isMemoryValue: boolean
 }
 
 export function MonitoringTableTab({
@@ -63,6 +66,7 @@ export function MonitoringTableTab({
   rangeEnabled,
   presentationRows,
   t,
+  maxHeight = "calc(100vh - 26rem)",
 }: MonitoringTableTabProps) {
   const [isExportingMultiTabs, setIsExportingMultiTabs] = useState(false)
 
@@ -76,6 +80,10 @@ export function MonitoringTableTab({
       unit: unite,
       consigneInf: measure.Consigne_Inf,
       consigneSup: measure.Consigne_Sup,
+      isMemoryValue:
+        typeof measure.Est_Valeur_Memoire === "number"
+          ? measure.Est_Valeur_Memoire !== 0
+          : Boolean(measure.Est_Valeur_Memoire),
     }))
   }, [sondeNumeroSerie, tableMeasurements, unite])
 
@@ -97,7 +105,11 @@ export function MonitoringTableTab({
       accessorKey: "dateLabel",
       header: t("table.columns.date_time"),
       sortingFn: (rowA, rowB) => Date.parse(rowA.original.dateIso) - Date.parse(rowB.original.dateIso),
-      cell: ({ row }) => <span className="font-medium">{row.original.dateLabel}</span>,
+      cell: ({ row }) => (
+        <span className={cn("font-medium", row.original.isMemoryValue && "text-amber-700 dark:text-amber-300")}>
+          {row.original.dateLabel}
+        </span>
+      ),
     },
     {
       accessorKey: "sensorSerial",
@@ -117,7 +129,16 @@ export function MonitoringTableTab({
           (row.original.consigneInf !== null && value < row.original.consigneInf) ||
           (row.original.consigneSup !== null && value > row.original.consigneSup)
 
-        return <span className={isOutOfRange ? "text-red-600 dark:text-red-400 font-bold" : ""}>{formatMeasureValue(value)}{row.original.unit}</span>
+        return (
+          <span
+            className={cn(
+              isOutOfRange ? "text-red-600 dark:text-red-400 font-bold" : "",
+              row.original.isMemoryValue && "text-amber-700 dark:text-amber-300",
+            )}
+          >
+            {formatMeasureValue(value)}{row.original.unit}
+          </span>
+        )
       },
     },
     {
@@ -147,9 +168,18 @@ export function MonitoringTableTab({
           (row.original.consigneSup !== null && value > row.original.consigneSup)
 
         return isOutOfRange ? (
-          <span className="text-red-600 dark:text-red-400 font-semibold">{t("table.status.out_of_range")}</span>
+          <span
+            className={cn(
+              "text-red-600 dark:text-red-400 font-semibold",
+              row.original.isMemoryValue && "text-amber-700 dark:text-amber-300",
+            )}
+          >
+            {t("table.status.out_of_range")}
+          </span>
         ) : (
-          <span className="text-green-600 dark:text-green-400">{t("table.status.ok")}</span>
+          <span className={cn("text-green-600 dark:text-green-400", row.original.isMemoryValue && "text-amber-700 dark:text-amber-300")}>
+            {t("table.status.ok")}
+          </span>
         )
       },
     },
@@ -214,6 +244,15 @@ export function MonitoringTableTab({
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-4 pt-4">
+      <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+        <span className="font-medium">{t("table.legend.title")}</span>
+        <span
+          className="inline-flex items-center rounded-full border border-amber-300 bg-amber-50 px-2 py-0.5 text-amber-800 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-300"
+          title={t("table.legend.memory_tooltip")}
+        >
+          {t("table.legend.memory")}
+        </span>
+      </div>
       <TanStackTable
         columns={columns}
         data={data}
@@ -243,7 +282,12 @@ export function MonitoringTableTab({
         onPaginationChange={onPaginationChange}
         sortingState={sorting}
         onSortingChange={onSortingChange}
-        maxHeight="calc(100vh - 26rem)"
+        maxHeight={maxHeight}
+        rowClassName={(row) =>
+          row.isMemoryValue
+            ? "bg-amber-50/55 dark:bg-amber-950/20 hover:!bg-amber-100/60 dark:hover:!bg-amber-900/25"
+            : undefined
+        }
         headerClassName="!bg-sidebar !text-sidebar-foreground"
         headerCellClassName="!bg-sidebar !text-sidebar-foreground !border-r !border-white/25 hover:!bg-sidebar-accent/80"
         tableClassName="border-separate border-spacing-0 [&_thead_th]:!border-r [&_thead_th]:!border-white/25 [&_tbody_td]:!border-b [&_tbody_td]:!border-border"

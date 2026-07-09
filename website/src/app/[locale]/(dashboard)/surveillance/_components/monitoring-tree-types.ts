@@ -16,6 +16,7 @@ export interface TreeStats {
   total: number;
   ok: number;
   warning: number;
+  ended: number;
   critical: number;
   inactive: number;
 }

@@ -529,6 +529,22 @@ namespace Vigitemp_Serveur
             );
         }
 
+        private void InvalidateLieuSettingsCache(int idLieu, string reason)
+        {
+            if (idLieu <= 0)
+            {
+                return;
+            }
+
+            if (_lieuSettingsCache.TryRemove(idLieu, out _))
+            {
+                if (_logSettingsCache)
+                {
+                    VigitempServeur.Log($"LieuAlarmSettings[cache-invalidated] idLieu={idLieu} reason={reason}");
+                }
+            }
+        }
+
         private void EnsureAlarmCursorInitialized()
         {
             if (_idServer != _alarmPollServerId)
@@ -1903,10 +1919,7 @@ namespace Vigitemp_Serveur
                     _schedules[row.IdLieu] = schedule;
                     RememberNextProbeDue(schedule);
                     SetSondeMetrologyFromSchedule(row);
-                    if (row.GspRecoveryPending && row.DerniereDateHeure.HasValue)
-                    {
-                        SensorGSP.PrimeLastSuccessfulProbeDateTime(row.SondeNumeroSerie, row.DerniereDateHeure.Value);
-                    }
+                    BootstrapPendingGspRecovery(row, schedule, now);
                     if (_logScheduler)
                     {
                         VigitempServeur.Log($"Scheduler add idLieu={row.IdLieu} serial={row.SondeNumeroSerie} freqSec={row.FrequenceSecondes}");
@@ -1917,6 +1930,7 @@ namespace Vigitemp_Serveur
 
                 if (row.InfosModifiees)
                 {
+                    InvalidateLieuSettingsCache(row.IdLieu, "infos-modifiees");
                     schedule.ConfigDirty = true;
                     schedule.ConfigCheckDue = false;
                 }
@@ -1935,10 +1949,6 @@ namespace Vigitemp_Serveur
                 {
                     var previousSerial = schedule.Serial;
                     SetSondeMetrologyFromSchedule(row);
-                    if (row.GspRecoveryPending && row.DerniereDateHeure.HasValue)
-                    {
-                        SensorGSP.PrimeLastSuccessfulProbeDateTime(row.SondeNumeroSerie, row.DerniereDateHeure.Value);
-                    }
                     schedule.Serial = row.SondeNumeroSerie;
                     schedule.SondeType = row.SondeType;
                     schedule.FamilleSonde = row.FamilleSonde;
@@ -1962,6 +1972,8 @@ namespace Vigitemp_Serveur
                     }
 
                 }
+
+                BootstrapPendingGspRecovery(row, schedule, now);
             }
 
             var toRemove = _schedules.Keys.Where(id => !seen.Contains(id)).ToList();
@@ -1978,6 +1990,53 @@ namespace Vigitemp_Serveur
                 {
                     VigitempServeur.Log($"Scheduler remove idLieu={idLieu}");
                 }
+            }
+        }
+
+        private void BootstrapPendingGspRecovery(SondeScheduleInfo row, SensorSchedule schedule, DateTime now)
+        {
+            if (row == null || schedule == null || !row.GspRecoveryPending)
+            {
+                return;
+            }
+
+            if (!row.DerniereDateHeure.HasValue)
+            {
+                if (_logScheduler)
+                {
+                    VigitempServeur.Log($"[SONDE][RECOVERY] serial={row.SondeNumeroSerie} status=waiting reason=no-last-measure");
+                }
+                return;
+            }
+
+            SensorGSP.PrimeLastSuccessfulProbeDateTime(row.SondeNumeroSerie, row.DerniereDateHeure.Value);
+
+            var serial = (row.SondeNumeroSerie ?? string.Empty).Trim();
+            if (string.IsNullOrWhiteSpace(serial))
+            {
+                return;
+            }
+
+            if (_gspMemoJobs.ContainsKey(serial))
+            {
+                return;
+            }
+
+            if (row.DerniereDateHeure.Value >= now)
+            {
+                return;
+            }
+
+            var gapSeconds = (now - row.DerniereDateHeure.Value).TotalSeconds;
+            var frequencySeconds = Math.Max(1, row.FrequenceSecondes);
+            var expectedMissingCount = Math.Max(1, (int)Math.Floor(gapSeconds / frequencySeconds));
+
+            EnqueueGspRecovery(serial, row.DerniereDateHeure.Value, now, expectedMissingCount);
+
+            if (_logScheduler)
+            {
+                VigitempServeur.Log(
+                    $"[SONDE][RECOVERY] serial={serial} status=bootstrap from-db-flag lastMeasure={row.DerniereDateHeure.Value:O} now={now:O} expectedMissingCount={expectedMissingCount}");
             }
         }
 
@@ -2289,5 +2348,3 @@ namespace Vigitemp_Serveur
         }
     }
 }
-
-

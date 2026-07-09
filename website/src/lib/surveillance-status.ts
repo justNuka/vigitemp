@@ -12,6 +12,7 @@ export type StatusCounts = {
   total: number
   ok: number
   warning: number
+  ended: number
   critical: number
   inactive: number
 }
@@ -127,12 +128,13 @@ export function getStatusTheme(
 }
 
 export function countStatus(sensors: { status: SensorStatus; isActive: boolean }[]): StatusCounts {
-  const stats: StatusCounts = { total: 0, ok: 0, warning: 0, critical: 0, inactive: 0 }
+  const stats: StatusCounts = { total: 0, ok: 0, warning: 0, ended: 0, critical: 0, inactive: 0 }
   for (const sensor of sensors) {
     stats.total++
     if (!sensor.isActive) stats.inactive++
     else if (sensor.status === "critical" || sensor.status === "technical") stats.critical++
     else if (sensor.status === "warning") stats.warning++
+    else if (sensor.status === "ended") stats.ended++
     else stats.ok++
   }
   return stats

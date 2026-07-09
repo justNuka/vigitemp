@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
-type AlarmStatus = "active" | "acknowledged" | "resolved";
+type AlarmStatus = "active" | "resolved";
 
 interface Stats {
   active: number;

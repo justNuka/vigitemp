@@ -36,7 +36,7 @@ CREATE TABLE `t_actionneur` (
   KEY `IDX_Id_Plan` (`Id_Plan`),
   CONSTRAINT `FK_PLAN_ACTIONNEUR` FOREIGN KEY (`Id_Plan`) REFERENCES `t_plan` (`Id_Plan`),
   CONSTRAINT `FK_TYPE_ACTIONNEUR` FOREIGN KEY (`Type`) REFERENCES `t_actionneur_type` (`Type`)
-) ENGINE=InnoDB AUTO_INCREMENT=60 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `t_actionneur_type`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
@@ -48,7 +48,7 @@ CREATE TABLE `t_actionneur_type` (
   `Gere_Relais` tinyint(1) DEFAULT '0',
   PRIMARY KEY (`Id_Actionneur_Type`),
   UNIQUE KEY `Type` (`Type`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `t_alarme`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
@@ -82,7 +82,7 @@ CREATE TABLE `t_alarme` (
   KEY `IDX_Date_Heure_Derniere_Mesure` (`Date_Heure_Derniere_Mesure`),
   KEY `IDX_Date_Heure_Debut_Alarme_Vrai` (`Date_Heure_Debut_Alarme_Vrai`),
   CONSTRAINT `FK_LIEU_ALARME` FOREIGN KEY (`Id_Lieu`) REFERENCES `t_lieu` (`Id_Lieu`)
-) ENGINE=InnoDB AUTO_INCREMENT=27795 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `t_alarme_histo`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
@@ -132,7 +132,7 @@ CREATE TABLE `t_alarme_message` (
   `Texte_Message` longtext,
   PRIMARY KEY (`Id_Alarme_Message`),
   UNIQUE KEY `CodeAlarmeMessage` (`Code_Alarme_Message`)
-) ENGINE=InnoDB AUTO_INCREMENT=20 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `t_ancien_mot_de_passe`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
@@ -146,7 +146,7 @@ CREATE TABLE `t_ancien_mot_de_passe` (
   KEY `IDX_Id_Utilisateur` (`Id_Utilisateur`),
   CONSTRAINT `FK_UTILISATEUR_ANCIEN_MDP` FOREIGN KEY (`Id_Utilisateur`) REFERENCES `t_utilisateur` (`Id_Utilisateur`),
   CONSTRAINT `FK_UTILISATEUR_ANCIENMDP` FOREIGN KEY (`Id_Utilisateur`) REFERENCES `t_utilisateur` (`Id_Utilisateur`)
-) ENGINE=InnoDB AUTO_INCREMENT=989 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `t_autorisation`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
@@ -162,7 +162,7 @@ CREATE TABLE `t_autorisation` (
   `A_Acces_VigiLog` tinyint(1) DEFAULT '0',
   PRIMARY KEY (`Id_Autorisation`),
   KEY `IDX_Code_Autorisation` (`Code_Autorisation`)
-) ENGINE=InnoDB AUTO_INCREMENT=20 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `t_milieu_inter`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
@@ -233,7 +233,7 @@ CREATE TABLE `t_certif` (
   KEY `IDX_Etalon_Numero_Serie` (`Etalon_Numero_Serie`),
   KEY `IDX_Unite` (`Unite`),
   KEY `IDX_Id_PDF` (`Id_PDF`)
-) ENGINE=InnoDB AUTO_INCREMENT=135 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `t_certif_mesure`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
@@ -247,7 +247,7 @@ CREATE TABLE `t_certif_mesure` (
   `Incertitude` float DEFAULT NULL,
   PRIMARY KEY (`Id_Certif_Mesure`),
   KEY `IDX_Id_Certif` (`Id_Certif`)
-) ENGINE=InnoDB AUTO_INCREMENT=136 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `t_commentaire_acquittement_alarme`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
@@ -259,158 +259,7 @@ CREATE TABLE `t_commentaire_acquittement_alarme` (
   PRIMARY KEY (`Id_Commentaire`),
   KEY `IDX_Type_Commentaire` (`Type_Commentaire`),
   KEY `IDX_Texte` (`Texte`)
-) ENGINE=InnoDB AUTO_INCREMENT=380 DEFAULT CHARSET=latin1;
-/*!40101 SET character_set_client = @saved_cs_client */;
-DROP TABLE IF EXISTS `t_datalogger_alarme`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `t_datalogger_alarme` (
-  `Id_Log_Alarme` int NOT NULL,
-  `Id_Reception` tinyint DEFAULT NULL,
-  `Date_Debut` datetime NOT NULL,
-  `Date_Fin` datetime NOT NULL,
-  `Est_Acquitte` tinyint DEFAULT NULL,
-  `Commentaire` varchar(200) DEFAULT NULL,
-  PRIMARY KEY (`Id_Log_Alarme`),
-  KEY `IDX_Id_Reception` (`Id_Reception`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
-/*!40101 SET character_set_client = @saved_cs_client */;
-DROP TABLE IF EXISTS `t_datalogger_coursier`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `t_datalogger_coursier` (
-  `Id_Datalogger_Coursier` int NOT NULL AUTO_INCREMENT,
-  `Code` varchar(10) DEFAULT NULL,
-  `Nom` varchar(64) DEFAULT NULL,
-  `Prenom` varchar(64) DEFAULT NULL,
-  `Date_Maj` date DEFAULT NULL,
-  `Heure_Maj` time DEFAULT NULL,
-  `Login_Maj` varchar(64) DEFAULT NULL,
-  PRIMARY KEY (`Id_Datalogger_Coursier`),
-  UNIQUE KEY `Code` (`Code`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=latin1;
-/*!40101 SET character_set_client = @saved_cs_client */;
-DROP TABLE IF EXISTS `t_datalogger_envoi`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `t_datalogger_envoi` (
-  `Id_Datalogger_Envoi` int NOT NULL AUTO_INCREMENT,
-  `Id_Datalogger_Reception` int DEFAULT NULL,
-  `Id_Site` int DEFAULT NULL,
-  `Materiel` varchar(50) DEFAULT NULL,
-  `Date_Maj` date DEFAULT NULL,
-  `Heure_Maj` time DEFAULT NULL,
-  `Login_Maj` varchar(64) DEFAULT NULL,
-  PRIMARY KEY (`Id_Datalogger_Envoi`),
-  KEY `IDX_Id_Datalogger_Reception` (`Id_Datalogger_Reception`),
-  KEY `IDX_Id_Site` (`Id_Site`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=latin1;
-/*!40101 SET character_set_client = @saved_cs_client */;
-DROP TABLE IF EXISTS `t_datalogger_etape`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `t_datalogger_etape` (
-  `Id_Datalogger_Etape` int NOT NULL AUTO_INCREMENT,
-  `Id_Datalogger_Tournee` int DEFAULT '0',
-  `Ordre` int DEFAULT NULL,
-  `Id_Site` int DEFAULT NULL,
-  PRIMARY KEY (`Id_Datalogger_Etape`),
-  KEY `IDX_Id_Datalogger_Tournee` (`Id_Datalogger_Tournee`),
-  CONSTRAINT `t_datalogger_etape_ibfk_1` FOREIGN KEY (`Id_Datalogger_Tournee`) REFERENCES `t_datalogger_tournee` (`Id_Datalogger_Tournee`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
-/*!40101 SET character_set_client = @saved_cs_client */;
-DROP TABLE IF EXISTS `t_datalogger_reception`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `t_datalogger_reception` (
-  `Id_Datalogger_Reception` int NOT NULL AUTO_INCREMENT,
-  `Id_Tournee` varchar(50) DEFAULT NULL,
-  `Id_Coursier` int DEFAULT NULL,
-  `Id_Site_Depart` int DEFAULT '0',
-  `Id_Site_Arrivee` int DEFAULT NULL,
-  `Numserie_VigiLog` varchar(13) DEFAULT NULL,
-  `Date_Reception` date DEFAULT NULL,
-  `Heure_Reception` time DEFAULT NULL,
-  `En_Attente` tinyint DEFAULT NULL,
-  `Termine` tinyint DEFAULT NULL,
-  `Duree_Livraison` int DEFAULT NULL,
-  `Depassement_Temperature_Bool` tinyint DEFAULT NULL,
-  `Depassement_Temps_Bool` tinyint DEFAULT NULL,
-  `Consigne` float DEFAULT NULL,
-  `Consigne_Inf_Active` tinyint DEFAULT NULL,
-  `Consigne_Inf` float DEFAULT NULL,
-  `Consigne_Sup_Active` tinyint DEFAULT NULL,
-  `Consigne_Sup` float DEFAULT NULL,
-  `Retard_Alarme_Temps` int DEFAULT NULL,
-  `Retard_Alarme_Temperature` int DEFAULT NULL,
-  `Temps` int DEFAULT NULL,
-  `Temperature_Moyenne` float DEFAULT NULL,
-  `Temperature_Max` float DEFAULT NULL,
-  `Temperature_Min` float DEFAULT NULL,
-  `Somme_Valeur_Temperature` float DEFAULT NULL,
-  `Nb_Valeur_Temperature` int DEFAULT NULL,
-  `Depassement_Temperature` int DEFAULT NULL,
-  `Depassement_Temps` int DEFAULT NULL,
-  `Commentaire_Acquittement` longtext,
-  `Date_Enregistrement` date DEFAULT NULL,
-  `Heure_Enregistrement` time DEFAULT NULL,
-  `Login_Enregistrement` varchar(64) DEFAULT NULL,
-  PRIMARY KEY (`Id_Datalogger_Reception`),
-  KEY `IDX_Id_Tournee` (`Id_Tournee`),
-  KEY `IDX_Id_Coursier` (`Id_Coursier`),
-  KEY `IDX_Numserie_VigiLog` (`Numserie_VigiLog`),
-  KEY `IDX_Id_Site_Depart` (`Id_Site_Depart`),
-  KEY `IDX_Id_Site_Arrivee` (`Id_Site_Arrivee`)
-) ENGINE=InnoDB AUTO_INCREMENT=129 DEFAULT CHARSET=latin1;
-/*!40101 SET character_set_client = @saved_cs_client */;
-DROP TABLE IF EXISTS `t_datalogger_sonde`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `t_datalogger_sonde` (
-  `Id_Datalogger_Sonde` int NOT NULL AUTO_INCREMENT,
-  `Num_Serie` varchar(13) NOT NULL,
-  `Consigne` float DEFAULT NULL,
-  `Consigne_Sup_Active` tinyint DEFAULT NULL,
-  `Consigne_Sup` float DEFAULT NULL,
-  `Consigne_Sup_Corrigee` float DEFAULT NULL,
-  `Consigne_Inf_Active` tinyint DEFAULT NULL,
-  `Consigne_Inf` float DEFAULT NULL,
-  `Consigne_Inf_Corrigee` float DEFAULT NULL,
-  `Avec_Prise_En_Compte_Incertitudes` tinyint DEFAULT NULL,
-  `Frequence` int DEFAULT NULL,
-  `Retard_Alarme_Temperature` int DEFAULT NULL,
-  `Coeff_X` float DEFAULT NULL,
-  `Coeff_Constant` float DEFAULT NULL,
-  `Repetabilite` float DEFAULT NULL,
-  `Incertitude` float DEFAULT NULL,
-  `Err_Justesse` float DEFAULT NULL,
-  `Date_Maj` date DEFAULT NULL,
-  `Heure_Maj` time DEFAULT NULL,
-  `Login_Maj` varchar(64) DEFAULT NULL,
-  `Archive` tinyint DEFAULT NULL,
-  PRIMARY KEY (`Id_Datalogger_Sonde`,`Num_Serie`) USING BTREE,
-  UNIQUE KEY `NumSerie` (`Num_Serie`),
-  KEY `IDX_Archive` (`Archive`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=latin1;
-/*!40101 SET character_set_client = @saved_cs_client */;
-DROP TABLE IF EXISTS `t_datalogger_tournee`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `t_datalogger_tournee` (
-  `Id_Datalogger_Tournee` int NOT NULL AUTO_INCREMENT,
-  `Nom` varchar(64) DEFAULT NULL,
-  `Id_Site_Depart` int DEFAULT NULL,
-  `Id_Site_Arrivee` int DEFAULT NULL,
-  `Temps` int DEFAULT NULL,
-  `Retard_Alarme_Temps` int DEFAULT NULL,
-  `Date_Maj` date DEFAULT NULL,
-  `Heure_Maj` time DEFAULT NULL,
-  `Login_Maj` varchar(64) DEFAULT NULL,
-  PRIMARY KEY (`Id_Datalogger_Tournee`),
-  UNIQUE KEY `Nom` (`Nom`),
-  KEY `IDX_Id_Site_Depart` (`Id_Site_Depart`),
-  KEY `IDX_Id_Site_Arrivee` (`Id_Site_Arrivee`)
-) ENGINE=InnoDB AUTO_INCREMENT=26 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `t_etalon`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
@@ -434,7 +283,7 @@ CREATE TABLE `t_etalon` (
   `Id_Module` int DEFAULT NULL,
   PRIMARY KEY (`Id_Etalon`),
   UNIQUE KEY `EtalonNumeroSerie_IDX` (`Etalon_Numero_Serie`)
-) ENGINE=InnoDB AUTO_INCREMENT=103 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `t_etalon_type`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
@@ -484,7 +333,7 @@ CREATE TABLE `t_etalonnage` (
   KEY `IDX_Moyenne_Sonde` (`Moyenne_Sonde`),
   KEY `IDX_Repetabilite` (`Repetabilite`),
   KEY `IDX_Id_Milieu` (`Id_Milieu`)
-) ENGINE=InnoDB AUTO_INCREMENT=9461 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `t_etalonnage_mesure`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
@@ -510,7 +359,7 @@ CREATE TABLE `t_groupe` (
   PRIMARY KEY (`Id_Groupe`),
   UNIQUE KEY `Groupe_NomGroupe_IDX` (`Nom_Groupe`),
   KEY `IDX_Numero_Regroupement` (`Numero_Regroupement`)
-) ENGINE=InnoDB AUTO_INCREMENT=391 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `t_liaison_profil_autorisation`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
@@ -537,7 +386,7 @@ CREATE TABLE `t_liaison_utilisateur_groupe` (
   KEY `IDX_IdGroupe` (`Id_Groupe`),
   CONSTRAINT `FK_GROUPE_LIAISON_UTILISATEUR` FOREIGN KEY (`Id_Groupe`) REFERENCES `t_groupe` (`Id_Groupe`),
   CONSTRAINT `FK_UTILISATEUR_LIAISON` FOREIGN KEY (`Id_Utilisateur`) REFERENCES `t_utilisateur` (`Id_Utilisateur`)
-) ENGINE=InnoDB AUTO_INCREMENT=58758 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `t_liaison_utilisateur_site`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
@@ -677,7 +526,7 @@ CREATE TABLE `t_lieu` (
   CONSTRAINT `FK_PLAN_LIEU` FOREIGN KEY (`Id_Plan`) REFERENCES `t_plan` (`Id_Plan`),
   CONSTRAINT `FK_SITE_LIEU` FOREIGN KEY (`Id_Site`) REFERENCES `t_site` (`Id_Site`),
   CONSTRAINT `FK_SONDE_LIEU` FOREIGN KEY (`Sonde_Numero_Serie`) REFERENCES `t_sonde` (`Sonde_Numero_Serie`)
-) ENGINE=InnoDB AUTO_INCREMENT=2110 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `t_lieu_groupe`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
@@ -708,7 +557,7 @@ CREATE TABLE `t_lieu_planning` (
   UNIQUE KEY `IdLieuJour` (`Id_Lieu`,`Est_Id_Jour`),
   KEY `IDX_Id_Lieu` (`Id_Lieu`),
   CONSTRAINT `FK_LIEU_PLANNING` FOREIGN KEY (`Id_Lieu`) REFERENCES `t_lieu` (`Id_Lieu`)
-) ENGINE=InnoDB AUTO_INCREMENT=67777 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `t_lieu_planning_audit`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
@@ -775,7 +624,7 @@ CREATE TABLE `t_module` (
   KEY `IDX_Type_Module` (`Type_Module`),
   KEY `IDX_Port_Serie` (`Port_Serie`),
   KEY `IDX_Id_Plan` (`Id_Plan`)
-) ENGINE=InnoDB AUTO_INCREMENT=85 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `t_module_type`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
@@ -786,7 +635,7 @@ CREATE TABLE `t_module_type` (
   `Libelle_Module` varchar(100) DEFAULT NULL,
   `Est_Flag_Affiche_Plan` tinyint(1) DEFAULT '0',
   PRIMARY KEY (`Id_Module_Type`)
-) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `t_parametre`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
@@ -796,6 +645,7 @@ CREATE TABLE `t_parametre` (
   `Mot_Cle` varchar(100) NOT NULL,
   `Valeur` longtext,
   `Commentaire` longtext,
+  `Champ_DATETIME` datetime DEFAULT NULL,
   PRIMARY KEY (`Section`,`Mot_Cle`),
   KEY `IDX_Section` (`Section`),
   KEY `IDX_Mot_Cle` (`Mot_Cle`)
@@ -809,7 +659,7 @@ CREATE TABLE `t_pdf` (
   `Nom_PDF` varchar(50) DEFAULT NULL,
   `Contenu_PDF` longblob,
   PRIMARY KEY (`Id_PDF`)
-) ENGINE=InnoDB AUTO_INCREMENT=2083 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `t_plan`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
@@ -821,63 +671,7 @@ CREATE TABLE `t_plan` (
   `Est_Archive` tinyint(1) DEFAULT '0',
   PRIMARY KEY (`Id_Plan`),
   UNIQUE KEY `Plan_Titre_IDX` (`Titre`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=latin1;
-/*!40101 SET character_set_client = @saved_cs_client */;
-DROP TABLE IF EXISTS `t_planning_alarme`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `t_planning_alarme` (
-  `Id_Planning_Alarme` int NOT NULL AUTO_INCREMENT,
-  `Id_Lieu` int DEFAULT NULL,
-  `Code_Activation` varchar(8) DEFAULT '11111111',
-  PRIMARY KEY (`Id_Planning_Alarme`),
-  KEY `IDX_Id_Lieu` (`Id_Lieu`),
-  CONSTRAINT `FK_LIEU_PLANNING_ALARME` FOREIGN KEY (`Id_Lieu`) REFERENCES `t_lieu` (`Id_Lieu`)
-) ENGINE=InnoDB AUTO_INCREMENT=1637 DEFAULT CHARSET=latin1;
-/*!40101 SET character_set_client = @saved_cs_client */;
-DROP TABLE IF EXISTS `t_planning_consigne`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `t_planning_consigne` (
-  `Id_Planning_Consigne` int NOT NULL AUTO_INCREMENT,
-  `Id_Lieu` int DEFAULT NULL,
-  `Code_Consigne` varchar(3) DEFAULT NULL,
-  `Valeur_Consigne_Jour1` float DEFAULT NULL,
-  `Valeur_Consigne_Jour1b` float DEFAULT NULL,
-  `Valeur_Consigne_Jour2` float DEFAULT NULL,
-  `Valeur_Consigne_Jour2b` float DEFAULT NULL,
-  `Valeur_Consigne_Jour3` float DEFAULT NULL,
-  `Valeur_Consigne_Jour3b` float DEFAULT NULL,
-  `Valeur_Consigne_Jour4` float DEFAULT NULL,
-  `Valeur_Consigne_Jour4b` float DEFAULT NULL,
-  `Valeur_Consigne_Jour5` float DEFAULT NULL,
-  `Valeur_Consigne_Jour5b` float DEFAULT NULL,
-  `Valeur_Consigne_Jour6` float DEFAULT NULL,
-  `Valeur_Consigne_Jour6b` float DEFAULT NULL,
-  `Valeur_Consigne_Jour7` float DEFAULT NULL,
-  `Valeur_Consigne_Jour7b` float DEFAULT NULL,
-  PRIMARY KEY (`Id_Planning_Consigne`),
-  KEY `IdLieu` (`Id_Lieu`),
-  CONSTRAINT `FK_LIEU_PLANNING_CONSIGNE` FOREIGN KEY (`Id_Lieu`) REFERENCES `t_lieu` (`Id_Lieu`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
-/*!40101 SET character_set_client = @saved_cs_client */;
-DROP TABLE IF EXISTS `t_planning_heure_bascule`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `t_planning_heure_bascule` (
-  `Id_Planning_Heure_Bascule` int NOT NULL AUTO_INCREMENT,
-  `Id_Lieu` int DEFAULT NULL,
-  `Heure_Jour1` time DEFAULT NULL,
-  `Heure_Jour2` time DEFAULT NULL,
-  `Heure_Jour3` time DEFAULT NULL,
-  `Heure_Jour4` time DEFAULT NULL,
-  `Heure_Jour5` time DEFAULT NULL,
-  `Heure_Jour6` time DEFAULT NULL,
-  `Heure_Jour7` time DEFAULT NULL,
-  PRIMARY KEY (`Id_Planning_Heure_Bascule`),
-  KEY `IdLieu` (`Id_Lieu`),
-  CONSTRAINT `FK_PLANNING_HEURE_BASCULE` FOREIGN KEY (`Id_Lieu`) REFERENCES `t_lieu` (`Id_Lieu`)
-) ENGINE=InnoDB AUTO_INCREMENT=24020 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `t_postes_clients`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
@@ -892,7 +686,7 @@ CREATE TABLE `t_postes_clients` (
   `Date_Heure_Derniere_Connexion` datetime DEFAULT NULL,
   PRIMARY KEY (`Id_Poste`),
   UNIQUE KEY `nomMachineId` (`Nom_Machine_Connexion`)
-) ENGINE=InnoDB AUTO_INCREMENT=54814 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `t_profil`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
@@ -906,29 +700,7 @@ CREATE TABLE `t_profil` (
   PRIMARY KEY (`Id_Profil`),
   UNIQUE KEY `Profil_ProfilUtilisateur_IDX` (`Profil_Utilisateur`),
   KEY `IDX_Est_Archive` (`Est_Archive`)
-) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=latin1;
-/*!40101 SET character_set_client = @saved_cs_client */;
-DROP TABLE IF EXISTS `t_push_subscription`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `t_push_subscription` (
-  `Id_Push_Subscription` int NOT NULL AUTO_INCREMENT,
-  `Id_Utilisateur` int DEFAULT NULL,
-  `Endpoint` varchar(2048) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `Endpoint_Hash` char(64) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `Key_P256dh` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `Key_Auth` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `Expiration_Time` bigint DEFAULT NULL,
-  `User_Agent` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `Date_Creation` datetime DEFAULT NULL,
-  `Date_Modification` datetime DEFAULT NULL,
-  `Est_Archive` tinyint(1) DEFAULT '0',
-  PRIMARY KEY (`Id_Push_Subscription`),
-  UNIQUE KEY `Endpoint_Hash` (`Endpoint_Hash`),
-  KEY `IDX_Est_Archive_Push_Subscription` (`Est_Archive`),
-  KEY `IDX_Id_Utilisateur_Push_Subscription` (`Id_Utilisateur`),
-  CONSTRAINT `FK_UTILISATEUR_PUSH_SUBSCRIPTION` FOREIGN KEY (`Id_Utilisateur`) REFERENCES `t_utilisateur` (`Id_Utilisateur`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `t_site`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
@@ -941,7 +713,7 @@ CREATE TABLE `t_site` (
   `Est_Archive` tinyint(1) DEFAULT '0',
   PRIMARY KEY (`Id_Site`),
   UNIQUE KEY `CodeSite_IDX` (`Code_Site`)
-) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `t_sonde`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
@@ -978,7 +750,7 @@ CREATE TABLE `t_sonde` (
   KEY `IDX_Etat_Sonde` (`Etat_Sonde`),
   KEY `IDX_Id_Sonde_Etat` (`Id_Sonde_Etat`),
   CONSTRAINT `FK_SONDE_ETAT_SURVEILLANCE` FOREIGN KEY (`Surveillance_Etat`) REFERENCES `t_etat_surveillance` (`Surveillance_Etat`)
-) ENGINE=InnoDB AUTO_INCREMENT=3771 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `t_sonde_type`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
@@ -992,7 +764,7 @@ CREATE TABLE `t_sonde_type` (
   `Famille_Sonde` varchar(16) NOT NULL DEFAULT 'CLASSIC',
   PRIMARY KEY (`Id_Sonde_Type`),
   UNIQUE KEY `Sonde_Type` (`Sonde_Type`)
-) ENGINE=InnoDB AUTO_INCREMENT=36 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `t_utilisateur`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
@@ -1023,17 +795,380 @@ CREATE TABLE `t_utilisateur` (
   UNIQUE KEY `Login` (`Login`),
   KEY `IDX_Est_Archive` (`Est_Archive`),
   KEY `IDX_Profil_Utilisateur` (`Profil_Utilisateur`)
-) ENGINE=InnoDB AUTO_INCREMENT=355 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
+DROP TABLE IF EXISTS `t_lieu_planning_regle`;
+CREATE TABLE `t_lieu_planning_regle` (
+	`Id_Regle` INT NOT NULL AUTO_INCREMENT,
+	`Id_Lieu` INT NOT NULL,
+	`Actif` TINYINT(1) NOT NULL DEFAULT '1',
+	`Jour_Debut` TINYINT NOT NULL,
+	`Heure_Debut` TIME NOT NULL,
+	`Jour_Fin` TINYINT NOT NULL,
+	`Heure_Fin` TIME NOT NULL,
+	`Consigne` FLOAT NULL DEFAULT NULL,
+	`Consigne_Sup` FLOAT NULL DEFAULT NULL,
+	`Consigne_Inf` FLOAT NULL DEFAULT NULL,
+	`Priorite` INT NOT NULL DEFAULT '0',
+	`Tolerance_Sup_Calc` FLOAT NULL DEFAULT NULL,
+	`Tolerance_Inf_Calc` FLOAT NULL DEFAULT NULL,
+	`Date_Creation` DATETIME NOT NULL DEFAULT (CURRENT_TIMESTAMP),
+	`Date_Maj` DATETIME NULL DEFAULT NULL,
+	`Retard_Alarme_Changement_Consigne` INT NULL DEFAULT NULL,
+	PRIMARY KEY (`Id_Regle`) USING BTREE,
+	INDEX `IDX_Id_Lieu` (`Id_Lieu`) USING BTREE,
+	INDEX `IDX_Actif_Lieu` (`Actif`, `Id_Lieu`) USING BTREE,
+	CONSTRAINT `FK_PLANNING_REGLE_LIEU` FOREIGN KEY (`Id_Lieu`) REFERENCES `t_lieu` (`Id_Lieu`) ON UPDATE NO ACTION ON DELETE CASCADE
+)
+COLLATE='utf8mb4_0900_ai_ci'
+ENGINE=InnoDB
+;
+
+DROP TABLE IF EXISTS `t_lieu_template`;
+CREATE TABLE `t_lieu_template` (
+	`Id_Lieu_Template` INT NOT NULL AUTO_INCREMENT,
+	`Nom_Template` VARCHAR(80) NOT NULL COLLATE 'utf8mb4_unicode_ci',
+	`Description` VARCHAR(255) NULL DEFAULT NULL COLLATE 'utf8mb4_unicode_ci',
+	`Lieu_Etat` VARCHAR(1) NOT NULL DEFAULT 'D' COLLATE 'utf8mb4_unicode_ci',
+	`Frequence` INT NULL DEFAULT NULL,
+	`Retard_Alarme_Haut` INT NULL DEFAULT NULL,
+	`Retard_Alarme_Bas` INT NULL DEFAULT NULL,
+	`Retard_Non_Reponse` INT NULL DEFAULT '60',
+	`Retard_Alarme_Changement_Consigne` INT NULL DEFAULT NULL,
+	`Consigne` DECIMAL(10,2) NULL DEFAULT NULL,
+	`Consigne_Sup` DECIMAL(10,2) NULL DEFAULT NULL,
+	`Consigne_Inf` DECIMAL(10,2) NULL DEFAULT NULL,
+	`Tolerance_Surveillance_Sup` DECIMAL(10,2) NULL DEFAULT NULL,
+	`Tolerance_Surveillance_Inf` DECIMAL(10,2) NULL DEFAULT NULL,
+	`Consigne_Sup_Pre_Alarme` DECIMAL(10,2) NULL DEFAULT NULL,
+	`Consigne_Inf_Pre_Alarme` DECIMAL(10,2) NULL DEFAULT NULL,
+	`Est_Consigne_Sup_Active` TINYINT(1) NOT NULL DEFAULT '0',
+	`Est_Consigne_Inf_Active` TINYINT(1) NOT NULL DEFAULT '0',
+	`Est_Consigne_Sup_Pre_Alarme_Active` TINYINT(1) NOT NULL DEFAULT '0',
+	`Est_Consigne_Inf_Pre_Alarme_Active` TINYINT(1) NOT NULL DEFAULT '0',
+	`Est_Son_Alarme_Active` TINYINT(1) NOT NULL DEFAULT '1',
+	`Est_Redeclenchement_Immediat` TINYINT(1) NOT NULL DEFAULT '0',
+	`Nb_Mesures_Temporisation_Redeclenchement` INT NULL DEFAULT '0',
+	`Observations_Info` TEXT NULL DEFAULT NULL COLLATE 'utf8mb4_unicode_ci',
+	`Est_Archive` TINYINT(1) NOT NULL DEFAULT '0',
+	`Date_Creation` DATETIME NOT NULL DEFAULT (CURRENT_TIMESTAMP),
+	`Date_Maj` DATETIME NOT NULL DEFAULT (CURRENT_TIMESTAMP) ON UPDATE CURRENT_TIMESTAMP,
+	`Id_Utilisateur_Creation` INT NULL DEFAULT NULL,
+	`Id_Utilisateur_Maj` INT NULL DEFAULT NULL,
+	PRIMARY KEY (`Id_Lieu_Template`) USING BTREE,
+	UNIQUE INDEX `UK_t_lieu_template_nom` (`Nom_Template`) USING BTREE,
+	INDEX `IDX_t_lieu_template_archive` (`Est_Archive`) USING BTREE,
+	INDEX `IDX_t_lieu_template_user_create` (`Id_Utilisateur_Creation`) USING BTREE,
+	INDEX `IDX_t_lieu_template_user_update` (`Id_Utilisateur_Maj`) USING BTREE,
+	CONSTRAINT `FK_t_lieu_template_user_create` FOREIGN KEY (`Id_Utilisateur_Creation`) REFERENCES `t_utilisateur` (`Id_Utilisateur`) ON UPDATE NO ACTION ON DELETE SET NULL,
+	CONSTRAINT `FK_t_lieu_template_user_update` FOREIGN KEY (`Id_Utilisateur_Maj`) REFERENCES `t_utilisateur` (`Id_Utilisateur`) ON UPDATE NO ACTION ON DELETE SET NULL
+)
+COLLATE='utf8mb4_unicode_ci'
+ENGINE=InnoDB
+;
+
+DROP TABLE IF EXISTS `t_sonde_etat`;
+CREATE TABLE `t_sonde_etat` (
+	`Id_Sonde_Etat` INT NOT NULL AUTO_INCREMENT,
+	`Etat_Sonde` VARCHAR(1) NULL DEFAULT NULL COLLATE 'utf8mb4_unicode_ci',
+	`Etat_Libelle` VARCHAR(50) NULL DEFAULT NULL COLLATE 'utf8mb4_unicode_ci',
+	PRIMARY KEY (`Id_Sonde_Etat`) USING BTREE,
+	UNIQUE INDEX `Etat_Sonde` (`Etat_Sonde`) USING BTREE
+)
+COLLATE='utf8mb4_unicode_ci'
+ENGINE=InnoDB
+;
+
+DROP TABLE IF EXISTS `t_materiel`;
+CREATE TABLE `t_materiel` (
+	`Id_Materiel` INT NOT NULL AUTO_INCREMENT,
+	`Ref_Commercial` VARCHAR(50) NOT NULL DEFAULT '' COLLATE 'utf8mb4_unicode_ci',
+	`Designation` VARCHAR(100) NOT NULL DEFAULT '' COLLATE 'utf8mb4_unicode_ci',
+	`Descriptif` VARCHAR(1000) NOT NULL DEFAULT '' COLLATE 'utf8mb4_unicode_ci',
+	`Gamme` VARCHAR(10) NOT NULL DEFAULT '' COLLATE 'utf8mb4_unicode_ci',
+	`Type` VARCHAR(10) NOT NULL DEFAULT '' COLLATE 'utf8mb4_unicode_ci',
+	`Chemin_Image` VARCHAR(500) NULL DEFAULT NULL COLLATE 'utf8mb4_unicode_ci',
+	PRIMARY KEY (`Id_Materiel`) USING BTREE,
+	INDEX `Id_Materiel` (`Id_Materiel`) USING BTREE
+)
+COLLATE='utf8mb4_unicode_ci'
+ENGINE=InnoDB
+;
+
+DROP TABLE IF EXISTS `t_commande_materiel`;
+CREATE TABLE `t_commande_materiel` (
+	`Id_Commande_Materiel` INT NOT NULL AUTO_INCREMENT,
+	`Reference_Commande` VARCHAR(64) NOT NULL COLLATE 'utf8mb4_unicode_ci',
+	`Id_Utilisateur` INT NOT NULL,
+	`Nom_Demandeur` VARCHAR(255) NOT NULL COLLATE 'utf8mb4_unicode_ci',
+	`Email_Demandeur` VARCHAR(255) NULL DEFAULT NULL COLLATE 'utf8mb4_unicode_ci',
+	`Email_Commercial` VARCHAR(255) NOT NULL COLLATE 'utf8mb4_unicode_ci',
+	`Commentaire` TEXT NULL DEFAULT NULL COLLATE 'utf8mb4_unicode_ci',
+	`Mode_Transmission` ENUM('SMTP','MAILTO') NOT NULL COLLATE 'utf8mb4_unicode_ci',
+	`Statut_Commande` ENUM('BROUILLON','ENVOYEE','PREPAREE') NOT NULL DEFAULT 'BROUILLON' COLLATE 'utf8mb4_unicode_ci',
+	`Date_Creation` DATETIME NOT NULL DEFAULT (CURRENT_TIMESTAMP),
+	`Date_Envoi` DATETIME NULL DEFAULT NULL,
+	`Id_Pdf` INT NULL DEFAULT NULL,
+	PRIMARY KEY (`Id_Commande_Materiel`) USING BTREE,
+	UNIQUE INDEX `UK_t_commande_materiel_reference` (`Reference_Commande`) USING BTREE,
+	INDEX `IX_t_commande_materiel_utilisateur` (`Id_Utilisateur`) USING BTREE,
+	INDEX `IX_t_commande_materiel_pdf` (`Id_Pdf`) USING BTREE,
+	CONSTRAINT `FK_t_commande_materiel_pdf` FOREIGN KEY (`Id_Pdf`) REFERENCES `t_pdf` (`Id_PDF`) ON UPDATE CASCADE ON DELETE SET NULL,
+	CONSTRAINT `FK_t_commande_materiel_utilisateur` FOREIGN KEY (`Id_Utilisateur`) REFERENCES `t_utilisateur` (`Id_Utilisateur`) ON UPDATE CASCADE ON DELETE NO ACTION
+)
+COLLATE='utf8mb4_unicode_ci'
+ENGINE=InnoDB
+;
+
+DROP TABLE IF EXISTS `t_commande_materiel_ligne`;
+CREATE TABLE `t_commande_materiel_ligne` (
+	`Id_Commande_Materiel_Ligne` INT NOT NULL AUTO_INCREMENT,
+	`Id_Commande_Materiel` INT NOT NULL,
+	`Id_Materiel` INT NOT NULL,
+	`Ref_Commercial` VARCHAR(100) NOT NULL COLLATE 'utf8mb4_unicode_ci',
+	`Designation` VARCHAR(255) NOT NULL COLLATE 'utf8mb4_unicode_ci',
+	`Descriptif` TEXT NULL DEFAULT NULL COLLATE 'utf8mb4_unicode_ci',
+	`Gamme` VARCHAR(50) NULL DEFAULT NULL COLLATE 'utf8mb4_unicode_ci',
+	`Type` VARCHAR(50) NULL DEFAULT NULL COLLATE 'utf8mb4_unicode_ci',
+	`Quantite` INT NOT NULL,
+	PRIMARY KEY (`Id_Commande_Materiel_Ligne`) USING BTREE,
+	INDEX `IX_t_commande_materiel_ligne_commande` (`Id_Commande_Materiel`) USING BTREE,
+	INDEX `IX_t_commande_materiel_ligne_materiel` (`Id_Materiel`) USING BTREE,
+	CONSTRAINT `FK_t_commande_materiel_ligne_commande` FOREIGN KEY (`Id_Commande_Materiel`) REFERENCES `t_commande_materiel` (`Id_Commande_Materiel`) ON UPDATE CASCADE ON DELETE CASCADE,
+	CONSTRAINT `FK_t_commande_materiel_ligne_materiel` FOREIGN KEY (`Id_Materiel`) REFERENCES `t_materiel` (`Id_Materiel`) ON UPDATE CASCADE ON DELETE NO ACTION
+)
+COLLATE='utf8mb4_unicode_ci'
+ENGINE=InnoDB
+;
+
+DROP TABLE IF EXISTS `t_notification`;
+CREATE TABLE `t_notification` (
+	`Id_Notification` INT NOT NULL AUTO_INCREMENT,
+	`Type` VARCHAR(32) NOT NULL COLLATE 'utf8mb4_unicode_ci',
+	`Id_Alarme` INT NULL DEFAULT NULL,
+	`Titre` VARCHAR(128) NULL DEFAULT NULL COLLATE 'utf8mb4_unicode_ci',
+	`Message` VARCHAR(512) NOT NULL COLLATE 'utf8mb4_unicode_ci',
+	`Payload_Json` LONGTEXT NULL DEFAULT NULL COLLATE 'utf8mb4_unicode_ci',
+	`Priorite` INT NULL DEFAULT '0',
+	`Date_Creation` DATETIME NOT NULL DEFAULT (CURRENT_TIMESTAMP),
+	`Est_Archive` TINYINT(1) NOT NULL DEFAULT '0',
+	PRIMARY KEY (`Id_Notification`) USING BTREE,
+	INDEX `IDX_Id_Alarme_Notification` (`Id_Alarme`) USING BTREE,
+	INDEX `IDX_Date_Creation_Notification` (`Date_Creation`) USING BTREE,
+	CONSTRAINT `FK_ALARME_NOTIFICATION` FOREIGN KEY (`Id_Alarme`) REFERENCES `t_alarme` (`Id_Alarme`) ON UPDATE NO ACTION ON DELETE SET NULL
+)
+COLLATE='utf8mb4_unicode_ci'
+ENGINE=InnoDB
+;
+
+DROP TABLE IF EXISTS `t_notification_delivery`;
+CREATE TABLE `t_notification_delivery` (
+	`Id_Delivery` INT NOT NULL AUTO_INCREMENT,
+	`Id_Notification` INT NOT NULL,
+	`Id_Poste` INT NOT NULL,
+	`Id_Utilisateur` INT NULL DEFAULT NULL,
+	`Statut` VARCHAR(32) NOT NULL COLLATE 'utf8mb4_unicode_ci',
+	`Nb_Tentatives` INT NOT NULL DEFAULT '0',
+	`Derniere_Erreur` VARCHAR(255) NULL DEFAULT NULL COLLATE 'utf8mb4_unicode_ci',
+	`Date_Queue` DATETIME NOT NULL DEFAULT (CURRENT_TIMESTAMP),
+	`Date_Envoi` DATETIME NULL DEFAULT NULL,
+	`Date_Ack_Agent` DATETIME NULL DEFAULT NULL,
+	`Date_Dernier_Event` DATETIME NULL DEFAULT NULL,
+	`Correlation_Id` VARCHAR(64) NULL DEFAULT NULL COLLATE 'utf8mb4_unicode_ci',
+	PRIMARY KEY (`Id_Delivery`) USING BTREE,
+	UNIQUE INDEX `UK_NOTIFICATION_POSTE` (`Id_Notification`, `Id_Poste`) USING BTREE,
+	INDEX `IDX_STATUT_DELIVERY` (`Statut`) USING BTREE,
+	INDEX `IDX_Date_Envoi_Delivery` (`Date_Envoi`) USING BTREE,
+	INDEX `FK_POSTE_DELIVERY` (`Id_Poste`) USING BTREE,
+	INDEX `FK_UTILISATEUR_DELIVERY` (`Id_Utilisateur`) USING BTREE,
+	CONSTRAINT `FK_NOTIFICATION_DELIVERY` FOREIGN KEY (`Id_Notification`) REFERENCES `t_notification` (`Id_Notification`) ON UPDATE NO ACTION ON DELETE CASCADE,
+	CONSTRAINT `FK_POSTE_DELIVERY` FOREIGN KEY (`Id_Poste`) REFERENCES `t_postes_clients` (`Id_Poste`) ON UPDATE NO ACTION ON DELETE CASCADE,
+	CONSTRAINT `FK_UTILISATEUR_DELIVERY` FOREIGN KEY (`Id_Utilisateur`) REFERENCES `t_utilisateur` (`Id_Utilisateur`) ON UPDATE NO ACTION ON DELETE NO ACTION
+)
+COLLATE='utf8mb4_unicode_ci'
+ENGINE=InnoDB
+;
+
+DROP TABLE IF EXISTS `t_notification_event`;
+CREATE TABLE `t_notification_event` (
+	`Id_Event` INT NOT NULL AUTO_INCREMENT,
+	`Id_Delivery` INT NOT NULL,
+	`Event_Type` VARCHAR(32) NOT NULL COLLATE 'utf8mb4_unicode_ci',
+	`Event_Data` LONGTEXT NULL DEFAULT NULL COLLATE 'utf8mb4_unicode_ci',
+	`Date_Event` DATETIME NOT NULL DEFAULT (CURRENT_TIMESTAMP),
+	PRIMARY KEY (`Id_Event`) USING BTREE,
+	INDEX `IDX_Id_Delivery_Event` (`Id_Delivery`) USING BTREE,
+	INDEX `IDX_Date_Event` (`Date_Event`) USING BTREE,
+	CONSTRAINT `FK_DELIVERY_EVENT` FOREIGN KEY (`Id_Delivery`) REFERENCES `t_notification_delivery` (`Id_Delivery`) ON UPDATE NO ACTION ON DELETE CASCADE
+)
+COLLATE='utf8mb4_unicode_ci'
+ENGINE=InnoDB
+;
+
+DROP TABLE IF EXISTS `t_vigilog`;
+CREATE TABLE `t_vigilog` (
+	`Id_VigiLog` INT NOT NULL AUTO_INCREMENT,
+	`Numero_Serie` VARCHAR(30) NOT NULL COLLATE 'utf8mb4_unicode_ci',
+	`Modele` VARCHAR(50) NULL DEFAULT NULL COLLATE 'utf8mb4_unicode_ci',
+	`Libelle` VARCHAR(100) NULL DEFAULT NULL COLLATE 'utf8mb4_unicode_ci',
+	`Actif` TINYINT(1) NOT NULL DEFAULT '1',
+	`Date_Etalonnage` DATETIME NULL DEFAULT NULL,
+	`Date_Validite` DATE NULL DEFAULT NULL,
+	`Duree_Validite_Jours` INT NULL DEFAULT NULL,
+	`Err_Justesse` FLOAT NULL DEFAULT NULL,
+	`Commentaire` TEXT NULL DEFAULT NULL COLLATE 'utf8mb4_unicode_ci',
+	`Id_Utilisateur_Creation` INT NULL DEFAULT NULL,
+	`Date_Heure_Creation` DATETIME NOT NULL DEFAULT (CURRENT_TIMESTAMP),
+	`Id_Utilisateur_Maj` INT NULL DEFAULT NULL,
+	`Date_Heure_Maj` DATETIME NULL DEFAULT NULL,
+	PRIMARY KEY (`Id_VigiLog`) USING BTREE,
+	UNIQUE INDEX `UK_t_vigilog_numero_serie` (`Numero_Serie`) USING BTREE,
+	INDEX `IDX_t_vigilog_actif` (`Actif`) USING BTREE,
+	INDEX `IDX_t_vigilog_modele` (`Modele`) USING BTREE
+)
+COLLATE='utf8mb4_unicode_ci'
+ENGINE=InnoDB
+;
+
+DROP TABLE IF EXISTS `t_vigilog_configuration`;
+CREATE TABLE `t_vigilog_configuration` (
+	`Id_VigiLog_Configuration` INT NOT NULL AUTO_INCREMENT,
+	`Nom_Configuration` VARCHAR(100) NOT NULL COLLATE 'utf8mb4_unicode_ci',
+	`Description_Configuration` VARCHAR(255) NULL DEFAULT NULL COLLATE 'utf8mb4_unicode_ci',
+	`Consigne` DECIMAL(10,2) NULL DEFAULT NULL,
+	`Limite_Basse_Active` TINYINT(1) NOT NULL DEFAULT '0',
+	`Limite_Basse` DECIMAL(10,2) NULL DEFAULT NULL,
+	`Limite_Haute_Active` TINYINT(1) NOT NULL DEFAULT '0',
+	`Limite_Haute` DECIMAL(10,2) NULL DEFAULT NULL,
+	`Frequence_Min` INT NOT NULL,
+	`Retard_Alarme_Min` INT NOT NULL,
+	`Delai_Demarrage_Min` INT NOT NULL DEFAULT '0',
+	`Autorise_Arret_Bouton_Stop` TINYINT(1) NOT NULL DEFAULT '1',
+	`Reinitialise_Avec_Bouton_Start` TINYINT(1) NOT NULL DEFAULT '1',
+	`Actif` TINYINT(1) NOT NULL DEFAULT '1',
+	`Id_Utilisateur_Creation` INT NULL DEFAULT NULL,
+	`Date_Heure_Creation` DATETIME NOT NULL DEFAULT (CURRENT_TIMESTAMP),
+	`Id_Utilisateur_Maj` INT NULL DEFAULT NULL,
+	`Date_Heure_Maj` DATETIME NULL DEFAULT NULL,
+	PRIMARY KEY (`Id_VigiLog_Configuration`) USING BTREE,
+	UNIQUE INDEX `UK_t_vigilog_configuration_nom` (`Nom_Configuration`) USING BTREE,
+	INDEX `IDX_t_vigilog_configuration_user_create` (`Id_Utilisateur_Creation`) USING BTREE,
+	INDEX `IDX_t_vigilog_configuration_user_update` (`Id_Utilisateur_Maj`) USING BTREE,
+	CONSTRAINT `FK_t_vigilog_configuration_user_creation` FOREIGN KEY (`Id_Utilisateur_Creation`) REFERENCES `t_utilisateur` (`Id_Utilisateur`) ON UPDATE CASCADE ON DELETE SET NULL,
+	CONSTRAINT `FK_t_vigilog_configuration_user_maj` FOREIGN KEY (`Id_Utilisateur_Maj`) REFERENCES `t_utilisateur` (`Id_Utilisateur`) ON UPDATE CASCADE ON DELETE SET NULL
+)
+COLLATE='utf8mb4_unicode_ci'
+ENGINE=InnoDB
+;
+
+DROP TABLE IF EXISTS `t_vigilog_tournee`;
+CREATE TABLE `t_vigilog_tournee` (
+	`Id_VigiLog_Tournee` INT NOT NULL AUTO_INCREMENT,
+	`Reference_Tournee` VARCHAR(50) NOT NULL COLLATE 'utf8mb4_unicode_ci',
+	`Id_VigiLog_Configuration` INT NULL DEFAULT NULL,
+	`Id_VigiLog` INT NULL DEFAULT NULL,
+	`Nom_Configuration` VARCHAR(100) NOT NULL COLLATE 'utf8mb4_unicode_ci',
+	`Id_Site_Depart` INT NOT NULL,
+	`Id_Site_Arrivee` INT NOT NULL,
+	`Numero_Serie_VigiLog` VARCHAR(30) NOT NULL COLLATE 'utf8mb4_unicode_ci',
+	`Statut` VARCHAR(30) NOT NULL COLLATE 'utf8mb4_unicode_ci',
+	`Resultat_Feu` VARCHAR(10) NULL DEFAULT NULL COLLATE 'utf8mb4_unicode_ci',
+	`Id_Utilisateur_Depart` INT NOT NULL,
+	`Date_Heure_Depart` DATETIME NOT NULL,
+	`Id_Utilisateur_Arrivee` INT NULL DEFAULT NULL,
+	`Date_Heure_Arrivee` DATETIME NULL DEFAULT NULL,
+	`Consigne` DECIMAL(10,2) NULL DEFAULT NULL,
+	`Limite_Basse_Active` TINYINT(1) NOT NULL DEFAULT '0',
+	`Limite_Basse` DECIMAL(10,2) NULL DEFAULT NULL,
+	`Limite_Haute_Active` TINYINT(1) NOT NULL DEFAULT '0',
+	`Limite_Haute` DECIMAL(10,2) NULL DEFAULT NULL,
+	`Frequence_Min` INT NOT NULL,
+	`Retard_Alarme_Min` INT NOT NULL,
+	`Delai_Demarrage_Min` INT NOT NULL DEFAULT '0',
+	`Autorise_Arret_Bouton_Stop` TINYINT(1) NOT NULL DEFAULT '1',
+	`Reinitialise_Avec_Bouton_Start` TINYINT(1) NOT NULL DEFAULT '1',
+	`Nb_Mesures` INT NOT NULL DEFAULT '0',
+	`Temperature_Min` DECIMAL(10,2) NULL DEFAULT NULL,
+	`Temperature_Moyenne` DECIMAL(10,2) NULL DEFAULT NULL,
+	`Temperature_Max` DECIMAL(10,2) NULL DEFAULT NULL,
+	`Duree_Hors_Limites_Secondes` INT NOT NULL DEFAULT '0',
+	`Duree_Alarme_Secondes` INT NOT NULL DEFAULT '0',
+	`Est_Depassement_Limites` TINYINT(1) NOT NULL DEFAULT '0',
+	`Est_Alarme` TINYINT(1) NOT NULL DEFAULT '0',
+	`Est_Acquittee` TINYINT(1) NOT NULL DEFAULT '0',
+	`Commentaire` TEXT NULL DEFAULT NULL COLLATE 'utf8mb4_unicode_ci',
+	`Commentaire_Acquittement` TEXT NULL DEFAULT NULL COLLATE 'utf8mb4_unicode_ci',
+	`Id_Utilisateur_Acquittement` INT NULL DEFAULT NULL,
+	`Date_Heure_Acquittement` DATETIME NULL DEFAULT NULL,
+	`Date_Heure_Creation` DATETIME NOT NULL DEFAULT (CURRENT_TIMESTAMP),
+	`Date_Heure_Maj` DATETIME NULL DEFAULT NULL,
+	PRIMARY KEY (`Id_VigiLog_Tournee`) USING BTREE,
+	UNIQUE INDEX `UK_t_vigilog_tournee_reference` (`Reference_Tournee`) USING BTREE,
+	INDEX `IDX_t_vigilog_tournee_config` (`Id_VigiLog_Configuration`) USING BTREE,
+	INDEX `IDX_t_vigilog_tournee_site_depart` (`Id_Site_Depart`) USING BTREE,
+	INDEX `IDX_t_vigilog_tournee_site_arrivee` (`Id_Site_Arrivee`) USING BTREE,
+	INDEX `IDX_t_vigilog_tournee_logger` (`Numero_Serie_VigiLog`) USING BTREE,
+	INDEX `IDX_t_vigilog_tournee_statut` (`Statut`) USING BTREE,
+	INDEX `IDX_t_vigilog_tournee_depart_user` (`Id_Utilisateur_Depart`) USING BTREE,
+	INDEX `IDX_t_vigilog_tournee_arrivee_user` (`Id_Utilisateur_Arrivee`) USING BTREE,
+	INDEX `IDX_t_vigilog_tournee_acquit_user` (`Id_Utilisateur_Acquittement`) USING BTREE,
+	INDEX `IDX_t_vigilog_tournee_vigilog` (`Id_VigiLog`) USING BTREE,
+	CONSTRAINT `FK_t_vigilog_tournee_configuration` FOREIGN KEY (`Id_VigiLog_Configuration`) REFERENCES `t_vigilog_configuration` (`Id_VigiLog_Configuration`) ON UPDATE CASCADE ON DELETE SET NULL,
+	CONSTRAINT `FK_t_vigilog_tournee_site_arrivee` FOREIGN KEY (`Id_Site_Arrivee`) REFERENCES `t_site` (`Id_Site`) ON UPDATE CASCADE ON DELETE RESTRICT,
+	CONSTRAINT `FK_t_vigilog_tournee_site_depart` FOREIGN KEY (`Id_Site_Depart`) REFERENCES `t_site` (`Id_Site`) ON UPDATE CASCADE ON DELETE RESTRICT,
+	CONSTRAINT `FK_t_vigilog_tournee_user_acquittement` FOREIGN KEY (`Id_Utilisateur_Acquittement`) REFERENCES `t_utilisateur` (`Id_Utilisateur`) ON UPDATE CASCADE ON DELETE SET NULL,
+	CONSTRAINT `FK_t_vigilog_tournee_user_arrivee` FOREIGN KEY (`Id_Utilisateur_Arrivee`) REFERENCES `t_utilisateur` (`Id_Utilisateur`) ON UPDATE CASCADE ON DELETE SET NULL,
+	CONSTRAINT `FK_t_vigilog_tournee_user_depart` FOREIGN KEY (`Id_Utilisateur_Depart`) REFERENCES `t_utilisateur` (`Id_Utilisateur`) ON UPDATE CASCADE ON DELETE RESTRICT,
+	CONSTRAINT `FK_t_vigilog_tournee_vigilog` FOREIGN KEY (`Id_VigiLog`) REFERENCES `t_vigilog` (`Id_VigiLog`) ON UPDATE CASCADE ON DELETE SET NULL
+)
+COLLATE='utf8mb4_unicode_ci'
+ENGINE=InnoDB
+;
+
+DROP TABLE IF EXISTS `t_vigilog_usage_ponctuel`;
+CREATE TABLE `t_vigilog_usage_ponctuel` (
+	`Id_VigiLog_Usage_Ponctuel` INT NOT NULL AUTO_INCREMENT,
+	`Reference_Usage` VARCHAR(50) NOT NULL COLLATE 'utf8mb4_0900_ai_ci',
+	`Id_VigiLog_Configuration` INT NULL DEFAULT NULL,
+	`Id_VigiLog` INT NULL DEFAULT NULL,
+	`Nom_Configuration` VARCHAR(100) NOT NULL COLLATE 'utf8mb4_0900_ai_ci',
+	`Numero_Serie_VigiLog` VARCHAR(30) NOT NULL COLLATE 'utf8mb4_0900_ai_ci',
+	`Nom_Lieu_Temporaire` VARCHAR(120) NOT NULL COLLATE 'utf8mb4_0900_ai_ci',
+	`Statut` VARCHAR(30) NOT NULL COLLATE 'utf8mb4_0900_ai_ci',
+	`Id_Utilisateur_Demarrage` INT NOT NULL,
+	`Date_Heure_Demarrage` DATETIME NOT NULL,
+	`Commentaire_Demarrage` TEXT NULL DEFAULT NULL COLLATE 'utf8mb4_0900_ai_ci',
+	`Id_Utilisateur_Arret` INT NULL DEFAULT NULL,
+	`Date_Heure_Arret` DATETIME NULL DEFAULT NULL,
+	`Commentaire_Arret` TEXT NULL DEFAULT NULL COLLATE 'utf8mb4_0900_ai_ci',
+	`Date_Heure_Creation` DATETIME NOT NULL DEFAULT (CURRENT_TIMESTAMP),
+	`Date_Heure_Maj` DATETIME NULL DEFAULT NULL,
+	PRIMARY KEY (`Id_VigiLog_Usage_Ponctuel`) USING BTREE,
+	UNIQUE INDEX `UK_t_vigilog_usage_ponctuel_reference` (`Reference_Usage`) USING BTREE,
+	INDEX `IDX_t_vigilog_usage_ponctuel_statut` (`Statut`) USING BTREE,
+	INDEX `IDX_t_vigilog_usage_ponctuel_logger` (`Numero_Serie_VigiLog`) USING BTREE,
+	INDEX `IDX_t_vigilog_usage_ponctuel_started_by` (`Id_Utilisateur_Demarrage`) USING BTREE,
+	INDEX `IDX_t_vigilog_usage_ponctuel_stopped_by` (`Id_Utilisateur_Arret`) USING BTREE,
+	INDEX `FK_t_vigilog_usage_ponctuel_configuration` (`Id_VigiLog_Configuration`) USING BTREE,
+	INDEX `FK_t_vigilog_usage_ponctuel_logger` (`Id_VigiLog`) USING BTREE,
+	CONSTRAINT `FK_t_vigilog_usage_ponctuel_configuration` FOREIGN KEY (`Id_VigiLog_Configuration`) REFERENCES `t_vigilog_configuration` (`Id_VigiLog_Configuration`) ON UPDATE NO ACTION ON DELETE NO ACTION,
+	CONSTRAINT `FK_t_vigilog_usage_ponctuel_logger` FOREIGN KEY (`Id_VigiLog`) REFERENCES `t_vigilog` (`Id_VigiLog`) ON UPDATE NO ACTION ON DELETE NO ACTION,
+	CONSTRAINT `FK_t_vigilog_usage_ponctuel_user_start` FOREIGN KEY (`Id_Utilisateur_Demarrage`) REFERENCES `t_utilisateur` (`Id_Utilisateur`) ON UPDATE NO ACTION ON DELETE NO ACTION,
+	CONSTRAINT `FK_t_vigilog_usage_ponctuel_user_stop` FOREIGN KEY (`Id_Utilisateur_Arret`) REFERENCES `t_utilisateur` (`Id_Utilisateur`) ON UPDATE NO ACTION ON DELETE NO ACTION
+)
+COLLATE='utf8mb4_0900_ai_ci'
+ENGINE=InnoDB
+;
+
 SET FOREIGN_KEY_CHECKS=1;
 
 SET FOREIGN_KEY_CHECKS=0;
 INSERT INTO `t_actionneur_type` VALUES (1,4,'IACTX Lumineux',1),(2,5,'IACTX Lumineux contact',1),(3,6,'IACTX Contact',1),(4,7,'IACTX Sonore',1);
-INSERT INTO `t_autorisation` VALUES (1,'PARAM_EDITION_STATISTIQUES','Parametrage edition automatiques des statistique','Indique les heures d\'edition des rapports de statistiques',1,0,0,0),(2,'MATERIEL_MESURE_GERER','Gerer le materiel de mesure','Ajouter / Modifier / Supprimer du materiel',1,0,0,0),(3,'MATERIEL_MESURE_VISUALISER','Visualiser le schema de l\'installation','Autorise la visualisation de la table sondes , table module',1,0,0,0),(4,'MATERIEL_ALARME_GERER','Gerer le materiel d\'alarme','',1,0,0,0),(5,'PARAMETRES_GERER','Gerer les paramÃƒÆ’Ã‚Â¨tres','Autorise l\'administration des tables de references',1,0,0,0),(6,'APPLICATION_QUITTER_ADMIN','Fermeture de l\'application depuis l\'administration','Autorise la fermeture de l\'application',1,0,0,0),(7,'MATERIEL_METROLOGIE_GERER','Gerer le materiel de metrologie','',0,1,0,0),(8,'METROLOGIE_REALISER','Realiser la metrologie','',0,1,0,0),(9,'METROLOGIE_VISUALISER','Visualiser la metrologie','Autorise la visualisation de la table etalonnage, de la table calibrage',0,1,0,0),(10,'APPLICATION_QUITTER_METRO','Fermeture de l\'application depuis la metrologie','Autorise la fermeture de l\'application',0,1,0,0),(11,'LIEU_GERER','Gerer les lieux','Autorise la gestion des lieux',0,0,1,0),(12,'LIEU_VISUALISER','Visualiser les lieux','Autorise la visualisation de la table lieux',0,0,1,0),(13,'ALARMES_GERER','Gerer les alarmes','',0,0,1,0),(14,'LIEU_ACTIV_DESACT','Activer / Desactiver un lieu','Autorise l\'activation et la desactivation des lieux',0,0,1,0),(15,'APPLICATION_QUITTER_SURV','Fermeture de l\'application depuis la surveillance','Autorise la fermeture de l\'application',0,0,1,0),(16,'APPLICATION_QUITTER_VIGILOG','Fermeture de l\'application depuis VigiLog','Autorise la fermeture de l\'application',0,0,0,1),(17,'GERER_PROFIL','Gerer les profils et les autorisations','Autorise la gestion des profils et des autorisations pour les utilisateurs',1,0,0,0),(18,'TELE_ASSISTANCE','Demander une assistance','Autorise l\'utilisation de la teleassitace',0,0,1,0),(19,'SUPERPOSITION_COURBE','Realiser une superposition de courbe','Autorise la fonction superposer les courbes',0,0,1,0);
+INSERT INTO `t_autorisation` VALUES (1,'PARAM_EDITION_STATISTIQUES','Parametrage edition automatiques des statistique','Indique les heures d\'edition des rapports de statistiques',1,0,0,0),(2,'MATERIEL_MESURE_GERER','Gerer le materiel de mesure','Ajouter / Modifier / Supprimer du materiel',1,0,0,0),(3,'MATERIEL_MESURE_VISUALISER','Visualiser le schema de l\'installation','Autorise la visualisation de la table sondes , table module',1,0,0,0),(4,'MATERIEL_ALARME_GERER','Gerer le materiel d\'alarme','',1,0,0,0),(5,'PARAMETRES_GERER','Gerer les paramÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¨tres','Autorise l\'administration des tables de references',1,0,0,0),(6,'APPLICATION_QUITTER_ADMIN','Fermeture de l\'application depuis l\'administration','Autorise la fermeture de l\'application',1,0,0,0),(7,'MATERIEL_METROLOGIE_GERER','Gerer le materiel de metrologie','',0,1,0,0),(8,'METROLOGIE_REALISER','Realiser la metrologie','',0,1,0,0),(9,'METROLOGIE_VISUALISER','Visualiser la metrologie','Autorise la visualisation de la table etalonnage, de la table calibrage',0,1,0,0),(10,'APPLICATION_QUITTER_METRO','Fermeture de l\'application depuis la metrologie','Autorise la fermeture de l\'application',0,1,0,0),(11,'LIEU_GERER','Gerer les lieux','Autorise la gestion des lieux',0,0,1,0),(12,'LIEU_VISUALISER','Visualiser les lieux','Autorise la visualisation de la table lieux',0,0,1,0),(13,'ALARMES_GERER','Gerer les alarmes','',0,0,1,0),(14,'LIEU_ACTIV_DESACT','Activer / Desactiver un lieu','Autorise l\'activation et la desactivation des lieux',0,0,1,0),(15,'APPLICATION_QUITTER_SURV','Fermeture de l\'application depuis la surveillance','Autorise la fermeture de l\'application',0,0,1,0),(16,'APPLICATION_QUITTER_VIGILOG','Fermeture de l\'application depuis VigiLog','Autorise la fermeture de l\'application',0,0,0,1),(17,'GERER_PROFIL','Gerer les profils et les autorisations','Autorise la gestion des profils et des autorisations pour les utilisateurs',1,0,0,0),(18,'TELE_ASSISTANCE','Demander une assistance','Autorise l\'utilisation de la teleassitace',0,0,1,0),(19,'SUPERPOSITION_COURBE','Realiser une superposition de courbe','Autorise la fonction superposer les courbes',0,0,1,0);
 INSERT INTO `t_etalon_type` VALUES ('ES','VigiTemp Type ES','Sonde talon radio type E',1,0,0.05),('EX','Externe','Sonde externe',1,1,0),('SEF','VigiTemp Type SEF','Sonde talon filaire ou filaire/radio avec prise RJ45',1,0,0.02),('SPET','Sonde etalon platine','Sonde etalon GSP platine',1,0,0.02);
 INSERT INTO `t_liaison_profil_autorisation` VALUES (1,6),(1,11),(1,12),(1,13),(1,14),(1,15),(1,16),(3,12),(3,13),(3,14),(3,15),(7,15),(8,1),(8,2),(8,3),(8,4),(8,5),(8,6),(8,7),(8,8),(8,9),(8,10),(8,11),(8,12),(8,13),(8,14),(8,15),(8,16),(8,17),(8,18),(8,19),(9,12),(9,13),(9,14),(9,15),(12,5),(12,6),(12,7),(12,8),(12,11),(12,12),(12,14),(12,16),(12,17);
 INSERT INTO `t_module_type` VALUES (1,'BIN','Boitier filaire avec prise DB9 (port serie)',0),(2,'BIR (filaire)','Boitier reseau filaire avec pris RJ45 (prise reseau)',1),(3,'BTR','Boitier radio avec prise DB9 (port serie)',0),(4,'BIR (radio)','Boitier reseau radio avec prise RJ45 (port serie)',1),(5,'CORONIS','Boitier radio CORONIS avec prise DB9 (port serie)',0),(6,'MRH','Boitier MRH',0),(7,'ITR','Module port serie',0),(8,'IETH','Module ethernet',0);
-INSERT INTO `t_parametre` VALUES ('CFR21','ACTIVATION_EXPIRATION_MOT_DE_PASSE','true','Activer l\'expiration des mots de passe (CFR21)'),('CFR21','ACTIVATION_NORME_CFR21','1','Activer la conformite CFR21 (saisie des configurations)'),('CFR21','EVENEMENTS','1','Activation des evenements'),('CFR21','JOURS_VALIDITE_MOT_DE_PASSE','90',NULL),('CFR21','MOT_DE_PASSE_PERMANENT','1','Le mot de passe ne peut pas ÃƒÆ’Ã‚Âªtre change par l\'utilisateur'),('CFR21','MOT_DE_PASSE_REUTILISABLE','0','L\'utilisateur ne peut pas reutiliser un ancien mot de passe'),('CFR21','NOMBRE_TENTATIVES_MOT_DE_PASSE','3','Nombre de tentatives autorisees avant verrouillage du compte'),('CFR21','REACTIVATION_ALARME_SONORE','500','Delai de reactivation de l\'alarme sonore en millisecondes'),('CFR21','SECURITE','0','Mode securite renforce'),('CFR21','TEMPS_DECONNEXION_MINUTES','20','Temps d\'inactivite avant deconnexion automatique en minutes'),('CFR21','VALIDITE_MOT_DE_PASSE_JOURS','90','Duree de validite du mot de passe en jours'),('LICENCE','CLIENT','9310027000','Numero client de licence'),('LICENCE','VIGITEL','Kd2sV0V5ujab8uqVIyIxGHVWx70','Cle de licence VigiTel'),('LICENCE','VIGITEMP','PzA5CoG+fGCp7L/SO3fTXQCa22Y','Cle de licence VigiTemp'),('MYSQL','MOT_DE_PASSE_CRYPTE','1','Le mot de passe MySQL est crypte'),('MYSQL','VERSION_BASE_DONNEES','20200201','Version de la base de donnees (utile pour les mises ÃƒÆ’Ã‚Â  jour)'),('SAUVEGARDES','ADRESSE_IP_MACHINE','10.133.226.14','Adresse IP de la machine serveur'),('SAUVEGARDES','CONSTRUCTION_BATCH','','Script de construction batch pour les sauvegardes'),('SAUVEGARDES','DOSSIER_MYSQL','C:/MySQL/APP','Chemin du dossier d\'installation MySQL'),('SAUVEGARDES','DOSSIER_SAUVEGARDE','D:/MySQL/BACKUP','Chemin du dossier de sauvegarde'),('SAUVEGARDES','LISTE_FICHIERS','D:/MySQL/BACKUP/BackupVigiTempX_20251205_2200.sql	BackupVigiTempX_20251205_2200	20251205	220022	310566532\r\nD:/MySQL/BACKUP/BackupVigiTempX_20251206_2200.sql	BackupVigiTempX_20251206_2200	20251206	220018	310567296\r\nD:/MySQL/BACKUP/BackupVigiTempX_20251207_2200.sql	BackupVigiTempX_20251207_2200	20251207	220015	310567819\r\nD:/MySQL/BACKUP/BackupVigiTempX_mesure_20251205_2200.sql	BackupVigiTempX_mesure_20251205_2200	20251205	220331	5706207530\r\nD:/MySQL/BACKUP/BackupVigiTempX_mesure_20251206_2200.sql	BackupVigiTempX_mesure_20251206_2200	20251206	220328	5712244382\r\nD:/MySQL/BACKUP/BackupVigiTempX_mesure_20251207_2200.sql	BackupVigiTempX_mesure_20251207_2200	20251207	220324	5718306181','Liste des fichiers de sauvegarde avec details'),('SAUVEGARDES','NOM_TACHE','SauvegardeVigiTempX','Nom de la tÃƒÆ’Ã‚Â¢che planifiee de sauvegarde'),('SECURITE','LONGUEUR_MINIMALE_MOT_DE_PASSE','8','Nombre minimum de caracteres pour un mot de passe'),('SECURITE','NOMBRE_MIN_CARACTERES_SPECIAUX','1','Nombre minimum de caracteres speciaux requis (!@#$%^&* etc.)'),('SECURITE','NOMBRE_MIN_CHIFFRES','1','Nombre minimum de chiffres requis'),('SECURITE','NOMBRE_MIN_LETTRES_MAJUSCULES','1','Nombre minimum de lettres majuscules requises'),('SECURITE','NOMBRE_MIN_LETTRES_MINUSCULES','1','Nombre minimum de lettres minuscules requises'),('SECURITE_EMAIL','SMTP_ACTIVATION','true','Activer l\'envoi d\'emails'),('SECURITE_EMAIL','SMTP_EXPEDITEUR','noreply@vigitemp.fr','Adresse email expediteur (doit correspondre au domaine SMTP)'),('SECURITE_EMAIL','SMTP_MOT_DE_PASSE','Password-123','Mot de passe SMTP'),('SECURITE_EMAIL','SMTP_PORT','587','Port SMTP (587 pour TLS, 465 pour SSL)'),('SECURITE_EMAIL','SMTP_SERVEUR','smtp-randommail18473.alwaysdata.net','Serveur SMTP pour l\'envoi d\'emails'),('SECURITE_EMAIL','SMTP_UTILISATEUR','randommail18473@alwaysdata.net','Utilisateur SMTP'),('SECURITE_MOT_DE_PASSE','LONGUEUR_MINIMALE','8','Longueur minimale du mot de passe'),('SECURITE_MOT_DE_PASSE','MIN_CARACTERES_SPECIAUX','1','Nombre minimum de caracteres speciaux'),('SECURITE_MOT_DE_PASSE','MIN_CHIFFRES','1','Nombre minimum de chiffres'),('SECURITE_MOT_DE_PASSE','MIN_LETTRES_MAJUSCULES','1','Nombre minimum de majuscules'),('SECURITE_MOT_DE_PASSE','MIN_LETTRES_MINUSCULES','1','Nombre minimum de minuscules'),('STATISTIQUE','ENTETE_RAPPORT_UTILISATEUR_221','','En-tÃƒÆ’Ã‚Âªte du rapport utilisateur 221'),('STATISTIQUE','ENTETE_RAPPORT_UTILISATEUR_81','','En-tÃƒÆ’Ã‚Âªte du rapport utilisateur 81'),('STATISTIQUE','HEURE_RAPPORT_UTILISATEUR_221','','Heure du rapport utilisateur 221'),('STATISTIQUE','HEURE_RAPPORT_UTILISATEUR_81','','Heure du rapport utilisateur 81'),('STATISTIQUE','ORIENTATION_RAPPORT_221','','Orientation du rapport 221'),('STATISTIQUE','ORIENTATION_RAPPORT_81','','Orientation du rapport 81'),('VIGISERV','ACTIONS_PRIORITAIRES','0','Activation des actions prioritaires'),('VIGISERV','ACTIONS_PRIORITAIRES_DESACTIVATION','0','Desactivation des actions prioritaires (si egal ÃƒÆ’Ã‚Â  1, les actions prioritaires n\'ont pas d\'effet)'),('VIGISERV','DATE_DERNIER_FICHIER_SAUVEGARDE','2025-12-07 22:03:24','Date du dernier fichier de sauvegarde remonte par VigiServ'),('VIGISERV','DELAI_ALERTE_MESURE_MINUTES','60','Delai de verification maximum avant de lancer une alerte sur la derniere mesure (en minutes)'),('VIGISERV','DELAI_REPONSE_SONDE_AVR_CENTIEMES_SECONDES','100','Delai maximum pour l\'attente de lecture des sondes AVR en centiemes de seconde'),('VIGISERV','DELAI_REPONSE_SONDE_EI_CENTIEMES_SECONDES','150','Delai maximum pour l\'attente de lecture des sondes EI en centiemes de seconde'),('VIGISERV','DELAI_SONNERIE_ALARME_MINUTES','2','Delai pour la verification si des alarmes sont presentes avant activation d\'une alarme sonore (en minutes)'),('VIGISERV','DERNIER_MESURE_APPEL','SondesSurveillance','Derniere fonction appelee par le service VigiServ'),('VIGISERV','DERNIER_MESURE_APPEL_1','SondesSurveillance','Derniere fonction appelee par le service VigiServ (serveur 1)'),('VIGISERV','DERNIER_MESURE_APPEL_2','SondesSurveillance','Derniere fonction appelee par le service VigiServ (serveur 2)'),('VIGISERV','DERNIER_MESURE_APPEL_3','SondesSurveillance','Derniere fonction appelee par le service VigiServ (serveur 3)'),('VIGISERV','DERNIER_MESURE_DATE_HEURE','2025120822000153','Date heure de la derniere mesure inscrite par le service VigiServ'),('VIGISERV','DERNIER_MESURE_DATE_HEURE_1','2025120822000152','Date heure de la derniere mesure inscrite par le service VigiServ (serveur 1)'),('VIGISERV','DERNIER_MESURE_DATE_HEURE_2','2025120822000152','Date heure de la derniere mesure inscrite par le service VigiServ (serveur 2)'),('VIGISERV','DERNIER_MESURE_DATE_HEURE_3','2025120822000220','Date heure de la derniere mesure inscrite par le service VigiServ (serveur 3)'),('VIGISERV','DERNIER_MESURE_SONDE','IPPD2I','Numero de sonde de la derniere mesure inscrite par le service VigiServ'),('VIGISERV','DERNIER_MESURE_SONDE_1','IN24CI','Numero de sonde de la derniere mesure inscrite par le service VigiServ (serveur 1)'),('VIGISERV','DERNIER_MESURE_SONDE_2','IN22PP','Numero de sonde de la derniere mesure inscrite par le service VigiServ (serveur 2)'),('VIGISERV','DERNIER_MESURE_SONDE_3','IN22GU','Numero de sonde de la derniere mesure inscrite par le service VigiServ (serveur 3)'),('VIGISERV','DIALOGUE_EN_MINUTES','1','Intervalle de dialogue avec le service VigiServ en minutes'),('VIGISERV','DUREE_LOGIN_SECONDES','60','Duree de validite du login (le login ne sera pas redemande dans ce delai) (en secondes)'),('VIGISERV','ECRAN_OFF','1','ecran eteint'),('VIGISERV','ENREGISTREMENT_ON','1','Activation de l\'enregistrement'),('VIGISERV','FICHIER_EXTERNE','0','Utiliser un fichier externe'),('VIGISERV','FREQUENCE_NON_REPONSE_MINUTES','15','Frequence ÃƒÆ’Ã‚Â  appliquer si la derniere mesure est en erreur (en minutes)'),('VIGISERV','FREQUENCE_VERIFICATION_MINUTES','15','Frequence de verification en minutes'),('VIGISERV','MEMOIRE_OFF','1','Memoire eteinte'),('VIGISERV','NOM_UTILISATEUR_SERVEUR','Serveur VigiTemp MC2','Nom de l\'utilisateur du serveur'),('VIGISERV','PING_MODULE','1','Autorise ou pas le ping en cas de test d\'un module reseau (0 = OFF, 1 = ON)'),('VIGISERV','SATURATION_SONDE_LINEAIRE','-40','Seuil de saturation d\'une sonde lineaire'),('VIGISERV','SECONDES_ENTRE_MESURES_ETALONNAGE','30','Nombre de secondes entre chaque mesure d\'etalonnage'),('VIGISERV','SERVEUR_ADRESSE_IP','10.133.226.14','Adresse IP du serveur VigiServ'),('VIGISERV','SERVEUR_ADRESSE_IP_1','10.133.226.14','Adresse IP du serveur VigiServ (serveur 1)'),('VIGISERV','SERVEUR_ADRESSE_IP_2','10.133.226.14','Adresse IP du serveur VigiServ (serveur 2)'),('VIGISERV','SERVEUR_ADRESSE_IP_3','10.133.226.14','Adresse IP du serveur VigiServ (serveur 3)'),('VIGISERV','SERVEUR_NOM','SVM-IFB-VIGIS','Nom du serveur VigiServ'),('VIGISERV','SERVEUR_NOM_1','SVM-IFB-VIGIS','Nom du serveur VigiServ (serveur 1)'),('VIGISERV','SERVEUR_NOM_2','SVM-IFB-VIGIS','Nom du serveur VigiServ (serveur 2)'),('VIGISERV','SERVEUR_NOM_3','SVM-IFB-VIGIS','Nom du serveur VigiServ (serveur 3)'),('VIGISERV','SERVICE_DATE_HEURE','2025120822000219','Date heure inscrite par le service VigiServ'),('VIGISERV','SERVICE_DATE_HEURE_1','2025120822000144','Date heure inscrite par le service VigiServ (serveur 1)'),('VIGISERV','SERVICE_DATE_HEURE_2','2025120822000144','Date heure inscrite par le service VigiServ (serveur 2)'),('VIGISERV','SERVICE_DATE_HEURE_3','2025120822000219','Date heure inscrite par le service VigiServ (serveur 3)'),('VIGISERV','SONDE_EN_SEUIL_BAS','-60','Seuil bas pour les sondes de type EN'),('VIGISERV','SONDE_EN_SEUIL_HAUT','100','Seuil haut pour les sondes de type EN'),('VIGISERV','SONDE_EP_SEUIL_BAS','-400','Seuil bas pour les sondes de type EP'),('VIGISERV','SONDE_EP_SEUIL_HAUT','400','Seuil haut pour les sondes de type EP'),('VIGISERV','SONDE_GN_SEUIL_BAS','-60','Seuil bas pour les sondes de type GN'),('VIGISERV','SONDE_GN_SEUIL_HAUT','70','Seuil haut pour les sondes de type GN'),('VIGISERV','SONDE_GP_SEUIL_BAS','-400','Seuil bas pour les sondes de type GP'),('VIGISERV','SONDE_GP_SEUIL_HAUT','400','Seuil haut pour les sondes de type GP'),('VIGISERV','SONDE_HN_SEUIL_BAS','-60','Seuil bas pour les sondes de type HN'),('VIGISERV','SONDE_HN_SEUIL_HAUT','100','Seuil haut pour les sondes de type HN'),('VIGISERV','SONDE_HP_SEUIL_BAS','-400','Seuil bas pour les sondes de type HP'),('VIGISERV','SONDE_HP_SEUIL_HAUT','400','Seuil haut pour les sondes de type HP'),('VIGISERV','SONDE_IC_SEUIL_BAS','-400','Seuil bas pour les sondes de type IC'),('VIGISERV','SONDE_IC_SEUIL_HAUT','400','Seuil haut pour les sondes de type IC'),('VIGISERV','SONDE_IHCQP_SEUIL_BAS','-400','Seuil bas pour les sondes de type IHCQP'),('VIGISERV','SONDE_IHCQP_SEUIL_HAUT','1200','Seuil haut pour les sondes de type IHCQP'),('VIGISERV','SONDE_IH_SEUIL_BAS','-400','Seuil bas pour les sondes de type IH'),('VIGISERV','SONDE_IH_SEUIL_HAUT','400','Seuil haut pour les sondes de type IH'),('VIGISERV','SONDE_IN_SEUIL_BAS','-60','Seuil bas pour les sondes de type IN'),('VIGISERV','SONDE_IN_SEUIL_HAUT','80','Seuil haut pour les sondes de type IN'),('VIGISERV','SONDE_IP_SEUIL_BAS','-400','Seuil bas pour les sondes de type IP'),('VIGISERV','SONDE_IP_SEUIL_HAUT','400','Seuil haut pour les sondes de type IP'),('VIGISERV','SONDE_IQ_SEUIL_BAS','-400','Seuil bas pour les sondes de type IQ'),('VIGISERV','SONDE_IQ_SEUIL_HAUT','1100','Seuil haut pour les sondes de type IQ'),('VIGISERV','TIMEOUT_PING_MILLISECONDES','200','TimeOut de la duree d\'attente de la fonction Ping() en millisecondes'),('VIGISERV','TIMEOUT_PORT_SERIE_MILLISECONDES','5000','TimeOut de la duree d\'attente de la fonction sOuvre() en millisecondes'),('VIGISURV','ALARME_SONORE_LIEU_NON_ACQUITE','0','Alarme sonore pour les lieux non acquittes'),('VIGISURV','ALERTE_SURVEILLANCE','0','Alerte de surveillance'),('VIGISURV','DELAI_ARRET_THREAD_CHANGEMENT_GROUPE_MILLISECONDES','500','Delai laisse ÃƒÆ’Ã‚Â  l\'application pour arrÃƒÆ’Ã‚Âªter le thread de mise ÃƒÆ’Ã‚Â  jour avant rafraÃƒÆ’Ã‚Â®chissement pour le changement de groupe (en millisecondes)'),('VIGISURV','DELAI_ARRET_THREAD_DESSIN_MILLISECONDES','100','Delai laisse ÃƒÆ’Ã‚Â  l\'application avant de redemarrer le thread dessin apres un changement de groupe (en millisecondes)'),('VIGISURV','DELAI_AVANT_ARCHIVE_JOURS','365','Nombre de jours avant archivage automatique'),('VIGISURV','DELAI_PAUSE_THREAD_MAJ_DESSIN_SECONDES','25','Delai en secondes de pause entre 2 mises ÃƒÆ’Ã‚Â  jour completes des dessins. Augmenter ce nombre pour dessiner moins souvent les graphes'),('VIGISURV','DELAI_PAUSE_THREAD_MAJ_SECONDES','30','Delai en secondes de pause entre 2 mises ÃƒÆ’Ã‚Â  jour completes des lieux. Augmenter ce nombre pour rafraÃƒÆ’Ã‚Â®chir moins souvent'),('VIGISURV','DELAI_RAFRAICHISSEMENT_ADMIN_SECONDES','300','Delai de mise ÃƒÆ’Ã‚Â  jour de l\'ecran d\'administration en secondes'),('VIGISURV','DELAI_RAFRAICHISSEMENT_METROLOGIE_SECONDES','300','Delai de mise ÃƒÆ’Ã‚Â  jour de l\'ecran de metrologie en secondes'),('VIGISURV','DELAI_VERIFICATION_ALERTES_SECONDES','30','Delai de verification des alertes en secondes'),('VIGISURV','DELAI_VERIFICATION_VIGISERV_MINUTES','60','Delai du message d\'alarme VigiServ en minutes'),('VIGISURV','DELAI_VERIFICATION_VIGITEL_MINUTES','60','Delai du message d\'alarme VigiTel en minutes'),('VIGISURV','EXPLICATIONS_TESTS','- Ping base VigiTemp\r\n  Permet de savoir si le serveur hebergeant la base de donnees VigiTemp est accessible. Un ping permet de connaÃƒÆ’Ã‚Â®tre son etat de connexion au reseau.\r\n\r\n- RequÃƒÆ’Ã‚Âªte base VigiTemp\r\n  Une requÃƒÆ’Ã‚Âªte est executee sur la base de donnees VigiTemp afin de savoir si MySQL est bien operationnel.\r\n\r\n- Ping serveur VigiServ\r\n  Permet de savoir si le serveur hebergeant la base de donnees des mesures est accessible. Un ping permet de connaÃƒÆ’Ã‚Â®tre son etat de connexion au reseau.\r\n\r\n- RequÃƒÆ’Ã‚Âªte serveur VigiServ\r\n  Une requÃƒÆ’Ã‚Âªte est executee sur la base de donnees VigiTemp afin de savoir si la base de donnees ÃƒÆ’Ã‚Â  bien ete initialisee.\r\n\r\n- Interrogation VigiServ\r\n  Verifie si VigiServ est actif. Le service VigiServ informe de son etat de faÃƒÆ’Ã‚Â§on reguliere en ecrivant dans la base de donnees. Si cette ecriture n\'a pas ete effectuee recemment alors VigiServ est inactif.\r\n\r\n- Interrogation VigiTel\r\n  Verifie si VigiTel est actif. Le service VigiTel informe de son etat de faÃƒÆ’Ã‚Â§on reguliere en ecrivant dans la base de donnees. Si cette ecriture n\'a pas ete effectuee recemment alors VigiTel est inactif.','Texte d\'explication pour les tests de la fenÃƒÆ’Ã‚Âªtre outils'),('VIGISURV','IDENT_VIGILOG','0','Identifiant VigiLog'),('VIGISURV','LANCEMENT_ROBOT_SURVEILLANCE_MINUTES','10','Lance la verification (Ping, RequÃƒÆ’Ã‚Âªtes, Services) toutes les 10 minutes'),('VIGISURV','LIAISON_ARMURE','0','Liaison avec l\'armoire'),('VIGISURV','LIAISON_ARMURE_MODE','1','Mode de liaison avec l\'armoire'),('VIGISURV','LIAISON_ARMURE_REPERTOIRE','','Repertoire de liaison avec l\'armoire'),('VIGISURV','MAX_VALIDITE_ETALONNAGE_JOURS','365','Nombre de jours durant lequel les etalonnages sont valides'),('VIGISURV','MAX_VALIDITE_SAUVEGARDE_JOURS','7','Nombre de jours durant lequel la sauvegarde est valide'),('VIGISURV','MOT_DE_PASSE_ETALONNAGE','METRO','Mot de passe pour les operations d\'etalonnage'),('VIGISURV','REMONTER_HEURE_SERVEUR_LOGIN','0','Activer la remontee de l\'heure du serveur au login'),('VIGISURV','TAUX_RAFRAICHISSEMENT_INITIALISATION_ECRAN','10','Nombre de lieux ÃƒÆ’Ã‚Â  afficher lors du chargement de l\'ecran. Augmenter ce nombre pour accelerer le premier chargement'),('VIGISURV','TEXTE_SAUVEGARDE','La mise en place des sauvegardes s\'effectue sur le poste serveur VigiTemp.','Texte d\'information sur les sauvegardes'),('VIGISURV','VISION_SIMPLE','0','Mode vision simple'),('VIGITEL','ALARME_NON_REPONSE','0','Alarme de non-reponse'),('VIGITEL','DUREE_LOGIN_SECONDES','60','Duree de validite du login VigiTel (en secondes)'),('VIGITEL','EMAIL_ALARME_EXPEDITEUR','vigitemp@chu-toulouse.fr','Adresse e-mail expediteur pour les alarmes'),('VIGITEL','EMAIL_ALARME_MESSAGE','Le lieu en alarme est : %Lieu (sonde nÃƒâ€šÃ‚Â° %NumSonde)\r\nType d\'alarme : %AlarmeTexteMessage\r\nDernier releve : %Valeur %Unite','Template du message d\'alarme par e-mail'),('VIGITEL','EMAIL_ALARME_OBJET','Alarme VigiTemp','Objet de l\'e-mail d\'alarme'),('VIGITEL','FORMAT_FICHIER_SON','41','Format du fichier son (41 = SAFTCCITT_ALaw_8kHzMono)'),('VIGITEL','FREQUENCE_VERIFICATION_MINUTES','15','Frequence de verification VigiTel en minutes'),('VIGITEL','MODE_DEBUG','0','Activer le mode debogage de VigiTel'),('VIGITEL','NOM_MODEM','Diva Server \'POTS2<41060>\' Chn 1 Ln 1 Ctrl \'1\'','Nom du modem utilise'),('VIGITEL','SEPARATEUR_DECIMAL',',','Separateur decimal (. ou ,) pour la mise en forme d\'une valeur relevee'),('VIGITEL','SERVICE_DATE_HEURE','2025120821594515','Date heure inscrite par le service VigiTel'),('VIGITEL','SMTP_COMPTE','','Compte SMTP VigiTel'),('VIGITEL','SMTP_MODE_ASYNCHRONE','0','Mode asynchrone SMTP'),('VIGITEL','SMTP_MOT_DE_PASSE','','Mot de passe SMTP VigiTel'),('VIGITEL','SMTP_PORT','25','Port SMTP VigiTel'),('VIGITEL','SMTP_SECURISE_TSL','0','Activer la securisation TSL du SMTP'),('VIGITEL','SMTP_SERVEUR','smtp','Serveur SMTP VigiTel'),('VIGITEL','VITESSE_VOIX','1','Vitesse de la voix (de -10 ÃƒÆ’Ã‚Â  10)'),('VIGITEL','VOLUME_VOIX','100','Volume de la voix (de 1 ÃƒÆ’Ã‚Â  100)');
+INSERT INTO `t_parametre` (`Section`, `Mot_Cle`, `Valeur`, `Commentaire`) VALUES ('CFR21','ACTIVATION_EXPIRATION_MOT_DE_PASSE','true','Activer l\'expiration des mots de passe (CFR21)'),('CFR21','ACTIVATION_NORME_CFR21','1','Activer la conformite CFR21 (saisie des configurations)'),('CFR21','EVENEMENTS','1','Activation des evenements'),('CFR21','JOURS_VALIDITE_MOT_DE_PASSE','90',NULL),('CFR21','MOT_DE_PASSE_PERMANENT','1','Le mot de passe ne peut pas ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âªtre change par l\'utilisateur'),('CFR21','MOT_DE_PASSE_REUTILISABLE','0','L\'utilisateur ne peut pas reutiliser un ancien mot de passe'),('CFR21','NOMBRE_TENTATIVES_MOT_DE_PASSE','3','Nombre de tentatives autorisees avant verrouillage du compte'),('CFR21','REACTIVATION_ALARME_SONORE','500','Delai de reactivation de l\'alarme sonore en millisecondes'),('CFR21','SECURITE','0','Mode securite renforce'),('CFR21','TEMPS_DECONNEXION_MINUTES','20','Temps d\'inactivite avant deconnexion automatique en minutes'),('CFR21','VALIDITE_MOT_DE_PASSE_JOURS','90','Duree de validite du mot de passe en jours'),('LICENCE','CLIENT','','Numero client de licence'),('LICENCE','VIGITEL','','Cle de licence VigiTel'),('LICENCE','VIGITEMP','','Cle de licence VigiTemp'),('MYSQL','MOT_DE_PASSE_CRYPTE','1','Le mot de passe MySQL est crypte'),('MYSQL','VERSION_BASE_DONNEES','20200201','Version de la base de donnees (utile pour les mises ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â  jour)'),('SAUVEGARDES','ADRESSE_IP_MACHINE','','Adresse IP de la machine serveur'),('SAUVEGARDES','CONSTRUCTION_BATCH','','Script de construction batch pour les sauvegardes'),('SAUVEGARDES','DOSSIER_MYSQL','','Chemin du dossier d\'installation MySQL'),('SAUVEGARDES','DOSSIER_SAUVEGARDE','','Chemin du dossier de sauvegarde'),('SAUVEGARDES','LISTE_FICHIERS','','Liste des fichiers de sauvegarde avec details'),('SAUVEGARDES','NOM_TACHE','','Nom de la tache planifiee de sauvegarde'),('SECURITE','LONGUEUR_MINIMALE_MOT_DE_PASSE','8','Nombre minimum de caracteres pour un mot de passe'),('SECURITE','NOMBRE_MIN_CARACTERES_SPECIAUX','1','Nombre minimum de caracteres speciaux requis (!@#$%^&* etc.)'),('SECURITE','NOMBRE_MIN_CHIFFRES','1','Nombre minimum de chiffres requis'),('SECURITE','NOMBRE_MIN_LETTRES_MAJUSCULES','1','Nombre minimum de lettres majuscules requises'),('SECURITE','NOMBRE_MIN_LETTRES_MINUSCULES','1','Nombre minimum de lettres minuscules requises'),('SECURITE_EMAIL','SMTP_ACTIVATION','true','Activer l\'envoi d\'emails'),('SECURITE_EMAIL','SMTP_EXPEDITEUR','','Adresse email expediteur (doit correspondre au domaine SMTP)'),('SECURITE_EMAIL','SMTP_MOT_DE_PASSE','','Mot de passe SMTP'),('SECURITE_EMAIL','SMTP_PORT','587','Port SMTP (587 pour TLS, 465 pour SSL)'),('SECURITE_EMAIL','SMTP_SERVEUR','','Serveur SMTP pour l\'envoi d\'emails'),('SECURITE_EMAIL','SMTP_UTILISATEUR','','Utilisateur SMTP'),('SECURITE_MOT_DE_PASSE','LONGUEUR_MINIMALE','8','Longueur minimale du mot de passe'),('SECURITE_MOT_DE_PASSE','MIN_CARACTERES_SPECIAUX','1','Nombre minimum de caracteres speciaux'),('SECURITE_MOT_DE_PASSE','MIN_CHIFFRES','1','Nombre minimum de chiffres'),('SECURITE_MOT_DE_PASSE','MIN_LETTRES_MAJUSCULES','1','Nombre minimum de majuscules'),('SECURITE_MOT_DE_PASSE','MIN_LETTRES_MINUSCULES','1','Nombre minimum de minuscules'),('STATISTIQUE','ENTETE_RAPPORT_UTILISATEUR_221','','En-tÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âªte du rapport utilisateur 221'),('STATISTIQUE','ENTETE_RAPPORT_UTILISATEUR_81','','En-tÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âªte du rapport utilisateur 81'),('STATISTIQUE','HEURE_RAPPORT_UTILISATEUR_221','','Heure du rapport utilisateur 221'),('STATISTIQUE','HEURE_RAPPORT_UTILISATEUR_81','','Heure du rapport utilisateur 81'),('STATISTIQUE','ORIENTATION_RAPPORT_221','','Orientation du rapport 221'),('STATISTIQUE','ORIENTATION_RAPPORT_81','','Orientation du rapport 81'),('VIGISERV','ACTIONS_PRIORITAIRES','0','Activation des actions prioritaires'),('VIGISERV','ACTIONS_PRIORITAIRES_DESACTIVATION','0','Desactivation des actions prioritaires (si egal ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â  1, les actions prioritaires n\'ont pas d\'effet)'),('VIGISERV','DATE_DERNIER_FICHIER_SAUVEGARDE','','Date du dernier fichier de sauvegarde remonte par VigiServ'),('VIGISERV','DELAI_ALERTE_MESURE_MINUTES','60','Delai de verification maximum avant de lancer une alerte sur la derniere mesure (en minutes)'),('VIGISERV','DELAI_REPONSE_SONDE_AVR_CENTIEMES_SECONDES','100','Delai maximum pour l\'attente de lecture des sondes AVR en centiemes de seconde'),('VIGISERV','DELAI_REPONSE_SONDE_EI_CENTIEMES_SECONDES','150','Delai maximum pour l\'attente de lecture des sondes EI en centiemes de seconde'),('VIGISERV','DELAI_SONNERIE_ALARME_MINUTES','2','Delai pour la verification si des alarmes sont presentes avant activation d\'une alarme sonore (en minutes)'),('VIGISERV','DERNIER_MESURE_APPEL','SondesSurveillance','Derniere fonction appelee par le service VigiServ'),('VIGISERV','DERNIER_MESURE_APPEL_1','SondesSurveillance','Derniere fonction appelee par le service VigiServ (serveur 1)'),('VIGISERV','DERNIER_MESURE_APPEL_2','SondesSurveillance','Derniere fonction appelee par le service VigiServ (serveur 2)'),('VIGISERV','DERNIER_MESURE_APPEL_3','SondesSurveillance','Derniere fonction appelee par le service VigiServ (serveur 3)'),('VIGISERV','DERNIER_MESURE_DATE_HEURE','','Date heure de la derniere mesure inscrite par le service VigiServ'),('VIGISERV','DERNIER_MESURE_DATE_HEURE_1','','Date heure de la derniere mesure inscrite par le service VigiServ (serveur 1)'),('VIGISERV','DERNIER_MESURE_DATE_HEURE_2','','Date heure de la derniere mesure inscrite par le service VigiServ (serveur 2)'),('VIGISERV','DERNIER_MESURE_DATE_HEURE_3','','Date heure de la derniere mesure inscrite par le service VigiServ (serveur 3)'),('VIGISERV','DERNIER_MESURE_SONDE','','Numero de sonde de la derniere mesure inscrite par le service VigiServ'),('VIGISERV','DERNIER_MESURE_SONDE_1','','Numero de sonde de la derniere mesure inscrite par le service VigiServ (serveur 1)'),('VIGISERV','DERNIER_MESURE_SONDE_2','','Numero de sonde de la derniere mesure inscrite par le service VigiServ (serveur 2)'),('VIGISERV','DERNIER_MESURE_SONDE_3','','Numero de sonde de la derniere mesure inscrite par le service VigiServ (serveur 3)'),('VIGISERV','DIALOGUE_EN_MINUTES','1','Intervalle de dialogue avec le service VigiServ en minutes'),('VIGISERV','DUREE_LOGIN_SECONDES','60','Duree de validite du login (le login ne sera pas redemande dans ce delai) (en secondes)'),('VIGISERV','ECRAN_OFF','1','ecran eteint'),('VIGISERV','ENREGISTREMENT_ON','1','Activation de l\'enregistrement'),('VIGISERV','FICHIER_EXTERNE','0','Utiliser un fichier externe'),('VIGISERV','FREQUENCE_NON_REPONSE_MINUTES','15','Frequence ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â  appliquer si la derniere mesure est en erreur (en minutes)'),('VIGISERV','FREQUENCE_VERIFICATION_MINUTES','15','Frequence de verification en minutes'),('VIGISERV','MEMOIRE_OFF','1','Memoire eteinte'),('VIGISERV','NOM_UTILISATEUR_SERVEUR','','Nom de l\'utilisateur du serveur'),('VIGISERV','PING_MODULE','1','Autorise ou pas le ping en cas de test d\'un module reseau (0 = OFF, 1 = ON)'),('VIGISERV','SATURATION_SONDE_LINEAIRE','-40','Seuil de saturation d\'une sonde lineaire'),('VIGISERV','SECONDES_ENTRE_MESURES_ETALONNAGE','30','Nombre de secondes entre chaque mesure d\'etalonnage'),('VIGISERV','SERVEUR_ADRESSE_IP','','Adresse IP du serveur VigiServ'),('VIGISERV','SERVEUR_ADRESSE_IP_1','','Adresse IP du serveur VigiServ (serveur 1)'),('VIGISERV','SERVEUR_ADRESSE_IP_2','','Adresse IP du serveur VigiServ (serveur 2)'),('VIGISERV','SERVEUR_ADRESSE_IP_3','','Adresse IP du serveur VigiServ (serveur 3)'),('VIGISERV','SERVEUR_NOM','','Nom du serveur VigiServ'),('VIGISERV','SERVEUR_NOM_1','','Nom du serveur VigiServ (serveur 1)'),('VIGISERV','SERVEUR_NOM_2','','Nom du serveur VigiServ (serveur 2)'),('VIGISERV','SERVEUR_NOM_3','','Nom du serveur VigiServ (serveur 3)'),('VIGISERV','SERVICE_DATE_HEURE','','Date heure inscrite par le service VigiServ'),('VIGISERV','SERVICE_DATE_HEURE_1','','Date heure inscrite par le service VigiServ (serveur 1)'),('VIGISERV','SERVICE_DATE_HEURE_2','','Date heure inscrite par le service VigiServ (serveur 2)'),('VIGISERV','SERVICE_DATE_HEURE_3','','Date heure inscrite par le service VigiServ (serveur 3)'),('VIGISERV','SONDE_EN_SEUIL_BAS','-60','Seuil bas pour les sondes de type EN'),('VIGISERV','SONDE_EN_SEUIL_HAUT','100','Seuil haut pour les sondes de type EN'),('VIGISERV','SONDE_EP_SEUIL_BAS','-400','Seuil bas pour les sondes de type EP'),('VIGISERV','SONDE_EP_SEUIL_HAUT','400','Seuil haut pour les sondes de type EP'),('VIGISERV','SONDE_GN_SEUIL_BAS','-60','Seuil bas pour les sondes de type GN'),('VIGISERV','SONDE_GN_SEUIL_HAUT','70','Seuil haut pour les sondes de type GN'),('VIGISERV','SONDE_GP_SEUIL_BAS','-400','Seuil bas pour les sondes de type GP'),('VIGISERV','SONDE_GP_SEUIL_HAUT','400','Seuil haut pour les sondes de type GP'),('VIGISERV','SONDE_HN_SEUIL_BAS','-60','Seuil bas pour les sondes de type HN'),('VIGISERV','SONDE_HN_SEUIL_HAUT','100','Seuil haut pour les sondes de type HN'),('VIGISERV','SONDE_HP_SEUIL_BAS','-400','Seuil bas pour les sondes de type HP'),('VIGISERV','SONDE_HP_SEUIL_HAUT','400','Seuil haut pour les sondes de type HP'),('VIGISERV','SONDE_IC_SEUIL_BAS','-400','Seuil bas pour les sondes de type IC'),('VIGISERV','SONDE_IC_SEUIL_HAUT','400','Seuil haut pour les sondes de type IC'),('VIGISERV','SONDE_IHCQP_SEUIL_BAS','-400','Seuil bas pour les sondes de type IHCQP'),('VIGISERV','SONDE_IHCQP_SEUIL_HAUT','1200','Seuil haut pour les sondes de type IHCQP'),('VIGISERV','SONDE_IH_SEUIL_BAS','-400','Seuil bas pour les sondes de type IH'),('VIGISERV','SONDE_IH_SEUIL_HAUT','400','Seuil haut pour les sondes de type IH'),('VIGISERV','SONDE_IN_SEUIL_BAS','-60','Seuil bas pour les sondes de type IN'),('VIGISERV','SONDE_IN_SEUIL_HAUT','80','Seuil haut pour les sondes de type IN'),('VIGISERV','SONDE_IP_SEUIL_BAS','-400','Seuil bas pour les sondes de type IP'),('VIGISERV','SONDE_IP_SEUIL_HAUT','400','Seuil haut pour les sondes de type IP'),('VIGISERV','SONDE_IQ_SEUIL_BAS','-400','Seuil bas pour les sondes de type IQ'),('VIGISERV','SONDE_IQ_SEUIL_HAUT','1100','Seuil haut pour les sondes de type IQ'),('VIGISERV','TIMEOUT_PING_MILLISECONDES','200','TimeOut de la duree d\'attente de la fonction Ping() en millisecondes'),('VIGISERV','TIMEOUT_PORT_SERIE_MILLISECONDES','5000','TimeOut de la duree d\'attente de la fonction sOuvre() en millisecondes'),('VIGISURV','ALARME_SONORE_LIEU_NON_ACQUITE','0','Alarme sonore pour les lieux non acquittes'),('VIGISURV','ALERTE_SURVEILLANCE','0','Alerte de surveillance'),('VIGISURV','DELAI_ARRET_THREAD_CHANGEMENT_GROUPE_MILLISECONDES','500','Delai laisse ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â  l\'application pour arrÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âªter le thread de mise ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â  jour avant rafraÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â®chissement pour le changement de groupe (en millisecondes)'),('VIGISURV','DELAI_ARRET_THREAD_DESSIN_MILLISECONDES','100','Delai laisse ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â  l\'application avant de redemarrer le thread dessin apres un changement de groupe (en millisecondes)'),('VIGISURV','DELAI_AVANT_ARCHIVE_JOURS','365','Nombre de jours avant archivage automatique'),('VIGISURV','DELAI_PAUSE_THREAD_MAJ_DESSIN_SECONDES','25','Delai en secondes de pause entre 2 mises ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â  jour completes des dessins. Augmenter ce nombre pour dessiner moins souvent les graphes'),('VIGISURV','DELAI_PAUSE_THREAD_MAJ_SECONDES','30','Delai en secondes de pause entre 2 mises ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â  jour completes des lieux. Augmenter ce nombre pour rafraÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â®chir moins souvent'),('VIGISURV','DELAI_RAFRAICHISSEMENT_ADMIN_SECONDES','300','Delai de mise ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â  jour de l\'ecran d\'administration en secondes'),('VIGISURV','DELAI_RAFRAICHISSEMENT_METROLOGIE_SECONDES','300','Delai de mise ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â  jour de l\'ecran de metrologie en secondes'),('VIGISURV','DELAI_VERIFICATION_ALERTES_SECONDES','30','Delai de verification des alertes en secondes'),('VIGISURV','DELAI_VERIFICATION_VIGISERV_MINUTES','60','Delai du message d\'alarme VigiServ en minutes'),('VIGISURV','DELAI_VERIFICATION_VIGITEL_MINUTES','60','Delai du message d\'alarme VigiTel en minutes'),('VIGISURV','EXPLICATIONS_TESTS','- Ping base VigiTemp\r\n  Permet de savoir si le serveur hebergeant la base de donnees VigiTemp est accessible. Un ping permet de connaÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â®tre son etat de connexion au reseau.\r\n\r\n- RequÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âªte base VigiTemp\r\n  Une requÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âªte est executee sur la base de donnees VigiTemp afin de savoir si MySQL est bien operationnel.\r\n\r\n- Ping serveur VigiServ\r\n  Permet de savoir si le serveur hebergeant la base de donnees des mesures est accessible. Un ping permet de connaÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â®tre son etat de connexion au reseau.\r\n\r\n- RequÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âªte serveur VigiServ\r\n  Une requÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âªte est executee sur la base de donnees VigiTemp afin de savoir si la base de donnees ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â  bien ete initialisee.\r\n\r\n- Interrogation VigiServ\r\n  Verifie si VigiServ est actif. Le service VigiServ informe de son etat de faÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§on reguliere en ecrivant dans la base de donnees. Si cette ecriture n\'a pas ete effectuee recemment alors VigiServ est inactif.\r\n\r\n- Interrogation VigiTel\r\n  Verifie si VigiTel est actif. Le service VigiTel informe de son etat de faÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§on reguliere en ecrivant dans la base de donnees. Si cette ecriture n\'a pas ete effectuee recemment alors VigiTel est inactif.','Texte d\'explication pour les tests de la fenÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âªtre outils'),('VIGISURV','IDENT_VIGILOG','0','Identifiant VigiLog'),('VIGISURV','LANCEMENT_ROBOT_SURVEILLANCE_MINUTES','10','Lance la verification (Ping, RequÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âªtes, Services) toutes les 10 minutes'),('VIGISURV','LIAISON_ARMURE','0','Liaison avec l\'armoire'),('VIGISURV','LIAISON_ARMURE_MODE','1','Mode de liaison avec l\'armoire'),('VIGISURV','LIAISON_ARMURE_REPERTOIRE','','Repertoire de liaison avec l\'armoire'),('VIGISURV','MAX_VALIDITE_ETALONNAGE_JOURS','365','Nombre de jours durant lequel les etalonnages sont valides'),('VIGISURV','MAX_VALIDITE_SAUVEGARDE_JOURS','7','Nombre de jours durant lequel la sauvegarde est valide'),('VIGISURV','MOT_DE_PASSE_ETALONNAGE','METRO','Mot de passe pour les operations d\'etalonnage'),('VIGISURV','REMONTER_HEURE_SERVEUR_LOGIN','0','Activer la remontee de l\'heure du serveur au login'),('VIGISURV','TAUX_RAFRAICHISSEMENT_INITIALISATION_ECRAN','10','Nombre de lieux ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â  afficher lors du chargement de l\'ecran. Augmenter ce nombre pour accelerer le premier chargement'),('VIGISURV','TEXTE_SAUVEGARDE','La mise en place des sauvegardes s\'effectue sur le poste serveur VigiTemp.','Texte d\'information sur les sauvegardes'),('VIGISURV','VISION_SIMPLE','0','Mode vision simple'),('VIGITEL','ALARME_NON_REPONSE','0','Alarme de non-reponse'),('VIGITEL','DUREE_LOGIN_SECONDES','60','Duree de validite du login VigiTel (en secondes)'),('VIGITEL','EMAIL_ALARME_EXPEDITEUR','','Adresse e-mail expediteur pour les alarmes'),('VIGITEL','EMAIL_ALARME_MESSAGE','Le lieu en alarme est : %Lieu (sonde nÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â° %NumSonde)\r\nType d\'alarme : %AlarmeTexteMessage\r\nDernier releve : %Valeur %Unite','Template du message d\'alarme par e-mail'),('VIGITEL','EMAIL_ALARME_OBJET','Alarme VigiTemp','Objet de l\'e-mail d\'alarme'),('VIGITEL','FORMAT_FICHIER_SON','41','Format du fichier son (41 = SAFTCCITT_ALaw_8kHzMono)'),('VIGITEL','FREQUENCE_VERIFICATION_MINUTES','15','Frequence de verification VigiTel en minutes'),('VIGITEL','MODE_DEBUG','0','Activer le mode debogage de VigiTel'),('VIGITEL','NOM_MODEM','','Nom du modem utilise'),('VIGITEL','SEPARATEUR_DECIMAL',',','Separateur decimal (. ou ,) pour la mise en forme d\'une valeur relevee'),('VIGITEL','SERVICE_DATE_HEURE','','Date heure inscrite par le service VigiTel'),('VIGITEL','SMTP_COMPTE','','Compte SMTP VigiTel'),('VIGITEL','SMTP_MODE_ASYNCHRONE','0','Mode asynchrone SMTP'),('VIGITEL','SMTP_MOT_DE_PASSE','','Mot de passe SMTP VigiTel'),('VIGITEL','SMTP_PORT','25','Port SMTP VigiTel'),('VIGITEL','SMTP_SECURISE_TSL','0','Activer la securisation TSL du SMTP'),('VIGITEL','SMTP_SERVEUR','smtp','Serveur SMTP VigiTel'),('VIGITEL','VITESSE_VOIX','1','Vitesse de la voix (de -10 ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â  10)'),('VIGITEL','VOLUME_VOIX','100','Volume de la voix (de 1 ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â  100)');
 INSERT INTO `t_profil` (`Id_Profil`, `Profil_Utilisateur`, `Commentaire`, `Est_MC2`, `Est_Archive`) VALUES
 (1,'Administrateurs',NULL,0,0),
 (3,'Consultation + Acquittement',NULL,0,0),
@@ -1102,6 +1237,115 @@ VALUES ('notifications', 'alarm_email_recipients', '', 'Liste des destinataires 
 ON DUPLICATE KEY UPDATE
   `Valeur` = VALUES(`Valeur`),
   `Commentaire` = VALUES(`Commentaire`);
+
+-- DONNEES COMPLEMENTAIRES (missing_data.sql)
+INSERT IGNORE INTO `t_materiel` (`Id_Materiel`,`Ref_Materiel`,`Nom_Materiel`,`Descriptif`,`Type_Materiel`,`Famille_Materiel`,`Archive`) VALUES
+  (1, 'M-GSO-U', 'Module de réception pour sondes GemSense One USB', 'USB\\r\\nLed d’activité\\r\\nAlimentation sur secteur', 'GSO', 'RADIO', NULL),
+  (2, 'M-GSO-E', 'Module de réception pour sondes GemSense One Ethernet', 'Ethernet RJ 45\\r\\nLed activité\\r\\nAlimentation sur secteur', 'GSO', 'RADIO', NULL),
+  (3, 'GSO-IT', 'Gemsense One Température interne', 'Fréquence de mesure 15 min fixe \\r\\nFonction mémoire (700 valeurs)\\r\\nPiles AAA*2 (2 ans selon utilisation)\\r\\nTempérature d\'utilisation : -20°C à 40°C', 'GSO', 'RADIO', NULL),
+  (4, 'GSO-ITH', 'Gemsense One Température & humidité interne', 'Fréquence de mesure 15 min fixe \\r\\nFonction mémoire (700 valeurs)\\r\\nPiles AAA*2 (2 ans selon utilisation)\\r\\nTempérature d\'utilisation : 10°C à 40°C\\r\\nDomaine d\'utilisation : 10%Hr à 90%Hr', 'GSO', 'RADIO', NULL),
+  (5, 'GSO-ET', 'Gemsense One Température externe', 'Fréquence de mesure 15 min fixe \\r\\nFonction mémoire (700 valeurs)\\r\\nPiles AAA*2 (2 ans selon utilisation)\\r\\nProtection : inox 316 L Ø 6 x 40 mm\\r\\nTempérature d\'utilisation : -40°C à 125°C', 'GSO', 'RADIO', NULL),
+  (6, 'GSO-ETH', 'Gemsense One Température & humidité externe', 'Fréquence de mesure 15 min fixe \\r\\nFonction mémoire (700 valeurs)\\r\\nPiles AAA*2 (2 ans selon utilisation)\\r\\nTempérature d\'utilisation : 10°C à 80°C\\r\\nDomaine d\'utilisation : 10%Hr à 90%Hr', 'GSO', 'RADIO', NULL),
+  (7, 'M-GSP', 'Module de réception pour sondes GemSense Pro Ethernet', 'Interface 10Base-T ou 100Base-TX\\r\\nConnecteur RJ45\\r\\nLed Link & activité\\r\\nSécurisé par mot de passe\\r\\nCPU : DSTni-EX\\r\\nMémoire : 256k SRAM 512Kb flash\\r\\nAlimentation sur secteur', 'GSP', 'RADIO', NULL),
+  (8, 'GSP-RN-BL', 'Gemsense Pro Numérique blanc', 'Sonde GemSense Pro avec écran 2,9" \\r\\nFonction mémoire (5300 valeurs)\\r\\nBatterie de secours (15 jours)\\r\\nGamme pro avec portée étendue\\r\\nCapteur numérique\\r\\nTempérature d\'utilisation : -30°C à 125°C\\r\\nCapteur numérique Ø 6mm l, 50mm  / -30°C à 125 °C Câble long 3 m BLANC', 'GSP', 'RADIO', NULL),
+  (9, 'GSP-RN-GR', 'Gemsense Pro Numérique gris', 'Sonde GemSense Pro avec écran 2,9" \\r\\nFonction mémoire (5300 valeurs)\\r\\nBatterie de secours (15 jours)\\r\\nGamme pro avec portée étendue\\r\\nCapteur numérique\\r\\nTempérature d\'utilisation : -30°C à 70°C\\r\\nCapteur numérique Ø 6mm l, 50mm  / -30°C à 70 °C  Câble long 3 m GRIS PLAT', 'GSP', 'RADIO', NULL),
+  (10, 'GSP-RP', 'Gemsense Pro platine', 'Sonde GemSense Pro avec écran 2,9" \\r\\nFonction mémoire (5300 valeurs)\\r\\nBatterie de secours (15 jours)\\r\\nGamme pro avec portée étendue\\r\\nGaine de protection : acier inox 316 L, Ø 6 \\r\\nTempérature d\'utilisation : -200 à 200°C\\r\\nSonde : Pt 100 céramique CEI 60751 classe A, en montage 4 fils\\r\\nCâble de raccordement : PFA/PFA', 'GSP', 'RADIO', NULL),
+  (11, 'GSP-RP-ALIM', 'Gemsense Pro platine alimentaire', 'Sonde GemSense Pro avec écran 2,9" \\r\\nFonction mémoire (5300 valeurs)\\r\\nBatterie de secours (15 jours)\\r\\nGamme pro avec portée étendue\\r\\nGaine de protection : acier inox 316 L - Ø 5 mm, \\r\\nlongueur utile : 150 mm\\r\\nPoignée : surmoulée silicone THT 250 °C - couleur rouge brique, longueur 130 mm\\r\\nSonde : Pt1000 céramique DIN IEC 60751 classe B, simple en montage A\\r\\nCâble de raccordement : silicone atoxique THT 250 °C continu - Alimentaire couleur rouge brique\\r\\nTempérature d\'utilisation : -50 à + 250 °C', 'GSP', 'RADIO', NULL),
+  (12, 'GSP-RP-CONT', 'Gemsense Pro platine contact', 'Sonde GemSense Pro avec écran 2,9" \\r\\nFonction mémoire (5300 valeurs)\\r\\nBatterie de secours (15 jours)\\r\\nGamme pro avec portée étendue\\r\\nCapteur de température\\r\\nSonde : Pt 100 CEI 60751 classe A, \\r\\nsimple enroulement, élément de mesure couche mince sous rétractable PFA\\r\\nSous film polyester \\r\\nTempérature d\'utilisation : -80+160 °C\\r\\nFixation par colle silicone sur surface dégraissée\\r\\nCâble de raccordement : PFA/PFA, section 0,09 mm², longueur 2 mètres, 3 conducteurs', 'GSP', 'RADIO', NULL),
+  (13, 'GSP-RP-AU', 'Gemsense Pro platine autoclave', 'Sonde GemSense Pro avec écran 2,9" \\r\\nFonction mémoire (5300 valeurs)\\r\\nBatterie de secours (15 jours)\\r\\nGamme pro avec portée étendue\\r\\nCapteur de température\\r\\nGaine de protection : acier inox 316 L - Ø 6 x 200 mm, \\r\\nprolongée par câble PFA/silicone protégé par flexible inox Ø 7 mm, longueur 1,5 mètres puis gaine étanche Ø 6 x 100 mm pour passage de cloison\\r\\nSonde : Pt 100 céramique CEI 60751 classe A, simple ou double enroulement en montage 3 fils\\r\\nCâble de raccordement : PFA/silicone, longueur 2 mètres\\r\\nTempérature maximale d\'utilisation : +180 °C\\r\\nExécution étanche', 'GSP', 'RADIO', NULL),
+  (14, 'GSP-RP-CF', 'Gemsense Pro platine chambre froide', 'Sonde GemSense Pro avec écran 2,9" \\r\\nFonction mémoire (5300 valeurs)\\r\\nBatterie de secours (15 jours)\\r\\nGamme pro avec portée étendue\\r\\nCapteur de température\\r\\nCapteur muni à l\'extrémité d\'une ogive inox diamètre 6 mm \\r\\nsertie sur 15 mètres de câble silicone.\\r\\nConfiguration 3 fils\\r\\nElément sensible Pt100 suivant NF EN 60751 classe B\\r\\nOgive inox diamètre 6 mm, longueur 50 mm\\r\\nTempérature d\'utilisation : -50°C à + 100°C\\r\\nSortie sur 15 mètres de câble : Conducteurs souples 7 brins \\r\\nde ø 0.2 mm isolés PFA sous gaine caoutchouc de silicone. \\r\\n2 conducteurs rouges, 1 conducteur blanc', 'GSP', 'RADIO', NULL),
+  (15, 'GSP-RP-MICRO', 'Gemsense Pro platine micro-capteur', 'Sonde GemSense Pro avec écran 2,9" \\r\\nFonction mémoire (5300 valeurs)\\r\\nBatterie de secours (15 jours)\\r\\nGamme pro avec portée étendue\\r\\nCapteur de temperature platine\\r\\nCapteur micro ø 2,18mm L 4,75m : -70°C à + 250°C', 'GSP', 'RADIO', NULL),
+  (16, 'GSP-RQ-CO2', 'Gemsense Pro CO2', 'Sonde GemSense Pro avec écran 2,9" \\r\\nFonction mémoire (5300 valeurs)\\r\\nGamme pro avec portée étendue\\r\\nLe capteur de dioxyde de carbone Vaisala CARBOCAP® GMP251 est une sonde intelligente et autonome.\\r\\nLa plage de température de fonctionnement va de -40 à +60 °C, \\r\\net la plage de mesure est comprise entre 0 et 20 % de CO2\\r\\nLe capteur GMP251 fait appel à la technologie unique de deuxième génération Vaisala CARBOCAP® qui offre une stabilité exceptionnelle. \\r\\nLa durée de vie de la GMP251 est prolongée grâce à un nouveau type de source de lumière infrarouge (IR) qui remplace l\'ampoule à incandescence traditionnelle. Elle bénéficie de compensations complètes de température et de pression de la mesure du COCO2 - mesure de température intégrée pour la compensation.', 'GSP', 'RADIO', NULL),
+  (17, 'GSP-RQ-HYG', 'Gemsense Pro hygrométrie', 'Sonde GemSense Pro avec écran 2,9" \\r\\nFonction mémoire (5300 valeurs)\\r\\nGamme pro avec portée étendue\\r\\nPlage de mesure de 0% à 100 %hr\\r\\nTempérature d\'utilisation de 10°C à +60°C\\r\\nCapteur de diamètre 12 mm longueur 71 mm', 'GSP', 'RADIO', NULL),
+  (18, 'GSP-RQ-THE', 'Gemsense Pro thermocouple', 'Sonde GemSense Pro avec écran 2,9" \\r\\nFonction mémoire (5300 valeurs)\\r\\nBatterie de secours (15 jours)\\r\\nGamme pro avec portée étendue\\r\\nCapteur de température\\r\\nCapteur thermocouple J chemise (déformable) :\\r\\nø 3 mm longueur 50 cm\\r\\nTempérature d\'utilisation  : 100°C à + 1500°C\\r\\nSortie sur câble tresse inox 1m', 'GSP', 'RADIO', NULL),
+  (19, 'GSP-RQ-PRES', 'Gemsense Pro pression différentielle', 'Sonde GemSense Pro avec écran 2,9" \\r\\nFonction mémoire (5300 valeurs)\\r\\nBatterie de secours (10 jours)\\r\\nGamme pro avec portée étendue\\r\\nCapteur de pression \\r\\nCapteur piézoélectique\\r\\nDomaine d\'utilisation  : 0 à 250 Pa\\r\\nSortie sur câble tresse inox 1m', 'GSP', 'RADIO', NULL),
+  (20, 'GSP-RQ-ATMO', 'Gemsense Pro pression atmosphérique', 'Sonde GemSense Pro avec écran 2,9" \\r\\nFonction mémoire (5300 valeurs)\\r\\nBatterie de secours (10 jours)\\r\\nGamme pro avec portée étendue\\r\\nCapteur de pression  \\r\\nCapteur ratiométrique\\r\\nDomaine d\'utilisation : atmosphère ambiante', 'GSP', 'RADIO', NULL),
+  (21, 'GSP-RQ-LUM', 'Gemsense Pro lumière', 'Sonde GemSense Pro avec écran 2,9" \\r\\nFonction mémoire (5300 valeurs)\\r\\nBatterie de secours (10 jours)\\r\\nGamme pro avec portée étendue\\r\\nCapteur de lumière \\r\\nCapteur photorésistif\\r\\nDomaine d\'utilisation : lumière ambiante', 'GSP', 'RADIO', NULL),
+  (22, 'GSP-RQ-01V', 'Gemsense Pro 0-1 Volt', 'Sonde GemSense Pro avec écran 2,9" \\r\\nFonction mémoire (5300 valeurs)\\r\\nBatterie de secours (10 jours)\\r\\nGamme pro avec portée étendue\\r\\nCapteur de tension \\r\\nEntrée 0-1Volt', 'GSP', 'RADIO', NULL),
+  (23, 'GSP-RQ-420MA', 'Gemsense Pro 4-20 mA', 'Sonde GemSense Pro avec écran 2,9" \\r\\nFonction mémoire (5300 valeurs)\\r\\nBatterie de secours (10 jours)\\r\\nGamme pro avec portée étendue\\r\\nCapteur de courant \\r\\nEntrée 4-20mA', 'GSP', 'RADIO', NULL),
+  (24, 'GSP-RQ-NONF', 'Gemsense Pro NO NF', 'Sonde GemSense Pro avec écran 2,9" \\r\\nFonction mémoire (5300 valeurs)\\r\\nBatterie de secours (10 jours)\\r\\nGamme pro avec portée étendue\\r\\nCapteur TOR \\r\\nEntrée récuperation de contact NO ou NF\\r\\nDomaine d\'utilisation : reprise de contact', 'GSP', 'RADIO', NULL),
+  (25, 'GSP-RP-ETAL', 'Gemsense Pro Etalon', 'Sonde GemSense Pro avec écran 2,9" \\r\\nLecture écran sous forme de liste pour des étalonnages \\r\\nplus faciles\\r\\nBatterie de secours (15 jours)\\r\\nGamme pro avec portée étendue\\r\\nGaine de protection : acier inox 316 L, Ø 3,5 longueur utile 150 mm \\r\\nTempérature d\'utilisation : -200 à 200°C\\r\\nSonde : Pt 100 céramique CEI 60751 classe 1/3DIN, \\r\\nen montage 4 fils\\r\\nCâble de raccordement : PFA/PFA \\r\\nRésolution d’affichage : 0,01°C \\r\\nRésolution de mesure : 0,003°C', 'GSP', 'ETALON', NULL),
+  (26, 'GSP-XN-BL', 'Gemsense Pro Ethernet numérique blanc', 'Liaison Ethernet RJ45 \\r\\nCapteur numérique\\r\\nTempérature d\'utilisation : -30°C à 125°C\\r\\nCapteur numérique Ø 6mm l, 50mm  / -30°C à 125 °C | Câble long 3 m BLANC', 'GSP', 'ETHERNET', NULL),
+  (27, 'GSP-XN-GR', 'Gemsense Pro Ethernet numérique gris', 'Liaison Ethernet RJ45 \\r\\nCapteur numérique\\r\\nTempérature d\'utilisation : -30°C à 70°C\\r\\nCapteur numérique Ø 6mm l, 50mm  / -30°C à 70 °C | Câble long 3 m GRIS PLAT', 'GSP', 'ETHERNET', NULL),
+  (28, 'GSP-XP', 'Gemsense Pro Ethernet platine', 'Liaison Ethernet RJ45 \\r\\nGaine de protection : acier inox 316 L, Ø 6 \\r\\nTempérature d\'utilisation : -200 à 200°C\\r\\nSonde : Pt 100 céramique CEI 60751 classe A, en montage 4 fils\\r\\nCâble de raccordement : PFA/PFA', 'GSP', 'ETHERNET', NULL),
+  (29, 'M-GSP-F', 'Module de réception pour sondes GemSense Pro Filaire', 'Ethernet RJ 45\\r\\nLed activité\\r\\nAlimentation sur secteur', 'GSP', 'FILAIRE', NULL),
+  (30, 'M-GSP-F-ALS', 'Alimentation supplémentaire pour sondes GemSense Pro Filaire', '', 'GSP', 'FILAIRE', NULL),
+  (31, 'GSP-FN-BL', 'Gemsense Pro filaire numérique blanc', 'Bus d’alimentation de data RS485\\r\\nCapteur numérique\\r\\nTempérature d\'utilisation : -30°C à 125°C\\r\\nCapteur numérique Ø 6mm l, 50mm  / -30°C à 125 °C | Câble long 3 m BLANC', 'GSP', 'FILAIRE', NULL),
+  (32, 'GSP-FN-GR', 'Gemsense Pro filaire numérique gris', 'Bus d’alimentation de data RS485\\r\\nCapteur numérique\\r\\nTempérature d\'utilisation : -30°C à 70°C\\r\\nCapteur numérique Ø 6mm l, 50mm  / -30°C à 70 °C | Câble long 3 m GRIS PLAT', 'GSP', 'FILAIRE', NULL),
+  (33, 'GSP-FP', 'Gemsense Pro Filaire platine', 'Bus d’alimentation de data RS485\\r\\nGaine de protection : acier inox 316 L, Ø 6 \\r\\nTempérature d\'utilisation : -200 à 200°C\\r\\nSonde : Pt 100 céramique CEI 60751 classe A, en montage 4 fils\\r\\nCâble de raccordement : PFA/PFA', 'GSP', 'FILAIRE', NULL);
+
+INSERT IGNORE INTO `t_sonde_etat` (`Id_Sonde_Etat`,`Etat_Sonde`,`Etat_Libelle`) VALUES
+  (1, 'A', 'En ajustage'),
+  (2, 'D', 'Surveillance désactivée'),
+  (3, 'E', 'En étalonnage'),
+  (4, 'S', 'Utilisée en surveillance'),
+  (5, 'T', 'En test');
+
+INSERT INTO `t_parametre` (`Section`,`Mot_Cle`,`Valeur`,`Commentaire`,`Champ_DATETIME`) VALUES
+  ('CFR21', 'ACTIVATION_EXPIRATION_MOT_DE_PASSE', 'true', 'Activer l\'expiration des mots de passe (CFR21)', NULL),
+  ('CFR21', 'ACTIVATION_NORME_CFR21', '0', 'Activer la conformite CFR21 (saisie des configurations)', NULL),
+  ('CFR21', 'EVENEMENTS', '1', 'Activation des evenements', NULL),
+  ('CFR21', 'JOURS_VALIDITE_MOT_DE_PASSE', '0', NULL, NULL),
+  ('CFR21', 'MOT_DE_PASSE_PERMANENT', '1', 'Le mot de passe ne peut pas etre change par l\'utilisateur', NULL),
+  ('CFR21', 'MOT_DE_PASSE_REUTILISABLE', '0', 'L\'utilisateur ne peut pas reutiliser un ancien mot de passe', NULL),
+  ('CFR21', 'NOMBRE_TENTATIVES_MOT_DE_PASSE', '3', 'Nombre de tentatives autorisees avant verrouillage du compte', NULL),
+  ('CFR21', 'REACTIVATION_ALARME_SONORE', '500', 'Delai de reactivation de l\'alarme sonore en millisecondes', NULL),
+  ('CFR21', 'SECURITE', '0', 'Mode securite renforcee', NULL),
+  ('CFR21', 'TEMPS_DECONNEXION_MINUTES', '20', 'Temps d\'inactivite avant deconnexion automatique en minutes', NULL),
+  ('CFR21', 'VALIDITE_MOT_DE_PASSE_JOURS', '90', 'Duree de validite du mot de passe en jours', NULL),
+  ('DASHBOARD', 'AUDIT_GRAPH_OPENINGS', 'false', 'Activer l\'audit trail a l\'ouverture des graphiques', NULL),
+  ('DASHBOARD', 'ETALONNAGE_WARNING_DAYS', '90', NULL, NULL),
+  ('DASHBOARD', 'REFRESH', '30', 'Intervalle de rafraichissement dashboard (secondes)', NULL),
+  ('DASHBOARD', 'REQUIRE_ACTION_COMMENT', 'false', NULL, NULL),
+  ('DASHBOARD', 'SHOW_NULL_NON_RESPONSE', 'true', 'Afficher les non-reponses (valeurs null) sur les graphes', NULL),
+  ('DASHBOARD', 'SURVEILLANCE_REFRESH', '30', 'Delai auto de rafraichissement de la surveillance (secondes)', NULL),
+  ('GENERAL', 'TIMEZONE', 'Europe/Paris', 'Fuseau horaire par defaut', NULL),
+  ('LICENCE', 'CLIENT', '', 'Numero client de licence', NULL),
+  ('LICENCE', 'VIGITEL', '', 'Cle de licence VigiTel', NULL),
+  ('LICENCE', 'VIGITEMP', '', 'Cle de licence VigiTemp', NULL),
+  ('NOTIFICATIONS', 'ALARM_EMAIL_ACKNOWLEDGED', 'true', 'Envoyer les emails d acquittement', NULL),
+  ('NOTIFICATIONS', 'ALARM_EMAIL_ENDED', 'true', 'Envoyer les emails d alarme terminee', NULL),
+  ('NOTIFICATIONS', 'ALARM_EMAIL_FALLBACK_TO_SYSTEM', 'true', 'Envoyer les emails d alarme aux destinataires systeme si aucun contact mail lieu n est configure', NULL),
+  ('NOTIFICATIONS', 'ALARM_EMAIL_RECIPIENTS', '', 'Emails en copie sur tous les emails systeme', NULL),
+  ('NOTIFICATIONS', 'EMAIL', 'true', 'Activation globale des emails systeme', NULL),
+  ('NOTIFICATIONS', 'GSP_BATTERY_EMAIL_PERCENT', '25', 'Seuil (%) envoi email batterie faible sonde GSP', NULL),
+  ('NOTIFICATIONS', 'GSP_BATTERY_NOTIFY_PERCENT', '50', 'Seuil (%) notification batterie faible sonde GSP', NULL),
+  ('NOTIFICATIONS_TEAMS', 'CHANNEL_LABEL', '', 'Nom lisible du canal Teams cible.', NULL),
+  ('NOTIFICATIONS_TEAMS', 'ENABLED', 'false', 'Active les notifications Teams via webhook Workflows.', NULL),
+  ('NOTIFICATIONS_TEAMS', 'NOTIFY_ON_ACK', 'false', 'Envoie un message Teams a l acquittement.', NULL),
+  ('NOTIFICATIONS_TEAMS', 'NOTIFY_ON_END', 'true', 'Envoie un message Teams a la fin alarme.', NULL),
+  ('NOTIFICATIONS_TEAMS', 'NOTIFY_ON_TRIGGER', 'true', 'Envoie un message Teams au declenchement alarme.', NULL),
+  ('NOTIFICATIONS_TEAMS', 'TIMEOUT_MS', '5000', 'Timeout HTTP du webhook Teams en millisecondes.', NULL),
+  ('NOTIFICATIONS_TEAMS', 'WEBHOOK_URL', '', 'URL du webhook Teams Workflows. Secret a proteger.', NULL),
+  ('SECURITE_EMAIL', 'SMTP_ACTIVATION', 'false', 'Activer l\'envoi d\'emails', NULL),
+  ('SECURITE_EMAIL', 'SMTP_EXPEDITEUR', '', 'Adresse email expediteur (doit correspondre au domaine SMTP)', NULL),
+  ('SECURITE_EMAIL', 'SMTP_MOT_DE_PASSE', '', 'Mot de passe SMTP', NULL),
+  ('SECURITE_EMAIL', 'SMTP_PORT', '587', 'Port SMTP (587 pour TLS, 465 pour SSL)', NULL),
+  ('SECURITE_EMAIL', 'SMTP_SERVEUR', '', 'Serveur SMTP pour l\'envoi d\'emails', NULL),
+  ('SECURITE_EMAIL', 'SMTP_UTILISATEUR', '', 'Utilisateur SMTP', NULL),
+  ('SECURITE_MOT_DE_PASSE', 'LONGUEUR_MINIMALE', '4', 'Longueur minimale du mot de passe', NULL),
+  ('SECURITE_MOT_DE_PASSE', 'MIN_CARACTERES_SPECIAUX', '0', 'Nombre minimum de caracteres speciaux', NULL),
+  ('SECURITE_MOT_DE_PASSE', 'MIN_CHIFFRES', '0', 'Nombre minimum de chiffres', NULL),
+  ('SECURITE_MOT_DE_PASSE', 'MIN_LETTRES_MAJUSCULES', '0', 'Nombre minimum de majuscules', NULL),
+  ('SECURITE_MOT_DE_PASSE', 'MIN_LETTRES_MINUSCULES', '0', 'Nombre minimum de minuscules', NULL),
+  ('SERVICE', 'GSO_DERNIER_DATE_HEURE', NULL, 'Date et heure de derniere mesure inscrite par la boucle GSO dans tm_mesures', NULL),
+  ('SERVICES', 'COMMERCIAL_CONTACT_EMAIL', '', 'Adresse email du service commercial utilisee pour les demandes de devis materiel', NULL),
+  ('STATISTICS_MONTHLY_REPORT', 'DAY_OF_MONTH', '1', 'Jour du mois (1..31, replie au dernier jour du mois si necessaire)', NULL),
+  ('STATISTICS_MONTHLY_REPORT', 'ENABLED', '0', 'Activation envoi recap mensuel stats', NULL),
+  ('STATISTICS_MONTHLY_REPORT', 'HOUR_LOCAL', '8', 'Heure locale (0..23)', NULL),
+  ('STATISTICS_MONTHLY_REPORT', 'INCLUDE_ALARM_COUNT', '1', 'Inclure nombre alarmes', NULL),
+  ('STATISTICS_MONTHLY_REPORT', 'INCLUDE_ALARM_HIGH_DURATION', '1', 'Inclure duree alarme haute', NULL),
+  ('STATISTICS_MONTHLY_REPORT', 'INCLUDE_ALARM_LOW_DURATION', '1', 'Inclure duree alarme basse', NULL),
+  ('STATISTICS_MONTHLY_REPORT', 'INCLUDE_AVG', '1', 'Inclure moyenne', NULL),
+  ('STATISTICS_MONTHLY_REPORT', 'INCLUDE_LOCATION_SUMMARY', '1', 'Inclure lieu/site/groupe', NULL),
+  ('STATISTICS_MONTHLY_REPORT', 'INCLUDE_MAX', '1', 'Inclure mesure max', NULL),
+  ('STATISTICS_MONTHLY_REPORT', 'INCLUDE_MIN', '1', 'Inclure mesure min', NULL),
+  ('STATISTICS_MONTHLY_REPORT', 'INCLUDE_OVER_HIGH_NO_ALARM', '1', 'Inclure depassement haut sans alarme', NULL),
+  ('STATISTICS_MONTHLY_REPORT', 'INCLUDE_OVER_LOW_NO_ALARM', '1', 'Inclure depassement bas sans alarme', NULL),
+  ('STATISTICS_MONTHLY_REPORT', 'INCLUDE_SETTINGS_SUMMARY', '1', 'Inclure consignes/tolerances/frequence/retards', NULL),
+  ('STATISTICS_MONTHLY_REPORT', 'LAST_SENT_MONTH', '', 'Dernier mois envoye au format YYYY-MM', NULL),
+  ('STATISTICS_MONTHLY_REPORT', 'RECIPIENTS', '', 'Destinataires separes par ; ou ,', NULL)
+ON DUPLICATE KEY UPDATE `Valeur` = VALUES(`Valeur`), `Commentaire` = VALUES(`Commentaire`), `Champ_DATETIME` = VALUES(`Champ_DATETIME`);
 
 -- =====================================================================
 -- vigi_chat (messagerie)
@@ -1338,19 +1582,25 @@ CREATE TABLE `tm_mesures_ajustage_etalon` (
   KEY `IDX_tm_mesures_ajustage_etalon_serie` (`Etalon_Numero_Serie`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-DROP TABLE IF EXISTS `tm_mesure_etalon`;
-CREATE TABLE `tm_mesure_etalon` (
-  `Id_Mesure_Etalon` int NOT NULL AUTO_INCREMENT,
-  `Id_Serveur_BDD` int NOT NULL DEFAULT '0',
-  `Valeur_Brute` float NOT NULL,
-  `Etalon_Numero_Serie` varchar(50) NOT NULL DEFAULT '',
-  `Est_Valeur_Null` tinyint NOT NULL,
-  `Date_Heure` datetime NOT NULL,
-  `Message_Erreur` varchar(50) NOT NULL DEFAULT '',
-  PRIMARY KEY (`Id_Mesure_Etalon`,`Id_Serveur_BDD`),
-  KEY `IDX_tm_mesure_etalon_date` (`Date_Heure`),
-  KEY `IDX_tm_mesure_etalon_serie` (`Etalon_Numero_Serie`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+DROP TABLE IF EXISTS `tm_mesures_etalon`;
+CREATE TABLE `tm_mesures_etalon` (
+	`Id_Mesure_Etalon` INT NOT NULL AUTO_INCREMENT,
+	`Id_Serveur_BDD` INT NOT NULL DEFAULT '0',
+	`Valeur_Brute` FLOAT NOT NULL,
+	`Etalon_Numero_Serie` VARCHAR(50) NOT NULL DEFAULT '' COLLATE 'utf8mb4_unicode_ci',
+	`Est_Valeur_Null` TINYINT NOT NULL,
+	`Date_Heure` DATETIME NOT NULL,
+	`Message_Erreur` VARCHAR(50) NOT NULL DEFAULT '' COLLATE 'utf8mb4_unicode_ci',
+	PRIMARY KEY (`Id_Mesure_Etalon`, `Id_Serveur_BDD`) USING BTREE,
+	INDEX `IDX_Valeur_Brute` (`Valeur_Brute`) USING BTREE,
+	INDEX `IDX_Etalon_Numero_Serie` (`Etalon_Numero_Serie`) USING BTREE,
+	INDEX `IDX_Est_Valeur_Null` (`Est_Valeur_Null`) USING BTREE,
+	INDEX `IDX_Date_Heure` (`Date_Heure`) USING BTREE,
+	INDEX `IDX_Message_Erreur` (`Message_Erreur`) USING BTREE
+)
+COLLATE='utf8mb4_unicode_ci'
+ENGINE=InnoDB
+;
 
 DROP TABLE IF EXISTS `tm_mesures_etalonnage`;
 CREATE TABLE `tm_mesures_etalonnage` (
@@ -2110,7 +2360,7 @@ main_block: BEGIN
     LIMIT 1;	
 
     /* ==========================================================
-       3. CAS : AUCUNE ALARME OUVERTE â†’ CREATION
+       3. CAS : AUCUNE ALARME OUVERTE Ã¢â€ â€™ CREATION
        ========================================================== */
     IF v_Id_Alarme IS NULL THEN
 	
@@ -2200,7 +2450,7 @@ main_block: BEGIN
 		
 
     /* ==========================================================
-       4. CAS : ALARME OUVERTE â†’ SUIVI / TRANSITION / FIN
+       4. CAS : ALARME OUVERTE Ã¢â€ â€™ SUIVI / TRANSITION / FIN
        ========================================================== */
     ELSE
 		
@@ -2268,7 +2518,7 @@ main_block: BEGIN
             SET NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee_T1 = 0;
             LEAVE main_block;
 		
-		/* --- TRANSITION BAS â†’ N --- */
+		/* --- TRANSITION BAS Ã¢â€ â€™ N --- */
 		ELSEIF v_TypeAlarme = 'B'
 			AND NEW.Est_Lieu_GSO=1
 			AND NEW.Lieu_Etat = 'S'
@@ -2301,7 +2551,7 @@ main_block: BEGIN
             SET NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee_T1 = 0;
             LEAVE main_block;
 
-		/* --- TRANSITION HAUT â†’ N --- */
+		/* --- TRANSITION HAUT Ã¢â€ â€™ N --- */
 		ELSEIF v_TypeAlarme = 'H'
 			AND NEW.Est_Lieu_GSO=1
 			AND NEW.Lieu_Etat = 'S'
@@ -2335,7 +2585,7 @@ main_block: BEGIN
             LEAVE main_block;
 			
 		
-        /* --- TRANSITION BAS â†’ HAUT --- */
+        /* --- TRANSITION BAS Ã¢â€ â€™ HAUT --- */
         ELSEIF v_TypeAlarme = 'B'
 			AND NEW.Est_Lieu_GSO=1
 			AND NEW.Lieu_Etat = 'S'
@@ -2366,7 +2616,7 @@ main_block: BEGIN
             SET NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee_T1 = 0;
             LEAVE main_block;
 
-        /* --- TRANSITION HAUT â†’ BAS --- */
+        /* --- TRANSITION HAUT Ã¢â€ â€™ BAS --- */
         ELSEIF v_TypeAlarme = 'H'
 			AND NEW.Est_Lieu_GSO=1
 			AND NEW.Lieu_Etat = 'S'
@@ -2432,7 +2682,7 @@ main_block: BEGIN
             SET NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee_T1 = 0;
             LEAVE main_block;
 			
-        /* --- FIN Dâ€™ALARME N --- */
+        /* --- FIN DÃ¢â‚¬â„¢ALARME N --- */
 		ELSEIF v_TypeAlarme = 'N'
 		AND TIMESTAMPDIFF(SECOND, NEW.Date_Heure_Derniere_Reponse, NOW()) < NEW.Retard_Non_Reponse * 60
 		THEN
@@ -2447,7 +2697,7 @@ main_block: BEGIN
 		SET NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee_T1 = 0;
 		LEAVE main_block;
 
-/* --- FIN Dâ€™ALARME B/H --- */
+/* --- FIN DÃ¢â‚¬â„¢ALARME B/H --- */
 	ELSEIF v_TypeAlarme IN('B','H') THEN 
 		UPDATE t_alarme
 		SET Date_Heure_Fin = NEW.Derniere_Date_Heure,
@@ -2475,19 +2725,19 @@ main_block: BEGIN
 /* --- PRE-ALARME BASSE --- */
 IF NEW.Est_Consigne_Inf_Pre_Alarme_Active = 1 THEN
 
-    /* EntrÃ©e en prÃ©-alarme basse d'un lieu en alarme terminee non acquittee */
+    /* EntrÃƒÂ©e en prÃƒÂ©-alarme basse d'un lieu en alarme terminee non acquittee */
     IF NEW.Derniere_Valeur < NEW.Consigne_Inf_Pre_Alarme AND NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee=1 THEN
         SET NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee=0; SET NEW.Est_Lieu_En_Pre_Alarme = 1; SET NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee_T1 = 1;
         
-       /* EntrÃ©e en prÃ©-alarme basse d'un lieu sans etat d'alarme */
+       /* EntrÃƒÂ©e en prÃƒÂ©-alarme basse d'un lieu sans etat d'alarme */
     ELSEIF NEW.Derniere_Valeur < NEW.Consigne_Inf_Pre_Alarme THEN
         SET NEW.Est_Lieu_En_Pre_Alarme = 1;     
 
-    /* Sortie de prÃ©-alarme basse (retour zone normale) puis retour a TermineeNonAcquitee */
+    /* Sortie de prÃƒÂ©-alarme basse (retour zone normale) puis retour a TermineeNonAcquitee */
     ELSEIF NEW.Derniere_Valeur >= NEW.Consigne_Inf_Pre_Alarme AND NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee_T1 = 1 THEN
         SET NEW.Est_Lieu_En_Pre_Alarme = 0; SET NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee=1; SET NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee_T1 = 0;
         
-     /* Sortie de prÃ©-alarme basse (retour zone normale) sans retour a TermineeNonAcquitee */
+     /* Sortie de prÃƒÂ©-alarme basse (retour zone normale) sans retour a TermineeNonAcquitee */
     ELSEIF NEW.Derniere_Valeur >= NEW.Consigne_Inf_Pre_Alarme AND NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee_T1 = 0 THEN
         SET NEW.Est_Lieu_En_Pre_Alarme = 0;    
     END IF;
@@ -2497,19 +2747,19 @@ END IF;
 /* --- PRE-ALARME HAUTE --- */
 IF NEW.Est_Consigne_Sup_Pre_Alarme_Active = 1 THEN
 
-    /* EntrÃ©e en prÃ©-alarme haute d'un lieu en alarme terminee non acquittee */
+    /* EntrÃƒÂ©e en prÃƒÂ©-alarme haute d'un lieu en alarme terminee non acquittee */
     IF NEW.Derniere_Valeur > NEW.Consigne_Sup_Pre_Alarme AND NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee=1 THEN
         SET NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee=0; SET NEW.Est_Lieu_En_Pre_Alarme = 1; SET NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee_T1 = 1;
         
-       /* EntrÃ©e en prÃ©-alarme haute d'un lieu sans etat d'alarme */
+       /* EntrÃƒÂ©e en prÃƒÂ©-alarme haute d'un lieu sans etat d'alarme */
     ELSEIF NEW.Derniere_Valeur > NEW.Consigne_Sup_Pre_Alarme THEN
         SET NEW.Est_Lieu_En_Pre_Alarme = 1;     
 
-    /* Sortie de prÃ©-alarme haute (retour zone normale) puis retour a TermineeNonAcquitee */
+    /* Sortie de prÃƒÂ©-alarme haute (retour zone normale) puis retour a TermineeNonAcquitee */
     ELSEIF NEW.Derniere_Valeur <= NEW.Consigne_Sup_Pre_Alarme AND NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee_T1 = 1 THEN
         SET NEW.Est_Lieu_En_Pre_Alarme = 0; SET NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee=1; SET NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee_T1 = 0;
         
-     /* Sortie de prÃ©-alarme haute (retour zone normale) sans retour a TermineeNonAcquitee */
+     /* Sortie de prÃƒÂ©-alarme haute (retour zone normale) sans retour a TermineeNonAcquitee */
     ELSEIF NEW.Derniere_Valeur <= NEW.Consigne_Sup_Pre_Alarme AND NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee_T1 = 0 THEN
         SET NEW.Est_Lieu_En_Pre_Alarme = 0;    
     END IF;

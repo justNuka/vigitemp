@@ -141,8 +141,9 @@ export default function MonitoringCard({
     if (!liveMeasurementDate) return orderedData
     const lastPoint = orderedData[orderedData.length - 1]
     const lastPointDate = lastPoint?.DateHeureMesureIso ? parseDbDateTime(lastPoint.DateHeureMesureIso) : null
+    const isLiveNullNonResponse = currentValue === null && (alarmType === "N" || alarmType === "M" || status === "technical")
 
-    if (lastPointDate && !Number.isNaN(lastPointDate.getTime()) && liveMeasurementDate <= lastPointDate) {
+    if (currentValue === null && !isLiveNullNonResponse) {
       return orderedData
     }
 
@@ -153,31 +154,42 @@ export default function MonitoringCard({
     }).format(liveMeasurementDate)
 
     const dateLabel = formatDbDateTime(liveMeasurementDate, { withSeconds: false })
-    const isLiveNullNonResponse = currentValue === null && (alarmType === "N" || alarmType === "M" || status === "technical")
+    const livePoint = {
+      id: `live-${idLieu}-${liveMeasurementDate.toISOString()}`,
+      Valeur: currentValue,
+      Nb_Decimal: template?.Nb_Decimal ?? null,
+      Unite: template?.Unite ?? "??C",
+      DateHeureMesure: dateLabel,
+      DateHeureMesureIso: liveMeasurementDate.toISOString(),
+      DateHeureMesureXaxis: timeLabel,
+      Consigne: template?.Consigne ?? null,
+      Consigne_Sup: template?.Consigne_Sup ?? null,
+      Consigne_Inf: template?.Consigne_Inf ?? null,
+      SondeNumeroSerie: template?.SondeNumeroSerie ?? sondeNumeroSerie,
+      Frequence: template?.Frequence ?? 15,
+      Est_Valeur_Null: isLiveNullNonResponse,
+      Etat_Alarme: template?.Etat_Alarme ?? 0,
+    }
 
-    if (currentValue === null && !isLiveNullNonResponse) {
+    const hasSameTimestampAsLastPoint =
+      !!lastPointDate &&
+      !Number.isNaN(lastPointDate.getTime()) &&
+      liveMeasurementDate.getTime() === lastPointDate.getTime()
+
+    const hasDifferentValueThanLastPoint =
+      !!lastPoint &&
+      ((lastPoint.Valeur ?? null) !== (currentValue ?? null) ||
+        Boolean(lastPoint.Est_Valeur_Null) !== Boolean(isLiveNullNonResponse))
+
+    if (hasSameTimestampAsLastPoint && hasDifferentValueThanLastPoint) {
+      return [...orderedData.slice(0, -1), livePoint]
+    }
+
+    if (lastPointDate && !Number.isNaN(lastPointDate.getTime()) && liveMeasurementDate <= lastPointDate) {
       return orderedData
     }
 
-    return [
-      ...orderedData,
-      {
-        id: `live-${idLieu}-${liveMeasurementDate.toISOString()}`,
-        Valeur: currentValue,
-        Nb_Decimal: template?.Nb_Decimal ?? null,
-        Unite: template?.Unite ?? "°C",
-        DateHeureMesure: dateLabel,
-        DateHeureMesureIso: liveMeasurementDate.toISOString(),
-        DateHeureMesureXaxis: timeLabel,
-        Consigne: template?.Consigne ?? null,
-        Consigne_Sup: template?.Consigne_Sup ?? null,
-        Consigne_Inf: template?.Consigne_Inf ?? null,
-        SondeNumeroSerie: template?.SondeNumeroSerie ?? sondeNumeroSerie,
-        Frequence: template?.Frequence ?? 15,
-        Est_Valeur_Null: isLiveNullNonResponse,
-        Etat_Alarme: template?.Etat_Alarme ?? 0,
-      },
-    ]
+    return [...orderedData, livePoint]
   }, [alarmType, currentValue, idLieu, liveMeasurementDate, localeTag, orderedData, sondeNumeroSerie, status])
 
   const summary = useMemo(() => getMeasureSummary(previewData), [previewData])
@@ -260,11 +272,9 @@ export default function MonitoringCard({
 
     if (actionType === 'surveillance') {
       const nextState = !isSurveillanceActive
-      setIsSurveillanceActive(nextState)
       onSurveillanceToggle(idLieu, 'surveillance', nextState, durationMinutes, normalizedActionComment || null)
     } else {
       const nextState = !isAlarmActive
-      setIsAlarmActive(nextState)
       onSurveillanceToggle(idLieu, 'alarms', nextState, durationMinutes, normalizedActionComment || null)
     }
 
@@ -402,8 +412,8 @@ export default function MonitoringCard({
       backgroundColor: 'rgba(59, 130, 246, 0.1)',
       borderWidth: 2,
       fill: false,
-      tension: 0.4,
-      pointRadius: 0,
+      tension: 0,
+      pointRadius: 1.5,
       pointHoverRadius: 4,
       order: 1,
     })
@@ -425,6 +435,19 @@ export default function MonitoringCard({
   const formattedLastValue = useMemo(() => formatMeasureValue(lastValue, decimals, localeTag), [lastValue, decimals, localeTag])
   const hasWirelessMetrics = Boolean(gsoRssi || gsoTension || batteryPercent !== null && batteryPercent !== undefined)
   const isOnBatteryPower = effectiveAlarmType === 'S'
+  const gsoBatteryState = useMemo(() => {
+    if (!isGso || !gsoTension) return null
+    const normalized = gsoTension.replace(',', '.').replace(/[^0-9.\-]/g, '')
+    const voltage = Number.parseFloat(normalized)
+    if (!Number.isFinite(voltage)) return null
+    if (voltage >= 2.9) {
+      return t('gso.battery_state.ok', { value: voltage.toFixed(2) })
+    }
+    if (voltage >= 2.65) {
+      return t('gso.battery_state.medium', { value: voltage.toFixed(2) })
+    }
+    return t('gso.battery_state.low', { value: voltage.toFixed(2) })
+  }, [gsoTension, isGso, t])
 
   const cardGlowClass = (() => {
     if (!isSurveillanceActive) return "opacity-75"
@@ -543,11 +566,11 @@ export default function MonitoringCard({
                       <span className="text-[11px] font-medium text-muted-foreground">{lastDateTime}</span>
                     </div>
                     {hasWirelessMetrics ? (
-                      <div className={`flex flex-wrap items-center justify-center gap-4 text-[11px] ${contentTextClassName}`}>
-                        {gsoRssi ? <RssiBars value={gsoRssi} label={t('gso.rssi', { value: gsoRssi })} /> : null}
-                        {batteryPercent !== null && batteryPercent !== undefined ? <span>{t('wireless.battery', { value: batteryPercent })}</span> : null}
-                        {gsoTension ? <span>{t('gso.tension', { value: gsoTension })}</span> : null}
-                      </div>
+                        <div className={`flex flex-wrap items-center justify-center gap-4 text-[11px] ${contentTextClassName}`}>
+                          {gsoRssi ? <RssiBars value={gsoRssi} label={t('gso.rssi', { value: gsoRssi })} /> : null}
+                          {batteryPercent !== null && batteryPercent !== undefined ? <span>{t('wireless.battery', { value: batteryPercent })}</span> : null}
+                          {gsoBatteryState ? <span>{gsoBatteryState}</span> : gsoTension ? <span>{t('gso.tension', { value: gsoTension })}</span> : null}
+                        </div>
                     ) : null}
                     {isOnBatteryPower ? (
                       <div className="flex items-center justify-center">

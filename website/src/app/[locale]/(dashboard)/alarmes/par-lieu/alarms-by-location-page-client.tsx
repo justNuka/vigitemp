@@ -359,7 +359,7 @@ export function AlarmsByLocationPageClient({
             searchField={["locationName", "siteName", "groups"]}
             searchPlaceholder={t("trend_by_location.search_placeholder")}
             emptyMessage={t("trend_by_location.empty")}
-            pageSize={200}
+            pageSize={500}
             exportFileName="statistiques-par-lieu"
             containerClassName="border-border"
             headerClassName="!bg-foreground/90 text-white dark:!bg-muted"

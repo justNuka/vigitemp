@@ -13,6 +13,7 @@ import { applyAccessFilter, buildLieuAccessFilter, getUserLocationScope } from "
 import { findLocationNameConflict, normalizeLocationName } from "@/lib/location-name-conflicts"
 import { buildLocationValueRangeIssues, getSensorTypeValueRangeBySerial } from "@/lib/sensor-value-range"
 import { getDbNow } from "@/lib/sql-provider"
+import { syncGspLocationConfiguration } from "@/lib/gsp-config-sync"
 
 const mailingContactSchema = z.object({
   Id_Tel_Num: z.number().optional(),
@@ -609,6 +610,28 @@ export const POST = withLogging(async (req: NextRequest) => {
         serialized?.Frequence === null || serialized?.Frequence === undefined
           ? serialized?.Frequence
           : Number(serialized.Frequence) / 60,
+    }
+
+    try {
+      await syncGspLocationConfiguration({
+        source: "create",
+        idLieu: lieu.Id_Lieu,
+        serial: serialized?.Sonde_Numero_Serie ?? null,
+        highLimit: serialized?.Tolerance_Surveillance_Sup ?? null,
+        lowLimit: serialized?.Tolerance_Surveillance_Inf ?? null,
+        frequencySeconds:
+          serialized?.Frequence === null || serialized?.Frequence === undefined
+            ? null
+            : Number(serialized.Frequence),
+        highDelayMinutes: serialized?.Retard_Alarme_Haut ?? null,
+        lowDelayMinutes: serialized?.Retard_Alarme_Bas ?? null,
+      })
+    } catch (error) {
+      log.warn("lieux", "gsp_create_sync_failed", {
+        lieuId: lieu.Id_Lieu,
+        serial: serialized?.Sonde_Numero_Serie ?? null,
+        error,
+      })
     }
 
     return apiOk(normalized, { status: 201 })

@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/dialog"
 import { useTranslations } from "next-intl"
 
-const RELEASE_VERSION = "0.3.0"
+const RELEASE_VERSION = "0.3.5"
 const COOKIE_NAME = "vigitemp_release_seen"
 
 type ChangelogItem = {
@@ -43,15 +43,29 @@ export function VersionChangelogModal() {
   const changelog = useMemo<ChangelogItem[]>(
     () => [
       {
-        title: t("sections.upgrade.title"),
+        title: t("sections.surveillance.title"),
         details: [
-          t("sections.upgrade.items.0"),
-          t("sections.upgrade.items.1"),
+          t("sections.surveillance.items.0"),
+          t("sections.surveillance.items.1"),
+          t("sections.surveillance.items.2"),
+          t("sections.surveillance.items.3"),
+          t("sections.surveillance.items.4"),
+          t("sections.surveillance.items.5"),
+          t("sections.surveillance.items.6"),
+          t("sections.surveillance.items.7"),
+          t("sections.surveillance.items.8"),
+          t("sections.surveillance.items.9"),
+          t("sections.surveillance.items.10"),
         ],
       },
       {
-        title: t("sections.services.title"),
-        details: [t("sections.services.items.0")],
+        title: t("sections.admin.title"),
+        details: [
+          t("sections.admin.items.0"),
+          t("sections.admin.items.1"),
+          t("sections.admin.items.2"),
+          t("sections.admin.items.3"),
+        ],
       },
     ],
     [t]

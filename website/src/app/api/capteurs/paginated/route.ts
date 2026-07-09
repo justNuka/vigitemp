@@ -6,7 +6,7 @@ import { withAuthLogging } from "@/lib/api-wrappers"
 import { apiError, apiOk } from "@/lib/api-response"
 import { prisma, prismaMesure } from "@/lib/prisma"
 import { log } from "@/lib/logger"
-import { normalizeUnitLabel } from "@/lib/measurements"
+import { normalizeMeasureNumber, normalizeUnitLabel } from "@/lib/measurements"
 
 const NO_STORE_HEADERS = {
   "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
@@ -16,10 +16,11 @@ const NO_STORE_HEADERS = {
 
 type TreeCounterStats = {
   total: number
+  disabled: number
   ok: number
-  warning: number
+  preAlarm: number
+  ended: number
   critical: number
-  inactive: number
 }
 
 type TreeCounterGroup = {
@@ -40,21 +41,28 @@ type TreeCounterSite = {
 }
 
 function emptyTreeStats(): TreeCounterStats {
-  return { total: 0, ok: 0, warning: 0, critical: 0, inactive: 0 }
+  return { total: 0, disabled: 0, ok: 0, preAlarm: 0, ended: 0, critical: 0 }
 }
 
 function bumpTreeStats(stats: TreeCounterStats, location: {
-  Est_Archive?: boolean | number | null
+  Lieu_Etat?: string | null
   Est_Lieu_En_Alarme?: number | null
   Est_Lieu_En_Pre_Alarme?: number | null
+  Est_Lieu_Alarme_Terminee_Non_Acquittee?: number | null
+  Est_Lieu_Alarme_Terminee_Non_Acquittee_T1?: number | null
 }) {
   stats.total++
-  if (location.Est_Archive) {
-    stats.inactive++
+  if (location.Lieu_Etat === "D") {
+    stats.disabled++
   } else if (location.Est_Lieu_En_Alarme === 1) {
     stats.critical++
+  } else if (
+    location.Est_Lieu_Alarme_Terminee_Non_Acquittee === 1 ||
+    location.Est_Lieu_Alarme_Terminee_Non_Acquittee_T1 === 1
+  ) {
+    stats.ended++
   } else if (location.Est_Lieu_En_Pre_Alarme === 1) {
-    stats.warning++
+    stats.preAlarm++
   } else {
     stats.ok++
   }
@@ -67,6 +75,7 @@ export const GET = withAuthLogging(async (request: NextRequest, ctx) => {
     const limit = Math.min(100, Math.max(1, parseInt(searchParams.get("limit") || "50", 10)))
     const siteIdsStr = searchParams.get("siteIds")
     const groupIdsStr = searchParams.get("groupIds")
+    const searchTerm = searchParams.get("searchTerm")?.trim() || ""
     const surveillanceDisabledParam = searchParams.get("surveillanceDisabled")
     const siteIds = siteIdsStr?.split(",").map(Number).filter(Boolean) || []
     const groupIds = groupIdsStr?.split(",").map(Number).filter(Boolean) || []
@@ -79,7 +88,7 @@ export const GET = withAuthLogging(async (request: NextRequest, ctx) => {
 
     const skip = (page - 1) * limit
 
-    const where: Record<string, unknown> = { Est_Archive: false }
+    const whereAnd: Record<string, unknown>[] = [{ Est_Archive: false }]
 
     const [assignedSites, assignedGroups] = await Promise.all([
       prisma.t_liaison_utilisateur_site.findMany({
@@ -108,7 +117,7 @@ export const GET = withAuthLogging(async (request: NextRequest, ctx) => {
       if (allowedSiteIds.length === 0) {
         return apiOk({ total: 0, page, limit, totalPages: 0, sensors: [] }, { headers: NO_STORE_HEADERS })
       }
-      where.Id_Site = { in: allowedSiteIds }
+      whereAnd.push({ Id_Site: { in: allowedSiteIds } })
     }
 
     if (groupIds.length > 0) {
@@ -118,9 +127,11 @@ export const GET = withAuthLogging(async (request: NextRequest, ctx) => {
       if (allowedGroupIds.length === 0) {
         return apiOk({ total: 0, page, limit, totalPages: 0, sensors: [] }, { headers: NO_STORE_HEADERS })
       }
-      where.OR = [
+      whereAnd.push({
+        OR: [
         { t_lieu_groupe: { some: { Id_Groupe: { in: allowedGroupIds } } } },
-      ]
+        ],
+      })
     }
 
     if (!hasFilters && (hasAssignedSites || hasAssignedGroups)) {
@@ -136,15 +147,27 @@ export const GET = withAuthLogging(async (request: NextRequest, ctx) => {
         })
       }
       if (accessOr.length > 0) {
-        where.OR = accessOr
+        whereAnd.push({ OR: accessOr })
       }
     }
 
     if (surveillanceDisabledFilter === "disabled") {
-      where.Lieu_Etat = "D"
+      whereAnd.push({ Lieu_Etat: "D" })
     } else if (surveillanceDisabledFilter === "active") {
-      where.NOT = [{ Lieu_Etat: "D" }]
+      whereAnd.push({ NOT: [{ Lieu_Etat: "D" }] })
     }
+
+    if (searchTerm.length > 0) {
+      whereAnd.push({
+        OR: [
+          { Nom_Lieu: { contains: searchTerm } },
+          { Sonde_Numero_Serie: { contains: searchTerm } },
+          { Adresse_Sonde: { contains: searchTerm } },
+        ],
+      })
+    }
+
+    const where: Record<string, unknown> = whereAnd.length === 1 ? whereAnd[0] : { AND: whereAnd }
 
     const total = await prisma.t_lieu.count({ where })
 
@@ -154,9 +177,11 @@ export const GET = withAuthLogging(async (request: NextRequest, ctx) => {
         Id_Lieu: true,
         Id_Site: true,
         Nom_Lieu: true,
-        Est_Archive: true,
+        Lieu_Etat: true,
         Est_Lieu_En_Alarme: true,
         Est_Lieu_En_Pre_Alarme: true,
+        Est_Lieu_Alarme_Terminee_Non_Acquittee: true,
+        Est_Lieu_Alarme_Terminee_Non_Acquittee_T1: true,
         t_site: { select: { Libelle_Site: true } },
         t_lieu_groupe: { include: { t_groupe: { select: { Id_Groupe: true, Nom_Groupe: true } } } },
       },
@@ -434,6 +459,8 @@ export const GET = withAuthLogging(async (request: NextRequest, ctx) => {
           location.Est_Consigne_Sup_Active === false
             ? null
             : location.Tolerance_Surveillance_Sup ?? location.Consigne_Sup ?? null
+        const resolvedDecimals =
+          typeof decimals === "number" && Number.isFinite(decimals) ? decimals : 2
 
           const alarmDelayMinutes =
             location.Retard_Alarme_Haut ??
@@ -450,9 +477,9 @@ export const GET = withAuthLogging(async (request: NextRequest, ctx) => {
           type: "temperature",
           unit,
           decimals,
-          currentValue: lastMeasurement?.Valeur ?? null,
-          minThreshold,
-          maxThreshold,
+          currentValue: normalizeMeasureNumber(lastMeasurement?.Valeur ?? null, resolvedDecimals),
+          minThreshold: normalizeMeasureNumber(minThreshold, 2),
+          maxThreshold: normalizeMeasureNumber(maxThreshold, 2),
           lastMeasurement: lastMeasurement?.Date_Heure_Mesure ?? null,
           isActive: !location.Est_Archive,
           status,
@@ -476,9 +503,9 @@ export const GET = withAuthLogging(async (request: NextRequest, ctx) => {
             alarmDelayHighMinutes: location.Retard_Alarme_Haut ?? null,
             alarmDelayLowMinutes: location.Retard_Alarme_Bas ?? null,
             noResponseDelayMinutes: location.Retard_Non_Reponse ?? null,
-            consigneSupPreAlarme: location.Consigne_Sup_Pre_Alarme ?? null,
+            consigneSupPreAlarme: normalizeMeasureNumber(location.Consigne_Sup_Pre_Alarme ?? null, 2),
             estConsigneSupPreAlarmeActive: location.Est_Consigne_Sup_Pre_Alarme_Active ?? false,
-            consigneInfPreAlarme: location.Consigne_Inf_Pre_Alarme ?? null,
+            consigneInfPreAlarme: normalizeMeasureNumber(location.Consigne_Inf_Pre_Alarme ?? null, 2),
             estConsigneInfPreAlarmeActive: location.Est_Consigne_Inf_Pre_Alarme_Active ?? false,
             comment: location.Commentaire ?? null,
             sondeNumeroSerie: location.Sonde_Numero_Serie ?? null,

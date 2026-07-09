@@ -21,6 +21,55 @@ function Write-Log($message) {
     Write-Host "[$timestamp] $message"
 }
 
+function Get-InstallerVersionFromFileName([string]$fileName, [string]$pattern) {
+    if ([string]::IsNullOrWhiteSpace($fileName)) { return $null }
+    $match = [regex]::Match($fileName, $pattern, [System.Text.RegularExpressions.RegexOptions]::IgnoreCase)
+    if ($match.Success) {
+        return $match.Groups["v"].Value
+    }
+    return $null
+}
+
+function Get-BestInstallerFile([string]$directory, [string[]]$patterns, [string]$versionRegex) {
+    if ([string]::IsNullOrWhiteSpace($directory) -or -not (Test-Path $directory)) {
+        return $null
+    }
+
+    $candidates = @()
+    foreach ($pattern in $patterns) {
+        $candidates += Get-ChildItem -Path $directory -File -Filter $pattern -ErrorAction SilentlyContinue
+    }
+
+    $candidates = @($candidates | Sort-Object -Property FullName -Unique)
+    if ($candidates.Count -eq 0) {
+        return $null
+    }
+
+    $best = $null
+    $bestVersion = $null
+    $bestWriteTime = [datetime]::MinValue
+    foreach ($candidate in $candidates) {
+        $version = Get-InstallerVersionFromFileName -fileName $candidate.Name -pattern $versionRegex
+        if (-not [string]::IsNullOrWhiteSpace($version)) {
+            try {
+                $parsed = [Version]$version
+                if ($null -eq $bestVersion -or $parsed -gt $bestVersion) {
+                    $bestVersion = $parsed
+                    $best = $candidate
+                }
+                continue
+            } catch { }
+        }
+
+        if ($null -eq $best -or $candidate.LastWriteTimeUtc -gt $bestWriteTime) {
+            $best = $candidate
+            $bestWriteTime = $candidate.LastWriteTimeUtc
+        }
+    }
+
+    return $best
+}
+
 $scriptRoot = $PSScriptRoot
 $serverRoot = Resolve-Path (Join-Path $scriptRoot "..")
 $repoRoot = Resolve-Path (Join-Path $serverRoot "..")
@@ -107,7 +156,12 @@ if (Test-Path $installerOutput) {
 }
 
 $installerSrc = Join-Path $serverRoot "installer"
+$mysqlInstallerSource = $null
+$vcInstallerSource = $null
 if (Test-Path $installerSrc) {
+    $mysqlInstallerSource = Get-BestInstallerFile -directory $installerSrc -patterns @("mysql-*-winx64.msi", "mysql-*.msi") -versionRegex '^mysql-(?<v>\d+\.\d+\.\d+)-winx64\.msi$'
+    $vcInstallerSource = Join-Path $installerSrc "VC_redist.x64.exe"
+
     Write-Log "Copying installer files (without PowerShell/dependency installers)..."
     $installerDest = Join-Path $OutputDir "installer"
     $installerArgs = @(
@@ -138,13 +192,11 @@ if (Test-Path $installerSrc) {
 
     $prereqsDest = Join-Path $installerDest "prereqs"
     New-Item -ItemType Directory -Force -Path $prereqsDest | Out-Null
-    $mysqlMsi = Join-Path $installerDest "mysql-8.4.7-winx64.msi"
-    if (Test-Path $mysqlMsi) {
-        Move-Item -Path $mysqlMsi -Destination (Join-Path $prereqsDest "mysql-8.4.7-winx64.msi") -Force
+    if ($mysqlInstallerSource -and (Test-Path $mysqlInstallerSource.FullName)) {
+        Copy-Item -Path $mysqlInstallerSource.FullName -Destination (Join-Path $prereqsDest $mysqlInstallerSource.Name) -Force
     }
-    $vcRedist = Join-Path $installerDest "VC_redist.x64.exe"
-    if (Test-Path $vcRedist) {
-        Move-Item -Path $vcRedist -Destination (Join-Path $prereqsDest "VC_redist.x64.exe") -Force
+    if (Test-Path $vcInstallerSource) {
+        Copy-Item -Path $vcInstallerSource -Destination (Join-Path $prereqsDest "VC_redist.x64.exe") -Force
     }
 }
 
@@ -174,12 +226,11 @@ if (Test-Path $prereqInstallerOutput) {
     Copy-Item -Path $prereqInstallerOutput -Destination (Join-Path $prereqRoot "VigitempPrereqsSetup.exe") -Force
 }
 
-$mysqlInstallerSource = Join-Path $installerSrc "mysql-8.4.7-winx64.msi"
-if (Test-Path $mysqlInstallerSource) {
-    Copy-Item -Path $mysqlInstallerSource -Destination (Join-Path $prereqMySqlDir "mysql-8.4.7-winx64.msi") -Force
+if ($mysqlInstallerSource -and (Test-Path $mysqlInstallerSource.FullName)) {
+    Get-ChildItem -Path $prereqMySqlDir -File -Filter "mysql-*.msi" -ErrorAction SilentlyContinue | Remove-Item -Force -ErrorAction SilentlyContinue
+    Copy-Item -Path $mysqlInstallerSource.FullName -Destination (Join-Path $prereqMySqlDir $mysqlInstallerSource.Name) -Force
 }
 
-$vcInstallerSource = Join-Path $installerSrc "VC_redist.x64.exe"
 if (Test-Path $vcInstallerSource) {
     Copy-Item -Path $vcInstallerSource -Destination (Join-Path $prereqVcDir "VC_redist.x64.exe") -Force
 }

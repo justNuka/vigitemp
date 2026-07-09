@@ -1,4 +1,4 @@
-import { AlertTriangle, BookOpen, Clock, Cpu, Database, Ruler, Users } from "lucide-react"
+import { AlertTriangle, BookOpen, Clock, Cpu, Ruler, Users } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
 import { ExpertWidgetCard } from "./expert-widget-card"
@@ -90,15 +90,35 @@ export function renderExpertWidget({
   }
 
   if (id === "backups") {
+    const backupBadge = metrics.latestBackupEtat ? (
+      <Badge
+        variant={
+          metrics.latestBackupEtat === "success"
+            ? "default"
+            : metrics.latestBackupEtat === "failed"
+              ? "destructive"
+              : "secondary"
+        }
+        className={
+          metrics.latestBackupEtat === "success"
+            ? "bg-emerald-600 text-white hover:bg-emerald-600"
+            : metrics.latestBackupEtat === "in_progress"
+              ? "bg-amber-100 text-amber-800 hover:bg-amber-100 dark:bg-amber-950 dark:text-amber-300"
+              : undefined
+        }
+      >
+        {metrics.latestBackupStatus}
+      </Badge>
+    ) : undefined
+
     return (
       <ExpertWidgetCard
         title={t("backup.title")}
-        description={t("backup.description")}
-        value={String(metrics.backupsTotal)}
-        helper={`${t("backup.last.label")}: ${metrics.lastBackupLabel}\n${metrics.backupLogFilePath !== "-" ? metrics.backupLogFilePath : metrics.backupStoragePath}`}
-        href="/admin/outils"
-        hrefLabel={accessLabel}
-        icon={<Database className="h-5 w-5 text-violet-600" />}
+        description={t("backup.description", { total: metrics.backupsTotal })}
+        value={metrics.latestBackupStatus}
+        helper={`${t("backup.last.label")}: ${metrics.lastBackupLabel}\n${metrics.backupStoragePath}`}
+        icon={<BookOpen className="h-5 w-5 text-violet-600" />}
+        badge={backupBadge}
       />
     )
   }

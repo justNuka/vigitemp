@@ -53,6 +53,24 @@ type Paginated<T> = {
   }
 }
 
+function formatAlarmValueForDisplay(value: string | null, locale: string) {
+  if (!value) return "-"
+
+  const trimmed = value.trim()
+  const match = trimmed.match(/^(-?\d+(?:[.,]\d+)?)(?:\s+(.*))?$/)
+  if (!match) return trimmed
+
+  const numericValue = Number.parseFloat(match[1].replace(",", "."))
+  if (!Number.isFinite(numericValue)) return trimmed
+
+  const formatted = new Intl.NumberFormat(locale, {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+  }).format(numericValue)
+  const unit = match[2]?.trim()
+  return unit ? `${formatted} ${unit}` : formatted
+}
+
 function formatAlarmType(t: ReturnType<typeof useTranslations>, type: string | null) {
   switch (type) {
     case "HIGH":
@@ -72,9 +90,10 @@ function formatAlarmType(t: ReturnType<typeof useTranslations>, type: string | n
 
 export function AlarmAcknowledgmentHistoryClient() {
   const t = useTranslations("alarmAckHistoryPage")
+  const locale = typeof Intl !== "undefined" ? Intl.DateTimeFormat().resolvedOptions().locale : "fr-FR"
   const { hasPermission, loading } = useAppAccess()
   const router = useRouter()
-  const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 200 })
+  const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 500 })
   const [draftFilters, setDraftFilters] = useState({
     q: "",
     lieuId: "all",
@@ -106,6 +125,19 @@ export function AlarmAcknowledgmentHistoryClient() {
     return params.toString()
   }, [appliedFilters, limit, page])
 
+  const exportQueryParams = useMemo(() => {
+    const params = new URLSearchParams({
+      page: "1",
+      limit: "1000",
+    })
+    if (appliedFilters.q.trim()) params.set("q", appliedFilters.q.trim())
+    if (appliedFilters.lieuId !== "all") params.set("lieuId", appliedFilters.lieuId)
+    if (appliedFilters.dateFrom) params.set("dateFrom", appliedFilters.dateFrom)
+    if (appliedFilters.dateTo) params.set("dateTo", appliedFilters.dateTo)
+    if (appliedFilters.type !== "all") params.set("type", appliedFilters.type)
+    return params.toString()
+  }, [appliedFilters])
+
   useEffect(() => {
     if (loading) return
     if (!canAccess) {
@@ -118,6 +150,16 @@ export function AlarmAcknowledgmentHistoryClient() {
     queryFn: () =>
       getJson<Paginated<AckHistoryItem>>(
         `/api/alarmes/acquittements?${queryParams}`,
+      ),
+    enabled: !loading && canAccess,
+    staleTime: 60_000,
+  })
+
+  const exportQuery = useQuery({
+    queryKey: ["alarm-ack-history-export", exportQueryParams],
+    queryFn: () =>
+      getJson<Paginated<AckHistoryItem>>(
+        `/api/alarmes/acquittements?${exportQueryParams}`,
       ),
     enabled: !loading && canAccess,
     staleTime: 60_000,
@@ -169,10 +211,11 @@ export function AlarmAcknowledgmentHistoryClient() {
         cell: ({ row }) => formatAlarmType(t, row.original.alarmType),
       },
       {
-        accessorKey: "alarmValue",
+        id: "alarmValue",
+        accessorFn: (row) => formatAlarmValueForDisplay(row.alarmValue, locale),
         header: t("table.columns.value"),
         meta: { exportLabel: t("table.columns.value") },
-        cell: ({ row }) => row.original.alarmValue || "-",
+        cell: ({ row }) => formatAlarmValueForDisplay(row.original.alarmValue, locale),
       },
       {
         id: "period",
@@ -203,7 +246,7 @@ export function AlarmAcknowledgmentHistoryClient() {
         ),
       },
     ],
-    [t],
+    [locale, t],
   )
 
   if (loading || (!canAccess && !loading)) {
@@ -363,6 +406,7 @@ export function AlarmAcknowledgmentHistoryClient() {
               }}
               maxHeight="70vh"
               exportFileName={`historique-acquittements-alarmes-${new Date().toISOString().slice(0, 10)}`}
+              exportData={exportQuery.data?.data ?? data}
               headerClassName="!bg-sidebar !text-sidebar-foreground"
               headerCellClassName="!bg-sidebar !text-sidebar-foreground !border-r !border-white/25 hover:!bg-sidebar-accent/80"
               tableClassName="border-separate border-spacing-0 [&_thead_th]:!border-r [&_thead_th]:!border-white/25 [&_tbody_td]:!border-b [&_tbody_td]:!border-border"

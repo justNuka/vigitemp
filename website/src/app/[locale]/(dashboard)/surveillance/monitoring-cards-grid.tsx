@@ -1,6 +1,8 @@
 "use client"
 
-import { Power, PowerOff } from "lucide-react"
+import { ChevronDown, ChevronRight, Power, PowerOff } from "lucide-react"
+import type { ReactNode } from "react"
+import { useState } from "react"
 import { useLocale, useTranslations } from "next-intl"
 
 import { MonitoringCardSkeleton } from "@/components/monitoring-card-skeleton"
@@ -23,6 +25,8 @@ interface MonitoringCardsGridProps {
   disabledTreeCounters?: SurveillanceTreeSiteCounter[]
   disabledFirst?: boolean
   isLoading?: boolean
+  activeFooter?: ReactNode
+  disabledFooter?: ReactNode
   onSurveillanceToggle?: (
     idLieu: number,
     action: "surveillance" | "alarms",
@@ -77,6 +81,8 @@ export function MonitoringCardsGrid({
   disabledTreeCounters = [],
   disabledFirst = false,
   isLoading = false,
+  activeFooter,
+  disabledFooter,
   onSurveillanceToggle,
   onGroupSurveillanceToggle,
   requireActionComment = false,
@@ -87,6 +93,7 @@ export function MonitoringCardsGrid({
   sortMode = "status",
 }: MonitoringCardsGridProps) {
   const t = useTranslations("surveillance")
+  const [disabledExpanded, setDisabledExpanded] = useState(false)
   const locale = useLocale()
   const timezone = useAppTimezone()
   const { value: expandedSites, toggle: toggleSite } = usePersistentStringSet("surveillance-expanded-sites")
@@ -136,6 +143,7 @@ export function MonitoringCardsGrid({
     disabledView: boolean
     emptyMessage: string | null
     className: string
+    footer?: ReactNode
   }> = [
     {
       key: "active",
@@ -145,6 +153,7 @@ export function MonitoringCardsGrid({
       disabledView: false,
       emptyMessage: null,
       className: "space-y-6",
+      footer: activeFooter,
     },
     {
       key: "disabled",
@@ -154,6 +163,7 @@ export function MonitoringCardsGrid({
       disabledView: true,
       emptyMessage: t("grid.disabled_empty"),
       className: "space-y-4",
+      footer: disabledFooter,
     },
   ]
 
@@ -164,9 +174,25 @@ export function MonitoringCardsGrid({
 
         return (
           <div key={section.key} className={section.className} style={{ order }}>
-            <MonitoringSectionHeader title={section.title} icon={section.icon} />
+            {section.disabledView ? (
+              <button
+                type="button"
+                onClick={() => setDisabledExpanded((current) => !current)}
+                className="w-full space-y-2 text-left"
+                aria-expanded={disabledExpanded}
+              >
+                <div className="flex items-center gap-2 text-xl font-semibold text-slate-700 transition-colors hover:text-slate-900 dark:text-slate-50 dark:hover:text-white">
+                  {disabledExpanded ? <ChevronDown className="h-5 w-5 text-slate-400" /> : <ChevronRight className="h-5 w-5 text-slate-400" />}
+                  {section.icon}
+                  {section.title}
+                </div>
+                <div className="h-px w-full bg-slate-200 dark:bg-slate-700" />
+              </button>
+            ) : (
+              <MonitoringSectionHeader title={section.title} icon={section.icon} />
+            )}
 
-            {section.sites.length > 0 ? (
+            {!section.disabledView || disabledExpanded ? section.sites.length > 0 ? (
               <div className="space-y-6">
                 {section.sites.map((site) => (
                   <MonitoringSiteSection
@@ -196,7 +222,9 @@ export function MonitoringCardsGrid({
               <div className="rounded-lg border border-dashed border-slate-200 dark:border-slate-700 px-4 py-3 text-sm text-slate-500">
                 {section.emptyMessage}
               </div>
-            ) : null}
+            ) : null : null}
+
+            {(!section.disabledView || disabledExpanded) && section.footer ? <div>{section.footer}</div> : null}
           </div>
         )
       })}

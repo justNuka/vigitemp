@@ -48,6 +48,13 @@ function normalizeAlarmType(type: string | null | undefined) {
   }
 }
 
+function formatAlarmValue(value: number | null | undefined, unit: string | null | undefined) {
+  if (typeof value !== "number" || !Number.isFinite(value)) return null
+  const formatted = value.toFixed(2)
+  const normalizedUnit = unit?.trim()
+  return normalizedUnit ? `${formatted} ${normalizedUnit}` : formatted
+}
+
 export const GET = withAnyAuthorizationLogging(
   getPermissionAliases("ALARM_ACK_ACCESS"),
   async (req: NextRequest, ctx: HandlerContext) => {
@@ -55,7 +62,7 @@ export const GET = withAnyAuthorizationLogging(
       const searchParams = req.nextUrl.searchParams
       const page = Math.max(parseInt(searchParams.get("page") || "1", 10), 1)
       const rawLimit = parseInt(searchParams.get("limit") || "20", 10)
-      const limit = Math.min(Math.max(rawLimit, 1), 100)
+      const limit = Math.min(Math.max(rawLimit, 1), 1000)
       const skip = (page - 1) * limit
       const q = searchParams.get("q")?.trim() || ""
       const type = searchParams.get("type")?.trim().toUpperCase() || ""
@@ -200,10 +207,7 @@ export const GET = withAnyAuthorizationLogging(
         const histo = alarmId ? histoMap.get(alarmId) : undefined
         const resolvedLieuId = row.Id_Lieu ?? histo?.Id_Lieu ?? null
         const lieu = resolvedLieuId ? lieuMap.get(resolvedLieuId) : undefined
-        const value =
-          typeof histo?.Valeur === "number"
-            ? `${histo.Valeur}${histo.Unite ? ` ${histo.Unite}` : ""}`
-            : null
+        const value = formatAlarmValue(histo?.Valeur, histo?.Unite)
 
         const endDate = row.Date_Heure_Journal ?? histo?.Date_Heure_Acquittement ?? histo?.Date_Heure_Fin ?? null
         const startDate = histo?.Date_Heure_Debut ?? null

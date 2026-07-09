@@ -79,6 +79,59 @@ function Compare-Version([string]$current, [string]$expected) {
     return -1
 }
 
+function Get-InstallerVersionFromFileName([string]$filePath, [string]$pattern) {
+    if ([string]::IsNullOrWhiteSpace($filePath) -or -not (Test-Path $filePath)) { return $null }
+    $fileName = [System.IO.Path]::GetFileName($filePath)
+    $match = [regex]::Match($fileName, $pattern, [System.Text.RegularExpressions.RegexOptions]::IgnoreCase)
+    if ($match.Success) {
+        return $match.Groups["v"].Value
+    }
+    return $null
+}
+
+function Get-BestInstallerFile([string[]]$searchDirectories, [string[]]$patterns, [string]$versionRegex) {
+    $candidates = @()
+    foreach ($directory in $searchDirectories) {
+        if ([string]::IsNullOrWhiteSpace($directory) -or -not (Test-Path $directory)) { continue }
+        foreach ($pattern in $patterns) {
+            $candidates += Get-ChildItem -Path $directory -File -Filter $pattern -ErrorAction SilentlyContinue
+        }
+    }
+
+    $candidates = @(
+        $candidates |
+            Sort-Object -Property FullName -Unique
+    )
+
+    if ($candidates.Count -eq 0) {
+        return $null
+    }
+
+    $bestPath = $null
+    $bestVersion = $null
+    $bestWriteTime = [datetime]::MinValue
+    foreach ($candidate in $candidates) {
+        $version = Get-InstallerVersionFromFileName -filePath $candidate.FullName -pattern $versionRegex
+        if (-not [string]::IsNullOrWhiteSpace($version)) {
+            try {
+                $parsed = [Version]$version
+                if ($null -eq $bestVersion -or $parsed -gt $bestVersion) {
+                    $bestVersion = $parsed
+                    $bestPath = $candidate.FullName
+                }
+                continue
+            } catch { }
+        }
+
+        if ($null -eq $bestPath -or $candidate.LastWriteTimeUtc -gt $bestWriteTime) {
+            $bestPath = $candidate.FullName
+            $bestWriteTime = $candidate.LastWriteTimeUtc
+        }
+    }
+
+    return $bestPath
+}
+
 function Convert-SecureStringToPlainText([Security.SecureString]$secureValue) {
     if ($null -eq $secureValue) { return "" }
     $bstr = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($secureValue)
@@ -130,10 +183,13 @@ if ([string]::IsNullOrWhiteSpace($VcRedistPath)) {
     }
 }
 if ([string]::IsNullOrWhiteSpace($MySqlMsiPath)) {
-    $MySqlMsiPath = Join-Path $scriptRoot "prereqs\\mysql-8.4.7-winx64.msi"
-    if (-not (Test-Path $MySqlMsiPath)) {
-        $MySqlMsiPath = Join-Path $scriptRoot "mysql-8.4.7-winx64.msi"
-    }
+    $MySqlMsiPath = Get-BestInstallerFile `
+        -searchDirectories @(
+            (Join-Path $scriptRoot "prereqs"),
+            $scriptRoot
+        ) `
+        -patterns @("mysql-*-winx64.msi", "mysql-*.msi") `
+        -versionRegex '^mysql-(?<v>\d+\.\d+\.\d+)-winx64\.msi$'
 }
 if ([string]::IsNullOrWhiteSpace($MainSeedPath)) {
     $MainSeedPath = Join-Path $scriptRoot "db\\vigisensys_seed.sql"
@@ -163,12 +219,12 @@ if (-not (Test-Path $MySqlMsiPath)) {
      Write-Log "Installation VC Redist terminee."
  }
 
- $expectedMySqlVersion = "8.4.7"
+ $expectedMySqlVersion = Get-InstallerVersionFromFileName -filePath $MySqlMsiPath -pattern '^mysql-(?<v>\d+\.\d+\.\d+)-winx64\.msi$'
  $mysqlExeExisting = Get-MySqlExePath
  $installedMySqlVersion = Get-MySqlVersionFromExe $mysqlExeExisting
  if ($installedMySqlVersion) {
-     $mysqlCompare = Compare-Version $installedMySqlVersion $expectedMySqlVersion
-     if ($mysqlCompare -ge 0) {
+     $mysqlCompare = if ([string]::IsNullOrWhiteSpace($expectedMySqlVersion)) { 0 } else { Compare-Version $installedMySqlVersion $expectedMySqlVersion }
+     if ([string]::IsNullOrWhiteSpace($expectedMySqlVersion) -or $mysqlCompare -ge 0) {
          Write-Log "MySQL detecte (version $installedMySqlVersion). Installation ignoree."
      } else {
          Write-Log "MySQL detecte (version $installedMySqlVersion). Mise a jour vers $expectedMySqlVersion..."
@@ -182,7 +238,7 @@ if (-not (Test-Path $MySqlMsiPath)) {
  }
 
 Write-Log "Lancer le configurateur MySQL et terminer la configuration (port, mot de passe root, service...)."
-$null = Read-Host "Appuyez sur Entreee quand la configuration MySQL est terminee"
+$null = Read-Host "Appuyez sur Entree quand la configuration MySQL est terminee"
 
 if ($skipSeedImport) {
     Write-Log "Import SQL ignore: bases existantes conservees."
@@ -209,5 +265,3 @@ if ($skipSeedImport) {
     Get-Content -Path $MainSeedPath -Raw | & $mysqlExe @mysqlArgs
     Write-Log "Import termine."
 }
-
-

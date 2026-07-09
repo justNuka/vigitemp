@@ -14,6 +14,7 @@ import { getPermissionAliases } from "@/lib/permissions"
 import { findLocationNameConflict } from "@/lib/location-name-conflicts"
 import { buildLocationValueRangeIssues, getSensorTypeValueRangeBySerial } from "@/lib/sensor-value-range"
 import { getDbDatePlusMinutes, getDbNow } from "@/lib/sql-provider"
+import { syncGspLocationConfiguration } from "@/lib/gsp-config-sync"
 
 const mailingContactSchema = z.object({
   Id_Tel_Num: z.number().optional(),
@@ -1089,6 +1090,28 @@ export const PATCH = withAnyAuthorizationLogging(
             )
           }
         }
+      }
+
+      try {
+        await syncGspLocationConfiguration({
+          source: "update",
+          idLieu: lieuId,
+          serial: normalized?.Sonde_Numero_Serie ?? null,
+          highLimit: normalized?.Tolerance_Surveillance_Sup ?? null,
+          lowLimit: normalized?.Tolerance_Surveillance_Inf ?? null,
+          frequencySeconds:
+            lieu?.Frequence === null || lieu?.Frequence === undefined
+              ? null
+              : Number(lieu.Frequence),
+          highDelayMinutes: normalized?.Retard_Alarme_Haut ?? null,
+          lowDelayMinutes: normalized?.Retard_Alarme_Bas ?? null,
+        })
+      } catch (error) {
+        log.warn("lieux", "gsp_update_sync_failed", {
+          lieuId,
+          serial: normalized?.Sonde_Numero_Serie ?? null,
+          error,
+        })
       }
 
       clearLocationCache(lieuId)

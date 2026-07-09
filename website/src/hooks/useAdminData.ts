@@ -6,6 +6,7 @@ import type { SystemLog } from "@/components/data-table/system-logs-columns";
 import { getJson, isUnauthorizedError } from "@/lib/http";
 import type { BackupsResponse } from "@/types/backup-types";
 import type { AuditLog } from "@/lib/api";
+import { formatDbDateTime } from "@/lib/date-display";
 
 type Paginated<T> = {
   data: T[];
@@ -53,7 +54,7 @@ export function useAcknowledgments(page: number = 1) {
       return {
         data: (response?.data ?? []).map((item: any) => ({
           id: String(item.id),
-          dateHeure: item.acknowledgedAt ?? "-",
+          dateHeure: item.acknowledgedAt ?? null,
           utilisateur: item.acknowledgedBy ?? "-",
           action: item.alarmType ?? "-",
           sonde: item.sensorSerial ?? "-",
@@ -74,10 +75,7 @@ export function useAuditLogs() {
       const response = await getJson<AuditLog[]>(`/api/audit?limit=50`);
       const rows: SystemLog[] = (response ?? []).map((item) => ({
         id: item.id,
-        dateHeure:
-          item.timestamp instanceof Date
-            ? item.timestamp.toISOString()
-            : new Date(item.timestamp).toISOString(),
+        dateHeure: formatDbDateTime(item.timestamp ?? null),
         utilisateur: item.userDisplayName || item.userId || "-",
         action: item.action,
         details: item.details || item.locationName || "",

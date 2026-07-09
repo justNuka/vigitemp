@@ -3,7 +3,7 @@ import { z } from "zod"
 
 import { prisma } from "@/lib/prisma"
 
-import { applyAccessFilter, buildAlarmAccessFilter, getUserLocationScope } from "@/lib/location-access-scope"
+import { applyAccessFilter, buildAlarmAccessFilter, buildLieuAccessFilter, getUserLocationScope } from "@/lib/location-access-scope"
 
 import { withAuthLogging } from "@/lib/api-wrappers"
 
@@ -14,7 +14,7 @@ import { serializeDbDateTime } from "@/lib/date-display"
 const alarmsQuerySchema = z.object({
   status: z.enum(["active", "acknowledged", "resolved"]).optional(),
   page: z.coerce.number().int().positive().default(1),
-  limit: z.coerce.number().int().min(1).max(200).default(15),
+  limit: z.coerce.number().int().min(1).max(1000).default(15),
   siteId: z.coerce.number().int().positive().optional(),
   locationId: z.coerce.number().int().positive().optional(),
 })
@@ -82,8 +82,18 @@ export const GET = withAuthLogging(async (req: NextRequest, ctx) => {
 
     if (siteId) {
       baseWhere.t_lieu = {
-        ...(typeof baseWhere.t_lieu === "object" && baseWhere.t_lieu ? (baseWhere.t_lieu as Record<string, unknown>) : {}),
-        Id_Site: siteId,
+        is: {
+          ...(
+            typeof baseWhere.t_lieu === "object" &&
+            baseWhere.t_lieu &&
+            "is" in (baseWhere.t_lieu as Record<string, unknown>) &&
+            typeof (baseWhere.t_lieu as Record<string, unknown>).is === "object" &&
+            (baseWhere.t_lieu as Record<string, unknown>).is
+              ? ((baseWhere.t_lieu as Record<string, unknown>).is as Record<string, unknown>)
+              : {}
+          ),
+          Id_Site: siteId,
+        },
       }
     }
 
@@ -92,12 +102,65 @@ export const GET = withAuthLogging(async (req: NextRequest, ctx) => {
     const scope = await getUserLocationScope(ctx.user.userId)
 
     const accessFilter = buildAlarmAccessFilter(scope)
-
+    const lieuAccessFilter = buildLieuAccessFilter(scope)
     const where = applyAccessFilter(baseWhere, accessFilter)
 
 
 
-    const [total, alarms] = await Promise.all([
+    const activeWhere = applyAccessFilter(
+      {
+        ...(locationId ? { Id_Lieu: locationId } : {}),
+        ...(siteId
+          ? {
+              t_lieu: {
+                is: {
+                  Id_Site: siteId,
+                },
+              },
+            }
+          : {}),
+        Est_Acquittee: false,
+        Date_Heure_Fin: null,
+      },
+      accessFilter,
+    )
+
+    const acknowledgedWhere = applyAccessFilter(
+      {
+        ...(locationId ? { Id_Lieu: locationId } : {}),
+        ...(siteId
+          ? {
+              t_lieu: {
+                is: {
+                  Id_Site: siteId,
+                },
+              },
+            }
+          : {}),
+        Est_Acquittee: true,
+      },
+      accessFilter,
+    )
+
+    const resolvedWhere = applyAccessFilter(
+      {
+        ...(locationId ? { Id_Lieu: locationId } : {}),
+        ...(siteId
+          ? {
+              t_lieu: {
+                is: {
+                  Id_Site: siteId,
+                },
+              },
+            }
+          : {}),
+        Est_Acquittee: false,
+        Date_Heure_Fin: { not: null },
+      },
+      accessFilter,
+    )
+
+    const [total, alarms, activeCount, acknowledgedCount, resolvedCount] = await Promise.all([
 
       prisma.t_alarme.count({ where }),
 
@@ -149,6 +212,10 @@ export const GET = withAuthLogging(async (req: NextRequest, ctx) => {
         take: limit,
 
       }),
+
+      prisma.t_alarme.count({ where: activeWhere }),
+      prisma.t_alarme.count({ where: acknowledgedWhere }),
+      prisma.t_alarme.count({ where: resolvedWhere }),
 
     ])
 
@@ -362,7 +429,7 @@ export const GET = withAuthLogging(async (req: NextRequest, ctx) => {
 
     const [siteRows, lieuOptions] = await Promise.all([
       prisma.t_lieu.findMany({
-        where: applyAccessFilter(siteId ? { Id_Site: siteId } : {}, accessFilter),
+        where: applyAccessFilter(siteId ? { Id_Site: siteId } : {}, lieuAccessFilter),
         select: {
           Id_Site: true,
           t_site: {
@@ -375,7 +442,7 @@ export const GET = withAuthLogging(async (req: NextRequest, ctx) => {
         orderBy: { Id_Site: "asc" },
       }),
       prisma.t_lieu.findMany({
-        where: applyAccessFilter(siteId ? { Id_Site: siteId } : {}, accessFilter),
+        where: applyAccessFilter(siteId ? { Id_Site: siteId } : {}, lieuAccessFilter),
         select: { Id_Lieu: true, Nom_Lieu: true },
         orderBy: { Nom_Lieu: "asc" },
       }),
@@ -412,6 +479,12 @@ export const GET = withAuthLogging(async (req: NextRequest, ctx) => {
 
           pages: Math.max(1, Math.ceil(total / limit)),
 
+        },
+
+        counts: {
+          active: activeCount,
+          acknowledged: acknowledgedCount,
+          resolved: resolvedCount,
         },
 
       },

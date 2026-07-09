@@ -43,10 +43,15 @@ export function MonitoringGroupToggleDialog({
   onConfirm,
   t,
 }: MonitoringGroupToggleDialogProps) {
-  const commentLabel = t("confirm.action_comment.label")
+  const translateOrFallback = (key: string, fallback: string) => {
+    const translated = t(key)
+    return translated === key ? fallback : translated
+  }
+
+  const commentLabel = translateOrFallback("confirm.action_comment.label", "Commentaire")
   const commentPlaceholder = requireActionComment
-    ? t("confirm.action_comment.placeholder_required")
-    : t("confirm.action_comment.placeholder_optional")
+    ? translateOrFallback("confirm.action_comment.placeholder_required", "Ajouter un commentaire (obligatoire)")
+    : translateOrFallback("confirm.action_comment.placeholder_optional", "Ajouter un commentaire (optionnel)")
 
   return (
     <Dialog open={modal !== null} onOpenChange={onClose}>

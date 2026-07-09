@@ -210,10 +210,11 @@ export type SensorWithLocation = {
 
 export type SurveillanceTreeCounterStats = {
   total: number;
+  disabled: number;
   ok: number;
-  warning: number;
+  preAlarm: number;
+  ended: number;
   critical: number;
-  inactive: number;
 };
 
 export type SurveillanceTreeGroupCounter = {
@@ -237,7 +238,7 @@ export type AlarmWithDetails = {
   id: string;
   sensorId: string;
   locationId: string;
-  type: "high" | "low" | "no-response" | "sector" | "module" | "ended";
+  type: "high" | "low" | "no-response" | "sector" | "module";
   value: number | null;
   threshold: number | null;
   status: "active" | "acknowledged" | "resolved";

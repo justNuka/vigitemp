@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import { connection } from "next/server";
-import { ServerAlarms, ServerAlarmStats } from "./server-alarms";
+import { ServerAlarms, ServerAlarmStats, type ServerAlarmStatus } from "./server-alarms";
 import { AlarmsPageClient } from "./alarms-page-client";
 import { AlarmsLoadingSkeleton } from "./alarms-loading-skeleton";
 import { getTranslations } from 'next-intl/server';
@@ -21,14 +21,14 @@ export async function generateMetadata({
 export default async function AlarmsPage({
   searchParams,
 }: {
-  searchParams: { status?: "active" | "acknowledged" | "resolved"; locationId?: string };
+  searchParams: { status?: "active" | "resolved"; locationId?: string };
 }) {
   await connection();
-  const status = searchParams.status || "active";
+  const status: ServerAlarmStatus = searchParams.status === "resolved" ? "resolved" : "active";
 
   // Chargement parallèle des données côté serveur avec cache
   const [alarmsData, statsData] = await Promise.all([
-    ServerAlarms(),
+    ServerAlarms(status),
     ServerAlarmStats(),
   ]);
 

@@ -20,6 +20,7 @@ interface MeasureData {
   Consigne_Inf: number | null;
   SondeNumeroSerie: string;
   Frequence: number;
+  Est_Valeur_Memoire?: boolean | number | null;
   Etat_Alarme: number;
 }
 

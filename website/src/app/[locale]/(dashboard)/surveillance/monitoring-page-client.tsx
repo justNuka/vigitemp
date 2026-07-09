@@ -45,8 +45,10 @@ type ViewMode = "tree" | "graphs";
 
 interface Stats {
   total: number;
+  disabled: number;
   ok: number;
-  warning: number;
+  preAlarm: number;
+  ended: number;
   critical: number;
   activeAlarms: number;
 }
@@ -63,12 +65,14 @@ interface Props {
 function aggregateTreeCounterStats(counters: SurveillanceTreeSiteCounter[]) {
   return counters.reduce(
     (acc, site) => {
+      acc.disabled += site.stats.disabled;
       acc.ok += site.stats.ok;
-      acc.warning += site.stats.warning;
+      acc.preAlarm += site.stats.preAlarm;
+      acc.ended += site.stats.ended;
       acc.critical += site.stats.critical;
       return acc;
     },
-    { ok: 0, warning: 0, critical: 0 },
+    { disabled: 0, ok: 0, preAlarm: 0, ended: 0, critical: 0 },
   );
 }
 
@@ -89,6 +93,7 @@ const getInitialDisabledFirst = (): boolean => {
 
 export function SurveillancePageClient({ initialStats, sites, groups, refreshIntervalSeconds, showNullNonResponse: initialShowNullNonResponse, requireActionComment }: Props) {
   const t = useTranslations("surveillance");
+  const tCard = useTranslations("monitoringCard");
   const { license } = useLicense();
   const canUseCurvesOverlay = isStandardOrExpert(license);
   const [viewMode, setViewMode] = useState<ViewMode>("graphs");
@@ -141,6 +146,10 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
   const { data: locationTemplates = [] } = useLocationTemplates(shouldLoadLocationFormData);
   const serverFilterSiteIds = filters.siteIds;
   const serverFilterGroupIds = filters.groupIds;
+  const serverSearchTerm = filters.searchTerm.trim();
+  const hasServerFilters =
+    serverFilterSiteIds.length > 0 || serverFilterGroupIds.length > 0 || serverSearchTerm.length > 0;
+  const paginatedLimit = hasServerFilters ? 500 : 50;
   const isBackgroundPaused = isEditLocationOpen || isOverlayOpen || isAcknowledgeDialogOpen || openDetailModalIds.length > 0;
 
   const {
@@ -151,10 +160,11 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
     hasNextPage: hasNextActivePage,
     forceRefresh: forceRefreshActive,
   } = usePaginatedSensors({
-    limit: 50,
+    limit: paginatedLimit,
     siteIds: serverFilterSiteIds,
     groupIds: serverFilterGroupIds,
     surveillanceDisabled: false,
+    searchTerm: serverSearchTerm,
   });
   const {
     data: disabledData,
@@ -164,12 +174,41 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
     hasNextPage: hasNextDisabledPage,
     forceRefresh: forceRefreshDisabled,
   } = usePaginatedSensors({
-    limit: 50,
+    limit: paginatedLimit,
     siteIds: serverFilterSiteIds,
     groupIds: serverFilterGroupIds,
     surveillanceDisabled: true,
+    searchTerm: serverSearchTerm,
   });
   useSurveillanceLiveUpdates({ enabled: !isRangeSelectionActive && !isBackgroundPaused });
+
+  useEffect(() => {
+    if (!hasServerFilters || isBackgroundPaused) return;
+    if (hasNextActivePage && !isFetchingActive && !isFetchingNextActivePage) {
+      void fetchNextActivePage();
+    }
+  }, [
+    fetchNextActivePage,
+    hasNextActivePage,
+    hasServerFilters,
+    isBackgroundPaused,
+    isFetchingActive,
+    isFetchingNextActivePage,
+  ]);
+
+  useEffect(() => {
+    if (!hasServerFilters || isBackgroundPaused) return;
+    if (hasNextDisabledPage && !isFetchingDisabled && !isFetchingNextDisabledPage) {
+      void fetchNextDisabledPage();
+    }
+  }, [
+    fetchNextDisabledPage,
+    hasNextDisabledPage,
+    hasServerFilters,
+    isBackgroundPaused,
+    isFetchingDisabled,
+    isFetchingNextDisabledPage,
+  ]);
 
   const activePaginatedData = useMemo(() => {
     const pages = activeData?.pages ?? [];
@@ -205,7 +244,7 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
     [activePaginatedData.sensors, disabledPaginatedData.sensors],
   );
   const uniqueSensors = useMemo(() => dedupeSensorsByLocation(allSensors), [allSensors]);
-  const visibleSensors = applySurveillanceFilters(uniqueSensors, { ...filters, siteIds: [], groupIds: [] });
+  const visibleSensors = applySurveillanceFilters(uniqueSensors, { ...filters, siteIds: [], groupIds: [], searchTerm: "" });
   const activeVisibleSensors = useMemo(
     () => visibleSensors.filter((sensor) => !sensor.location.surveillanceDisabled),
     [visibleSensors],
@@ -223,6 +262,10 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
   const disabledSectionCount = filters.searchTerm.trim().length > 0 ? countVisibleLocations(disabledVisibleSensors) : disabledPaginatedData.total;
 
   const activeAlarmsCount = useMemo(() => {
+    if (!hasServerFilters && filters.searchTerm.trim().length === 0) {
+      return initialStats?.activeAlarms ?? 0;
+    }
+
     if (uniqueSensors.length === 0) {
       return initialStats?.activeAlarms ?? 0;
     }
@@ -238,7 +281,7 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
       }
     }
     return ids.size;
-  }, [initialStats?.activeAlarms, uniqueSensors]);
+  }, [filters.searchTerm, hasServerFilters, initialStats?.activeAlarms, uniqueSensors]);
 
   const visibleLocationCount = useMemo(() => new Set(visibleSensors.map((sensor) => Number(sensor.location.id ?? sensor.id)).filter((id) => Number.isFinite(id))).size, [visibleSensors]);
   const totalVisibleLocationCount = useMemo(
@@ -262,8 +305,10 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
 
     return {
       total: totalVisibleLocationCount,
+      disabled: disabledSectionCount,
       ok: treeStats.ok,
-      warning: treeStats.warning,
+      preAlarm: treeStats.preAlarm,
+      ended: treeStats.ended,
       critical: treeStats.critical,
       activeAlarms: activeAlarmsCount,
     };
@@ -301,13 +346,25 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
 
   const performRefresh = useCallback(
     async (silent = false) => {
-      await Promise.all([forceRefreshActive(), forceRefreshDisabled()]);
+      const activePagesToFetch = Math.max(activeData?.pages?.length ?? 1, 1);
+      const disabledPagesToFetch = Math.max(disabledData?.pages?.length ?? 1, 1);
+
+      await Promise.all([
+        forceRefreshActive({
+          fetchAllPages: hasServerFilters,
+          pagesToFetch: activePagesToFetch,
+        }),
+        forceRefreshDisabled({
+          fetchAllPages: hasServerFilters,
+          pagesToFetch: disabledPagesToFetch,
+        }),
+      ]);
       window.dispatchEvent(new CustomEvent("vigitemp:measurements-refresh"));
       if (!silent) {
         toast.success(t("refresh.refreshed"));
       }
     },
-    [forceRefreshActive, forceRefreshDisabled, t],
+    [activeData?.pages?.length, disabledData?.pages?.length, forceRefreshActive, forceRefreshDisabled, hasServerFilters, t],
   );
 
   const handleRefresh = useCallback(async () => {
@@ -394,8 +451,9 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
       siteIds: serverFilterSiteIds,
       groupIds: serverFilterGroupIds,
       surveillanceDisabled: false,
+      searchTerm: serverSearchTerm,
     });
-  }, [activeData?.pages, activePaginatedData.limit, queryClient, serverFilterGroupIds, serverFilterSiteIds]);
+  }, [activeData?.pages, activePaginatedData.limit, queryClient, serverFilterGroupIds, serverFilterSiteIds, serverSearchTerm]);
 
   useEffect(() => {
     const pages = disabledData?.pages ?? [];
@@ -407,8 +465,9 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
       siteIds: serverFilterSiteIds,
       groupIds: serverFilterGroupIds,
       surveillanceDisabled: true,
+      searchTerm: serverSearchTerm,
     });
-  }, [disabledData?.pages, disabledPaginatedData.limit, queryClient, serverFilterGroupIds, serverFilterSiteIds]);
+  }, [disabledData?.pages, disabledPaginatedData.limit, queryClient, serverFilterGroupIds, serverFilterSiteIds, serverSearchTerm]);
 
   const handleDetailsModalStateChange = useCallback((idLieu: number, open: boolean) => {
     setOpenDetailModalIds((current) => {
@@ -598,13 +657,14 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
           payload.data.surveillanceDisabledComment ?? null,
         );
       }
+      await performRefresh(true);
       setGroupActionComment("");
       setGroupActionCommentError(null);
       setGroupToggleModal(null);
     } catch {
       toast.error(t("refresh.error"));
     }
-  }, [groupActionComment, groupDisableDuration, groupToggleModal, requireActionComment, t, updateSensorsCache]);
+  }, [groupActionComment, groupDisableDuration, groupToggleModal, performRefresh, requireActionComment, t, updateSensorsCache]);
 
 
 
@@ -629,11 +689,11 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
               <div className="flex flex-wrap items-center gap-2 text-sm">
                 <UITooltip>
                   <TooltipTrigger asChild>
-                    <span className="inline-flex items-center gap-1.5 rounded-full bg-sky-50 px-3 py-1 font-medium text-sky-700 dark:bg-sky-500/10 dark:text-sky-300 hover:shadow-sm hover:-translate-y-0.5 transition-all duration-150 cursor-help">
-                      {t("stats.total", { count: visibleStats.total })}
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-50 px-3 py-1 font-medium text-slate-700 dark:bg-slate-500/10 dark:text-slate-300 hover:shadow-sm hover:-translate-y-0.5 transition-all duration-150 cursor-help">
+                      {t("stats.disabled", { count: visibleStats.disabled })}
                     </span>
                   </TooltipTrigger>
-                  <TooltipContent><p className="text-xs">{t("stats_descriptions.total_locations")}</p></TooltipContent>
+                  <TooltipContent><p className="text-xs">{t("stats_descriptions.disabled_locations")}</p></TooltipContent>
                 </UITooltip>
                 <UITooltip>
                   <TooltipTrigger asChild>
@@ -648,10 +708,19 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
                   <TooltipTrigger asChild>
                     <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-3 py-1 font-medium text-amber-700 dark:bg-amber-500/10 dark:text-amber-400 hover:shadow-sm hover:-translate-y-0.5 transition-all duration-150 cursor-help">
                       <span className="h-2 w-2 rounded-full bg-amber-500" aria-hidden="true" />
-                      {t("stats.warning", { count: visibleStats.warning })}
+                      {t("stats.pre_alarm", { count: visibleStats.preAlarm })}
                     </span>
                   </TooltipTrigger>
-                  <TooltipContent><p className="text-xs">{t("stats_descriptions.alert_locations")}</p></TooltipContent>
+                  <TooltipContent><p className="text-xs">{t("stats_descriptions.pre_alarm_locations")}</p></TooltipContent>
+                </UITooltip>
+                <UITooltip>
+                  <TooltipTrigger asChild>
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-violet-50 px-3 py-1 font-medium text-violet-700 dark:bg-violet-500/10 dark:text-violet-300 hover:shadow-sm hover:-translate-y-0.5 transition-all duration-150 cursor-help">
+                      <span className="h-2 w-2 rounded-full bg-violet-500" aria-hidden="true" />
+                      {t("stats.ended", { count: visibleStats.ended })}
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent><p className="text-xs">{t("stats_descriptions.ended_locations")}</p></TooltipContent>
                 </UITooltip>
                 <UITooltip>
                   <TooltipTrigger asChild>
@@ -705,19 +774,23 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
                 isLoading={showGridSkeleton}
                 showNullNonResponse={showNullNonResponse}
                 sortMode={filters.sortMode}
-              />
-              <SurveillanceLoadMore
-                sentinelRef={loadMoreRef}
-                hasNextPage={!!hasNextActivePage}
-                isFetching={isFetchingNextActivePage}
-                onLoadMore={() => void fetchNextActivePage()}
-                label={t("load_more_active")}
-              />
-              <SurveillanceLoadMore
-                hasNextPage={!!hasNextDisabledPage}
-                isFetching={isFetchingNextDisabledPage}
-                onLoadMore={() => void fetchNextDisabledPage()}
-                label={t("load_more_disabled")}
+                activeFooter={
+                  <SurveillanceLoadMore
+                    sentinelRef={loadMoreRef}
+                    hasNextPage={!!hasNextActivePage}
+                    isFetching={isFetchingNextActivePage}
+                    onLoadMore={() => void fetchNextActivePage()}
+                    label={t("load_more_active")}
+                  />
+                }
+                disabledFooter={
+                  <SurveillanceLoadMore
+                    hasNextPage={!!hasNextDisabledPage}
+                    isFetching={isFetchingNextDisabledPage}
+                    onLoadMore={() => void fetchNextDisabledPage()}
+                    label={t("load_more_disabled")}
+                  />
+                }
               />
             </>
           ) : (
@@ -736,19 +809,23 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
                 isLoading={showGridSkeleton}
                 showNullNonResponse={showNullNonResponse}
                 sortMode={filters.sortMode}
-              />
-              <SurveillanceLoadMore
-                sentinelRef={loadMoreRef}
-                hasNextPage={!!hasNextActivePage}
-                isFetching={isFetchingNextActivePage}
-                onLoadMore={() => void fetchNextActivePage()}
-                label={t("load_more_active")}
-              />
-              <SurveillanceLoadMore
-                hasNextPage={!!hasNextDisabledPage}
-                isFetching={isFetchingNextDisabledPage}
-                onLoadMore={() => void fetchNextDisabledPage()}
-                label={t("load_more_disabled")}
+                activeFooter={
+                  <SurveillanceLoadMore
+                    sentinelRef={loadMoreRef}
+                    hasNextPage={!!hasNextActivePage}
+                    isFetching={isFetchingNextActivePage}
+                    onLoadMore={() => void fetchNextActivePage()}
+                    label={t("load_more_active")}
+                  />
+                }
+                disabledFooter={
+                  <SurveillanceLoadMore
+                    hasNextPage={!!hasNextDisabledPage}
+                    isFetching={isFetchingNextDisabledPage}
+                    onLoadMore={() => void fetchNextDisabledPage()}
+                    label={t("load_more_disabled")}
+                  />
+                }
               />
             </>
           )}
@@ -764,9 +841,9 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
         />
       ) : null}
 
-      <MonitoringGroupToggleDialog
-        modal={groupToggleModal}
-        disableDuration={groupDisableDuration}
+        <MonitoringGroupToggleDialog
+          modal={groupToggleModal}
+          disableDuration={groupDisableDuration}
         actionComment={groupActionComment}
         actionCommentError={groupActionCommentError}
         requireActionComment={requireActionComment}
@@ -781,10 +858,10 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
           setGroupToggleModal(null)
           setGroupActionComment("")
           setGroupActionCommentError(null)
-        }}
-        onConfirm={() => void handleGroupSurveillanceToggleConfirm()}
-        t={(key, values) => t(key, values as Record<string, string | number>)}
-      />
+          }}
+          onConfirm={() => void handleGroupSurveillanceToggleConfirm()}
+          t={(key, values) => t(key, values as Record<string, string | number>)}
+        />
 
       <LocationFormDialog
         open={isEditLocationOpen}
@@ -805,12 +882,3 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
     </>
   );
 }
-
-
-
-
-
-
-
-
-

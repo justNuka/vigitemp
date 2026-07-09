@@ -1,9 +1,30 @@
 import { NextRequest } from "next/server"
-import { prismaMesure } from "@/lib/prisma"
+import { prisma, prismaMesure } from "@/lib/prisma"
 import { withAuthLogging } from "@/lib/api-wrappers"
 import { apiError, apiOk } from "@/lib/api-response"
 import { log } from "@/lib/logger"
 import { parseDbDateTime, serializeDbDateTime } from "@/lib/date-display"
+
+function extractAlarmId(comment: string | null | undefined): number | null {
+	if (!comment) return null
+
+	for (const chunk of comment.split("|")) {
+		const trimmed = chunk.trim()
+		if (!trimmed.startsWith("{") || !trimmed.endsWith("}")) continue
+
+		try {
+			const parsed = JSON.parse(trimmed) as { alarmId?: unknown }
+			const value = typeof parsed.alarmId === "number" ? parsed.alarmId : Number(parsed.alarmId)
+			if (Number.isFinite(value) && value > 0) {
+				return value
+			}
+		} catch {
+			// Ignore malformed fragments.
+		}
+	}
+
+	return null
+}
 
 const FALLBACK_CODE_LABELS: Record<string, string> = {
 	AACT: "Association d'un module d'alarme %1",
@@ -59,18 +80,18 @@ export const GET = withAuthLogging(
 			if (hasValidFrom && parsedFrom) dateFilter.gte = parsedFrom
 			if (hasValidTo && parsedTo) dateFilter.lte = parsedTo
 
-			const logs = await prismaMesure.tm_journal.findMany({
+			const rawLogs = await prismaMesure.tm_journal.findMany({
 				where: {
 					OR: [
 						{ Id_Lieu: lieuId },
-						{ Code_Journal: "ACQ", Commentaire: { contains: `#${lieuId}` } },
+						{ Code_Journal: "ACQ" },
 					],
 					...(Object.keys(dateFilter).length > 0 ? { Date_Heure_Journal: dateFilter } : {}),
 				},
-				take: limit,
 				orderBy: { Date_Heure_Journal: "desc" },
 				select: {
 					Id_Journal: true,
+					Id_Lieu: true,
 					Date_Heure_Journal: true,
 					Code_Journal: true,
 					Commentaire: true,
@@ -79,6 +100,44 @@ export const GET = withAuthLogging(
 					Profil_Utilisateur: true,
 				},
 			})
+
+			const alarmIds = Array.from(
+				new Set(
+					rawLogs
+						.map((entry) => extractAlarmId(entry.Commentaire))
+						.filter((value): value is number => typeof value === "number" && value > 0),
+				),
+			)
+
+			const histoLieuByAlarmId = new Map<number, number>()
+			if (alarmIds.length > 0) {
+				const histos = await prisma.t_alarme_histo.findMany({
+					where: { Id_Alarme: { in: alarmIds } },
+					select: { Id_Alarme: true, Id_Lieu: true },
+				})
+
+				for (const histo of histos) {
+					if (
+						typeof histo.Id_Lieu === "number" &&
+						histo.Id_Lieu > 0 &&
+						!histoLieuByAlarmId.has(histo.Id_Alarme)
+					) {
+						histoLieuByAlarmId.set(histo.Id_Alarme, histo.Id_Lieu)
+					}
+				}
+			}
+
+			const logs = rawLogs
+				.filter((entry) => {
+					if (entry.Id_Lieu === lieuId) return true
+					if ((entry.Code_Journal || "").trim() !== "ACQ") return false
+
+					const alarmId = extractAlarmId(entry.Commentaire)
+					if (!alarmId) return false
+
+					return histoLieuByAlarmId.get(alarmId) === lieuId
+				})
+				.slice(0, limit)
 
 			const codes = Array.from(
 				new Set(

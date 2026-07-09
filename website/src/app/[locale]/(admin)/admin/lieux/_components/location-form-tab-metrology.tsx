@@ -176,6 +176,9 @@ export function LocationFormTabMetrology({ isExpertEdition }: LocationFormTabMet
   const iEtalonnage = Math.abs(formData.Incertitude ?? 0)
   const deriveValue = Math.abs(formData.Derive ?? 0)
   const withDerivePart = 2 * Math.sqrt(Math.pow(iEtalonnage / 2, 2) + Math.pow(deriveValue / Math.sqrt(3), 2))
+  const appliedAccuracyCorrection = formData.Erreur_Justesse === undefined || formData.Erreur_Justesse === null
+    ? null
+    : -formData.Erreur_Justesse
 
   useEffect(() => {
     if (!['quart', 'manuel', 'uncertainties'].includes(formData.EMT_Mode ?? '')) return
@@ -228,7 +231,12 @@ export function LocationFormTabMetrology({ isExpertEdition }: LocationFormTabMet
         {isExpertEdition ? t('mode.expert') : t('mode.standard')}
       </div>
 
-      <MetrologySensorInfoSection formData={formData} latestAdjustment={latestAdjustment} latestCalibration={latestCalibration} />
+      <MetrologySensorInfoSection
+        formData={formData}
+        latestAdjustment={latestAdjustment}
+        latestCalibration={latestCalibration}
+        appliedAccuracyCorrection={appliedAccuracyCorrection}
+      />
 
       <div className="border p-4 rounded-lg space-y-4">
         <h3 className="font-semibold">{t('calibration.manual_apply_title')}</h3>

@@ -186,18 +186,13 @@ export function MonitoringCardHeader({
 
         <TooltipProvider>
           <div className={`${headerTextClassName} shrink-0 mt-0.5 flex flex-col items-center gap-1.5`}>
-            <div className="flex min-h-4 items-center justify-center gap-1.5">
-              <span
-                className={`h-2 w-2 rounded-full ${hasActiveAlarmCode ? 'bg-white/90 animate-pulse' : 'bg-white/40'}`}
-                aria-hidden="true"
-              />
+            <div className="flex min-h-4 items-center justify-center">
               <UITooltip>
                 <TooltipTrigger asChild>
                   <span
-                    className={`inline-flex min-w-5 items-center justify-center rounded-full px-1.5 py-0.5 text-[10px] font-semibold tracking-wide ${hasActiveAlarmCode ? 'bg-black/20 text-white ring-1 ring-white/20' : 'bg-white/15 text-white/90 ring-1 ring-white/20'}`}
-                  >
-                    {alarmCodeLabel}
-                  </span>
+                    className={`inline-flex h-3 w-3 cursor-help rounded-full ${hasActiveAlarmCode ? 'bg-white/90 animate-pulse' : 'bg-white/40'}`}
+                    aria-hidden="true"
+                  />
                 </TooltipTrigger>
                 <TooltipContent>
                   <p className="text-xs">{hasActiveAlarmCode ? (effectiveAlarmType === 'H' ? t('alarmTypes.high') : effectiveAlarmType === 'B' ? t('alarmTypes.low') : effectiveAlarmType === 'S' ? t('alarmTypes.sector') : effectiveAlarmType === 'M' ? t('alarmTypes.module') : effectiveAlarmType === 'T' ? t('alarmTypes.ended') : t('alarmTypes.no_response')) : t('status.ok')}</p>

@@ -14,6 +14,7 @@ export type MeasureData = {
   SondeNumeroSerie: string
   Frequence: number
   Est_Valeur_Null?: boolean | number | null
+  Est_Valeur_Memoire?: boolean | number | null
   Etat_Alarme: number
 }
 
@@ -76,6 +77,18 @@ export function formatMeasureValue(
   }).format(value)
 }
 
+export function normalizeMeasureNumber(
+  value: number | null | undefined,
+  decimals = 2,
+): number | null {
+  if (value === null || value === undefined || Number.isNaN(value) || !Number.isFinite(value)) {
+    return null
+  }
+
+  const fractionDigits = Math.max(0, Math.min(10, Math.trunc(decimals)))
+  return Number(value.toFixed(fractionDigits))
+}
+
 export function getMeasureSummary(
   measures: MeasureData[],
   fallback?: Partial<Pick<MeasureSummary, "consigneSup" | "consigneInf" | "consigne" | "unite" | "frequence">>,
@@ -96,9 +109,9 @@ export function getMeasureSummary(
   const lastDateTime = last?.DateHeureMesure || ""
 
   return {
-    consigneSup: last?.Consigne_Sup ?? first?.Consigne_Sup ?? fallback?.consigneSup ?? null,
-    consigneInf: last?.Consigne_Inf ?? first?.Consigne_Inf ?? fallback?.consigneInf ?? null,
-    consigne: last?.Consigne ?? first?.Consigne ?? fallback?.consigne ?? null,
+    consigneSup: normalizeMeasureNumber(last?.Consigne_Sup ?? first?.Consigne_Sup ?? fallback?.consigneSup ?? null),
+    consigneInf: normalizeMeasureNumber(last?.Consigne_Inf ?? first?.Consigne_Inf ?? fallback?.consigneInf ?? null),
+    consigne: normalizeMeasureNumber(last?.Consigne ?? first?.Consigne ?? fallback?.consigne ?? null),
     unite,
     frequence,
     lastMeasureText,

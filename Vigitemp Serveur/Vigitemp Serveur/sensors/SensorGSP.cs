@@ -27,6 +27,7 @@ namespace Vigitemp_Serveur.sensors
         private const int ClockCheckIntervalHours = 6;
         private const int ClockDriftWarningSeconds = 120;
         private const int ClockDriftCriticalSeconds = 600;
+        private const int ClockDriftImmediateResyncSeconds = 3600;
         private const int ClockSyncCooldownMinutes = 30;
         private const int ClockSyncEmptyResponseRetryMinutes = 5;
         private const int DefaultBatteryNotifyPercent = 50;
@@ -201,7 +202,7 @@ namespace Vigitemp_Serveur.sensors
                 _consecutiveTimeouts = 0;
                 LastFailureReason = null;
 
-                await CheckAndSynchronizeClockAsync(parsed, hadTimeoutBeforeSuccess);
+                parsed = await CheckAndSynchronizeClockAsync(parsed, hadTimeoutBeforeSuccess);
                 LogMeasurementGap(parsed);
                 HandlePowerSupplyAlarm(parsed);
                 LogBatteryHealth(parsed);
@@ -799,24 +800,26 @@ namespace Vigitemp_Serveur.sensors
             return Math.Abs(parsed.Temperature.Value) < 0.000001d;
         }
 
-        private async Task CheckAndSynchronizeClockAsync(GspTemperatureResponse parsed, bool hadTimeoutBeforeSuccess)
+        private async Task<GspTemperatureResponse> CheckAndSynchronizeClockAsync(GspTemperatureResponse parsed, bool hadTimeoutBeforeSuccess)
         {
             if (!parsed.ProbeDateTime.HasValue)
             {
-                return;
+                return parsed;
             }
 
             var nowUtc = DateTime.UtcNow;
             var serverNow = DateTime.Now;
             var signedDriftSeconds = (serverNow - parsed.ProbeDateTime.Value).TotalSeconds;
             var driftSeconds = Math.Abs(signedDriftSeconds);
+            var requiresImmediateVerification = IsProbeDateTimeClearlyInvalid(parsed.ProbeDateTime.Value, serverNow)
+                || driftSeconds >= ClockDriftImmediateResyncSeconds;
             var shouldCheck = hadTimeoutBeforeSuccess
                 || !_lastDateTimeCheckUtc.HasValue
                 || (nowUtc - _lastDateTimeCheckUtc.Value).TotalHours >= ClockCheckIntervalHours;
 
             if (!shouldCheck && driftSeconds < ClockDriftWarningSeconds)
             {
-                return;
+                return parsed;
             }
 
             _lastDateTimeCheckUtc = nowUtc;
@@ -831,19 +834,20 @@ namespace Vigitemp_Serveur.sensors
 
             if (driftSeconds < ClockDriftWarningSeconds)
             {
-                return;
+                return parsed;
             }
 
             var serialKey = string.IsNullOrWhiteSpace(m_sondeSerialNumber)
                 ? _commandTarget
                 : m_sondeSerialNumber.Trim().ToUpperInvariant();
 
-            if (LastClockSyncAttemptUtcBySerial.TryGetValue(serialKey, out var lastAttemptUtc) &&
+            if (!requiresImmediateVerification &&
+                LastClockSyncAttemptUtcBySerial.TryGetValue(serialKey, out var lastAttemptUtc) &&
                 (nowUtc - lastAttemptUtc).TotalMinutes < ClockSyncCooldownMinutes)
             {
                 VigitempServeur.Log(
                     $"[SONDE][TIME] type=GSP serial={m_sondeSerialNumber} status=sync-skipped reason=cooldown driftSec={Math.Round(signedDriftSeconds, 0, MidpointRounding.AwayFromZero)}");
-                return;
+                return parsed;
             }
 
             var payload = GspProtocol.BuildDateTimePayload(serverNow);
@@ -855,12 +859,60 @@ namespace Vigitemp_Serveur.sensors
                 : nowUtc;
             VigitempServeur.Log(
                 $"[SONDE][TIME] type=GSP serial={m_sondeSerialNumber} status=sync-sent payload={payload} response={(syncResponseIsEmpty ? "<empty>" : TrimForLog(response))} ackTarget={(syncResponseMatchesTarget ? "ok" : "mismatch")} nextRetryMin={(syncResponseMatchesTarget ? ClockSyncCooldownMinutes : ClockSyncEmptyResponseRetryMinutes)}");
+
+            if (!requiresImmediateVerification)
+            {
+                return parsed;
+            }
+
+            await Task.Delay(InterCommandDelayMs);
+            var verificationPayload = _requestGraphDisplay ? "1g" : string.Empty;
+            var verificationResponse = await SendRequestAndReadWithTimeoutAsync(
+                "TEMP",
+                verificationPayload,
+                allowEmptyResponse: true,
+                EndOfResponseSilenceMs,
+                ReadTimeoutMs + 1000);
+
+            if (!string.IsNullOrWhiteSpace(verificationResponse) &&
+                GspProtocol.TryParseTemperatureResponse(verificationResponse, _commandTarget, out var refreshed) &&
+                refreshed.Temperature.HasValue)
+            {
+                var refreshedServerNow = DateTime.Now;
+                if (refreshed.ProbeDateTime.HasValue)
+                {
+                    var refreshedDriftSeconds = Math.Round(
+                        (refreshedServerNow - refreshed.ProbeDateTime.Value).TotalSeconds,
+                        0,
+                        MidpointRounding.AwayFromZero);
+                    VigitempServeur.Log(
+                        $"[SONDE][TIME] type=GSP serial={m_sondeSerialNumber} status=post-sync-check probe={refreshed.ProbeDateTime.Value:O} server={refreshedServerNow:O} driftSec={refreshedDriftSeconds}");
+                }
+                else
+                {
+                    VigitempServeur.Log(
+                        $"[SONDE][TIME] type=GSP serial={m_sondeSerialNumber} status=post-sync-check probe=<missing>");
+                }
+
+                return refreshed;
+            }
+
+            VigitempServeur.Log(
+                $"[SONDE][TIME] type=GSP serial={m_sondeSerialNumber} status=post-sync-check-failed response={(string.IsNullOrWhiteSpace(verificationResponse) ? "<empty>" : TrimForLog(verificationResponse))}");
+            return parsed;
         }
 
         private void LogMeasurementGap(GspTemperatureResponse parsed)
         {
             if (!parsed.ProbeDateTime.HasValue)
             {
+                return;
+            }
+
+            if (IsProbeDateTimeClearlyInvalid(parsed.ProbeDateTime.Value, DateTime.Now))
+            {
+                VigitempServeur.Log(
+                    $"[SONDE][GAP] type=GSP serial={m_sondeSerialNumber} status=skipped reason=invalid-probe-datetime probe={parsed.ProbeDateTime.Value:O}");
                 return;
             }
 
@@ -891,6 +943,16 @@ namespace Vigitemp_Serveur.sensors
                 ths.GetDatabase().setLieuGspRecoveryPending(m_idLieu, true);
                 ths.EnqueueGspRecovery(m_sondeSerialNumber, previousProbeDateTime, currentProbeDateTime, missingCount);
             }
+        }
+
+        private static bool IsProbeDateTimeClearlyInvalid(DateTime probeDateTime, DateTime serverNow)
+        {
+            if (probeDateTime.Year < 2020)
+            {
+                return true;
+            }
+
+            return Math.Abs((serverNow - probeDateTime).TotalHours) >= 12;
         }
 
         private void LogBatteryHealth(GspTemperatureResponse parsed)

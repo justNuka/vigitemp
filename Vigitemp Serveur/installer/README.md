@@ -8,7 +8,7 @@ Ce script installe le service d'interrogation, met a jour le App.config et place
 
 ## Pre-requis offline (MySQL + VC redist)
 Si la machine client n'a pas Internet :
-- Placer `mysql-8.4.7-winx64.msi` et `VC_redist.x64.exe` dans `installer\prereqs\`
+- Placer un MSI MySQL de type `mysql-<version>-winx64.msi` et `VC_redist.x64.exe` dans `installer\prereqs\`
 - Lancer :
 ```powershell
 .\Install-MySQL-And-VCredist.ps1

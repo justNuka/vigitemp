@@ -1,7 +1,8 @@
 ﻿"use client"
 
-import { Power, PowerOff } from "lucide-react"
+import { ChevronDown, ChevronRight, Power, PowerOff } from "lucide-react"
 import type { ReactNode } from "react"
+import { useState } from "react"
 import { useTranslations } from "next-intl"
 
 import MonitoringCard from "@/components/monitoring-card"
@@ -18,6 +19,8 @@ interface SensorsCardsGridProps {
   disabledTotalCount?: number
   disabledFirst?: boolean
   isLoading?: boolean
+  activeFooter?: ReactNode
+  disabledFooter?: ReactNode
   onSurveillanceToggle?: (
     idLieu: number,
     action: "surveillance" | "alarms",
@@ -46,6 +49,8 @@ export function SensorsCardsGrid({
   disabledTotalCount,
   disabledFirst = false,
   isLoading = false,
+  activeFooter,
+  disabledFooter,
   onSurveillanceToggle,
   requireActionComment = false,
   onEditLocation,
@@ -55,6 +60,7 @@ export function SensorsCardsGrid({
   sortMode = "status",
 }: SensorsCardsGridProps) {
   const t = useTranslations("surveillance")
+  const [disabledExpanded, setDisabledExpanded] = useState(false)
   const handleSurveillanceToggle =
     onSurveillanceToggle ??
     ((_: number, __: "surveillance" | "alarms", ___: boolean, ____: number | null, _____?: string | null) => {
@@ -96,11 +102,24 @@ export function SensorsCardsGrid({
     isDisabledSection = false,
   ) => (
     <div className="space-y-4">
-      <div className="flex items-center gap-2 text-xl font-semibold text-slate-700 dark:text-slate-200 border-b border-slate-200 dark:border-slate-700 pb-2">
-        {icon}
-        {title}
-      </div>
-      {items.length === 0 ? (
+      {isDisabledSection ? (
+        <button
+          type="button"
+          onClick={() => setDisabledExpanded((current) => !current)}
+          className="flex w-full items-center gap-2 border-b border-slate-200 pb-2 text-left text-xl font-semibold text-slate-700 transition-colors hover:text-slate-900 dark:border-slate-700 dark:text-slate-200 dark:hover:text-white"
+          aria-expanded={disabledExpanded}
+        >
+          {disabledExpanded ? <ChevronDown className="h-5 w-5 text-slate-400" /> : <ChevronRight className="h-5 w-5 text-slate-400" />}
+          {icon}
+          {title}
+        </button>
+      ) : (
+        <div className="flex items-center gap-2 text-xl font-semibold text-slate-700 dark:text-slate-200 border-b border-slate-200 dark:border-slate-700 pb-2">
+          {icon}
+          {title}
+        </div>
+      )}
+      {isDisabledSection && !disabledExpanded ? null : items.length === 0 ? (
         <div className="rounded-lg border border-dashed border-slate-200 dark:border-slate-700 px-4 py-3 text-sm text-slate-500">
           {title === t("grid.disabled_title") ? t("grid.disabled_empty") : t("grid.empty_title")}
         </div>
@@ -153,6 +172,7 @@ export function SensorsCardsGrid({
           })}
         </div>
       )}
+      {(!isDisabledSection || disabledExpanded) ? (isDisabledSection ? disabledFooter : activeFooter) : null}
     </div>
   )
 

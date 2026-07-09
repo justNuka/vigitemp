@@ -14,6 +14,7 @@ import {
   Title,
   Tooltip as ChartTooltip,
 } from "chart.js";
+import { Maximize2, Minimize2 } from "lucide-react";
 
 import { TanStackTable } from "@/components/data-table/tanstack-table";
 import { MonitoringAuditTab } from "@/components/monitoring-details/monitoring-audit-tab";
@@ -222,18 +223,21 @@ export default function MonitoringDetailsModal({
   });
 
   const hasLocalMeasurements = Boolean(initialMeasurements?.length);
-  const shouldLoadBase = isOpen && isSurveillanceActive && !hasLocalMeasurements;
+  const shouldLoadBase = isOpen && isSurveillanceActive;
   const { data: fetchedData, isLoading } = useLieuMeasurements(idLieu, {
     enabled: shouldLoadBase,
     source: "mesures",
     includeNullNonResponse: showNullNonResponse,
   });
 
-  const baseLoading = isSurveillanceActive && shouldLoadBase && isLoading;
+  const hasFetchedMeasurements = fetchedData.length > 0;
+  const baseLoading = isSurveillanceActive && shouldLoadBase && isLoading && !hasLocalMeasurements;
   const baseData = isSurveillanceActive
-    ? hasLocalMeasurements
-      ? initialMeasurements ?? []
-      : fetchedData ?? []
+    ? hasFetchedMeasurements
+      ? fetchedData
+      : hasLocalMeasurements
+        ? initialMeasurements ?? []
+        : []
     : rangeGraphData;
   const data = rangeEnabled ? rangeGraphData : baseData;
   const fallbackHistoryRange = useMemo(() => {
@@ -454,8 +458,18 @@ export default function MonitoringDetailsModal({
     setZoomBounds(null);
   }, [idLieu, isOpen, rangeEnabled, explicitRangeStart, explicitRangeEnd]);
 
+  const [detailsSize, setDetailsSize] = useState<"standard" | "expanded">("standard");
   const isDialogLoading = rangeEnabled ? rangeGraphLoading : baseLoading;
-  const expandedHistoryLayout = rangeEnabled && (activeTab === "graph" || activeTab === "table");
+  const expandedHistoryLayout =
+    detailsSize === "expanded" || (rangeEnabled && (activeTab === "graph" || activeTab === "table"));
+  const tabContentMaxHeight = detailsSize === "expanded" ? "calc(100vh - 18rem)" : "calc(100vh - 26rem)";
+
+  useEffect(() => {
+    if (!isOpen) {
+      setDetailsSize("standard");
+    }
+  }, [isOpen]);
+
   const handleTableSortingChange = useCallback((updater: Updater<SortingState>) => {
     setTableSorting((prev) => {
       const next = typeof updater === "function" ? updater(prev) : updater;
@@ -514,6 +528,19 @@ export default function MonitoringDetailsModal({
                   </p>
                 ) : null}
               </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setDetailsSize((prev) => (prev === "expanded" ? "standard" : "expanded"))}
+              >
+                {detailsSize === "expanded" ? (
+                  <Minimize2 className="mr-2 h-4 w-4" />
+                ) : (
+                  <Maximize2 className="mr-2 h-4 w-4" />
+                )}
+                {detailsSize === "expanded" ? t("actions.standard_size") : t("actions.expanded_size")}
+              </Button>
             </div>
 
             <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as "graph" | "table" | "audit")} className="flex min-h-0 w-full flex-1 flex-col">
@@ -529,7 +556,7 @@ export default function MonitoringDetailsModal({
                 </TabsTrigger>
               </TabsList>
 
-              <TabsContent value="graph" className={cn(expandedHistoryLayout && "space-y-6") }>
+              <TabsContent value="graph" className={cn("flex min-h-0 flex-1 flex-col", expandedHistoryLayout && "space-y-6") }>
                 <MonitoringGraphTab
                   chartRef={chartRef}
                   orderedData={orderedData}
@@ -576,11 +603,18 @@ export default function MonitoringDetailsModal({
                   rangeEnabled={rangeEnabled}
                   presentationRows={presentationRows}
                   t={t}
+                  maxHeight={tabContentMaxHeight}
                 />
               </TabsContent>
 
-              <TabsContent value="audit">
-                <MonitoringAuditTab logs={auditLogs} isLoading={auditLoading} error={auditError} t={t} />
+              <TabsContent value="audit" className="flex min-h-0 flex-1 flex-col">
+                <MonitoringAuditTab
+                  logs={auditLogs}
+                  isLoading={auditLoading}
+                  error={auditError}
+                  t={t}
+                  maxHeight={tabContentMaxHeight}
+                />
               </TabsContent>
             </Tabs>
           </div>

@@ -76,6 +76,7 @@ export interface TanStackTableProps<TData> {
   tableClassName?: string;
   headerClassName?: string;
   bodyClassName?: string;
+  rowClassName?: (row: TData) => string | undefined;
   containerClassName?: string;
   toolbarClassName?: string;
   headerCellClassName?: string;
@@ -86,6 +87,7 @@ export interface TanStackTableProps<TData> {
   exportFormats?: Array<"csv" | "xlsx" | "pdf">;
   promptExportCount?: boolean;
   enableExportColumnSelection?: boolean;
+  exportData?: TData[];
   manualPagination?: boolean;
   manualSorting?: boolean;
   pageCount?: number;
@@ -98,6 +100,8 @@ export interface TanStackTableProps<TData> {
   ) => void;
   sortingState?: SortingState;
   onSortingChange?: (updater: Updater<SortingState>) => void;
+  onFilteredRowCountChange?: (count: number) => void;
+  resultsLabel?: string;
 }
 
 /**
@@ -135,6 +139,7 @@ export function TanStackTable<TData extends Record<string, any>>({
   tableClassName,
   headerClassName,
   bodyClassName,
+  rowClassName,
   containerClassName,
   toolbarClassName,
   headerCellClassName,
@@ -145,6 +150,7 @@ export function TanStackTable<TData extends Record<string, any>>({
   exportFormats = ["csv", "xlsx", "pdf"],
   promptExportCount = false,
   enableExportColumnSelection = false,
+  exportData,
   manualPagination = false,
   manualSorting = false,
   pageCount,
@@ -153,6 +159,8 @@ export function TanStackTable<TData extends Record<string, any>>({
   onPaginationChange,
   sortingState,
   onSortingChange,
+  onFilteredRowCountChange,
+  resultsLabel,
 }: TanStackTableProps<TData>) {
   const t = useTranslations('tanstackTable');
   const [sorting, setSorting] = useState<SortingState>([]);
@@ -231,10 +239,11 @@ export function TanStackTable<TData extends Record<string, any>>({
   });
 
   const pageSizeOptions = Array.from(
-    new Set([10, 20, 30, 40, 50, 100, 200, table.getState().pagination.pageSize])
+    new Set([10, 20, 50, 100, 200, 500, 1000, table.getState().pagination.pageSize])
   ).sort((a, b) => a - b);
 
   const rows = showPagination ? table.getRowModel().rows : table.getFilteredRowModel().rows;
+  const filteredRowCount = table.getFilteredRowModel().rows.length;
 
   const exportableColumns = useMemo(() => {
     const exclude = new Set(exportExcludeColumnIds);
@@ -245,9 +254,16 @@ export function TanStackTable<TData extends Record<string, any>>({
   }, [exportExcludeColumnIds, table]);
 
   const exportRows = useMemo(() => {
-    // Export what is currently in the table (filtered + sorted), not only the current page.
-    return table.getPrePaginationRowModel().rows;
+    // Export what is currently visible logically in the table: filters + sorting applied, pagination ignored.
+    return table.getSortedRowModel().rows;
   }, [table]);
+
+  const exportDataRows = useMemo(() => exportData ?? null, [exportData]);
+  const exportRowCount = exportDataRows?.length ?? exportRows.length;
+
+  useEffect(() => {
+    onFilteredRowCountChange?.(filteredRowCount);
+  }, [filteredRowCount, onFilteredRowCountChange]);
 
   const [selectedExportColumnIds, setSelectedExportColumnIds] = useState<string[]>([]);
   const [exportDialogOpen, setExportDialogOpen] = useState(false);
@@ -323,26 +339,41 @@ export function TanStackTable<TData extends Record<string, any>>({
   }
 
   function resolveRowsToExport(requestedCount?: number | null) {
-    if (exportRows.length === 0) {
-      return exportRows;
+    const rowsSource = exportDataRows ?? exportRows;
+    if (rowsSource.length === 0) {
+      return rowsSource;
     }
 
     if (!promptExportCount || requestedCount === null || requestedCount === undefined) {
-      return exportRows;
+      return rowsSource;
     }
 
     const parsedCount = Math.trunc(requestedCount);
-    if (!Number.isFinite(parsedCount) || parsedCount < 1 || parsedCount > exportRows.length) {
-      toast.error(t('export_count_prompt.invalid', { max: exportRows.length }));
+    if (!Number.isFinite(parsedCount) || parsedCount < 1 || parsedCount > rowsSource.length) {
+      toast.error(t('export_count_prompt.invalid', { max: rowsSource.length }));
       return null;
     }
 
-    return exportRows.slice(0, parsedCount);
+    return rowsSource.slice(0, parsedCount);
   }
 
-  function buildExportMatrixForRows(rowsToExport: typeof exportRows) {
+  function buildExportMatrixForRows(rowsToExport: typeof exportRows | TData[]) {
     const body = rowsToExport.map((row) => {
-      return selectedExportColumns.map((col) => formatExportValue(row.getValue(col.id)));
+      if (typeof (row as any)?.getValue === "function") {
+        return selectedExportColumns.map((col) => formatExportValue((row as any).getValue(col.id)));
+      }
+
+      const rawRow = row as TData;
+      return selectedExportColumns.map((col) => {
+        const columnDef = col.columnDef as any;
+        if (typeof columnDef.accessorFn === "function") {
+          return formatExportValue(columnDef.accessorFn(rawRow, 0));
+        }
+        if (typeof columnDef.accessorKey === "string") {
+          return formatExportValue((rawRow as Record<string, unknown>)[columnDef.accessorKey]);
+        }
+        return "";
+      });
     });
     return { headers: exportHeaders, rows: body };
   }
@@ -375,9 +406,9 @@ export function TanStackTable<TData extends Record<string, any>>({
   }
 
   function requestExport(format: "csv" | "xlsx" | "pdf") {
-    if (promptExportCount && exportRows.length > 0) {
+    if (promptExportCount && exportRowCount > 0) {
       setPendingExportFormat(format);
-      setExportCountInput(String(exportRows.length));
+      setExportCountInput(String(exportRowCount));
       setExportDialogOpen(true);
       return;
     }
@@ -397,7 +428,7 @@ export function TanStackTable<TData extends Record<string, any>>({
     if (!pendingExportFormat) return;
     const parsedCount = Number.parseInt(exportCountInput.trim(), 10);
     if (!Number.isFinite(parsedCount)) {
-      toast.error(t('export_count_prompt.invalid', { max: exportRows.length }));
+      toast.error(t('export_count_prompt.invalid', { max: exportRowCount }));
       return;
     }
 
@@ -513,7 +544,7 @@ export function TanStackTable<TData extends Record<string, any>>({
                 </>
               ) : null}
               <span className="text-sm text-muted-foreground">
-                {t('results', { count: table.getFilteredRowModel().rows.length })}
+                {resultsLabel ?? t('results', { count: filteredRowCount })}
               </span>
             </>
           )}
@@ -533,7 +564,7 @@ export function TanStackTable<TData extends Record<string, any>>({
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
                     {exportFormats.includes("csv") ? (
-                      <DropdownMenuItem onClick={() => requestExport("csv")}>CSV</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => requestExport("csv")}>CSV</DropdownMenuItem>
                     ) : null}
                     {exportFormats.includes("xlsx") ? (
                       <DropdownMenuItem onClick={() => requestExport("xlsx")}>Excel</DropdownMenuItem>
@@ -717,6 +748,7 @@ export function TanStackTable<TData extends Record<string, any>>({
                       isSelected &&
                         'bg-blue-100 dark:bg-blue-950 text-blue-900 dark:text-blue-100 font-medium [&_td:first-child]:border-l-4 [&_td:first-child]:border-l-primary',
                       onRowClick && 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
+                      rowClassName?.(row.original),
                     )}
                   >
                     {row.getVisibleCells().map((cell, cellIndex) => {
@@ -764,7 +796,7 @@ export function TanStackTable<TData extends Record<string, any>>({
                 count:
                   manualPagination && typeof totalRows === "number"
                     ? totalRows
-                    : table.getFilteredRowModel().rows.length,
+                    : filteredRowCount,
               })}
             </span>
           </div>
@@ -825,14 +857,14 @@ export function TanStackTable<TData extends Record<string, any>>({
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>{t('export_count_prompt.title')}</DialogTitle>
-            <DialogDescription>{t('export_count_prompt.message', { max: exportRows.length })}</DialogDescription>
+                  <DialogDescription>{t('export_count_prompt.message', { max: exportRowCount })}</DialogDescription>
           </DialogHeader>
 
           <div className="space-y-2">
             <Input
               type="number"
               min={1}
-              max={Math.max(1, exportRows.length)}
+                        max={Math.max(1, exportRowCount)}
               value={exportCountInput}
               onChange={(event) => setExportCountInput(event.target.value)}
               aria-label={t('export_count_prompt.input_label')}

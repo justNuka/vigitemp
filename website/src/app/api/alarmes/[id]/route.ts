@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma"
 import { log } from "@/lib/logger"
 import { applyAccessFilter, buildAlarmAccessFilter, getUserLocationScope } from "@/lib/location-access-scope"
 import { serializeDbDateTime } from "@/lib/date-display"
+import { normalizeMeasureNumber } from "@/lib/measurements"
 
 function mapAlarmType(type: string | null | undefined) {
   switch ((type ?? "").trim().toUpperCase()) {
@@ -82,14 +83,20 @@ export const GET = withAuthLogging(
         type: mapAlarmType(alarm.Type),
         currentValue: alarm.Type === "N" || alarm.Type === "M" || alarm.Type === "A" || alarm.Type === "S"
           ? null
-          : alarm.t_lieu?.Derniere_Valeur ?? alarm.Valeur ?? null,
-        value: alarm.Valeur ?? null,
+          : normalizeMeasureNumber(alarm.t_lieu?.Derniere_Valeur ?? alarm.Valeur ?? null, 2),
+        value: normalizeMeasureNumber(alarm.Valeur ?? null, 2),
         unit: alarm.Unite ?? alarm.t_lieu?.Derniere_Unite ?? null,
         minThreshold: hasConfiguredThresholds
-          ? alarm.t_lieu?.Tolerance_Surveillance_Inf ?? alarm.t_lieu?.Consigne_Inf ?? null
+          ? normalizeMeasureNumber(
+              alarm.t_lieu?.Tolerance_Surveillance_Inf ?? alarm.t_lieu?.Consigne_Inf ?? null,
+              2,
+            )
           : null,
         maxThreshold: hasConfiguredThresholds
-          ? alarm.t_lieu?.Tolerance_Surveillance_Sup ?? alarm.t_lieu?.Consigne_Sup ?? null
+          ? normalizeMeasureNumber(
+              alarm.t_lieu?.Tolerance_Surveillance_Sup ?? alarm.t_lieu?.Consigne_Sup ?? null,
+              2,
+            )
           : null,
         triggeredAt: serializeDbDateTime(alarm.Date_Heure_Debut) || null,
         endedAt: serializeDbDateTime(alarm.Date_Heure_Fin) || null,

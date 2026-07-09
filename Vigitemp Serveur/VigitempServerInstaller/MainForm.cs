@@ -603,7 +603,13 @@ public sealed class MainForm : Form
             AppendLog("[OK] Artefacts d'installation supprimes du dossier installe.");
 
             SetStatus("Etat : installation terminee avec succes");
-            AppendLog("[OK] Installation termineee.");
+            AppendLog("[OK] Installation terminee.");
+            _close.Text = "Terminer";
+            MessageBox.Show(
+                "Installation du serveur terminee avec succes.\r\nVous pouvez fermer l'installateur.",
+                "Installation terminee",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Information);
         }
         catch (Exception ex)
         {
@@ -718,5 +724,4 @@ public sealed class MainForm : Form
         }
     }
 }
-
 

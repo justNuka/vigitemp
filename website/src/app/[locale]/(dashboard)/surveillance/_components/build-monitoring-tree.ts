@@ -7,7 +7,7 @@ type TreeLabels = {
 };
 
 function emptyStats(): TreeStats {
-  return { total: 0, ok: 0, warning: 0, critical: 0, inactive: 0 };
+  return { total: 0, ok: 0, warning: 0, ended: 0, critical: 0, inactive: 0 };
 }
 
 function bumpStats(stats: TreeStats, sensor: SensorWithLocation) {
@@ -18,6 +18,8 @@ function bumpStats(stats: TreeStats, sensor: SensorWithLocation) {
     stats.critical++;
   } else if (sensor.status === "warning") {
     stats.warning++;
+  } else if (sensor.status === "ended") {
+    stats.ended++;
   } else {
     stats.ok++;
   }

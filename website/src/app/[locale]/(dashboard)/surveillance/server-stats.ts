@@ -5,8 +5,10 @@ import { log } from "@/lib/logger"
 
 export interface DashboardStats {
   total: number
+  disabled: number
   ok: number
-  warning: number
+  preAlarm: number
+  ended: number
   critical: number
   activeAlarms: number
 }
@@ -25,8 +27,10 @@ export async function ServerDashboardStats(): Promise<DashboardStats> {
     if (!userId) {
       return {
         total: 0,
+        disabled: 0,
         ok: 0,
-        warning: 0,
+        preAlarm: 0,
+        ended: 0,
         critical: 0,
         activeAlarms: 0,
       }
@@ -38,15 +42,31 @@ export async function ServerDashboardStats(): Promise<DashboardStats> {
     const locations = await prisma.t_lieu.findMany({
       where: applyAccessFilter({ Est_Archive: false }, lieuAccessFilter),
       select: {
+        Lieu_Etat: true,
         Est_Lieu_En_Alarme: true,
         Est_Lieu_En_Pre_Alarme: true,
+        Est_Lieu_Alarme_Terminee_Non_Acquittee: true,
+        Est_Lieu_Alarme_Terminee_Non_Acquittee_T1: true,
       },
     })
 
     const total = locations.length
-    const critical = locations.filter((l) => l.Est_Lieu_En_Alarme === 1).length
-    const warning = locations.filter((l) => l.Est_Lieu_En_Alarme !== 1 && l.Est_Lieu_En_Pre_Alarme === 1).length
-    const ok = total - warning - critical
+    const disabled = locations.filter((l) => l.Lieu_Etat === "D").length
+    const activeLocations = locations.filter((l) => l.Lieu_Etat !== "D")
+    const critical = activeLocations.filter((l) => l.Est_Lieu_En_Alarme === 1).length
+    const ended = activeLocations.filter(
+      (l) =>
+        l.Est_Lieu_En_Alarme !== 1 &&
+        (l.Est_Lieu_Alarme_Terminee_Non_Acquittee === 1 || l.Est_Lieu_Alarme_Terminee_Non_Acquittee_T1 === 1),
+    ).length
+    const preAlarm = activeLocations.filter(
+      (l) =>
+        l.Est_Lieu_En_Alarme !== 1 &&
+        l.Est_Lieu_Alarme_Terminee_Non_Acquittee !== 1 &&
+        l.Est_Lieu_Alarme_Terminee_Non_Acquittee_T1 !== 1 &&
+        l.Est_Lieu_En_Pre_Alarme === 1,
+    ).length
+    const ok = activeLocations.length - preAlarm - ended - critical
 
     const activeAlarms = await prisma.t_alarme.count({
       where: applyAccessFilter({ Est_Acquittee: false }, alarmAccessFilter),
@@ -54,8 +74,10 @@ export async function ServerDashboardStats(): Promise<DashboardStats> {
 
     return {
       total,
+      disabled,
       ok,
-      warning,
+      preAlarm,
+      ended,
       critical,
       activeAlarms,
     }
@@ -63,8 +85,10 @@ export async function ServerDashboardStats(): Promise<DashboardStats> {
     log.error("surveillance/stats", "failed_to_load_dashboard_stats", { error })
     return {
       total: 0,
+      disabled: 0,
       ok: 0,
-      warning: 0,
+      preAlarm: 0,
+      ended: 0,
       critical: 0,
       activeAlarms: 0,
     }

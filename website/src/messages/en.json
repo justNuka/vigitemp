@@ -170,6 +170,8 @@
       "alert_sensors": "Pre-alarms + alarms",
       "total_locations": "Total number of displayed locations",
       "ok_locations": "Locations without active alarm",
+      "pre_alarm_locations": "Locations in pre-alarm",
+      "ended_locations": "Locations with ended alarm awaiting acknowledgment",
       "alert_locations": "Locations in pre-alarm or ended alarm awaiting acknowledgment",
       "critical_locations": "Locations with an alarm in progress"
     },
@@ -218,6 +220,8 @@
       "print": "Print",
       "exportMeasurements": "Export measurements",
       "exportAudit": "Export audit",
+      "expandedView": "Expanded view",
+      "standardView": "Standard view",
       "locationAlarms": "Location alarms",
       "selectAlarm": "Select an alarm",
       "empty": "No alarms available for this location.",
@@ -544,7 +548,10 @@
     "load_more": "Load more",
     "stats": {
       "total": "{count, plural, one {# location} other {# locations}}",
+      "disabled": "{count, plural, one {# disabled} other {# disabled}}",
       "ok": "{count} OK",
+      "pre_alarm": "{count, plural, one {# pre-alarm} other {# pre-alarms}}",
+      "ended": "{count, plural, one {# ended alarm} other {# ended alarms}}",
       "warning": "{count, plural, one {# warning} other {# warnings}}",
       "critical": "{count, plural, one {# critical} other {# critical}}"
     },
@@ -574,6 +581,8 @@
       "alert_sensors": "Pre-alarms + alarms",
       "total_locations": "Total number of displayed locations",
       "ok_locations": "Locations without active alarm",
+      "pre_alarm_locations": "Locations in pre-alarm",
+      "ended_locations": "Locations with ended alarm awaiting acknowledgment",
       "alert_locations": "Locations in pre-alarm or alarm",
       "critical_locations": "Locations in critical alarm or no response"
     },
@@ -618,6 +627,14 @@
       },
       "cancel": "Cancel",
       "confirm": "Confirm"
+    },
+    "confirm": {
+      "action_comment": {
+        "label": "Comment",
+        "placeholder_optional": "Add a comment (optional)",
+        "placeholder_required": "Add a comment (required)",
+        "required_error": "A comment is required for this action."
+      }
     },
     "legend": {
       "technical_alarm": "Technical alarm",
@@ -777,6 +794,7 @@
         "applied_calibration_date": "Applied calibration date",
         "unit": "Unit",
         "accuracy_error": "Accuracy error",
+        "accuracy_correction_example": "Applied correction (example): {value}",
         "uncertainty": "Uncertainty",
         "drift": "Drift"
       },
@@ -856,7 +874,7 @@
       "editRule": "Edit rule",
       "backToBaseSetpoints": "Back to base setpoints",
       "deleteRule": "Delete",
-      "activeStatus": "Active planning — Rule",
+      "activeStatus": "Active planning â€” Rule",
       "baseStatus": "Base setpoints",
       "loading": "Loading...",
       "overviewTotalRules": "Total rules",
@@ -919,7 +937,7 @@
         "emtDerive": "Drift included",
         "emtToleranceSup": "Calculated upper tolerance",
         "emtToleranceInf": "Calculated lower tolerance",
-        "emtNotCalculable": "—",
+        "emtNotCalculable": "â€”",
         "emtModeQuart": "Quarter rule",
         "emtModeManuel": "Manual",
         "emtModeUncertainties": "Uncertainties",
@@ -1559,7 +1577,7 @@
       "dialogTitle": "Save to audit trail",
       "dialogDescription": "This analysis will be logged in the system audit journal.",
       "commentLabel": "Conclusion / comment",
-      "commentPlaceholder": "E.g.: Location [name] - New tolerances: +X°C / -Y°C - N simulated alarms. Impact deemed acceptable because...",
+      "commentPlaceholder": "E.g.: Location [name] - New tolerances: +XÂ°C / -YÂ°C - N simulated alarms. Impact deemed acceptable because...",
       "cancel": "Cancel",
       "confirm": "Save",
       "success": "Analysis saved successfully",
@@ -1730,8 +1748,8 @@
       "delete_description": "Are you sure you want to delete this measurement point?",
       "columns": {
         "point": "Point",
-        "reference": "Reference T°",
-        "value": "Measured T°",
+        "reference": "Reference TÂ°",
+        "value": "Measured TÂ°",
         "incertitude": "Uncertainty"
       }
     },
@@ -3156,7 +3174,12 @@
     "sensor": "Sensor: {serial}",
     "gso": {
       "rssi": "RSSI: {value}",
-      "tension": "Voltage: {value}"
+      "tension": "Voltage: {value}",
+      "battery_state": {
+        "ok": "Battery state: OK ({value}V)",
+        "medium": "Battery state: Medium ({value}V)",
+        "low": "Battery state: Low ({value}V)"
+      }
     },
     "wireless": {
       "battery": "Battery: {value}%",
@@ -3166,6 +3189,10 @@
       "graph": "Chart",
       "table": "Measurements table",
       "audit": "Audit"
+    },
+    "actions": {
+      "expanded_size": "Expanded view",
+      "standard_size": "Standard view"
     },
     "filters": {
       "site": "Site",
@@ -3199,6 +3226,11 @@
         "out_of_range": "Out of range",
         "ok": "OK",
         "no_response": "No response"
+      },
+      "legend": {
+        "title": "Legend:",
+        "memory": "Memory retrieval",
+        "memory_tooltip": "A memory retrieval is a measurement collected afterward when the sensor did not respond during the initial polling."
       },
       "empty": "No measurements",
       "empty_with_range": "Please select two dates to view measurements"
@@ -3327,20 +3359,32 @@
     "title": "New version {version}",
     "description": "Key updates and changes to know.",
     "sections": {
-      "upgrade": {
-        "title": "License upgrade",
+      "surveillance": {
+        "title": "Monitoring and alarms",
         "items": {
-          "0": "License upgrade page translated (FR/EN) with harmonized labels.",
-          "1": "Color palette aligned to VigiSensys brand on the upgrade page."
+          "0": "Fixed loading errors on the alarms list and on the related access filters.",
+          "1": "Monitoring refresh now preserves filtered display and already loaded locations more reliably.",
+          "2": "Values shown in chart tooltips and on the Y axis are now formatted cleanly.",
+          "3": "Alarm analysis charts now use the full measurement history, including for older alarms.",
+          "4": "GSP setpoint updates now correctly send both low and high alarm delays to the probe.",
+          "5": "Re-enabling monitoring now resets the last response timestamp to avoid unjustified no-response alarms.",
+          "6": "Group-level monitoring activation and deactivation have been stabilized, with the correct labels in the confirmation dialog.",
+          "7": "Measurements coming from memory retrieval are now visually highlighted in the location details table.",
+          "8": "Alarm acknowledgments now appear correctly in the audit trail of a location details view.",
+          "9": "With active filters, refresh now reloads the matching locations correctly and keeps the load-more action positioned inside each section.",
+          "10": "Tree-view counters now separate pre-alarms from ended alarms correctly."
         }
       },
-      "services": {
-        "title": "MC2 Services",
-        "items": {
-          "0": "New MC2 Services hub with direct access to upgrade, hardware, and news."
+        "admin": {
+          "title": "Administration",
+          "items": {
+            "0": "Added the system backup block for all license tiers.",
+            "1": "The acknowledgment history link from the admin dashboard now opens a real page.",
+            "2": "Acknowledgment history exports now correctly reapply the active filters.",
+            "3": "Free acknowledgment comments are now loaded from the dedicated journal source."
+          }
         }
       }
-    }
   },
   "servicesNav": {
     "upgrade": "License upgrade",
@@ -4323,6 +4367,7 @@
       "no_response": "No response",
       "sector": "Power / mains",
       "module": "Module issue",
+      "filtered_results_suffix": "displayed / total",
       "all_sites": "All sites",
       "all_locations": "All locations",
       "site_placeholder": "Filter by site",

@@ -8,10 +8,12 @@ import type { SensorWithLocation } from "@/lib/api"
 import { type SiteSection } from "../_helpers/group-sensors"
 import { staggerContainer } from "@/lib/motion-variants"
 import { sortSensors, type SurveillanceSortMode } from "../_helpers/monitoring-derived"
-import { formatAlarmes, formatGroupes, formatPreAlarmes, formatSondes } from "../_helpers/monitoring-labels"
+import { formatAlarmes, formatAlarmesTerminees, formatGroupes, formatPreAlarmes, formatSondes } from "../_helpers/monitoring-labels"
 import { SurveillanceTreeStatsBadges } from "./monitoring-tree-stats-badges"
 import { buildMonitoringCardProps } from "./monitoring-card-props"
 import { parseDbDateTime } from "@/lib/date-display"
+import type { StatusCounts } from "@/lib/surveillance-status"
+import type { SurveillanceTreeCounterStats } from "@/lib/api"
 
 type Translate = (key: string, values?: Record<string, string>) => string
 
@@ -84,6 +86,22 @@ function countLoadedLocations(sensors: SensorWithLocation[]) {
   return new Set(sensors.map((sensor) => String(sensor.location.id || sensor.id))).size
 }
 
+function toDisplayStats(stats: SurveillanceTreeCounterStats | StatusCounts): StatusCounts {
+  if ("preAlarm" in stats || "ended" in stats || "disabled" in stats) {
+    const treeStats = stats as SurveillanceTreeCounterStats
+    return {
+      total: treeStats.total,
+      ok: treeStats.ok,
+      warning: treeStats.preAlarm,
+      ended: treeStats.ended,
+      critical: treeStats.critical,
+      inactive: treeStats.disabled,
+    }
+  }
+
+  return stats
+}
+
 function PartialLoadNotice({ message }: { message: string }) {
   return (
     <div className="mx-2 flex items-start gap-2 rounded-md border border-sky-200 bg-sky-50 px-3 py-2 text-xs font-medium text-sky-800 shadow-sm dark:border-sky-500/30 dark:bg-sky-500/10 dark:text-sky-100">
@@ -118,7 +136,7 @@ export function MonitoringSiteSection({
     onSurveillanceToggle ??
     ((_: number, __: "surveillance" | "alarms", ___: boolean, ____?: number | null, _____?: string | null) => {})
   const siteSensors = site.groups.flatMap((group) => group.sensors)
-  const siteStats = site.globalStats ?? countStatus(siteSensors)
+  const siteStats = toDisplayStats(site.globalStats ?? countStatus(siteSensors))
   const siteSensorsCount = site.sensorsCountGlobal ?? site.sensorsCount
   const siteGroupsCount = site.groupsCountGlobal ?? site.groups.length
 
@@ -145,6 +163,7 @@ export function MonitoringSiteSection({
             {formatSondes(siteSensorsCount)} - {formatGroupes(siteGroupsCount)}
             {!disabledView && siteStats.critical > 0 ? ` - ${formatAlarmes(siteStats.critical)}` : ""}
             {!disabledView && siteStats.warning > 0 ? ` - ${formatPreAlarmes(siteStats.warning)}` : ""}
+            {!disabledView && siteStats.ended > 0 ? ` - ${formatAlarmesTerminees(siteStats.ended)}` : ""}
           </span>
           {!disabledView ? <SurveillanceTreeStatsBadges stats={siteStats} compact /> : null}
         </span>
@@ -153,7 +172,7 @@ export function MonitoringSiteSection({
       {isSiteExpanded ? (
         <div className="space-y-3">
           {site.groups.map((group) => {
-            const groupStats = group.globalStats ?? countStatus(group.sensors)
+            const groupStats = toDisplayStats(group.globalStats ?? countStatus(group.sensors))
             const sortedGroupSensors = sortSensors(group.sensors, sortMode)
             const isGroupExpanded = disabledView ? true : expandedGroups.has(group.groupKey)
             const loadedGroupLocations = countLoadedLocations(group.sensors)
@@ -204,6 +223,7 @@ export function MonitoringSiteSection({
                         {formatSondes(group.sensorsCountGlobal ?? group.sensors.length)}
                         {groupStats.critical > 0 ? ` - ${formatAlarmes(groupStats.critical)}` : ""}
                         {groupStats.warning > 0 ? ` - ${formatPreAlarmes(groupStats.warning)}` : ""}
+                        {groupStats.ended > 0 ? ` - ${formatAlarmesTerminees(groupStats.ended)}` : ""}
                       </span>
                       <SurveillanceTreeStatsBadges stats={groupStats} compact />
                     </span>

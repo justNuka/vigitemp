@@ -7,6 +7,7 @@ import { formatDbDateTime } from "@/lib/date-display"
 import { getGlobalNonResponseDefault } from "@/lib/non-response-preference"
 import { canUserAccessLieu } from "@/lib/location-access-scope"
 import { log } from "@/lib/logger"
+import { normalizeMeasureNumber } from "@/lib/measurements"
 
 function normalizeDisplayUnit(unit: string | null | undefined): string {
   const normalized = unit?.trim()
@@ -116,6 +117,7 @@ export const GET = withAuthLogging(
                 Frequence: true,
                 Est_Etat_Alarme: true,
                 Est_Valeur_Null: true,
+                Est_Valeur_Memoire: true,
               },
             })
           : prismaMesure.tm_graphique.findMany({
@@ -200,44 +202,55 @@ export const GET = withAuthLogging(
         const dateHeure = m.Date_Heure_Mesure ? new Date(m.Date_Heure_Mesure) : new Date()
         const isNullMeasurement =
           typeof m.Est_Valeur_Null === "number" ? m.Est_Valeur_Null !== 0 : Boolean(m.Est_Valeur_Null)
+        const isMemoryMeasurement =
+          "Est_Valeur_Memoire" in m
+            ? typeof m.Est_Valeur_Memoire === "number"
+              ? m.Est_Valeur_Memoire !== 0
+              : Boolean(m.Est_Valeur_Memoire)
+            : false
 
         const dateDisplay = formatDbDateTime(dateHeure, { withSeconds: false })
         const dateXaxis = formatDbDateTime(dateHeure, { timeOnly: true, withSeconds: false })
+        const resolvedDecimals =
+          m.Nb_Decimal !== null && m.Nb_Decimal !== undefined
+            ? Number(m.Nb_Decimal)
+            : decimalsLieu !== null
+              ? Number(decimalsLieu)
+              : null
 
         return {
           id: ("Id_Mesure" in m ? m.Id_Mesure : m.Id_Graphique)?.toString() || "",
-          Valeur: isNullMeasurement || m.Valeur === null ? null : parseFloat(m.Valeur.toString()),
-          Nb_Decimal:
-            m.Nb_Decimal !== null && m.Nb_Decimal !== undefined
-              ? Number(m.Nb_Decimal)
-              : decimalsLieu !== null
-                ? Number(decimalsLieu)
-                : null,
+          Valeur:
+            isNullMeasurement || m.Valeur === null
+              ? null
+              : normalizeMeasureNumber(parseFloat(m.Valeur.toString()), resolvedDecimals ?? 2),
+          Nb_Decimal: resolvedDecimals,
           Unite: normalizeDisplayUnit(calibration?.Unite ?? lieu?.Derniere_Unite ?? m.Unite),
           DateHeureMesure: dateDisplay,
           DateHeureMesureIso: dateHeure.toISOString(),
           DateHeureMesureXaxis: dateXaxis,
           Consigne:
             m.Consigne !== null
-              ? parseFloat(m.Consigne.toString())
+              ? normalizeMeasureNumber(parseFloat(m.Consigne.toString()), 2)
               : consigneLieu !== null
-                ? parseFloat(consigneLieu.toString())
+                ? normalizeMeasureNumber(parseFloat(consigneLieu.toString()), 2)
                 : null,
           Consigne_Sup:
             m.Consigne_Sup !== null
-              ? parseFloat(m.Consigne_Sup.toString())
+              ? normalizeMeasureNumber(parseFloat(m.Consigne_Sup.toString()), 2)
               : consigneSupLieu !== null
-                ? parseFloat(consigneSupLieu.toString())
+                ? normalizeMeasureNumber(parseFloat(consigneSupLieu.toString()), 2)
                 : null,
           Consigne_Inf:
             m.Consigne_Inf !== null
-              ? parseFloat(m.Consigne_Inf.toString())
+              ? normalizeMeasureNumber(parseFloat(m.Consigne_Inf.toString()), 2)
               : consigneInfLieu !== null
-                ? parseFloat(consigneInfLieu.toString())
+                ? normalizeMeasureNumber(parseFloat(consigneInfLieu.toString()), 2)
                 : null,
           SondeNumeroSerie: m.Sonde_Numero_Serie || "",
           Frequence: m.Frequence || 15,
           Est_Valeur_Null: isNullMeasurement,
+          Est_Valeur_Memoire: isMemoryMeasurement,
           Etat_Alarme:
             typeof m.Est_Etat_Alarme === "number"
               ? m.Est_Etat_Alarme

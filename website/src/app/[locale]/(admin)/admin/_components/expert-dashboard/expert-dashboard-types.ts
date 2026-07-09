@@ -21,6 +21,8 @@ export type Metrics = {
   latestAuditAction: string
   latestConnectedLabel: string
   lastBackupLabel: string
+  latestBackupStatus: string
+  latestBackupEtat: "success" | "in_progress" | "failed" | null
   backupStoragePath: string
   backupLogFilePath: string
   hideStandards: boolean

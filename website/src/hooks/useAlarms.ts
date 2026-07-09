@@ -42,15 +42,18 @@ type Paginated<T> = {
   data: T[];
   pagination: { page: number; limit: number; total: number; pages: number };
   filters?: { sites: AlarmFilterOption[]; lieux: AlarmFilterOption[] };
+  counts?: { active: number; acknowledged: number; resolved: number };
 };
 
 export async function fetchAlarmsPage(
   page: number,
   limit: number,
+  status?: "active" | "acknowledged" | "resolved",
   siteId?: string,
   locationId?: string,
 ): Promise<Paginated<Alarm>> {
   const params = new URLSearchParams({ page: String(page), limit: String(limit) });
+  if (status) params.set("status", status);
   if (siteId && siteId !== "all") params.set("siteId", siteId);
   if (locationId && locationId !== "all") params.set("locationId", locationId);
 
@@ -76,23 +79,30 @@ export async function fetchAlarmsPage(
     Count_30_Days: item.count30Days ?? null,
   }));
 
-  return { data, pagination: response.pagination, filters: response.filters };
+  return {
+    data,
+    pagination: response.pagination,
+    filters: response.filters,
+    counts: response.counts,
+  };
 }
 
 export function useAlarms({
   page = 1,
   limit = 15,
+  status,
   siteId = "all",
   locationId = "all",
 }: {
   page?: number;
   limit?: number;
+  status?: "active" | "acknowledged" | "resolved";
   siteId?: string;
   locationId?: string;
 } = {}) {
   return useQuery({
-    queryKey: ["alarms", page, limit, siteId, locationId],
-    queryFn: () => fetchAlarmsPage(page, limit, siteId, locationId),
+    queryKey: ["alarms", status ?? "all", page, limit, siteId, locationId],
+    queryFn: () => fetchAlarmsPage(page, limit, status, siteId, locationId),
     refetchInterval: (query) => (isUnauthorizedError(query.state.error) ? false : 60000),
   });
 }

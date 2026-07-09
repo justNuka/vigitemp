@@ -15,7 +15,7 @@ import {
   Title,
   Tooltip as ChartTooltip,
 } from "chart.js"
-import { AlertTriangle, ChevronLeft, Clock3, LocateFixed } from "lucide-react"
+import { AlertTriangle, ChevronLeft, Clock3, LocateFixed, Maximize2, Minimize2 } from "lucide-react"
 import { AlarmAcknowledgeDialog, type AcknowledgeDialogAlarm } from "@/components/alarm-acknowledge-dialog"
 import { alarmsApi } from "@/lib/api"
 import { toast } from "sonner"
@@ -123,13 +123,15 @@ export function AlarmAnalysisClient() {
   const [isLoadingDetail, setIsLoadingDetail] = useState(false)
   const [dateRange, setDateRange] = useState<DateRangeValue | null>(null)
   const [activeTab, setActiveTab] = useState<"graph" | "table" | "audit">("graph")
-  const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 200 })
+  const [detailsSize, setDetailsSize] = useState<"standard" | "expanded">("standard")
+  const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 500 })
   const [tableSorting, setTableSorting] = useState<SortingState>([])
   const [zoomBounds, setZoomBounds] = useState<ZoomBounds | null>(null)
   const [guidePositions, setGuidePositions] = useState<GuidePositions>({ sup: null, inf: null, consigne: null, preSup: null, preInf: null })
   const [showGraphAudits, setShowGraphAudits] = useState(true)
   const [isAcknowledgeOpen, setIsAcknowledgeOpen] = useState(false)
   const [isAcknowledgePending, setIsAcknowledgePending] = useState(false)
+  const tabContentMaxHeight = detailsSize === "expanded" ? "calc(100vh - 18rem)" : "calc(100vh - 26rem)"
 
   useEffect(() => {
     if (isChartZoomPluginRegistered) return
@@ -226,6 +228,7 @@ export function AlarmAnalysisClient() {
     rowNumber: 500,
     startDate: explicitRangeStart,
     endDate: explicitRangeEnd,
+    source: "mesures",
     includeNullNonResponse: true,
   })
 
@@ -472,6 +475,13 @@ export function AlarmAnalysisClient() {
           <Button variant="outline" onClick={exportAuditCsv} disabled={auditLogs.length === 0}>
             {t("analysis.exportAudit")}
           </Button>
+          <Button
+            variant="outline"
+            onClick={() => setDetailsSize((current) => (current === "expanded" ? "standard" : "expanded"))}
+          >
+            {detailsSize === "expanded" ? <Minimize2 className="mr-2 h-4 w-4" /> : <Maximize2 className="mr-2 h-4 w-4" />}
+            {detailsSize === "expanded" ? t("analysis.standardView") : t("analysis.expandedView")}
+          </Button>
         </div>
       </PageHeader>
 
@@ -648,11 +658,18 @@ export function AlarmAnalysisClient() {
                 isSurveillanceActive={true}
                 rangeEnabled={Boolean(dateRange?.from)}
                 presentationRows={presentationRows}
+                maxHeight={tabContentMaxHeight}
                 t={tMonitoring}
               />
             </TabsContent>
             <TabsContent value="audit" className="min-w-0">
-              <MonitoringAuditTab logs={auditLogs} isLoading={auditLoading || isLoadingDetail || isGraphLoading} error={auditError} t={tMonitoring} />
+              <MonitoringAuditTab
+                logs={auditLogs}
+                isLoading={auditLoading || isLoadingDetail || isGraphLoading}
+                error={auditError}
+                maxHeight={tabContentMaxHeight}
+                t={tMonitoring}
+              />
             </TabsContent>
           </Tabs>
         </div>
