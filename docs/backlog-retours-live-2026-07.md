@@ -141,6 +141,24 @@
 | R-141 | Dashboard utilisateur: ajouter un camembert type d'alarmes | moyen | moyen | a faire | Nouveau widget |
 | R-142 | Mail d'alarme terminee pour les GSO ne part pas | majeur | moyen | a faire | L'envoi d'alarme declenchee fonctionne correctement |
 
+## 13. Retours backlog du 2026-07-13
+| ID | Sujet | Impact | Complexite | Statut | Notes |
+|---|---|---|---|---|---|
+| R-143 | Remontees memoire: thread dedie avec buffer de demandes | majeur | lourd | a faire | Stocker les remontees a faire puis laisser un thread dedie les consommer |
+| R-144 | Remontees memoire: stocker debut et fin de non reponse dans une nouvelle table | majeur | moyen | a faire | Base pour reconstruire proprement les plages a demander |
+| R-145 | Remontees memoire: construire les demandes a partir des vraies plages date/heure | majeur | lourd | a faire | Prendre premiere date, derniere date, puis ajuster offset et volume de memoire a demander |
+| R-146 | Remontees memoire: ne pas lancer de demande si la non reponse n'a pas encore de fin | majeur | rapide | a faire | Tant que la plage est ouverte, on ne demande rien |
+| R-147 | Page admin alarmes: erreur 500 depuis le dashboard admin | majeur | moyen | a faire | Acces via la carte dashboard admin buggue |
+| R-148 | Acquittement page alarmes: statut non mis a jour sur la surveillance | majeur | moyen | a faire | Verifier refresh/revalidation/cache apres acquittement |
+| R-149 | Surveillance: agrandir en largeur le badge alarmes du header | mineur | rapide | a faire | Information prioritaire, badge trop serre |
+| R-150 | Afficher le nombre d'alarmes sur le lien de la page alarmes | mineur | rapide | a faire | Rendre le lien plus informatif |
+| R-151 | Ameliorer l'affichage des audits trop "code" | moyen | moyen | fait | Les details des audits de lieu masquent maintenant les champs techniques bruts, resumant les changements avec des libelles metier et des valeurs reformatees |
+| R-152 | Modale de lieu: plage par defaut sur la journee courante | majeur | moyen | fait | A l'ouverture, la modale charge maintenant par defaut la journee courante pour le graphe, le tableau et l'audit |
+| R-153 | Cards surveillance: retirer les boutons details et plan | mineur | rapide | fait | Les actions details et plan ont ete retirees des cards de surveillance |
+| R-154 | Tableau de mesures: afficher les remontees memoire en italique, sans couleur | mineur | rapide | fait | La mise en avant amber a ete retiree au profit d'un rendu en italique uniquement |
+| R-155 | Passer les mails a envoyer en base via `notification` pour suivi | majeur | lourd | a faire | Probable ajout d'un type de notification mail et d'un workflow de reprise/suivi |
+| R-156 | Nouveaux logos light/dark: utiliser le logo blanc dans la sidebar | mineur | rapide | a faire | Ajustement theming/branding |
+
 ## Proposition d'ordre de traitement
 1. R-011 remontees memoire non visibles
 2. R-012 aucun lieu/aucune sonde si filtre actif sans resultat charge -> si on met un filtre sur la page de surveillance (par exemple une recherche de lieu), qu'on change de page, et qu'on revient, si le lieu ne fait pas parti des 50 lieux chargés de base, alors on voit aucun résultat
@@ -169,6 +187,15 @@
 25. R-137 erreur de justesse
 26. R-138 / R-139 / R-140 / R-141 dashboard utilisateur
 27. R-142 mail d'alarme terminee GSO
+28. R-143 / R-144 / R-145 / R-146 refonte remontees memoire
+29. R-147 page admin alarmes 500
+30. R-148 acquittement page alarmes -> surveillance
+31. R-149 / R-150 header et lien alarmes
+32. R-151 audit plus lisible
+33. R-152 / R-153 details modale lieu et cards surveillance
+34. R-154 remontees memoire en italique dans le tableau
+35. R-155 notifications mail en base
+36. R-156 nouveaux logos light/dark sidebar
 
 ## Points a preciser
 - R-002 `version publique de test`: parle-t-on d'un environnement expose, d'un badge visible, ou d'un canal de diffusion logiciel ?

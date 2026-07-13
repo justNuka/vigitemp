@@ -23,7 +23,7 @@ export function MetrologySensorInfoSection({
   const t = useTranslations('locationsForm.metrology')
   const correctionExample = appliedAccuracyCorrection === null
     ? null
-    : formatMeasureValue(appliedAccuracyCorrection, 2)
+    : `${appliedAccuracyCorrection >= 0 ? '+' : '-'}${formatMeasureValue(Math.abs(appliedAccuracyCorrection), 2)}`
 
   return (
     <div className="border p-4 rounded-lg space-y-4">

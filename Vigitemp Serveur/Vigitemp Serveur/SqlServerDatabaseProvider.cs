@@ -1634,6 +1634,250 @@ namespace Vigitemp_Serveur
             }
         }
 
+        public bool addGspRecoverySpan(int idLieu, string serialNumber, DateTime recoverFromProbeDateTime, DateTime recoverUntilProbeDateTime)
+        {
+            lock (_lock)
+            {
+                try
+                {
+                    if (!EnsureConnected())
+                    {
+                        return false;
+                    }
+
+                    var normalizedSerial = (serialNumber ?? string.Empty).Trim();
+                    if (idLieu <= 0 || string.IsNullOrWhiteSpace(normalizedSerial) || recoverUntilProbeDateTime <= recoverFromProbeDateTime)
+                    {
+                        return false;
+                    }
+
+                    using (var cmd = CreateCommand(
+                        _connectionMeasure,
+                        "INSERT INTO dbo.[tm_remontee_plage_gsp] " +
+                        "([Id_Lieu], [GSP_SN], [Date_Heure_Debut], [Date_Heure_Fin], [Statut], [Date_Creation], [Date_Derniere_Maj], [Nb_Tentatives], [Derniere_Erreur]) " +
+                        "VALUES " +
+                        "(@idLieu, @serial, @dateDebut, @dateFin, 'A_FAIRE', GETDATE(), GETDATE(), 0, NULL);"))
+                    {
+                        cmd.Parameters.AddWithValue("@idLieu", idLieu);
+                        cmd.Parameters.AddWithValue("@serial", normalizedSerial);
+                        cmd.Parameters.AddWithValue("@dateDebut", recoverFromProbeDateTime);
+                        cmd.Parameters.AddWithValue("@dateFin", recoverUntilProbeDateTime);
+                        cmd.ExecuteNonQuery();
+                    }
+
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    VigitempServeur.Log("(addGspRecoverySpan MSSQL) SQL Erreur: " + ex.Message);
+                    return false;
+                }
+            }
+        }
+
+        public List<GspRecoverySpan> getPendingGspRecoverySpans(int idLieu, string serialNumber)
+        {
+            lock (_lock)
+            {
+                var result = new List<GspRecoverySpan>();
+                try
+                {
+                    if (!EnsureConnected())
+                    {
+                        return result;
+                    }
+
+                    var normalizedSerial = (serialNumber ?? string.Empty).Trim();
+                    if (idLieu <= 0 || string.IsNullOrWhiteSpace(normalizedSerial))
+                    {
+                        return result;
+                    }
+
+                    using (var cmd = CreateCommand(
+                        _connectionMeasure,
+                        "SELECT [Id], [Id_Lieu], [GSP_SN], [Date_Heure_Debut], [Date_Heure_Fin], [Statut], [Date_Creation], [Date_Derniere_Maj], [Nb_Tentatives], [Derniere_Erreur] " +
+                        "FROM dbo.[tm_remontee_plage_gsp] " +
+                        "WHERE [Id_Lieu] = @idLieu AND [GSP_SN] = @serial AND [Statut] = 'A_FAIRE' " +
+                        "ORDER BY [Date_Heure_Debut] ASC, [Id] ASC;"))
+                    {
+                        cmd.Parameters.AddWithValue("@idLieu", idLieu);
+                        cmd.Parameters.AddWithValue("@serial", normalizedSerial);
+                        using (var reader = cmd.ExecuteReader())
+                        {
+                            while (reader.Read())
+                            {
+                                result.Add(new GspRecoverySpan
+                                {
+                                    Id = Convert.ToInt32(reader["Id"]),
+                                    IdLieu = Convert.ToInt32(reader["Id_Lieu"]),
+                                    Serial = reader["GSP_SN"]?.ToString(),
+                                    RecoverFromProbeDateTime = Convert.ToDateTime(reader["Date_Heure_Debut"]),
+                                    RecoverUntilProbeDateTime = Convert.ToDateTime(reader["Date_Heure_Fin"]),
+                                    Status = reader["Statut"]?.ToString(),
+                                    CreatedAt = Convert.ToDateTime(reader["Date_Creation"]),
+                                    UpdatedAt = reader["Date_Derniere_Maj"] == DBNull.Value ? (DateTime?)null : Convert.ToDateTime(reader["Date_Derniere_Maj"]),
+                                    AttemptCount = reader["Nb_Tentatives"] == DBNull.Value ? 0 : Convert.ToInt32(reader["Nb_Tentatives"]),
+                                    LastError = reader["Derniere_Erreur"] == DBNull.Value ? null : reader["Derniere_Erreur"].ToString()
+                                });
+                            }
+                        }
+                    }
+
+                    return result;
+                }
+                catch (Exception ex)
+                {
+                    VigitempServeur.Log("(getPendingGspRecoverySpans MSSQL) SQL Erreur: " + ex.Message);
+                    return result;
+                }
+            }
+        }
+
+        public bool setGspRecoverySpansStatus(IEnumerable<int> spanIds, string status, string lastError = null, bool incrementAttempts = false)
+        {
+            lock (_lock)
+            {
+                try
+                {
+                    if (!EnsureConnected())
+                    {
+                        return false;
+                    }
+
+                    var ids = (spanIds ?? Enumerable.Empty<int>()).Where(id => id > 0).Distinct().ToList();
+                    if (ids.Count == 0 || string.IsNullOrWhiteSpace(status))
+                    {
+                        return true;
+                    }
+
+                    using (var cmd = _connectionMeasure.CreateCommand())
+                    {
+                        var parameterNames = new List<string>(ids.Count);
+                        for (var index = 0; index < ids.Count; index++)
+                        {
+                            var parameterName = "@id" + index;
+                            parameterNames.Add(parameterName);
+                            cmd.Parameters.AddWithValue(parameterName, ids[index]);
+                        }
+
+                        cmd.CommandText =
+                            "UPDATE dbo.[tm_remontee_plage_gsp] " +
+                            "SET [Statut] = @status, " +
+                            "[Date_Derniere_Maj] = GETDATE(), " +
+                            "[Derniere_Erreur] = @lastError, " +
+                            "[Nb_Tentatives] = [Nb_Tentatives] + @incrementAttempts " +
+                            "WHERE [Id] IN (" + string.Join(", ", parameterNames) + ");";
+                        cmd.Parameters.AddWithValue("@status", status.Trim().ToUpperInvariant());
+                        cmd.Parameters.AddWithValue("@lastError", string.IsNullOrWhiteSpace(lastError) ? (object)DBNull.Value : lastError.Trim());
+                        cmd.Parameters.AddWithValue("@incrementAttempts", incrementAttempts ? 1 : 0);
+                        cmd.ExecuteNonQuery();
+                    }
+
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    VigitempServeur.Log("(setGspRecoverySpansStatus MSSQL) SQL Erreur: " + ex.Message);
+                    return false;
+                }
+            }
+        }
+
+        public bool hasPendingGspRecoverySpans(int idLieu, string serialNumber)
+        {
+            lock (_lock)
+            {
+                try
+                {
+                    if (!EnsureConnected())
+                    {
+                        return false;
+                    }
+
+                    var normalizedSerial = (serialNumber ?? string.Empty).Trim();
+                    if (idLieu <= 0 || string.IsNullOrWhiteSpace(normalizedSerial))
+                    {
+                        return false;
+                    }
+
+                    using (var cmd = CreateCommand(
+                        _connectionMeasure,
+                        "SELECT TOP 1 1 " +
+                        "FROM dbo.[tm_remontee_plage_gsp] " +
+                        "WHERE [Id_Lieu] = @idLieu AND [GSP_SN] = @serial AND [Statut] <> 'TRAITEE';"))
+                    {
+                        cmd.Parameters.AddWithValue("@idLieu", idLieu);
+                        cmd.Parameters.AddWithValue("@serial", normalizedSerial);
+                        var scalar = cmd.ExecuteScalar();
+                        return scalar != null && scalar != DBNull.Value;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    VigitempServeur.Log("(hasPendingGspRecoverySpans MSSQL) SQL Erreur: " + ex.Message);
+                    return false;
+                }
+            }
+        }
+
+        public bool hasBlockingGspRecoveryAlarm(int idLieu)
+        {
+            lock (_lock)
+            {
+                try
+                {
+                    if (!EnsureConnected())
+                    {
+                        return false;
+                    }
+
+                    using (var cmd = CreateCommand(
+                        _connectionMain,
+                        "SELECT TOP 1 1 FROM t_alarme " +
+                        "WHERE Id_Lieu = @idLieu AND Type IN ('N', 'M') AND Date_Heure_Fin IS NULL;"))
+                    {
+                        cmd.Parameters.AddWithValue("@idLieu", idLieu);
+                        var scalar = cmd.ExecuteScalar();
+                        return scalar != null && scalar != DBNull.Value;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    VigitempServeur.Log("(hasBlockingGspRecoveryAlarm MSSQL) SQL Erreur: " + ex.Message);
+                    return false;
+                }
+            }
+        }
+
+        public int resetInProgressGspRecoverySpans()
+        {
+            lock (_lock)
+            {
+                try
+                {
+                    if (!EnsureConnected())
+                    {
+                        return 0;
+                    }
+
+                    using (var cmd = CreateCommand(
+                        _connectionMeasure,
+                        "UPDATE dbo.[tm_remontee_plage_gsp] " +
+                        "SET [Statut] = 'A_FAIRE', [Date_Derniere_Maj] = GETDATE(), [Derniere_Erreur] = @lastError " +
+                        "WHERE [Statut] = 'EN_COURS';"))
+                    {
+                        cmd.Parameters.AddWithValue("@lastError", "server-restart");
+                        return cmd.ExecuteNonQuery();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    VigitempServeur.Log("(resetInProgressGspRecoverySpans MSSQL) SQL Erreur: " + ex.Message);
+                    return 0;
+                }
+            }
+        }
+
         public bool setNonResponseAlarm(int idLieu, string sondeNumeroSerie, bool isActive)
         {
             return setTechnicalAlarm(idLieu, sondeNumeroSerie, "N", isActive, "setNonResponseAlarm MSSQL");

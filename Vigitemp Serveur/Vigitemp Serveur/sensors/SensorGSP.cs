@@ -940,8 +940,7 @@ namespace Vigitemp_Serveur.sensors
                 var missingCount = Math.Max(1, (int)Math.Floor(gapSeconds / _frequencySeconds) - 1);
                 VigitempServeur.Log(
                     $"[SONDE][GAP] type=GSP serial={m_sondeSerialNumber} previous={previousProbeDateTime:O} current={currentProbeDateTime:O} expectedSec={_frequencySeconds} actualSec={Math.Round(gapSeconds, 0, MidpointRounding.AwayFromZero)} status=anomaly missingCount={missingCount}");
-                ths.GetDatabase().setLieuGspRecoveryPending(m_idLieu, true);
-                ths.EnqueueGspRecovery(m_sondeSerialNumber, previousProbeDateTime, currentProbeDateTime, missingCount);
+                ths.RegisterGspRecoveryGap(m_idLieu, m_sondeSerialNumber, previousProbeDateTime, currentProbeDateTime);
             }
         }
 

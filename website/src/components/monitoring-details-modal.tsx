@@ -71,6 +71,15 @@ type GuidePositions = {
   preInf: number | null;
 };
 
+function buildCurrentDayRange(): DateRangeValue {
+  const now = new Date();
+  const from = new Date(now);
+  from.setHours(0, 0, 0, 0);
+  const to = new Date(now);
+  to.setHours(23, 59, 59, 999);
+  return { from, to };
+}
+
 export default function MonitoringDetailsModal({
   isOpen,
   onClose,
@@ -116,7 +125,7 @@ export default function MonitoringDetailsModal({
     };
   }, []);
 
-  const [dateRange, setDateRange] = useState<DateRangeValue | null>(initialRange ?? null);
+  const [dateRange, setDateRange] = useState<DateRangeValue | null>(initialRange ?? buildCurrentDayRange());
   const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 200 });
   const [guidePositions, setGuidePositions] = useState<GuidePositions>({
     sup: null,
@@ -152,10 +161,9 @@ export default function MonitoringDetailsModal({
   }, [dateRange, initialRange, isOpen]);
 
   useEffect(() => {
-    if (initialRange) {
-      setDateRange(initialRange);
-    }
-  }, [initialRange]);
+    if (!isOpen) return;
+    setDateRange(initialRange ?? buildCurrentDayRange());
+  }, [idLieu, initialRange, isOpen]);
 
   useEffect(() => {
     if (!isOpen) {
@@ -461,8 +469,13 @@ export default function MonitoringDetailsModal({
   const [detailsSize, setDetailsSize] = useState<"standard" | "expanded">("standard");
   const isDialogLoading = rangeEnabled ? rangeGraphLoading : baseLoading;
   const expandedHistoryLayout =
-    detailsSize === "expanded" || (rangeEnabled && (activeTab === "graph" || activeTab === "table"));
-  const tabContentMaxHeight = detailsSize === "expanded" ? "calc(100vh - 18rem)" : "calc(100vh - 26rem)";
+    detailsSize === "expanded" ||
+    activeTab === "audit" ||
+    (rangeEnabled && (activeTab === "graph" || activeTab === "table"));
+  const tabContentMaxHeight =
+    detailsSize === "expanded" || activeTab === "audit"
+      ? "calc(100vh - 18rem)"
+      : "calc(100vh - 26rem)";
 
   useEffect(() => {
     if (!isOpen) {

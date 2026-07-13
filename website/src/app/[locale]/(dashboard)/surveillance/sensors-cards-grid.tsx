@@ -17,6 +17,7 @@ interface SensorsCardsGridProps {
   disabledSensors: SensorWithLocation[]
   activeTotalCount?: number
   disabledTotalCount?: number
+  emptyDescription?: string
   disabledFirst?: boolean
   isLoading?: boolean
   activeFooter?: ReactNode
@@ -47,6 +48,7 @@ export function SensorsCardsGrid({
   disabledSensors,
   activeTotalCount,
   disabledTotalCount,
+  emptyDescription,
   disabledFirst = false,
   isLoading = false,
   activeFooter,
@@ -87,7 +89,7 @@ export function SensorsCardsGrid({
   }
 
   if (activeSensors.length === 0 && disabledSensors.length === 0) {
-    return <SurveillanceEmptyState title={t("grid.empty_title")} />
+    return <SurveillanceEmptyState title={t("grid.empty_title")} description={emptyDescription} />
   }
 
   const sortedDisabledSensors = sortSensors(disabledSensors, sortMode)

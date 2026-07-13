@@ -254,8 +254,8 @@ export function TanStackTable<TData extends Record<string, any>>({
   }, [exportExcludeColumnIds, table]);
 
   const exportRows = useMemo(() => {
-    // Export what is currently visible logically in the table: filters + sorting applied, pagination ignored.
-    return table.getSortedRowModel().rows;
+    // Export the current logical dataset after local filters/sorting, but before pagination.
+    return table.getPrePaginationRowModel().rows;
   }, [table]);
 
   const exportDataRows = useMemo(() => exportData ?? null, [exportData]);

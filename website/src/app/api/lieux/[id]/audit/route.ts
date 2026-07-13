@@ -2,6 +2,7 @@ import { NextRequest } from "next/server"
 import { prisma, prismaMesure } from "@/lib/prisma"
 import { withAuthLogging } from "@/lib/api-wrappers"
 import { apiError, apiOk } from "@/lib/api-response"
+import { formatMonitoringAuditSummary } from "@/lib/audit/monitoring-audit"
 import { log } from "@/lib/logger"
 import { parseDbDateTime, serializeDbDateTime } from "@/lib/date-display"
 
@@ -165,6 +166,7 @@ export const GET = withAuthLogging(
 			const formatted = logs.map((log) => {
 				const code = log.Code_Journal?.trim() || ""
 				const label = codeMap.get(code) ?? FALLBACK_CODE_LABELS[code] ?? ""
+				const summarizedDetails = formatMonitoringAuditSummary(log.Commentaire)
 
 				return {
 					id: log.Id_Journal,
@@ -175,7 +177,10 @@ export const GET = withAuthLogging(
 					commentaireUtilisateur: log.Commentaire_Utilisateur ?? null,
 					user: log.Nom_Utilisateur ?? null,
 					profile: log.Profil_Utilisateur ?? null,
-					detailsSummary: [log.Commentaire_Utilisateur, log.Commentaire].filter(Boolean).join(" | ") || null,
+					detailsSummary:
+						summarizedDetails !== "-"
+							? summarizedDetails
+							: log.Commentaire_Utilisateur ?? null,
 					lieuId,
 				}
 			})

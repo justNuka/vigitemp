@@ -205,7 +205,7 @@ export type SensorWithLocation = {
   status: "ok" | "warning" | "critical" | "technical" | "ended";
   lieuType?: string | null;
   alarmId?: number | null;
-  alarmType?: "H" | "B" | "N" | "S" | "M" | "T" | null;
+  alarmType?: "H" | "B" | "N" | "S" | "A" | "M" | "T" | null;
 };
 
 export type SurveillanceTreeCounterStats = {

@@ -194,6 +194,7 @@ export const GET = withAdminLogging(async (_req: NextRequest) => {
         logFilePath: backupLogPath,
         archiveCount: archiveRecords.length,
         slotCount: BACKUP_SLOT_NAMES.length,
+        latestRun: runRecords[0] ?? null,
       },
     }
 

@@ -89,7 +89,7 @@ export async function fetchAlarmsPage(
 
 export function useAlarms({
   page = 1,
-  limit = 15,
+  limit = 500,
   status,
   siteId = "all",
   locationId = "all",

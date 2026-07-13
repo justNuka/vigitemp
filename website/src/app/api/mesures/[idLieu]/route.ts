@@ -21,7 +21,6 @@ export const GET = withAuthLogging(
       const { idLieu } = await params
       const searchParams = req.nextUrl.searchParams
       const rowNumberParam = parseInt(searchParams.get("rowNumber") || "125")
-      const rowNumber = Math.min(rowNumberParam, 125)
       const pageParam = parseInt(searchParams.get("page") || "1")
       const pageSizeParam = parseInt(searchParams.get("pageSize") || "200")
       const page = Number.isFinite(pageParam) && pageParam > 0 ? pageParam : 1
@@ -33,6 +32,8 @@ export const GET = withAuthLogging(
       const forceFresh = searchParams.get("fresh") === "true"
       const includeMeta = searchParams.get("includeMeta") === "true"
       const source = searchParams.get("source") === "mesures" ? "mesures" : "graphique"
+      const maxRowNumber = source === "mesures" ? 2000 : 500
+      const rowNumber = Math.min(rowNumberParam, maxRowNumber)
       const usePagination = source === "mesures" && (searchParams.has("page") || searchParams.has("pageSize"))
       const includeNullNonResponse = await getGlobalNonResponseDefault()
       const sortBy = sortByParam === "value" ? "value" : sortByParam === "date" ? "date" : null

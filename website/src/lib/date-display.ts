@@ -5,6 +5,8 @@ type FormatOptions = {
   dateOnly?: boolean;
   timeOnly?: boolean;
   fallback?: string;
+  locale?: string | string[];
+  timeZone?: string;
 };
 
 const pad2 = (value: number) => String(value).padStart(2, "0");
@@ -67,7 +69,7 @@ const maybeAlreadyFormatted = (value: string) => {
 };
 
 export function formatDbDateTime(value: DbDateInput, options: FormatOptions = {}): string {
-  const { withSeconds = true, dateOnly = false, timeOnly = false, fallback = "-" } = options;
+  const { withSeconds = true, dateOnly = false, timeOnly = false, fallback = "-", locale, timeZone } = options;
 
   if (typeof value === "string") {
     const direct = maybeAlreadyFormatted(value);
@@ -83,6 +85,59 @@ export function formatDbDateTime(value: DbDateInput, options: FormatOptions = {}
   const hours = pad2(date.getHours());
   const minutes = pad2(date.getMinutes());
   const seconds = pad2(date.getSeconds());
+
+  if (locale || timeZone) {
+    if (dateOnly) {
+      const dateOptions: Intl.DateTimeFormatOptions = {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+      };
+
+      if (timeZone) {
+        dateOptions.timeZone = timeZone;
+      }
+
+      return new Intl.DateTimeFormat(locale, dateOptions).format(date);
+    }
+
+    if (timeOnly) {
+      const timeOptions: Intl.DateTimeFormatOptions = {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+      };
+
+      if (withSeconds) {
+        timeOptions.second = "2-digit";
+      }
+
+      if (timeZone) {
+        timeOptions.timeZone = timeZone;
+      }
+
+      return new Intl.DateTimeFormat(locale, timeOptions).format(date);
+    }
+
+    const dateTimeOptions: Intl.DateTimeFormatOptions = {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    };
+
+    if (withSeconds) {
+      dateTimeOptions.second = "2-digit";
+    }
+
+    if (timeZone) {
+      dateTimeOptions.timeZone = timeZone;
+    }
+
+    return new Intl.DateTimeFormat(locale, dateTimeOptions).format(date);
+  }
 
   if (dateOnly) return `${day}/${month}/${year}`;
   if (timeOnly) return withSeconds ? `${hours}:${minutes}:${seconds}` : `${hours}:${minutes}`;

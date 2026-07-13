@@ -26,13 +26,13 @@ import { MonitoringGraphTab } from "@/components/monitoring-details/monitoring-g
 import { MonitoringTableTab } from "@/components/monitoring-details/monitoring-table-tab"
 import type { DateRangeValue, ZoomBounds } from "@/components/monitoring-details/types"
 import { useMonitoringAuditLogs } from "@/components/monitoring-details/use-monitoring-audit-logs"
+import { useMonitoringRangeMeasurements } from "@/components/monitoring-details/use-monitoring-range-measurements"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { DateRangePicker } from "@/components/ui/date-range-picker"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { useLieuMeasurements } from "@/hooks/useLieuMeasurements"
 import { useLieuMeasurementsPaged } from "@/hooks/useLieuMeasurementsPaged"
 import { formatDbDateTime, parseDbDateTime } from "@/lib/date-display"
 import { getMeasureSummary, calculateYDomain, formatMeasureValue, sortMeasuresChronologically } from "@/lib/measurements"
@@ -131,7 +131,10 @@ export function AlarmAnalysisClient() {
   const [showGraphAudits, setShowGraphAudits] = useState(true)
   const [isAcknowledgeOpen, setIsAcknowledgeOpen] = useState(false)
   const [isAcknowledgePending, setIsAcknowledgePending] = useState(false)
-  const tabContentMaxHeight = detailsSize === "expanded" ? "calc(100vh - 18rem)" : "calc(100vh - 26rem)"
+  const tabContentMaxHeight =
+    detailsSize === "expanded" || activeTab === "audit"
+      ? "calc(100vh - 18rem)"
+      : "calc(100vh - 26rem)"
 
   useEffect(() => {
     if (isChartZoomPluginRegistered) return
@@ -223,12 +226,10 @@ export function AlarmAnalysisClient() {
     return end
   }, [dateRange])
 
-  const { data: graphData = [], isLoading: isGraphLoading } = useLieuMeasurements(locationId, {
+  const { data: graphData = [], isLoading: isGraphLoading } = useMonitoringRangeMeasurements(locationId, {
     enabled: locationId > 0 && !!explicitRangeStart && !!explicitRangeEnd,
-    rowNumber: 500,
-    startDate: explicitRangeStart,
-    endDate: explicitRangeEnd,
-    source: "mesures",
+    rangeStart: explicitRangeStart,
+    rangeEnd: explicitRangeEnd,
     includeNullNonResponse: true,
   })
 
@@ -607,13 +608,17 @@ export function AlarmAnalysisClient() {
             </Button>
           </div>
 
-          <Tabs value={activeTab} onValueChange={(next) => setActiveTab(next as "graph" | "table" | "audit")} className="min-w-0">
+          <Tabs
+            value={activeTab}
+            onValueChange={(next) => setActiveTab(next as "graph" | "table" | "audit")}
+            className="flex min-h-0 min-w-0 flex-1 flex-col"
+          >
             <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="graph">{tMonitoring("tabs.graph")}</TabsTrigger>
               <TabsTrigger value="table">{tMonitoring("tabs.table")}</TabsTrigger>
               <TabsTrigger value="audit">{tMonitoring("tabs.audit")}</TabsTrigger>
             </TabsList>
-            <TabsContent value="graph" className="min-w-0">
+            <TabsContent value="graph" className="flex min-h-0 min-w-0 flex-1 flex-col">
               <MonitoringGraphTab
                 chartRef={chartRef}
                 orderedData={orderedData}
@@ -639,7 +644,7 @@ export function AlarmAnalysisClient() {
                 t={tMonitoring}
               />
             </TabsContent>
-            <TabsContent value="table" className="min-w-0">
+            <TabsContent value="table" className="flex min-h-0 min-w-0 flex-1 flex-col">
               <MonitoringTableTab
                 tableMeasurements={orderedHistoryData}
                 nomLieu={selectedAlarmDetail?.locationName ?? "-"}
@@ -662,7 +667,7 @@ export function AlarmAnalysisClient() {
                 t={tMonitoring}
               />
             </TabsContent>
-            <TabsContent value="audit" className="min-w-0">
+            <TabsContent value="audit" className="flex min-h-0 min-w-0 flex-1 flex-col">
               <MonitoringAuditTab
                 logs={auditLogs}
                 isLoading={auditLoading || isLoadingDetail || isGraphLoading}

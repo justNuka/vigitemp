@@ -222,6 +222,19 @@ export function AlarmsClient({ alarms, statusFilter, initialLocationId = null, s
     </Button>
   );
 
+  const hasHiddenLocationFilter = Boolean(locationFilterId);
+  const hiddenLocationFilterLabel = useMemo(() => {
+    if (!locationFilterId) return null;
+    const matchingAlarm = localAlarms.find((alarm) => alarm.locationId === locationFilterId);
+    return matchingAlarm?.location?.name ?? locationFilterId;
+  }, [localAlarms, locationFilterId]);
+
+  const clearImplicitFilters = useCallback(() => {
+    setLocationFilterId(null);
+    setTypeFilters([]);
+    router.replace(`/${locale}/alarmes?status=${statusFilter}`);
+  }, [locale, router, statusFilter]);
+
   const columns: ColumnDef<AlarmRow>[] = [
     {
       accessorKey: "type",
@@ -380,6 +393,13 @@ export function AlarmsClient({ alarms, statusFilter, initialLocationId = null, s
     return { from: new Date(start.getTime() - padMs), to: new Date(end.getTime() + padMs) };
   }, [selectedAlarm]);
 
+  const resultsLabel = useMemo(() => {
+    return t("table.results_with_total", {
+      visible: visibleRowCount,
+      total: alarmsByStatus.length,
+    });
+  }, [alarmsByStatus.length, t, visibleRowCount]);
+
   const cardTitle = statusFilter === "active" ? t("titles.active") : t("titles.resolved");
   const handleCloseDialog = useCallback(() => {
     setSelectedAlarm(null);
@@ -441,6 +461,33 @@ export function AlarmsClient({ alarms, statusFilter, initialLocationId = null, s
         </div>
       </CardHeader>
       <CardContent>
+          {hasHiddenLocationFilter ? (
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-[#26A5DA]/35 bg-[#26A5DA]/8 px-3 py-2 text-sm text-[#075776] dark:border-[#26A5DA]/45 dark:bg-[#26A5DA]/12 dark:text-sky-50">
+              <div className="flex flex-wrap items-center gap-2">
+                <Bell className="h-4 w-4" />
+                <span className="font-medium">{t("filters.active_label")}</span>
+                <span className="rounded-full bg-white/70 px-2.5 py-1 text-xs font-medium text-[#075776] dark:bg-slate-900/40 dark:text-sky-50">
+                  {t("filters.active_location", { value: hiddenLocationFilterLabel ?? locationFilterId ?? "-" })}
+                </span>
+                {typeFilters.length > 0 ? (
+                  <span className="rounded-full bg-white/70 px-2.5 py-1 text-xs font-medium text-[#075776] dark:bg-slate-900/40 dark:text-sky-50">
+                    {t("filters.active_types", {
+                      value: typeFilters.map((type) => t(`filter.types.${type}`)).join(", "),
+                    })}
+                  </span>
+                ) : null}
+              </div>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="gap-2 text-[#075776] hover:bg-[#26A5DA]/14 hover:text-[#075776] dark:text-sky-50 dark:hover:bg-[#26A5DA]/18"
+                onClick={clearImplicitFilters}
+              >
+                {t("filters.clear")}
+              </Button>
+            </div>
+          ) : null}
           <TanStackTable<AlarmRow>
             columns={columns}
             data={tableData}
@@ -448,6 +495,7 @@ export function AlarmsClient({ alarms, statusFilter, initialLocationId = null, s
           pageSize={500}
           isLoading={isRefreshing}
           emptyMessage={t("table.empty")}
+          resultsLabel={resultsLabel}
           selectedRowId={selectedAlarm?.id}
           onRowClick={(row: AlarmRow) => {
             const fullAlarm = localAlarms.find((item) => item.id === row.id);

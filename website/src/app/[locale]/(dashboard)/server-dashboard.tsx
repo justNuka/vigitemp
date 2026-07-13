@@ -1,6 +1,8 @@
 import { unstable_noStore } from "next/cache";
 import { getTranslations } from "next-intl/server";
 
+import { formatLocalDateKey } from "@/lib/date-range-api"
+
 
 
 
@@ -541,6 +543,10 @@ export async function ServerActiveAlarms() {
   return alarms.map((alarm) => {
 
 
+    const isTechnicalAlarm =
+      alarm.Type === "N" || alarm.Type === "M" || alarm.Type === "S" || alarm.Type === "A"
+
+
     const hasConfiguredThresholds =
 
 
@@ -595,7 +601,7 @@ export async function ServerActiveAlarms() {
     status: alarm.Est_Acquittee ? ("acknowledged" as const) : ("active" as const),
 
 
-    value: alarm.Type === "N" || alarm.Type === "M" || alarm.Type === "S" ? null : (alarm.Valeur !== null ? parseFloat(alarm.Valeur.toString()) : 0),
+    value: isTechnicalAlarm ? null : (alarm.Valeur !== null ? parseFloat(alarm.Valeur.toString()) : 0),
 
 
     threshold: 0, // Pas de champ threshold direct dans t_alarme
@@ -628,10 +634,10 @@ export async function ServerActiveAlarms() {
       type: "temperature" as const,
 
 
-      status: alarm.Type === "N" || alarm.Type === "S" ? ("technical" as const) : ("critical" as const),
+      status: isTechnicalAlarm ? ("technical" as const) : ("critical" as const),
 
 
-      currentValue: alarm.Valeur !== null ? parseFloat(alarm.Valeur.toString()) : null,
+      currentValue: isTechnicalAlarm ? null : (alarm.Valeur !== null ? parseFloat(alarm.Valeur.toString()) : null),
 
 
       unit: alarm.Unite || "°C",
@@ -833,7 +839,7 @@ export async function ServerSensorOverview() {
 
 
 
-  const overviewAlarmTypeByLieu = new Map<number, "H" | "B" | "N" | "S" | "M">()
+  const overviewAlarmTypeByLieu = new Map<number, "H" | "B" | "N" | "S" | "A" | "M">()
 
 
   for (const alarm of overviewAlarms) {
@@ -842,7 +848,7 @@ export async function ServerSensorOverview() {
     if (!alarm.Id_Lieu) continue
 
 
-    const type = alarm.Type as "H" | "B" | "N" | "S" | "M" | null
+    const type = alarm.Type as "H" | "B" | "N" | "S" | "A" | "M" | null
 
 
     if (!type) continue
@@ -890,7 +896,8 @@ export async function ServerSensorOverview() {
           lieu.Est_Lieu_Alarme_Terminee_Non_Acquittee_T1 === 1),
 
 
-      isTechnical: alarmType === "N" || alarmType === "S" || alarmType === "M",
+      isTechnical:
+        alarmType === "N" || alarmType === "S" || alarmType === "A" || alarmType === "M",
 
 
     });
@@ -1056,14 +1063,14 @@ export async function ServerAlarmTrendCount() {
   for (let offset = 0; offset < 7; offset += 1) {
     const day = new Date(startDate)
     day.setDate(startDate.getDate() + offset)
-    countsByDay.set(day.toISOString().slice(0, 10), 0)
+    countsByDay.set(formatLocalDateKey(day), 0)
   }
 
   for (const alarm of [...activeAlarms, ...historyAlarms]) {
     if (!alarm.Date_Heure_Debut) {
       continue
     }
-    const key = alarm.Date_Heure_Debut.toISOString().slice(0, 10)
+    const key = formatLocalDateKey(alarm.Date_Heure_Debut)
     if (countsByDay.has(key)) {
       countsByDay.set(key, (countsByDay.get(key) ?? 0) + 1)
     }

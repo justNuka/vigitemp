@@ -108,6 +108,11 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
   const [isRangeSelectionActive, setIsRangeSelectionActive] = useState(false);
   const [openDetailModalIds, setOpenDetailModalIds] = useState<number[]>([]);
   const [isAcknowledgeDialogOpen, setIsAcknowledgeDialogOpen] = useState(false);
+  const [stableActiveSensors, setStableActiveSensors] = useState<SensorWithLocation[]>([]);
+  const [stableDisabledSensors, setStableDisabledSensors] = useState<SensorWithLocation[]>([]);
+  const [stableActiveSectionCount, setStableActiveSectionCount] = useState(0);
+  const [stableDisabledSectionCount, setStableDisabledSectionCount] = useState(0);
+  const [stableVisibleStats, setStableVisibleStats] = useState<Stats>(initialStats);
   const loadMoreRef = useRef<HTMLDivElement>(null);
   const nextAutoRefreshAtRef = useRef<number | null>(null);
   const remainingAutoRefreshMsRef = useRef<number | null>(null);
@@ -260,6 +265,7 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
   );
   const activeSectionCount = filters.searchTerm.trim().length > 0 ? countVisibleLocations(activeVisibleSensors) : activePaginatedData.total;
   const disabledSectionCount = filters.searchTerm.trim().length > 0 ? countVisibleLocations(disabledVisibleSensors) : disabledPaginatedData.total;
+  const emptyStateDescription = hasServerFilters && visibleSensors.length === 0 ? t("grid.empty_filtered") : undefined;
 
   const activeAlarmsCount = useMemo(() => {
     if (!hasServerFilters && filters.searchTerm.trim().length === 0) {
@@ -320,6 +326,31 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
     totalVisibleLocationCount,
     visibleSensors,
   ]);
+  const isFetching = isFetchingActive || isFetchingDisabled;
+  const showGridSkeleton = isFetching && visibleSensors.length === 0;
+
+  useEffect(() => {
+    if (isFetching && hasServerFilters) return;
+    setStableActiveSensors(activeVisibleSensors);
+    setStableDisabledSensors(disabledVisibleSensors);
+    setStableActiveSectionCount(activeSectionCount);
+    setStableDisabledSectionCount(disabledSectionCount);
+    setStableVisibleStats(visibleStats);
+  }, [
+    activeSectionCount,
+    activeVisibleSensors,
+    disabledSectionCount,
+    disabledVisibleSensors,
+    hasServerFilters,
+    isFetching,
+    visibleStats,
+  ]);
+
+  const displayedActiveSensors = hasServerFilters && isFetching ? stableActiveSensors : activeVisibleSensors;
+  const displayedDisabledSensors = hasServerFilters && isFetching ? stableDisabledSensors : disabledVisibleSensors;
+  const displayedActiveSectionCount = hasServerFilters && isFetching ? stableActiveSectionCount : activeSectionCount;
+  const displayedDisabledSectionCount = hasServerFilters && isFetching ? stableDisabledSectionCount : disabledSectionCount;
+  const displayedVisibleStats = hasServerFilters && isFetching ? stableVisibleStats : visibleStats;
 
   const overlayLocations = useMemo(() => {
     const map = new Map<number, { id: number; name: string; site?: string | null }>();
@@ -477,9 +508,6 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
       return current;
     });
   }, []);
-
-  const isFetching = isFetchingActive || isFetchingDisabled;
-  const showGridSkeleton = isFetching && visibleSensors.length === 0;
 
   const handleToggleOrder = useCallback(() => {
     setDisabledFirst((current) => {
@@ -644,7 +672,7 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
         return;
       }
 
-      if (payload?.ok && payload?.data?.lieuIds) {
+      if (payload?.data?.lieuIds) {
         const surveillanceDisabledSince = payload.data.surveillanceDisabledSince
           ? parseDbDateTime(payload.data.surveillanceDisabledSince)
           : null
@@ -657,10 +685,10 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
           payload.data.surveillanceDisabledComment ?? null,
         );
       }
-      await performRefresh(true);
       setGroupActionComment("");
       setGroupActionCommentError(null);
       setGroupToggleModal(null);
+      void performRefresh(true).catch(() => undefined);
     } catch {
       toast.error(t("refresh.error"));
     }
@@ -678,7 +706,7 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
       <PageHeader
         title={t("title")}
         description={t("description")}
-        activeAlarms={visibleStats.activeAlarms}
+        activeAlarms={displayedVisibleStats.activeAlarms}
       />
 
       <LazyMotion features={domAnimation}>
@@ -690,7 +718,7 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
                 <UITooltip>
                   <TooltipTrigger asChild>
                     <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-50 px-3 py-1 font-medium text-slate-700 dark:bg-slate-500/10 dark:text-slate-300 hover:shadow-sm hover:-translate-y-0.5 transition-all duration-150 cursor-help">
-                      {t("stats.disabled", { count: visibleStats.disabled })}
+                      {t("stats.disabled", { count: displayedVisibleStats.disabled })}
                     </span>
                   </TooltipTrigger>
                   <TooltipContent><p className="text-xs">{t("stats_descriptions.disabled_locations")}</p></TooltipContent>
@@ -699,7 +727,7 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
                   <TooltipTrigger asChild>
                     <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-50 px-3 py-1 font-medium text-blue-700 dark:bg-blue-500/10 dark:text-blue-300 hover:shadow-sm hover:-translate-y-0.5 transition-all duration-150 cursor-help">
                       <span className="h-2 w-2 rounded-full bg-blue-500" aria-hidden="true" />
-                      {t("stats.ok", { count: visibleStats.ok })}
+                      {t("stats.ok", { count: displayedVisibleStats.ok })}
                     </span>
                   </TooltipTrigger>
                   <TooltipContent><p className="text-xs">{t("stats_descriptions.ok_locations")}</p></TooltipContent>
@@ -708,7 +736,7 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
                   <TooltipTrigger asChild>
                     <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-3 py-1 font-medium text-amber-700 dark:bg-amber-500/10 dark:text-amber-400 hover:shadow-sm hover:-translate-y-0.5 transition-all duration-150 cursor-help">
                       <span className="h-2 w-2 rounded-full bg-amber-500" aria-hidden="true" />
-                      {t("stats.pre_alarm", { count: visibleStats.preAlarm })}
+                      {t("stats.pre_alarm", { count: displayedVisibleStats.preAlarm })}
                     </span>
                   </TooltipTrigger>
                   <TooltipContent><p className="text-xs">{t("stats_descriptions.pre_alarm_locations")}</p></TooltipContent>
@@ -717,7 +745,7 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
                   <TooltipTrigger asChild>
                     <span className="inline-flex items-center gap-1.5 rounded-full bg-violet-50 px-3 py-1 font-medium text-violet-700 dark:bg-violet-500/10 dark:text-violet-300 hover:shadow-sm hover:-translate-y-0.5 transition-all duration-150 cursor-help">
                       <span className="h-2 w-2 rounded-full bg-violet-500" aria-hidden="true" />
-                      {t("stats.ended", { count: visibleStats.ended })}
+                      {t("stats.ended", { count: displayedVisibleStats.ended })}
                     </span>
                   </TooltipTrigger>
                   <TooltipContent><p className="text-xs">{t("stats_descriptions.ended_locations")}</p></TooltipContent>
@@ -726,10 +754,10 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
                   <TooltipTrigger asChild>
                     <span className="inline-flex items-center gap-1.5 rounded-full bg-red-50 px-3 py-1 font-medium text-red-700 dark:bg-red-500/10 dark:text-red-400 hover:shadow-sm hover:-translate-y-0.5 transition-all duration-150 cursor-help">
                       <span
-                        className={cn("h-2 w-2 rounded-full bg-red-500", visibleStats.critical > 0 && "animate-pulse")}
+                        className={cn("h-2 w-2 rounded-full bg-red-500", displayedVisibleStats.critical > 0 && "animate-pulse")}
                         aria-hidden="true"
                       />
-                      {t("stats.critical", { count: visibleStats.critical })}
+                      {t("stats.critical", { count: displayedVisibleStats.critical })}
                     </span>
                   </TooltipTrigger>
                   <TooltipContent><p className="text-xs">{t("stats_descriptions.critical_locations")}</p></TooltipContent>
@@ -758,10 +786,11 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
           {viewMode === "tree" ? (
             <>
               <MonitoringCardsGrid
-                activeSensors={activeVisibleSensors}
-                disabledSensors={disabledVisibleSensors}
-                activeTotalCount={activeSectionCount}
-                disabledTotalCount={disabledSectionCount}
+                activeSensors={displayedActiveSensors}
+                disabledSensors={displayedDisabledSensors}
+                activeTotalCount={displayedActiveSectionCount}
+                disabledTotalCount={displayedDisabledSectionCount}
+                emptyDescription={emptyStateDescription}
                 activeTreeCounters={filters.searchTerm.trim() ? [] : activePaginatedData.treeCounters}
                 disabledTreeCounters={filters.searchTerm.trim() ? [] : disabledPaginatedData.treeCounters}
                 disabledFirst={disabledFirst}
@@ -796,10 +825,11 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
           ) : (
             <>
               <SensorsCardsGrid
-                activeSensors={activeVisibleSensors}
-                disabledSensors={disabledVisibleSensors}
-                activeTotalCount={activeSectionCount}
-                disabledTotalCount={disabledSectionCount}
+                activeSensors={displayedActiveSensors}
+                disabledSensors={displayedDisabledSensors}
+                activeTotalCount={displayedActiveSectionCount}
+                disabledTotalCount={displayedDisabledSectionCount}
+                emptyDescription={emptyStateDescription}
                 disabledFirst={disabledFirst}
                 onSurveillanceToggle={handleSurveillanceToggle}
                 requireActionComment={requireActionComment}

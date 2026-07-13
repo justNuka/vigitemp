@@ -10,6 +10,7 @@ export interface BackupSummary {
   logFilePath: string
   archiveCount: number
   slotCount: number
+  latestRun?: BackupRecord | null
 }
 
 export interface BackupsResponse {

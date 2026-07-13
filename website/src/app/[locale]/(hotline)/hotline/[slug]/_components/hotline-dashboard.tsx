@@ -15,6 +15,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Terminal } from "@/components/magicui/terminal"
 import { isFeatureEnabled } from "@/lib/feature-flags"
 import { getJson, isUnauthorizedError, postJson } from "@/lib/http"
+import { formatLocalDateKey } from "@/lib/date-range-api"
 
 import { HotlineHealthCard } from "./dashboard/hotline-health-card"
 import { HotlineLogsFilters, HotlineLogsPanel } from "./dashboard/hotline-logs-panel"
@@ -89,7 +90,7 @@ export function HotlineDashboard({ slug, username }: HotlineDashboardProps) {
   const [logsError, setLogsError] = useState<string | null>(null)
   const [loadingLogs, setLoadingLogs] = useState(true)
   const [logSource, setLogSource] = useState<'web' | 'server' | 'web-service-error' | 'web-service-wrapper' | 'web-service-output'>('web')
-  const [logDate, setLogDate] = useState(() => new Date().toISOString().slice(0, 10))
+  const [logDate, setLogDate] = useState(() => formatLocalDateKey(new Date()))
   const [logLimit, setLogLimit] = useState('200')
   const [agentSecretStatus, setAgentSecretStatus] = useState<{
     status: string

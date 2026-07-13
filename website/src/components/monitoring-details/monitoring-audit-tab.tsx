@@ -2,8 +2,12 @@ import { Fragment, useMemo } from "react"
 import type { ColumnDef } from "@tanstack/react-table"
 
 import { TanStackTable } from "@/components/data-table/tanstack-table"
-import { formatDbDateTime, parseDbDateTime } from "@/lib/date-display"
-import { formatMeasureValue } from "@/lib/measurements"
+import { formatDbDateTime } from "@/lib/date-display"
+import {
+  buildMonitoringAuditRows,
+  formatMonitoringAuditSummary,
+  sanitizeMonitoringAuditText,
+} from "@/lib/audit/monitoring-audit"
 
 import type { AuditLog } from "./types"
 
@@ -27,105 +31,15 @@ type AuditRow = {
   comment: string | null
 }
 
-const AUDIT_FIELD_LABELS: Record<string, string> = {
-  Nom_Lieu: "Nom du lieu",
-  Commentaire: "Commentaire",
-  Observations_Info: "Observations",
-  Id_Site: "Site",
-  Sonde_Numero_Serie: "Sonde",
-  Consigne: "Consigne",
-  Consigne_Sup: "Consigne sup.",
-  Consigne_Inf: "Consigne inf.",
-  Tolerance_Surveillance_Sup: "Tolerance sup.",
-  Tolerance_Surveillance_Inf: "Tolerance inf.",
-  Retard_Alarme_Haut: "Retard alarme haut",
-  Retard_Alarme_Bas: "Retard alarme bas",
-  Retard_Non_Reponse: "Retard non reponse",
-  Frequence: "Frequence",
-}
-
-function sanitizeAuditText(value: string | null | undefined) {
-  if (!value) return "-"
-  const normalized = value
-    .replace(/%[12]/g, "")
-    .replace(/\r\n/g, "\n")
-    .split("\n")
-    .map((line) => line.replace(/[ \t]{2,}/g, " ").trim())
-    .join("\n")
-    .trim()
-
-  return normalized || "-"
-}
-
-function formatAuditValue(key: string, value: unknown) {
-  if (value === null || value === undefined || value === "") return "-"
-  if (typeof value === "boolean") return value ? "Oui" : "Non"
-  if (typeof value === "number") return formatMeasureValue(value)
-  if (typeof value === "string") {
-    const lowered = key.toLowerCase()
-    if (lowered.endsWith("at") || lowered.includes("date") || lowered.includes("time")) {
-      const parsed = parseDbDateTime(value)
-      if (parsed && !Number.isNaN(parsed.getTime())) {
-        return formatDbDateTime(parsed)
-      }
-    }
-    const asNumber = Number(value)
-    if (value.trim() !== "" && Number.isFinite(asNumber) && /^-?\d+(?:[.,]\d+)?$/.test(value.trim())) {
-      return formatMeasureValue(asNumber)
-    }
-    return value
-  }
-  return String(value)
-}
-
-function isFromToChange(value: unknown): value is { from?: unknown; to?: unknown } {
-  if (!value || typeof value !== "object" || Array.isArray(value)) return false
-  return Object.prototype.hasOwnProperty.call(value, "from") || Object.prototype.hasOwnProperty.call(value, "to")
-}
-
 function buildAuditRows(raw: string | null | undefined) {
-  const sanitized = sanitizeAuditText(raw)
+  const sanitized = sanitizeMonitoringAuditText(raw)
   if (sanitized === "-") return [] as Array<{ label: string; value: string }>
 
-  const jsonStart = sanitized.indexOf("{")
-  const jsonEnd = sanitized.lastIndexOf("}")
-  if (jsonStart < 0 || jsonEnd <= jsonStart) return []
-
-  try {
-    const parsed = JSON.parse(sanitized.slice(jsonStart, jsonEnd + 1)) as Record<string, unknown>
-    return Object.entries(parsed)
-      .filter(([key, value]) => key !== "action" && value !== null && value !== undefined)
-      .map(([key, value]) => {
-        const label = AUDIT_FIELD_LABELS[key] ?? key
-        if (isFromToChange(value)) {
-          return {
-            label,
-            value: `Avant: ${formatAuditValue("from", value.from)} | Apres: ${formatAuditValue("to", value.to)}`,
-          }
-        }
-
-        return {
-          label,
-          value: formatAuditValue(key, value),
-        }
-      })
-  } catch {
-    return []
-  }
+  return buildMonitoringAuditRows(raw)
 }
 
 function formatAuditDetails(value: string | null | undefined) {
-  const sanitized = sanitizeAuditText(value)
-  if (sanitized === "-") return sanitized
-
-  const jsonStart = sanitized.indexOf("{")
-  const jsonEnd = sanitized.lastIndexOf("}")
-  if (jsonStart >= 0 && jsonEnd > jsonStart) {
-    const prefix = sanitized.slice(0, jsonStart).trim()
-    return prefix || sanitized.slice(jsonStart, jsonEnd + 1)
-  }
-
-  return sanitized
+  return formatMonitoringAuditSummary(value)
 }
 
 export function MonitoringAuditTab({ logs, isLoading, error, t, maxHeight = "calc(100vh - 26rem)" }: MonitoringAuditTabProps) {
@@ -133,13 +47,13 @@ export function MonitoringAuditTab({ logs, isLoading, error, t, maxHeight = "cal
     return logs.map((log) => ({
       id: log.id,
       code: log.code || "-",
-      label: sanitizeAuditText(log.label),
+      label: sanitizeMonitoringAuditText(log.label),
       dateIso: log.timestamp ?? "",
       dateLabel: log.timestamp ? formatDbDateTime(log.timestamp) : "-",
       user: log.user || "-",
       details: formatAuditDetails(log.commentaire || log.detailsSummary),
-      detailRows: buildAuditRows(log.commentaire),
-      comment: log.commentaireUtilisateur ? sanitizeAuditText(log.commentaireUtilisateur) : null,
+      detailRows: buildAuditRows(log.commentaire || log.detailsSummary),
+      comment: log.commentaireUtilisateur ? sanitizeMonitoringAuditText(log.commentaireUtilisateur) : null,
     }))
   }, [logs])
 

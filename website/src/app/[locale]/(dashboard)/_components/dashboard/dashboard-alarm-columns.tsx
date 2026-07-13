@@ -1,5 +1,5 @@
 import type { ColumnDef } from "@tanstack/react-table"
-import { ArrowDown, ArrowUp, Clock, MessageSquare } from "lucide-react"
+import { ArrowDown, ArrowUp, Clock, MessageSquare, PowerOff, WifiOff } from "lucide-react"
 import { formatDistanceToNow } from "date-fns"
 import type { Locale } from "date-fns"
 
@@ -50,7 +50,24 @@ export function createDashboardAlarmColumns({
       header: t("table.columns.type"),
       size: 60,
       cell: ({ row }) => {
-        const isHigh = row.getValue("type") === "high"
+        const type = row.getValue("type") as AlarmRow["type"]
+        if (type === "no-response" || type === "module") {
+          return (
+            <div className="p-1.5 rounded-md w-fit bg-black/10">
+              <WifiOff className="h-4 w-4 text-black" />
+            </div>
+          )
+        }
+
+        if (type === "sector") {
+          return (
+            <div className="p-1.5 rounded-md w-fit bg-amber-100">
+              <PowerOff className="h-4 w-4 text-amber-700" />
+            </div>
+          )
+        }
+
+        const isHigh = type === "high"
         return (
           <div className={cn("p-1.5 rounded-md w-fit", isHigh ? "bg-destructive/12" : "bg-info/12")}>
             {isHigh ? (
@@ -80,7 +97,9 @@ export function createDashboardAlarmColumns({
       header: () => <div className="text-right">{t("table.columns.last_value")}</div>,
       cell: ({ row }) => {
         const alarm = row.original
-        const value = alarm.sensor.currentValue ?? alarm.value ?? null
+        const isTechnicalAlarm =
+          alarm.type === "no-response" || alarm.type === "sector" || alarm.type === "module"
+        const value = isTechnicalAlarm ? null : (alarm.sensor.currentValue ?? alarm.value ?? null)
         return <div className="text-right font-mono font-medium">{value !== null ? `${formatMeasureValue(value)} ${alarm.sensor.unit}` : "-"}</div>
       },
     },

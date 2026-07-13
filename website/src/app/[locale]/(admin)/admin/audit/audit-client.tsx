@@ -19,7 +19,7 @@ import { getJson } from "@/lib/http";
 import { cn } from "@/lib/utils";
 import type { AuditLog } from "@/lib/api";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { parseDbDateTime } from "@/lib/date-display";
+import { formatDbDateTime, parseDbDateTime } from "@/lib/date-display";
 
 import { LazyMotion, domAnimation, m } from "motion/react";
 import { fadeInUp } from "@/lib/motion-variants";
@@ -38,7 +38,10 @@ interface ActiveFilters {
 }
 
 function formatDateInput(date: Date): string {
-  return date.toISOString().slice(0, 10);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
 }
 
 function hasActiveFilters(filters: ActiveFilters): boolean {
@@ -146,15 +149,7 @@ export function AuditClient({ logs: initialLogs }: Props) {
         if (!timestamp || Number.isNaN(timestamp.getTime())) return t("table.empty_value");
         return (
           <span className="font-mono text-sm whitespace-nowrap">
-            {timestamp.toLocaleString(localeTag, {
-              timeZone: timezone,
-              day: "2-digit",
-              month: "2-digit",
-              year: "numeric",
-              hour: "2-digit",
-              minute: "2-digit",
-              second: "2-digit",
-            })}
+            {formatDbDateTime(timestamp, { locale: localeTag, timeZone: timezone })}
           </span>
         );
       },

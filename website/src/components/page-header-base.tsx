@@ -87,7 +87,7 @@ export function PageHeaderBase({
                           <Button
                             variant="destructive"
                             size="sm"
-                            className="gap-2 opacity-75 cursor-not-allowed"
+                            className="min-w-[7.5rem] gap-2 px-3 md:min-w-[10rem] md:px-4 opacity-75 cursor-not-allowed"
                             data-testid="button-active-alarms"
                             disabled
                           >
@@ -106,7 +106,7 @@ export function PageHeaderBase({
                       <Button
                         variant="destructive"
                         size="sm"
-                        className="gap-2 animate-pulse-subtle"
+                        className="min-w-[7.5rem] gap-2 px-3 md:min-w-[10rem] md:px-4 animate-pulse-subtle"
                         data-testid="button-active-alarms"
                       >
                         <AlertTriangle className="h-4 w-4" />

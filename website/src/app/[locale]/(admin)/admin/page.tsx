@@ -113,8 +113,6 @@ export default function AdminDashboard() {
   const backupsQuery = useBackups()
   const unassignedSensorsQuery = useUnassignedSensors({ page: 1, limit: 20 })
 
-  const accessLabel = t("actions.open_page")
-
   const activeAlarmsTotal = activeAlarmsQuery.data?.pagination.total || 0
   const alarmsInProgressTotal = alarmsActiveCountQuery.data?.pagination.total ?? activeAlarmsTotal
   const alarmsPendingAckTotal = alarmsResolvedCountQuery.data?.pagination.total ?? 0
@@ -123,9 +121,11 @@ export default function AdminDashboard() {
   const systemLogsTotal = systemLogsQuery.data?.pagination.total || 0
   const unassignedTotal = unassignedSensorsQuery.data?.pagination.total || 0
   const backupsTotal = backupsQuery.data?.summary.archiveCount ?? 0
+  const accessLabel = t("actions.open_page")
+  const alarmsAccessLabel = `${accessLabel} (${alarmsInProgressTotal})`
   const backupStoragePath = backupsQuery.data?.summary.storagePath ?? "-"
   const backupLogFilePath = backupsQuery.data?.summary.logFilePath ?? "-"
-  const latestBackup = backupsQuery.data?.data?.[0]
+  const latestBackup = backupsQuery.data?.summary.latestRun ?? backupsQuery.data?.data?.[0]
   const lastBackupLabel = latestBackup?.dateHeure
     ? new Intl.DateTimeFormat(locale, {
         dateStyle: "short",
@@ -340,7 +340,7 @@ export default function AdminDashboard() {
             value={String(acknowledgmentsTotal)}
             helper={`${t("acknowledgments.columns.date_time")}: ${latestAck}`}
             href={`/admin/alarmes/acquittements`}
-            hrefLabel={accessLabel}
+            hrefLabel={alarmsAccessLabel}
             icon={<Clock className="h-5 w-5 text-amber-600" />}
           />
 

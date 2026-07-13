@@ -27,6 +27,12 @@ namespace Vigitemp_Serveur
         bool setLieuImmediateRetriggerFlag(int idLieu, bool enabled);
         bool setLieuInfosModifiees(int idLieu, bool value);
         bool setLieuGspRecoveryPending(int idLieu, bool value);
+        bool addGspRecoverySpan(int idLieu, string serialNumber, DateTime recoverFromProbeDateTime, DateTime recoverUntilProbeDateTime);
+        List<GspRecoverySpan> getPendingGspRecoverySpans(int idLieu, string serialNumber);
+        bool setGspRecoverySpansStatus(IEnumerable<int> spanIds, string status, string lastError = null, bool incrementAttempts = false);
+        bool hasPendingGspRecoverySpans(int idLieu, string serialNumber);
+        bool hasBlockingGspRecoveryAlarm(int idLieu);
+        int resetInProgressGspRecoverySpans();
         bool setNonResponseAlarm(int idLieu, string sondeNumeroSerie, bool isActive);
         bool? getPowerAlarmActiveState(int idLieu);
         bool setPowerAlarm(int idLieu, string sondeNumeroSerie, bool isActive);

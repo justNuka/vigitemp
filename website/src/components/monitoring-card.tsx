@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
 import { Chart as ChartJS, CategoryScale, Filler, Legend, LineElement, LinearScale, PointElement, Title, Tooltip } from 'chart.js'
-import { BatteryWarning, FileText, MapPin, Power, PowerOff, Settings } from 'lucide-react'
+import { BatteryWarning, Power, PowerOff, Settings } from 'lucide-react'
 import { m } from 'motion/react'
 import { useQueryClient } from '@tanstack/react-query'
 
@@ -39,7 +39,7 @@ interface MonitoringCardProps {
   siteName: string
   groupName: string
   status: SensorStatus
-  alarmType?: 'H' | 'B' | 'N' | 'S' | 'M' | 'T' | null
+  alarmType?: 'H' | 'B' | 'N' | 'S' | 'A' | 'M' | 'T' | null
   alarmDisabled: boolean
   alarmDisabledUntil: Date | string | null
   alarmDelayMinutes: number | null
@@ -619,15 +619,6 @@ export default function MonitoringCard({
               <div className="flex justify-center gap-4">
                 <UITooltip>
                   <TooltipTrigger asChild>
-                    <button onClick={(event) => { event.stopPropagation(); setIsModalOpen(true) }} className={`p-1 rounded-md transition-colors ${actionButtonClassName}`}>
-                      <FileText className={`w-4 h-4 ${actionIconClassName}`} />
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent><p className="text-xs">{t('actions.details')}</p></TooltipContent>
-                </UITooltip>
-
-                <UITooltip>
-                  <TooltipTrigger asChild>
                     <span>
                       <button
                         onClick={(event) => {
@@ -648,16 +639,6 @@ export default function MonitoringCard({
                   <TooltipContent>
                     <p className="text-xs">{canToggleSurveillance ? t('actions.toggle') : t('actions.toggle_forbidden')}</p>
                   </TooltipContent>
-                </UITooltip>
-
-                <UITooltip>
-                  <TooltipTrigger asChild>
-                    {/* Localisation is display-only for now; keep click isolated to avoid opening the details modal by mistake. */}
-                    <button onClick={(event) => event.stopPropagation()} className={`p-1 rounded-md transition-colors ${actionButtonClassName}`}>
-                      <MapPin className={`w-4 h-4 ${actionIconClassName}`} />
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent><p className="text-xs">{t('actions.location')}</p></TooltipContent>
                 </UITooltip>
 
                 <UITooltip>

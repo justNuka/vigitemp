@@ -106,7 +106,7 @@ export function MonitoringTableTab({
       header: t("table.columns.date_time"),
       sortingFn: (rowA, rowB) => Date.parse(rowA.original.dateIso) - Date.parse(rowB.original.dateIso),
       cell: ({ row }) => (
-        <span className={cn("font-medium", row.original.isMemoryValue && "text-amber-700 dark:text-amber-300")}>
+        <span className={cn("font-medium", row.original.isMemoryValue && "italic")}>
           {row.original.dateLabel}
         </span>
       ),
@@ -133,7 +133,7 @@ export function MonitoringTableTab({
           <span
             className={cn(
               isOutOfRange ? "text-red-600 dark:text-red-400 font-bold" : "",
-              row.original.isMemoryValue && "text-amber-700 dark:text-amber-300",
+              row.original.isMemoryValue && "italic",
             )}
           >
             {formatMeasureValue(value)}{row.original.unit}
@@ -171,13 +171,13 @@ export function MonitoringTableTab({
           <span
             className={cn(
               "text-red-600 dark:text-red-400 font-semibold",
-              row.original.isMemoryValue && "text-amber-700 dark:text-amber-300",
+              row.original.isMemoryValue && "italic",
             )}
           >
             {t("table.status.out_of_range")}
           </span>
         ) : (
-          <span className={cn("text-green-600 dark:text-green-400", row.original.isMemoryValue && "text-amber-700 dark:text-amber-300")}>
+          <span className={cn("text-green-600 dark:text-green-400", row.original.isMemoryValue && "italic")}>
             {t("table.status.ok")}
           </span>
         )
@@ -247,7 +247,7 @@ export function MonitoringTableTab({
       <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
         <span className="font-medium">{t("table.legend.title")}</span>
         <span
-          className="inline-flex items-center rounded-full border border-amber-300 bg-amber-50 px-2 py-0.5 text-amber-800 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-300"
+          className="inline-flex items-center rounded-full border px-2 py-0.5 italic"
           title={t("table.legend.memory_tooltip")}
         >
           {t("table.legend.memory")}
@@ -283,11 +283,7 @@ export function MonitoringTableTab({
         sortingState={sorting}
         onSortingChange={onSortingChange}
         maxHeight={maxHeight}
-        rowClassName={(row) =>
-          row.isMemoryValue
-            ? "bg-amber-50/55 dark:bg-amber-950/20 hover:!bg-amber-100/60 dark:hover:!bg-amber-900/25"
-            : undefined
-        }
+        rowClassName={(row) => (row.isMemoryValue ? "italic" : undefined)}
         headerClassName="!bg-sidebar !text-sidebar-foreground"
         headerCellClassName="!bg-sidebar !text-sidebar-foreground !border-r !border-white/25 hover:!bg-sidebar-accent/80"
         tableClassName="border-separate border-spacing-0 [&_thead_th]:!border-r [&_thead_th]:!border-white/25 [&_tbody_td]:!border-b [&_tbody_td]:!border-border"

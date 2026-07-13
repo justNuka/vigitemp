@@ -136,7 +136,7 @@ export function SurveillanceFilters({ onFilterChange, sites, groups }: Props) {
                 filters.groupIds.length > 0 ? t("status.groupCount", { count: filters.groupIds.length }) : null,
                 filters.searchTerm.trim().length > 0 ? t("status.search") : null,
                 filters.sortMode !== "status" ? t("status.sort") : null,
-              ].filter(Boolean).join(" • ")}
+              ].filter(Boolean).join(" | ")}
             </Badge>
           </div>
           <Button type="button" variant="ghost" size="sm" className="gap-2 text-[#075776] hover:bg-[#26A5DA]/14 hover:text-[#075776] dark:text-sky-50 dark:hover:bg-[#26A5DA]/18" onClick={clearFilters}>

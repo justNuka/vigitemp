@@ -272,6 +272,10 @@
       "loading": "Refreshing..."
     },
     "filters": {
+      "active_label": "Active filters",
+      "active_location": "Location: {value}",
+      "active_types": "Types: {value}",
+      "clear": "Reset",
       "type_label": "Alarm type",
       "all": "All",
       "high": "High",
@@ -300,6 +304,7 @@
     "table": {
       "search_placeholder": "Search alarms...",
       "empty": "No alarms",
+      "results_with_total": "{visible} result(s) out of {total} in this tab",
       "columns": {
         "type": "Type",
         "location": "Location / Sensor",
@@ -569,6 +574,7 @@
       "disabled_until": "Monitoring disabled until {date}",
       "partial_group_loaded": "Partial view: {loaded} of {total} locations loaded. Click \"Load more\" to display the rest.",
       "empty_title": "No sensors",
+      "empty_filtered": "No sensor matches the active filters.",
       "unknown_site": "Unknown site",
       "no_group": "No group",
       "no_site": "No site"
@@ -794,7 +800,7 @@
         "applied_calibration_date": "Applied calibration date",
         "unit": "Unit",
         "accuracy_error": "Accuracy error",
-        "accuracy_correction_example": "Applied correction (example): {value}",
+        "accuracy_correction_example": "Applied correction (inverse sign): {value}",
         "uncertainty": "Uncertainty",
         "drift": "Drift"
       },
@@ -3372,7 +3378,9 @@
           "7": "Measurements coming from memory retrieval are now visually highlighted in the location details table.",
           "8": "Alarm acknowledgments now appear correctly in the audit trail of a location details view.",
           "9": "With active filters, refresh now reloads the matching locations correctly and keeps the load-more action positioned inside each section.",
-          "10": "Tree-view counters now separate pre-alarms from ended alarms correctly."
+          "10": "Tree-view counters now separate pre-alarms from ended alarms correctly.",
+          "11": "The surveillance page now shows a clear empty state when no sensor matches the active filters.",
+          "12": "Location details keep setpoint and tolerance labels readable even on smaller screens."
         }
       },
         "admin": {
@@ -3381,7 +3389,8 @@
             "0": "Added the system backup block for all license tiers.",
             "1": "The acknowledgment history link from the admin dashboard now opens a real page.",
             "2": "Acknowledgment history exports now correctly reapply the active filters.",
-            "3": "Free acknowledgment comments are now loaded from the dedicated journal source."
+            "3": "Free acknowledgment comments are now loaded from the dedicated journal source.",
+            "4": "The accuracy error preview now clearly shows the inverse sign applied by the correction."
           }
         }
       }
@@ -4371,7 +4380,12 @@
       "all_sites": "All sites",
       "all_locations": "All locations",
       "site_placeholder": "Filter by site",
-      "location_placeholder": "Filter by location"
+      "location_placeholder": "Filter by location",
+      "active_label": "Active filters",
+      "active_site": "Site: {value}",
+      "active_location": "Location: {value}",
+      "active_types": "Types: {value}",
+      "clear": "Reset"
     },
     "acknowledge_success": "Alarm acknowledged successfully",
     "acknowledge_error": "Failed to acknowledge alarm",

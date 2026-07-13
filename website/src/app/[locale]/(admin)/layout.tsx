@@ -1,25 +1,26 @@
 "use client";
+
 import { AdminSidebar } from "@/components/admin-sidebar";
 import { SidebarProvider } from "@/components/ui/sidebar";
-import { alarmsApi, authApi } from "@/lib/api";
+import { authApi } from "@/lib/api";
 import { useAutoLock } from "@/hooks/useAutoLock";
 import { useRouter } from "@/i18n/navigation";
 import { useEffect, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { clearAgentSession } from "@/lib/agent-session";
 import PageTransitionWrapper from "@/components/animations/transitions/page-transitions/PageTransitionWrapper";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { useAlarmCount } from "@/hooks/useAdminData";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useTranslations } from "next-intl";
 import { AlertTriangle } from "lucide-react";
 import { isFeatureEnabled } from "@/lib/feature-flags";
 import { toast } from "sonner";
+
 export default function AdminGroupLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  // Activer le verrouillage automatique
   useAutoLock();
   const router = useRouter();
   const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
@@ -29,25 +30,16 @@ export default function AdminGroupLayout({
     message: string;
   } | null>(null);
   const t = useTranslations("agentSecretAlert");
-  // Fetch current user
   const { data: currentUser } = useCurrentUser();
-  const alarmsQueryKey = ["alarms", "active"] as const;
-  const { data: alarms } = useQuery({
-    queryKey: alarmsQueryKey,
-    queryFn: () => alarmsApi.getActive(),
-    refetchInterval: 60_000,
-    refetchOnMount: true,
-    refetchOnReconnect: true,
-    refetchOnWindowFocus: false,
-    staleTime: 30_000, // 30s — fresh enough, prevents focus-triggered refetches
-    retry: false,
-  });
-  // NOTE: Admin check disabled for now (rights handling will be redesigned).
+  const activeAlarmCountQuery = useAlarmCount("active");
+  const activeAlarmsCount = activeAlarmCountQuery.data?.pagination.total ?? 0;
+
   useEffect(() => {
     if (currentUser) {
       setIsAuthorized(true);
     }
   }, [currentUser]);
+
   useEffect(() => {
     if (!currentUser) return;
     const loadStatus = async () => {
@@ -66,7 +58,7 @@ export default function AdminGroupLayout({
         });
       }
     };
-    loadStatus();
+    void loadStatus();
   }, [currentUser, t]);
 
   useEffect(() => {
@@ -80,6 +72,7 @@ export default function AdminGroupLayout({
       duration: 8000,
     });
   }, [agentSecretStatus, t]);
+
   const handleLogout = async () => {
     try {
       await authApi.logout();
@@ -94,22 +87,25 @@ export default function AdminGroupLayout({
       router.push("/login");
     }
   };
+
   if (isAuthorized === null) {
     return null;
   }
+
   if (!isAuthorized) {
     return null;
   }
+
   return (
     <SidebarProvider>
       <div className="flex h-dvh w-full">
         <AdminSidebar
           currentUser={currentUser}
           onLogout={handleLogout}
-          activeAlarms={alarms?.length ?? 0}
+          activeAlarms={activeAlarmsCount}
         />
         <main className="flex-1 min-h-0 bg-background">
-          {isFeatureEnabled("enableAgentSecretAlert") && agentSecretStatus && agentSecretStatus.status !== "ok" && (
+          {isFeatureEnabled("enableAgentSecretAlert") && agentSecretStatus && agentSecretStatus.status !== "ok" ? (
             <div className="px-6 pt-6">
               <Alert variant="destructive">
                 <AlertTriangle className="h-4 w-4" />
@@ -119,10 +115,8 @@ export default function AdminGroupLayout({
                 </AlertDescription>
               </Alert>
             </div>
-          )}
-          <PageTransitionWrapper className="min-h-0">
-            {children}
-          </PageTransitionWrapper>
+          ) : null}
+          <PageTransitionWrapper className="min-h-0">{children}</PageTransitionWrapper>
         </main>
       </div>
     </SidebarProvider>

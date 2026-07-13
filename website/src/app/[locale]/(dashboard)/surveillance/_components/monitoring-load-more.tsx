@@ -15,7 +15,7 @@ export function SurveillanceLoadMore({ sentinelRef, hasNextPage, isFetching, onL
     <>
       <div ref={sentinelRef} />
       {hasNextPage ? (
-        <div className="flex justify-center py-4">
+        <div className="flex justify-start py-4">
           <Button variant="outline" onClick={onLoadMore} disabled={isFetching}>
             {label}
           </Button>

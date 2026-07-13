@@ -35,6 +35,7 @@ import { z } from "zod";
 import { toast } from "sonner";
 import { formatMeasureValue } from "@/lib/measurements";
 import { markAlarmAcknowledgedInPaginatedSensorsCache } from "@/lib/surveillance-cache";
+import { X } from "lucide-react";
 
 type SelectedAlarm = {
   id: string;
@@ -129,6 +130,31 @@ export function AlarmsClientTanStack() {
   const limit = pagination.pageSize;
 
   const { acknowledgeMutation } = useAlarmMutations();
+
+  const invalidateAlarmRelatedState = useCallback(async (nextActiveCount?: number | null) => {
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: ["alarms"] }),
+      queryClient.invalidateQueries({ queryKey: ["capteurs", "paginated"] }),
+      queryClient.invalidateQueries({ queryKey: ["admin", "alarmes-actives"] }),
+      queryClient.invalidateQueries({ queryKey: ["admin", "alarms-count"] }),
+      queryClient.invalidateQueries({ queryKey: ["admin"] }),
+      queryClient.invalidateQueries({ queryKey: ["tableau-de-bord"] }),
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] }),
+    ]);
+
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(
+        new CustomEvent("vigitemp:active-alarms", {
+          detail: {
+            count:
+              typeof nextActiveCount === "number"
+                ? Math.max(0, nextActiveCount)
+                : undefined,
+          },
+        }),
+      );
+    }
+  }, [queryClient]);
 
   const { data, isLoading, isFetching } = useAlarms({
     page,
@@ -254,14 +280,49 @@ export function AlarmsClientTanStack() {
 
   const hasLocalTypeFilter = typeFilters.length > 0;
   const hasLocalFilteredDisplay = filteredRowCount !== tableData.length;
+  const visibleCount = tableData.length;
 
   const activeTabLabel = `${tDialog("tabs.active")} (${counts.active})`;
   const resolvedTabLabel = `${tDialog("tabs.resolved")} (${counts.resolved})`;
 
   const resultsLabel =
-    hasLocalTypeFilter || hasLocalFilteredDisplay
-      ? `${filteredRowCount} / ${total} ${t("filters.filtered_results_suffix")}`
+    hasLocalTypeFilter || hasLocalFilteredDisplay || visibleCount !== total
+      ? `${hasLocalFilteredDisplay ? filteredRowCount : visibleCount} / ${total} ${t("filters.filtered_results_suffix")}`
       : t("results", { count: total });
+
+  const selectedSiteLabel = selectedSiteId === "all"
+    ? null
+    : siteOptions.find((site) => String(site.id) === selectedSiteId)?.name ?? selectedSiteId;
+
+  const selectedLocationLabel = selectedLocationId === "all"
+    ? null
+    : locationOptions.find((location) => String(location.id) === selectedLocationId)?.name ?? selectedLocationId;
+
+  const hasActiveFilters =
+    selectedSiteId !== "all" ||
+    selectedLocationId !== "all" ||
+    typeFilters.length > 0;
+
+  const typeFilterLabel = typeFilters.length > 0
+    ? typeFilters
+        .map((type) => {
+          switch (type) {
+            case "high":
+              return t("filters.high");
+            case "low":
+              return t("filters.low");
+            case "no-response":
+              return t("filters.no_response");
+            case "sector":
+              return t("filters.sector");
+            case "module":
+              return t("filters.module");
+            default:
+              return type;
+          }
+        })
+        .join(", ")
+    : null;
 
   const selectableAlarmIds = useMemo(
     () => tableData.filter((alarm) => !alarm.Est_Acquittee).map((alarm) => alarm.Id_Alarme),
@@ -515,7 +576,7 @@ export function AlarmsClientTanStack() {
 
   const handleRefresh = () => {
     startRefresh(() => {
-      queryClient.invalidateQueries({ queryKey: ["alarms"] });
+      void invalidateAlarmRelatedState();
     });
   };
 
@@ -539,8 +600,7 @@ export function AlarmsClientTanStack() {
       }
 
       ids.forEach((id) => markAlarmAcknowledgedInPaginatedSensorsCache(queryClient, id));
-      queryClient.invalidateQueries({ queryKey: ["capteurs", "paginated"] });
-      queryClient.invalidateQueries({ queryKey: ["alarms"] });
+      await invalidateAlarmRelatedState(Math.max(0, counts.active - successCount));
       setSelectedAlarmIds([]);
       setBulkComment("");
       setBulkDialogOpen(false);
@@ -601,6 +661,34 @@ export function AlarmsClientTanStack() {
             {resolvedTabLabel}
           </Button>
         </div>
+        {hasActiveFilters ? (
+          <div className="mb-4 flex flex-wrap items-center gap-2 rounded-md border border-primary/20 bg-primary/5 px-3 py-2 text-sm">
+            <span className="font-medium text-primary">{t("filters.active_label")}</span>
+            {selectedSiteLabel ? (
+              <Badge variant="outline">{t("filters.active_site", { value: selectedSiteLabel })}</Badge>
+            ) : null}
+            {selectedLocationLabel ? (
+              <Badge variant="outline">{t("filters.active_location", { value: selectedLocationLabel })}</Badge>
+            ) : null}
+            {typeFilterLabel ? (
+              <Badge variant="outline">{t("filters.active_types", { value: typeFilterLabel })}</Badge>
+            ) : null}
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="ml-auto h-7 gap-1 px-2"
+              onClick={() => {
+                setSelectedSiteId("all");
+                setSelectedLocationId("all");
+                setTypeFilters([]);
+              }}
+            >
+              <X className="h-3.5 w-3.5" />
+              {t("filters.clear")}
+            </Button>
+          </div>
+        ) : null}
         <TanStackTable
           columns={columns}
           data={tableData}
@@ -670,6 +758,8 @@ export function AlarmsClientTanStack() {
             setSelectedAlarmId(row.Id_Alarme);
           }}
           resultsLabel={resultsLabel}
+          exportData={tableData}
+          exportFileName="alarmes"
           headerClassName="!bg-sidebar !text-sidebar-foreground"
           headerCellClassName="!bg-sidebar !text-sidebar-foreground !border-r !border-white/25 hover:!bg-sidebar-accent/80"
           tableClassName="border-separate border-spacing-0 [&_thead_th]:!border-r [&_thead_th]:!border-white/25 [&_tbody_td]:!border-b [&_tbody_td]:!border-border"
@@ -699,8 +789,7 @@ export function AlarmsClientTanStack() {
           reset({ comment: "" });
           await alarmsApi.acknowledge(selectedAlarm.id, values.comment || "");
           markAlarmAcknowledgedInPaginatedSensorsCache(queryClient, acknowledgedAlarmId);
-          queryClient.invalidateQueries({ queryKey: ["capteurs", "paginated"] });
-          queryClient.invalidateQueries({ queryKey: ["alarms"] });
+          await invalidateAlarmRelatedState(Math.max(0, counts.active - 1));
         }}
         canAcknowledgeAlarm={canAcknowledgeAlarm}
         acknowledgePending={acknowledgeMutation.isPending || isDetailLoading}

@@ -21,7 +21,7 @@ const HEADER_GRADIENT_MAP: Record<string, string> = {
 
 interface MonitoringCardHeaderProps {
   status: SensorStatus
-  effectiveAlarmType: 'H' | 'B' | 'N' | 'S' | 'M' | 'T' | null
+  effectiveAlarmType: 'H' | 'B' | 'N' | 'S' | 'A' | 'M' | 'T' | null
   isSurveillanceActive: boolean
   lieuEtat: string
   siteName: string
@@ -73,7 +73,7 @@ export function MonitoringCardHeader({
         ? { label: t('alarmTypes.low'), headerBgClassName: 'bg-blue-700', headerBorderClassName: 'border-blue-800', headerTextClassName: 'text-white' }
         : effectiveAlarmType === 'N'
           ? { label: t('alarmTypes.no_response'), headerBgClassName: 'bg-black', headerBorderClassName: 'border-black', headerTextClassName: 'text-white' }
-          : effectiveAlarmType === 'S'
+          : effectiveAlarmType === 'S' || effectiveAlarmType === 'A'
             ? { label: t('alarmTypes.sector'), headerBgClassName: 'bg-black', headerBorderClassName: 'border-black', headerTextClassName: 'text-white' }
             : effectiveAlarmType === 'M'
               ? { label: t('alarmTypes.module'), headerBgClassName: 'bg-black', headerBorderClassName: 'border-black', headerTextClassName: 'text-white' }

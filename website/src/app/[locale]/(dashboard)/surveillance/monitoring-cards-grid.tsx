@@ -21,6 +21,7 @@ interface MonitoringCardsGridProps {
   disabledSensors: SensorWithLocation[]
   activeTotalCount?: number
   disabledTotalCount?: number
+  emptyDescription?: string
   activeTreeCounters?: SurveillanceTreeSiteCounter[]
   disabledTreeCounters?: SurveillanceTreeSiteCounter[]
   disabledFirst?: boolean
@@ -77,6 +78,7 @@ export function MonitoringCardsGrid({
   disabledSensors,
   activeTotalCount,
   disabledTotalCount,
+  emptyDescription,
   activeTreeCounters = [],
   disabledTreeCounters = [],
   disabledFirst = false,
@@ -121,7 +123,7 @@ export function MonitoringCardsGrid({
   }
 
   if (activeSensors.length === 0 && disabledSensors.length === 0) {
-    return <SurveillanceEmptyState title={t("grid.empty_title")} />
+    return <SurveillanceEmptyState title={t("grid.empty_title")} description={emptyDescription} />
   }
 
   const groupingLabels = {

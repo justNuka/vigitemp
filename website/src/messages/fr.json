@@ -306,6 +306,7 @@
       "disabled_until": "Surveillance dÃ©sactivÃ©e jusqu'au {date}",
       "partial_group_loaded": "Affichage partiel : {loaded} sur {total} lieux chargÃ©s. Cliquez sur Â« Charger plus Â» pour afficher la suite.",
       "empty_title": "Aucune sonde",
+      "empty_filtered": "Aucune sonde ne correspond aux filtres actifs.",
       "unknown_site": "Site inconnu",
       "no_group": "Sans groupe",
       "no_site": "Sans site"
@@ -598,6 +599,7 @@
     "tabs": {
       "active": "Actives",
       "acknowledged": "AcquittÃ©es",
+      "results_with_total": "{visible} r\u00e9sultat(s) sur {total} dans cet onglet",
       "resolved": "Ã€ acquitter",
       "empty_tooltip": "Aucune alarme dans cette catÃ©gorie pour le moment"
     },
@@ -630,6 +632,10 @@
       "comment_select_empty": "Aucun commentaire disponible"
     },
     "filters": {
+      "active_label": "Filtres actifs",
+      "active_location": "Lieu : {value}",
+      "active_types": "Types : {value}",
+      "clear": "Reinitialiser",
       "type_label": "Type d'alarme",
       "all": "Tous",
       "high": "Haut",
@@ -1127,7 +1133,7 @@
         "applied_calibration_date": "Date d'Ã©talonnage appliquÃ©e",
         "unit": "UnitÃ©",
         "accuracy_error": "Erreur de justesse",
-        "accuracy_correction_example": "Correction appliquÃ©e (exemple) : {value}",
+        "accuracy_correction_example": "Correction appliquÃ©e (signe inverse) : {value}",
         "uncertainty": "Incertitude",
         "drift": "DÃ©rive"
       },
@@ -3383,7 +3389,9 @@
           "7": "Les mesures issues d'une remontee memoire sont maintenant distinguees visuellement dans le tableau de details d'un lieu.",
           "8": "Les acquittements d'alarme remontent maintenant correctement dans l'audit de detail d'un lieu.",
           "9": "Avec un filtre actif, le rafraichissement recharge maintenant correctement les lieux correspondants et replace le bouton de chargement au bon endroit dans chaque section.",
-          "10": "Les compteurs en vue arborescence distinguent maintenant correctement les pre-alarmes et les alarmes terminees."
+          "10": "Les compteurs en vue arborescence distinguent maintenant correctement les pre-alarmes et les alarmes terminees.",
+          "11": "La page de surveillance affiche maintenant un message explicite quand aucun capteur ne correspond aux filtres actifs.",
+          "12": "Le detail d'un lieu conserve des libelles de consigne et de tolerance plus lisibles, y compris sur petits ecrans."
         }
       },
         "admin": {
@@ -3392,7 +3400,8 @@
             "0": "Ajout du bloc sauvegarde systeme pour toutes les licences.",
             "1": "Le lien du journal des acquittements depuis le dashboard admin ouvre maintenant une vraie page.",
             "2": "L'export de l'historique des acquittements reapplique maintenant correctement les filtres actifs.",
-            "3": "La liste des commentaires libres d'acquittement est maintenant chargee depuis le journal dedie."
+            "3": "La liste des commentaires libres d'acquittement est maintenant chargee depuis le journal dedie.",
+            "4": "L'aperçu de l'erreur de justesse affiche maintenant clairement le signe inverse applique lors de la correction."
           }
         }
       }
@@ -4381,7 +4390,12 @@
       "all_sites": "Tous les sites",
       "all_locations": "Tous les lieux",
       "site_placeholder": "Filtrer par site",
-      "location_placeholder": "Filtrer par lieu"
+      "location_placeholder": "Filtrer par lieu",
+      "active_label": "Filtres actifs",
+      "active_site": "Site : {value}",
+      "active_location": "Lieu : {value}",
+      "active_types": "Types : {value}",
+      "clear": "RÃƒÂ©initialiser"
     },
     "acknowledge_success": "Alarme acquittÃ©e avec succÃ¨s",
     "acknowledge_error": "Erreur lors de l'acquittement",

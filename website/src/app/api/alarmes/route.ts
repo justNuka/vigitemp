@@ -14,7 +14,7 @@ import { serializeDbDateTime } from "@/lib/date-display"
 const alarmsQuerySchema = z.object({
   status: z.enum(["active", "acknowledged", "resolved"]).optional(),
   page: z.coerce.number().int().positive().default(1),
-  limit: z.coerce.number().int().min(1).max(1000).default(15),
+  limit: z.coerce.number().int().min(1).max(1000).default(500),
   siteId: z.coerce.number().int().positive().optional(),
   locationId: z.coerce.number().int().positive().optional(),
 })

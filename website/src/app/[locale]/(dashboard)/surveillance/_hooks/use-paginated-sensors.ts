@@ -147,23 +147,6 @@ export function usePaginatedSensors({
         pageParams?: unknown[]
       }>(queryKey)
       const loadedPagesCount = Math.max(currentData?.pages?.length ?? 1, 1)
-
-      await queryClient.removeQueries({
-        queryKey: [
-          "capteurs",
-          "paginated",
-          limit,
-          "sites",
-          siteIds.join(","),
-          "groups",
-          groupIds.join(","),
-          "surveillanceDisabled",
-          surveillanceDisabled === undefined ? "all" : surveillanceDisabled ? "1" : "0",
-          "search",
-          searchTerm.trim().toLocaleLowerCase("fr"),
-          "page",
-        ],
-      })
       const firstPage = await fetchPage(1)
       const totalPagesToFetch = fetchAllPages
         ? Math.max(firstPage?.totalPages ?? 1, 1)
