@@ -25,6 +25,7 @@ const AUDIT_FIELD_LABELS: Record<string, string> = {
   mailingContactsCount: "Contacts mail",
   dateHeureSurveillanceOn: "Date activation surveillance",
   dateHeureSurveillanceOff: "Date desactivation surveillance",
+  acknowledgedAt: "Date d'acquittement",
   reason: "Motif",
   from: "Avant",
   to: "Apres",
@@ -93,7 +94,12 @@ export function buildMonitoringAuditRows(raw: string | null | undefined) {
   try {
     const parsed = JSON.parse(sanitized.slice(jsonStart, jsonEnd + 1)) as Record<string, unknown>
     return Object.entries(parsed)
-      .filter(([key, value]) => !["alarmId", "locationId", "lieuId"].includes(key) && value !== null && value !== undefined)
+      .filter(
+        ([key, value]) =>
+          !["alarmId", "locationId", "lieuId", "acknowledgedAt"].includes(key) &&
+          value !== null &&
+          value !== undefined,
+      )
       .map(([key, value]) => {
         const label = AUDIT_FIELD_LABELS[key] ?? key
         if (isFromToChange(value)) {
@@ -117,7 +123,18 @@ export function formatMonitoringAuditSummary(value: string | null | undefined) {
   const sanitized = sanitizeMonitoringAuditText(value)
   if (sanitized === "-") return sanitized
 
-  const prefix = sanitized.split("{")[0]?.trim().replace(/\|+$/g, "").trim()
+  const prefix = sanitized
+    .split("{")[0]
+    ?.split("|")
+    .map((segment) => segment.trim())
+    .filter(
+      (segment) =>
+        segment.length > 0 &&
+        !/^(acknowledgedAt|alarmId|locationId|lieuId)\s*:/i.test(segment) &&
+        !/^IP\s*:/i.test(segment),
+    )
+    .join(" | ")
+    .trim()
   const rows = buildMonitoringAuditRows(value)
 
   if (rows.length === 0) return prefix || sanitized

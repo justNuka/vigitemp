@@ -51,6 +51,7 @@ export function buildMonitoringCardProps(
     lieuEtat: sensor.location.lieuEtat ?? "",
     surveillanceDisabled: sensor.location.surveillanceDisabled ?? false,
     surveillanceDisabledSince: sensor.location.surveillanceDisabledSince ?? null,
+    surveillanceDisabledUntil: sensor.location.surveillanceDisabledUntil ?? null,
     surveillanceDisabledBy: sensor.location.surveillanceDisabledBy ?? null,
     surveillanceDisabledComment: sensor.location.surveillanceDisabledComment ?? null,
     sondeNumeroSerie: sensor.location.sondeNumeroSerie ?? "",

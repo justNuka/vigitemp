@@ -699,6 +699,61 @@ export async function ServerActiveAlarms() {
 
 }
 
+export type DashboardAlarmTypeCounts = {
+  high: number
+  low: number
+  noResponse: number
+  sector: number
+  module: number
+}
+
+/** Comptage complet par type pour le camembert du dashboard. */
+export async function ServerActiveAlarmTypeCounts(): Promise<DashboardAlarmTypeCounts> {
+  unstable_noStore()
+  const emptyCounts: DashboardAlarmTypeCounts = {
+    high: 0,
+    low: 0,
+    noResponse: 0,
+    sector: 0,
+    module: 0,
+  }
+  const userId = await getServerAuthenticatedUserId()
+  if (shouldSkipDbOnBuild || !userId) return emptyCounts
+
+  const { prisma } = await import("@/lib/prisma")
+  const scope = await getUserLocationScope(userId)
+  const alarmAccessFilter = buildAlarmAccessFilter(scope)
+  const alarms = await prisma.t_alarme.findMany({
+    where: applyAccessFilter(
+      { Est_Acquittee: false, Date_Heure_Fin: null },
+      alarmAccessFilter,
+    ),
+    select: { Type: true },
+  })
+
+  return alarms.reduce<DashboardAlarmTypeCounts>((counts, alarm) => {
+    switch (alarm.Type) {
+      case "H":
+        counts.high += 1
+        break
+      case "B":
+        counts.low += 1
+        break
+      case "N":
+        counts.noResponse += 1
+        break
+      case "M":
+        counts.module += 1
+        break
+      case "S":
+      case "A":
+        counts.sector += 1
+        break
+    }
+    return counts
+  }, emptyCounts)
+}
+
 
 
 

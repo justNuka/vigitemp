@@ -20,7 +20,14 @@ import {
   MonitoringGroupToggleDialog,
   type MonitoringGroupModalState,
 } from "./_components/monitoring-group-toggle-dialog";
-import { applySurveillanceFilters, computeSurveillanceStats, dedupeSensorsByLocation, type FilterState } from "./_helpers/monitoring-derived";
+import {
+  applySurveillanceFilters,
+  areSurveillanceFiltersEqual,
+  computeSurveillanceStats,
+  dedupeSensorsByLocation,
+  type FilterState,
+  type SurveillanceStatusFilter,
+} from "./_helpers/monitoring-derived";
 import { toast } from "sonner";
 import { useForm, useWatch } from "react-hook-form";
 import { LocationFormDialog } from "@/app/[locale]/(admin)/admin/lieux/_components/location-form-dialog";
@@ -90,6 +97,41 @@ const getInitialDisabledFirst = (): boolean => {
   return decodeURIComponent(match[1]) === "1";
 };
 
+const defaultSurveillanceFilters: FilterState = {
+  siteIds: [],
+  groupIds: [],
+  searchTerm: "",
+  sortMode: "status",
+  statusFilter: "all",
+};
+
+function isValidStatusFilter(value: unknown): value is SurveillanceStatusFilter {
+  return value === "all" || value === "disabled" || value === "ok" || value === "preAlarm" || value === "ended" || value === "critical";
+}
+
+function getInitialFilters(): FilterState {
+  if (typeof window === "undefined") return defaultSurveillanceFilters;
+
+  try {
+    const raw = window.localStorage.getItem("surveillance_filters");
+    if (!raw) return defaultSurveillanceFilters;
+
+    const parsed = JSON.parse(raw) as Partial<FilterState> | null;
+    if (!parsed) return defaultSurveillanceFilters;
+
+    return {
+      siteIds: Array.isArray(parsed.siteIds) ? parsed.siteIds.filter((id): id is number => typeof id === "number" && Number.isFinite(id)) : [],
+      groupIds: Array.isArray(parsed.groupIds) ? parsed.groupIds.filter((id): id is number => typeof id === "number" && Number.isFinite(id)) : [],
+      searchTerm: typeof parsed.searchTerm === "string" ? parsed.searchTerm : "",
+      sortMode: parsed.sortMode === "alphabetical" ? "alphabetical" : "status",
+      statusFilter: isValidStatusFilter(parsed.statusFilter) ? parsed.statusFilter : "all",
+    };
+  } catch {
+    window.localStorage.removeItem("surveillance_filters");
+    return defaultSurveillanceFilters;
+  }
+}
+
 
 export function SurveillancePageClient({ initialStats, sites, groups, refreshIntervalSeconds, showNullNonResponse: initialShowNullNonResponse, requireActionComment }: Props) {
   const t = useTranslations("surveillance");
@@ -97,7 +139,7 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
   const { license } = useLicense();
   const canUseCurvesOverlay = isStandardOrExpert(license);
   const [viewMode, setViewMode] = useState<ViewMode>("graphs");
-  const [filters, setFilters] = useState<FilterState>({ siteIds: [], groupIds: [], searchTerm: "", sortMode: "status" });
+  const [filters, setFilters] = useState<FilterState>(() => getInitialFilters());
   const [disabledFirst, setDisabledFirst] = useState<boolean>(() => getInitialDisabledFirst());
   const [isOverlayOpen, setIsOverlayOpen] = useState(false);
   const [showNullNonResponse] = useState(initialShowNullNonResponse);
@@ -108,14 +150,22 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
   const [isRangeSelectionActive, setIsRangeSelectionActive] = useState(false);
   const [openDetailModalIds, setOpenDetailModalIds] = useState<number[]>([]);
   const [isAcknowledgeDialogOpen, setIsAcknowledgeDialogOpen] = useState(false);
-  const [stableActiveSensors, setStableActiveSensors] = useState<SensorWithLocation[]>([]);
-  const [stableDisabledSensors, setStableDisabledSensors] = useState<SensorWithLocation[]>([]);
-  const [stableActiveSectionCount, setStableActiveSectionCount] = useState(0);
-  const [stableDisabledSectionCount, setStableDisabledSectionCount] = useState(0);
-  const [stableVisibleStats, setStableVisibleStats] = useState<Stats>(initialStats);
   const loadMoreRef = useRef<HTMLDivElement>(null);
   const nextAutoRefreshAtRef = useRef<number | null>(null);
   const remainingAutoRefreshMsRef = useRef<number | null>(null);
+  const stableDisplayRef = useRef<{
+    activeSensors: SensorWithLocation[];
+    disabledSensors: SensorWithLocation[];
+    activeSectionCount: number;
+    disabledSectionCount: number;
+    visibleStats: Stats;
+  }>({
+    activeSensors: [],
+    disabledSensors: [],
+    activeSectionCount: 0,
+    disabledSectionCount: 0,
+    visibleStats: initialStats,
+  });
   const queryClient = useQueryClient();
 
   const { data: locations = [] } = useLocations();
@@ -249,7 +299,27 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
     [activePaginatedData.sensors, disabledPaginatedData.sensors],
   );
   const uniqueSensors = useMemo(() => dedupeSensorsByLocation(allSensors), [allSensors]);
-  const visibleSensors = applySurveillanceFilters(uniqueSensors, { ...filters, siteIds: [], groupIds: [], searchTerm: "" });
+  const baseVisibleSensors = useMemo(
+    () =>
+      applySurveillanceFilters(uniqueSensors, {
+        ...filters,
+        siteIds: [],
+        groupIds: [],
+        searchTerm: "",
+        statusFilter: "all",
+      }),
+    [filters, uniqueSensors],
+  );
+  const visibleSensors = useMemo(
+    () =>
+      applySurveillanceFilters(uniqueSensors, {
+        ...filters,
+        siteIds: [],
+        groupIds: [],
+        searchTerm: "",
+      }),
+    [filters, uniqueSensors],
+  );
   const activeVisibleSensors = useMemo(
     () => visibleSensors.filter((sensor) => !sensor.location.surveillanceDisabled),
     [visibleSensors],
@@ -263,8 +333,9 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
       new Set(sensors.map((sensor) => Number(sensor.location.id ?? sensor.id)).filter((id) => Number.isFinite(id))).size,
     [],
   );
-  const activeSectionCount = filters.searchTerm.trim().length > 0 ? countVisibleLocations(activeVisibleSensors) : activePaginatedData.total;
-  const disabledSectionCount = filters.searchTerm.trim().length > 0 ? countVisibleLocations(disabledVisibleSensors) : disabledPaginatedData.total;
+  const hasLocalDisplayFilter = filters.searchTerm.trim().length > 0 || filters.statusFilter !== "all";
+  const activeSectionCount = hasLocalDisplayFilter ? countVisibleLocations(activeVisibleSensors) : activePaginatedData.total;
+  const disabledSectionCount = hasLocalDisplayFilter ? countVisibleLocations(disabledVisibleSensors) : disabledPaginatedData.total;
   const emptyStateDescription = hasServerFilters && visibleSensors.length === 0 ? t("grid.empty_filtered") : undefined;
 
   const activeAlarmsCount = useMemo(() => {
@@ -272,12 +343,12 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
       return initialStats?.activeAlarms ?? 0;
     }
 
-    if (uniqueSensors.length === 0) {
+    if (baseVisibleSensors.length === 0) {
       return initialStats?.activeAlarms ?? 0;
     }
 
     const ids = new Set<number>();
-    for (const sensor of uniqueSensors) {
+    for (const sensor of baseVisibleSensors) {
       if (sensor.status !== "critical" && sensor.status !== "technical") {
         continue;
       }
@@ -287,9 +358,12 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
       }
     }
     return ids.size;
-  }, [filters.searchTerm, hasServerFilters, initialStats?.activeAlarms, uniqueSensors]);
+  }, [baseVisibleSensors, filters.searchTerm, hasServerFilters, initialStats?.activeAlarms]);
 
-  const visibleLocationCount = useMemo(() => new Set(visibleSensors.map((sensor) => Number(sensor.location.id ?? sensor.id)).filter((id) => Number.isFinite(id))).size, [visibleSensors]);
+  const visibleLocationCount = useMemo(
+    () => new Set(baseVisibleSensors.map((sensor) => Number(sensor.location.id ?? sensor.id)).filter((id) => Number.isFinite(id))).size,
+    [baseVisibleSensors],
+  );
   const totalVisibleLocationCount = useMemo(
     () => (filters.searchTerm.trim().length > 0 ? visibleLocationCount : activePaginatedData.total + disabledPaginatedData.total),
     [activePaginatedData.total, disabledPaginatedData.total, filters.searchTerm, visibleLocationCount],
@@ -298,7 +372,7 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
   const visibleStats = useMemo(() => {
     if (filters.searchTerm.trim().length > 0) {
       return computeSurveillanceStats({
-        sensors: visibleSensors,
+        sensors: baseVisibleSensors,
         total: totalVisibleLocationCount,
         activeAlarms: activeAlarmsCount,
       });
@@ -311,7 +385,7 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
 
     return {
       total: totalVisibleLocationCount,
-      disabled: disabledSectionCount,
+      disabled: disabledPaginatedData.total,
       ok: treeStats.ok,
       preAlarm: treeStats.preAlarm,
       ended: treeStats.ended,
@@ -321,36 +395,30 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
   }, [
     activeAlarmsCount,
     activePaginatedData.treeCounters,
+    disabledPaginatedData.total,
     disabledPaginatedData.treeCounters,
     filters.searchTerm,
     totalVisibleLocationCount,
-    visibleSensors,
+    baseVisibleSensors,
   ]);
   const isFetching = isFetchingActive || isFetchingDisabled;
   const showGridSkeleton = isFetching && visibleSensors.length === 0;
 
-  useEffect(() => {
-    if (isFetching && hasServerFilters) return;
-    setStableActiveSensors(activeVisibleSensors);
-    setStableDisabledSensors(disabledVisibleSensors);
-    setStableActiveSectionCount(activeSectionCount);
-    setStableDisabledSectionCount(disabledSectionCount);
-    setStableVisibleStats(visibleStats);
-  }, [
-    activeSectionCount,
-    activeVisibleSensors,
-    disabledSectionCount,
-    disabledVisibleSensors,
-    hasServerFilters,
-    isFetching,
-    visibleStats,
-  ]);
+  if (!(isFetching && hasServerFilters)) {
+    stableDisplayRef.current = {
+      activeSensors: activeVisibleSensors,
+      disabledSensors: disabledVisibleSensors,
+      activeSectionCount,
+      disabledSectionCount,
+      visibleStats,
+    };
+  }
 
-  const displayedActiveSensors = hasServerFilters && isFetching ? stableActiveSensors : activeVisibleSensors;
-  const displayedDisabledSensors = hasServerFilters && isFetching ? stableDisabledSensors : disabledVisibleSensors;
-  const displayedActiveSectionCount = hasServerFilters && isFetching ? stableActiveSectionCount : activeSectionCount;
-  const displayedDisabledSectionCount = hasServerFilters && isFetching ? stableDisabledSectionCount : disabledSectionCount;
-  const displayedVisibleStats = hasServerFilters && isFetching ? stableVisibleStats : visibleStats;
+  const displayedActiveSensors = hasServerFilters && isFetching ? stableDisplayRef.current.activeSensors : activeVisibleSensors;
+  const displayedDisabledSensors = hasServerFilters && isFetching ? stableDisplayRef.current.disabledSensors : disabledVisibleSensors;
+  const displayedActiveSectionCount = hasServerFilters && isFetching ? stableDisplayRef.current.activeSectionCount : activeSectionCount;
+  const displayedDisabledSectionCount = hasServerFilters && isFetching ? stableDisplayRef.current.disabledSectionCount : disabledSectionCount;
+  const displayedVisibleStats = hasServerFilters && isFetching ? stableDisplayRef.current.visibleStats : visibleStats;
 
   const overlayLocations = useMemo(() => {
     const map = new Map<number, { id: number; name: string; site?: string | null }>();
@@ -372,8 +440,22 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
 
 
   const handleFilterChange = useCallback((newFilters: FilterState) => {
-    setFilters(newFilters);
+    setFilters((current) => (areSurveillanceFiltersEqual(current, newFilters) ? current : newFilters));
   }, []);
+
+  const handleStatusFilterToggle = useCallback((statusFilter: Exclude<SurveillanceStatusFilter, "all">) => {
+    setFilters((current) => {
+      const nextFilters: FilterState = {
+        ...current,
+        statusFilter: current.statusFilter === statusFilter ? "all" : statusFilter,
+      };
+      return areSurveillanceFiltersEqual(current, nextFilters) ? current : nextFilters;
+    });
+  }, []);
+
+  useEffect(() => {
+    window.localStorage.setItem("surveillance_filters", JSON.stringify(filters));
+  }, [filters]);
 
   const performRefresh = useCallback(
     async (silent = false) => {
@@ -523,6 +605,7 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
       lieuEtat: string | null | undefined,
       surveillanceDisabled: boolean,
       surveillanceDisabledSince?: Date | null,
+      surveillanceDisabledUntil?: Date | null,
       surveillanceDisabledBy?: string | null,
       surveillanceDisabledComment?: string | null,
     ) => {
@@ -533,10 +616,22 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
             ...sensor.location,
             lieuEtat: lieuEtat ?? sensor.location.lieuEtat,
             surveillanceDisabled,
-            surveillanceDisabledSince: surveillanceDisabledSince ?? sensor.location.surveillanceDisabledSince,
-            surveillanceDisabledBy: surveillanceDisabledBy ?? sensor.location.surveillanceDisabledBy,
+            surveillanceDisabledSince:
+              surveillanceDisabledSince === undefined
+                ? sensor.location.surveillanceDisabledSince
+                : surveillanceDisabledSince,
+            surveillanceDisabledUntil:
+              surveillanceDisabledUntil === undefined
+                ? sensor.location.surveillanceDisabledUntil
+                : surveillanceDisabledUntil,
+            surveillanceDisabledBy:
+              surveillanceDisabledBy === undefined
+                ? sensor.location.surveillanceDisabledBy
+                : surveillanceDisabledBy,
             surveillanceDisabledComment:
-              surveillanceDisabledComment ?? sensor.location.surveillanceDisabledComment,
+              surveillanceDisabledComment === undefined
+                ? sensor.location.surveillanceDisabledComment
+                : surveillanceDisabledComment,
           },
         })),
       );
@@ -672,27 +767,32 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
         return;
       }
 
+      setGroupActionComment("");
+      setGroupActionCommentError(null);
+      setGroupToggleModal(null);
+
       if (payload?.data?.lieuIds) {
         const surveillanceDisabledSince = payload.data.surveillanceDisabledSince
           ? parseDbDateTime(payload.data.surveillanceDisabledSince)
+          : null
+        const surveillanceDisabledUntil = payload.data.surveillanceDisabledUntil
+          ? parseDbDateTime(payload.data.surveillanceDisabledUntil)
           : null
         updateSensorsCache(
           payload.data.lieuIds as number[],
           payload.data.lieuEtat ?? (disabled ? "D" : "S"),
           Boolean(payload.data.surveillanceDisabled),
           surveillanceDisabledSince,
+          surveillanceDisabledUntil,
           payload.data.surveillanceDisabledBy ?? null,
           payload.data.surveillanceDisabledComment ?? null,
         );
       }
-      setGroupActionComment("");
-      setGroupActionCommentError(null);
+    } catch (error) {
+      console.error("Group surveillance toggle failed", error);
       setGroupToggleModal(null);
-      void performRefresh(true).catch(() => undefined);
-    } catch {
-      toast.error(t("refresh.error"));
     }
-  }, [groupActionComment, groupDisableDuration, groupToggleModal, performRefresh, requireActionComment, t, updateSensorsCache]);
+  }, [groupActionComment, groupDisableDuration, groupToggleModal, requireActionComment, t, updateSensorsCache]);
 
 
 
@@ -717,48 +817,83 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
               <div className="flex flex-wrap items-center gap-2 text-sm">
                 <UITooltip>
                   <TooltipTrigger asChild>
-                    <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-50 px-3 py-1 font-medium text-slate-700 dark:bg-slate-500/10 dark:text-slate-300 hover:shadow-sm hover:-translate-y-0.5 transition-all duration-150 cursor-help">
+                    <button
+                      type="button"
+                      onClick={() => handleStatusFilterToggle("disabled")}
+                      className={cn(
+                        "inline-flex items-center gap-1.5 rounded-full bg-slate-50 px-3 py-1 font-medium text-slate-700 dark:bg-slate-500/10 dark:text-slate-300 hover:shadow-sm hover:-translate-y-0.5 transition-all duration-150",
+                        filters.statusFilter === "disabled" && "ring-2 ring-slate-400 ring-offset-1 dark:ring-slate-300",
+                      )}
+                    >
                       {t("stats.disabled", { count: displayedVisibleStats.disabled })}
-                    </span>
+                    </button>
                   </TooltipTrigger>
                   <TooltipContent><p className="text-xs">{t("stats_descriptions.disabled_locations")}</p></TooltipContent>
                 </UITooltip>
                 <UITooltip>
                   <TooltipTrigger asChild>
-                    <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-50 px-3 py-1 font-medium text-blue-700 dark:bg-blue-500/10 dark:text-blue-300 hover:shadow-sm hover:-translate-y-0.5 transition-all duration-150 cursor-help">
+                    <button
+                      type="button"
+                      onClick={() => handleStatusFilterToggle("ok")}
+                      className={cn(
+                        "inline-flex items-center gap-1.5 rounded-full bg-blue-50 px-3 py-1 font-medium text-blue-700 dark:bg-blue-500/10 dark:text-blue-300 hover:shadow-sm hover:-translate-y-0.5 transition-all duration-150",
+                        filters.statusFilter === "ok" && "ring-2 ring-blue-400 ring-offset-1 dark:ring-blue-300",
+                      )}
+                    >
                       <span className="h-2 w-2 rounded-full bg-blue-500" aria-hidden="true" />
                       {t("stats.ok", { count: displayedVisibleStats.ok })}
-                    </span>
+                    </button>
                   </TooltipTrigger>
                   <TooltipContent><p className="text-xs">{t("stats_descriptions.ok_locations")}</p></TooltipContent>
                 </UITooltip>
                 <UITooltip>
                   <TooltipTrigger asChild>
-                    <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-3 py-1 font-medium text-amber-700 dark:bg-amber-500/10 dark:text-amber-400 hover:shadow-sm hover:-translate-y-0.5 transition-all duration-150 cursor-help">
+                    <button
+                      type="button"
+                      onClick={() => handleStatusFilterToggle("preAlarm")}
+                      className={cn(
+                        "inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-3 py-1 font-medium text-amber-700 dark:bg-amber-500/10 dark:text-amber-400 hover:shadow-sm hover:-translate-y-0.5 transition-all duration-150",
+                        filters.statusFilter === "preAlarm" && "ring-2 ring-amber-400 ring-offset-1 dark:ring-amber-300",
+                      )}
+                    >
                       <span className="h-2 w-2 rounded-full bg-amber-500" aria-hidden="true" />
                       {t("stats.pre_alarm", { count: displayedVisibleStats.preAlarm })}
-                    </span>
+                    </button>
                   </TooltipTrigger>
                   <TooltipContent><p className="text-xs">{t("stats_descriptions.pre_alarm_locations")}</p></TooltipContent>
                 </UITooltip>
                 <UITooltip>
                   <TooltipTrigger asChild>
-                    <span className="inline-flex items-center gap-1.5 rounded-full bg-violet-50 px-3 py-1 font-medium text-violet-700 dark:bg-violet-500/10 dark:text-violet-300 hover:shadow-sm hover:-translate-y-0.5 transition-all duration-150 cursor-help">
+                    <button
+                      type="button"
+                      onClick={() => handleStatusFilterToggle("ended")}
+                      className={cn(
+                        "inline-flex items-center gap-1.5 rounded-full bg-violet-50 px-3 py-1 font-medium text-violet-700 dark:bg-violet-500/10 dark:text-violet-300 hover:shadow-sm hover:-translate-y-0.5 transition-all duration-150",
+                        filters.statusFilter === "ended" && "ring-2 ring-violet-400 ring-offset-1 dark:ring-violet-300",
+                      )}
+                    >
                       <span className="h-2 w-2 rounded-full bg-violet-500" aria-hidden="true" />
                       {t("stats.ended", { count: displayedVisibleStats.ended })}
-                    </span>
+                    </button>
                   </TooltipTrigger>
                   <TooltipContent><p className="text-xs">{t("stats_descriptions.ended_locations")}</p></TooltipContent>
                 </UITooltip>
                 <UITooltip>
                   <TooltipTrigger asChild>
-                    <span className="inline-flex items-center gap-1.5 rounded-full bg-red-50 px-3 py-1 font-medium text-red-700 dark:bg-red-500/10 dark:text-red-400 hover:shadow-sm hover:-translate-y-0.5 transition-all duration-150 cursor-help">
+                    <button
+                      type="button"
+                      onClick={() => handleStatusFilterToggle("critical")}
+                      className={cn(
+                        "inline-flex items-center gap-1.5 rounded-full bg-red-50 px-3 py-1 font-medium text-red-700 dark:bg-red-500/10 dark:text-red-400 hover:shadow-sm hover:-translate-y-0.5 transition-all duration-150",
+                        filters.statusFilter === "critical" && "ring-2 ring-red-400 ring-offset-1 dark:ring-red-300",
+                      )}
+                    >
                       <span
                         className={cn("h-2 w-2 rounded-full bg-red-500", displayedVisibleStats.critical > 0 && "animate-pulse")}
                         aria-hidden="true"
                       />
                       {t("stats.critical", { count: displayedVisibleStats.critical })}
-                    </span>
+                    </button>
                   </TooltipTrigger>
                   <TooltipContent><p className="text-xs">{t("stats_descriptions.critical_locations")}</p></TooltipContent>
                 </UITooltip>
@@ -770,6 +905,7 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
             <SurveillanceHeaderControls
               sites={sites}
               groups={groups}
+              filters={filters}
               viewMode={viewMode}
               onViewModeChange={setViewMode}
               onFilterChange={handleFilterChange}

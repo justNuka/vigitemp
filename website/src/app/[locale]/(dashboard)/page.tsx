@@ -7,6 +7,7 @@ import { DashboardClient } from "./dashboard-client";
 import { DashboardHeader } from "./dashboard-header";
 import {
   ServerActiveAlarms,
+  ServerActiveAlarmTypeCounts,
   ServerAlarmTrendCount,
   ServerCriticalSensors,
   ServerDashboardStats,
@@ -39,11 +40,12 @@ export default async function DashboardPage({
   const { locale } = await params;
 
   // Chargement parall?le des donn?es avec cache
-  const [stats, criticalSensors, activeAlarms, sensorOverview, trendStats] =
+  const [stats, criticalSensors, activeAlarms, alarmTypeCounts, sensorOverview, trendStats] =
     await Promise.all([
       ServerDashboardStats(),
       ServerCriticalSensors(),
       ServerActiveAlarms(),
+      ServerActiveAlarmTypeCounts(),
       ServerSensorOverview(),
       ServerAlarmTrendCount(),
     ]);
@@ -57,6 +59,7 @@ export default async function DashboardPage({
         <DashboardClient
           criticalSensors={criticalSensors}
           activeAlarms={activeAlarms}
+          alarmTypeCounts={alarmTypeCounts}
           sensorOverview={sensorOverview}
           totalActiveAlarms={stats.activeAlarms}
           trendCountLast7d={trendStats.countLast7d}

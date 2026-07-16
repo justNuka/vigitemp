@@ -57,6 +57,7 @@ BEGIN
     [Date_Heure_Derniere_Mesure] DATETIME NULL,
     [Est_Alarme_Pour_VigiTel] BIT NULL DEFAULT(0),
     [Est_Mail_Envoye] BIT NULL,
+    [Est_Mail_Fin_Envoye] BIT NOT NULL DEFAULT(0),
     [Est_Tel_Acquittee] BIT NULL,
     CONSTRAINT [PK_t_alarme] PRIMARY KEY ([Id_Alarme])
   );
@@ -378,6 +379,7 @@ BEGIN
     [Derniere_Nb_Decimal] INT NULL DEFAULT(2),
     [Est_Lieu_En_Alarme] TINYINT NULL DEFAULT(0),
     [Est_Lieu_Alarme_Terminee_Non_Acquittee] TINYINT NULL DEFAULT(0),
+    [Est_Auto_Acquittement_Non_Reponse] BIT NOT NULL DEFAULT(0),
     [Est_Lieu_Alarme_Terminee_Non_Acquittee_T1] TINYINT NULL DEFAULT(0),
     [Est_Lieu_En_Pre_Alarme] TINYINT NULL DEFAULT(0),
     [Id_Alarme] INT NULL DEFAULT(0),
@@ -3250,4 +3252,3 @@ BEGIN
   WHERE c.[Port_Serie_Send_GSO] IS NULL;
 END;
 GO
-

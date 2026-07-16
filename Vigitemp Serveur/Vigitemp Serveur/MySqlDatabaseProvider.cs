@@ -977,7 +977,7 @@ namespace Vigitemp_Serveur
                     {
                         if (!dr_lieux.Read())
                         {
-                            VigitempServeur.Log("(AddMesureNoResponse) Aucune ligne t_lieu pour la sonde: " + p_numeroSerie);
+                            VigitempServeur.Log("[SONDE][DB] action=insert-null status=no-lieu serial=" + p_numeroSerie);
                             return false;
                         }
 
@@ -994,7 +994,6 @@ namespace Vigitemp_Serveur
                     var now = DateTime.Now;
                     if (HasRecentMeasurement(p_numeroSerie, now, requireNonNullValue: false))
                     {
-                        VigitempServeur.Log($"(AddMesureNoResponse) Doublon ignore sonde={p_numeroSerie} windowSec={GetDuplicateGuardSeconds()}");
                         return false;
                     }
 
@@ -1045,12 +1044,11 @@ namespace Vigitemp_Serveur
                     cmdUpdateLieu.Parameters.AddWithValue("@idlieu", idLieu);
                     cmdUpdateLieu.ExecuteNonQuery();
 
-                    VigitempServeur.Log($"(AddMesureNoResponse) Mesure null inseree pour non-reponse sonde={p_numeroSerie} lieu={idLieu}");
                     return true;
                 }
                 catch (Exception ex)
                 {
-                    VigitempServeur.Log("(AddMesureNoResponse) SQL Erreur: " + ex);
+                    VigitempServeur.Log("[SONDE][DB] action=insert-null status=error serial=" + p_numeroSerie + " error=" + ex.Message);
                     return false;
                 }
             }
@@ -2538,10 +2536,9 @@ namespace Vigitemp_Serveur
                         "SELECT a.Id_Lieu, a.Id_Alarme " +
                         "FROM t_alarme a " +
                         "WHERE a.Date_Heure_Fin IS NOT NULL " +
-                        "AND a.Date_Heure_Fin > @since " +
-                        "ORDER BY a.Date_Heure_Fin ASC " +
+                        "AND IFNULL(a.Est_Mail_Fin_Envoye, 0) <> 1 " +
+                        "ORDER BY a.Date_Heure_Fin ASC, a.Id_Alarme ASC " +
                         "LIMIT @limit;";
-                    cmd.Parameters.AddWithValue("@since", sinceLocalTime.ToString("yyyy-MM-dd HH:mm:ss"));
                     cmd.Parameters.AddWithValue("@limit", limit);
 
                     using (var reader = cmd.ExecuteReader())
@@ -2593,6 +2590,33 @@ namespace Vigitemp_Serveur
                 catch (Exception ex)
                 {
                     VigitempServeur.Log("(markAlarmMailSent) SQL Erreur: " + ex.Message + " | alarmId=" + alarmId);
+                    return false;
+                }
+            }
+        }
+
+        public bool markAlarmEndMailSent(int alarmId)
+        {
+            lock (_lock)
+            {
+                try
+                {
+                    if (alarmId <= 0 || !EnsureConnected())
+                    {
+                        return false;
+                    }
+
+                    var cmd = this.connection_vigitemp.CreateCommand();
+                    cmd.CommandText =
+                        "UPDATE t_alarme " +
+                        "SET Est_Mail_Fin_Envoye = 1 " +
+                        "WHERE Id_Alarme = @idAlarme;";
+                    cmd.Parameters.AddWithValue("@idAlarme", alarmId);
+                    return cmd.ExecuteNonQuery() > 0;
+                }
+                catch (Exception ex)
+                {
+                    VigitempServeur.Log("(markAlarmEndMailSent) SQL Erreur: " + ex.Message + " | alarmId=" + alarmId);
                     return false;
                 }
             }

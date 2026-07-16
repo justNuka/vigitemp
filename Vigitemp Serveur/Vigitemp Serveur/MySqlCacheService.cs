@@ -112,11 +112,10 @@ namespace Vigitemp_Serveur
                         cmd.ExecuteNonQuery();
                     }
 
-                    VigitempServeur.Log($"(InsertMeasureToGraphique) Mesure inseree dans tm_graphique pour idSonde={idSonde}");
                 }
                 catch (Exception ex)
                 {
-                    VigitempServeur.Log($"(InsertMeasureToGraphique) Erreur: {ex.Message} | {ex.StackTrace}");
+                    VigitempServeur.Log($"[CACHE][GRAPH] status=error idSonde={idSonde} error={ex.Message}");
                 }
             }
         }

@@ -25,6 +25,7 @@ export interface DateRangePickerProps {
   allowEmpty?: boolean
   matchTriggerWidth?: boolean
   popoverClassName?: string
+  triggerLabel?: string
 }
 
 export const DateRangePicker: FC<DateRangePickerProps> & { filePath: string } = ({
@@ -38,7 +39,8 @@ export const DateRangePicker: FC<DateRangePickerProps> & { filePath: string } = 
   showCompare = true,
   allowEmpty = false,
   matchTriggerWidth = true,
-  popoverClassName
+  popoverClassName,
+  triggerLabel
 }) => {
   const intlLocale = useLocale()
   const t = useTranslations('dateRangePicker')
@@ -115,7 +117,7 @@ export const DateRangePicker: FC<DateRangePickerProps> & { filePath: string } = 
             <div className="py-1">
               <div>
                 {range?.from
-                  ? `${formatDate(range.from, resolvedLocale)}${range.to != null ? ' - ' + formatDate(range.to, resolvedLocale) : ''}`
+                  ? triggerLabel ?? `${formatDate(range.from, resolvedLocale)}${range.to != null ? ' - ' + formatDate(range.to, resolvedLocale) : ''}`
                   : t('selectRange')}
               </div>
             </div>

@@ -6,7 +6,7 @@ import { Switch } from "@/components/ui/switch"
 import { Line } from "react-chartjs-2"
 import type { Chart as ChartJS } from "chart.js"
 
-import { formatDbDateTime } from "@/lib/date-display"
+import { formatDbDateTime, parseDbDateTime } from "@/lib/date-display"
 import {
   formatMeasureValue,
   formatTimeAxisLabel,
@@ -47,6 +47,7 @@ interface MonitoringGraphTabProps {
   resetChartZoom: () => void
   captureZoomBounds: (chart: ChartJS<"line">) => void
   t: (key: string, values?: Record<string, string | number>) => string
+  graphHeightClassName?: string
 }
 
 function normalizeGuideValue(value: number | null): number | null {
@@ -104,8 +105,8 @@ function buildMergedAxisLabels(
   }
 
   return Array.from(labels).sort((left, right) => {
-    const leftTs = Date.parse(left)
-    const rightTs = Date.parse(right)
+    const leftTs = parseDbDateTime(left)?.getTime() ?? Number.NaN
+    const rightTs = parseDbDateTime(right)?.getTime() ?? Number.NaN
     if (!Number.isFinite(leftTs) || !Number.isFinite(rightTs)) {
       return left.localeCompare(right)
     }
@@ -136,6 +137,7 @@ export function MonitoringGraphTab({
   resetChartZoom,
   captureZoomBounds,
   t,
+  graphHeightClassName,
 }: MonitoringGraphTabProps) {
   const localeTag = locale === "fr" ? "fr-FR" : locale
   const auditMarkerLabel = t("chart.audit_markers")
@@ -260,12 +262,14 @@ export function MonitoringGraphTab({
       return { auditMarkerSeries: series, auditMarkerDetailsByIndex: detailsByIndex }
     }
 
-    const pointTimestamps = orderedData.map((point) => Date.parse(point.DateHeureMesureIso ?? point.DateHeureMesure))
+    const pointTimestamps = orderedData.map(
+      (point) => parseDbDateTime(point.DateHeureMesureIso ?? point.DateHeureMesure)?.getTime() ?? Number.NaN,
+    )
     const axisIndexByLabel = new Map(axisLabels.map((label, index) => [label, index]))
 
     for (const log of auditLogs) {
       if (!log.timestamp) continue
-      const logTs = Date.parse(log.timestamp)
+      const logTs = parseDbDateTime(log.timestamp)?.getTime() ?? Number.NaN
       if (!Number.isFinite(logTs)) continue
 
       let nearestIndex = -1
@@ -290,12 +294,9 @@ export function MonitoringGraphTab({
       series[axisIndex] = markerValue
 
       const markerDetails = [
-        log.code,
         log.label,
-        log.timestamp ? formatDbDateTime(log.timestamp) : "",
         log.detailsSummary,
         log.commentaireUtilisateur,
-        log.commentaire,
       ]
         .filter((value) => Boolean(value && value.trim()))
         .join(" - ")
@@ -320,7 +321,12 @@ export function MonitoringGraphTab({
     [orderedData],
   )
 
-  const guideLabelMaxWidth = { maxWidth: "min(18rem, calc(100vw - 5rem))" }
+  const guideLabelMaxWidth = { maxWidth: "min(18rem, calc(100vw - 4rem))" }
+  const guideLabelStyle = {
+    left: "-42px",
+    transform: "translateY(-50%)",
+    ...guideLabelMaxWidth,
+  } as const
 
   return (
     <div className="space-y-4 pt-4 min-h-[68vh]">
@@ -350,7 +356,7 @@ export function MonitoringGraphTab({
 
       <p className="text-xs text-muted-foreground">{t("chart.drag_zoom_hint")}</p>
 
-      <div className="relative h-[calc(100vh-23rem)] min-h-[60vh]">
+      <div className={graphHeightClassName ?? "relative h-[calc(100vh-23rem)] min-h-[60vh]"}>
         {!hasPlottedMeasures ? (
           <div className="flex h-full items-center justify-center rounded-lg border border-dashed border-border bg-muted/20 px-6 text-center">
             <div className="space-y-2">
@@ -442,23 +448,23 @@ export function MonitoringGraphTab({
                 tension: 0,
                 pointRadius: axisLabels.map((label) => {
                   const point = measurementByLabel.get(label)
-                  return !point || isMemoryMeasure(point) ? 0 : 3.5
+                  return !point || isMemoryMeasure(point) ? 0 : 2
                 }),
-                pointHoverRadius: 8,
+                pointHoverRadius: 4,
                 pointHitRadius: 16,
                 pointStyle: "circle",
-                hoverBorderWidth: 2,
+                hoverBorderWidth: 0,
                 pointBackgroundColor: axisLabels.map((label) => {
                   const point = measurementByLabel.get(label)
                   return !point || isMemoryMeasure(point) ? "rgba(0,0,0,0)" : "#3b82f6"
                 }),
                 pointBorderColor: axisLabels.map((label) => {
                   const point = measurementByLabel.get(label)
-                  return !point || isMemoryMeasure(point) ? "rgba(0,0,0,0)" : "#fff"
+                  return !point || isMemoryMeasure(point) ? "rgba(0,0,0,0)" : "#3b82f6"
                 }),
                 pointBorderWidth: axisLabels.map((label) => {
                   const point = measurementByLabel.get(label)
-                  return !point || isMemoryMeasure(point) ? 0 : 2
+                  return !point || isMemoryMeasure(point) ? 0 : 0
                 }),
                 order: 1,
               },
@@ -515,8 +521,15 @@ export function MonitoringGraphTab({
                 filter: (context) => {
                   if (typeof context.dataIndex !== "number") return false
                   const label = context?.dataset?.label
+                  const axisLabel = axisLabels[context.dataIndex]
+                  const point = axisLabel ? measurementByLabel.get(axisLabel) : undefined
+                  const isMemoryPoint = point ? isMemoryMeasure(point) : false
+                  const isMemoryDataset =
+                    context.dataset.borderColor === "#d97706" ||
+                    context.dataset.backgroundColor === "#d97706"
+                  if (label === measuresLabel && isMemoryPoint) return false
+                  if (isMemoryDataset && isMemoryPoint) return true
                   if (label === measuresLabel) return true
-                  if (label === t("table.legend.memory")) return true
                   return showAuditMarkers && label === auditMarkerLabel
                 },
                 callbacks: {
@@ -530,6 +543,9 @@ export function MonitoringGraphTab({
                     if (typeof index !== "number") return ""
                     const label = axisLabels[index]
                     const measure = measurementByLabel.get(label)
+                    const isMemoryDataset =
+                      context.dataset.borderColor === "#d97706" ||
+                      context.dataset.backgroundColor === "#d97706"
                     if (context.dataset.label === auditMarkerLabel) {
                       const details = auditMarkerDetailsByIndex.get(index) ?? []
                       return t("chart.audit_marker_count", { count: details.length || 1 })
@@ -537,11 +553,8 @@ export function MonitoringGraphTab({
                     if (!measure || measure.Valeur === null) {
                       return t("table.status.no_response")
                     }
-                    if (context.dataset.label === t("table.legend.memory")) {
-                      return `${t("table.legend.memory")} - ${t("tooltip.value", {
-                        value: formatMeasureValue(measure.Valeur, measure.Nb_Decimal ?? null, localeTag),
-                        unit: unite,
-                      })}`
+                    if (isMemoryDataset) {
+                      return ""
                     }
                     if (context.dataset.label === measuresLabel) {
                       return t("tooltip.value", {
@@ -550,6 +563,26 @@ export function MonitoringGraphTab({
                       })
                     }
                     return `${context.dataset.label}`
+                  },
+                  afterLabel: (context) => {
+                    const index = context?.dataIndex
+                    if (typeof index !== "number") return []
+                    const label = axisLabels[index]
+                    const measure = measurementByLabel.get(label)
+                    const isMemoryDataset =
+                      context.dataset.borderColor === "#d97706" ||
+                      context.dataset.backgroundColor === "#d97706"
+                    if (isMemoryDataset) {
+                      if (!measure || measure.Valeur === null) return []
+                      return [
+                        t("table.legend.memory"),
+                        t("tooltip.value", {
+                          value: formatMeasureValue(measure.Valeur, measure.Nb_Decimal ?? null, localeTag),
+                          unit: unite,
+                        }),
+                      ]
+                    }
+                    return []
                   },
                   afterBody: (context) => {
                     const first = context?.[0]
@@ -590,7 +623,8 @@ export function MonitoringGraphTab({
                   maxTicksLimit: timeAxisSpanMs >= 24 * 60 * 60 * 1000 ? 10 : 8,
                   maxRotation: 0,
                   minRotation: 0,
-                  font: { size: 11 },
+                  font: { size: 10 },
+                  padding: 8,
                   callback: (value, index) => {
                     const dataIndex = typeof value === "number" ? value : Number(value)
                     const rawValue = axisLabels[Number.isFinite(dataIndex) ? Math.round(dataIndex) : index]
@@ -626,35 +660,35 @@ export function MonitoringGraphTab({
         <div className="absolute inset-0 z-0 pointer-events-none">
           {preAlarmSup !== null && guidePositions.preSup !== null && (
             <>
-                <div className="absolute z-20 left-4 truncate text-[11px] font-medium text-red-500 bg-white/95 dark:bg-popover/95 px-2 py-1 rounded shadow-sm" style={{ top: `${guidePositions.preSup}px`, transform: "translateY(-50%)", ...guideLabelMaxWidth }} title={locale === "fr" ? `Pre-sup: ${formattedPreAlarmSup}${unite}` : `Pre-high: ${formattedPreAlarmSup}${unite}`}>
+                <div className="absolute z-20 truncate text-[11px] font-medium text-red-500 bg-white/95 dark:bg-popover/95 px-2 py-1 rounded shadow-sm" style={{ top: `${guidePositions.preSup}px`, ...guideLabelStyle }} title={locale === "fr" ? `Pre-sup: ${formattedPreAlarmSup}${unite}` : `Pre-high: ${formattedPreAlarmSup}${unite}`}>
                 {locale === "fr" ? `Pre-sup: ${formattedPreAlarmSup}${unite}` : `Pre-high: ${formattedPreAlarmSup}${unite}`}
               </div>
             </>
           )}
           {consigneSup !== null && guidePositions.sup !== null && (
             <>
-                <div className="absolute z-20 left-4 truncate text-xs font-medium text-red-600 dark:text-red-400 bg-white/95 dark:bg-popover/95 px-2 py-1 rounded shadow-md" style={{ top: `${guidePositions.sup}px`, transform: "translateY(-50%)", ...guideLabelMaxWidth }} title={t("guides.max", { value: formattedConsigneSup ?? "-", unit: unite })}>
+                <div className="absolute z-20 truncate text-xs font-medium text-red-600 dark:text-red-400 bg-white/95 dark:bg-popover/95 px-2 py-1 rounded shadow-md" style={{ top: `${guidePositions.sup}px`, ...guideLabelStyle }} title={t("guides.max", { value: formattedConsigneSup ?? "-", unit: unite })}>
                 {t("guides.max", { value: formattedConsigneSup ?? "-", unit: unite })}
               </div>
             </>
           )}
           {consigne !== null && guidePositions.consigne !== null && (
             <>
-                <div className="absolute z-20 left-4 truncate text-xs font-medium text-gray-900 dark:text-popover-foreground bg-white/95 dark:bg-popover/95 px-2 py-1 rounded shadow-md" style={{ top: `${guidePositions.consigne}px`, transform: "translateY(-50%)", ...guideLabelMaxWidth }} title={t("guides.target", { value: formattedConsigne ?? "-", unit: unite })}>
+                <div className="absolute z-20 truncate text-xs font-medium text-gray-900 dark:text-popover-foreground bg-white/95 dark:bg-popover/95 px-2 py-1 rounded shadow-md" style={{ top: `${guidePositions.consigne}px`, ...guideLabelStyle }} title={t("guides.target", { value: formattedConsigne ?? "-", unit: unite })}>
                 {t("guides.target", { value: formattedConsigne ?? "-", unit: unite })}
               </div>
             </>
           )}
           {preAlarmInf !== null && guidePositions.preInf !== null && (
             <>
-                <div className="absolute z-20 left-4 truncate text-[11px] font-medium text-blue-600 dark:text-blue-300 bg-white/95 dark:bg-popover/95 px-2 py-1 rounded shadow-sm" style={{ top: `${guidePositions.preInf}px`, transform: "translateY(-50%)", ...guideLabelMaxWidth }} title={locale === "fr" ? `Pre-inf: ${formattedPreAlarmInf}${unite}` : `Pre-low: ${formattedPreAlarmInf}${unite}`}>
+                <div className="absolute z-20 truncate text-[11px] font-medium text-blue-600 dark:text-blue-300 bg-white/95 dark:bg-popover/95 px-2 py-1 rounded shadow-sm" style={{ top: `${guidePositions.preInf}px`, ...guideLabelStyle }} title={locale === "fr" ? `Pre-inf: ${formattedPreAlarmInf}${unite}` : `Pre-low: ${formattedPreAlarmInf}${unite}`}>
                 {locale === "fr" ? `Pre-inf: ${formattedPreAlarmInf}${unite}` : `Pre-low: ${formattedPreAlarmInf}${unite}`}
               </div>
             </>
           )}
           {consigneInf !== null && guidePositions.inf !== null && (
             <>
-                <div className="absolute z-20 left-4 truncate text-xs font-medium text-red-600 dark:text-red-400 bg-white/95 dark:bg-popover/95 px-2 py-1 rounded shadow-md" style={{ top: `${guidePositions.inf}px`, transform: "translateY(-50%)", ...guideLabelMaxWidth }} title={t("guides.min", { value: formattedConsigneInf ?? "-", unit: unite })}>
+                <div className="absolute z-20 truncate text-xs font-medium text-red-600 dark:text-red-400 bg-white/95 dark:bg-popover/95 px-2 py-1 rounded shadow-md" style={{ top: `${guidePositions.inf}px`, ...guideLabelStyle }} title={t("guides.min", { value: formattedConsigneInf ?? "-", unit: unite })}>
                 {t("guides.min", { value: formattedConsigneInf ?? "-", unit: unite })}
               </div>
             </>

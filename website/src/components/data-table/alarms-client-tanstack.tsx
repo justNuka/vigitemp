@@ -238,6 +238,7 @@ export function AlarmsClientTanStack() {
   useEffect(() => {
     if (selectedAlarmId === null) return;
     setSelectedCommentId("");
+    reset({ comment: "" });
     setAlarmCount30(null);
     setShowGraph(false);
     let active = true;
@@ -254,7 +255,7 @@ export function AlarmsClientTanStack() {
       .finally(() => { if (active) setIsStatsLoading(false); });
     setIsStatsLoading(true);
     return () => { active = false; };
-  }, [normalizeCommentOptions, selectedAlarmId]);
+  }, [normalizeCommentOptions, reset, selectedAlarmId]);
 
   const formatDateTime = useCallback((date: string | null) => {
     if (!date) return t("date.na");
@@ -279,14 +280,14 @@ export function AlarmsClientTanStack() {
     }));
 
   const hasLocalTypeFilter = typeFilters.length > 0;
-  const hasLocalFilteredDisplay = filteredRowCount !== tableData.length;
+  const hasLocalFilteredDisplay = filteredRowCount < tableData.length;
   const visibleCount = tableData.length;
 
   const activeTabLabel = `${tDialog("tabs.active")} (${counts.active})`;
   const resolvedTabLabel = `${tDialog("tabs.resolved")} (${counts.resolved})`;
 
   const resultsLabel =
-    hasLocalTypeFilter || hasLocalFilteredDisplay || visibleCount !== total
+    hasLocalTypeFilter || hasLocalFilteredDisplay
       ? `${hasLocalFilteredDisplay ? filteredRowCount : visibleCount} / ${total} ${t("filters.filtered_results_suffix")}`
       : t("results", { count: total });
 

@@ -108,14 +108,10 @@ namespace Vigitemp_Serveur.sensors
                 string suplex;
                 int length = sp.BytesToRead;
                 byte[] buf = new byte[length];
-                VigitempServeur.Log($"[SONDE][RX] type=EN serial={m_sondeSerialNumber} port={m_comPort} event=read");
-
-
-                VigitempServeur.Log($"[SONDE][RX] type=EN serial={m_sondeSerialNumber} bytes={length}");
                 sp.Read(buf, 0, length);
                 AppendToResponse(iso.GetString(buf));
                 m_sensor_response = Regex.Replace(m_sensor_response, @"\r?\n|\r", "");
-                VigitempServeur.Log($"[SONDE][RX] type=EN serial={m_sondeSerialNumber} raw={m_sensor_response} len={m_sensor_response.Length}");
+                VigitempServeur.Log($"[SONDE][RX] type=EN serial={m_sondeSerialNumber} port={m_comPort} raw={m_sensor_response} len={m_sensor_response.Length}");
                 var m = Regex.Match(m_sensor_response, m_regexResponseTempSensor, RegexOptions.None);
                 if (m_sensor_response.Length == 14)
                 {
@@ -131,22 +127,16 @@ namespace Vigitemp_Serveur.sensors
                 {
                     return;
                 }
-                VigitempServeur.Log($"[SONDE][RX] type=EN serial={m_sondeSerialNumber} frame={regex_res}");
-
                 byte[] bytes = iso.GetBytes(regex_res);
                 string hexString = Hex.ToHexString(bytes);
-                VigitempServeur.Log($"[SONDE][RX] type=EN serial={m_sondeSerialNumber} hex={hexString}");
 
                 suplex = hexString.Substring(24, 2);
                 int poidsFort = int.Parse(suplex, NumberStyles.HexNumber);
-                VigitempServeur.Log($"[SONDE][RX] type=EN serial={m_sondeSerialNumber} poidsFort={poidsFort}");
 
                 suplex = hexString.Substring(26, 2);
                 int poidsFaible = int.Parse(suplex, NumberStyles.HexNumber);
-                VigitempServeur.Log($"[SONDE][RX] type=EN serial={m_sondeSerialNumber} poidsFaible={poidsFaible}");
 
                 tmp_resistance = (poidsFort * 256 + poidsFaible - 2048).ToString();
-                VigitempServeur.Log($"[SONDE][RX] type=EN serial={m_sondeSerialNumber} resistance={tmp_resistance}");
 
                 if (int.Parse(tmp_resistance) > -2048 && int.Parse(tmp_resistance) < 2048)
                 {

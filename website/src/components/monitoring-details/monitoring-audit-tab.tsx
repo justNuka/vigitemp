@@ -2,7 +2,7 @@ import { Fragment, useMemo } from "react"
 import type { ColumnDef } from "@tanstack/react-table"
 
 import { TanStackTable } from "@/components/data-table/tanstack-table"
-import { formatDbDateTime } from "@/lib/date-display"
+import { formatDbDateTime, parseDbDateTime } from "@/lib/date-display"
 import {
   buildMonitoringAuditRows,
   formatMonitoringAuditSummary,
@@ -51,8 +51,8 @@ export function MonitoringAuditTab({ logs, isLoading, error, t, maxHeight = "cal
       dateIso: log.timestamp ?? "",
       dateLabel: log.timestamp ? formatDbDateTime(log.timestamp) : "-",
       user: log.user || "-",
-      details: formatAuditDetails(log.commentaire || log.detailsSummary),
-      detailRows: buildAuditRows(log.commentaire || log.detailsSummary),
+      details: formatAuditDetails(log.detailsSummary || log.commentaire),
+      detailRows: buildAuditRows(log.commentaire),
       comment: log.commentaireUtilisateur ? sanitizeMonitoringAuditText(log.commentaireUtilisateur) : null,
     }))
   }, [logs])
@@ -71,7 +71,9 @@ export function MonitoringAuditTab({ logs, isLoading, error, t, maxHeight = "cal
     {
       accessorKey: "dateIso",
       header: t("audit.columns.date_time"),
-      sortingFn: (rowA, rowB, columnId) => Date.parse(rowA.getValue(columnId) as string) - Date.parse(rowB.getValue(columnId) as string),
+      sortingFn: (rowA, rowB, columnId) =>
+        (parseDbDateTime(rowA.getValue(columnId) as string)?.getTime() ?? 0) -
+        (parseDbDateTime(rowB.getValue(columnId) as string)?.getTime() ?? 0),
       cell: ({ row }) => <span>{row.original.dateLabel}</span>,
     },
     {
@@ -108,7 +110,7 @@ export function MonitoringAuditTab({ logs, isLoading, error, t, maxHeight = "cal
   }
 
   return (
-    <div className="space-y-4 pt-2">
+    <div className="space-y-4 pt-2 min-h-0">
       <TanStackTable
         columns={columns}
         data={data}
@@ -121,6 +123,7 @@ export function MonitoringAuditTab({ logs, isLoading, error, t, maxHeight = "cal
         headerCellClassName="!bg-sidebar !text-sidebar-foreground !border-r !border-white/25 hover:!bg-sidebar-accent/80"
         tableClassName="border-separate border-spacing-0 [&_thead_th]:!border-r [&_thead_th]:!border-white/25 [&_tbody_td]:!border-b [&_tbody_td]:!border-border"
         maxHeight={maxHeight}
+        containerClassName="min-h-0"
       />
     </div>
   )

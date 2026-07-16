@@ -95,15 +95,15 @@ export function VersionChangelogModal() {
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="max-w-2xl">
-        <DialogHeader>
+      <DialogContent className="flex max-h-[85vh] max-w-2xl flex-col overflow-hidden">
+        <DialogHeader className="shrink-0">
           <DialogTitle className="text-lg">{t("title", { version: RELEASE_VERSION })}</DialogTitle>
           <DialogDescription>
             {t("description")}
           </DialogDescription>
         </DialogHeader>
 
-        <div className="mt-2 space-y-6">
+        <div className="mt-2 flex-1 space-y-6 overflow-y-auto pr-2">
           {changelog.map((item, index) => (
             <div key={`${item.title}-${index}`} className="relative pl-6">
               <div className="absolute left-1 top-1 h-full w-px bg-border" />

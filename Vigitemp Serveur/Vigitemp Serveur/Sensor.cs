@@ -744,7 +744,7 @@ namespace Vigitemp_Serveur
                 else if (!ok)
                 {
                     VigitempServeur.Log(
-                        $"Non-reponse sonde {m_sondeSerialNumber}: {reason ?? "unknown"} en attente retard={Math.Max(0, settings.RetardNonReponseMinutes)}m lieu={m_idLieu}");
+                        $"[SONDE][NO-RESPONSE] serial={m_sondeSerialNumber} lieu={m_idLieu} status=pending reason={reason ?? "unknown"} retardMin={Math.Max(0, settings.RetardNonReponseMinutes)}");
                 }
 
                 if (eval.TransitionToActive)
@@ -782,10 +782,6 @@ namespace Vigitemp_Serveur
 
                 ApplyAlarmState(overallAlarmActive, preAlarmActive: false, valueForNotify: ok ? (double?)null : 0d);
 
-                if (!ok && eval.IsActive && !string.IsNullOrWhiteSpace(reason))
-                {
-                    VigitempServeur.Log($"Non-reponse sonde {m_sondeSerialNumber}: {reason}");
-                }
             }
             catch (Exception ex)
             {

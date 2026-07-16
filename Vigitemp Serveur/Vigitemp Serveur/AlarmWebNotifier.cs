@@ -1,6 +1,8 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Configuration;
+using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Threading;
@@ -16,6 +18,7 @@ namespace Vigitemp_Serveur
         private static string BaseUrl =>
             ConfigurationManager.AppSettings["VigiSensys.WebsiteBaseUrl"] ??
             ConfigurationManager.AppSettings["Vigi.WebsiteBaseUrl"];
+
         private static string Secret =>
             ConfigurationManager.AppSettings["VigiSensys.AlarmDispatchSecret"] ??
             ConfigurationManager.AppSettings["Vigi.AlarmDispatchSecret"];
@@ -27,20 +30,18 @@ namespace Vigitemp_Serveur
 
             if (string.IsNullOrWhiteSpace(baseUrl))
             {
-                VigitempServeur.Log("WARNING AlarmWebNotifier: Vigi.WebsiteBaseUrl non configure dans App.config. Aucune notification d'alarme ne sera envoyee aux agents.");
-            }
-            else
-            {
-                VigitempServeur.Log($"AlarmWebNotifier: WebsiteBaseUrl={baseUrl}");
+                VigitempServeur.Log("[ALARM][WEB] status=config-warning issue=missing-base-url");
             }
 
             if (string.IsNullOrWhiteSpace(secret))
             {
-                VigitempServeur.Log("WARNING AlarmWebNotifier: Vigi.AlarmDispatchSecret non configure dans App.config. Les requêtes seront rejetees avec 401.");
+                VigitempServeur.Log("[ALARM][WEB] status=config-warning issue=missing-secret");
+                return;
             }
-            else
+
+            if (!string.IsNullOrWhiteSpace(baseUrl))
             {
-                VigitempServeur.Log("AlarmWebNotifier: AlarmDispatchSecret configure.");
+                VigitempServeur.Log("[ALARM][WEB] status=config-ok baseUrl=" + baseUrl);
             }
         }
 
@@ -58,7 +59,7 @@ namespace Vigitemp_Serveur
 
                 if (string.IsNullOrWhiteSpace(BaseUrl) || string.IsNullOrWhiteSpace(Secret))
                 {
-                    VigitempServeur.Log("AlarmWebNotifier: configuration manquante (BaseUrl/Secret)");
+                    VigitempServeur.Log("[ALARM][WEB] event=triggered status=skipped reason=missing-config");
                     return mailedAlarmIds;
                 }
 
@@ -83,24 +84,20 @@ namespace Vigitemp_Serveur
                             AddDispatchSecretHeaders(req);
                             req.Content = new StringContent(payload, Encoding.UTF8, "application/json");
 
-                            VigitempServeur.Log(
-                                "AlarmWebNotifier: envoi notification web triggered " +
-                                "alarmId=" + capturedAlarm.IdAlarme +
-                                " idLieu=" + capturedAlarm.IdLieu +
-                                " url=" + url);
-
                             var response = await _http.SendAsync(req);
                             var statusCode = (int)response.StatusCode;
                             if (statusCode < 200 || statusCode >= 300)
+                            {
                                 VigitempServeur.Log(
-                                    "AlarmWebNotifier: WARNING reponse non-2xx triggered (status=" + statusCode + ") " +
-                                    "idLieu=" + capturedAlarm.IdLieu +
+                                    "[ALARM][WEB] event=triggered status=warning code=" + statusCode +
+                                    " idLieu=" + capturedAlarm.IdLieu +
                                     " alarmId=" + capturedAlarm.IdAlarme);
+                            }
                             else
                             {
                                 VigitempServeur.Log(
-                                    "AlarmWebNotifier: notification triggered envoyee (status=" + statusCode + ") " +
-                                    "idLieu=" + capturedAlarm.IdLieu +
+                                    "[ALARM][WEB] event=triggered status=sent code=" + statusCode +
+                                    " idLieu=" + capturedAlarm.IdLieu +
                                     " alarmId=" + capturedAlarm.IdAlarme);
                                 lock (mailedAlarmIdsLock)
                                 {
@@ -110,7 +107,7 @@ namespace Vigitemp_Serveur
                         }
                         catch (Exception ex)
                         {
-                            VigitempServeur.Log("AlarmWebNotifier: echec triggered alarm " + capturedAlarm.IdAlarme + ": " + ex.Message);
+                            VigitempServeur.Log("[ALARM][WEB] event=triggered status=error alarmId=" + capturedAlarm.IdAlarme + " error=" + ex.Message);
                         }
                     }));
                 }
@@ -119,32 +116,33 @@ namespace Vigitemp_Serveur
             }
             catch (Exception ex)
             {
-                VigitempServeur.Log("AlarmWebNotifier: echec envoi notification batch: " + ex.Message);
+                VigitempServeur.Log("[ALARM][WEB] event=triggered status=batch-error error=" + ex.Message);
             }
 
             return mailedAlarmIds;
         }
 
-        public static async Task NotifyEndedAlarmBatchAsync(IReadOnlyList<AlarmNotificationItem> alarms)
+        public static async Task<IReadOnlyList<int>> NotifyEndedAlarmBatchAsync(IReadOnlyList<AlarmNotificationItem> alarms)
         {
+            var dispatchedAlarmIds = new ConcurrentBag<int>();
             try
             {
-                if (alarms == null || alarms.Count == 0) return;
+                if (alarms == null || alarms.Count == 0) return new List<int>();
 
                 if (string.IsNullOrWhiteSpace(BaseUrl) || string.IsNullOrWhiteSpace(Secret))
                 {
-                    VigitempServeur.Log("AlarmWebNotifier: configuration manquante (BaseUrl/Secret)");
-                    return;
+                    VigitempServeur.Log("[ALARM][WEB] event=ended status=skipped reason=missing-config");
+                    return new List<int>();
                 }
 
                 var url = Combine(BaseUrl, "/api/alarmes/dispatch");
-
                 var tasks = new List<Task>();
+
                 foreach (var alarm in alarms)
                 {
                     if (alarm == null || alarm.IdAlarme <= 0) continue;
 
-                    var capturedAlarm = alarm; // capture for closure
+                    var capturedAlarm = alarm;
                     tasks.Add(Task.Run(async () =>
                     {
                         try
@@ -162,19 +160,24 @@ namespace Vigitemp_Serveur
                             var response = await _http.SendAsync(req);
                             var statusCode = (int)response.StatusCode;
                             if (statusCode < 200 || statusCode >= 300)
+                            {
                                 VigitempServeur.Log(
-                                    "AlarmWebNotifier: WARNING reponse non-2xx ended (status=" + statusCode + ") " +
-                                    "idLieu=" + capturedAlarm.IdLieu +
+                                    "[ALARM][WEB] event=ended status=warning code=" + statusCode +
+                                    " idLieu=" + capturedAlarm.IdLieu +
                                     " alarmId=" + capturedAlarm.IdAlarme);
+                            }
                             else
+                            {
+                                dispatchedAlarmIds.Add(capturedAlarm.IdAlarme);
                                 VigitempServeur.Log(
-                                    "AlarmWebNotifier: notification ended envoyee (status=" + statusCode + ") " +
-                                    "idLieu=" + capturedAlarm.IdLieu +
+                                    "[ALARM][WEB] event=ended status=sent code=" + statusCode +
+                                    " idLieu=" + capturedAlarm.IdLieu +
                                     " alarmId=" + capturedAlarm.IdAlarme);
+                            }
                         }
                         catch (Exception ex)
                         {
-                            VigitempServeur.Log("AlarmWebNotifier: echec ended alarm " + capturedAlarm.IdAlarme + ": " + ex.Message);
+                            VigitempServeur.Log("[ALARM][WEB] event=ended status=error alarmId=" + capturedAlarm.IdAlarme + " error=" + ex.Message);
                         }
                     }));
                 }
@@ -183,25 +186,27 @@ namespace Vigitemp_Serveur
             }
             catch (Exception ex)
             {
-                VigitempServeur.Log("AlarmWebNotifier: echec envoi notification ended batch: " + ex.Message);
+                VigitempServeur.Log("[ALARM][WEB] event=ended status=batch-error error=" + ex.Message);
             }
+
+            return dispatchedAlarmIds.ToList();
         }
 
         public static async Task NotifyRealtimeAlarmAsync(int? alarmId, int? idLieu, string eventType)
         {
             try
             {
-                if (string.IsNullOrWhiteSpace(BaseUrl) || string.IsNullOrWhiteSpace(Secret))
-                {
-                    VigitempServeur.Log("AlarmWebNotifier: configuration manquante (BaseUrl/Secret)");
-                    return;
-                }
-
-                var url = Combine(BaseUrl, "/api/alarmes/dispatch-realtime");
                 var normalizedEventType = string.Equals(eventType, "ended", StringComparison.OrdinalIgnoreCase)
                     ? "ended"
                     : "triggered";
 
+                if (string.IsNullOrWhiteSpace(BaseUrl) || string.IsNullOrWhiteSpace(Secret))
+                {
+                    VigitempServeur.Log("[ALARM][WEB] event=" + normalizedEventType + " status=skipped reason=missing-config");
+                    return;
+                }
+
+                var url = Combine(BaseUrl, "/api/alarmes/dispatch-realtime");
                 var payloadBuilder = new StringBuilder();
                 payloadBuilder.Append("{");
                 var hasField = false;
@@ -227,31 +232,24 @@ namespace Vigitemp_Serveur
                 AddDispatchSecretHeaders(req);
                 req.Content = new StringContent(payloadBuilder.ToString(), Encoding.UTF8, "application/json");
 
-                VigitempServeur.Log(
-                    "AlarmWebNotifier: envoi realtime web " +
-                    "eventType=" + normalizedEventType +
-                    (idLieu.HasValue ? (" idLieu=" + idLieu.Value) : "") +
-                    (alarmId.HasValue ? (" alarmId=" + alarmId.Value) : "") +
-                    " url=" + url);
-
                 var response = await _http.SendAsync(req);
                 var statusCode = (int)response.StatusCode;
+                var target =
+                    (idLieu.HasValue ? (" idLieu=" + idLieu.Value) : string.Empty) +
+                    (alarmId.HasValue ? (" alarmId=" + alarmId.Value) : string.Empty);
+
                 if (statusCode < 200 || statusCode >= 300)
-                    VigitempServeur.Log(
-                        "AlarmWebNotifier: WARNING reponse non-2xx realtime (status=" + statusCode + ") " +
-                        "eventType=" + normalizedEventType +
-                        (idLieu.HasValue ? (" idLieu=" + idLieu.Value) : "") +
-                        (alarmId.HasValue ? (" alarmId=" + alarmId.Value) : ""));
+                {
+                    VigitempServeur.Log("[ALARM][WEB] event=" + normalizedEventType + " status=warning code=" + statusCode + target);
+                }
                 else
-                    VigitempServeur.Log(
-                        "AlarmWebNotifier: realtime web envoye (status=" + statusCode + ") " +
-                        "eventType=" + normalizedEventType +
-                        (idLieu.HasValue ? (" idLieu=" + idLieu.Value) : "") +
-                        (alarmId.HasValue ? (" alarmId=" + alarmId.Value) : ""));
+                {
+                    VigitempServeur.Log("[ALARM][WEB] event=" + normalizedEventType + " status=sent code=" + statusCode + target);
+                }
             }
             catch (Exception ex)
             {
-                VigitempServeur.Log("AlarmWebNotifier: echec envoi realtime: " + ex.Message);
+                VigitempServeur.Log("[ALARM][WEB] status=realtime-error error=" + ex.Message);
             }
         }
 
@@ -266,7 +264,7 @@ namespace Vigitemp_Serveur
 
                 if (string.IsNullOrWhiteSpace(BaseUrl) || string.IsNullOrWhiteSpace(Secret))
                 {
-                    VigitempServeur.Log("AlarmWebNotifier: configuration manquante (BaseUrl/Secret)");
+                    VigitempServeur.Log("[ALARM][WEB] event=gsp-battery status=skipped reason=missing-config");
                     return;
                 }
 
@@ -292,27 +290,28 @@ namespace Vigitemp_Serveur
                 AddDispatchSecretHeaders(req);
                 req.Content = new StringContent(payload, Encoding.UTF8, "application/json");
 
-                VigitempServeur.Log(
-                    "AlarmWebNotifier: envoi batterie GSP " +
-                    "idLieu=" + idLieu +
-                    " sonde=" + (sondeSerial ?? "") +
-                    " battery=" + batteryPercent +
-                    " sendEmail=" + sendEmail +
-                    " url=" + url);
-
                 var response = await _http.SendAsync(req);
                 var statusCode = (int)response.StatusCode;
                 if (statusCode < 200 || statusCode >= 300)
                 {
                     VigitempServeur.Log(
-                        "AlarmWebNotifier: WARNING reponse non-2xx batterie GSP (status=" + statusCode + ") " +
-                        "idLieu=" + idLieu +
-                        " sonde=" + (sondeSerial ?? ""));
+                        "[ALARM][WEB] event=gsp-battery status=warning code=" + statusCode +
+                        " idLieu=" + idLieu +
+                        " sonde=" + (sondeSerial ?? string.Empty));
+                }
+                else
+                {
+                    VigitempServeur.Log(
+                        "[ALARM][WEB] event=gsp-battery status=sent code=" + statusCode +
+                        " idLieu=" + idLieu +
+                        " sonde=" + (sondeSerial ?? string.Empty) +
+                        " battery=" + batteryPercent +
+                        " sendEmail=" + sendEmail);
                 }
             }
             catch (Exception ex)
             {
-                VigitempServeur.Log("AlarmWebNotifier: echec envoi batterie GSP: " + ex.Message);
+                VigitempServeur.Log("[ALARM][WEB] event=gsp-battery status=error error=" + ex.Message);
             }
         }
 
@@ -327,42 +326,39 @@ namespace Vigitemp_Serveur
 
                 if (string.IsNullOrWhiteSpace(BaseUrl) || string.IsNullOrWhiteSpace(Secret))
                 {
-                    VigitempServeur.Log("AlarmWebNotifier: configuration manquante (BaseUrl/Secret) pour recap mensuel stats");
+                    VigitempServeur.Log("[STATS][MONTHLY] status=skipped reason=missing-config");
                     return;
                 }
 
                 var url = Combine(BaseUrl, "/api/statistiques/recap-mensuel/send");
                 var req = new HttpRequestMessage(HttpMethod.Get, url);
                 AddDispatchSecretHeaders(req);
-                VigitempServeur.Log("AlarmWebNotifier: trigger recap mensuel stats url=" + url);
 
                 using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(8)))
                 {
                     var response = await _http.SendAsync(req, cts.Token);
-                var statusCode = (int)response.StatusCode;
-                if (statusCode < 200 || statusCode >= 300)
-                {
-                    var body = await response.Content.ReadAsStringAsync();
-                    if (body != null && body.Length > 200)
+                    var statusCode = (int)response.StatusCode;
+                    if (statusCode < 200 || statusCode >= 300)
                     {
-                        body = body.Substring(0, 200);
+                        var body = await response.Content.ReadAsStringAsync();
+                        if (body != null && body.Length > 200)
+                        {
+                            body = body.Substring(0, 200);
+                        }
+
+                        VigitempServeur.Log(
+                            "[STATS][MONTHLY] status=warning code=" + statusCode + " body=" + (body ?? string.Empty));
+                        return;
                     }
 
-                    VigitempServeur.Log(
-                        "AlarmWebNotifier: WARNING recap mensuel stats non-2xx " +
-                        "(status=" + statusCode + ") body=" + (body ?? ""));
-                    return;
-                }
-
-                VigitempServeur.Log("AlarmWebNotifier: recap mensuel stats check OK (status=" + statusCode + ")");
-                _monthlyStatsPauseUntilUtc = DateTime.MinValue;
+                    VigitempServeur.Log("[STATS][MONTHLY] status=ok code=" + statusCode);
+                    _monthlyStatsPauseUntilUtc = DateTime.MinValue;
                 }
             }
             catch (Exception ex)
             {
                 _monthlyStatsPauseUntilUtc = DateTime.UtcNow.AddHours(6);
-                VigitempServeur.Log("AlarmWebNotifier: echec check recap mensuel stats: " + ex);
-                VigitempServeur.Log("AlarmWebNotifier: recap mensuel stats en pause pendant 6h apres echec de connexion.");
+                VigitempServeur.Log("[STATS][MONTHLY] status=error pauseHours=6 error=" + ex.Message);
             }
         }
 
@@ -390,4 +386,3 @@ namespace Vigitemp_Serveur
         }
     }
 }
-

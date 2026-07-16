@@ -25,7 +25,7 @@ export async function ServerFilterOptions() {
 
     const scope = await getUserLocationScope(userId)
     const lieuAccessFilter = buildLieuAccessFilter(scope)
-    const [sitesData, groupeData, lieuxData] = await Promise.all([
+    const [sitesData, lieuxData] = await Promise.all([
       prisma.t_site.findMany({
         where:
           scope.siteIds.length > 0
@@ -33,11 +33,6 @@ export async function ServerFilterOptions() {
             : { Est_Archive: false },
         select: { Id_Site: true, Libelle_Site: true, Est_Archive: true },
         orderBy: { Libelle_Site: "asc" },
-      }),
-      prisma.t_groupe.findMany({
-        select: { Id_Groupe: true, Nom_Groupe: true, Numero_Regroupement: true },
-        orderBy: { Nom_Groupe: "asc" },
-        where: applyAccessFilter({ Est_Archive: false }, lieuAccessFilter),
       }),
       prisma.t_lieu.findMany({
         select: {
@@ -49,6 +44,28 @@ export async function ServerFilterOptions() {
         where: applyAccessFilter({ Est_Archive: false }, lieuAccessFilter),
       }),
     ])
+
+    const allowedGroupIds = Array.from(
+      new Set(
+        lieuxData.flatMap((lieu) =>
+          (lieu.t_lieu_groupe ?? [])
+            .map((group) => group.Id_Groupe)
+            .filter((id): id is number => typeof id === "number" && id > 0),
+        ),
+      ),
+    )
+
+    const groupeData =
+      allowedGroupIds.length > 0
+        ? await prisma.t_groupe.findMany({
+            where: {
+              Est_Archive: false,
+              Id_Groupe: { in: allowedGroupIds },
+            },
+            select: { Id_Groupe: true, Nom_Groupe: true, Numero_Regroupement: true },
+            orderBy: { Nom_Groupe: "asc" },
+          })
+        : []
 
     const siteMap = new Map<number, string>()
     for (const site of sitesData) {

@@ -130,6 +130,7 @@ export function AlarmsClient({ alarms, statusFilter, initialLocationId = null, s
     setShowGraph(false);
     setSelectedCommentId("");
     setAlarmCount30(null);
+    reset({ comment: "" });
     let isActive = true;
     setIsCommentsLoading(true);
     fetch("/api/alarmes/commentaires-acquittement")
@@ -145,7 +146,7 @@ export function AlarmsClient({ alarms, statusFilter, initialLocationId = null, s
       });
 
     return () => { isActive = false; };
-  }, [normalizeCommentOptions, selectedAlarm]);
+  }, [normalizeCommentOptions, reset, selectedAlarm]);
 
   useEffect(() => {
     if (!selectedAlarm) return;
@@ -319,14 +320,7 @@ export function AlarmsClient({ alarms, statusFilter, initialLocationId = null, s
     },
   ];
 
-  const alarmsByStatus = useMemo(
-    () =>
-      localAlarms.filter((alarm) => {
-        if (statusFilter === "active") return alarm.status === "active";
-        return alarm.status === "resolved";
-      }),
-    [localAlarms, statusFilter],
-  );
+  const alarmsByStatus = useMemo(() => localAlarms, [localAlarms]);
 
   const tableData: AlarmRow[] = alarmsByStatus
     .filter((alarm) => {
@@ -394,10 +388,14 @@ export function AlarmsClient({ alarms, statusFilter, initialLocationId = null, s
   }, [selectedAlarm]);
 
   const resultsLabel = useMemo(() => {
-    return t("table.results_with_total", {
-      visible: visibleRowCount,
-      total: alarmsByStatus.length,
-    });
+    try {
+      return t("table.results_with_total", {
+        visible: visibleRowCount,
+        total: alarmsByStatus.length,
+      });
+    } catch {
+      return `${visibleRowCount} / ${alarmsByStatus.length}`;
+    }
   }, [alarmsByStatus.length, t, visibleRowCount]);
 
   const cardTitle = statusFilter === "active" ? t("titles.active") : t("titles.resolved");

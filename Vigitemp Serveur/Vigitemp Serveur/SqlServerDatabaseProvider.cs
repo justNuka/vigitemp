@@ -876,7 +876,7 @@ namespace Vigitemp_Serveur
                         {
                             if (!reader.Read())
                             {
-                                VigitempServeur.Log("(AddMesureNoResponse MSSQL) Aucune ligne t_lieu pour la sonde: " + p_numeroSerie);
+                                VigitempServeur.Log("[SONDE][DB] action=insert-null status=no-lieu serial=" + p_numeroSerie + " provider=mssql");
                                 return false;
                             }
 
@@ -894,7 +894,6 @@ namespace Vigitemp_Serveur
                     var now = DateTime.Now;
                     if (HasRecentMeasurement(p_numeroSerie, now, requireNonNullValue: false))
                     {
-                        VigitempServeur.Log($"(AddMesureNoResponse MSSQL) Doublon ignore sonde={p_numeroSerie} windowSec={GetDuplicateGuardSeconds()}");
                         return false;
                     }
 
@@ -949,12 +948,11 @@ namespace Vigitemp_Serveur
                         cmdUpdateLieu.ExecuteNonQuery();
                     }
 
-                    VigitempServeur.Log($"(AddMesureNoResponse MSSQL) Mesure null inseree pour non-reponse sonde={p_numeroSerie} lieu={idLieu}");
                     return true;
                 }
                 catch (Exception ex)
                 {
-                    VigitempServeur.Log("(AddMesureNoResponse MSSQL) SQL Erreur: " + ex);
+                    VigitempServeur.Log("[SONDE][DB] action=insert-null status=error serial=" + p_numeroSerie + " provider=mssql error=" + ex.Message);
                     return false;
                 }
             }
@@ -1037,7 +1035,7 @@ namespace Vigitemp_Serveur
             }
             catch (Exception ex)
             {
-                VigitempServeur.Log("(InsertMeasureToGraphique MSSQL) Erreur: " + ex.Message);
+                VigitempServeur.Log("[CACHE][GRAPH] status=error provider=mssql idSonde=" + idSonde + " error=" + ex.Message);
             }
         }
 
@@ -2456,11 +2454,10 @@ namespace Vigitemp_Serveur
                         "SELECT TOP (@limit) a.Id_Lieu, a.Id_Alarme " +
                         "FROM t_alarme a " +
                         "WHERE a.Date_Heure_Fin IS NOT NULL " +
-                        "AND a.Date_Heure_Fin > @since " +
-                        "ORDER BY a.Date_Heure_Fin ASC;"))
+                        "AND ISNULL(a.Est_Mail_Fin_Envoye, 0) <> 1 " +
+                        "ORDER BY a.Date_Heure_Fin ASC, a.Id_Alarme ASC;"))
                     {
                         cmd.Parameters.AddWithValue("@limit", limit);
-                        cmd.Parameters.AddWithValue("@since", sinceLocalTime);
 
                         using (var reader = cmd.ExecuteReader())
                         {
@@ -2512,6 +2509,33 @@ namespace Vigitemp_Serveur
                 catch (Exception ex)
                 {
                     VigitempServeur.Log("(markAlarmMailSent MSSQL) SQL Erreur: " + ex.Message + " | alarmId=" + alarmId);
+                    return false;
+                }
+            }
+        }
+
+        public bool markAlarmEndMailSent(int alarmId)
+        {
+            lock (_lock)
+            {
+                try
+                {
+                    if (alarmId <= 0 || !EnsureConnected())
+                    {
+                        return false;
+                    }
+
+                    using (var cmd = CreateCommand(
+                        _connectionMain,
+                        "UPDATE t_alarme SET Est_Mail_Fin_Envoye = 1 WHERE Id_Alarme = @idAlarme;"))
+                    {
+                        cmd.Parameters.AddWithValue("@idAlarme", alarmId);
+                        return cmd.ExecuteNonQuery() > 0;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    VigitempServeur.Log("(markAlarmEndMailSent MSSQL) SQL Erreur: " + ex.Message + " | alarmId=" + alarmId);
                     return false;
                 }
             }

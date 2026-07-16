@@ -20,6 +20,8 @@ import { TanStackTable } from "@/components/data-table/tanstack-table";
 import { MonitoringAuditTab } from "@/components/monitoring-details/monitoring-audit-tab";
 import { MonitoringGraphTab } from "@/components/monitoring-details/monitoring-graph-tab";
 import { MonitoringTableTab } from "@/components/monitoring-details/monitoring-table-tab";
+import { getRssiLevel, parseRssiValue } from "@/components/monitoring-card/rssi";
+import { RssiBars } from "@/components/monitoring-card/rssi-bars";
 import type { DateRangeValue, ZoomBounds } from "@/components/monitoring-details/types";
 import { useMonitoringAuditLogs } from "@/components/monitoring-details/use-monitoring-audit-logs";
 import { useMonitoringRangeMeasurements } from "@/components/monitoring-details/use-monitoring-range-measurements";
@@ -136,7 +138,7 @@ export default function MonitoringDetailsModal({
   });
   const [activeTab, setActiveTab] = useState<"graph" | "table" | "audit">("graph");
   const [zoomBounds, setZoomBounds] = useState<ZoomBounds | null>(null);
-  const [showGraphAudits, setShowGraphAudits] = useState(true);
+  const [showGraphAudits, setShowGraphAudits] = useState(false);
   const [tableSorting, setTableSorting] = useState<SortingState>([]);
   const chartRef = useRef<ChartJS<"line"> | null>(null);
   const graphAuditKeyRef = useRef<string | null>(null);
@@ -470,18 +472,29 @@ export default function MonitoringDetailsModal({
   const isDialogLoading = rangeEnabled ? rangeGraphLoading : baseLoading;
   const expandedHistoryLayout =
     detailsSize === "expanded" ||
-    activeTab === "audit" ||
     (rangeEnabled && (activeTab === "graph" || activeTab === "table"));
   const tabContentMaxHeight =
-    detailsSize === "expanded" || activeTab === "audit"
+    detailsSize === "expanded"
       ? "calc(100vh - 18rem)"
       : "calc(100vh - 26rem)";
+  const graphHeightClassName =
+    detailsSize === "expanded"
+      ? "relative h-[calc(100vh-20rem)] min-h-[72vh]"
+      : "relative h-[calc(100vh-28rem)] min-h-[52vh]";
 
   useEffect(() => {
     if (!isOpen) {
       setDetailsSize("standard");
     }
   }, [isOpen]);
+
+  const gsoRssiLabel = useMemo(() => {
+    if (!gsoRssi) return null;
+    const dbm = parseRssiValue(gsoRssi);
+    const level = getRssiLevel(dbm);
+    const quality = level >= 4 ? "OK" : level === 3 ? "Moyen" : "Faible";
+    return `${t("gso.rssi", { value: gsoRssi })} - ${quality}`;
+  }, [gsoRssi, t]);
 
   const handleTableSortingChange = useCallback((updater: Updater<SortingState>) => {
     setTableSorting((prev) => {
@@ -492,10 +505,12 @@ export default function MonitoringDetailsModal({
   }, []);
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+      <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className={cn(
-        "w-[95vw] max-h-[95vh] overflow-y-auto overflow-x-hidden transition-all duration-300 ease-out",
-        expandedHistoryLayout ? "max-w-[98vw] h-[96vh]" : "max-w-7xl",
+        "max-h-[95vh] overflow-y-auto overflow-x-hidden transition-all duration-300 ease-out",
+        expandedHistoryLayout
+          ? "w-[98vw] max-w-[98vw] h-[96vh]"
+          : "w-[min(94vw,1200px)] max-w-[1200px]",
       )}>
         <DialogHeader>
           <DialogTitle>{nomLieu}</DialogTitle>
@@ -503,7 +518,12 @@ export default function MonitoringDetailsModal({
             <p className="text-sm text-muted-foreground">{t("sensor", { serial: sondeNumeroSerie })}</p>
             {gsoRssi || gsoTension || batteryPercent !== null && batteryPercent !== undefined ? (
               <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
-                {gsoRssi ? <span>{t("gso.rssi", { value: gsoRssi })}</span> : null}
+                {gsoRssi ? (
+                  <span className="inline-flex items-center gap-2">
+                    <RssiBars value={gsoRssi} label={gsoRssiLabel ?? t("gso.rssi", { value: gsoRssi })} />
+                    <span>{gsoRssiLabel ?? t("gso.rssi", { value: gsoRssi })}</span>
+                  </span>
+                ) : null}
                 {batteryPercent !== null && batteryPercent !== undefined ? <span>{t("wireless.battery", { value: batteryPercent })}</span> : null}
                 {gsoTension ? <span>{t("gso.tension", { value: gsoTension })}</span> : null}
               </div>
@@ -534,12 +554,8 @@ export default function MonitoringDetailsModal({
                   showCompare={false}
                   matchTriggerWidth={false}
                   popoverClassName="w-[min(1280px,calc(100vw-1rem))]"
+                  triggerLabel={selectedRangeLabel ?? undefined}
                 />
-                {selectedRangeLabel ? (
-                  <p className="text-sm text-muted-foreground">
-                    {t("filters.selected_range", { range: selectedRangeLabel })}
-                  </p>
-                ) : null}
               </div>
               <Button
                 type="button"
@@ -593,6 +609,7 @@ export default function MonitoringDetailsModal({
                   resetChartZoom={resetChartZoom}
                   captureZoomBounds={captureZoomBounds}
                   t={t}
+                  graphHeightClassName={graphHeightClassName}
                 />
               </TabsContent>
 

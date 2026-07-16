@@ -128,7 +128,7 @@ export function AlarmAnalysisClient() {
   const [tableSorting, setTableSorting] = useState<SortingState>([])
   const [zoomBounds, setZoomBounds] = useState<ZoomBounds | null>(null)
   const [guidePositions, setGuidePositions] = useState<GuidePositions>({ sup: null, inf: null, consigne: null, preSup: null, preInf: null })
-  const [showGraphAudits, setShowGraphAudits] = useState(true)
+  const [showGraphAudits, setShowGraphAudits] = useState(false)
   const [isAcknowledgeOpen, setIsAcknowledgeOpen] = useState(false)
   const [isAcknowledgePending, setIsAcknowledgePending] = useState(false)
   const tabContentMaxHeight =
@@ -686,7 +686,7 @@ export function AlarmAnalysisClient() {
         onOpenChange={setIsAcknowledgeOpen}
         isConfirming={isAcknowledgePending}
         selectionMode="single"
-        onConfirm={async (alarmIds, comment) => {
+        onConfirm={async (alarmIds, comment, options) => {
           setIsAcknowledgePending(true)
           try {
             const results = await Promise.allSettled(
@@ -697,7 +697,9 @@ export function AlarmAnalysisClient() {
               throw new Error("no_acknowledgement_succeeded")
             }
             toast.success(t("toast.acknowledge_success"))
-            setIsAcknowledgeOpen(false)
+            if (options?.closeAfter !== false) {
+              setIsAcknowledgeOpen(false)
+            }
             await refreshAlarms()
           } catch {
             toast.error(t("toast.acknowledge_error"))

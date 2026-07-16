@@ -60,7 +60,7 @@ type Props = {
   open: boolean;
   alarm: AcknowledgeDialogAlarm | null;
   onOpenChange: (open: boolean) => void;
-  onConfirm: (alarmIds: string[], comment?: string) => Promise<void>;
+  onConfirm: (alarmIds: string[], comment?: string, options?: { closeAfter: boolean }) => Promise<void>;
   isConfirming?: boolean;
   selectionMode?: "single" | "multiple";
 };
@@ -130,6 +130,39 @@ export function AlarmAcknowledgeDialog({
   });
 
   const comment = useWatch({ control, name: "comment" }) ?? "";
+  const confirmDisabled =
+    isConfirming ||
+    isSubmitting ||
+    (selectionMode === "multiple" && selectedAlarmIds.length === 0)
+
+  const submitAcknowledgement = (closeAfter: boolean) =>
+    handleSubmit(async ({ comment: commentValue }) => {
+      if (!alarm) return
+      const targetAlarmIds =
+        selectionMode === "single"
+          ? [focusedAlarmId ?? alarm.id]
+          : selectedAlarmIds.length > 0
+            ? selectedAlarmIds
+            : [alarm.id]
+
+      await onConfirm(targetAlarmIds, commentValue, { closeAfter })
+
+      if (closeAfter) return
+
+      const acknowledgedIds = new Set(targetAlarmIds)
+      const remainingAlarms = relatedAlarms.filter((row) => !acknowledgedIds.has(String(row.id)))
+      const nextFocusedId = remainingAlarms[0] ? String(remainingAlarms[0].id) : null
+
+      setRelatedAlarms(remainingAlarms)
+      setFocusedAlarmId(nextFocusedId)
+      setSelectedAlarmIds(nextFocusedId ? [nextFocusedId] : [])
+      setSelectedCommentId("")
+      reset({ comment: "" })
+
+      if (!nextFocusedId) {
+        onOpenChange(false)
+      }
+    })
 
   useEffect(() => {
     if (!open) return;
@@ -142,9 +175,22 @@ export function AlarmAcknowledgeDialog({
   }, [open]);
 
   useEffect(() => {
+    if (open) return;
+    reset({ comment: "" });
+    setSelectedCommentId("");
+    setAlarmCount30(null);
+    setAlarmDetails(null);
+    setRelatedAlarms([]);
+    setSelectedAlarmIds([]);
+    setFocusedAlarmId(null);
+    setRelatedTypeFilter("all");
+  }, [open, reset]);
+
+  useEffect(() => {
     if (!open || !alarm) return;
     let isActive = true;
     const initId = window.setTimeout(() => {
+      reset({ comment: "" });
       setSelectedCommentId("");
       setAlarmCount30(null);
       setAlarmDetails(null);
@@ -240,7 +286,13 @@ export function AlarmAcknowledgeDialog({
       isActive = false;
       window.clearTimeout(initId);
     };
-  }, [open, alarmId, alarmLocationId, selectionMode]);
+  }, [alarm, alarmId, alarmLocationId, open, reset, selectionMode]);
+
+  useEffect(() => {
+    if (!open) return;
+    reset({ comment: "" });
+    setSelectedCommentId("");
+  }, [alarmId, open, reset]);
 
   useEffect(() => {
     if (!open || !focusedAlarmId) return;
@@ -451,7 +503,10 @@ export function AlarmAcknowledgeDialog({
           }
         }}
       >
-        <DialogContent className="sm:max-w-4xl max-h-[92dvh] overflow-y-auto border-border bg-card shadow-2xl">
+        <DialogContent
+          key={alarm?.id ?? "alarm-acknowledge-empty"}
+          className="sm:max-w-4xl max-h-[92dvh] overflow-y-auto border-border bg-card shadow-2xl"
+        >
           <DialogHeader className="pb-3 border-b border-border/50">
             <DialogTitle className="flex items-center gap-3">
               <span className="inline-flex items-center justify-center h-9 w-9 rounded-lg bg-destructive/10 text-destructive shrink-0">
@@ -643,10 +698,12 @@ export function AlarmAcknowledgeDialog({
                   if (!Number.isFinite(targetLocationId) || targetLocationId <= 0 || !Number.isFinite(targetAlarmId) || targetAlarmId <= 0) {
                     return;
                   }
-                  onOpenChange(false);
-                  router.push(
-                    `/${locale}/alarmes/analyse?locationId=${encodeURIComponent(String(targetLocationId))}&alarmId=${encodeURIComponent(String(targetAlarmId))}`,
-                  );
+                  const targetUrl = `/${locale}/alarmes/analyse?locationId=${encodeURIComponent(String(targetLocationId))}&alarmId=${encodeURIComponent(String(targetAlarmId))}`;
+                  if (typeof window !== "undefined") {
+                    window.open(targetUrl, "_blank", "noopener,noreferrer");
+                    return;
+                  }
+                  router.push(targetUrl);
                 }}
               >
                 {t("dialog.graph_show")}
@@ -717,27 +774,27 @@ export function AlarmAcknowledgeDialog({
               {t("dialog.cancel")}
             </Button>
             <Button
-              onClick={handleSubmit(async ({ comment: commentValue }) => {
-                const targetAlarmIds =
-                  selectionMode === "single"
-                    ? [focusedAlarmId ?? alarm.id]
-                    : selectedAlarmIds.length > 0
-                      ? selectedAlarmIds
-                      : [alarm.id];
-                await onConfirm(targetAlarmIds, commentValue);
-              })}
-              disabled={
-                isConfirming ||
-                isSubmitting ||
-                (selectionMode === "multiple" && selectedAlarmIds.length === 0)
-              }
-              data-testid="button-confirm-acknowledge"
+              variant="outline"
+              onClick={submitAcknowledgement(false)}
+              disabled={confirmDisabled}
+              data-testid="button-confirm-acknowledge-stay"
             >
               {isConfirming
                 ? t("dialog.confirming")
                 : selectionMode === "multiple" && selectedAlarmIds.length > 1
-                  ? t("dialog.confirm_many", { count: selectedAlarmIds.length })
-                  : t("dialog.confirm")}
+                  ? t("dialog.confirm_many_stay", { count: selectedAlarmIds.length })
+                  : t("dialog.confirm_stay")}
+            </Button>
+            <Button
+              onClick={submitAcknowledgement(true)}
+              disabled={confirmDisabled}
+              data-testid="button-confirm-acknowledge-close"
+            >
+              {isConfirming
+                ? t("dialog.confirming")
+                : selectionMode === "multiple" && selectedAlarmIds.length > 1
+                  ? t("dialog.confirm_many_close", { count: selectedAlarmIds.length })
+                  : t("dialog.confirm_close")}
             </Button>
           </DialogFooter>
         </DialogContent>

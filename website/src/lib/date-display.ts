@@ -11,34 +11,44 @@ type FormatOptions = {
 
 const pad2 = (value: number) => String(value).padStart(2, "0");
 
-const TIMEZONE_AWARE_ISO_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+\-]\d{2}:\d{2})$/;
-
-const reinterpretUtcAsLocal = (date: Date): Date =>
-  new Date(
-    date.getUTCFullYear(),
-    date.getUTCMonth(),
-    date.getUTCDate(),
-    date.getUTCHours(),
-    date.getUTCMinutes(),
-    date.getUTCSeconds(),
-    date.getUTCMilliseconds(),
+const parseLocalDateTimeParts = (value: string): Date | null => {
+  const match = value.match(
+    /^(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{2}):(\d{2})(?::(\d{2})(?:\.(\d{1,3}))?)?)?$/,
   );
+
+  if (!match) return null;
+
+  const [, year, month, day, hour = "00", minute = "00", second = "00", millisecond = "0"] = match;
+  const parsed = new Date(
+    Number(year),
+    Number(month) - 1,
+    Number(day),
+    Number(hour),
+    Number(minute),
+    Number(second),
+    Number(millisecond.padEnd(3, "0")),
+  );
+
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+};
 
 export const parseDbDateTime = (value: DbDateInput): Date | null => {
   if (value === null || value === undefined) return null;
 
   if (value instanceof Date) {
-    return Number.isNaN(value.getTime()) ? null : reinterpretUtcAsLocal(value);
+    return Number.isNaN(value.getTime()) ? null : new Date(value.getTime());
   }
 
   if (typeof value === "string") {
     const trimmed = value.trim();
     if (!trimmed) return null;
 
+    const localDateTime = parseLocalDateTimeParts(trimmed);
+    if (localDateTime) return localDateTime;
+
     const parsed = new Date(trimmed);
     if (Number.isNaN(parsed.getTime())) return null;
 
-    if (TIMEZONE_AWARE_ISO_RE.test(trimmed)) return reinterpretUtcAsLocal(parsed);
     return parsed;
   }
 

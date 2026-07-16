@@ -114,9 +114,12 @@ export function AlarmDetailsDialog({
                   if (!Number.isFinite(targetLocationId) || targetLocationId <= 0 || !Number.isFinite(targetAlarmId) || targetAlarmId <= 0) {
                     return
                   }
-                  setShowGraph(false)
-                  onClose(false)
-                  router.push(`/${locale}/alarmes/analyse?locationId=${encodeURIComponent(String(targetLocationId))}&alarmId=${encodeURIComponent(String(targetAlarmId))}`)
+                  const targetUrl = `/${locale}/alarmes/analyse?locationId=${encodeURIComponent(String(targetLocationId))}&alarmId=${encodeURIComponent(String(targetAlarmId))}`
+                  if (typeof window !== "undefined") {
+                    window.open(targetUrl, "_blank", "noopener,noreferrer")
+                    return
+                  }
+                  router.push(targetUrl)
                 }}
               >
                 {t('dialog.graph_show')}

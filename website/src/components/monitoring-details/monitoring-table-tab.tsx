@@ -4,6 +4,7 @@ import type { ColumnDef, SortingState, Updater } from "@tanstack/react-table"
 
 import { TanStackTable } from "@/components/data-table/tanstack-table"
 import { Button } from "@/components/ui/button"
+import { parseDbDateTime } from "@/lib/date-display"
 import type { MeasureData } from "@/lib/measurements"
 import { formatMeasureValue } from "@/lib/measurements"
 import { cn } from "@/lib/utils"
@@ -104,7 +105,9 @@ export function MonitoringTableTab({
       id: "date",
       accessorKey: "dateLabel",
       header: t("table.columns.date_time"),
-      sortingFn: (rowA, rowB) => Date.parse(rowA.original.dateIso) - Date.parse(rowB.original.dateIso),
+      sortingFn: (rowA, rowB) =>
+        (parseDbDateTime(rowA.original.dateIso)?.getTime() ?? 0) -
+        (parseDbDateTime(rowB.original.dateIso)?.getTime() ?? 0),
       cell: ({ row }) => (
         <span className={cn("font-medium", row.original.isMemoryValue && "italic")}>
           {row.original.dateLabel}

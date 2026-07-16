@@ -1,54 +1,105 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { SwitchWithLoading } from '@/components/ui/switch-with-loading';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useTranslations } from 'next-intl';
+import { getJson, patchJson } from '@/lib/http';
+
+type AutoLockConfig = {
+  enabled: boolean;
+  duration: number;
+};
+
+const DEFAULT_CONFIG: AutoLockConfig = { enabled: true, duration: 15 };
+const DURATION_OPTIONS = [5, 10, 15, 20, 30, 60];
+const AUTO_LOCK_CONFIG_EVENT = 'vigitemp:auto-lock-config-changed';
+
+function readLocalConfig(): AutoLockConfig {
+  try {
+    if (typeof window === 'undefined') return DEFAULT_CONFIG;
+    const stored = window.localStorage.getItem('autoLockConfig');
+    if (!stored) return DEFAULT_CONFIG;
+    const parsed = JSON.parse(stored) as Partial<AutoLockConfig>;
+    return {
+      enabled: typeof parsed.enabled === 'boolean' ? parsed.enabled : DEFAULT_CONFIG.enabled,
+      duration: typeof parsed.duration === 'number' ? parsed.duration : DEFAULT_CONFIG.duration,
+    };
+  } catch (error) {
+    console.error('Erreur lors du chargement de la config:', error);
+    return DEFAULT_CONFIG;
+  }
+}
+
+function persistLocalConfig(config: AutoLockConfig) {
+  window.localStorage.setItem('autoLockConfig', JSON.stringify(config));
+  window.dispatchEvent(new CustomEvent(AUTO_LOCK_CONFIG_EVENT, { detail: config }));
+}
 
 export function AutoLockSettingsCard() {
   const t = useTranslations('adminSettings');
-  const [autoLockConfig, setAutoLockConfig] = useState(() => {
-    const defaultConfig = { enabled: true, duration: 15 };
-    try {
-      if (typeof window === 'undefined') return defaultConfig;
-      const stored = window.localStorage.getItem('autoLockConfig');
-      if (!stored) return defaultConfig;
-      const parsed = JSON.parse(stored) as { enabled?: boolean; duration?: number };
-      return {
-        enabled: typeof parsed.enabled === 'boolean' ? parsed.enabled : defaultConfig.enabled,
-        duration: typeof parsed.duration === 'number' ? parsed.duration : defaultConfig.duration,
-      };
-    } catch (error) {
-      console.error('Erreur lors du chargement de la config:', error);
-      return defaultConfig;
-    }
-  });
+  const [autoLockConfig, setAutoLockConfig] = useState<AutoLockConfig>(() => readLocalConfig());
 
   const autoLockEnabled = autoLockConfig.enabled;
   const autoLockDuration = autoLockConfig.duration;
 
-  const handleAutoLockToggle = (enabled: boolean) => {
-    const config = { enabled, duration: autoLockDuration };
-    setAutoLockConfig(config);
-    localStorage.setItem('autoLockConfig', JSON.stringify(config));
-    toast.success(
-      enabled
-        ? t('security.toast.enabled', { minutes: autoLockDuration })
-        : t('security.toast.disabled')
-    );
-    window.dispatchEvent(new Event('storage'));
+  useEffect(() => {
+    let cancelled = false;
+
+    getJson<AutoLockConfig>('/api/parametres/auto-lock')
+      .then((config) => {
+        if (cancelled) return;
+        setAutoLockConfig(config);
+        persistLocalConfig(config);
+      })
+      .catch((error) => {
+        console.error('Erreur lors du chargement de la config auto-lock:', error);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const saveAutoLockConfig = async (config: AutoLockConfig) => {
+    const savedConfig = await patchJson<AutoLockConfig>('/api/parametres/auto-lock', config);
+    setAutoLockConfig(savedConfig);
+    persistLocalConfig(savedConfig);
+    return savedConfig;
   };
 
-  const handleAutoLockDurationChange = (duration: string) => {
+  const handleAutoLockToggle = async (enabled: boolean) => {
+    const config = { enabled, duration: autoLockDuration };
+    setAutoLockConfig(config);
+    try {
+      const savedConfig = await saveAutoLockConfig(config);
+      toast.success(
+        savedConfig.enabled
+          ? t('security.toast.enabled', { minutes: savedConfig.duration })
+          : t('security.toast.disabled')
+      );
+    } catch (error) {
+      console.error('Erreur lors de la sauvegarde de la config auto-lock:', error);
+      setAutoLockConfig(autoLockConfig);
+      toast.error(t('security.toast.update_error'));
+    }
+  };
+
+  const handleAutoLockDurationChange = async (duration: string) => {
     const durationNum = parseInt(duration, 10);
     const config = { enabled: autoLockEnabled, duration: durationNum };
     setAutoLockConfig(config);
-    localStorage.setItem('autoLockConfig', JSON.stringify(config));
-    toast.success(t('security.toast.duration', { minutes: durationNum }));
-    window.dispatchEvent(new Event('storage'));
+    try {
+      const savedConfig = await saveAutoLockConfig(config);
+      toast.success(t('security.toast.duration', { minutes: savedConfig.duration }));
+    } catch (error) {
+      console.error('Erreur lors de la sauvegarde de la config auto-lock:', error);
+      setAutoLockConfig(autoLockConfig);
+      toast.error(t('security.toast.update_error'));
+    }
   };
 
   return (
@@ -83,11 +134,11 @@ export function AutoLockSettingsCard() {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="5">{t('security.duration_options.5')}</SelectItem>
-                <SelectItem value="10">{t('security.duration_options.10')}</SelectItem>
-                <SelectItem value="15">{t('security.duration_options.15')}</SelectItem>
-                <SelectItem value="30">{t('security.duration_options.30')}</SelectItem>
-                <SelectItem value="60">{t('security.duration_options.60')}</SelectItem>
+                {DURATION_OPTIONS.map((minutes) => (
+                  <SelectItem key={minutes} value={minutes.toString()}>
+                    {t(`security.duration_options.${minutes}`)}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>

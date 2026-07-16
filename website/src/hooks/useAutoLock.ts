@@ -11,12 +11,14 @@ interface AutoLockConfig {
 }
 
 const DEFAULT_DURATION = 15; // 15 minutes par défaut
+const AUTO_LOCK_CONFIG_EVENT = "vigitemp:auto-lock-config-changed";
 
 export function useAutoLock() {
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const configRef = useRef<AutoLockConfig | null>(null);
 
-  // Charger la config depuis localStorage
+  // Charger la config depuis le cache local. La base reste la source de vérité,
+  // mais ce cache évite de retomber à 15 min pendant le chargement initial.
   const loadConfig = useCallback((): AutoLockConfig => {
     if (typeof window === "undefined") {
       return { enabled: true, duration: DEFAULT_DURATION };
@@ -79,22 +81,35 @@ export function useAutoLock() {
     }, timeoutDuration);
   }, [loadConfig, handleLogout]);
 
+  const refreshConfigFromApi = useCallback(async () => {
+    try {
+      const config = await fetchJson<AutoLockConfig>("/api/parametres/auto-lock", {
+        credentials: "include",
+      });
+      configRef.current = config;
+      try {
+        localStorage.setItem("autoLockConfig", JSON.stringify(config));
+      } catch (error) {
+        console.error("Erreur lors de la sauvegarde de la config auto-lock:", error);
+      }
+      resetTimer();
+    } catch (error) {
+      console.error("Erreur lors du chargement de la config auto-lock:", error);
+    }
+  }, [resetTimer]);
+
   // Événements à écouter
   useEffect(() => {
     // Charger la config au montage
     const config = loadConfig();
     configRef.current = config;
 
-    // Ne pas activer si désactivé
-    if (!config.enabled) {
-      return;
-    }
-
     // Événements qui indiquent une activité
     const events = ["mousedown", "mousemove", "keypress", "scroll", "touchstart", "click"];
 
     // Démarrer le timer initial
     resetTimer();
+    void refreshConfigFromApi();
 
     // Ajouter les listeners
     events.forEach((event) => {
@@ -111,6 +126,17 @@ export function useAutoLock() {
     };
     window.addEventListener("storage", handleStorageChange);
 
+    const handleConfigChange = (event: Event) => {
+      const customEvent = event as CustomEvent<AutoLockConfig>;
+      if (customEvent.detail) {
+        configRef.current = customEvent.detail;
+        resetTimer();
+        return;
+      }
+      void refreshConfigFromApi();
+    };
+    window.addEventListener(AUTO_LOCK_CONFIG_EVENT, handleConfigChange);
+
     // Cleanup
     return () => {
       if (timeoutRef.current) {
@@ -120,8 +146,9 @@ export function useAutoLock() {
         document.removeEventListener(event, resetTimer, true);
       });
       window.removeEventListener("storage", handleStorageChange);
+      window.removeEventListener(AUTO_LOCK_CONFIG_EVENT, handleConfigChange);
     };
-  }, [loadConfig, resetTimer]);
+  }, [loadConfig, refreshConfigFromApi, resetTimer]);
 
   // Fonction pour mettre à jour la config (utilisée dans les settings)
   const updateConfig = useCallback(
@@ -132,6 +159,9 @@ export function useAutoLock() {
       try {
         localStorage.setItem("autoLockConfig", JSON.stringify(updatedConfig));
         configRef.current = updatedConfig;
+        window.dispatchEvent(
+          new CustomEvent(AUTO_LOCK_CONFIG_EVENT, { detail: updatedConfig }),
+        );
         resetTimer();
       } catch (error) {
         console.error("Erreur lors de la sauvegarde de la config auto-lock:", error);

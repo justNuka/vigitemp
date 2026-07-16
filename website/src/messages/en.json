@@ -370,6 +370,10 @@
       "cancel": "Cancel",
       "confirm": "Acknowledge",
       "confirm_many": "Acknowledge ({count})",
+      "confirm_stay": "Acknowledge and stay",
+      "confirm_close": "Acknowledge and close",
+      "confirm_many_stay": "Acknowledge and stay ({count})",
+      "confirm_many_close": "Acknowledge and close ({count})",
       "confirming": "Acknowledging...",
       "location_alarms_notice": "Several alarms exist for this location. You can open the alarms page filtered on this location.",
       "view_location_alarms": "View location alarms",
@@ -495,7 +499,15 @@
         "siteCount": "{count} site(s)",
         "groupCount": "{count} group(s)",
         "search": "search",
-        "sort": "sort"
+        "sort": "sort",
+        "badge_filter": "badge: {value}"
+      },
+      "status_filters": {
+        "disabled": "disabled",
+        "ok": "OK",
+        "preAlarm": "pre-alarms",
+        "ended": "ended",
+        "critical": "critical"
       },
       "actions": {
         "clear": "Reset"
@@ -520,7 +532,8 @@
     "refresh": {
       "label": "Refresh",
       "loading": "Refreshing...",
-      "refreshed": "Data refreshed"
+      "refreshed": "Data refreshed",
+      "error": "Refresh failed"
     },
     "toast": {
       "location_not_found": "Location not found",
@@ -1910,13 +1923,15 @@
         "5": "5 minutes",
         "10": "10 minutes",
         "15": "15 minutes",
+        "20": "20 minutes",
         "30": "30 minutes",
         "60": "1 hour"
       },
       "toast": {
         "enabled": "Auto lock enabled ({minutes} min)",
         "disabled": "Auto lock disabled",
-        "duration": "Inactivity duration set to {minutes} minutes"
+        "duration": "Inactivity duration set to {minutes} minutes",
+        "update_error": "Update failed"
       }
     },
     "notifications": {
@@ -3016,6 +3031,8 @@
       "statistics_title": "Statistics by location",
       "statistics_description": "Open detailed per-location statistics with custom period selection.",
       "open_statistics": "Open statistics"
+      ,"type_distribution": "Distribution by type"
+      ,"type_distribution_aria": "Distribution of {count} active alarms by type"
     },
     "ack_dialog": {
       "title": "Acknowledge alarm",
@@ -4115,7 +4132,12 @@
     },
     "gso": {
       "rssi": "RSSI: {value}",
-      "tension": "Voltage: {value}"
+      "tension": "Voltage: {value}",
+      "battery_state": {
+        "ok": "Battery state: OK ({value}V)",
+        "medium": "Battery state: Medium ({value}V)",
+        "low": "Battery state: Low ({value}V)"
+      }
     },
     "wireless": {
       "battery": "Battery: {value}%"

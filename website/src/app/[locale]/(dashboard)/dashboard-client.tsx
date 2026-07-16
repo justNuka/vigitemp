@@ -17,10 +17,12 @@ import { staggerContainer, fadeInUp } from "@/lib/motion-variants"
 import { DashboardActiveAlarmsSection } from "./_components/dashboard/dashboard-active-alarms-section"
 import { createDashboardAlarmColumns, buildAlarmRows } from "./_components/dashboard/dashboard-alarm-columns"
 import { DashboardTrendSection } from "./_components/dashboard/dashboard-trend-section"
+import type { DashboardAlarmTypeCounts } from "./server-dashboard"
 
 interface DashboardClientProps {
   criticalSensors: SensorWithLocation[]
   activeAlarms: AlarmWithDetails[]
+  alarmTypeCounts: DashboardAlarmTypeCounts
   sensorOverview: SensorWithLocation[]
   totalActiveAlarms: number
   trendCountLast7d: number
@@ -30,12 +32,14 @@ interface DashboardClientProps {
 export function DashboardClient({
   criticalSensors: _criticalSensors,
   activeAlarms,
+  alarmTypeCounts,
   sensorOverview: _sensorOverview,
   totalActiveAlarms,
   trendCountLast7d,
   trendMeasurements,
 }: DashboardClientProps) {
   const t = useTranslations("dashboardClient")
+  const tAlarmType = useTranslations("alarmAckHistoryPage.table.type")
   const locale = useLocale()
   const dateLocale = locale.toLowerCase().startsWith("fr") ? fr : enUS
   const localeTag = locale.toLowerCase().startsWith("fr") ? "fr-FR" : locale
@@ -138,6 +142,14 @@ export function DashboardClient({
             t={t}
             trendMeasurements={trendMeasurements}
             trendCountLast7d={trendCountLast7d}
+            alarmTypeCounts={alarmTypeCounts}
+            alarmTypeLabels={{
+              high: tAlarmType("high"),
+              low: tAlarmType("low"),
+              noResponse: tAlarmType("no_response"),
+              sector: tAlarmType("sector"),
+              module: tAlarmType("module"),
+            }}
           />
         </m.div>
 
@@ -164,11 +176,13 @@ export function DashboardClient({
           onOpenChange={(open) => {
             if (!open) setSelectedAlarm(null)
           }}
-          onConfirm={async (alarmIds, commentValue) => {
+          onConfirm={async (alarmIds, commentValue, options) => {
             for (const alarmId of alarmIds) {
               await handleAcknowledge(alarmId, commentValue ?? "")
             }
-            setSelectedAlarm(null)
+            if (options?.closeAfter !== false) {
+              setSelectedAlarm(null)
+            }
           }}
           isConfirming={isAcknowledging}
         />

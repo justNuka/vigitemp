@@ -272,6 +272,7 @@ export type Location = {
   lieuEtat?: string | null;
   surveillanceDisabled?: boolean;
   surveillanceDisabledSince?: Date | null;
+  surveillanceDisabledUntil?: Date | null;
   surveillanceDisabledBy?: string | null;
   surveillanceDisabledComment?: string | null;
   lieuType?: string | null;

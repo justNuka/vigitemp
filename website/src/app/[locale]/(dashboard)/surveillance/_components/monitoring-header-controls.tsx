@@ -15,6 +15,7 @@ type ViewMode = "tree" | "graphs"
 type Props = {
   sites: Site[]
   groups: Group[]
+  filters: FilterState
   viewMode: ViewMode
   onViewModeChange: (value: ViewMode) => void
   onFilterChange: (filters: FilterState) => void
@@ -30,6 +31,7 @@ type Props = {
 export function SurveillanceHeaderControls({
   sites,
   groups,
+  filters,
   viewMode,
   onViewModeChange,
   onFilterChange,
@@ -57,7 +59,7 @@ export function SurveillanceHeaderControls({
 
   return (
     <div className="flex w-full flex-col gap-4 rounded-lg border border-border/60 bg-white/85 p-3 shadow-sm dark:bg-card/95 dark:shadow-black/20">
-      <SurveillanceFilters onFilterChange={onFilterChange} sites={sites} groups={groups} />
+      <SurveillanceFilters filters={filters} onFilterChange={onFilterChange} sites={sites} groups={groups} />
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <SurveillanceViewTabs value={viewMode} onChange={onViewModeChange} graphsLabel={graphsLabel} treeLabel={treeLabel} />
         <div className="flex items-center gap-2 self-start sm:self-auto">

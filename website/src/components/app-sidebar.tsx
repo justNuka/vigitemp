@@ -155,7 +155,12 @@ export function AppSidebar({ activeAlarms = 0, currentUser, onLogout }: AppSideb
     <Sidebar>
       <SidebarHeader className="p-4 flex flex-col items-center bg-linear-to-b from-sidebar-accent/30 to-transparent">
         <Link href="/" className="flex items-center justify-center gap-2">
-          <Logo size="xs" showText textClassName="text-sidebar-foreground" />
+          <Logo
+            size="xs"
+            showText
+            textClassName="text-sidebar-foreground"
+            iconClassName="brightness-0 invert"
+          />
         </Link>
         <span className="inline-flex items-center rounded-md bg-amber-300/20 px-3 py-1 text-xs font-bold text-amber-200 ring-1 ring-inset ring-amber-300/40 mt-2">
           {licenseLabel}

@@ -1,12 +1,14 @@
 import type { SensorWithLocation } from "@/lib/api"
 
 export type SurveillanceSortMode = "status" | "alphabetical"
+export type SurveillanceStatusFilter = "all" | "disabled" | "ok" | "preAlarm" | "ended" | "critical"
 
 export type FilterState = {
   siteIds: number[]
   groupIds: number[]
   searchTerm: string
   sortMode: SurveillanceSortMode
+  statusFilter: SurveillanceStatusFilter
 }
 
 export type Stats = {
@@ -17,6 +19,21 @@ export type Stats = {
   ended: number
   critical: number
   activeAlarms: number
+}
+
+function areSameNumberArrays(left: number[], right: number[]) {
+  if (left.length !== right.length) return false
+  return left.every((value, index) => value === right[index])
+}
+
+export function areSurveillanceFiltersEqual(left: FilterState, right: FilterState) {
+  return (
+    left.searchTerm === right.searchTerm &&
+    left.sortMode === right.sortMode &&
+    left.statusFilter === right.statusFilter &&
+    areSameNumberArrays(left.siteIds, right.siteIds) &&
+    areSameNumberArrays(left.groupIds, right.groupIds)
+  )
 }
 
 function compareByLocationName(a: SensorWithLocation, b: SensorWithLocation) {
@@ -89,6 +106,32 @@ export function applySurveillanceFilters(sensors: SensorWithLocation[], filters:
             )
 
       return locationGroupIds.some((id) => filters.groupIds.includes(id))
+    })
+  }
+
+  if (filters.statusFilter !== "all") {
+    result = result.filter((sensor) => {
+      if (filters.statusFilter === "disabled") {
+        return Boolean(sensor.location.surveillanceDisabled)
+      }
+
+      if (sensor.location.surveillanceDisabled) {
+        return false
+      }
+
+      if (filters.statusFilter === "ok") {
+        return sensor.status === "ok"
+      }
+
+      if (filters.statusFilter === "preAlarm") {
+        return sensor.status === "warning"
+      }
+
+      if (filters.statusFilter === "ended") {
+        return sensor.status === "ended"
+      }
+
+      return sensor.status === "critical" || sensor.status === "technical"
     })
   }
 

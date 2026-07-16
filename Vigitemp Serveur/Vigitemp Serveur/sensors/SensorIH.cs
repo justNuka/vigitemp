@@ -110,8 +110,6 @@ namespace Vigitemp_Serveur.sensors
                 int poidsFort = regex_res[6];
                 int poidsFaible = regex_res[7];
                 tmp_resistance = (poidsFort * 256 + poidsFaible - 2048).ToString();
-                VigitempServeur.Log($"[SONDE][RX] type=IH serial={m_sondeSerialNumber} resistance={tmp_resistance}");
-
                 if (int.Parse(tmp_resistance) > -2048 && int.Parse(tmp_resistance) < 2048)
                 {
                     // recuperer a et b our corriger la valeur brute

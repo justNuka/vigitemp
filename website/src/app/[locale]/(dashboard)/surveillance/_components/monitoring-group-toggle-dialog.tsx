@@ -44,8 +44,19 @@ export function MonitoringGroupToggleDialog({
   t,
 }: MonitoringGroupToggleDialogProps) {
   const translateOrFallback = (key: string, fallback: string) => {
-    const translated = t(key)
-    return translated === key ? fallback : translated
+    try {
+      const translated = t(key)
+      if (
+        !translated ||
+        translated === key ||
+        translated === `surveillance.${key}`
+      ) {
+        return fallback
+      }
+      return translated
+    } catch {
+      return fallback
+    }
   }
 
   const commentLabel = translateOrFallback("confirm.action_comment.label", "Commentaire")

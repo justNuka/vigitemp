@@ -6,9 +6,10 @@ interface LogoProps {
   size?: "xs" | "sm" | "md" | "lg";
   showText?: boolean;
   textClassName?: string;
+  iconClassName?: string;
 }
 
-export function Logo({ className, size = "xs", showText = false, textClassName }: LogoProps) {
+export function Logo({ className, size = "xs", showText = false, textClassName, iconClassName }: LogoProps) {
   const heights = {
     xs: 16,
     sm: 24,
@@ -25,7 +26,7 @@ export function Logo({ className, size = "xs", showText = false, textClassName }
         alt="VigiSensys Logo"
         height={iconSize}
         width={iconSize}
-        className="object-contain"
+        className={cn("object-contain", iconClassName)}
         priority
         unoptimized
       />

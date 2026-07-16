@@ -162,7 +162,7 @@ export function MiniChart({
             x2="100"
             y2={minThresholdY}
             stroke="hsl(var(--warning))"
-            strokeWidth="0.5"
+            strokeWidth="0.35"
             strokeDasharray="2,2"
             vectorEffect="non-scaling-stroke"
           />
@@ -174,7 +174,7 @@ export function MiniChart({
             x2="100"
             y2={maxThresholdY}
             stroke="hsl(var(--destructive))"
-            strokeWidth="0.5"
+            strokeWidth="0.35"
             strokeDasharray="2,2"
             vectorEffect="non-scaling-stroke"
           />
@@ -184,7 +184,7 @@ export function MiniChart({
           d={pathData}
           fill="none"
           stroke={isOutOfRange ? "hsl(var(--destructive))" : "hsl(var(--primary))"}
-          strokeWidth="1.5"
+          strokeWidth="1.1"
           vectorEffect="non-scaling-stroke"
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -193,7 +193,7 @@ export function MiniChart({
         <circle
           cx={lastPoint.x}
           cy={lastPoint.y}
-          r="2.5"
+          r="1.9"
           fill={isOutOfRange ? "hsl(var(--destructive))" : "hsl(var(--primary))"}
           className={isOutOfRange ? "animate-pulse" : ""}
         />

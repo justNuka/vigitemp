@@ -71,10 +71,6 @@ namespace Vigitemp_Serveur.sensors
                 VigitempServeur.Log($"[SONDE][TX] type=IE serial={m_sondeSerialNumber} port={m_comPort} adresse={m_sondeAdresse} cmd={command} (repeat)");
                 m_port.Write(command);
 
-                //Console.WriteLine("Donnees ecrites dans le port COM: " + "SM" + m_sondeAdresse + "0000000000000000");
-                //Trace.WriteLine("Donnees ecrites dans le port COM: " + "SM" + m_sondeAdresse + "0000000000000000");
-                VigitempServeur.Log("Donnees ecrites dans le port COM: " + "SM" + m_sondeAdresse + "0000000000000000");
-
                 while (pendingResults)
                 {
                     await Task.Delay(25);

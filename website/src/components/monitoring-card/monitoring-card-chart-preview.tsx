@@ -56,7 +56,12 @@ export function MonitoringCardChartPreview({
         <Line
           data={{
             labels: orderedData.map((point) => point.DateHeureMesureXaxis),
-            datasets: chartDatasets,
+            datasets: chartDatasets.map((dataset) => ({
+              ...dataset,
+              borderWidth: dataset.label === "" ? 1.35 : 1,
+              pointRadius: dataset.label === "" ? 1.25 : 0,
+              pointHoverRadius: dataset.label === "" ? 1.25 : 0,
+            })),
           }}
           options={{
             responsive: true,

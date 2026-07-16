@@ -182,6 +182,12 @@ const FIELD_LABEL_MAP: Record<string, { fr: string; en: string }> = {
   Frequence_Mesure: { fr: 'Frequence mesure (s)', en: 'Measurement freq. (s)' },
   Retard_Alarme: { fr: "Retard d'alarme (s)", en: 'Alarm delay (s)' },
   Hysteresis: { fr: 'Hysteresis', en: 'Hysteresis' },
+  disabled: { fr: 'Surveillance desactivee', en: 'Monitoring disabled' },
+  durationMinutes: { fr: 'Duree (min)', en: 'Duration (min)' },
+  reactivationAt: { fr: 'Reactivation prevue', en: 'Scheduled reactivation' },
+  updated: { fr: 'Lieux modifies', en: 'Updated locations' },
+  lieuIds: { fr: 'Lieux concernes', en: 'Locations' },
+  groupOrLiaisonId: { fr: 'Groupe / liaison', en: 'Group / link' },
 }
 
 function formatFieldValue(
@@ -196,7 +202,14 @@ function formatFieldValue(
     return localeTag.startsWith('fr') ? (value ? 'Oui' : 'Non') : (value ? 'Yes' : 'No')
   }
 
-  if (typeof value === 'number') return String(value)
+  if (typeof value === 'number') {
+    if (Number.isInteger(value)) return String(value)
+    return new Intl.NumberFormat(localeTag, { maximumFractionDigits: 4 }).format(value)
+  }
+
+  if (Array.isArray(value)) {
+    return value.map((item) => formatFieldValue(key, item, localeTag, timezone)).join(', ')
+  }
 
   if (typeof value === 'string') {
     if (value.includes(' ? ')) {

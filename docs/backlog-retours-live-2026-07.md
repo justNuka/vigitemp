@@ -104,12 +104,12 @@
 | R-108 | Cards surveillance: supprimer les lettres d'etat et garder uniquement les icones avec hover | mineur | rapide | fait | Le code lettre a ete retire, l'information reste disponible via les icones et tooltips |
 | R-109 | GSO: remplacer l'affichage tension par un etat OK / Moyen / Faible | moyen | rapide | fait | Les cartes affichent maintenant un etat batterie metier avec les seuils demandes |
 | R-110 | Sonde SPNB-26000068: remontees memoire anormales autour de 11h avec mesures vers 3h le 2026-07-08 | majeur | moyen | a analyser | Incident de reference a documenter/corriger |
-| R-111 | Verifier que l'erreur de justesse est bien prise en compte avec le bon signe | majeur | moyen | a faire | Attendu: inverse de l'erreur de justesse a appliquer |
-| R-112 | Dashboard utilisateur: certaines alarmes de non reponse affichent l'icone alarme basse | moyen | rapide | a faire | Probleme de mapping icone/type |
+| R-111 | Verifier que l'erreur de justesse est bien prise en compte avec le bon signe | majeur | moyen | fait | Le serveur applique `-Err_Justesse` uniquement si `Est_Correction_Ej` est actif, pour MySQL et MSSQL |
+| R-112 | Dashboard utilisateur: certaines alarmes de non reponse affichent l'icone alarme basse | moyen | rapide | fait | Les alarmes non-reponse et module utilisent maintenant l'icone technique WifiOff |
 | R-113 | Dashboard utilisateur: affichage de `-7,5` a expliquer/corriger | moyen | rapide | a faire | Contexte exact a verifier |
-| R-114 | Dashboard utilisateur: ajouter une echelle sur le graphique de tendance d'alarmes | mineur | rapide | a faire | Lisibilite |
-| R-115 | Dashboard utilisateur: ajouter un camembert par type d'alarmes | moyen | moyen | a faire | Nouveau widget |
-| R-116 | Mail d'alarme terminee pour les GSO ne part pas | majeur | moyen | a faire | Le mail d'alarme declenchee fonctionne deja |
+| R-114 | Dashboard utilisateur: ajouter une echelle sur le graphique de tendance d'alarmes | mineur | rapide | fait | Echelle min/max et reperes temporels affiches sur la tendance |
+| R-115 | Dashboard utilisateur: ajouter un camembert par type d'alarmes | moyen | moyen | fait | Camembert calcule sur toutes les alarmes actives accessibles, avec detail par type |
+| R-116 | Mail d'alarme terminee pour les GSO ne part pas | majeur | moyen | fait | Suivi persistant en base; envoi retente et marque uniquement apres succes HTTP |
 
 ## 12. Retours live detailles du 2026-07-08
 | ID | Sujet | Impact | Complexite | Statut | Notes |
@@ -118,10 +118,10 @@
 | R-118 | Exports Excel/CSV: revoir la presentation | moyen | moyen | a faire | Souhait: un onglet de presentation avec logo puis un onglet de donnees |
 | R-119 | Exports: remplacer les libelles trop techniques par du vocabulaire metier | moyen | rapide | a faire | Exemple cite: type d'alarme et autres codes trop bruts |
 | R-120 | Page alarmes: nombre total incoherent et pagination bloquee | majeur | moyen | en cours | Correction de la pagination serveur et du comptage affiche sous filtres locaux. Reste a valider sur les cas charges en environnement de test |
-| R-121 | Page alarmes: supprimer l'onglet `Acquittees` | mineur | rapide | a faire | Juge non utile |
-| R-122 | Page alarmes: retirer le filtre type d'alarme `terminee` | mineur | rapide | a faire | Filtre considere inutile |
-| R-123 | Paginations: retirer 30 et 40, ajouter 500 et 1000 | moyen | rapide | a faire | Harmonisation demandee sur les tableaux concernes |
-| R-124 | Acquittement: charger les commentaires libres depuis `tm_journal_commentaire_libre` | moyen | rapide | a faire | Menu deroulant lors de l'acquittement |
+| R-121 | Page alarmes: supprimer l'onglet `Acquittees` | mineur | rapide | fait | Deja corrige sur la page alarmes, doublon de R-095 |
+| R-122 | Page alarmes: retirer le filtre type d'alarme `terminee` | mineur | rapide | fait | Deja corrige sur la page alarmes, doublon de R-096 |
+| R-123 | Paginations: retirer 30 et 40, ajouter 500 et 1000 | moyen | rapide | fait | Deja corrige sur les tableaux concernes, doublon de R-097 |
+| R-124 | Acquittement: charger les commentaires libres depuis `tm_journal_commentaire_libre` | moyen | rapide | fait | Deja branche sur l'acquittement, doublon de R-098 |
 | R-125 | Surveillance: afficher les lieux desactives en bloc repliable/depliable | moyen | moyen | fait | Bloc replie par defaut avec depliage manuel |
 | R-126 | Surveillance: badge du nombre d'alarmes incorrect | majeur | moyen | fait | Recalcul des stats de synthese corrige |
 | R-127 | Surveillance: revoir les badges du haut | majeur | moyen | fait | Badges reorganises selon le retour metier |
@@ -134,12 +134,12 @@
 | R-134 | Cards surveillance: retirer les lettres d'etat, ne garder que les icones avec hover | mineur | rapide | fait | Les cartes n'affichent plus de code lettre, uniquement des icones explicites |
 | R-135 | GSO: remplacer l'affichage de tension par un etat batterie | moyen | rapide | fait | Tension brute remplacee sur les cartes par un etat OK / Moyen / Faible |
 | R-136 | SPNB-26000068: remontees memoire anormales autour de 11h avec mesures de 3h du matin le 08/07 | majeur | moyen | a analyser | Incident a documenter puis corriger |
-| R-137 | Verifier que l'erreur de justesse est bien appliquee avec le bon signe | majeur | moyen | a faire | Attendu: appliquer l'inverse de l'erreur de justesse |
-| R-138 | Dashboard utilisateur: certaines alarmes de non reponse affichent l'icone alarme basse | moyen | rapide | a faire | Probleme de mapping type -> icone |
+| R-137 | Verifier que l'erreur de justesse est bien appliquee avec le bon signe | majeur | moyen | fait | Le serveur applique l'inverse de l'erreur de justesse lorsque la correction est active |
+| R-138 | Dashboard utilisateur: certaines alarmes de non reponse affichent l'icone alarme basse | moyen | rapide | fait | Mapping corrige vers l'icone technique |
 | R-139 | Dashboard utilisateur: affichage de `-7,5` a expliquer/corriger | moyen | rapide | a faire | Contexte a verifier sur la source de calcul |
-| R-140 | Dashboard utilisateur: ajouter une echelle sur le graphique de tendance d'alarmes | mineur | rapide | a faire | Lisibilite |
-| R-141 | Dashboard utilisateur: ajouter un camembert type d'alarmes | moyen | moyen | a faire | Nouveau widget |
-| R-142 | Mail d'alarme terminee pour les GSO ne part pas | majeur | moyen | a faire | L'envoi d'alarme declenchee fonctionne correctement |
+| R-140 | Dashboard utilisateur: ajouter une echelle sur le graphique de tendance d'alarmes | mineur | rapide | fait | Echelle ajoutee au graphique de tendance |
+| R-141 | Dashboard utilisateur: ajouter un camembert type d'alarmes | moyen | moyen | fait | Camembert alimente par un comptage serveur complet |
+| R-142 | Mail d'alarme terminee pour les GSO ne part pas | majeur | moyen | fait | Correctif commun avec R-116, compatible MySQL et SQL Server |
 
 ## 13. Retours backlog du 2026-07-13
 | ID | Sujet | Impact | Complexite | Statut | Notes |
@@ -150,14 +150,25 @@
 | R-146 | Remontees memoire: ne pas lancer de demande si la non reponse n'a pas encore de fin | majeur | rapide | a faire | Tant que la plage est ouverte, on ne demande rien |
 | R-147 | Page admin alarmes: erreur 500 depuis le dashboard admin | majeur | moyen | a faire | Acces via la carte dashboard admin buggue |
 | R-148 | Acquittement page alarmes: statut non mis a jour sur la surveillance | majeur | moyen | a faire | Verifier refresh/revalidation/cache apres acquittement |
-| R-149 | Surveillance: agrandir en largeur le badge alarmes du header | mineur | rapide | a faire | Information prioritaire, badge trop serre |
-| R-150 | Afficher le nombre d'alarmes sur le lien de la page alarmes | mineur | rapide | a faire | Rendre le lien plus informatif |
+| R-149 | Surveillance: agrandir en largeur le badge alarmes du header | mineur | rapide | fait | Le bouton d'acces aux alarmes actives dans le header a ete elargi pour afficher proprement le volume d'alarmes |
+| R-150 | Afficher le nombre d'alarmes sur le lien de la page alarmes | mineur | rapide | fait | Le dashboard admin affiche maintenant le nombre d'alarmes directement dans le lien d'acces a la page alarmes |
 | R-151 | Ameliorer l'affichage des audits trop "code" | moyen | moyen | fait | Les details des audits de lieu masquent maintenant les champs techniques bruts, resumant les changements avec des libelles metier et des valeurs reformatees |
 | R-152 | Modale de lieu: plage par defaut sur la journee courante | majeur | moyen | fait | A l'ouverture, la modale charge maintenant par defaut la journee courante pour le graphe, le tableau et l'audit |
 | R-153 | Cards surveillance: retirer les boutons details et plan | mineur | rapide | fait | Les actions details et plan ont ete retirees des cards de surveillance |
 | R-154 | Tableau de mesures: afficher les remontees memoire en italique, sans couleur | mineur | rapide | fait | La mise en avant amber a ete retiree au profit d'un rendu en italique uniquement |
 | R-155 | Passer les mails a envoyer en base via `notification` pour suivi | majeur | lourd | a faire | Probable ajout d'un type de notification mail et d'un workflow de reprise/suivi |
-| R-156 | Nouveaux logos light/dark: utiliser le logo blanc dans la sidebar | mineur | rapide | a faire | Ajustement theming/branding |
+| R-156 | Nouveaux logos light/dark: utiliser le logo blanc dans la sidebar | mineur | rapide | fait | Le logo de sidebar est maintenant force en rendu blanc sur les barres laterales sombres |
+
+## 14. Retours backlog du 2026-07-15
+| ID | Sujet | Impact | Complexite | Statut | Notes |
+|---|---|---|---|---|---|
+| R-157 | Acquittement automatique des alarmes de non reponse | majeur | moyen | a faire | Ajouter un champ par lieu dans `t_lieu` (defaut `0`) pour autoriser l'acquittement automatique des non reponses. Parametrage admin a prevoir plus tard via un tableau/liste des lieux avec cases a cocher et actions tout cocher / tout decocher. Si actif: a la fin d'une alarme de non reponse, supprimer la ligne concernee dans `t_alarme`, remettre `t_lieu.Id_Alarme=0`, `t_lieu.Est_Lieu_En_Alarme=0` et `t_lieu.Est_Lieu_Alarme_Terminee_Non_Acquittee=0`. |
+
+## 15. Retours backlog du 2026-07-16
+| ID | Sujet | Impact | Complexite | Statut | Notes |
+|---|---|---|---|---|---|
+| R-158 | Graphiques: ne pas afficher les audits par defaut | mineur | rapide | fait | Les audits restent activables manuellement dans les graphiques de lieu et d'analyse d'alarme. |
+| R-159 | Graphiques: prevoir un export de la courbe | moyen | moyen | a discuter | Ajouter une possibilite d'export du graphique/courbe, possiblement rattachee a l'export multi-onglets. |
 
 ## Proposition d'ordre de traitement
 1. R-011 remontees memoire non visibles
@@ -196,6 +207,8 @@
 34. R-154 remontees memoire en italique dans le tableau
 35. R-155 notifications mail en base
 36. R-156 nouveaux logos light/dark sidebar
+37. R-158 affichage audits sur graphiques par defaut
+38. R-159 export de courbe / graphique
 
 ## Points a preciser
 - R-002 `version publique de test`: parle-t-on d'un environnement expose, d'un badge visible, ou d'un canal de diffusion logiciel ?

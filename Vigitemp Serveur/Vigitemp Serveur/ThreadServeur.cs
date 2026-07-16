@@ -660,7 +660,7 @@ namespace Vigitemp_Serveur
                 {
                     if (_logSettingsCache)
                     {
-                        VigitempServeur.Log($"LieuAlarmSettings[db-null] idLieu={idLieu}");
+                        VigitempServeur.Log($"[CACHE][LIEU-SETTINGS] idLieu={idLieu} status=db-null");
                     }
                     return null;
                 }
@@ -795,23 +795,10 @@ namespace Vigitemp_Serveur
         {
             if (settings == null) return;
             VigitempServeur.Log(
-                $"LieuAlarmSettings[{source}] idLieu={idLieu} " +
-                $"consigneInf={settings.ConsigneInf?.ToString() ?? "null"} " +
-                $"consigneSup={settings.ConsigneSup?.ToString() ?? "null"} " +
-                $"consigneInfActive={settings.ConsigneInfActive} " +
-                $"consigneSupActive={settings.ConsigneSupActive} " +
-                $"consigneInfPre={settings.ConsigneInfPreAlarme?.ToString() ?? "null"} " +
-                $"consigneInfPreActive={settings.ConsigneInfPreAlarmeActive} " +
-                $"consigneSupPre={settings.ConsigneSupPreAlarme?.ToString() ?? "null"} " +
-                $"consigneSupPreActive={settings.ConsigneSupPreAlarmeActive} " +
-                $"retardBasMin={settings.RetardAlarmeBasMinutes} " +
-                $"retardHautMin={settings.RetardAlarmeHautMinutes} " +
-                $"retardNonReponseMin={settings.RetardNonReponseMinutes} " +
-                $"retardChangementConsigneMin={settings.RetardAlarmeChangementConsigneMinutes} " +
-                $"planningDerniereMaj={settings.PlanningDerniereMaj:O} " +
-                $"temporisationRedeclenchementMesures={settings.NbMesuresTemporisationRedeclenchement} " +
-                $"notificationActive={settings.NotificationActive} " +
-                $"reactivationUtc={settings.DateHeureReactivationAlarme:O}"
+                $"[CACHE][LIEU-SETTINGS] idLieu={idLieu} status={source}" +
+                (string.Equals(source, "db-refresh", StringComparison.OrdinalIgnoreCase)
+                    ? $" retardBasMin={settings.RetardAlarmeBasMinutes} retardHautMin={settings.RetardAlarmeHautMinutes} retardNonReponseMin={settings.RetardNonReponseMinutes}"
+                    : string.Empty)
             );
         }
 
@@ -826,7 +813,7 @@ namespace Vigitemp_Serveur
             {
                 if (_logSettingsCache)
                 {
-                    VigitempServeur.Log($"LieuAlarmSettings[cache-invalidated] idLieu={idLieu} reason={reason}");
+                    VigitempServeur.Log($"[CACHE][LIEU-SETTINGS] idLieu={idLieu} status=invalidated reason={reason}");
                 }
             }
         }
@@ -849,11 +836,11 @@ namespace Vigitemp_Serveur
                 var lastId = GetDatabase().getLastAlarmIdByServeur(_idServer);
                 _lastAlarmIdSeen = Math.Max(0, lastId);
                 _alarmCursorInitialized = true;
-                VigitempServeur.Log($"Alarm poll init: lastAlarmId={_lastAlarmIdSeen} server={_idServer}");
+                VigitempServeur.Log($"[ALARM][POLL] status=init lastAlarmId={_lastAlarmIdSeen} server={_idServer}");
             }
             catch (Exception ex)
             {
-                VigitempServeur.Log("Alarm poll init error (will retry next tick): " + ex.Message);
+                VigitempServeur.Log("[ALARM][POLL] status=init-error error=" + ex.Message);
                 // _alarmCursorInitialized reste false → skip poll ce tick
             }
         }
@@ -872,7 +859,7 @@ namespace Vigitemp_Serveur
             }
 
             _lastAlarmEndPollLocal = DateTime.Now;
-            VigitempServeur.Log($"Alarm end poll init: since={_lastAlarmEndPollLocal:O} server={_idServer}");
+            VigitempServeur.Log($"[ALARM][END-POLL] status=init since={_lastAlarmEndPollLocal:O} server={_idServer}");
         }
 
         private async Task PollNewAlarmsAsync()
@@ -1009,7 +996,7 @@ namespace Vigitemp_Serveur
             }
         }
 
-        private void PollEndedAlarms()
+        private async Task PollEndedAlarmsAsync()
         {
             if (_idServer != _alarmPollServerId)
             {
@@ -1055,7 +1042,6 @@ namespace Vigitemp_Serveur
                     continue;
                 }
 
-                _endedAlarmDispatchById[alarm.IdAlarme] = pollNow;
                 filtered.Add(alarm);
             }
 
@@ -1070,7 +1056,19 @@ namespace Vigitemp_Serveur
             // Legacy agent endpoint (/alarm?action=hide) is deprecated.
             // End-of-alarm handling is now done by web dispatch and email flow.
 
-            _ = AlarmWebNotifier.NotifyEndedAlarmBatchAsync(filtered);
+            var dispatchedAlarmIds = await AlarmWebNotifier.NotifyEndedAlarmBatchAsync(filtered);
+            foreach (var alarmId in dispatchedAlarmIds)
+            {
+                if (alarmId <= 0)
+                {
+                    continue;
+                }
+
+                if (GetDatabase().markAlarmEndMailSent(alarmId))
+                {
+                    _endedAlarmDispatchById[alarmId] = pollNow;
+                }
+            }
         }
 
         public void Start()
@@ -1323,7 +1321,7 @@ namespace Vigitemp_Serveur
                 await ProcessPendingGspConfigurationAsync(prioritizeDirtyPushes: false);
                 await ProcessPendingGspMemoBatchAsync();
                 await PollNewAlarmsAsync();
-                PollEndedAlarms();
+                await PollEndedAlarmsAsync();
             }
             finally
             {
@@ -1922,45 +1920,45 @@ namespace Vigitemp_Serveur
                 case "IN":
                     Interlocked.Increment(ref VigitempServeur.nombres_interrogations);
                     var sensorIN = new SensorIN(this, schedule.Port, serial, schedule.Adresse);
-                    VigitempServeur.Log($"Interrogation sonde IN serial={serial} port={schedule.Port} adresse={schedule.Adresse} workerServer={_idServer}");
+                    VigitempServeur.Log($"[SONDE][START] type=IN serial={serial} port={schedule.Port} adresse={schedule.Adresse} workerServer={_idServer}");
                     return await sensorIN.read();
                 case "IE":
                     Interlocked.Increment(ref VigitempServeur.nombres_interrogations);
                     var sensorIE = new SensorIE(this, schedule.Port, serial, schedule.Adresse);
-                    VigitempServeur.Log($"Interrogation sonde IE serial={serial} port={schedule.Port} adresse={schedule.Adresse} workerServer={_idServer}");
+                    VigitempServeur.Log($"[SONDE][START] type=IE serial={serial} port={schedule.Port} adresse={schedule.Adresse} workerServer={_idServer}");
                     return await sensorIE.read();
                 case "IQ":
                     return true;
                 case "IP":
                     Interlocked.Increment(ref VigitempServeur.nombres_interrogations);
                     var sensorIP = new SensorIP(this, schedule.Port, serial, schedule.Adresse);
-                    VigitempServeur.Log($"Interrogation sonde IP serial={serial} port={schedule.Port} adresse={schedule.Adresse} workerServer={_idServer}");
+                    VigitempServeur.Log($"[SONDE][START] type=IP serial={serial} port={schedule.Port} adresse={schedule.Adresse} workerServer={_idServer}");
                     return await sensorIP.read();
                 case "IC":
                     Interlocked.Increment(ref VigitempServeur.nombres_interrogations);
                     var sensorIC = new SensorIC(this, schedule.Port, serial, schedule.Adresse);
-                    VigitempServeur.Log($"Interrogation sonde IC serial={serial} port={schedule.Port} adresse={schedule.Adresse} workerServer={_idServer}");
+                    VigitempServeur.Log($"[SONDE][START] type=IC serial={serial} port={schedule.Port} adresse={schedule.Adresse} workerServer={_idServer}");
                     return await sensorIC.read();
                 case "IH":
                     Interlocked.Increment(ref VigitempServeur.nombres_interrogations);
                     var sensorIH = new SensorIH(this, schedule.Port, serial, schedule.Adresse);
-                    VigitempServeur.Log($"Interrogation sonde IH serial={serial} port={schedule.Port} adresse={schedule.Adresse} workerServer={_idServer}");
+                    VigitempServeur.Log($"[SONDE][START] type=IH serial={serial} port={schedule.Port} adresse={schedule.Adresse} workerServer={_idServer}");
                     return await sensorIH.read();
                 case "EN":
                     Interlocked.Increment(ref VigitempServeur.nombres_interrogations);
                     var sensorEN = new SensorEN(this, schedule.Port, serial, schedule.Adresse);
-                    VigitempServeur.Log($"Interrogation sonde EN serial={serial} port={schedule.Port} adresse={schedule.Adresse} workerServer={_idServer}");
+                    VigitempServeur.Log($"[SONDE][START] type=EN serial={serial} port={schedule.Port} adresse={schedule.Adresse} workerServer={_idServer}");
                     return await sensorEN.read();
                 case "HN":
                     Interlocked.Increment(ref VigitempServeur.nombres_interrogations);
                     var sensorHN = new SensorHN(this, schedule.Port, serial, schedule.Adresse, schedule.Module);
-                    VigitempServeur.Log($"Interrogation sonde HN serial={serial} port={schedule.Port} adresse={schedule.Adresse} module={schedule.Module} workerServer={_idServer}");
+                    VigitempServeur.Log($"[SONDE][START] type=HN serial={serial} port={schedule.Port} adresse={schedule.Adresse} module={schedule.Module} workerServer={_idServer}");
                     return await sensorHN.read();
                 case "GSP":
                     Interlocked.Increment(ref VigitempServeur.nombres_interrogations);
                     var requestGraphDisplay = ShouldRequestGspGraphDisplay(schedule);
                     var gspSensor = new SensorGSP(this, schedule.Port, serial, schedule.Adresse, schedule.FrequencySeconds, false, requestGraphDisplay);
-                    VigitempServeur.Log($"Interrogation sonde GSP serial={serial} port={schedule.Port} adresse={schedule.Adresse} configDirty={schedule.ConfigDirty} requestGraphDisplay={requestGraphDisplay} workerServer={_idServer}");
+                    VigitempServeur.Log($"[SONDE][START] type=GSP serial={serial} port={schedule.Port} adresse={schedule.Adresse} configDirty={schedule.ConfigDirty} requestGraphDisplay={requestGraphDisplay} workerServer={_idServer}");
                     var gspSuccess = await gspSensor.read();
                     if (!gspSuccess && gspSensor.LastFailureLooksLikeModuleUnavailable)
                     {
@@ -2235,7 +2233,7 @@ namespace Vigitemp_Serveur
 
                 _lastStatsMonthlyDispatchAttemptUtc = nowUtc;
                 VigitempServeur.Log(
-                    $"Monthly stats dispatch trigger start server={_idServer} intervalMin={intervalMinutes}");
+                    $"[STATS][MONTHLY] status=start server={_idServer} intervalMin={intervalMinutes}");
 
                 _ = Task.Run(async () =>
                 {

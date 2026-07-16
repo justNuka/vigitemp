@@ -45,6 +45,7 @@ namespace Vigitemp_Serveur
         List<AlarmNotificationItem> getUnsentOpenAlarms(int maxCount, DateTime? maxStartLocalTime = null);
         List<AlarmNotificationItem> getEndedAlarmsSince(int idServeur, DateTime sinceLocalTime, int maxCount);
         bool markAlarmMailSent(int alarmId);
+        bool markAlarmEndMailSent(int alarmId);
         string getLieuUnite(int idLieu);
         SondeMetrologySettings getSondeMetrologyBySerialNumber(string p_serial_number);
         bool writeAuditJournal(string codeJournal, string username, string userProfile, int? idLieu, string commentaire, string commentaireUtilisateur);

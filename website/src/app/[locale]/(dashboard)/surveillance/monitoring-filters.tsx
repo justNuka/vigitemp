@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useMemo } from "react"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -11,10 +11,11 @@ import { cn } from "@/lib/utils"
 import { Funnel, X } from "lucide-react"
 import { useTranslations } from 'next-intl'
 
-import type { FilterState, SurveillanceSortMode } from "./_helpers/monitoring-derived"
+import { areSurveillanceFiltersEqual, type FilterState, type SurveillanceSortMode } from "./_helpers/monitoring-derived"
 import type { Group, Site } from "./server-filters"
 
 type Props = {
+  filters: FilterState
   onFilterChange: (filters: FilterState) => void
   sites: Site[]
   groups: Group[]
@@ -33,38 +34,20 @@ function buildAllowedGroupIdSet(groups: Group[], selectedSiteIds: number[]) {
   return allowed
 }
 
-export function SurveillanceFilters({ onFilterChange, sites, groups }: Props) {
+export function SurveillanceFilters({ filters: controlledFilters, onFilterChange, sites, groups }: Props) {
   const t = useTranslations('surveillance.filters')
-  const [filters, setFilters] = useState<FilterState>({
-    siteIds: [],
-    groupIds: [],
-    searchTerm: "",
-    sortMode: "status",
-  })
+  const filters = controlledFilters
+  const setFilters = (updater: FilterState | ((previous: FilterState) => FilterState)) => {
+    const nextFilters = typeof updater === "function" ? updater(controlledFilters) : updater
+    if (!areSurveillanceFiltersEqual(nextFilters, controlledFilters)) {
+      onFilterChange(nextFilters)
+    }
+  }
 
   const allowedGroupIds = useMemo(
     () => buildAllowedGroupIdSet(groups, filters.siteIds),
     [groups, filters.siteIds],
   )
-
-  useEffect(() => {
-    if (typeof window === "undefined") return
-    try {
-      const raw = window.localStorage.getItem("surveillance_filters")
-      if (!raw) return
-      const parsed = JSON.parse(raw) as Partial<FilterState> | null
-      if (!parsed) return
-      setFilters((prev) => ({
-        ...prev,
-        siteIds: Array.isArray(parsed.siteIds) ? parsed.siteIds : [],
-        groupIds: Array.isArray(parsed.groupIds) ? parsed.groupIds : [],
-        searchTerm: typeof parsed.searchTerm === "string" ? parsed.searchTerm : "",
-        sortMode: parsed.sortMode === "alphabetical" ? "alphabetical" : "status",
-      }))
-    } catch {
-      window.localStorage.removeItem("surveillance_filters")
-    }
-  }, [])
 
   const disabledGroupIds = useMemo(() => {
     const disabled = new Set<number>()
@@ -75,33 +58,12 @@ export function SurveillanceFilters({ onFilterChange, sites, groups }: Props) {
     return disabled
   }, [allowedGroupIds, groups])
 
-  useEffect(() => {
-    onFilterChange(filters)
-    if (typeof window !== "undefined") {
-      window.localStorage.setItem("surveillance_filters", JSON.stringify(filters))
-    }
-  }, [filters, onFilterChange])
-
-  useEffect(() => {
-    if (!allowedGroupIds) return
-    const updateId = window.setTimeout(() => {
-      setFilters((prev) => {
-        const nextGroupIds = prev.groupIds.filter((id) => allowedGroupIds.has(id))
-        if (nextGroupIds.length === prev.groupIds.length) return prev
-        return { ...prev, groupIds: nextGroupIds }
-      })
-    }, 0)
-
-    return () => {
-      window.clearTimeout(updateId)
-    }
-  }, [allowedGroupIds])
-
   const hasActiveFilters =
     filters.siteIds.length > 0 ||
     filters.groupIds.length > 0 ||
     filters.searchTerm.trim().length > 0 ||
-    filters.sortMode !== "status"
+    filters.sortMode !== "status" ||
+    filters.statusFilter !== "all"
 
   const clearFilters = () => {
     setFilters({
@@ -109,8 +71,12 @@ export function SurveillanceFilters({ onFilterChange, sites, groups }: Props) {
       groupIds: [],
       searchTerm: "",
       sortMode: "status",
+      statusFilter: "all",
     })
   }
+
+  const activeStatusFilterLabel =
+    filters.statusFilter !== "all" ? t(`status_filters.${filters.statusFilter}`) : null
 
   const handleSiteChange = (selectedIds: number[]) => {
     const normalizedSiteIds = selectedIds ?? []
@@ -136,6 +102,7 @@ export function SurveillanceFilters({ onFilterChange, sites, groups }: Props) {
                 filters.groupIds.length > 0 ? t("status.groupCount", { count: filters.groupIds.length }) : null,
                 filters.searchTerm.trim().length > 0 ? t("status.search") : null,
                 filters.sortMode !== "status" ? t("status.sort") : null,
+                activeStatusFilterLabel ? t("status.badge_filter", { value: activeStatusFilterLabel }) : null,
               ].filter(Boolean).join(" | ")}
             </Badge>
           </div>
@@ -221,4 +188,3 @@ export function SurveillanceFilters({ onFilterChange, sites, groups }: Props) {
     </div>
   )
 }
-

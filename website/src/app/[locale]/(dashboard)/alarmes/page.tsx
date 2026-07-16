@@ -21,10 +21,11 @@ export async function generateMetadata({
 export default async function AlarmsPage({
   searchParams,
 }: {
-  searchParams: { status?: "active" | "resolved"; locationId?: string };
+  searchParams: Promise<{ status?: "active" | "resolved"; locationId?: string }>;
 }) {
   await connection();
-  const status: ServerAlarmStatus = searchParams.status === "resolved" ? "resolved" : "active";
+  const resolvedSearchParams = await searchParams;
+  const status: ServerAlarmStatus = resolvedSearchParams.status === "resolved" ? "resolved" : "active";
 
   // Chargement parallèle des données côté serveur avec cache
   const [alarmsData, statsData] = await Promise.all([
@@ -38,7 +39,7 @@ export default async function AlarmsPage({
         alarms={alarmsData}
         stats={statsData}
         initialStatus={status}
-        initialLocationId={searchParams.locationId ?? null}
+        initialLocationId={resolvedSearchParams.locationId ?? null}
       />
     </Suspense>
   );

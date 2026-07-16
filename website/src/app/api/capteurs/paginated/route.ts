@@ -495,6 +495,7 @@ export const GET = withAuthLogging(async (request: NextRequest, ctx) => {
             lieuEtat: location.Lieu_Etat ?? null,
             surveillanceDisabled,
             surveillanceDisabledSince: location.Date_Heure_Surveillance_Off ?? disabledAudit?.disabledAt ?? null,
+            surveillanceDisabledUntil: location.Date_Heure_Reactivation_Surveillance ?? null,
             surveillanceDisabledBy: disabledAudit?.disabledBy ?? null,
             surveillanceDisabledComment: disabledAudit?.disabledComment ?? null,
             lieuType: location.Type_Lieu ?? null,

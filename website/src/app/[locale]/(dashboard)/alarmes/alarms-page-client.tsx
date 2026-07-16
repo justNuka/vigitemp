@@ -78,6 +78,7 @@ export function AlarmsPageClient({ alarms, stats, initialStatus, initialLocation
       </PageHeader>
 
       <AlarmsClient
+        key={`${initialStatus}:${initialLocationId ?? "all"}`}
         alarms={alarms}
         statusFilter={statusFilter}
         stats={localStats}

@@ -325,7 +325,7 @@ export default function AdminDashboard() {
             value={String(alarmsInProgressTotal)}
             helper={t("summary.alarms_helper", { pending: alarmsPendingAckTotal })}
             href={`/admin/alarmes`}
-            hrefLabel={accessLabel}
+            hrefLabel={alarmsAccessLabel}
             icon={<AlertTriangle className="h-5 w-5 text-red-600" />}
             badge={
               alarmsPendingAckTotal > 0 ? (
@@ -340,7 +340,7 @@ export default function AdminDashboard() {
             value={String(acknowledgmentsTotal)}
             helper={`${t("acknowledgments.columns.date_time")}: ${latestAck}`}
             href={`/admin/alarmes/acquittements`}
-            hrefLabel={alarmsAccessLabel}
+            hrefLabel={accessLabel}
             icon={<Clock className="h-5 w-5 text-amber-600" />}
           />
 

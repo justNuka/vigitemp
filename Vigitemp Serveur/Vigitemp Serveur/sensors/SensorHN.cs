@@ -101,18 +101,16 @@ namespace Vigitemp_Serveur.sensors
                     return;
                 }
 
-                VigitempServeur.Log($"[SONDE][RX] type=HN serial={m_sondeSerialNumber} port={m_comPort} event=read");
                 SerialPort sp = (SerialPort)sender;
                 Encoding iso = Encoding.GetEncoding("ISO-8859-1");
                 string regex_res;
                 string suplex;
                 int length = sp.BytesToRead;
-                VigitempServeur.Log($"[SONDE][RX] type=HN serial={m_sondeSerialNumber} bytes={length}");
                 byte[] buf = new byte[length];
                 sp.Read(buf, 0, length);
                 AppendToResponse(iso.GetString(buf));
                 m_sensor_response = Regex.Replace(m_sensor_response, @"\r?\n|\r", "");
-                VigitempServeur.Log($"[SONDE][RX] type=HN serial={m_sondeSerialNumber} raw={m_sensor_response} len={m_sensor_response.Length}");
+                VigitempServeur.Log($"[SONDE][RX] type=HN serial={m_sondeSerialNumber} port={m_comPort} raw={m_sensor_response} len={m_sensor_response.Length}");
                 var m = Regex.Match(m_sensor_response, m_regexResponseTempSensor, RegexOptions.None);
                 if (m_sensor_response.Length == 19)
                 {
@@ -128,11 +126,8 @@ namespace Vigitemp_Serveur.sensors
                 {
                     return;
                 }
-                VigitempServeur.Log($"[SONDE][RX] type=HN serial={m_sondeSerialNumber} frame={regex_res}");
-
                 byte[] bytes = iso.GetBytes(regex_res);
                 string hexString = Hex.ToHexString(bytes);
-                VigitempServeur.Log($"[SONDE][RX] type=HN serial={m_sondeSerialNumber} hex={hexString}");
 
             suplex = hexString.Substring(28, 2);
             tmp_valeur = Convert.ToString(Convert.ToInt32(suplex, 16), 2).PadLeft(8, '0');
@@ -143,11 +138,9 @@ namespace Vigitemp_Serveur.sensors
             suplex = hexString.Substring(32, 2);
             tmp_valeur += Convert.ToString(Convert.ToInt32(suplex, 16), 2).PadLeft(8, '0');
 
-            VigitempServeur.Log($"[SONDE][RX] type=HN serial={m_sondeSerialNumber} binary={tmp_valeur}");
             int tmp_temperature_int = (int)Convert.ToInt64(tmp_valeur, 2);
             tmp_valeur = ((1 - tmp_temperature_int / Math.Pow(2, 20) - 0.32) / 0.0047).ToString();
             tmp_valeur = tmp_valeur.Replace(",", ".");
-            VigitempServeur.Log($"[SONDE][RX] type=HN serial={m_sondeSerialNumber} parsedValue={tmp_valeur}");
 
             var rawValue = Convert.ToDouble(float.Parse(tmp_valeur, CultureInfo.InvariantCulture.NumberFormat));
             var correctedValue = RoundMeasure(ApplyMetrology(rawValue));

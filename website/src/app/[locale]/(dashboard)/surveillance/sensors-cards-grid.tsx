@@ -2,7 +2,7 @@
 
 import { ChevronDown, ChevronRight, Power, PowerOff } from "lucide-react"
 import type { ReactNode } from "react"
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import { useTranslations } from "next-intl"
 
 import MonitoringCard from "@/components/monitoring-card"
@@ -69,6 +69,15 @@ export function SensorsCardsGrid({
       // no-op
     })
 
+  const sortedDisabledSensors = useMemo(
+    () => sortSensors(disabledSensors, sortMode),
+    [disabledSensors, sortMode],
+  )
+  const sortedActiveSensors = useMemo(
+    () => sortSensors(activeSensors, sortMode),
+    [activeSensors, sortMode],
+  )
+
   // Afficher des skeleton cards pendant le chargement
   if (isLoading) {
     return (
@@ -92,8 +101,6 @@ export function SensorsCardsGrid({
     return <SurveillanceEmptyState title={t("grid.empty_title")} description={emptyDescription} />
   }
 
-  const sortedDisabledSensors = sortSensors(disabledSensors, sortMode)
-  const sortedActiveSensors = sortSensors(activeSensors, sortMode)
   const countLocations = (items: SensorWithLocation[], fallback?: number) =>
     fallback ?? new Set(items.map((sensor) => Number(sensor.location.id ?? sensor.id)).filter((id) => Number.isFinite(id))).size
 
@@ -198,6 +205,4 @@ export function SensorsCardsGrid({
     </div>
   )
 }
-
-
 
