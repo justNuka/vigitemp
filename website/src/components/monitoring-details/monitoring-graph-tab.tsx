@@ -48,6 +48,7 @@ interface MonitoringGraphTabProps {
   captureZoomBounds: (chart: ChartJS<"line">) => void
   t: (key: string, values?: Record<string, string | number>) => string
   graphHeightClassName?: string
+  exportFileName: string
 }
 
 function normalizeGuideValue(value: number | null): number | null {
@@ -138,6 +139,7 @@ export function MonitoringGraphTab({
   captureZoomBounds,
   t,
   graphHeightClassName,
+  exportFileName,
 }: MonitoringGraphTabProps) {
   const localeTag = locale === "fr" ? "fr-FR" : locale
   const auditMarkerLabel = t("chart.audit_markers")
@@ -321,6 +323,16 @@ export function MonitoringGraphTab({
     [orderedData],
   )
 
+  const exportChartImage = () => {
+    const chart = chartRef.current
+    if (!chart) return
+
+    const anchor = document.createElement("a")
+    anchor.href = chart.toBase64Image("image/png", 1)
+    anchor.download = `${exportFileName}-courbe.png`
+    anchor.click()
+  }
+
   const guideLabelMaxWidth = { maxWidth: "min(18rem, calc(100vw - 4rem))" }
   const guideLabelStyle = {
     left: "-42px",
@@ -350,6 +362,9 @@ export function MonitoringGraphTab({
           </label>
           <Button type="button" variant="outline" size="sm" onClick={resetChartZoom} disabled={!hasPlottedMeasures}>
             {t("chart.reset_zoom")}
+          </Button>
+          <Button type="button" variant="outline" size="sm" onClick={exportChartImage} disabled={!hasPlottedMeasures}>
+            {t("chart.export_image")}
           </Button>
         </div>
       </div>

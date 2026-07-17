@@ -11,6 +11,7 @@ export function getDefaultLocationFormData(): LocationFormData {
     Sonde_Numero_Serie: null,
     Id_Module: null,
     MailingContacts: [],
+    Apply_Mailing_To_Groups: false,
     Est_Son_Alarme_Active: true,
 
     Consigne: undefined,

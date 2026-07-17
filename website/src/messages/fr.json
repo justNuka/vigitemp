@@ -3296,6 +3296,7 @@
       "measure_count": "Mesures dans le graphique: {count}",
       "drag_zoom_hint": "Molette pour zoomer, glisser pour se déplacer, double-clic pour réinitialiser.",
       "reset_zoom": "Réinitialiser le zoom",
+      "export_image": "Exporter la courbe",
       "empty_title": "Aucune mesure disponible",
       "empty_description": "Aucune mesure n'est disponible sur la plage ou le contexte sélectionné."
     },

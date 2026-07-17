@@ -31,7 +31,7 @@ export const GET = withAuthLogging(async (req: NextRequest) => {
     }))
 
     const response = apiOk(formatted)
-    response.headers.set("Cache-Control", "public, s-maxage=60, stale-while-revalidate=300")
+    response.headers.set("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate")
     return response
   } catch (error) {
     log.error("tableau-de-bord/measurements", "get_tableau_de_bord_measurements_error", { error: error });

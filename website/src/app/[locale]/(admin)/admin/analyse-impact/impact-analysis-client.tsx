@@ -5,6 +5,7 @@ import { TrendingUp, Save, Download } from "lucide-react"
 import { useTranslations, useLocale } from "next-intl"
 import type { Chart as ChartJS } from "chart.js"
 import { fetchJson } from "@/lib/http"
+import { formatDbDateTime } from "@/lib/date-display"
 import { useMonitoringRangeMeasurements } from "@/components/monitoring-details/use-monitoring-range-measurements"
 import { Button } from "@/components/ui/button"
 import {
@@ -227,7 +228,7 @@ export function ImpactAnalysisClient() {
 
     doc.setFont("helvetica", "normal")
     doc.setFontSize(10)
-    doc.text(`${lieu.nom} - ${new Date().toLocaleString(locale === "fr" ? "fr-FR" : locale)}`, margin, y)
+    doc.text(`${lieu.nom} - ${formatDbDateTime(new Date(), { locale: locale === "fr" ? "fr-FR" : locale })}`, margin, y)
     y += 10
 
     doc.setFontSize(11)
@@ -254,8 +255,8 @@ export function ImpactAnalysisClient() {
     doc.setFont("helvetica", "normal")
 
     for (const alarm of realAlarms.slice(0, 10)) {
-      const start = alarm.Date_Heure_Debut ? new Date(alarm.Date_Heure_Debut).toLocaleString(locale === "fr" ? "fr-FR" : locale) : "-"
-      const end = alarm.Date_Heure_Fin ? new Date(alarm.Date_Heure_Fin).toLocaleString(locale === "fr" ? "fr-FR" : locale) : "-"
+      const start = formatDbDateTime(alarm.Date_Heure_Debut, { locale: locale === "fr" ? "fr-FR" : locale })
+      const end = formatDbDateTime(alarm.Date_Heure_Fin, { locale: locale === "fr" ? "fr-FR" : locale })
       doc.text(`${alarm.Type ?? "-"} | ${start} -> ${end}`, margin, y)
       y += 5
       if (y > 280) break

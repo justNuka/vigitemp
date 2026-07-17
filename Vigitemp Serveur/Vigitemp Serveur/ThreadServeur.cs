@@ -45,9 +45,9 @@ namespace Vigitemp_Serveur
             new ConcurrentDictionary<string, CachedMetrology>(StringComparer.OrdinalIgnoreCase);
         private readonly object _lieuSettingsLock = new object();
         private readonly int _settingsCacheSeconds = GetSettingInt("Vigi.License.SettingsCacheSeconds", 60);
-        private readonly bool _logSettingsCache = GetSettingBool("Vigitemp.Alarms.LogSettingsCache", true);
+        private readonly bool _logSettingsCache = GetSettingBool("Vigitemp.Alarms.LogSettingsCache", false);
         private readonly int _schedulerTickMs = GetSettingInt("Vigitemp.Scheduler.TickMs", 5000);
-        private readonly bool _logScheduler = GetSettingBool("Vigitemp.Scheduler.Log", true);
+        private readonly bool _logScheduler = GetSettingBool("Vigitemp.Scheduler.Log", false);
         private readonly int _gspConfigFreeSlotMinSeconds = GetSettingInt("Vigitemp.Gsp.ConfigFreeSlotMinSeconds", 20);
         private readonly int _gspConfigCheckEverySuccessfulProbes = GetSettingInt("Vigitemp.Gsp.ConfigCheckEverySuccessfulProbes", 12);
         private readonly int _gspGraphDisplayEveryMeasures = GetSettingInt("Vigitemp.Gsp.GraphDisplayEveryMeasures", 0);
@@ -931,11 +931,6 @@ namespace Vigitemp_Serveur
 
         private async Task RetryUnsentOpenAlarmsIfNeededAsync(DateTime nowUtc)
         {
-            if (!_alarmRetryUnsentEnabled)
-            {
-                return;
-            }
-
             if (_idServer != _alarmPollServerId)
             {
                 return;
@@ -957,6 +952,13 @@ namespace Vigitemp_Serveur
             try
             {
                 var maxBatch = Math.Max(1, _alarmRetryUnsentMaxBatch);
+                await AlarmWebNotifier.ProcessPendingAlarmEmailsAsync(maxBatch);
+
+                if (!_alarmRetryUnsentEnabled)
+                {
+                    return;
+                }
+
                 var maxStartLocalTime = DateTime.Now.AddMinutes(-Math.Max(0, _alarmRetryUnsentMinAgeMinutes));
                 var pending = GetDatabase().getUnsentOpenAlarms(maxBatch, maxStartLocalTime);
                 if (pending == null || pending.Count == 0)
@@ -1912,7 +1914,7 @@ namespace Vigitemp_Serveur
                 return false;
             }
 
-            VigitempServeur.Log($"[SONDE][ASSIGN] workerServer={_idServer} idLieu={schedule.IdLieu} serial={serial} type={schedule.SondeType} port={schedule.Port}");
+            VigitempServeur.LogDetailed($"[SONDE][ASSIGN] workerServer={_idServer} idLieu={schedule.IdLieu} serial={serial} type={schedule.SondeType} port={schedule.Port}");
             var sensorType = ResolveSensorType(serial, schedule.SondeType, schedule.FamilleSonde, schedule.ModuleType);
 
             switch (sensorType)
@@ -1920,45 +1922,45 @@ namespace Vigitemp_Serveur
                 case "IN":
                     Interlocked.Increment(ref VigitempServeur.nombres_interrogations);
                     var sensorIN = new SensorIN(this, schedule.Port, serial, schedule.Adresse);
-                    VigitempServeur.Log($"[SONDE][START] type=IN serial={serial} port={schedule.Port} adresse={schedule.Adresse} workerServer={_idServer}");
+                    VigitempServeur.LogDetailed($"[SONDE][START] type=IN serial={serial} port={schedule.Port} adresse={schedule.Adresse} workerServer={_idServer}");
                     return await sensorIN.read();
                 case "IE":
                     Interlocked.Increment(ref VigitempServeur.nombres_interrogations);
                     var sensorIE = new SensorIE(this, schedule.Port, serial, schedule.Adresse);
-                    VigitempServeur.Log($"[SONDE][START] type=IE serial={serial} port={schedule.Port} adresse={schedule.Adresse} workerServer={_idServer}");
+                    VigitempServeur.LogDetailed($"[SONDE][START] type=IE serial={serial} port={schedule.Port} adresse={schedule.Adresse} workerServer={_idServer}");
                     return await sensorIE.read();
                 case "IQ":
                     return true;
                 case "IP":
                     Interlocked.Increment(ref VigitempServeur.nombres_interrogations);
                     var sensorIP = new SensorIP(this, schedule.Port, serial, schedule.Adresse);
-                    VigitempServeur.Log($"[SONDE][START] type=IP serial={serial} port={schedule.Port} adresse={schedule.Adresse} workerServer={_idServer}");
+                    VigitempServeur.LogDetailed($"[SONDE][START] type=IP serial={serial} port={schedule.Port} adresse={schedule.Adresse} workerServer={_idServer}");
                     return await sensorIP.read();
                 case "IC":
                     Interlocked.Increment(ref VigitempServeur.nombres_interrogations);
                     var sensorIC = new SensorIC(this, schedule.Port, serial, schedule.Adresse);
-                    VigitempServeur.Log($"[SONDE][START] type=IC serial={serial} port={schedule.Port} adresse={schedule.Adresse} workerServer={_idServer}");
+                    VigitempServeur.LogDetailed($"[SONDE][START] type=IC serial={serial} port={schedule.Port} adresse={schedule.Adresse} workerServer={_idServer}");
                     return await sensorIC.read();
                 case "IH":
                     Interlocked.Increment(ref VigitempServeur.nombres_interrogations);
                     var sensorIH = new SensorIH(this, schedule.Port, serial, schedule.Adresse);
-                    VigitempServeur.Log($"[SONDE][START] type=IH serial={serial} port={schedule.Port} adresse={schedule.Adresse} workerServer={_idServer}");
+                    VigitempServeur.LogDetailed($"[SONDE][START] type=IH serial={serial} port={schedule.Port} adresse={schedule.Adresse} workerServer={_idServer}");
                     return await sensorIH.read();
                 case "EN":
                     Interlocked.Increment(ref VigitempServeur.nombres_interrogations);
                     var sensorEN = new SensorEN(this, schedule.Port, serial, schedule.Adresse);
-                    VigitempServeur.Log($"[SONDE][START] type=EN serial={serial} port={schedule.Port} adresse={schedule.Adresse} workerServer={_idServer}");
+                    VigitempServeur.LogDetailed($"[SONDE][START] type=EN serial={serial} port={schedule.Port} adresse={schedule.Adresse} workerServer={_idServer}");
                     return await sensorEN.read();
                 case "HN":
                     Interlocked.Increment(ref VigitempServeur.nombres_interrogations);
                     var sensorHN = new SensorHN(this, schedule.Port, serial, schedule.Adresse, schedule.Module);
-                    VigitempServeur.Log($"[SONDE][START] type=HN serial={serial} port={schedule.Port} adresse={schedule.Adresse} module={schedule.Module} workerServer={_idServer}");
+                    VigitempServeur.LogDetailed($"[SONDE][START] type=HN serial={serial} port={schedule.Port} adresse={schedule.Adresse} module={schedule.Module} workerServer={_idServer}");
                     return await sensorHN.read();
                 case "GSP":
                     Interlocked.Increment(ref VigitempServeur.nombres_interrogations);
                     var requestGraphDisplay = ShouldRequestGspGraphDisplay(schedule);
                     var gspSensor = new SensorGSP(this, schedule.Port, serial, schedule.Adresse, schedule.FrequencySeconds, false, requestGraphDisplay);
-                    VigitempServeur.Log($"[SONDE][START] type=GSP serial={serial} port={schedule.Port} adresse={schedule.Adresse} configDirty={schedule.ConfigDirty} requestGraphDisplay={requestGraphDisplay} workerServer={_idServer}");
+                    VigitempServeur.LogDetailed($"[SONDE][START] type=GSP serial={serial} port={schedule.Port} adresse={schedule.Adresse} configDirty={schedule.ConfigDirty} requestGraphDisplay={requestGraphDisplay} workerServer={_idServer}");
                     var gspSuccess = await gspSensor.read();
                     if (!gspSuccess && gspSensor.LastFailureLooksLikeModuleUnavailable)
                     {

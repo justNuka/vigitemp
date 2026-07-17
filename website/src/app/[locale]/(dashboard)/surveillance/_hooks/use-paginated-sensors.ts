@@ -1,7 +1,7 @@
 ﻿"use client"
 
 import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query"
-import { useCallback, useRef } from "react"
+import { useCallback, useMemo, useRef } from "react"
 
 import type { SensorWithLocation } from "@/lib/api"
 import type { SurveillanceTreeSiteCounter } from "@/lib/api"
@@ -53,7 +53,7 @@ export function usePaginatedSensors({
   searchTerm = "",
 }: { limit?: number; enabled?: boolean } & Filters = {}) {
   const queryClient = useQueryClient()
-  const queryKey = [
+  const queryKey = useMemo(() => [
     "capteurs",
     "paginated",
     limit,
@@ -65,18 +65,11 @@ export function usePaginatedSensors({
     surveillanceDisabled === undefined ? "all" : surveillanceDisabled ? "1" : "0",
     "search",
     searchTerm.trim().toLocaleLowerCase("fr"),
-  ] as const
+  ] as const, [groupIds, limit, searchTerm, siteIds, surveillanceDisabled])
   const bypassCacheRef = useRef(false)
 
   const fetchPage = useCallback(
     async (page: number) => {
-      if (!bypassCacheRef.current) {
-        const cached = queryClient.getQueryData<PaginatedResponse>(
-          paginatedSensorsPageKey(limit, page, { siteIds, groupIds, surveillanceDisabled, searchTerm }),
-        )
-        if (cached) return cached
-      }
-
       if (page === 1) {
         fetch("/api/capteurs/reactivate", { method: "POST" }).catch(() => undefined)
       }
@@ -102,34 +95,23 @@ export function usePaginatedSensors({
       }
 
       const response = await getJson<PaginatedResponse>(`/api/capteurs/paginated?${params}`)
-      queryClient.setQueryData(
-        paginatedSensorsPageKey(limit, page, { siteIds, groupIds, surveillanceDisabled, searchTerm }),
-        response,
-      )
       return response
     },
-    [groupIds, limit, queryClient, searchTerm, siteIds, surveillanceDisabled],
+    [groupIds, limit, searchTerm, siteIds, surveillanceDisabled],
   )
-
-  // Hardening: when the page subtree is re-rendered/remounted by App Router, avoid re-fetching
-  // the heavy paginated list if we already have it in React Query cache.
-  const hasCachedData = queryClient.getQueryData(queryKey) !== undefined
-  const effectiveEnabled = enabled && !hasCachedData
 
   const query = useInfiniteQuery({
     queryKey,
-    enabled: effectiveEnabled,
+    enabled,
     queryFn: async ({ pageParam }) => fetchPage(Number(pageParam ?? 1)),
     initialPageParam: 1,
     getNextPageParam: (lastPage: PaginatedResponse) => {
       if (!lastPage?.page || !lastPage?.totalPages) return undefined
       return lastPage.page < lastPage.totalPages ? lastPage.page + 1 : undefined
     },
-    // Important: eviter de refetch toutes les pages a chaque retour sur /surveillance.
-    // On privilegie le cache + des mises a jour ciblees (SSE / delta) plutot qu'un refetch global.
-    staleTime: 30 * 60 * 1000,
-    gcTime: 2 * 60 * 60 * 1000,
-    refetchOnMount: true,
+    staleTime: 0,
+    gcTime: 5 * 60 * 1000,
+    refetchOnMount: "always",
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
     refetchInterval: false,
@@ -167,7 +149,7 @@ export function usePaginatedSensors({
     } finally {
       bypassCacheRef.current = false
     }
-  }, [fetchPage, groupIds, limit, queryClient, queryKey, searchTerm, siteIds, surveillanceDisabled])
+  }, [fetchPage, queryClient, queryKey])
 
   return {
     ...query,

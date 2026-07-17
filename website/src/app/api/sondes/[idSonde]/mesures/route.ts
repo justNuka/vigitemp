@@ -47,7 +47,7 @@ export const GET = withAuthLogging(
       mesures.reverse()
 
       const response = apiOk({ mesures, derniereMaj })
-      response.headers.set("Cache-Control", "public, max-age=30")
+      response.headers.set("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate")
       return response
     } catch (error) {
       log.error("sondes/mesures", "sonde_mesures_fetch_error", { error: error });

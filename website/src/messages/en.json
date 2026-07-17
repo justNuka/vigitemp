@@ -3298,6 +3298,7 @@
       "measure_count": "Points in chart: {count}",
       "drag_zoom_hint": "Use the wheel to zoom, drag to pan, and double-click to reset.",
       "reset_zoom": "Reset zoom",
+      "export_image": "Export chart",
       "empty_title": "No measurements available",
       "empty_description": "No measurements are available for the selected range or context."
     },

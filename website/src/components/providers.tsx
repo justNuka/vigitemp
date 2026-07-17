@@ -68,7 +68,7 @@ export function Providers({
         const client = new QueryClient({
         defaultOptions: {
           queries: {
-            staleTime: 60 * 1000, // 1 minute
+            staleTime: 0,
             refetchOnWindowFocus: false,
           },
         },

@@ -21,6 +21,7 @@ import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import type { MeasureData } from "@/lib/measurements"
 import type { ZoomBounds } from "@/components/monitoring-details/types"
+import { formatDbDateTime } from "@/lib/date-display"
 import { computeSimulatedZones } from "../lib/simulated-zones"
 
 ChartJS.register(
@@ -290,16 +291,12 @@ export function ImpactChart({
             callback: (_value: unknown, index: number) => {
               const label = labels[index]
               if (!label) return ""
-              try {
-                return new Date(label).toLocaleString(localeTag, {
-                  month: "2-digit",
-                  day: "2-digit",
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })
-              } catch {
-                return label
-              }
+              return formatDbDateTime(label, {
+                locale: localeTag,
+                withSeconds: false,
+                withYear: false,
+                fallback: label,
+              })
             },
           },
         }
@@ -312,16 +309,12 @@ export function ImpactChart({
             callback: (_value: unknown, index: number) => {
               const label = labels[index]
               if (!label) return ""
-              try {
-                return new Date(label).toLocaleString(localeTag, {
-                  month: "2-digit",
-                  day: "2-digit",
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })
-              } catch {
-                return label
-              }
+              return formatDbDateTime(label, {
+                locale: localeTag,
+                withSeconds: false,
+                withYear: false,
+                fallback: label,
+              })
             },
           },
         }
@@ -345,17 +338,11 @@ export function ImpactChart({
           title: (items: Array<{ label?: string }>) => {
             const label = items[0]?.label
             if (!label) return ""
-            try {
-              return new Date(label).toLocaleString(localeTag, {
-                day: "2-digit",
-                month: "2-digit",
-                year: "numeric",
-                hour: "2-digit",
-                minute: "2-digit",
-              })
-            } catch {
-              return label
-            }
+            return formatDbDateTime(label, {
+              locale: localeTag,
+              withSeconds: false,
+              fallback: label,
+            })
           },
           label: (context: { parsed: { y: number | null } }) => {
             const y = context.parsed.y

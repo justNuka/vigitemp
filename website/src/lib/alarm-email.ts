@@ -1,5 +1,5 @@
 import { prisma, prismaMesure } from "@/lib/prisma";
-import { getSystemEmailCcRecipients, isEmailEnabled, isSystemEmailFallbackEnabled, sendEmail, type EmailAttachment } from "@/lib/email";
+import { getSystemEmailCcRecipients, isSystemEmailFallbackEnabled, sendEmail, type EmailAttachment } from "@/lib/email";
 import { log } from "@/lib/logger";
 import AlarmEventNotificationEmail from "../../emails/alarm-event-notification";
 import { PNG } from "pngjs";
@@ -9,7 +9,7 @@ import { canUseApplicationEmail } from "@/lib/license-email";
 
 export type AlarmEmailEventType = "triggered" | "ended" | "acknowledged";
 
-type SendAlarmEventEmailInput = {
+export type SendAlarmEventEmailInput = {
   eventType: AlarmEmailEventType;
   alarmId?: number | null;
   site?: string | null;
@@ -29,6 +29,77 @@ type SendAlarmEventEmailInput = {
   consigneInf?: number | null;
   consigne?: number | null;
 };
+
+type QueuedAlarmEmailStatus = "queued" | "sending" | "sent" | "failed";
+
+type QueuedAlarmEmailPayload = {
+  version: 1;
+  status: QueuedAlarmEmailStatus;
+  attempts: number;
+  recipient: string;
+  ccRecipients: string[];
+  usedSystemFallback: boolean;
+  input: Omit<SendAlarmEventEmailInput, "triggeredAt" | "endedAt" | "acknowledgedAt"> & {
+    triggeredAt?: string | null;
+    endedAt?: string | null;
+    acknowledgedAt?: string | null;
+  };
+  nextAttemptAt?: string | null;
+  lastError?: string | null;
+};
+
+const ALARM_EMAIL_NOTIFICATION_TYPE = "ALARM_EMAIL";
+const ALARM_EMAIL_MAX_ATTEMPTS = 5;
+
+function serializeAlarmEmailInput(input: SendAlarmEventEmailInput): QueuedAlarmEmailPayload["input"] {
+  return {
+    ...input,
+    triggeredAt: input.triggeredAt?.toISOString() ?? null,
+    endedAt: input.endedAt?.toISOString() ?? null,
+    acknowledgedAt: input.acknowledgedAt?.toISOString() ?? null,
+  };
+}
+
+function deserializeAlarmEmailInput(input: QueuedAlarmEmailPayload["input"]): SendAlarmEventEmailInput {
+  return {
+    ...input,
+    triggeredAt: input.triggeredAt ? new Date(input.triggeredAt) : null,
+    endedAt: input.endedAt ? new Date(input.endedAt) : null,
+    acknowledgedAt: input.acknowledgedAt ? new Date(input.acknowledgedAt) : null,
+  };
+}
+
+function parseQueuedAlarmEmailPayload(raw: string | null): QueuedAlarmEmailPayload | null {
+  if (!raw) return null;
+  try {
+    const parsed = JSON.parse(raw) as Partial<QueuedAlarmEmailPayload>;
+    if (
+      parsed.version !== 1 ||
+      typeof parsed.status !== "string" ||
+      typeof parsed.attempts !== "number" ||
+      typeof parsed.recipient !== "string" ||
+      !Array.isArray(parsed.ccRecipients) ||
+      !parsed.input
+    ) {
+      return null;
+    }
+    return parsed as QueuedAlarmEmailPayload;
+  } catch {
+    return null;
+  }
+}
+
+function alarmEmailQueueKey(input: SendAlarmEventEmailInput, recipient: string) {
+  const eventDate = input.acknowledgedAt ?? input.endedAt ?? input.triggeredAt;
+  const alarmKey =
+    input.alarmId ?? `${input.idLieu ?? input.lieu}:${eventDate?.toISOString() ?? "undated"}`;
+  return `alarm-email:${alarmKey}:${input.eventType}:${recipient.toLowerCase()}`.slice(0, 512);
+}
+
+function nextRetryDate(attempts: number) {
+  const delaySeconds = Math.min(3600, 60 * 2 ** Math.max(0, attempts - 1));
+  return new Date(Date.now() + delaySeconds * 1000);
+}
 
 async function isAlarmEmailNotificationEnabled() {
   const setting = await prisma.t_parametre.findFirst({
@@ -577,6 +648,190 @@ function buildSubject(eventType: AlarmEmailEventType, lieu: string, locale: AppL
   }
 }
 
+async function sendQueuedAlarmEmailNow(payload: QueuedAlarmEmailPayload) {
+  const input = deserializeAlarmEmailInput(payload.input);
+  const chartInline =
+    input.eventType === "triggered"
+      ? await buildAlarmChartInlineAttachment({
+          alarmId: input.alarmId,
+          idLieu: input.idLieu,
+          triggeredAt: input.triggeredAt,
+          unit: input.unite,
+          consigneSup: input.consigneSup,
+          consigneInf: input.consigneInf,
+          consigne: input.consigne,
+        })
+      : undefined;
+
+  const locale = await getGlobalAppLanguage();
+  const alarmTypeLabel = mapAlarmTypeLabel(input.alarmTypeCode, locale);
+  const subject = buildSubject(input.eventType, input.lieu, locale);
+  const lastValue = formatLastValue(input.lastValue, input.unite, locale);
+  const details = sanitizeAlarmText(input.details);
+
+  return sendEmail({
+    to: payload.recipient,
+    cc: payload.ccRecipients,
+    subject,
+    includeSystemCc: false,
+    attachments: chartInline ? [chartInline.attachment] : undefined,
+    react: AlarmEventNotificationEmail({
+      eventType: input.eventType,
+      site: input.site ?? undefined,
+      lieu: input.lieu,
+      sonde: input.sonde ?? undefined,
+      alarmType: alarmTypeLabel,
+      locale,
+      triggeredAt: formatDateTime(input.triggeredAt, locale),
+      endedAt: formatDateTime(input.endedAt, locale),
+      acknowledgedAt: formatDateTime(input.acknowledgedAt, locale),
+      acknowledgedBy: input.acknowledgedBy ?? undefined,
+      lastValue,
+      details,
+      alarmUrl: input.alarmUrl ?? undefined,
+      chartSrc: chartInline?.chartSrc,
+    }),
+  });
+}
+
+async function reserveAlarmEmail(
+  input: SendAlarmEventEmailInput,
+  recipient: string,
+  ccRecipients: string[],
+  usedSystemFallback: boolean,
+) {
+  const key = alarmEmailQueueKey(input, recipient);
+  const existing = await prisma.t_notification.findFirst({
+    where: { Type: ALARM_EMAIL_NOTIFICATION_TYPE, Message: key },
+    orderBy: { Id_Notification: "desc" },
+    select: { Id_Notification: true, Payload_Json: true },
+  });
+  if (existing) return existing;
+
+  const locale = await getGlobalAppLanguage();
+  const payload: QueuedAlarmEmailPayload = {
+    version: 1,
+    status: "queued",
+    attempts: 0,
+    recipient,
+    ccRecipients,
+    usedSystemFallback,
+    input: serializeAlarmEmailInput(input),
+    nextAttemptAt: new Date().toISOString(),
+    lastError: null,
+  };
+
+  return prisma.t_notification.create({
+    data: {
+      Type: ALARM_EMAIL_NOTIFICATION_TYPE,
+      Id_Alarme: input.alarmId ?? null,
+      Titre: buildSubject(input.eventType, input.lieu, locale).slice(0, 128),
+      Message: key,
+      Payload_Json: JSON.stringify(payload),
+      Priorite: input.eventType === "triggered" ? 10 : 5,
+      Est_Archive: false,
+    },
+    select: { Id_Notification: true, Payload_Json: true },
+  });
+}
+
+async function deliverQueuedAlarmEmail(notificationId: number) {
+  const notification = await prisma.t_notification.findUnique({
+    where: { Id_Notification: notificationId },
+    select: { Id_Notification: true, Payload_Json: true },
+  });
+  const payload = parseQueuedAlarmEmailPayload(notification?.Payload_Json ?? null);
+  if (!notification || !payload) return false;
+  if (payload.status === "sent") return true;
+  if (payload.attempts >= ALARM_EMAIL_MAX_ATTEMPTS) return false;
+
+  const claimedPayload: QueuedAlarmEmailPayload = {
+    ...payload,
+    status: "sending",
+    attempts: payload.attempts + 1,
+    nextAttemptAt: new Date(Date.now() + 5 * 60 * 1000).toISOString(),
+    lastError: null,
+  };
+  const claimedRaw = JSON.stringify(claimedPayload);
+  const claim = await prisma.t_notification.updateMany({
+    where: {
+      Id_Notification: notification.Id_Notification,
+      Payload_Json: notification.Payload_Json,
+    },
+    data: { Payload_Json: claimedRaw },
+  });
+  if (claim.count !== 1) return false;
+
+  try {
+    const result = await sendQueuedAlarmEmailNow(claimedPayload);
+    if (!result.success) throw new Error(result.error || "unknown_error");
+
+    await prisma.t_notification.update({
+      where: { Id_Notification: notification.Id_Notification },
+      data: {
+        Payload_Json: JSON.stringify({
+          ...claimedPayload,
+          status: "sent",
+          nextAttemptAt: null,
+          lastError: null,
+        } satisfies QueuedAlarmEmailPayload),
+        Est_Archive: true,
+      },
+    });
+    return true;
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    await prisma.t_notification.update({
+      where: { Id_Notification: notification.Id_Notification },
+      data: {
+        Payload_Json: JSON.stringify({
+          ...claimedPayload,
+          status: "failed",
+          nextAttemptAt: nextRetryDate(claimedPayload.attempts).toISOString(),
+          lastError: errorMessage.slice(0, 500),
+        } satisfies QueuedAlarmEmailPayload),
+      },
+    });
+    log.warn("ALARM_EMAIL", "Queued alarm email delivery failed", {
+      notificationId,
+      alarmId: claimedPayload.input.alarmId,
+      eventType: claimedPayload.input.eventType,
+      attempt: claimedPayload.attempts,
+      error: errorMessage,
+    });
+    return false;
+  }
+}
+
+export async function processPendingAlarmEmails(maxBatch = 50) {
+  const candidates = await prisma.t_notification.findMany({
+    where: {
+      Type: ALARM_EMAIL_NOTIFICATION_TYPE,
+      Est_Archive: false,
+    },
+    orderBy: [{ Priorite: "desc" }, { Date_Creation: "asc" }],
+    take: Math.max(1, Math.min(200, maxBatch * 4)),
+    select: { Id_Notification: true, Payload_Json: true },
+  });
+
+  const now = Date.now();
+  const pending = candidates
+    .filter((candidate) => {
+      const payload = parseQueuedAlarmEmailPayload(candidate.Payload_Json);
+      if (!payload || payload.status === "sent" || payload.attempts >= ALARM_EMAIL_MAX_ATTEMPTS) return false;
+      const nextAttemptAt = payload.nextAttemptAt ? Date.parse(payload.nextAttemptAt) : 0;
+      return !Number.isFinite(nextAttemptAt) || nextAttemptAt <= now;
+    })
+    .slice(0, Math.max(1, Math.min(200, maxBatch)));
+
+  const results = await Promise.all(pending.map((item) => deliverQueuedAlarmEmail(item.Id_Notification)));
+  return {
+    attempted: pending.length,
+    sent: results.filter(Boolean).length,
+    failed: results.filter((success) => !success).length,
+  };
+}
+
 export async function sendAlarmEventEmails(input: SendAlarmEventEmailInput) {
   const emailLicense = await canUseApplicationEmail();
   if (!emailLicense.allowed) {
@@ -617,67 +872,11 @@ export async function sendAlarmEventEmails(input: SendAlarmEventEmailInput) {
     usedSystemFallback: recipientsState.usedSystemFallback,
   });
 
-  const smtpEnabled = await isEmailEnabled();
-  if (!smtpEnabled) {
-    return { attempted: recipients.length, sent: 0, skipped: "smtp_not_ready" as const };
-  }
-
-  const chartInline =
-    input.eventType === "triggered"
-      ? await buildAlarmChartInlineAttachment({
-          alarmId: input.alarmId,
-          idLieu: input.idLieu,
-          triggeredAt: input.triggeredAt,
-          unit: input.unite,
-          consigneSup: input.consigneSup,
-          consigneInf: input.consigneInf,
-          consigne: input.consigne,
-        })
-      : undefined;
-
-  const locale = await getGlobalAppLanguage();
-  const alarmTypeLabel = mapAlarmTypeLabel(input.alarmTypeCode, locale);
-  const subject = buildSubject(input.eventType, input.lieu, locale);
-  const lastValue = formatLastValue(input.lastValue, input.unite, locale);
-  const details = sanitizeAlarmText(input.details);
-
   const results = await Promise.all(
     recipients.map(async (to) => {
       try {
-        const result = await sendEmail({
-          to,
-          cc: ccRecipients,
-          subject,
-          includeSystemCc: false,
-          attachments: chartInline ? [chartInline.attachment] : undefined,
-          react: AlarmEventNotificationEmail({
-            eventType: input.eventType,
-            site: input.site ?? undefined,
-            lieu: input.lieu,
-            sonde: input.sonde ?? undefined,
-            alarmType: alarmTypeLabel,
-            locale,
-            triggeredAt: formatDateTime(input.triggeredAt, locale),
-            endedAt: formatDateTime(input.endedAt, locale),
-            acknowledgedAt: formatDateTime(input.acknowledgedAt, locale),
-            acknowledgedBy: input.acknowledgedBy ?? undefined,
-            lastValue,
-            details,
-            alarmUrl: input.alarmUrl ?? undefined,
-            chartSrc: chartInline?.chartSrc,
-          }),
-        });
-
-        if (!result.success) {
-          log.warn("ALARM_EMAIL", "Alarm event email send failed", {
-            eventType: input.eventType,
-            alarmId: input.alarmId,
-            to,
-            error: result.error || "unknown_error",
-          });
-        }
-
-        return result.success;
+        const queued = await reserveAlarmEmail(input, to, ccRecipients, recipientsState.usedSystemFallback);
+        return deliverQueuedAlarmEmail(queued.Id_Notification);
       } catch (error) {
         log.warn("ALARM_EMAIL", "Alarm event email send exception", {
           eventType: input.eventType,

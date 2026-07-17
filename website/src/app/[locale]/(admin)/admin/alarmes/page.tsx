@@ -1,6 +1,14 @@
-import { PageHeader } from "@/components/page-header";
-import { AlarmsClientTanStack } from "@/components/data-table/alarms-client-tanstack";
+import { Suspense } from "react";
+import { connection } from "next/server";
 import { getTranslations } from "next-intl/server";
+
+import { AlarmsLoadingSkeleton } from "@/app/[locale]/(dashboard)/alarmes/alarms-loading-skeleton";
+import { AlarmsPageClient } from "@/app/[locale]/(dashboard)/alarmes/alarms-page-client";
+import {
+  ServerAlarms,
+  ServerAlarmStats,
+  type ServerAlarmStatus,
+} from "@/app/[locale]/(dashboard)/alarmes/server-alarms";
 
 export async function generateMetadata({
   params,
@@ -16,23 +24,27 @@ export async function generateMetadata({
 }
 
 export default async function AlarmsPage({
-  params,
+  searchParams,
 }: {
-  params: Promise<{ locale: string }>;
+  searchParams: Promise<{ status?: "active" | "resolved"; locationId?: string }>;
 }) {
-  const { locale } = await params;
-  const t = await getTranslations({ locale, namespace: "adminAlarmsPage" });
+  await connection();
+  const resolvedSearchParams = await searchParams;
+  const status: ServerAlarmStatus =
+    resolvedSearchParams.status === "resolved" ? "resolved" : "active";
+  const [alarms, stats] = await Promise.all([
+    ServerAlarms(status),
+    ServerAlarmStats(),
+  ]);
 
   return (
-    <div className="flex flex-col min-h-full">
-      <PageHeader
-        title={t("title")}
-        description={t("description")}
+    <Suspense fallback={<AlarmsLoadingSkeleton />}>
+      <AlarmsPageClient
+        alarms={alarms}
+        stats={stats}
+        initialStatus={status}
+        initialLocationId={resolvedSearchParams.locationId ?? null}
       />
-
-      <div className="space-y-6 p-6">
-        <AlarmsClientTanStack />
-      </div>
-    </div>
+    </Suspense>
   );
 }

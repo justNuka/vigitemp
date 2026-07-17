@@ -157,10 +157,27 @@ export function AlarmAcknowledgmentHistoryClient() {
 
   const exportQuery = useQuery({
     queryKey: ["alarm-ack-history-export", exportQueryParams],
-    queryFn: () =>
-      getJson<Paginated<AckHistoryItem>>(
+    queryFn: async () => {
+      const firstPage = await getJson<Paginated<AckHistoryItem>>(
         `/api/alarmes/acquittements?${exportQueryParams}`,
-      ),
+      )
+      if (firstPage.pagination.pages <= 1) return firstPage
+
+      const pages = await Promise.all(
+        Array.from({ length: firstPage.pagination.pages - 1 }, (_, index) => {
+          const params = new URLSearchParams(exportQueryParams)
+          params.set("page", String(index + 2))
+          return getJson<Paginated<AckHistoryItem>>(
+            `/api/alarmes/acquittements?${params.toString()}`,
+          )
+        }),
+      )
+
+      return {
+        ...firstPage,
+        data: [firstPage.data, ...pages.map((result) => result.data)].flat(),
+      }
+    },
     enabled: !loading && canAccess,
     staleTime: 60_000,
   })
@@ -170,7 +187,10 @@ export function AlarmAcknowledgmentHistoryClient() {
       {
         accessorKey: "acknowledgedAt",
         header: t("table.columns.acknowledgedAt"),
-        meta: { exportLabel: t("table.columns.acknowledgedAt") },
+        meta: {
+          exportLabel: t("table.columns.acknowledgedAt"),
+          exportValue: (row: AckHistoryItem) => row.acknowledgedAt ? formatDbDateTime(row.acknowledgedAt) : "-",
+        },
         cell: ({ row }) => row.original.acknowledgedAt ? formatDbDateTime(row.original.acknowledgedAt) : "-",
       },
       {
@@ -194,7 +214,16 @@ export function AlarmAcknowledgmentHistoryClient() {
         id: "duration",
         accessorFn: (row) => row.durationMs ?? -1,
         header: t("table.columns.duration"),
-        meta: { exportLabel: t("table.columns.duration") },
+        meta: {
+          exportLabel: t("table.columns.duration"),
+          exportValue: (row: AckHistoryItem) => {
+            if (row.durationMs === null || row.durationMs < 0) return "-";
+            const totalMinutes = Math.max(Math.floor(row.durationMs / 60000), 0);
+            const hours = Math.floor(totalMinutes / 60);
+            const minutes = totalMinutes % 60;
+            return hours > 0 ? `${hours}h ${minutes}min` : `${minutes}min`;
+          },
+        },
         cell: ({ row }) => {
           const durationMs = row.original.durationMs;
           if (durationMs === null || durationMs < 0) return "-";
@@ -207,7 +236,10 @@ export function AlarmAcknowledgmentHistoryClient() {
       {
         accessorKey: "alarmType",
         header: t("table.columns.type"),
-        meta: { exportLabel: t("table.columns.type") },
+        meta: {
+          exportLabel: t("table.columns.type"),
+          exportValue: (row: AckHistoryItem) => formatAlarmType(t, row.alarmType),
+        },
         cell: ({ row }) => formatAlarmType(t, row.original.alarmType),
       },
       {
@@ -221,7 +253,13 @@ export function AlarmAcknowledgmentHistoryClient() {
         id: "period",
         accessorFn: (row) => `${row.triggeredAt || ""} ${row.endedAt || ""}`.trim(),
         header: t("table.columns.period"),
-        meta: { exportLabel: t("table.columns.period") },
+        meta: {
+          exportLabel: t("table.columns.period"),
+          exportValue: (row: AckHistoryItem) => [
+            `${t("table.period.start")} ${row.triggeredAt ? formatDbDateTime(row.triggeredAt) : "-"}`,
+            `${t("table.period.end")} ${row.endedAt ? formatDbDateTime(row.endedAt) : "-"}`,
+          ].join(" / "),
+        },
         cell: ({ row }) => (
           <div className="space-y-1 text-xs">
             <div>
@@ -294,7 +332,7 @@ export function AlarmAcknowledgmentHistoryClient() {
               emptyMessage={t("empty")}
               isLoading={query.isLoading || query.isFetching}
               enablePrint={false}
-              exportFormats={["csv", "pdf"]}
+              exportFormats={["csv", "xlsx", "pdf"]}
               toolbarRight={
                 <div className="flex flex-wrap items-center gap-2">
                   <div className="relative min-w-[16rem]">
@@ -407,6 +445,14 @@ export function AlarmAcknowledgmentHistoryClient() {
               maxHeight="70vh"
               exportFileName={`historique-acquittements-alarmes-${new Date().toISOString().slice(0, 10)}`}
               exportData={exportQuery.data?.data ?? data}
+              exportTitle={t("title")}
+              exportFilters={[
+                { label: t("filters.location"), value: draftFilters.lieuId === "all" ? t("filters.allLocations") : (lieuOptions.find((lieu) => String(lieu.id) === draftFilters.lieuId)?.name ?? draftFilters.lieuId) },
+                { label: t("filters.type"), value: draftFilters.type === "all" ? t("filters.allTypes") : formatAlarmType(t, draftFilters.type) },
+                { label: t("filters.dateFrom"), value: draftFilters.dateFrom || "-" },
+                { label: t("filters.dateTo"), value: draftFilters.dateTo || "-" },
+                { label: t("table.search"), value: draftFilters.q.trim() || "-" },
+              ]}
               headerClassName="!bg-sidebar !text-sidebar-foreground"
               headerCellClassName="!bg-sidebar !text-sidebar-foreground !border-r !border-white/25 hover:!bg-sidebar-accent/80"
               tableClassName="border-separate border-spacing-0 [&_thead_th]:!border-r [&_thead_th]:!border-white/25 [&_tbody_td]:!border-b [&_tbody_td]:!border-border"

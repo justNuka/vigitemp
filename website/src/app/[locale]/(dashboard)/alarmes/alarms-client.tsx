@@ -22,6 +22,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { alarmsApi, type AlarmWithDetails } from "@/lib/api";
 import { formatDbDateTime, parseDbDateTime } from "@/lib/date-display";
 import { formatMeasureValue } from "@/lib/measurements";
+import { markAlarmAcknowledgedInPaginatedSensorsCache } from "@/lib/surveillance-cache";
 import { cn } from "@/lib/utils";
 
 import { AlarmDetailsDialog } from "./_components/alarm-details-dialog";
@@ -175,7 +176,15 @@ export function AlarmsClient({ alarms, statusFilter, initialLocationId = null, s
         alarms.find((alarm) => alarm.id === variables.id) ??
         null;
 
-      queryClient.invalidateQueries({ queryKey: ["alarms"] });
+      const acknowledgedAlarmId = Number(variables.id);
+      markAlarmAcknowledgedInPaginatedSensorsCache(queryClient, acknowledgedAlarmId);
+      void Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["alarms"] }),
+        queryClient.invalidateQueries({ queryKey: ["capteurs", "paginated"] }),
+        queryClient.invalidateQueries({ queryKey: ["admin", "alarmes-actives"] }),
+        queryClient.invalidateQueries({ queryKey: ["admin", "alarms-count"] }),
+        queryClient.invalidateQueries({ queryKey: ["dashboard"] }),
+      ]);
       setLocalAlarms((prev) => prev.filter((alarm) => alarm.id !== variables.id));
 
       if (acknowledgedAlarm) {
@@ -236,11 +245,43 @@ export function AlarmsClient({ alarms, statusFilter, initialLocationId = null, s
     router.replace(`/${locale}/alarmes?status=${statusFilter}`);
   }, [locale, router, statusFilter]);
 
+  const getAlarmTypeExportLabel = (type: AlarmRowType) => {
+    if (type === "high") return t("dialog.type_high");
+    if (type === "low") return t("dialog.type_low");
+    if (type === "no-response") return t("dialog.type_no_response");
+    if (type === "sector") return t("dialog.type_sector");
+    if (type === "module") return t("dialog.type_module");
+    return t("dialog.type_other");
+  };
+
+  const getAlarmValueExport = (alarm: AlarmRow) => {
+    if (alarm.type === "no-response" || alarm.type === "sector" || alarm.type === "module") return "-";
+    const value = alarm.value ?? alarm.sensor.currentValue ?? null;
+    return value === null ? "-" : `${formatMeasureValue(value)} ${alarm.sensor.unit}`;
+  };
+
+  const getThresholdsExport = (alarm: AlarmRow) => {
+    const sup = alarm.sensor.maxThreshold;
+    const inf = alarm.sensor.minThreshold;
+    const showThresholds = hasConfiguredThresholds(alarm);
+    const hasSup = showThresholds && sup !== null && sup !== undefined;
+    const hasInf = showThresholds && inf !== null && inf !== undefined;
+    if (!hasSup && !hasInf) return "-";
+    return [
+      hasSup ? t("thresholds.sup", { value: formatMeasureValue(sup), unit: alarm.sensor.unit }) : t("thresholds.sup_empty"),
+      hasInf ? t("thresholds.inf", { value: formatMeasureValue(inf), unit: alarm.sensor.unit }) : t("thresholds.inf_empty"),
+    ].join(" / ");
+  };
+
   const columns: ColumnDef<AlarmRow>[] = [
     {
       accessorKey: "type",
       header: t("table.columns.type"),
       size: 60,
+      meta: {
+        exportLabel: t("table.columns.type"),
+        exportValue: (row: AlarmRow) => getAlarmTypeExportLabel(row.type),
+      },
       cell: ({ row }) => {
         const type = row.getValue("type") as AlarmRowType;
         if (type === "no-response" || type === "module") {
@@ -257,11 +298,19 @@ export function AlarmsClient({ alarms, statusFilter, initialLocationId = null, s
       id: "location",
       accessorFn: (row) => `${row.location.name} ${row.sensor.name}`,
       header: t("table.columns.location"),
+      meta: {
+        exportLabel: t("table.columns.location"),
+        exportValue: (row: AlarmRow) => `${row.location.name} / ${row.sensor.name}`,
+      },
       cell: ({ row }) => <div className="min-w-0"><p className="font-medium truncate">{row.original.location.name}</p><p className="text-sm text-muted-foreground truncate">{row.original.sensor.name}</p></div>,
     },
     {
       id: "lastValue",
       header: () => <div className="text-right">{t("table.columns.triggered_value")}</div>,
+      meta: {
+        exportLabel: t("table.columns.triggered_value"),
+        exportValue: (row: AlarmRow) => getAlarmValueExport(row),
+      },
       cell: ({ row }) => {
         const alarm = row.original;
         const value = alarm.type === "no-response" || alarm.type === "sector" || alarm.type === "module" ? null : (alarm.value ?? alarm.sensor.currentValue ?? null);
@@ -271,6 +320,10 @@ export function AlarmsClient({ alarms, statusFilter, initialLocationId = null, s
     {
       id: "consignes",
       header: () => <div className="text-right">{t("table.columns.thresholds")}</div>,
+      meta: {
+        exportLabel: t("table.columns.thresholds"),
+        exportValue: (row: AlarmRow) => getThresholdsExport(row),
+      },
       cell: ({ row }) => {
         const alarm = row.original;
         const sup = alarm.sensor.maxThreshold;
@@ -285,6 +338,10 @@ export function AlarmsClient({ alarms, statusFilter, initialLocationId = null, s
     {
       accessorKey: "triggeredAt",
       header: t("table.columns.triggered_at"),
+      meta: {
+        exportLabel: t("table.columns.triggered_at"),
+        exportValue: (row: AlarmRow) => formatDbDateTime(row.triggeredAt),
+      },
       cell: ({ row }) => {
         const rawTriggeredAt = row.getValue("triggeredAt") as string | Date;
         const triggeredDate = parseDbDateTime(rawTriggeredAt);
@@ -292,7 +349,19 @@ export function AlarmsClient({ alarms, statusFilter, initialLocationId = null, s
         return <div className="flex items-center gap-1.5 text-sm"><Clock className="h-3.5 w-3.5 text-muted-foreground" /><TooltipProvider><Tooltip><TooltipTrigger asChild><span className="cursor-help">{formatDistanceToNow(triggeredDate, { addSuffix: true, locale: fr })}</span></TooltipTrigger><TooltipContent><p className="text-xs">{formatDbDateTime(rawTriggeredAt)}</p></TooltipContent></Tooltip></TooltipProvider></div>;
       },
     },
-    { accessorKey: "status", header: t("table.columns.status"), cell: ({ row }) => <div className="flex justify-center"><AlarmStatusBadge status={row.getValue("status") as string} /></div> },
+    {
+      accessorKey: "status",
+      header: t("table.columns.status"),
+      meta: {
+        exportLabel: t("table.columns.status"),
+        exportValue: (row: AlarmRow) => {
+          if (row.status === "acknowledged") return t("status.acknowledged");
+          if (row.status === "resolved") return t("status.resolved");
+          return t("status.active");
+        },
+      },
+      cell: ({ row }) => <div className="flex justify-center"><AlarmStatusBadge status={row.getValue("status") as string} /></div>,
+    },
     {
       id: "actions",
       header: () => <div className="text-center">{t("table.columns.actions")}</div>,

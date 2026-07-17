@@ -56,7 +56,13 @@ export function DashboardTrendSection({
           </CardTitle>
         </CardHeader>
         <CardContent className="pt-4">
-          <MiniChart measurements={trendMeasurements} height={120} showScale className="rounded-lg overflow-hidden pr-10" />
+          <MiniChart
+            measurements={trendMeasurements}
+            height={120}
+            showScale
+            nonNegativeScale
+            className="rounded-lg overflow-hidden pr-10"
+          />
           <div className="mt-4 flex items-center justify-between text-sm">
             <div className="flex flex-col">
               <span className="text-2xl font-bold text-foreground tabular-nums">

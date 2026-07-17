@@ -11,6 +11,7 @@ import { AutoLockSettingsCard } from "./auto-lock-settings-card";
 import { GeneralSettingsCard } from "./general-settings-card";
 import { MessagingSettingsCard } from "./messaging-settings-card";
 import { NotificationsSettingsCard } from "./notifications-settings-card";
+import { NonResponseAutoAckSettingsCard } from "./non-response-auto-ack-settings-card";
 import { PasswordPolicyCard } from "./password-policy-card";
 import { SMTPConfigModal } from "./smtp-config-modal";
 import { SmtpSettingsCard } from "./smtp-settings-card";
@@ -131,6 +132,8 @@ export function SettingsClient({ settings: initialSettings }: Props) {
         onToggle={toggleDraft}
         onRecipientsChange={setDraftValue}
       />
+
+      <NonResponseAutoAckSettingsCard />
 
       {isStandardOrExpert(license) ? (
         <MessagingSettingsCard

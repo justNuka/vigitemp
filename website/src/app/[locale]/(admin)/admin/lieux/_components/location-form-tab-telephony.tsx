@@ -32,6 +32,8 @@ export function LocationFormTabTelephony({ users }: Props) {
   });
 
   const contacts = watch("MailingContacts") ?? [];
+  const groupIds = watch("GroupIds") ?? [];
+  const applyMailingToGroups = watch("Apply_Mailing_To_Groups") ?? false;
 
   const markMailingDirty = () => {
     const current = getValues("MailingContacts") ?? [];
@@ -170,6 +172,26 @@ export function LocationFormTabTelephony({ users }: Props) {
             })}
           </div>
         )}
+
+        <label className="flex items-start gap-3 rounded-md border border-sky-200 bg-sky-50 p-3 text-sm">
+          <Checkbox
+            checked={applyMailingToGroups}
+            disabled={groupIds.length === 0}
+            onCheckedChange={(checked) =>
+              setValue("Apply_Mailing_To_Groups", !!checked, {
+                shouldDirty: true,
+                shouldTouch: true,
+              })
+            }
+          />
+          <span>
+            <span className="block font-medium text-sky-950">Appliquer ces contacts aux groupes selectionnes</span>
+            <span className="mt-1 block text-xs text-sky-800">
+              La liste remplacera les contacts mail de tous les autres lieux appartenant aux groupes selectionnes.
+              {groupIds.length === 0 ? " Selectionnez au moins un groupe dans l'onglet General." : ""}
+            </span>
+          </span>
+        </label>
       </div>
     </TabsContent>
   );

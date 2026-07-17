@@ -4,6 +4,7 @@ import { useMemo } from "react";
 import { cn } from "@/lib/utils";
 import type { Measurement } from "@/lib/api";
 import { useLocale, useTranslations } from "next-intl";
+import { formatDbDateTime } from "@/lib/date-display";
 
 interface MiniChartProps {
   measurements: Measurement[];
@@ -12,6 +13,7 @@ interface MiniChartProps {
   className?: string;
   height?: number;
   showScale?: boolean;
+  nonNegativeScale?: boolean;
 }
 
 export function MiniChart({
@@ -21,6 +23,7 @@ export function MiniChart({
   className,
   height = 60,
   showScale = false,
+  nonNegativeScale = false,
 }: MiniChartProps) {
   const t = useTranslations("miniChart");
   const locale = useLocale();
@@ -32,7 +35,7 @@ export function MiniChart({
     const max = Math.max(...values, maxThreshold ?? -Infinity);
     const range = max - min || 1;
     const padding = range * 0.1;
-    const displayMin = min - padding;
+    const displayMin = nonNegativeScale ? Math.max(0, min - padding) : min - padding;
     const displayMax = max + padding;
     const displayRange = displayMax - displayMin;
 
@@ -56,25 +59,23 @@ export function MiniChart({
       displayMax,
       displayRange,
     };
-  }, [measurements, minThreshold, maxThreshold]);
+  }, [measurements, minThreshold, maxThreshold, nonNegativeScale]);
 
   const xLabels = useMemo(() => {
     if (measurements.length < 2) return [] as string[];
     if (measurements.length > 10) {
       return [
-        new Date(measurements[0].timestamp).toLocaleDateString(locale, { day: "2-digit", month: "2-digit" }),
-        new Date(measurements[measurements.length - 1].timestamp).toLocaleDateString(locale, {
-          day: "2-digit",
-          month: "2-digit",
+        formatDbDateTime(measurements[0].timestamp, { locale, dateOnly: true, withYear: false }),
+        formatDbDateTime(measurements[measurements.length - 1].timestamp, {
+          locale,
+          dateOnly: true,
+          withYear: false,
         }),
       ];
     }
 
     return measurements.map((m) =>
-      new Date(m.timestamp).toLocaleDateString(locale, {
-        day: "2-digit",
-        month: "2-digit",
-      }),
+      formatDbDateTime(m.timestamp, { locale, dateOnly: true, withYear: false }),
     );
   }, [locale, measurements]);
 

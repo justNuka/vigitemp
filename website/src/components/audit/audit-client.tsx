@@ -37,7 +37,7 @@ import { ColumnDef } from "@tanstack/react-table";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { useAppTimezone } from "@/components/timezone-provider";
-import { parseDbDateTime } from "@/lib/date-display";
+import { formatDbDateTime, parseDbDateTime } from "@/lib/date-display";
 
 interface Props {
   logs: AuditLog[];
@@ -79,15 +79,7 @@ function formatDateSafe(value: string, localeTag: string, timezone?: string): st
   if (Number.isNaN(date.getTime())) {
     return null;
   }
-  return date.toLocaleString(localeTag, {
-    ...(timezone ? { timeZone: timezone } : {}),
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-  });
+  return formatDbDateTime(date, { locale: localeTag, timeZone: timezone });
 }
 
 function parseAuditDetails(
@@ -201,7 +193,8 @@ export function AuditClient({ logs }: Props) {
     queryKey: ["audit-codes"],
     queryFn: () => getJson<AuditCode[]>("/api/audit/codes"),
     enabled: codesOpen,
-    staleTime: 10 * 60 * 1000,
+    staleTime: 0,
+    refetchOnMount: "always",
   });
 
   const filteredLogs = logs.filter((log) => {
@@ -251,15 +244,7 @@ export function AuditClient({ logs }: Props) {
         if (!timestamp || Number.isNaN(timestamp.getTime())) return t("table.empty_value");
         return (
           <span className="font-mono text-sm whitespace-nowrap">
-            {timestamp.toLocaleString(localeTag, {
-              timeZone: timezone,
-              day: "2-digit",
-              month: "2-digit",
-              year: "numeric",
-              hour: "2-digit",
-              minute: "2-digit",
-              second: "2-digit",
-            })}
+            {formatDbDateTime(timestamp, { locale: localeTag, timeZone: timezone })}
           </span>
         );
       },

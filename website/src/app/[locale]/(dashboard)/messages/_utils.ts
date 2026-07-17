@@ -1,3 +1,5 @@
+import { formatDbDateTimeIntl } from "@/lib/date-display"
+
 /**
  * Derives 1-2 initials from a display name.
  * "Jean Martin" → "JM", "Alice" → "A", "" → "?"
@@ -15,5 +17,7 @@ export function getInitials(name: string): string {
  */
 export function formatDate(iso: string | null): string {
   if (!iso) return "—"
-  return new Date(iso).toLocaleDateString([], { day: "numeric", month: "long", year: "numeric" })
+  return formatDbDateTimeIntl(iso, {
+    intl: { day: "numeric", month: "long", year: "numeric" },
+  })
 }

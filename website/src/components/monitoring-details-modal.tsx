@@ -610,6 +610,7 @@ export default function MonitoringDetailsModal({
                   captureZoomBounds={captureZoomBounds}
                   t={t}
                   graphHeightClassName={graphHeightClassName}
+                  exportFileName={exportFileName}
                 />
               </TabsContent>
 

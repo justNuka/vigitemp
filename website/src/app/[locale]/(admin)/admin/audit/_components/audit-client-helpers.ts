@@ -1,5 +1,5 @@
 import type { AuditLog } from '@/lib/api'
-import { parseDbDateTime } from '@/lib/date-display'
+import { formatDbDateTime, parseDbDateTime } from '@/lib/date-display'
 
 export interface AuditCode {
   Code_Journal: string
@@ -31,15 +31,7 @@ export function formatDateSafe(value: string, localeTag: string, timezone?: stri
   if (!date) return null
   if (Number.isNaN(date.getTime())) return null
 
-  return date.toLocaleString(localeTag, {
-    ...(timezone ? { timeZone: timezone } : {}),
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-  })
+  return formatDbDateTime(date, { locale: localeTag, timeZone: timezone })
 }
 
 export function parseAuditDetails(

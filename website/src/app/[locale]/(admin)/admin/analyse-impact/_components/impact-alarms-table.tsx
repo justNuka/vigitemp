@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
 import { TanStackTable } from "@/components/data-table/tanstack-table"
 import type { MeasureData } from "@/lib/measurements"
+import { formatDbDateTime } from "@/lib/date-display"
 import type { SimulatedZone } from "../lib/simulated-zones"
 import type { RealAlarm } from "./impact-chart"
 
@@ -30,17 +31,7 @@ function formatDuration(startIso: string, endIso: string): string {
 }
 
 function formatDate(iso: string, locale: string): string {
-  try {
-    return new Date(iso).toLocaleString(locale, {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    })
-  } catch {
-    return iso
-  }
+  return formatDbDateTime(iso, { locale, withSeconds: false, fallback: iso })
 }
 
 function countOutOfBoundPoints(measurements: MeasureData[], zone: SimulatedZone): number {

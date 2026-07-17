@@ -21,7 +21,7 @@ import { DateRangePicker } from "@/components/ui/date-range-picker"
 import { getJson } from "@/lib/http"
 import { toApiUtcDateTime } from "@/lib/date-range-api"
 import { formatTimeAxisLabel } from "@/lib/measurements"
-import { parseDbDateTime } from "@/lib/date-display"
+import { formatDbDateTime, parseDbDateTime } from "@/lib/date-display"
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend)
 
@@ -227,8 +227,7 @@ export function CurvesOverlayModal({ open, onOpenChange, locations }: Props) {
         const value = dataset.data[rowIndex]
         return value === null || value === undefined ? "" : String(value)
       })
-      const parsedLabel = parseDbDateTime(label)
-      return [parsedLabel ? parsedLabel.toLocaleString(localeTag) : label, ...values]
+      return [formatDbDateTime(label, { locale: localeTag, fallback: label }), ...values]
     })
 
     const escapeCell = (value: string) => {
@@ -264,7 +263,7 @@ export function CurvesOverlayModal({ open, onOpenChange, locations }: Props) {
         </head>
         <body>
           <h2>${t("overlay.title")}</h2>
-          <div class="meta">${new Date().toLocaleString(localeTag)}</div>
+          <div class="meta">${formatDbDateTime(new Date(), { locale: localeTag })}</div>
           <img src="${imageDataUrl}" alt="overlay" />
         </body>
       </html>

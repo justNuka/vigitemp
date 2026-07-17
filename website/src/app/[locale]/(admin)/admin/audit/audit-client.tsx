@@ -79,7 +79,8 @@ export function AuditClient({ logs: initialLogs }: Props) {
     queryKey: ["audit-logs", queryParams],
     queryFn: () => getJson<AuditLog[]>(`/api/audit${queryParams ? `?${queryParams}` : ""}`),
     enabled: filtersActive,
-    staleTime: 30 * 1000,
+    staleTime: 0,
+    refetchOnMount: "always",
   });
 
   const actionConfig = useMemo(() => buildAuditActionConfig(t), [t]);

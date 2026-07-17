@@ -21,15 +21,15 @@
 ## 2. Cache, rafraichissement et coherence d'affichage
 | ID | Sujet | Impact | Complexite | Statut | Notes |
 |---|---|---|---|---|---|
-| R-010 | Verifier le cache global et possiblement supprimer la notion de cache | majeur | lourd | a faire | Sujet transverse web, mesures, surveillance, audit |
+| R-010 | Verifier le cache global et possiblement supprimer la notion de cache | majeur | lourd | fait | Les donnees dynamiques (surveillance, mesures, graphiques, dashboards et audits) ne sont plus servies depuis un cache HTTP ou un cache UI considere frais. React Query reste utilise pour l'etat de pagination, mais les vues sont invalidees et rechargees au montage |
 | R-011 | Remontees memoire: le graphique ne se met pas a jour apres recuperation serveur | majeur | moyen | en cours | Correctif applique sur la modale de detail: elle recharge maintenant les mesures fraiches au lieu de rester figee sur le snapshot initial de la carte. Validation terrain encore necessaire |
 | R-012 | Si filtre actif mais lieu non charge, afficher explicitement `Aucune sonde` | mineur | rapide | en cours | Le refresh recharge maintenant toutes les pages correspondantes quand un filtre serveur est actif, et le bouton `charger plus` a ete replace dans chaque section. Validation terrain encore necessaire |
 
 ## 3. Dates, heures et formatage
 | ID | Sujet | Impact | Complexite | Statut | Notes |
 |---|---|---|---|---|---|
-| R-020 | Dates/heures decalees de 2h sur certaines lignes d'audit | majeur | moyen | en cours | Le dashboard admin repasse maintenant par le helper commun de formatage. Reste a finir l'audit global de tous les flux audit |
-| R-021 | Verifier chaque affichage/reutilisation de date dans le produit | majeur | lourd | a faire | Audit global front/API |
+| R-020 | Dates/heures decalees de 2h sur certaines lignes d'audit | majeur | moyen | fait | Les audits globaux, les audits de lieu et les details structures passent desormais par `date-display` avec le fuseau applicatif |
+| R-021 | Verifier chaque affichage/reutilisation de date dans le produit | majeur | lourd | fait | Les affichages persistants (audit, surveillance, dashboards, utilisateurs, analyse d'impact, exports, graphiques et messagerie) passent par `date-display`; seuls les controles de saisie et l'horloge locale restent autonomes |
 | R-022 | Valeurs au hover affichent parfois trop de decimales | mineur | rapide | fait | Formatage front normalise sur les tooltips graphiques |
 
 ## 4. Graphiques et visualisation
@@ -52,7 +52,7 @@
 ## 6. Sondes, surveillance et alarmes
 | ID | Sujet | Impact | Complexite | Statut | Notes |
 |---|---|---|---|---|---|
-| R-050 | Verifier que le retard bas n'est pas passe a la sonde | majeur | rapide | en cours | Le helper web/C# est pret, branchement des routes lieu en cours |
+| R-050 | Verifier que le retard bas n'est pas passe a la sonde | majeur | rapide | fait | Creation et modification de lieu transmettent maintenant distinctement le retard bas et le retard haut. Tous les chemins C# (synchronisation prioritaire, controle periodique et hotline) construisent `ECON...{bas}r{haut}t`, puis `DCON` compare separement `RetardBas` et `RetardHaut` |
 | R-051 | Bloquer la surveillance quand code `M` | moyen | moyen | a faire | A revoir plus tard, hors urgence |
 
 ## 7. Dashboard admin et navigation
@@ -67,12 +67,12 @@
 | R-070 | Commentaire perso fonctionne mal | moyen | moyen | a faire | Revoir fonctionnement plus tard |
 | R-071 | Message `configuration invalide agent` a revoir | moyen | moyen | a faire | Plus tard |
 | R-072 | Revoir les logs pour la hotline | moyen | moyen | a faire | Plus tard |
-| R-073 | Revoir les logs serveur: plus propres, moins lourds, plus concis | moyen | moyen | a faire | A cadrer au moment du traitement avec les attentes detaillees |
+| R-073 | Revoir les logs serveur: plus propres, moins lourds, plus concis | moyen | moyen | fait | Les traces detaillees de demarrage, affectation, ouverture/fermeture, drain normal, RSSI, cache et scheduler sont desactivees par defaut. Les TX/RX, erreurs et bilans DONE restent visibles; `Vigitemp.Log.Detailed=true` permet de retablir le detail. |
 
 ## 9. Mailing et telephonie
 | ID | Sujet | Impact | Complexite | Statut | Notes |
 |---|---|---|---|---|---|
-| R-080 | Mailing: `appliquer au groupe` quand on ajoute un mail dans un lieu | moyen | moyen | a faire | Workflow d'edition de lieu/groupe |
+| R-080 | Mailing: `appliquer au groupe` quand on ajoute un mail dans un lieu | moyen | moyen | fait | Option ajoutee dans l'onglet mailing; les contacts sont recopies sur les autres lieux des groupes selectionnes a la creation et a la modification |
 | R-081 | Planning telephonie: plage horaire ou il ne faut pas appeler | majeur | moyen | a faire | A traiter apres |
 | R-082 | Ne pas mettre la telephonie pendant 1 mois apres installation | moyen | moyen | a faire | Plus tard, probablement parametre/date de grace |
 
@@ -84,9 +84,9 @@
 ## 11. Retours live du 2026-07-08
 | ID | Sujet | Impact | Complexite | Statut | Notes |
 |---|---|---|---|---|---|
-| R-091 | Exports: appliquer les filtres selectionnes | majeur | moyen | fait | L'historique des acquittements exporte maintenant le jeu filtre complet et non plus seulement la page courante |
-| R-092 | Exports: revoir la forme Excel/CSV avec onglet de presentation + onglet de donnees | moyen | moyen | a faire | Ajouter logo, presentation, libelles metier plus lisibles |
-| R-093 | Exports: supprimer le langage trop technique/code dans les valeurs exportees | moyen | rapide | a faire | Exemple: types d'alarmes et statuts |
+| R-091 | Exports: appliquer les filtres selectionnes | majeur | moyen | fait | Les alarmes et l'historique des acquittements exportent maintenant toutes les pages correspondant aux filtres; le tableau generique applique aussi sa recherche locale aux donnees d'export |
+| R-092 | Exports: revoir la forme Excel/CSV avec onglet de presentation + onglet de donnees | moyen | moyen | en cours | Excel contient une feuille Presentation (titre, date, filtres, nombre de lignes) et une feuille Donnees dimensionnee et filtrable. Reste le logo, qui necessite un moteur Excel gerant les images. CSV reste volontairement mono-table car le format ne gere pas les onglets |
+| R-093 | Exports: supprimer le langage trop technique/code dans les valeurs exportees | moyen | rapide | fait | Le tableau generique accepte maintenant une valeur metier par colonne; les exports d'alarmes et d'acquittements formatent types, statuts, dates, durees, valeurs et seuils comme dans l'interface |
 | R-094 | Page alarmes: verifier le nombre total d'alarmes et la pagination bloquee | majeur | moyen | en cours | Le chargement serveur respecte maintenant l'onglet actif, la pagination serveur est conservee jusqu'au bout et les onglets distinguent mieux total global / lignes filtrees localement. Validation terrain encore necessaire |
 | R-095 | Page alarmes: supprimer l'onglet `Acquittees` | mineur | rapide | fait | Onglet retire de la page alarmes |
 | R-096 | Page alarmes: retirer le filtre type `terminee` | mineur | rapide | fait | Option retiree du filtre type |
@@ -106,7 +106,7 @@
 | R-110 | Sonde SPNB-26000068: remontees memoire anormales autour de 11h avec mesures vers 3h le 2026-07-08 | majeur | moyen | a analyser | Incident de reference a documenter/corriger |
 | R-111 | Verifier que l'erreur de justesse est bien prise en compte avec le bon signe | majeur | moyen | fait | Le serveur applique `-Err_Justesse` uniquement si `Est_Correction_Ej` est actif, pour MySQL et MSSQL |
 | R-112 | Dashboard utilisateur: certaines alarmes de non reponse affichent l'icone alarme basse | moyen | rapide | fait | Les alarmes non-reponse et module utilisent maintenant l'icone technique WifiOff |
-| R-113 | Dashboard utilisateur: affichage de `-7,5` a expliquer/corriger | moyen | rapide | a faire | Contexte exact a verifier |
+| R-113 | Dashboard utilisateur: affichage de `-7,5` a expliquer/corriger | moyen | rapide | fait | Le padding de l'echelle de tendance des alarmes est maintenant borne a zero |
 | R-114 | Dashboard utilisateur: ajouter une echelle sur le graphique de tendance d'alarmes | mineur | rapide | fait | Echelle min/max et reperes temporels affiches sur la tendance |
 | R-115 | Dashboard utilisateur: ajouter un camembert par type d'alarmes | moyen | moyen | fait | Camembert calcule sur toutes les alarmes actives accessibles, avec detail par type |
 | R-116 | Mail d'alarme terminee pour les GSO ne part pas | majeur | moyen | fait | Suivi persistant en base; envoi retente et marque uniquement apres succes HTTP |
@@ -114,9 +114,9 @@
 ## 12. Retours live detailles du 2026-07-08
 | ID | Sujet | Impact | Complexite | Statut | Notes |
 |---|---|---|---|---|---|
-| R-117 | Exports: les filtres selectionnes ne sont pas appliques | majeur | moyen | a faire | Concerne les exports de tableaux, avec attente d'un resultat coherent avec le filtrage UI |
-| R-118 | Exports Excel/CSV: revoir la presentation | moyen | moyen | a faire | Souhait: un onglet de presentation avec logo puis un onglet de donnees |
-| R-119 | Exports: remplacer les libelles trop techniques par du vocabulaire metier | moyen | rapide | a faire | Exemple cite: type d'alarme et autres codes trop bruts |
+| R-117 | Exports: les filtres selectionnes ne sont pas appliques | majeur | moyen | fait | Les filtres serveur, les filtres de type et la recherche locale sont appliques au jeu complet avant export; l'historique charge aussi toutes les pages au-dela de 1000 lignes |
+| R-118 | Exports Excel/CSV: revoir la presentation | moyen | moyen | en cours | Excel dispose maintenant des feuilles Presentation et Donnees avec largeurs de colonnes et filtre automatique. Reste l'integration du logo via une bibliotheque compatible images |
+| R-119 | Exports: remplacer les libelles trop techniques par du vocabulaire metier | moyen | rapide | fait | Doublon de R-093 traite sur les alarmes actives et l'historique des acquittements |
 | R-120 | Page alarmes: nombre total incoherent et pagination bloquee | majeur | moyen | en cours | Correction de la pagination serveur et du comptage affiche sous filtres locaux. Reste a valider sur les cas charges en environnement de test |
 | R-121 | Page alarmes: supprimer l'onglet `Acquittees` | mineur | rapide | fait | Deja corrige sur la page alarmes, doublon de R-095 |
 | R-122 | Page alarmes: retirer le filtre type d'alarme `terminee` | mineur | rapide | fait | Deja corrige sur la page alarmes, doublon de R-096 |
@@ -136,7 +136,7 @@
 | R-136 | SPNB-26000068: remontees memoire anormales autour de 11h avec mesures de 3h du matin le 08/07 | majeur | moyen | a analyser | Incident a documenter puis corriger |
 | R-137 | Verifier que l'erreur de justesse est bien appliquee avec le bon signe | majeur | moyen | fait | Le serveur applique l'inverse de l'erreur de justesse lorsque la correction est active |
 | R-138 | Dashboard utilisateur: certaines alarmes de non reponse affichent l'icone alarme basse | moyen | rapide | fait | Mapping corrige vers l'icone technique |
-| R-139 | Dashboard utilisateur: affichage de `-7,5` a expliquer/corriger | moyen | rapide | a faire | Contexte a verifier sur la source de calcul |
+| R-139 | Dashboard utilisateur: affichage de `-7,5` a expliquer/corriger | moyen | rapide | fait | Doublon de R-113: l'echelle des comptages d'alarmes ne descend plus sous zero |
 | R-140 | Dashboard utilisateur: ajouter une echelle sur le graphique de tendance d'alarmes | mineur | rapide | fait | Echelle ajoutee au graphique de tendance |
 | R-141 | Dashboard utilisateur: ajouter un camembert type d'alarmes | moyen | moyen | fait | Camembert alimente par un comptage serveur complet |
 | R-142 | Mail d'alarme terminee pour les GSO ne part pas | majeur | moyen | fait | Correctif commun avec R-116, compatible MySQL et SQL Server |
@@ -144,31 +144,31 @@
 ## 13. Retours backlog du 2026-07-13
 | ID | Sujet | Impact | Complexite | Statut | Notes |
 |---|---|---|---|---|---|
-| R-143 | Remontees memoire: thread dedie avec buffer de demandes | majeur | lourd | a faire | Stocker les remontees a faire puis laisser un thread dedie les consommer |
-| R-144 | Remontees memoire: stocker debut et fin de non reponse dans une nouvelle table | majeur | moyen | a faire | Base pour reconstruire proprement les plages a demander |
-| R-145 | Remontees memoire: construire les demandes a partir des vraies plages date/heure | majeur | lourd | a faire | Prendre premiere date, derniere date, puis ajuster offset et volume de memoire a demander |
-| R-146 | Remontees memoire: ne pas lancer de demande si la non reponse n'a pas encore de fin | majeur | rapide | a faire | Tant que la plage est ouverte, on ne demande rien |
-| R-147 | Page admin alarmes: erreur 500 depuis le dashboard admin | majeur | moyen | a faire | Acces via la carte dashboard admin buggue |
-| R-148 | Acquittement page alarmes: statut non mis a jour sur la surveillance | majeur | moyen | a faire | Verifier refresh/revalidation/cache apres acquittement |
+| R-143 | Remontees memoire: thread dedie avec buffer de demandes | majeur | lourd | fait | Le thread d'interrogation place les lots lus dans une file concurrente; un worker dedie filtre la plage puis insere uniquement les mesures absentes. |
+| R-144 | Remontees memoire: stocker debut et fin de non reponse dans une nouvelle table | majeur | moyen | fait | `tm_remontee_plage_gsp` est presente dans les seeds MySQL et MSSQL avec les statuts persistants `A_FAIRE`, `EN_COURS`, `TRAITEE` et `ERREUR`, les tentatives et la derniere erreur. |
+| R-145 | Remontees memoire: construire les demandes a partir des vraies plages date/heure | majeur | lourd | fait | Le serveur agrege la premiere date de debut et la derniere date de fin, puis calcule offset et volume selon la frequence et l'heure serveur. |
+| R-146 | Remontees memoire: ne pas lancer de demande si la non reponse n'a pas encore de fin | majeur | rapide | fait | La plage est creee seulement lors d'une nouvelle reponse valide; les alarmes actives `N` ou `M` reportent la demande. En cas d'echec de verification SQL, le traitement reste bloque par securite. |
+| R-147 | Page admin alarmes: erreur 500 depuis le dashboard admin | majeur | moyen | fait | `/admin/alarmes` reutilise le chargement serveur et l'ecran principal stabilise au lieu de l'ancien client autonome branche sur `/api/alarmes` |
+| R-148 | Acquittement page alarmes: statut non mis a jour sur la surveillance | majeur | moyen | fait | L'acquittement met a jour le capteur correspondant dans le cache puis invalide les donnees alarmes, surveillance et dashboards |
 | R-149 | Surveillance: agrandir en largeur le badge alarmes du header | mineur | rapide | fait | Le bouton d'acces aux alarmes actives dans le header a ete elargi pour afficher proprement le volume d'alarmes |
 | R-150 | Afficher le nombre d'alarmes sur le lien de la page alarmes | mineur | rapide | fait | Le dashboard admin affiche maintenant le nombre d'alarmes directement dans le lien d'acces a la page alarmes |
 | R-151 | Ameliorer l'affichage des audits trop "code" | moyen | moyen | fait | Les details des audits de lieu masquent maintenant les champs techniques bruts, resumant les changements avec des libelles metier et des valeurs reformatees |
 | R-152 | Modale de lieu: plage par defaut sur la journee courante | majeur | moyen | fait | A l'ouverture, la modale charge maintenant par defaut la journee courante pour le graphe, le tableau et l'audit |
 | R-153 | Cards surveillance: retirer les boutons details et plan | mineur | rapide | fait | Les actions details et plan ont ete retirees des cards de surveillance |
 | R-154 | Tableau de mesures: afficher les remontees memoire en italique, sans couleur | mineur | rapide | fait | La mise en avant amber a ete retiree au profit d'un rendu en italique uniquement |
-| R-155 | Passer les mails a envoyer en base via `notification` pour suivi | majeur | lourd | a faire | Probable ajout d'un type de notification mail et d'un workflow de reprise/suivi |
+| R-155 | Passer les mails a envoyer en base via `notification` pour suivi | majeur | lourd | fait | File persistante dans `t_notification` (`ALARM_EMAIL`) avant SMTP, deduplication alarme/evenement/destinataire, statuts/tentatives/erreur dans le payload, envoi immediat puis reprise periodique par le serveur (5 tentatives max) |
 | R-156 | Nouveaux logos light/dark: utiliser le logo blanc dans la sidebar | mineur | rapide | fait | Le logo de sidebar est maintenant force en rendu blanc sur les barres laterales sombres |
 
 ## 14. Retours backlog du 2026-07-15
 | ID | Sujet | Impact | Complexite | Statut | Notes |
 |---|---|---|---|---|---|
-| R-157 | Acquittement automatique des alarmes de non reponse | majeur | moyen | a faire | Ajouter un champ par lieu dans `t_lieu` (defaut `0`) pour autoriser l'acquittement automatique des non reponses. Parametrage admin a prevoir plus tard via un tableau/liste des lieux avec cases a cocher et actions tout cocher / tout decocher. Si actif: a la fin d'une alarme de non reponse, supprimer la ligne concernee dans `t_alarme`, remettre `t_lieu.Id_Alarme=0`, `t_lieu.Est_Lieu_En_Alarme=0` et `t_lieu.Est_Lieu_Alarme_Terminee_Non_Acquittee=0`. |
+| R-157 | Acquittement automatique des alarmes de non reponse | majeur | moyen | fait | Champ present dans les seeds, comportement serveur MySQL/MSSQL implemente et parametrage admin ajoute: recherche, activation individuelle, tout cocher/decocher et audit par lieu. |
 
 ## 15. Retours backlog du 2026-07-16
 | ID | Sujet | Impact | Complexite | Statut | Notes |
 |---|---|---|---|---|---|
 | R-158 | Graphiques: ne pas afficher les audits par defaut | mineur | rapide | fait | Les audits restent activables manuellement dans les graphiques de lieu et d'analyse d'alarme. |
-| R-159 | Graphiques: prevoir un export de la courbe | moyen | moyen | a discuter | Ajouter une possibilite d'export du graphique/courbe, possiblement rattachee a l'export multi-onglets. |
+| R-159 | Graphiques: prevoir un export de la courbe | moyen | moyen | fait | Export PNG ajoute au composant partage, disponible dans les details de lieu et l'analyse d'alarme. |
 
 ## Proposition d'ordre de traitement
 1. R-011 remontees memoire non visibles

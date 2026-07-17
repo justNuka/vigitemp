@@ -194,6 +194,7 @@ const createLieuSchema = z.object({
   Incertitude: z.number().nullable().optional(),
   Derive: z.number().nullable().optional(),
   MailingContacts: z.array(mailingContactSchema).optional(),
+  Apply_Mailing_To_Groups: z.boolean().optional(),
   Est_Son_Alarme_Active: z.boolean().optional(),
 }).superRefine(addConsigneGuards)
 
@@ -370,6 +371,7 @@ export const POST = withLogging(async (req: NextRequest) => {
         : Math.round(validated.Frequence * 60)
 
     const mailingContacts = normalizeMailingContacts(validated.MailingContacts)
+    let mailingPropagationTargetIds: number[] = []
     const dateCreation = new Date()
     dateCreation.setHours(0, 0, 0, 0)
     const dbNow = await getDbNow(prisma)
@@ -536,6 +538,38 @@ export const POST = withLogging(async (req: NextRequest) => {
       })
     }
 
+    if (validated.Apply_Mailing_To_Groups === true && groupIds.length > 0) {
+      const groupLocations = await prisma.t_lieu_groupe.findMany({
+        where: {
+          Id_Groupe: { in: groupIds },
+          Id_Lieu: { not: lieu.Id_Lieu },
+        },
+        select: { Id_Lieu: true },
+      })
+      mailingPropagationTargetIds = Array.from(new Set(groupLocations.map((row) => row.Id_Lieu)))
+
+      if (mailingPropagationTargetIds.length > 0) {
+        await prisma.$transaction(async (tx) => {
+          await tx.t_lieu_mail_tel.deleteMany({
+            where: { Id_Lieu: { in: mailingPropagationTargetIds } },
+          })
+          if (mailingContacts.length > 0) {
+            await tx.t_lieu_mail_tel.createMany({
+              data: mailingPropagationTargetIds.flatMap((targetLieuId) =>
+                mailingContacts.map((contact) => ({
+                  Id_Lieu: targetLieuId,
+                  Ordre_Contact: contact.Numero_Ordre,
+                  Id_Utilisateur: contact.Id_Utilisateur,
+                  Est_Via_Telephone: contact.Est_Via_Telephone,
+                  Est_Via_Email: contact.Est_Via_Email,
+                })),
+              ),
+            })
+          }
+        })
+      }
+    }
+
     const ip = getClientIp(req)
 
     log.audit("CC", {
@@ -555,6 +589,24 @@ export const POST = withLogging(async (req: NextRequest) => {
       },
       lieuId: lieu.Id_Lieu,
     })
+
+    if (mailingPropagationTargetIds.length > 0) {
+      log.audit("CC", {
+        user: user.username,
+        userId: user.userId,
+        userProfile: user.profile,
+        ip,
+        resource: `Lieu: ${validated.Nom_Lieu} (Mailing groupe)`,
+        resourceId: lieu.Id_Lieu,
+        lieuId: lieu.Id_Lieu,
+        changes: {
+          action: "mailing_apply_to_groups",
+          contactsCount: mailingContacts.length,
+          affectedLocationsCount: mailingPropagationTargetIds.length,
+          affectedLocationIds: mailingPropagationTargetIds,
+        },
+      })
+    }
 
     auditRouteCreate(req, user, {
       resource: `Lieu: ${validated.Nom_Lieu}`,

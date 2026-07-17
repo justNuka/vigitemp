@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { getJson, postJson } from "@/lib/http"
 import { cn } from "@/lib/utils"
+import { formatDbDateTimeIntl, parseDbDateTime } from "@/lib/date-display"
 import { MessageInput } from "./message-input"
 import { AttachmentPreview } from "./attachment-preview"
 import { TypingIndicator } from "./typing-indicator"
@@ -35,7 +36,8 @@ function getDateLabel(
   dateStr: string,
   tTime: ReturnType<typeof useTranslations<"messaging.time">>
 ): string {
-  const date = new Date(dateStr)
+  const date = parseDbDateTime(dateStr)
+  if (!date) return "-"
   const now = new Date()
   const todayStr = now.toDateString()
   const dateStrNorm = date.toDateString()
@@ -43,7 +45,9 @@ function getDateLabel(
   const yesterday = new Date(now)
   yesterday.setDate(yesterday.getDate() - 1)
   if (dateStrNorm === yesterday.toDateString()) return tTime("date_separator_yesterday")
-  return date.toLocaleDateString([], { weekday: "long", day: "numeric", month: "long" })
+  return formatDbDateTimeIntl(date, {
+    intl: { weekday: "long", day: "numeric", month: "long" },
+  })
 }
 
 function buildRows(
@@ -54,7 +58,7 @@ function buildRows(
   let lastDateKey = ""
 
   for (const msg of messages) {
-    const dateKey = new Date(msg.createdAt).toDateString()
+    const dateKey = parseDbDateTime(msg.createdAt)?.toDateString() ?? msg.createdAt
     if (dateKey !== lastDateKey) {
       rows.push({
         type: "date",
@@ -69,7 +73,9 @@ function buildRows(
 }
 
 function formatMessageTime(dateStr: string): string {
-  return new Date(dateStr).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+  return formatDbDateTimeIntl(dateStr, {
+    intl: { hour: "2-digit", minute: "2-digit" },
+  })
 }
 
 const GROUP_AVATAR_MAX_SHOWN = 4

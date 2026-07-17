@@ -266,6 +266,7 @@ const updateLieuSchema = z.object({
   Incertitude: z.number().nullable().optional(),
   Derive: z.number().nullable().optional(),
   MailingContacts: z.array(mailingContactSchema).optional(),
+  Apply_Mailing_To_Groups: z.boolean().optional(),
   Est_Son_Alarme_Active: z.boolean().optional(),
   Commentaire_Action: z.string().trim().max(500).nullable().optional(),
 }).superRefine(addConsigneGuards)
@@ -499,6 +500,8 @@ export const PATCH = withAnyAuthorizationLogging(
 
       const shouldUpdateMailingContacts = Object.prototype.hasOwnProperty.call(body, "MailingContacts")
       const mailingContacts = shouldUpdateMailingContacts ? normalizeMailingContacts(MailingContacts) : []
+      const applyMailingToGroups = validated.Apply_Mailing_To_Groups === true
+      let mailingPropagationTargetIds: number[] = []
 
       const hasIdSite = Object.prototype.hasOwnProperty.call(validated, "Id_Site")
       const hasSondeNumeroSerie = Object.prototype.hasOwnProperty.call(validated, "Sonde_Numero_Serie")
@@ -766,6 +769,45 @@ export const PATCH = withAnyAuthorizationLogging(
               })),
             })
           }
+
+          if (applyMailingToGroups) {
+            const effectiveGroupIds = groupIds !== undefined
+              ? groupIds
+              : (await tx.t_lieu_groupe.findMany({
+                  where: { Id_Lieu: lieuId },
+                  select: { Id_Groupe: true },
+                })).map((row) => row.Id_Groupe)
+
+            if (effectiveGroupIds.length > 0) {
+              const groupLocations = await tx.t_lieu_groupe.findMany({
+                where: {
+                  Id_Groupe: { in: effectiveGroupIds },
+                  Id_Lieu: { not: lieuId },
+                },
+                select: { Id_Lieu: true },
+              })
+              mailingPropagationTargetIds = Array.from(new Set(groupLocations.map((row) => row.Id_Lieu)))
+
+              if (mailingPropagationTargetIds.length > 0) {
+                await tx.t_lieu_mail_tel.deleteMany({
+                  where: { Id_Lieu: { in: mailingPropagationTargetIds } },
+                })
+                if (mailingContacts.length > 0) {
+                  await tx.t_lieu_mail_tel.createMany({
+                    data: mailingPropagationTargetIds.flatMap((targetLieuId) =>
+                      mailingContacts.map((contact) => ({
+                        Id_Lieu: targetLieuId,
+                        Ordre_Contact: contact.Numero_Ordre,
+                        Id_Utilisateur: contact.Id_Utilisateur,
+                        Est_Via_Telephone: contact.Est_Via_Telephone,
+                        Est_Via_Email: contact.Est_Via_Email,
+                      })),
+                    ),
+                  })
+                }
+              }
+            }
+          }
         }
 
         if (hasIdModule) {
@@ -818,6 +860,25 @@ export const PATCH = withAnyAuthorizationLogging(
             ? serialized?.Frequence
             : Number(serialized.Frequence) / 60,
         MailingContacts: shouldUpdateMailingContacts ? mailingContacts : undefined,
+        Apply_Mailing_To_Groups: false,
+      }
+
+      if (mailingPropagationTargetIds.length > 0) {
+        log.audit("CC", {
+          user: user.username,
+          userId: user.userId,
+          userProfile: user.profile,
+          ip,
+          resource: `Lieu: ${lieuName ?? lieuId} (Mailing groupe)`,
+          resourceId: lieuId,
+          lieuId,
+          changes: {
+            action: "mailing_apply_to_groups",
+            contactsCount: mailingContacts.length,
+            affectedLocationsCount: mailingPropagationTargetIds.length,
+            affectedLocationIds: mailingPropagationTargetIds,
+          },
+        })
       }
 
       if (hasLieuEtat && user && typeof Lieu_Etat === "string" && previousLieuEtat !== Lieu_Etat) {

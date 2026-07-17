@@ -177,6 +177,7 @@ export const locationFormSchema = z.object({
   Corriger_Erreur_Justesse: z.boolean().optional(),
   Prendre_En_Compte_Derive: z.boolean().optional(),
   MailingContacts: z.array(mailingContactSchema).optional(),
+  Apply_Mailing_To_Groups: z.boolean().optional(),
   Applied_Etalonnage_Id: z.coerce.number().int().positive().optional().nullable(),
 }).superRefine(addConsigneGuards);
 

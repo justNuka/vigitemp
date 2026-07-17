@@ -24,6 +24,7 @@ export function mapLocationToFormData(location: LocationRow): LocationFormData {
     ...location,
     GroupIds: selectedGroupIds,
     MailingContacts: mailingContacts,
+    Apply_Mailing_To_Groups: false,
   }
 }
 

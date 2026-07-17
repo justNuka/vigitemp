@@ -11,7 +11,7 @@ import { AlarmAcknowledgeDialog } from "@/components/alarm-acknowledge-dialog"
 import { useAppAccess } from "@/components/access/app-access-provider"
 import { useAppTimezone } from "@/components/timezone-provider"
 import { alarmsApi, type AlarmWithDetails, type Measurement, type SensorWithLocation } from "@/lib/api"
-import { parseDbDateTime } from "@/lib/date-display"
+import { formatDbDateTime } from "@/lib/date-display"
 import { markAlarmAcknowledgedInPaginatedSensorsCache } from "@/lib/surveillance-cache"
 import { staggerContainer, fadeInUp } from "@/lib/motion-variants"
 import { DashboardActiveAlarmsSection } from "./_components/dashboard/dashboard-active-alarms-section"
@@ -63,17 +63,7 @@ export function DashboardClient({
   )
 
   const formatTzDateTime = useCallback((value: string | Date) => {
-    const date = parseDbDateTime(value)
-    if (!date || Number.isNaN(date.getTime())) return "-"
-    return date.toLocaleString(localeTag, {
-      timeZone: timezone,
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-    })
+    return formatDbDateTime(value, { locale: localeTag, timeZone: timezone })
   }, [localeTag, timezone])
 
   const handleAcknowledge = async (alarmId: string, commentValue: string) => {

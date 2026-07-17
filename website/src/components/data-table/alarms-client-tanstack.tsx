@@ -36,6 +36,7 @@ import { toast } from "sonner";
 import { formatMeasureValue } from "@/lib/measurements";
 import { markAlarmAcknowledgedInPaginatedSensorsCache } from "@/lib/surveillance-cache";
 import { X } from "lucide-react";
+import type { Alarm } from "@/hooks/useAlarms";
 
 type SelectedAlarm = {
   id: string;
@@ -170,6 +171,22 @@ export function AlarmsClientTanStack() {
   const siteOptions = data?.filters?.sites ?? [];
   const locationOptions = useMemo(() => data?.filters?.lieux ?? [], [data?.filters?.lieux]);
 
+  const exportQuery = useQuery({
+    queryKey: ["alarms-export", statusFilter, selectedSiteId, selectedLocationId],
+    queryFn: async () => {
+      const firstPage = await fetchAlarmsPage(1, 1000, statusFilter, selectedSiteId, selectedLocationId);
+      if (firstPage.pagination.pages <= 1) return firstPage.data;
+
+      const remainingPages = await Promise.all(
+        Array.from({ length: firstPage.pagination.pages - 1 }, (_, index) =>
+          fetchAlarmsPage(index + 2, 1000, statusFilter, selectedSiteId, selectedLocationId),
+        ),
+      );
+      return [firstPage.data, ...remainingPages.map((result) => result.data)].flat();
+    },
+    staleTime: 0,
+  });
+
   const commentSchema = z.object({
     comment: z.string().max(200, tDialog("validation.comment_max", { max: 200 })).optional(),
   });
@@ -262,7 +279,7 @@ export function AlarmsClientTanStack() {
     return formatDbDateTime(date);
   }, [t]);
 
-  const tableData: AlarmRow[] = alarms
+  const mapAlarmsToRows = useCallback((source: Alarm[]): AlarmRow[] => source
     .filter((alarm) => typeFilters.length === 0 || typeFilters.includes(alarm.Type))
     .map((alarm) => ({
       Id_Alarme: alarm.Id_Alarme,
@@ -277,7 +294,13 @@ export function AlarmsClientTanStack() {
       Derniere_Valeur: alarm.Derniere_Valeur ?? null,
       Status: alarm.Status,
       Count_30_Days: alarm.Count_30_Days ?? null,
-    }));
+    })), [t, typeFilters]);
+
+  const tableData = useMemo(() => mapAlarmsToRows(alarms), [alarms, mapAlarmsToRows]);
+  const exportTableData = useMemo(
+    () => mapAlarmsToRows(exportQuery.data ?? alarms),
+    [alarms, exportQuery.data, mapAlarmsToRows],
+  );
 
   const hasLocalTypeFilter = typeFilters.length > 0;
   const hasLocalFilteredDisplay = filteredRowCount < tableData.length;
@@ -759,7 +782,13 @@ export function AlarmsClientTanStack() {
             setSelectedAlarmId(row.Id_Alarme);
           }}
           resultsLabel={resultsLabel}
-          exportData={tableData}
+          exportData={exportTableData}
+          exportTitle={t("title")}
+          exportFilters={[
+            { label: t("filters.active_site", { value: "" }).replace(/\s*:\s*$/, ""), value: selectedSiteLabel ?? t("filters.all_sites") },
+            { label: t("filters.active_location", { value: "" }).replace(/\s*:\s*$/, ""), value: selectedLocationLabel ?? t("filters.all_locations") },
+            { label: t("filters.active_types", { value: "" }).replace(/\s*:\s*$/, ""), value: typeFilterLabel ?? "-" },
+          ]}
           exportFileName="alarmes"
           headerClassName="!bg-sidebar !text-sidebar-foreground"
           headerCellClassName="!bg-sidebar !text-sidebar-foreground !border-r !border-white/25 hover:!bg-sidebar-accent/80"

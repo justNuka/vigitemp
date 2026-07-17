@@ -88,6 +88,8 @@ export interface TanStackTableProps<TData> {
   promptExportCount?: boolean;
   enableExportColumnSelection?: boolean;
   exportData?: TData[];
+  exportTitle?: string;
+  exportFilters?: Array<{ label: string; value: string }>;
   manualPagination?: boolean;
   manualSorting?: boolean;
   pageCount?: number;
@@ -151,6 +153,8 @@ export function TanStackTable<TData extends Record<string, any>>({
   promptExportCount = false,
   enableExportColumnSelection = false,
   exportData,
+  exportTitle,
+  exportFilters = [],
   manualPagination = false,
   manualSorting = false,
   pageCount,
@@ -258,7 +262,26 @@ export function TanStackTable<TData extends Record<string, any>>({
     return table.getPrePaginationRowModel().rows;
   }, [table]);
 
-  const exportDataRows = useMemo(() => exportData ?? null, [exportData]);
+  const exportDataRows = useMemo(() => {
+    if (!exportData) return null;
+
+    const searchTerm = globalFilter.trim().toLocaleLowerCase();
+    if (!searchTerm) return exportData;
+
+    return exportData.filter((rowData) => {
+      if (searchField) {
+        const fieldsToSearch = Array.isArray(searchField) ? searchField : [searchField];
+        return fieldsToSearch.some((field) => {
+          const fieldValue = rowData[field];
+          return fieldValue != null && String(fieldValue).toLocaleLowerCase().includes(searchTerm);
+        });
+      }
+
+      return Object.values(rowData).some((value) =>
+        value != null && String(value).toLocaleLowerCase().includes(searchTerm),
+      );
+    });
+  }, [exportData, globalFilter, searchField]);
   const exportRowCount = exportDataRows?.length ?? exportRows.length;
 
   useEffect(() => {
@@ -359,20 +382,30 @@ export function TanStackTable<TData extends Record<string, any>>({
 
   function buildExportMatrixForRows(rowsToExport: typeof exportRows | TData[]) {
     const body = rowsToExport.map((row) => {
+      const rawRow = (typeof (row as any)?.getValue === "function"
+        ? (row as any).original
+        : row) as TData;
+
+      const resolveExportValue = (col: (typeof selectedExportColumns)[number], fallback: unknown) => {
+        const exportValue = (col.columnDef as any)?.meta?.exportValue as
+          | ((data: TData) => unknown)
+          | undefined;
+        return formatExportValue(exportValue ? exportValue(rawRow) : fallback);
+      };
+
       if (typeof (row as any)?.getValue === "function") {
-        return selectedExportColumns.map((col) => formatExportValue((row as any).getValue(col.id)));
+        return selectedExportColumns.map((col) => resolveExportValue(col, (row as any).getValue(col.id)));
       }
 
-      const rawRow = row as TData;
       return selectedExportColumns.map((col) => {
         const columnDef = col.columnDef as any;
         if (typeof columnDef.accessorFn === "function") {
-          return formatExportValue(columnDef.accessorFn(rawRow, 0));
+          return resolveExportValue(col, columnDef.accessorFn(rawRow, 0));
         }
         if (typeof columnDef.accessorKey === "string") {
-          return formatExportValue((rawRow as Record<string, unknown>)[columnDef.accessorKey]);
+          return resolveExportValue(col, (rawRow as Record<string, unknown>)[columnDef.accessorKey]);
         }
-        return "";
+        return resolveExportValue(col, "");
       });
     });
     return { headers: exportHeaders, rows: body };
@@ -483,9 +516,39 @@ export function TanStackTable<TData extends Record<string, any>>({
     const { headers, rows } = buildExportMatrixForRows(rowsToExport);
     const xlsx = await import("xlsx");
 
+    const exportedAt = new Intl.DateTimeFormat(undefined, {
+      dateStyle: "medium",
+      timeStyle: "medium",
+    }).format(new Date());
+    const presentationRows = [
+      ["VigiSensys"],
+      [exportTitle ?? exportFileName],
+      [],
+      ["Date export", exportedAt],
+      ["Nombre de lignes", rows.length],
+      ...exportFilters
+        .filter((filter) => filter.value.trim().length > 0)
+        .map((filter) => [filter.label, filter.value]),
+    ];
+
+    const presentationSheet = xlsx.utils.aoa_to_sheet(presentationRows);
+    presentationSheet["!cols"] = [{ wch: 28 }, { wch: 52 }];
+
     const worksheet = xlsx.utils.aoa_to_sheet([headers, ...rows]);
+    worksheet["!autofilter"] = { ref: xlsx.utils.encode_range({ s: { r: 0, c: 0 }, e: { r: Math.max(rows.length, 0), c: Math.max(headers.length - 1, 0) } }) };
+    worksheet["!cols"] = headers.map((header, columnIndex) => ({
+      wch: Math.min(
+        48,
+        Math.max(
+          12,
+          String(header).length + 2,
+          ...rows.slice(0, 250).map((row) => String(row[columnIndex] ?? "").length + 2),
+        ),
+      ),
+    }));
     const workbook = xlsx.utils.book_new();
-    xlsx.utils.book_append_sheet(workbook, worksheet, "Export");
+    xlsx.utils.book_append_sheet(workbook, presentationSheet, "Presentation");
+    xlsx.utils.book_append_sheet(workbook, worksheet, "Donnees");
 
     const arrayBuffer = xlsx.write(workbook, { bookType: "xlsx", type: "array" });
     const blob = new Blob([arrayBuffer], {

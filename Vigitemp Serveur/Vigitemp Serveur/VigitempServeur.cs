@@ -25,6 +25,8 @@ namespace Vigitemp_Serveur
         private static readonly object _lock = new object();
         private static readonly long _maxLogFileSizeBytes =
             GetSettingInt("Vigitemp.Log.MaxFileSizeMB", 10) * 1024L * 1024L;
+        private static readonly bool _detailedLogsEnabled =
+            GetSettingBool("Vigitemp.Log.Detailed", false);
         private static int _exceptionHooksInitialized = 0;
         private System.Timers.Timer _timer;
         private HotlineApiServer _hotlineApi;
@@ -195,6 +197,14 @@ namespace Vigitemp_Serveur
                 "logs");
         }
 
+        public static void LogDetailed(string logMessage)
+        {
+            if (_detailedLogsEnabled)
+            {
+                Log(logMessage);
+            }
+        }
+
         private static string GetLogPath()
         {
             return Path.Combine(GetLogBaseDir(), "vigitemp-serveur.log");
@@ -295,6 +305,21 @@ namespace Vigitemp_Serveur
                 try { ctsToStart?.Dispose(); } catch { /* ignore */ }
                 Log($"StartWorker failed: worker={idServeur} error={ex}");
                 throw;
+            }
+        }
+
+        private static bool GetSettingBool(string key, bool defaultValue)
+        {
+            try
+            {
+                var raw = ConfigurationManager.AppSettings[key];
+                if (string.IsNullOrWhiteSpace(raw)) return defaultValue;
+                if (bool.TryParse(raw, out var value)) return value;
+                return defaultValue;
+            }
+            catch
+            {
+                return defaultValue;
             }
         }
 

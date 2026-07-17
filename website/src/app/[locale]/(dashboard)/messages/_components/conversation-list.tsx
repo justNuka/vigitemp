@@ -10,25 +10,33 @@ import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/lib/utils"
+import { formatDbDateTimeIntl, parseDbDateTime } from "@/lib/date-display"
 import type { ConversationSummary } from "./_types"
 import { getInitials } from "../_utils"
 
 function formatTime(dateStr: string, t: ReturnType<typeof useTranslations<"messaging.time">>): string {
-  const date = new Date(dateStr)
+  const date = parseDbDateTime(dateStr)
+  if (!date) return "-"
   const now = new Date()
   const diffMs = now.getTime() - date.getTime()
   const diffMin = Math.floor(diffMs / 60_000)
   if (diffMin < 1) return t("just_now")
   if (diffMin < 60) return t("minutes_ago", { count: diffMin })
   const diffH = Math.floor(diffMin / 60)
-  if (diffH < 24) return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+  if (diffH < 24) {
+    return formatDbDateTimeIntl(date, {
+      intl: { hour: "2-digit", minute: "2-digit" },
+    })
+  }
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
   const yesterday = new Date(today)
   yesterday.setDate(today.getDate() - 1)
   const msgDay = new Date(date.getFullYear(), date.getMonth(), date.getDate())
   const isYesterday = msgDay.getTime() === yesterday.getTime()
   if (isYesterday) return t("yesterday")
-  return date.toLocaleDateString([], { day: "numeric", month: "short" })
+  return formatDbDateTimeIntl(date, {
+    intl: { day: "numeric", month: "short" },
+  })
 }
 
 type ConversationListProps = {

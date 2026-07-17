@@ -2,8 +2,16 @@ export type DbDateInput = string | number | Date | null | undefined;
 
 type FormatOptions = {
   withSeconds?: boolean;
+  withYear?: boolean;
   dateOnly?: boolean;
   timeOnly?: boolean;
+  fallback?: string;
+  locale?: string | string[];
+  timeZone?: string;
+};
+
+type IntlFormatOptions = {
+  intl: Intl.DateTimeFormatOptions;
   fallback?: string;
   locale?: string | string[];
   timeZone?: string;
@@ -79,7 +87,15 @@ const maybeAlreadyFormatted = (value: string) => {
 };
 
 export function formatDbDateTime(value: DbDateInput, options: FormatOptions = {}): string {
-  const { withSeconds = true, dateOnly = false, timeOnly = false, fallback = "-", locale, timeZone } = options;
+  const {
+    withSeconds = true,
+    withYear = true,
+    dateOnly = false,
+    timeOnly = false,
+    fallback = "-",
+    locale,
+    timeZone,
+  } = options;
 
   if (typeof value === "string") {
     const direct = maybeAlreadyFormatted(value);
@@ -101,7 +117,7 @@ export function formatDbDateTime(value: DbDateInput, options: FormatOptions = {}
       const dateOptions: Intl.DateTimeFormatOptions = {
         day: "2-digit",
         month: "2-digit",
-        year: "numeric",
+        ...(withYear ? { year: "numeric" as const } : {}),
       };
 
       if (timeZone) {
@@ -132,7 +148,7 @@ export function formatDbDateTime(value: DbDateInput, options: FormatOptions = {}
     const dateTimeOptions: Intl.DateTimeFormatOptions = {
       day: "2-digit",
       month: "2-digit",
-      year: "numeric",
+      ...(withYear ? { year: "numeric" as const } : {}),
       hour: "2-digit",
       minute: "2-digit",
       hour12: false,
@@ -149,9 +165,20 @@ export function formatDbDateTime(value: DbDateInput, options: FormatOptions = {}
     return new Intl.DateTimeFormat(locale, dateTimeOptions).format(date);
   }
 
-  if (dateOnly) return `${day}/${month}/${year}`;
+  if (dateOnly) return withYear ? `${day}/${month}/${year}` : `${day}/${month}`;
   if (timeOnly) return withSeconds ? `${hours}:${minutes}:${seconds}` : `${hours}:${minutes}`;
 
   const time = withSeconds ? `${hours}:${minutes}:${seconds}` : `${hours}:${minutes}`;
-  return `${day}/${month}/${year} ${time}`;
+  return withYear ? `${day}/${month}/${year} ${time}` : `${day}/${month} ${time}`;
+}
+
+export function formatDbDateTimeIntl(value: DbDateInput, options: IntlFormatOptions): string {
+  const { intl, fallback = "-", locale, timeZone } = options;
+  const date = parseDbDateTime(value);
+  if (!date) return fallback;
+
+  return new Intl.DateTimeFormat(locale, {
+    ...intl,
+    ...(timeZone ? { timeZone } : {}),
+  }).format(date);
 }

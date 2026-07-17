@@ -362,6 +362,37 @@ namespace Vigitemp_Serveur
             }
         }
 
+        public static async Task ProcessPendingAlarmEmailsAsync(int maxBatch)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(BaseUrl) || string.IsNullOrWhiteSpace(Secret))
+                {
+                    return;
+                }
+
+                var url = Combine(BaseUrl, "/api/notifications/email-process");
+                var payload = "{\"maxBatch\":" + Math.Max(1, Math.Min(200, maxBatch)) + "}";
+                var req = new HttpRequestMessage(HttpMethod.Post, url);
+                AddDispatchSecretHeaders(req);
+                req.Content = new StringContent(payload, Encoding.UTF8, "application/json");
+
+                var response = await _http.SendAsync(req);
+                var statusCode = (int)response.StatusCode;
+                if (statusCode < 200 || statusCode >= 300)
+                {
+                    VigitempServeur.Log("[ALARM][EMAIL-QUEUE] status=warning code=" + statusCode);
+                    return;
+                }
+
+                VigitempServeur.LogDetailed("[ALARM][EMAIL-QUEUE] status=processed code=" + statusCode);
+            }
+            catch (Exception ex)
+            {
+                VigitempServeur.Log("[ALARM][EMAIL-QUEUE] status=error error=" + ex.Message);
+            }
+        }
+
         private static string EscapeJson(string value)
         {
             if (string.IsNullOrEmpty(value)) return "";

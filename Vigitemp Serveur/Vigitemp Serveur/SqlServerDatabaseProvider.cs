@@ -1826,7 +1826,7 @@ namespace Vigitemp_Serveur
                 {
                     if (!EnsureConnected())
                     {
-                        return false;
+                        return true;
                     }
 
                     using (var cmd = CreateCommand(
@@ -1842,7 +1842,7 @@ namespace Vigitemp_Serveur
                 catch (Exception ex)
                 {
                     VigitempServeur.Log("(hasBlockingGspRecoveryAlarm MSSQL) SQL Erreur: " + ex.Message);
-                    return false;
+                    return true;
                 }
             }
         }
@@ -2011,7 +2011,11 @@ namespace Vigitemp_Serveur
                             updated = cmdResolve.ExecuteNonQuery();
                         }
 
-                        UpdateLieuEndedFlag(idLieu);
+                        var autoAcknowledged = alarmType == "N" && AutoAcknowledgeEndedNonResponseAlarms(idLieu);
+                        if (!autoAcknowledged)
+                        {
+                            UpdateLieuEndedFlag(idLieu);
+                        }
                         if (updated > 0)
                         {
                             _ = AlarmWebNotifier.NotifyRealtimeAlarmAsync(null, idLieu, "ended");
@@ -2024,6 +2028,57 @@ namespace Vigitemp_Serveur
                 {
                     VigitempServeur.Log("(" + logContext + ") SQL Erreur: " + ex.Message);
                     return false;
+                }
+            }
+        }
+
+        private bool AutoAcknowledgeEndedNonResponseAlarms(int idLieu)
+        {
+            using (var cmdEnabled = CreateCommand(
+                _connectionMain,
+                "SELECT TOP 1 Est_Auto_Acquittement_Non_Reponse FROM t_lieu WHERE Id_Lieu = @idLieu;"))
+            {
+                cmdEnabled.Parameters.AddWithValue("@idLieu", idLieu);
+                var enabled = cmdEnabled.ExecuteScalar();
+                if (enabled == null || enabled == DBNull.Value || !Convert.ToBoolean(enabled))
+                {
+                    return false;
+                }
+            }
+
+            using (var transaction = _connectionMain.BeginTransaction())
+            {
+                try
+                {
+                    using (var cmdDelete = CreateCommand(
+                        _connectionMain,
+                        "DELETE FROM t_alarme " +
+                        "WHERE Id_Lieu = @idLieu AND Type = 'N' AND Date_Heure_Fin IS NOT NULL " +
+                        "AND ISNULL(Est_Acquittee, 0) = 0;"))
+                    {
+                        cmdDelete.Transaction = transaction;
+                        cmdDelete.Parameters.AddWithValue("@idLieu", idLieu);
+                        cmdDelete.ExecuteNonQuery();
+                    }
+
+                    using (var cmdLieu = CreateCommand(
+                        _connectionMain,
+                        "UPDATE t_lieu SET Id_Alarme = 0, Est_Lieu_En_Alarme = 0, " +
+                        "Est_Lieu_Alarme_Terminee_Non_Acquittee = 0 " +
+                        "WHERE Id_Lieu = @idLieu;"))
+                    {
+                        cmdLieu.Transaction = transaction;
+                        cmdLieu.Parameters.AddWithValue("@idLieu", idLieu);
+                        cmdLieu.ExecuteNonQuery();
+                    }
+
+                    transaction.Commit();
+                    return true;
+                }
+                catch
+                {
+                    try { transaction.Rollback(); } catch { /* ignore */ }
+                    throw;
                 }
             }
         }

@@ -154,7 +154,7 @@ namespace Vigitemp_Serveur.sensors
                 await OpenPortWithRetryAsync();
                 m_port.DiscardInBuffer();
                 m_port.DiscardOutBuffer();
-                VigitempServeur.Log($"[SONDE][OPEN] type=GSP serial={m_sondeSerialNumber} port={m_comPort} adresse={m_sondeAdresse} target={_commandTarget}");
+                VigitempServeur.LogDetailed($"[SONDE][OPEN] type=GSP serial={m_sondeSerialNumber} port={m_comPort} adresse={m_sondeAdresse} target={_commandTarget}");
 
                 var tempPayload = _requestGraphDisplay ? "1g" : string.Empty;
                 string response = await SendRequestAndReadAsync("TEMP", tempPayload, allowEmptyResponse: false);
@@ -175,7 +175,7 @@ namespace Vigitemp_Serveur.sensors
                 }
 
                 var detectedSerials = GspProtocol.ExtractDetectedSerials(response);
-                VigitempServeur.Log($"[SONDE][INFO] type=GSP serial={m_sondeSerialNumber} port={m_comPort} detectedSerials={(detectedSerials.Count == 0 ? "<none>" : string.Join(",", detectedSerials))}");
+                VigitempServeur.LogDetailed($"[SONDE][INFO] type=GSP serial={m_sondeSerialNumber} port={m_comPort} detectedSerials={(detectedSerials.Count == 0 ? "<none>" : string.Join(",", detectedSerials))}");
 
                 if (!GspProtocol.TryParseTemperatureResponse(response, _commandTarget, out var parsed) || !parsed.Temperature.HasValue)
                 {
@@ -260,7 +260,7 @@ namespace Vigitemp_Serveur.sensors
 
                 await Task.Delay(200);
 
-                VigitempServeur.Log($"[SONDE][CLOSE] type=GSP serial={m_sondeSerialNumber} port={m_comPort}");
+                VigitempServeur.LogDetailed($"[SONDE][CLOSE] type=GSP serial={m_sondeSerialNumber} port={m_comPort}");
             }
         }
 
@@ -571,7 +571,7 @@ namespace Vigitemp_Serveur.sensors
                 var drained = await DrainBufferedDataAsync();
                 if (!string.IsNullOrWhiteSpace(drained))
                 {
-                    VigitempServeur.Log($"[SONDE][DRAIN] type=GSP serial={m_sondeSerialNumber} port={m_comPort} raw={drained}");
+                    VigitempServeur.LogDetailed($"[SONDE][DRAIN] type=GSP serial={m_sondeSerialNumber} port={m_comPort} raw={drained}");
                     if (ShouldRunExtendedPurge(drained))
                     {
                         await PurgePortUntilQuietAsync("repeated-drain");
@@ -1063,7 +1063,7 @@ namespace Vigitemp_Serveur.sensors
 
             if (_lastRssi != parsed.Rssi.Value)
             {
-                VigitempServeur.Log($"[SONDE][RSSI] type=GSP serial={m_sondeSerialNumber} rssi={parsed.Rssi.Value}");
+                VigitempServeur.LogDetailed($"[SONDE][RSSI] type=GSP serial={m_sondeSerialNumber} rssi={parsed.Rssi.Value}");
                 _lastRssi = parsed.Rssi.Value;
             }
         }

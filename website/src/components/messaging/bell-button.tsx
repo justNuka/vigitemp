@@ -13,6 +13,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
 import { useUnreadCount } from "@/hooks/useUnreadCount"
 import { getJson, postJson } from "@/lib/http"
+import { formatDbDateTimeIntl, parseDbDateTime } from "@/lib/date-display"
 
 type ConversationSummary = {
   id: number
@@ -42,14 +43,19 @@ function useFormatTime() {
   const t = useTranslations("messaging.time")
 
   return function formatTime(dateStr: string): string {
-    const date = new Date(dateStr)
+    const date = parseDbDateTime(dateStr)
+    if (!date) return "-"
     const now = new Date()
     const diffMs = now.getTime() - date.getTime()
     const diffMin = Math.floor(diffMs / 60_000)
     if (diffMin < 1) return t("just_now")
     if (diffMin < 60) return t("minutes_ago", { count: diffMin })
     const diffH = Math.floor(diffMin / 60)
-    if (diffH < 24) return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+    if (diffH < 24) {
+      return formatDbDateTimeIntl(date, {
+        intl: { hour: "2-digit", minute: "2-digit" },
+      })
+    }
 
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
     const yesterday = new Date(today)
@@ -58,7 +64,9 @@ function useFormatTime() {
     const isYesterday = msgDay.getTime() === yesterday.getTime()
 
     if (isYesterday) return t("yesterday")
-    return date.toLocaleDateString([], { day: "numeric", month: "short" })
+    return formatDbDateTimeIntl(date, {
+      intl: { day: "numeric", month: "short" },
+    })
   }
 }
 

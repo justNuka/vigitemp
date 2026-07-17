@@ -13,6 +13,7 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
 import { fetchJson, postJson, putJson } from "@/lib/http"
+import { formatDbDateTime } from "@/lib/date-display"
 import { TelephonyProviderFields } from "./telephony/telephony-provider-fields"
 import { buildSummary, COPY, DEFAULT_DRAFT } from "./telephony/telephony-settings-helpers"
 import type { ProviderId, TelephonyDraft } from "./telephony/telephony-settings-types"
@@ -199,7 +200,7 @@ export function TelephonySettingsCard() {
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <KeyRound className="h-4 w-4" />
             {savedAt
-              ? `${copy.localSaved}: ${new Date(savedAt).toLocaleString(locale === "en" ? "en-US" : "fr-FR")}`
+              ? `${copy.localSaved}: ${formatDbDateTime(savedAt, { locale: locale === "en" ? "en-US" : "fr-FR" })}`
               : copy.warning}
           </div>
           <div className="flex gap-2">
