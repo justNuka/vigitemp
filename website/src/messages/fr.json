@@ -730,6 +730,8 @@
       "cancel": "Annuler",
       "confirm": "Acquitter",
       "confirm_many": "Acquitter ({count})",
+      "confirm_many_stay": "Acquitter et rester ({count})",
+      "confirm_many_close": "Acquitter et fermer ({count})",
       "confirming": "Acquittement...",
       "type_ended": "Alarme terminée",
       "location_alarms_notice": "Plusieurs alarmes existent pour ce lieu. Vous pouvez ouvrir la page des alarmes filtrées sur ce lieu.",
@@ -2865,7 +2867,7 @@
       "password_required": "Le mot de passe est obligatoire"
     },
     "footer": {
-      "tagline": "Surveillance environnementale pour laboratoires"
+      "tagline": "Surveillance environnementale et métrologique"
     },
     "reset_modal": {
       "title": "Mot de passe oublié ?",

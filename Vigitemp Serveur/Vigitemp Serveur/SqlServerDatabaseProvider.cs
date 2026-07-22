@@ -743,7 +743,7 @@ namespace Vigitemp_Serveur
 
                     using (var cmdCheck = CreateCommand(
                         _connectionMeasure,
-                        "SELECT TOP 1 1 FROM tm_mesures WHERE Sonde_Numero_Serie = @serial AND Date_Heure_Mesure = @dateheuremesure;"))
+                        "SELECT TOP 1 1 FROM tm_mesures WHERE Sonde_Numero_Serie = @serial AND Date_Heure_Mesure = @dateheuremesure AND ISNULL(Est_Valeur_Null, 0) = 0;"))
                     {
                         cmdCheck.Parameters.AddWithValue("@serial", p_numeroSerie);
                         cmdCheck.Parameters.AddWithValue("@dateheuremesure", measureDateTime);
@@ -754,26 +754,59 @@ namespace Vigitemp_Serveur
                         }
                     }
 
-                    using (var cmdMeasure = CreateCommand(
+                    var nullMatchToleranceSeconds = Math.Max(60, Math.Min(900, (Math.Max(1, frequence) / 2) + 30));
+                    var replacedNull = false;
+                    using (var cmdReplaceNull = CreateCommand(
                         _connectionMeasure,
-                        "INSERT INTO tm_mesures " +
-                        "(Id_Serveur_BDD, Date_Heure_Mesure, Valeur, Valeur_Brute, Est_Valeur_Memoire, Consigne, Consigne_Sup, Consigne_Inf, Unite, Frequence, Sonde_Numero_Serie, Id_Lieu, Est_Etat_Alarme) " +
-                        "VALUES " +
-                        "(@idserveurbdd, @dateheuremesure, @valeur, @resistance, 1, @consigne, @consignesup, @consigneinf, @unite, @frequence, @sondenumeroserie, @idlieu, @estEtatAlarme)"))
+                        ";WITH missing AS (" +
+                        " SELECT TOP (1) * FROM tm_mesures" +
+                        " WHERE Sonde_Numero_Serie = @sondenumeroserie AND Id_Lieu = @idlieu" +
+                        " AND ISNULL(Est_Valeur_Null, 0) = 1" +
+                        " AND ABS(DATEDIFF(SECOND, Date_Heure_Mesure, @dateheuremesure)) <= @toleranceSeconds" +
+                        " ORDER BY ABS(DATEDIFF(SECOND, Date_Heure_Mesure, @dateheuremesure))" +
+                        ") UPDATE missing SET Date_Heure_Mesure = @dateheuremesure, Valeur = @valeur," +
+                        " Valeur_Brute = @resistance, Est_Valeur_Memoire = 1, Est_Valeur_Null = 0," +
+                        " Consigne = @consigne, Consigne_Sup = @consignesup, Consigne_Inf = @consigneinf," +
+                        " Unite = @unite, Frequence = @frequence, Est_Etat_Alarme = @estEtatAlarme;"))
                     {
-                        cmdMeasure.Parameters.AddWithValue("@idserveurbdd", idServeurBdd);
-                        cmdMeasure.Parameters.AddWithValue("@dateheuremesure", measureDateTime);
-                        cmdMeasure.Parameters.AddWithValue("@valeur", p_valeur);
-                        cmdMeasure.Parameters.AddWithValue("@resistance", (object)p_resistance ?? DBNull.Value);
-                        cmdMeasure.Parameters.AddWithValue("@unite", p_unite);
-                        cmdMeasure.Parameters.AddWithValue("@consigne", consigne);
-                        cmdMeasure.Parameters.AddWithValue("@consignesup", consigneSup);
-                        cmdMeasure.Parameters.AddWithValue("@consigneinf", consigneInf);
-                        cmdMeasure.Parameters.AddWithValue("@frequence", frequence);
-                        cmdMeasure.Parameters.AddWithValue("@sondenumeroserie", p_numeroSerie);
-                        cmdMeasure.Parameters.AddWithValue("@idlieu", idLieu);
-                        cmdMeasure.Parameters.AddWithValue("@estEtatAlarme", estEtatAlarme);
-                        cmdMeasure.ExecuteNonQuery();
+                        cmdReplaceNull.Parameters.AddWithValue("@dateheuremesure", measureDateTime);
+                        cmdReplaceNull.Parameters.AddWithValue("@valeur", p_valeur);
+                        cmdReplaceNull.Parameters.AddWithValue("@resistance", (object)p_resistance ?? DBNull.Value);
+                        cmdReplaceNull.Parameters.AddWithValue("@unite", p_unite);
+                        cmdReplaceNull.Parameters.AddWithValue("@consigne", consigne);
+                        cmdReplaceNull.Parameters.AddWithValue("@consignesup", consigneSup);
+                        cmdReplaceNull.Parameters.AddWithValue("@consigneinf", consigneInf);
+                        cmdReplaceNull.Parameters.AddWithValue("@frequence", frequence);
+                        cmdReplaceNull.Parameters.AddWithValue("@sondenumeroserie", p_numeroSerie);
+                        cmdReplaceNull.Parameters.AddWithValue("@idlieu", idLieu);
+                        cmdReplaceNull.Parameters.AddWithValue("@estEtatAlarme", estEtatAlarme);
+                        cmdReplaceNull.Parameters.AddWithValue("@toleranceSeconds", nullMatchToleranceSeconds);
+                        replacedNull = cmdReplaceNull.ExecuteNonQuery() > 0;
+                    }
+
+                    if (!replacedNull)
+                    {
+                        using (var cmdMeasure = CreateCommand(
+                            _connectionMeasure,
+                            "INSERT INTO tm_mesures " +
+                            "(Id_Serveur_BDD, Date_Heure_Mesure, Valeur, Valeur_Brute, Est_Valeur_Memoire, Consigne, Consigne_Sup, Consigne_Inf, Unite, Frequence, Sonde_Numero_Serie, Id_Lieu, Est_Etat_Alarme) " +
+                            "VALUES " +
+                            "(@idserveurbdd, @dateheuremesure, @valeur, @resistance, 1, @consigne, @consignesup, @consigneinf, @unite, @frequence, @sondenumeroserie, @idlieu, @estEtatAlarme)"))
+                        {
+                            cmdMeasure.Parameters.AddWithValue("@idserveurbdd", idServeurBdd);
+                            cmdMeasure.Parameters.AddWithValue("@dateheuremesure", measureDateTime);
+                            cmdMeasure.Parameters.AddWithValue("@valeur", p_valeur);
+                            cmdMeasure.Parameters.AddWithValue("@resistance", (object)p_resistance ?? DBNull.Value);
+                            cmdMeasure.Parameters.AddWithValue("@unite", p_unite);
+                            cmdMeasure.Parameters.AddWithValue("@consigne", consigne);
+                            cmdMeasure.Parameters.AddWithValue("@consignesup", consigneSup);
+                            cmdMeasure.Parameters.AddWithValue("@consigneinf", consigneInf);
+                            cmdMeasure.Parameters.AddWithValue("@frequence", frequence);
+                            cmdMeasure.Parameters.AddWithValue("@sondenumeroserie", p_numeroSerie);
+                            cmdMeasure.Parameters.AddWithValue("@idlieu", idLieu);
+                            cmdMeasure.Parameters.AddWithValue("@estEtatAlarme", estEtatAlarme);
+                            cmdMeasure.ExecuteNonQuery();
+                        }
                     }
 
                     var isInActiveThresholds =
@@ -2036,7 +2069,7 @@ namespace Vigitemp_Serveur
         {
             using (var cmdEnabled = CreateCommand(
                 _connectionMain,
-                "SELECT TOP 1 Est_Auto_Acquittement_Non_Reponse FROM t_lieu WHERE Id_Lieu = @idLieu;"))
+                "SELECT TOP 1 Est_Acc_Auto_Alarme_NR FROM t_lieu WHERE Id_Lieu = @idLieu;"))
             {
                 cmdEnabled.Parameters.AddWithValue("@idLieu", idLieu);
                 var enabled = cmdEnabled.ExecuteScalar();

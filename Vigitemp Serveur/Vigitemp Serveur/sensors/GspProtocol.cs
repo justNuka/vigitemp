@@ -316,8 +316,8 @@ namespace Vigitemp_Serveur.sensors
 
             foreach (Match match in Regex.Matches(
                 response,
-                @"(?:^|\r?\n)\s*(\d+)\|(\d{2}/\d{2}/\d{4}\s+\d{2}:\d{2}:\d{2})=(-?\d+(?:[.,]\d+)?)",
-                RegexOptions.IgnoreCase))
+                @"^[ \t]*(\d+)\|(\d{2}/\d{2}/\d{4}[ \t]+\d{2}:\d{2}:\d{2})=(-?\d+(?:[.,]\d+)?)[ \t]*\r?$",
+                RegexOptions.IgnoreCase | RegexOptions.Multiline))
             {
                 if (!match.Success || match.Groups.Count < 4)
                 {
@@ -345,6 +345,12 @@ namespace Vigitemp_Serveur.sensors
                     NumberStyles.Float | NumberStyles.AllowLeadingSign,
                     CultureInfo.InvariantCulture,
                     out var temperature))
+                {
+                    continue;
+                }
+
+                // Reject corrupted physical values before they can reach the database.
+                if (double.IsNaN(temperature) || double.IsInfinity(temperature) || Math.Abs(temperature) > 1000d)
                 {
                     continue;
                 }

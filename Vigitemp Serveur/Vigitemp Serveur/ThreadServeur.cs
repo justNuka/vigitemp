@@ -160,7 +160,6 @@ namespace Vigitemp_Serveur
             public int CurrentOffset { get; set; }
             public int CompletedCount { get; set; }
             public int ScannedCount { get; set; }
-            public bool ReachedRecoveryStart { get; set; }
             public int ConsecutiveFailures { get; set; }
             public DateTime CreatedAtUtc { get; set; }
             public DateTime? LastChunkAtUtc { get; set; }
@@ -401,6 +400,15 @@ namespace Vigitemp_Serveur
                     continue;
                 }
 
+                if (double.IsNaN(measurement.Temperature.Value)
+                    || double.IsInfinity(measurement.Temperature.Value)
+                    || Math.Abs(measurement.Temperature.Value) > 1000d)
+                {
+                    VigitempServeur.Log(
+                        $"[SONDE][MEMO-PROC] serial={batch.Serial} status=discarded reason=invalid-value value={measurement.Temperature.Value.ToString(CultureInfo.InvariantCulture)}");
+                    continue;
+                }
+
                 var measurementDate = measurement.ProbeDateTime.Value;
                 if (measurementDate <= batch.RecoverFromProbeDateTime || measurementDate >= batch.RecoverUntilProbeDateTime)
                 {
@@ -535,6 +543,13 @@ namespace Vigitemp_Serveur
 
             lock (job.SyncRoot)
             {
+                if (job.RecoverUntilProbeDateTime.HasValue && job.ScannedCount < job.RequestedCount)
+                {
+                    VigitempServeur.Log(
+                        $"[SONDE][RECOVERY] serial={job.Serial} status=incomplete origin={origin} scanned={job.ScannedCount}/{job.RequestedCount}");
+                    return;
+                }
+
                 job.RequestCompleted = true;
             }
 
@@ -1544,8 +1559,6 @@ namespace Vigitemp_Serveur
                 }
 
                 var insertedThisBatch = 0;
-                var reachedRecoveryStart = false;
-
                 if (job.RecoverUntilProbeDateTime.HasValue)
                 {
                     var fromDate = job.RecoverFromProbeDateTime;
@@ -1561,14 +1574,7 @@ namespace Vigitemp_Serveur
                     foreach (var measurement in memo.Measurements)
                     {
                         batch.Measurements.Add(measurement);
-                        if (measurement.ProbeDateTime.HasValue &&
-                            measurement.ProbeDateTime.Value <= fromDate.GetValueOrDefault(DateTime.MinValue))
-                        {
-                            reachedRecoveryStart = true;
-                        }
                     }
-
-                    job.ReachedRecoveryStart = job.ReachedRecoveryStart || reachedRecoveryStart;
 
                     if (batch.Measurements.Count > 0)
                     {
@@ -1592,7 +1598,7 @@ namespace Vigitemp_Serveur
                     $"[SONDE][MEMO-JOB] serial={job.Serial} status=batch announced={returnedCount} received={receivedMeasurementCount} inserted={insertedThisBatch} completed={job.CompletedCount}/{job.RequestedCount} nextOffset={job.CurrentOffset} scanned={job.ScannedCount}");
 
                 var shouldComplete = job.RecoverUntilProbeDateTime.HasValue
-                    ? job.ReachedRecoveryStart || job.ScannedCount >= job.RequestedCount
+                    ? job.ScannedCount >= job.RequestedCount
                     : job.CompletedCount >= job.RequestedCount || returnedCount < count;
                 if (shouldComplete)
                 {

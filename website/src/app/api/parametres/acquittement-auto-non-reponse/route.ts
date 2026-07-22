@@ -11,7 +11,7 @@ type LocationSettingRow = {
   Id_Lieu: number | bigint
   Nom_Lieu: string | null
   Sonde_Numero_Serie: string | null
-  Est_Auto_Acquittement_Non_Reponse: boolean | number | bigint | null
+  Est_Acc_Auto_Alarme_NR: boolean | number | bigint | null
 }
 
 const updateSchema = z.object({
@@ -25,14 +25,14 @@ async function readLocations(): Promise<LocationSettingRow[]> {
       Id_Lieu,
       Nom_Lieu,
       Sonde_Numero_Serie,
-      Est_Auto_Acquittement_Non_Reponse
+      Est_Acc_Auto_Alarme_NR
     FROM t_lieu
     WHERE Est_Archive = 0
     ORDER BY Nom_Lieu ASC, Id_Lieu ASC
   `
 }
 
-function isEnabled(value: LocationSettingRow["Est_Auto_Acquittement_Non_Reponse"]) {
+function isEnabled(value: LocationSettingRow["Est_Acc_Auto_Alarme_NR"]) {
   return value === true || Number(value ?? 0) === 1
 }
 
@@ -43,7 +43,7 @@ export const GET = withAuthorizationLogging("PARAMETRES_GERER", async () => {
       id: Number(row.Id_Lieu),
       name: row.Nom_Lieu?.trim() || `Lieu #${String(row.Id_Lieu)}`,
       sensorSerial: row.Sonde_Numero_Serie?.trim() || null,
-      enabled: isEnabled(row.Est_Auto_Acquittement_Non_Reponse),
+      enabled: isEnabled(row.Est_Acc_Auto_Alarme_NR),
     })))
   } catch (error) {
     log.error("parametres/acquittement-auto-non-reponse", "settings_load_failed", { error })
@@ -64,7 +64,7 @@ export const PATCH = withAuthorizationLogging(
       }
 
       const changedRows = currentRows.filter(
-        (row) => isEnabled(row.Est_Auto_Acquittement_Non_Reponse) !== payload.enabled,
+        (row) => isEnabled(row.Est_Acc_Auto_Alarme_NR) !== payload.enabled,
       )
 
       // Keep transactions reasonably small on large installations.
@@ -74,7 +74,7 @@ export const PATCH = withAuthorizationLogging(
           for (const row of chunk) {
             await tx.$executeRaw`
               UPDATE t_lieu
-              SET Est_Auto_Acquittement_Non_Reponse = ${payload.enabled ? 1 : 0}
+              SET Est_Acc_Auto_Alarme_NR = ${payload.enabled ? 1 : 0}
               WHERE Id_Lieu = ${Number(row.Id_Lieu)}
             `
           }
@@ -95,7 +95,7 @@ export const PATCH = withAuthorizationLogging(
           changes: {
             action: "update",
             acquittementAutomatiqueNonReponse: {
-              from: isEnabled(row.Est_Auto_Acquittement_Non_Reponse),
+              from: isEnabled(row.Est_Acc_Auto_Alarme_NR),
               to: payload.enabled,
             },
           },

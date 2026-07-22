@@ -474,7 +474,7 @@ CREATE TABLE `t_lieu` (
   `Derniere_Nb_Decimal` int DEFAULT NULL,
   `Est_Lieu_En_Alarme` tinyint DEFAULT NULL,
   `Est_Lieu_Alarme_Terminee_Non_Acquittee` tinyint DEFAULT NULL,
-  `Est_Auto_Acquittement_Non_Reponse` tinyint(1) NOT NULL DEFAULT '0',
+  `Est_Acc_Auto_Alarme_NR` tinyint(1) NOT NULL DEFAULT '0',
   `Est_Lieu_En_Pre_Alarme` tinyint DEFAULT NULL,
   `Id_Alarme` int DEFAULT NULL,
   `Lieu_Etat_N1` varchar(50) DEFAULT NULL,
