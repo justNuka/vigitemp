@@ -105,11 +105,14 @@ export default function AdminGroupLayout({
           activeAlarms={activeAlarmsCount}
         />
         <main className="flex-1 min-h-0 bg-background">
-          {isFeatureEnabled("enableAgentSecretAlert") && agentSecretStatus && agentSecretStatus.status !== "ok" ? (
+          {isFeatureEnabled("enableAgentSecretAlert") &&
+          agentSecretStatus &&
+          agentSecretStatus.status !== "ok" &&
+          agentSecretStatus.scope === "agent" ? (
             <div className="px-6 pt-6">
               <Alert variant="destructive">
                 <AlertTriangle className="h-4 w-4" />
-                <AlertTitle>{agentSecretStatus.scope === "agent" ? t("agent_title") : t("title")}</AlertTitle>
+                <AlertTitle>{t("agent_title")}</AlertTitle>
                 <AlertDescription>
                   {agentSecretStatus.message || t("status_error")}
                 </AlertDescription>

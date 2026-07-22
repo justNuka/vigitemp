@@ -184,10 +184,13 @@ export function HotlineDashboard({ slug, username }: HotlineDashboardProps) {
 
   return (
     <div className="flex w-full flex-1 flex-col gap-6 rounded-2xl border border-border/60 bg-white/95 p-4 shadow-sm dark:bg-card/95 dark:shadow-black/25 md:p-6">
-      {isFeatureEnabled('enableAgentSecretAlert') && agentSecretStatus && agentSecretStatus.status !== 'ok' ? (
+      {isFeatureEnabled('enableAgentSecretAlert') &&
+      agentSecretStatus &&
+      agentSecretStatus.status !== 'ok' &&
+      agentSecretStatus.scope === 'agent' ? (
           <Alert variant="destructive">
             <AlertTriangle className="h-4 w-4" />
-            <AlertTitle>{agentSecretStatus.scope === 'agent' ? tAlert('agent_title') : tAlert('title')}</AlertTitle>
+            <AlertTitle>{tAlert('agent_title')}</AlertTitle>
             <AlertDescription>{agentSecretStatus.message || tAlert('status_error')}</AlertDescription>
           </Alert>
       ) : null}

@@ -19,7 +19,10 @@ namespace Vigitemp_Serveur
     internal sealed class HotlineApiServer
     {
         private const int GspBufferDrainMs = 400;
+        private const int GspPostCommandDrainMs = 1000;
+        private const int GspPostCommandQuietMs = 250;
         private const int GspEndOfResponseSilenceMs = 500;
+        private const int MaxExchangeLogLength = 2000;
 
         private HttpListener _listener;
         private CancellationTokenSource _cts;
@@ -97,7 +100,7 @@ namespace Vigitemp_Serveur
 
             _cts = new CancellationTokenSource();
             _listenTask = Task.Run(() => ListenLoop(_cts.Token));
-            VigitempServeur.Log("Hotline API started on " + prefix);
+            VigitempServeur.Log("[HOTLINE][START] bind=" + prefix);
         }
 
         public void Stop()
@@ -120,7 +123,7 @@ namespace Vigitemp_Serveur
                 catch (Exception ex)
                 {
                     if (_listener == null || !_listener.IsListening) return;
-                    VigitempServeur.Log("Hotline API error: " + ex.Message);
+                    VigitempServeur.Log("[HOTLINE][LISTEN] status=error error=" + EscapeForLog(ex.Message));
                     continue;
                 }
 
@@ -165,7 +168,8 @@ namespace Vigitemp_Serveur
             }
             catch (Exception ex)
             {
-                VigitempServeur.Log("Hotline API failure: " + ex);
+                VigitempServeur.Log("[HOTLINE][API] status=error error=" + EscapeForLog(ex.Message));
+                LogHotlineDetailed("[HOTLINE][API][DETAIL] " + ex);
                 WriteJson(response, 500, new { ok = false, error = "server_error", message = "Server error" });
             }
         }
@@ -287,7 +291,7 @@ namespace Vigitemp_Serveur
                 Action = request.Action,
             };
 
-            VigitempServeur.Log(string.Format(CultureInfo.InvariantCulture,
+            LogHotlineDetailed(string.Format(CultureInfo.InvariantCulture,
                 "Hotline sensor-test request: type={0}; serial={1}; action={2}; manualPort={3}; manualAddress={4}; manualModule={5}; baudRate={6}; parity={7}; dataBits={8}; stopBits={9}; readTimeoutMs={10}; writeTimeoutMs={11}; listenWindowMs={12}",
                 request.SensorType ?? string.Empty,
                 request.Serial ?? string.Empty,
@@ -382,7 +386,7 @@ namespace Vigitemp_Serveur
             {
                 var mutexName = BuildPortMutexName(portName);
                 namedMutex = new Mutex(false, mutexName);
-                VigitempServeur.Log($"Hotline sensor-test port-lock waiting: port={portName}; mutex={mutexName}; serial={request.Serial}; action={request.Action}");
+                LogHotlineDetailed($"[HOTLINE][LOCK] status=waiting port={portName}; mutex={mutexName}; serial={request.Serial}; action={request.Action}");
                 try
                 {
                     var lockTimeoutMs = GetIntSetting("VigiSensys.Hotline.PortLockTimeoutMs", GetIntSetting("Vigitemp.Hotline.PortLockTimeoutMs", 5000));
@@ -391,17 +395,17 @@ namespace Vigitemp_Serveur
                 catch (AbandonedMutexException)
                 {
                     mutexAcquired = true;
-                    VigitempServeur.Log($"Hotline sensor-test port-lock abandoned-acquired: port={portName}; serial={request.Serial}; action={request.Action}");
+                    VigitempServeur.Log($"[HOTLINE][LOCK] status=abandoned-acquired port={portName}; serial={request.Serial}; action={request.Action}");
                 }
 
                 if (!mutexAcquired)
                 {
-                    VigitempServeur.Log($"Hotline sensor-test port-lock timeout: port={portName}; serial={request.Serial}; action={request.Action}");
+                    VigitempServeur.Log($"[HOTLINE][LOCK] status=timeout port={portName}; serial={request.Serial}; action={request.Action}");
                     result.Error = "Port série occupé, impossible d'obtenir le verrou dans le délai imparti.";
                     return;
                 }
 
-                VigitempServeur.Log($"Hotline sensor-test port-lock acquired: port={portName}; serial={request.Serial}; action={request.Action}");
+                LogHotlineDetailed($"[HOTLINE][LOCK] status=acquired port={portName}; serial={request.Serial}; action={request.Action}");
                 using (var port = CreatePort(portName, request))
                 {
                     port.Open();
@@ -533,7 +537,7 @@ namespace Vigitemp_Serveur
                     try
                     {
                         namedMutex.ReleaseMutex();
-                        VigitempServeur.Log($"Hotline sensor-test port-lock released: port={portName}; serial={request.Serial}; action={request.Action}");
+                        LogHotlineDetailed($"[HOTLINE][LOCK] status=released port={portName}; serial={request.Serial}; action={request.Action}");
                     }
                     catch (ApplicationException)
                     {
@@ -597,7 +601,15 @@ namespace Vigitemp_Serveur
                 port.Write(command);
                 Thread.Sleep(150);
 
-                var response = ReadGspResponse(port, listenWindowMs);
+                string response;
+                try
+                {
+                    response = ReadGspResponse(port, listenWindowMs);
+                }
+                finally
+                {
+                    PurgeAfterGspCommand(port, result);
+                }
                 if (!string.IsNullOrWhiteSpace(response))
                 {
                     AddExchange(result, "rx", "ascii", response.Trim());
@@ -631,7 +643,15 @@ namespace Vigitemp_Serveur
                 port.Write(command);
                 Thread.Sleep(200);
 
-                var response = ReadGspResponse(port, listenWindowMs);
+                string response;
+                try
+                {
+                    response = ReadGspResponse(port, listenWindowMs);
+                }
+                finally
+                {
+                    PurgeAfterGspCommand(port, result);
+                }
                 if (!string.IsNullOrWhiteSpace(response))
                 {
                     AddExchange(result, "rx", "ascii", response.Trim());
@@ -664,6 +684,35 @@ namespace Vigitemp_Serveur
                 lastDataAt = DateTime.UtcNow;
             }
             return buffer.Trim();
+        }
+
+        private static void PurgeAfterGspCommand(SerialPort port, SensorTestResult result)
+        {
+            if (port == null || !port.IsOpen) return;
+
+            var startedAt = DateTime.UtcNow;
+            var quietSince = startedAt;
+            var buffer = string.Empty;
+            while ((DateTime.UtcNow - startedAt).TotalMilliseconds < GspPostCommandDrainMs)
+            {
+                Thread.Sleep(25);
+                var chunk = port.ReadExisting();
+                if (!string.IsNullOrEmpty(chunk))
+                {
+                    buffer += chunk;
+                    quietSince = DateTime.UtcNow;
+                    continue;
+                }
+
+                if ((DateTime.UtcNow - quietSince).TotalMilliseconds >= GspPostCommandQuietMs) break;
+            }
+
+            port.DiscardInBuffer();
+            port.DiscardOutBuffer();
+            if (!string.IsNullOrWhiteSpace(buffer))
+            {
+                AddExchange(result, "purge", "ascii", EscapeForLog(buffer.Trim()));
+            }
         }
 
         private static string ReadGspResponse(SerialPort port, int? listenWindowMs)
@@ -774,30 +823,48 @@ namespace Vigitemp_Serveur
         {
             var detectedSerials = result.DetectedSerials == null || result.DetectedSerials.Count == 0 ? string.Empty : string.Join(",", result.DetectedSerials);
             VigitempServeur.Log(string.Format(CultureInfo.InvariantCulture,
-                "Hotline sensor-test result: success={0}; type={1}; serial={2}; action={3}; requestedCommand={4}; port={5}; address={6}; module={7}; value={8}; unit={9}; detectedSerials={10}; error={11}",
-                result.Success ? "true" : "false",
+                "[HOTLINE][DONE] status={0} type={1} serial={2} action={3} command={4} port={5} value={6}{7} detected={8} error={9}",
+                result.Success ? "ok" : "error",
                 result.SensorType ?? string.Empty,
                 result.Serial ?? string.Empty,
                 result.Action ?? string.Empty,
                 result.RequestedCommand ?? string.Empty,
                 result.Port ?? string.Empty,
-                result.Address ?? string.Empty,
-                result.Module ?? string.Empty,
                 result.Value.HasValue ? result.Value.Value.ToString(CultureInfo.InvariantCulture) : string.Empty,
                 result.Unit ?? string.Empty,
                 detectedSerials,
-                result.Error ?? string.Empty));
+                EscapeForLog(result.Error ?? string.Empty)));
 
-            foreach (var exchange in result.Exchanges)
+            if (result.Exchanges == null || result.Exchanges.Count == 0)
             {
-                VigitempServeur.Log(string.Format(CultureInfo.InvariantCulture,
-                    "Hotline sensor-test exchange: serial={0}; action={1}; direction={2}; format={3}; content={4}",
-                    result.Serial ?? string.Empty,
-                    result.Action ?? string.Empty,
-                    exchange.Direction ?? string.Empty,
-                    exchange.Format ?? string.Empty,
-                    EscapeForLog(exchange.Content ?? string.Empty)));
+                return;
             }
+
+            var exchanges = string.Join(" || ", result.Exchanges.Select(exchange => string.Format(
+                CultureInfo.InvariantCulture,
+                "{0}[{1}]={2}",
+                (exchange.Direction ?? string.Empty).ToUpperInvariant(),
+                exchange.Format ?? string.Empty,
+                EscapeForLog(exchange.Content ?? string.Empty))));
+
+            VigitempServeur.Log(string.Format(
+                CultureInfo.InvariantCulture,
+                "[HOTLINE][IO] serial={0} action={1} {2}",
+                result.Serial ?? string.Empty,
+                result.Action ?? string.Empty,
+                TruncateForLog(exchanges, MaxExchangeLogLength)));
+        }
+
+        private static void LogHotlineDetailed(string message)
+        {
+            if (!GetBoolSetting("Vigitemp.Hotline.LogDetailed", false)) return;
+            VigitempServeur.Log(message);
+        }
+
+        private static string TruncateForLog(string value, int maxLength)
+        {
+            if (string.IsNullOrEmpty(value) || value.Length <= maxLength) return value ?? string.Empty;
+            return value.Substring(0, Math.Max(0, maxLength)) + "...[truncated]";
         }
 
         private static JObject ReadJson(HttpListenerRequest request)
@@ -833,6 +900,12 @@ namespace Vigitemp_Serveur
         {
             var rawValue = GetSetting(key, string.Empty);
             return int.TryParse(rawValue, out var value) ? value : defaultValue;
+        }
+
+        private static bool GetBoolSetting(string key, bool defaultValue)
+        {
+            var rawValue = GetSetting(key, string.Empty);
+            return bool.TryParse(rawValue, out var value) ? value : defaultValue;
         }
 
         private static bool ValidateApiKey(HttpListenerRequest request)

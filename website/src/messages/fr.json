@@ -3406,7 +3406,8 @@
             "1": "Le lien du journal des acquittements depuis le dashboard admin ouvre maintenant une vraie page.",
             "2": "L'export de l'historique des acquittements reapplique maintenant correctement les filtres actifs.",
             "3": "La liste des commentaires libres d'acquittement est maintenant chargee depuis le journal dedie.",
-            "4": "L'aperçu de l'erreur de justesse affiche maintenant clairement le signe inverse applique lors de la correction."
+            "4": "L'aperçu de l'erreur de justesse affiche maintenant clairement le signe inverse applique lors de la correction.",
+            "5": "Les exports Excel comportent maintenant un onglet de presentation VigiSensys et un onglet de donnees distinct et lisible."
           }
         }
       }

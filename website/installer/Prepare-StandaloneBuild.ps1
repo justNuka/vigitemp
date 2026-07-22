@@ -189,10 +189,10 @@ if (-not $SkipGenerate) {
         Write-Error "pnpm prisma:prepare failed (code $($prepareResult.ExitCode))."
     }
 
-    Write-Log "Running pnpm prisma:generate..."
-    $generateResult = Invoke-Pnpm -Arguments @("prisma:generate")
+    Write-Log "Running pnpm prisma:generate:prepared..."
+    $generateResult = Invoke-Pnpm -Arguments @("prisma:generate:prepared")
     if ($generateResult.ExitCode -ne 0) {
-        Write-Error "pnpm prisma:generate failed (code $($generateResult.ExitCode))."
+        Write-Error "pnpm prisma:generate:prepared failed (code $($generateResult.ExitCode))."
     }
 }
 

@@ -15,6 +15,7 @@ namespace Vigitemp_Serveur.sensors
         public int? BatteryPercent { get; set; }
         public int? Rssi { get; set; }
         public bool? IsOnBatteryPower { get; set; }
+        public bool IsMaintenanceMode { get; set; }
         public string AlarmStateRaw { get; set; }
     }
 
@@ -195,7 +196,10 @@ namespace Vigitemp_Serveur.sensors
                 return EnsureCommandTerminator(normalizedPrefix + normalizedTarget);
             }
 
-            return normalizedPrefix + normalizedTarget + " " + normalizedPayload.Trim();
+            var command = normalizedPrefix + normalizedTarget + " " + normalizedPayload.Trim();
+            return string.Equals(normalizedPrefix, "ED-H", StringComparison.OrdinalIgnoreCase)
+                ? EnsureCommandTerminator(command)
+                : command;
         }
 
         private static string EnsureCommandTerminator(string command)
@@ -273,6 +277,7 @@ namespace Vigitemp_Serveur.sensors
             };
 
             result.IsOnBatteryPower = TryExtractPowerState(result.AlarmStateRaw);
+            result.IsMaintenanceMode = ContainsAlarmToken(result.AlarmStateRaw, "M");
 
             if (!result.Temperature.HasValue)
             {
@@ -741,6 +746,21 @@ namespace Vigitemp_Serveur.sensors
                 default:
                     return null;
             }
+        }
+
+        private static bool ContainsAlarmToken(string rawAlarmState, string expectedToken)
+        {
+            if (string.IsNullOrWhiteSpace(rawAlarmState) || string.IsNullOrWhiteSpace(expectedToken))
+            {
+                return false;
+            }
+
+            return rawAlarmState
+                .Split(new[] { '+', ',', ';', '|', ' ' }, StringSplitOptions.RemoveEmptyEntries)
+                .Any(token => string.Equals(
+                    (token ?? string.Empty).Trim(),
+                    expectedToken.Trim(),
+                    StringComparison.OrdinalIgnoreCase));
         }
     }
 }

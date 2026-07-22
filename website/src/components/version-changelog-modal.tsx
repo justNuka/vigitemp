@@ -67,6 +67,8 @@ export function VersionChangelogModal() {
           t("sections.admin.items.1"),
           t("sections.admin.items.2"),
           t("sections.admin.items.3"),
+          t("sections.admin.items.4"),
+          t("sections.admin.items.5"),
         ],
       },
     ],

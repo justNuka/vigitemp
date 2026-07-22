@@ -48,12 +48,11 @@ namespace Vigitemp_Serveur
         private readonly bool _logSettingsCache = GetSettingBool("Vigitemp.Alarms.LogSettingsCache", false);
         private readonly int _schedulerTickMs = GetSettingInt("Vigitemp.Scheduler.TickMs", 5000);
         private readonly bool _logScheduler = GetSettingBool("Vigitemp.Scheduler.Log", false);
-        private readonly int _gspConfigFreeSlotMinSeconds = GetSettingInt("Vigitemp.Gsp.ConfigFreeSlotMinSeconds", 20);
+        private readonly int _gspConfigFreeSlotMinSeconds = GetSettingInt("Vigitemp.Gsp.ConfigFreeSlotMinSeconds", 10);
         private readonly int _gspConfigCheckEverySuccessfulProbes = GetSettingInt("Vigitemp.Gsp.ConfigCheckEverySuccessfulProbes", 12);
         private readonly int _gspGraphDisplayEveryMeasures = GetSettingInt("Vigitemp.Gsp.GraphDisplayEveryMeasures", 0);
         private readonly int _gspConfigModuleBackoffSeconds = GetSettingInt("Vigitemp.Gsp.ConfigModuleBackoffSeconds", 300);
-        private readonly int _gspMemoFreeSlotMinSeconds = GetSettingInt("Vigitemp.Gsp.MemoFreeSlotMinSeconds", 15);
-        private readonly int _gspMemoMaxBatchSize = GetSettingInt("Vigitemp.Gsp.MemoMaxBatchSize", 100);
+        private readonly int _gspMemoFreeSlotMinSeconds = GetSettingInt("Vigitemp.Gsp.MemoFreeSlotMinSeconds", 10);
         private readonly bool _logMetrologyDetailed = GetSettingBool("Vigitemp.Metrology.LogDetailed", false);
         private readonly bool _offsetDisabledForPack;
         private readonly int _alarmPollSeconds = GetSettingInt("Vigitemp.Alarms.PollSeconds", 15);
@@ -157,10 +156,11 @@ namespace Vigitemp_Serveur
             public int IdLieu { get; set; }
             public List<int> SpanIds { get; } = new List<int>();
             public int RequestedCount { get; set; }
-            public int BatchSize { get; set; }
+            public int RequestSize { get; set; }
             public int CurrentOffset { get; set; }
             public int CompletedCount { get; set; }
             public int ScannedCount { get; set; }
+            public bool ReachedRecoveryStart { get; set; }
             public int ConsecutiveFailures { get; set; }
             public DateTime CreatedAtUtc { get; set; }
             public DateTime? LastChunkAtUtc { get; set; }
@@ -225,7 +225,9 @@ namespace Vigitemp_Serveur
             var schedule = _schedules.Values.FirstOrDefault(s => string.Equals(s.Serial, serial, StringComparison.OrdinalIgnoreCase));
 
             var requestedCount = Math.Max(1, totalCount);
-            var safeBatchSize = ClampGspMemoBatchSize(batchSize);
+            // Keep the legacy parameter for API compatibility, but request the
+            // complete range in one command: the GSP protocol has no batch cap.
+            var requestSize = requestedCount;
             var safeOffset = Math.Max(0, startOffset ?? 0);
 
             _gspMemoJobs.AddOrUpdate(
@@ -234,7 +236,7 @@ namespace Vigitemp_Serveur
                 {
                     Serial = serial,
                     RequestedCount = requestedCount,
-                    BatchSize = safeBatchSize,
+                    RequestSize = requestSize,
                     CurrentOffset = safeOffset,
                     CompletedCount = 0,
                     ConsecutiveFailures = 0,
@@ -243,7 +245,7 @@ namespace Vigitemp_Serveur
                 (_, existing) =>
                 {
                     existing.RequestedCount = requestedCount;
-                    existing.BatchSize = safeBatchSize;
+                    existing.RequestSize = requestSize;
                     existing.CurrentOffset = safeOffset;
                     existing.CompletedCount = 0;
                     existing.ConsecutiveFailures = 0;
@@ -258,7 +260,7 @@ namespace Vigitemp_Serveur
                 GetDatabase().setLieuGspRecoveryPending(schedule.IdLieu, true);
             }
 
-            VigitempServeur.Log($"[SONDE][MEMO-JOB] serial={serial} status=queued requested={requestedCount} batch={safeBatchSize} offset={safeOffset}");
+            VigitempServeur.Log($"[SONDE][MEMO-JOB] serial={serial} status=queued requested={requestedCount} offset={safeOffset}");
             return true;
         }
 
@@ -298,14 +300,14 @@ namespace Vigitemp_Serveur
             }
 
             var requestedCount = Math.Max(1, expectedMissingCount);
-            var batchSize = ClampGspMemoBatchSize(Math.Max(20, requestedCount));
+            var requestSize = requestedCount;
             _gspMemoJobs.AddOrUpdate(
                 serial,
                 _ => new GspMemoJob
                 {
                     Serial = serial,
                     RequestedCount = requestedCount,
-                    BatchSize = batchSize,
+                    RequestSize = requestSize,
                     CurrentOffset = 0,
                     CompletedCount = 0,
                     ScannedCount = 0,
@@ -317,7 +319,7 @@ namespace Vigitemp_Serveur
                 (_, existing) =>
                 {
                     existing.RequestedCount = requestedCount;
-                    existing.BatchSize = batchSize;
+                    existing.RequestSize = requestSize;
                     existing.CurrentOffset = 0;
                     existing.CompletedCount = 0;
                     existing.ScannedCount = 0;
@@ -330,7 +332,7 @@ namespace Vigitemp_Serveur
                     return existing;
                 });
 
-            VigitempServeur.Log($"[SONDE][RECOVERY] serial={serial} status=queued from={recoverFromProbeDateTime:O} until={recoverUntilProbeDateTime:O} expectedMissingCount={requestedCount} batch={batchSize}");
+            VigitempServeur.Log($"[SONDE][RECOVERY] serial={serial} status=queued from={recoverFromProbeDateTime:O} until={recoverUntilProbeDateTime:O} expectedMissingCount={requestedCount}");
             return true;
         }
 
@@ -472,7 +474,7 @@ namespace Vigitemp_Serveur
             var frequencySeconds = Math.Max(1, row.FrequenceSecondes);
             var currentOffset = ComputeGspMemoOffset(now, recoverUntil, frequencySeconds);
             var requestedCount = ComputeGspMemoRequestedCount(recoverFrom, recoverUntil, frequencySeconds);
-            var batchSize = ClampGspMemoBatchSize(Math.Min(requestedCount, _gspMemoMaxBatchSize));
+            var requestSize = requestedCount;
 
             var spanIds = spans.Select(s => s.Id).Where(id => id > 0).Distinct().ToList();
             if (spanIds.Count == 0)
@@ -491,7 +493,7 @@ namespace Vigitemp_Serveur
                 Serial = serial,
                 IdLieu = row.IdLieu,
                 RequestedCount = requestedCount,
-                BatchSize = batchSize,
+                RequestSize = requestSize,
                 CurrentOffset = currentOffset,
                 CompletedCount = 0,
                 ScannedCount = 0,
@@ -506,7 +508,7 @@ namespace Vigitemp_Serveur
             SensorGSP.PrimeLastSuccessfulProbeDateTime(serial, recoverUntil);
 
             VigitempServeur.Log(
-                $"[SONDE][RECOVERY] serial={serial} status=queued spans={spanIds.Count} idLieu={row.IdLieu} from={recoverFrom:O} until={recoverUntil:O} requested={requestedCount} batch={batchSize} offset={currentOffset}");
+                $"[SONDE][RECOVERY] serial={serial} status=queued spans={spanIds.Count} idLieu={row.IdLieu} from={recoverFrom:O} until={recoverUntil:O} requested={requestedCount} offset={currentOffset}");
             return true;
         }
 
@@ -1465,27 +1467,10 @@ namespace Vigitemp_Serveur
                 return;
             }
 
-            if (job.ScannedCount >= 6000)
-            {
-                if (job.SpanIds.Count > 0)
-                {
-                    MarkGspRecoveryJobFailed(job, "scan-limit", "request");
-                }
-                else
-                {
-                    _gspMemoJobs.TryRemove(job.Serial, out _);
-                    GetDatabase().setLieuGspRecoveryPending(schedule.IdLieu, false);
-                }
-                VigitempServeur.Log($"[SONDE][MEMO-JOB] serial={job.Serial} status=aborted reason=scan-limit scanned={job.ScannedCount}");
-                return;
-            }
-
             var count = job.RecoverUntilProbeDateTime.HasValue
-                ? job.BatchSize
-                : Math.Min(job.BatchSize, remaining);
-            count = ClampGspMemoBatchSize(count);
-
-            var minWindowSeconds = EstimateGspMemoFreeSlotSeconds(count);
+                ? Math.Max(1, job.RequestedCount - job.ScannedCount)
+                : Math.Min(job.RequestSize, remaining);
+            var minWindowSeconds = EstimateGspMemoFreeSlotSeconds();
             if (!HasFreePortWindow(schedule.Port, minWindowSeconds, DateTime.Now, out var nextDue))
             {
                 job.LastChunkAtUtc = DateTime.UtcNow;
@@ -1532,23 +1517,29 @@ namespace Vigitemp_Serveur
                 }
 
                 var returnedCount = memo.ReturnedCount ?? memo.Measurements.Count;
+                var receivedMeasurementCount = job.RecoverUntilProbeDateTime.HasValue
+                    ? memo.Measurements.Count
+                    : Math.Max(0, returnedCount);
                 var effectiveOffset = memo.Offset ?? job.CurrentOffset;
                 job.LastChunkAtUtc = DateTime.UtcNow;
                 job.ConsecutiveFailures = 0;
-                job.ScannedCount += Math.Max(0, returnedCount);
+                job.ScannedCount += receivedMeasurementCount;
 
-                if (returnedCount <= 0)
+                if (receivedMeasurementCount <= 0)
                 {
                     if (job.SpanIds.Count > 0)
                     {
-                        MarkGspRecoveryJobCompleted(job, "request:no-more-data");
+                        MarkGspRecoveryJobFailed(
+                            job,
+                            $"memory-range-incomplete:scanned={job.ScannedCount}/{job.RequestedCount}",
+                            "request:no-more-data");
                     }
                     else
                     {
                         _gspMemoJobs.TryRemove(job.Serial, out _);
                         GetDatabase().setLieuGspRecoveryPending(schedule.IdLieu, false);
                     }
-                    VigitempServeur.Log($"[SONDE][MEMO-JOB] serial={job.Serial} status=completed requested={job.RequestedCount} completed={job.CompletedCount} offset={job.CurrentOffset} reason=no-more-data");
+                    VigitempServeur.Log($"[SONDE][MEMO-JOB] serial={job.Serial} status={(job.SpanIds.Count > 0 ? "failed" : "completed")} requested={job.RequestedCount} completed={job.CompletedCount} scanned={job.ScannedCount} offset={job.CurrentOffset} reason=no-more-data");
                     return;
                 }
 
@@ -1577,6 +1568,8 @@ namespace Vigitemp_Serveur
                         }
                     }
 
+                    job.ReachedRecoveryStart = job.ReachedRecoveryStart || reachedRecoveryStart;
+
                     if (batch.Measurements.Count > 0)
                     {
                         lock (job.SyncRoot)
@@ -1592,12 +1585,14 @@ namespace Vigitemp_Serveur
                     job.CompletedCount += returnedCount;
                 }
 
-                job.CurrentOffset = effectiveOffset + returnedCount;
+                // NombreMesure may be larger than the payload actually decoded. Advancing by
+                // parsed measurements prevents silently skipping part of a recovery range.
+                job.CurrentOffset = effectiveOffset + receivedMeasurementCount;
                 VigitempServeur.Log(
-                    $"[SONDE][MEMO-JOB] serial={job.Serial} status=batch returned={returnedCount} inserted={insertedThisBatch} completed={job.CompletedCount}/{job.RequestedCount} nextOffset={job.CurrentOffset} scanned={job.ScannedCount}");
+                    $"[SONDE][MEMO-JOB] serial={job.Serial} status=batch announced={returnedCount} received={receivedMeasurementCount} inserted={insertedThisBatch} completed={job.CompletedCount}/{job.RequestedCount} nextOffset={job.CurrentOffset} scanned={job.ScannedCount}");
 
                 var shouldComplete = job.RecoverUntilProbeDateTime.HasValue
-                    ? reachedRecoveryStart || job.ScannedCount >= job.RequestedCount || returnedCount < count
+                    ? job.ReachedRecoveryStart || job.ScannedCount >= job.RequestedCount
                     : job.CompletedCount >= job.RequestedCount || returnedCount < count;
                 if (shouldComplete)
                 {
@@ -2600,17 +2595,9 @@ namespace Vigitemp_Serveur
                    ((schedule.SondeType ?? string.Empty).Trim().StartsWith("SP", StringComparison.OrdinalIgnoreCase));
         }
 
-        private int ClampGspMemoBatchSize(int requestedBatchSize)
+        private int EstimateGspMemoFreeSlotSeconds()
         {
-            var maxBatch = Math.Max(1, _gspMemoMaxBatchSize);
-            return Math.Min(maxBatch, Math.Max(1, requestedBatchSize));
-        }
-
-        private int EstimateGspMemoFreeSlotSeconds(int count)
-        {
-            var safeCount = Math.Max(1, count);
-            var recommended = safeCount <= 20 ? 10 : _gspMemoFreeSlotMinSeconds;
-            return Math.Max(5, recommended);
+            return Math.Max(1, _gspMemoFreeSlotMinSeconds);
         }
 
         private static string FormatDateForLog(DateTime? value)

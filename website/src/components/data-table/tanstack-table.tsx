@@ -19,6 +19,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
+import { exportStyledExcel } from '@/lib/excel-export';
 import {
   Select,
   SelectContent,
@@ -514,47 +515,27 @@ export function TanStackTable<TData extends Record<string, any>>({
     if (!rowsToExport) return;
 
     const { headers, rows } = buildExportMatrixForRows(rowsToExport);
-    const xlsx = await import("xlsx");
-
     const exportedAt = new Intl.DateTimeFormat(undefined, {
       dateStyle: "medium",
       timeStyle: "medium",
     }).format(new Date());
     const presentationRows = [
-      ["VigiSensys"],
-      [exportTitle ?? exportFileName],
-      [],
-      ["Date export", exportedAt],
-      ["Nombre de lignes", rows.length],
+      { label: "Date export", value: exportedAt },
+      { label: "Nombre de lignes", value: rows.length },
       ...exportFilters
         .filter((filter) => filter.value.trim().length > 0)
-        .map((filter) => [filter.label, filter.value]),
+        .map((filter) => ({ label: filter.label, value: filter.value })),
     ];
-
-    const presentationSheet = xlsx.utils.aoa_to_sheet(presentationRows);
-    presentationSheet["!cols"] = [{ wch: 28 }, { wch: 52 }];
-
-    const worksheet = xlsx.utils.aoa_to_sheet([headers, ...rows]);
-    worksheet["!autofilter"] = { ref: xlsx.utils.encode_range({ s: { r: 0, c: 0 }, e: { r: Math.max(rows.length, 0), c: Math.max(headers.length - 1, 0) } }) };
-    worksheet["!cols"] = headers.map((header, columnIndex) => ({
-      wch: Math.min(
-        48,
-        Math.max(
-          12,
-          String(header).length + 2,
-          ...rows.slice(0, 250).map((row) => String(row[columnIndex] ?? "").length + 2),
-        ),
-      ),
-    }));
-    const workbook = xlsx.utils.book_new();
-    xlsx.utils.book_append_sheet(workbook, presentationSheet, "Presentation");
-    xlsx.utils.book_append_sheet(workbook, worksheet, "Donnees");
-
-    const arrayBuffer = xlsx.write(workbook, { bookType: "xlsx", type: "array" });
-    const blob = new Blob([arrayBuffer], {
-      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    await exportStyledExcel({
+      fileName: exportFileName,
+      title: exportTitle ?? exportFileName,
+      presentationSheetName: "Presentation",
+      dataSheetName: "Donnees",
+      presentationHeaders: ["Information", "Valeur"],
+      presentationRows,
+      dataHeaders: headers,
+      dataRows: rows,
     });
-    downloadBlob(blob, `${exportFileName}.xlsx`);
   }
 
   async function exportPdf(requestedCount?: number | null) {

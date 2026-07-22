@@ -12,6 +12,8 @@ namespace Vigitemp_Serveur.sensors
     {
         private const int ReadTimeoutMs = 2000;
         private const int BufferDrainMs = 400;
+        private const int PostCommandDrainMs = 1000;
+        private const int PostCommandQuietMs = 250;
         private const int PostInterrogationDrainMs = 1000;
         private const int PostInterrogationQuietMs = 200;
         private const int ExtendedBufferDrainMs = 3000;
@@ -62,6 +64,7 @@ namespace Vigitemp_Serveur.sensors
         private int _batteryNotifyPercent = DefaultBatteryNotifyPercent;
         private int _batteryEmailPercent = DefaultBatteryEmailPercent;
         private DateTime? _lastBatteryThresholdRefreshUtc;
+        private bool _maintenanceModeActive;
 
         private sealed class DrainState
         {
@@ -170,7 +173,7 @@ namespace Vigitemp_Serveur.sensors
                     _consecutiveTimeouts++;
                     LastFailureReason = "timeout";
                     VigitempServeur.Log($"[SONDE][DONE] type=GSP serial={m_sondeSerialNumber} port={m_comPort} status=timeout consecutiveTimeouts={_consecutiveTimeouts}");
-                    HandleNoResponseAlarm(false, "timeout", insertNullMeasureImmediately: true);
+                    HandleCommunicationFailure("timeout");
                     return false;
                 }
 
@@ -182,7 +185,7 @@ namespace Vigitemp_Serveur.sensors
                     _consecutiveTimeouts++;
                     LastFailureReason = "parse";
                     VigitempServeur.Log($"[SONDE][ERR] type=GSP serial={m_sondeSerialNumber} port={m_comPort} parse=temperature rawResponse={response}");
-                    HandleNoResponseAlarm(false, "parse", insertNullMeasureImmediately: true);
+                    HandleCommunicationFailure("parse");
                     return false;
                 }
 
@@ -193,7 +196,7 @@ namespace Vigitemp_Serveur.sensors
                     VigitempServeur.Log(
                         $"[SONDE][ERR] type=GSP serial={m_sondeSerialNumber} port={m_comPort} status=invalid-payload reason=zero-temperature temp={parsed.Temperature.Value.ToString(CultureInfo.InvariantCulture)} battery={(parsed.BatteryPercent.HasValue ? parsed.BatteryPercent.Value.ToString(CultureInfo.InvariantCulture) : "null")} rssi={(parsed.Rssi.HasValue ? parsed.Rssi.Value.ToString(CultureInfo.InvariantCulture) : "null")} rawResponse={TrimForLog(response)}");
                     VigitempServeur.Log($"[SONDE][DONE] type=GSP serial={m_sondeSerialNumber} port={m_comPort} status=invalid-payload consecutiveTimeouts={_consecutiveTimeouts}");
-                    HandleNoResponseAlarm(false, "invalid-payload", insertNullMeasureImmediately: true);
+                    HandleCommunicationFailure("invalid-payload");
                     return false;
                 }
 
@@ -203,6 +206,13 @@ namespace Vigitemp_Serveur.sensors
                 LastFailureReason = null;
 
                 parsed = await CheckAndSynchronizeClockAsync(parsed, hadTimeoutBeforeSuccess);
+                var maintenanceWasActive = _maintenanceModeActive;
+                _maintenanceModeActive = parsed.IsMaintenanceMode;
+                if (_maintenanceModeActive != maintenanceWasActive)
+                {
+                    VigitempServeur.Log(
+                        $"[SONDE][MAINTENANCE] type=GSP serial={m_sondeSerialNumber} active={_maintenanceModeActive.ToString().ToLowerInvariant()}");
+                }
                 LogMeasurementGap(parsed);
                 HandlePowerSupplyAlarm(parsed);
                 LogBatteryHealth(parsed);
@@ -218,7 +228,10 @@ namespace Vigitemp_Serveur.sensors
                 var measuredValue = RoundMeasure(ApplyMetrology(rawValue));
                 var unit = string.IsNullOrWhiteSpace(parsed.Unit) ? "C" : parsed.Unit;
                 HandleNoResponseAlarm(true);
-                compareMeasuresAndLimits(measuredValue, unit);
+                if (!_maintenanceModeActive)
+                {
+                    compareMeasuresAndLimits(measuredValue, unit);
+                }
                 ths.GetDatabase().AddMesure(m_sondeSerialNumber, measuredValue, unit, ToInvariantRaw(rawValue), FormatRssi(parsed.Rssi));
                 ths.GetDatabase().UpdateLieuWirelessMetrics(m_sondeSerialNumber, parsed.BatteryPercent, parsed.Rssi);
                 LastResponseReceivedAtLocal = probeResponseReceivedAtLocal;
@@ -231,7 +244,7 @@ namespace Vigitemp_Serveur.sensors
                 LastFailureReason = "serial-semaphore-timeout";
                 VigitempServeur.Log($"[SONDE][PORT-RECOVER] type=GSP serial={m_sondeSerialNumber} port={m_comPort} reason=semaphore-timeout action=dispose-port error={ex.Message}");
                 DisposePort();
-                HandleNoResponseAlarm(false, "serial-semaphore-timeout", insertNullMeasureImmediately: true);
+                HandleCommunicationFailure("serial-semaphore-timeout");
                 return false;
             }
             catch (Exception ex)
@@ -239,7 +252,7 @@ namespace Vigitemp_Serveur.sensors
                 _consecutiveTimeouts++;
                 LastFailureReason = "exception";
                 VigitempServeur.Log($"[SONDE][ERR] type=GSP serial={m_sondeSerialNumber} port={m_comPort} error={ex}");
-                HandleNoResponseAlarm(false, "exception", insertNullMeasureImmediately: true);
+                HandleCommunicationFailure("exception");
                 return false;
             }
             finally
@@ -262,6 +275,18 @@ namespace Vigitemp_Serveur.sensors
 
                 VigitempServeur.LogDetailed($"[SONDE][CLOSE] type=GSP serial={m_sondeSerialNumber} port={m_comPort}");
             }
+        }
+
+        private void HandleCommunicationFailure(string reason)
+        {
+            if (_maintenanceModeActive)
+            {
+                VigitempServeur.Log(
+                    $"[SONDE][MAINTENANCE] type=GSP serial={m_sondeSerialNumber} communicationFailure={reason} alarm=suppressed");
+                return;
+            }
+
+            HandleNoResponseAlarm(false, reason, insertNullMeasureImmediately: true);
         }
 
         private static bool IsSerialSemaphoreTimeout(IOException ex)
@@ -321,12 +346,10 @@ namespace Vigitemp_Serveur.sensors
                     {
                         VigitempServeur.Log(
                             $"[SONDE][CFG] type=GSP serial={m_sondeSerialNumber} command={command.Key} status=ack-mismatch response={(string.IsNullOrWhiteSpace(response) ? "<empty>" : TrimForLog(response))}");
-                        await PurgePortUntilQuietAsync("post-config-command-failed");
                         continue;
                     }
 
                     successCount++;
-                    await PurgePortUntilQuietAsync("post-config-command");
                 }
 
                 var allCommandsSucceeded = successCount == commands.Count;
@@ -459,7 +482,6 @@ namespace Vigitemp_Serveur.sensors
                     return false;
                 }
 
-                await PurgePortUntilQuietAsync("post-config-command");
                 VigitempServeur.Log($"[SONDE][CFG] type=GSP serial={m_sondeSerialNumber} status=sent-runtime command=ECON");
                 return true;
             }
@@ -584,7 +606,15 @@ namespace Vigitemp_Serveur.sensors
                 m_port.Write(candidate);
                 await Task.Delay(InterCommandDelayMs);
 
-                var response = await ReadResponseAsync(endOfResponseSilenceMs);
+                string response;
+                try
+                {
+                    response = await ReadResponseAsync(endOfResponseSilenceMs);
+                }
+                finally
+                {
+                    await PurgePortAfterCommandAsync(commandPrefix);
+                }
                 if (!string.IsNullOrWhiteSpace(response))
                 {
                     VigitempServeur.Log($"[SONDE][RX] type=GSP serial={m_sondeSerialNumber} port={m_comPort} raw={response}");
@@ -657,6 +687,41 @@ namespace Vigitemp_Serveur.sensors
             }
 
             return buffer.Trim();
+        }
+
+        private async Task PurgePortAfterCommandAsync(string commandPrefix)
+        {
+            if (m_port == null || !m_port.IsOpen)
+            {
+                return;
+            }
+
+            var startedAt = DateTime.UtcNow;
+            var quietSince = startedAt;
+            var buffer = string.Empty;
+
+            while ((DateTime.UtcNow - startedAt).TotalMilliseconds < PostCommandDrainMs)
+            {
+                await Task.Delay(25);
+                var chunk = m_port.ReadExisting();
+                if (!string.IsNullOrEmpty(chunk))
+                {
+                    buffer += chunk;
+                    quietSince = DateTime.UtcNow;
+                    continue;
+                }
+
+                if ((DateTime.UtcNow - quietSince).TotalMilliseconds >= PostCommandQuietMs)
+                {
+                    break;
+                }
+            }
+
+            m_port.DiscardInBuffer();
+            m_port.DiscardOutBuffer();
+
+            VigitempServeur.LogDetailed(
+                $"[SONDE][PORT-PURGE] type=GSP serial={m_sondeSerialNumber} port={m_comPort} command={commandPrefix} reason=post-command durationMs={(DateTime.UtcNow - startedAt).TotalMilliseconds:0} extraBytes={buffer.Length} extraRaw={TrimForLog(buffer)}");
         }
 
         private async Task<string> DrainBufferedDataAsync()

@@ -271,7 +271,7 @@ export function HotlineSensorTestPanel() {
 
   const normalizedRawCommandValue = useMemo(() => {
     if (gsp.rawExactMode) {
-      return rawCommandValue.trim()
+      return rawCommandValue
     }
     return normalizeRawCommand(rawCommandValue)
   }, [gsp.rawExactMode, rawCommandValue])

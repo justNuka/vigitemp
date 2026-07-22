@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { parseDbDateTime } from "@/lib/date-display"
 import type { MeasureData } from "@/lib/measurements"
 import { formatMeasureValue } from "@/lib/measurements"
+import { exportStyledExcel } from "@/lib/excel-export"
 import { cn } from "@/lib/utils"
 
 type PresentationExportRow = {
@@ -204,16 +205,17 @@ export function MonitoringTableTab({
 
     setIsExportingMultiTabs(true)
     try {
-      const xlsx = await import("xlsx")
-
-      const workbook = xlsx.utils.book_new()
-      const presentationSheet = xlsx.utils.aoa_to_sheet([
-        [t("table.multi_tabs.presentation_columns.label"), t("table.multi_tabs.presentation_columns.value")],
-        ...presentationRows.map((row) => [row.label, row.value]),
-      ])
-
-      const measurementsSheet = xlsx.utils.aoa_to_sheet([
-        [
+      await exportStyledExcel({
+        fileName: `${exportFileName}-multi-tabs`,
+        title: nomLieu,
+        presentationSheetName: t("table.multi_tabs.presentation_sheet"),
+        dataSheetName: t("table.multi_tabs.measurements_sheet"),
+        presentationHeaders: [
+          t("table.multi_tabs.presentation_columns.label"),
+          t("table.multi_tabs.presentation_columns.value"),
+        ],
+        presentationRows,
+        dataHeaders: [
           t("table.columns.date_time"),
           t("table.columns.serial"),
           t("table.columns.value"),
@@ -221,25 +223,8 @@ export function MonitoringTableTab({
           t("table.columns.upper_threshold"),
           t("table.columns.status"),
         ],
-        ...measurementRowsForExport,
-      ])
-
-      xlsx.utils.book_append_sheet(workbook, presentationSheet, t("table.multi_tabs.presentation_sheet"))
-      xlsx.utils.book_append_sheet(workbook, measurementsSheet, t("table.multi_tabs.measurements_sheet"))
-
-      const arrayBuffer = xlsx.write(workbook, { bookType: "xlsx", type: "array" })
-      const blob = new Blob([arrayBuffer], {
-        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        dataRows: measurementRowsForExport,
       })
-
-      const url = URL.createObjectURL(blob)
-      const anchor = document.createElement("a")
-      anchor.href = url
-      anchor.download = `${exportFileName}-multi-tabs.xlsx`
-      document.body.appendChild(anchor)
-      anchor.click()
-      anchor.remove()
-      URL.revokeObjectURL(url)
     } finally {
       setIsExportingMultiTabs(false)
     }

@@ -632,7 +632,14 @@ if (-not $Offline) {
     & $pnpmCmd.Source install | Out-Null
 
     Write-Log (T "Gnration des clients Prisma..." "Generating Prisma clients...")
-    & $pnpmCmd.Source prisma:generate | Out-Null
+    & $pnpmCmd.Source prisma:prepare --provider $dbProvider | Out-Null
+    if ($LASTEXITCODE -ne 0) {
+        throw (T "Echec de preparation des schemas Prisma." "Failed to prepare Prisma schemas.")
+    }
+    & $pnpmCmd.Source prisma:generate:prepared | Out-Null
+    if ($LASTEXITCODE -ne 0) {
+        throw (T "Echec de generation des clients Prisma." "Failed to generate Prisma clients.")
+    }
 
     Write-Log (T "Build de l'app Next.js..." "Building Next.js app...")
     & $pnpmCmd.Source build | Out-Null
@@ -779,6 +786,5 @@ function Confirm-WebInstall {
 Confirm-WebInstall
 
 Stop-Transcript | Out-Null
-
 
 

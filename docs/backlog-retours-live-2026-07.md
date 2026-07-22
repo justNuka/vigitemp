@@ -53,7 +53,7 @@
 | ID | Sujet | Impact | Complexite | Statut | Notes |
 |---|---|---|---|---|---|
 | R-050 | Verifier que le retard bas n'est pas passe a la sonde | majeur | rapide | fait | Creation et modification de lieu transmettent maintenant distinctement le retard bas et le retard haut. Tous les chemins C# (synchronisation prioritaire, controle periodique et hotline) construisent `ECON...{bas}r{haut}t`, puis `DCON` compare separement `RetardBas` et `RetardHaut` |
-| R-051 | Bloquer la surveillance quand code `M` | moyen | moyen | a faire | A revoir plus tard, hors urgence |
+| R-051 | Bloquer la surveillance quand code `M` | moyen | moyen | termine | Le code `M` suspend maintenant l'evaluation des seuils et les alarmes de non-reponse GSP. La mesure reste historisee et la surveillance reprend automatiquement quand `M` disparait de la trame |
 
 ## 7. Dashboard admin et navigation
 | ID | Sujet | Impact | Complexite | Statut | Notes |
@@ -64,9 +64,9 @@
 ## 8. Commentaires, agent, hotline
 | ID | Sujet | Impact | Complexite | Statut | Notes |
 |---|---|---|---|---|---|
-| R-070 | Commentaire perso fonctionne mal | moyen | moyen | a faire | Revoir fonctionnement plus tard |
-| R-071 | Message `configuration invalide agent` a revoir | moyen | moyen | a faire | Plus tard |
-| R-072 | Revoir les logs pour la hotline | moyen | moyen | a faire | Plus tard |
+| R-070 | Commentaire perso fonctionne mal | moyen | moyen | termine | Le commentaire libre et le commentaire predefini sont reinitialises a la fermeture, au changement d'alarme et apres un acquittement sans fermeture. Une nouvelle fenetre ne reprend plus la saisie precedente |
+| R-071 | Message `configuration invalide agent` a revoir | moyen | moyen | termine | Les erreurs internes de licence/dechiffrement ne sont plus affichees globalement dans les pages admin/hotline. Seule une indisponibilite effective de l'agent reste visible |
+| R-072 | Revoir les logs pour la hotline | moyen | moyen | fait | Une operation produit au plus un bilan `[HOTLINE][DONE]` et une ligne TX/RX agregee `[HOTLINE][IO]`, tronquee pour les grosses reponses memoire. Les parametres de requete et le cycle du verrou COM sont disponibles avec `Vigitemp.Hotline.LogDetailed=true`; erreurs et timeouts restent toujours traces. |
 | R-073 | Revoir les logs serveur: plus propres, moins lourds, plus concis | moyen | moyen | fait | Les traces detaillees de demarrage, affectation, ouverture/fermeture, drain normal, RSSI, cache et scheduler sont desactivees par defaut. Les TX/RX, erreurs et bilans DONE restent visibles; `Vigitemp.Log.Detailed=true` permet de retablir le detail. |
 
 ## 9. Mailing et telephonie
@@ -85,9 +85,9 @@
 | ID | Sujet | Impact | Complexite | Statut | Notes |
 |---|---|---|---|---|---|
 | R-091 | Exports: appliquer les filtres selectionnes | majeur | moyen | fait | Les alarmes et l'historique des acquittements exportent maintenant toutes les pages correspondant aux filtres; le tableau generique applique aussi sa recherche locale aux donnees d'export |
-| R-092 | Exports: revoir la forme Excel/CSV avec onglet de presentation + onglet de donnees | moyen | moyen | en cours | Excel contient une feuille Presentation (titre, date, filtres, nombre de lignes) et une feuille Donnees dimensionnee et filtrable. Reste le logo, qui necessite un moteur Excel gerant les images. CSV reste volontairement mono-table car le format ne gere pas les onglets |
+| R-092 | Exports: revoir la forme Excel/CSV avec onglet de presentation + onglet de donnees | moyen | moyen | fait | Les exports Excel utilisent une feuille Presentation avec logo VigiSensys, titre, date, filtres et nombre de lignes, puis une feuille Donnees stylisee, dimensionnee et filtrable. CSV reste volontairement mono-table car le format ne gere pas les onglets |
 | R-093 | Exports: supprimer le langage trop technique/code dans les valeurs exportees | moyen | rapide | fait | Le tableau generique accepte maintenant une valeur metier par colonne; les exports d'alarmes et d'acquittements formatent types, statuts, dates, durees, valeurs et seuils comme dans l'interface |
-| R-094 | Page alarmes: verifier le nombre total d'alarmes et la pagination bloquee | majeur | moyen | en cours | Le chargement serveur respecte maintenant l'onglet actif, la pagination serveur est conservee jusqu'au bout et les onglets distinguent mieux total global / lignes filtrees localement. Validation terrain encore necessaire |
+| R-094 | Page alarmes: verifier le nombre total d'alarmes et la pagination bloquee | majeur | moyen | fait | Le chargement serveur recupere tout l'onglet actif, les compteurs restent globaux et la table pagine localement sans plafond a 200. Les tailles 500 et 1000 sont disponibles et le bouton suivant repose sur le nombre reel de pages. |
 | R-095 | Page alarmes: supprimer l'onglet `Acquittees` | mineur | rapide | fait | Onglet retire de la page alarmes |
 | R-096 | Page alarmes: retirer le filtre type `terminee` | mineur | rapide | fait | Option retiree du filtre type |
 | R-097 | Paginations globales: retirer 30/40 et ajouter 500/1000 | moyen | rapide | fait | Options 30/40 retirees, 500/1000 ajoutees dans le composant de pagination partage |
@@ -103,7 +103,7 @@
 | R-107 | Graphique details lieu: afficher les plages de remontees memoire avec une couleur differente | majeur | moyen | fait | Les plages memoire sont maintenant surlignees sur le graphe en plus du tableau |
 | R-108 | Cards surveillance: supprimer les lettres d'etat et garder uniquement les icones avec hover | mineur | rapide | fait | Le code lettre a ete retire, l'information reste disponible via les icones et tooltips |
 | R-109 | GSO: remplacer l'affichage tension par un etat OK / Moyen / Faible | moyen | rapide | fait | Les cartes affichent maintenant un etat batterie metier avec les seuils demandes |
-| R-110 | Sonde SPNB-26000068: remontees memoire anormales autour de 11h avec mesures vers 3h le 2026-07-08 | majeur | moyen | a analyser | Incident de reference a documenter/corriger |
+| R-110 | Sonde SPNB-26000068: remontees memoire anormales autour de 11h avec mesures vers 3h le 2026-07-08 | majeur | moyen | fait | L'incident provenait du reset d'horloge de la sonde. Une date manifestement invalide declenche maintenant une synchronisation `ED-H` immediate suivie d'une nouvelle lecture `TEMP`, avant de poursuivre le traitement |
 | R-111 | Verifier que l'erreur de justesse est bien prise en compte avec le bon signe | majeur | moyen | fait | Le serveur applique `-Err_Justesse` uniquement si `Est_Correction_Ej` est actif, pour MySQL et MSSQL |
 | R-112 | Dashboard utilisateur: certaines alarmes de non reponse affichent l'icone alarme basse | moyen | rapide | fait | Les alarmes non-reponse et module utilisent maintenant l'icone technique WifiOff |
 | R-113 | Dashboard utilisateur: affichage de `-7,5` a expliquer/corriger | moyen | rapide | fait | Le padding de l'echelle de tendance des alarmes est maintenant borne a zero |
@@ -115,9 +115,9 @@
 | ID | Sujet | Impact | Complexite | Statut | Notes |
 |---|---|---|---|---|---|
 | R-117 | Exports: les filtres selectionnes ne sont pas appliques | majeur | moyen | fait | Les filtres serveur, les filtres de type et la recherche locale sont appliques au jeu complet avant export; l'historique charge aussi toutes les pages au-dela de 1000 lignes |
-| R-118 | Exports Excel/CSV: revoir la presentation | moyen | moyen | en cours | Excel dispose maintenant des feuilles Presentation et Donnees avec largeurs de colonnes et filtre automatique. Reste l'integration du logo via une bibliotheque compatible images |
+| R-118 | Exports Excel/CSV: revoir la presentation | moyen | moyen | fait | Excel dispose des feuilles Presentation et Donnees, du logo VigiSensys, de largeurs adaptees, d'en-tetes stylises et d'un filtre automatique |
 | R-119 | Exports: remplacer les libelles trop techniques par du vocabulaire metier | moyen | rapide | fait | Doublon de R-093 traite sur les alarmes actives et l'historique des acquittements |
-| R-120 | Page alarmes: nombre total incoherent et pagination bloquee | majeur | moyen | en cours | Correction de la pagination serveur et du comptage affiche sous filtres locaux. Reste a valider sur les cas charges en environnement de test |
+| R-120 | Page alarmes: nombre total incoherent et pagination bloquee | majeur | moyen | fait | Doublon de R-094: les onglets affichent les totaux globaux, le libelle du tableau distingue les lignes visibles du total charge et la pagination accepte plus de 200 alarmes. |
 | R-121 | Page alarmes: supprimer l'onglet `Acquittees` | mineur | rapide | fait | Deja corrige sur la page alarmes, doublon de R-095 |
 | R-122 | Page alarmes: retirer le filtre type d'alarme `terminee` | mineur | rapide | fait | Deja corrige sur la page alarmes, doublon de R-096 |
 | R-123 | Paginations: retirer 30 et 40, ajouter 500 et 1000 | moyen | rapide | fait | Deja corrige sur les tableaux concernes, doublon de R-097 |
@@ -133,7 +133,7 @@
 | R-133 | Graphique details de lieu: afficher les plages de remontees memoire avec une couleur differente | majeur | moyen | fait | Les plages memoire sont maintenant visibles distinctement sur le graphe |
 | R-134 | Cards surveillance: retirer les lettres d'etat, ne garder que les icones avec hover | mineur | rapide | fait | Les cartes n'affichent plus de code lettre, uniquement des icones explicites |
 | R-135 | GSO: remplacer l'affichage de tension par un etat batterie | moyen | rapide | fait | Tension brute remplacee sur les cartes par un etat OK / Moyen / Faible |
-| R-136 | SPNB-26000068: remontees memoire anormales autour de 11h avec mesures de 3h du matin le 08/07 | majeur | moyen | a analyser | Incident a documenter puis corriger |
+| R-136 | SPNB-26000068: remontees memoire anormales autour de 11h avec mesures de 3h du matin le 08/07 | majeur | moyen | fait | Doublon de R-110: reset d'horloge identifie et resynchronisation immediate ajoutee avant traitement de la mesure |
 | R-137 | Verifier que l'erreur de justesse est bien appliquee avec le bon signe | majeur | moyen | fait | Le serveur applique l'inverse de l'erreur de justesse lorsque la correction est active |
 | R-138 | Dashboard utilisateur: certaines alarmes de non reponse affichent l'icone alarme basse | moyen | rapide | fait | Mapping corrige vers l'icone technique |
 | R-139 | Dashboard utilisateur: affichage de `-7,5` a expliquer/corriger | moyen | rapide | fait | Doublon de R-113: l'echelle des comptages d'alarmes ne descend plus sous zero |

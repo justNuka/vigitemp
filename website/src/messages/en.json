@@ -3408,7 +3408,8 @@
             "1": "The acknowledgment history link from the admin dashboard now opens a real page.",
             "2": "Acknowledgment history exports now correctly reapply the active filters.",
             "3": "Free acknowledgment comments are now loaded from the dedicated journal source.",
-            "4": "The accuracy error preview now clearly shows the inverse sign applied by the correction."
+            "4": "The accuracy error preview now clearly shows the inverse sign applied by the correction.",
+            "5": "Excel exports now include a VigiSensys presentation sheet and a separate, readable data sheet."
           }
         }
       }
