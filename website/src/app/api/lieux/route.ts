@@ -14,6 +14,7 @@ import { findLocationNameConflict, normalizeLocationName } from "@/lib/location-
 import { buildLocationValueRangeIssues, getSensorTypeValueRangeBySerial } from "@/lib/sensor-value-range"
 import { getDbNow } from "@/lib/sql-provider"
 import { syncGspLocationConfiguration } from "@/lib/gsp-config-sync"
+import { parseDbDateTime } from "@/lib/date-display"
 
 const mailingContactSchema = z.object({
   Id_Tel_Num: z.number().optional(),
@@ -43,8 +44,8 @@ function parseAppliedCalibrationDate(value: unknown) {
   if (value === null || value === "") return null
   if (typeof value !== "string") throw new Error("invalid_calibration_date")
 
-  const parsed = new Date(value)
-  if (Number.isNaN(parsed.getTime())) {
+  const parsed = parseDbDateTime(value)
+  if (!parsed) {
     throw new Error("invalid_calibration_date")
   }
 

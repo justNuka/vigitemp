@@ -13,6 +13,7 @@ import { apiError, apiOk } from "@/lib/api-response"
 import { getUserAvatarMap, setUserAvatarValue } from "@/lib/user-avatar-db"
 import { getGlobalAppLanguage } from "@/lib/app-language"
 import { canUseApplicationEmail } from "@/lib/license-email"
+import { serializeDbDateTime } from "@/lib/date-display"
 
 const createUserSchema = z.object({
   username: z.string().min(3, "Username must be at least 3 characters"),
@@ -44,7 +45,7 @@ export const GET = withAdminLogging(async (_req: NextRequest) => {
       displayName: `${user.Prenom || ""} ${user.Nom || ""}`.trim() || user.Login,
       role: user.Profil_Utilisateur || "user",
       status: !user.Est_Archive ? "active" : "inactive",
-      createdAt: user.Date_Creation?.toISOString() || null,
+      createdAt: serializeDbDateTime(user.Date_Creation),
       email: user.Adresse_Email || null,
       avatar: avatarMap.get(user.Id_Utilisateur) ?? null,
     }))

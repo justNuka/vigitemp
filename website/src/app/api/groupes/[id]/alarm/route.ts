@@ -7,6 +7,7 @@ import { apiError, apiOk } from "@/lib/api-response"
 import { withAuthLogging } from "@/lib/api-wrappers"
 import { log } from "@/lib/logger"
 import { getDbDatePlusMinutes } from "@/lib/sql-provider"
+import { serializeDbDateTime } from "@/lib/date-display"
 
 const alarmToggleSchema = z.object({
   disabled: z.boolean(),
@@ -59,7 +60,7 @@ export const PATCH = withAuthLogging(
       log.data.update("Notifications d'alarme groupe", groupId, user.username, user.userId, getClientIp(req), {
         disabled: { from: !payload.disabled, to: payload.disabled },
         durationMinutes: { from: null, to: durationMinutes },
-        reactivationAt: { from: null, to: reactivationAt?.toISOString() ?? null },
+        reactivationAt: { from: null, to: serializeDbDateTime(reactivationAt) },
         updated: result.count,
       })
 
@@ -67,7 +68,7 @@ export const PATCH = withAuthLogging(
         updated: result.count,
         lieuIds,
         alarmDisabled: payload.disabled,
-        alarmDisabledUntil: reactivationAt,
+        alarmDisabledUntil: serializeDbDateTime(reactivationAt),
       })
     } catch (error) {
       if (error instanceof z.ZodError) {

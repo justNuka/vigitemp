@@ -11,7 +11,7 @@ import { sortSensors, type SurveillanceSortMode } from "../_helpers/monitoring-d
 import { formatAlarmes, formatAlarmesTerminees, formatGroupes, formatPreAlarmes, formatSondes } from "../_helpers/monitoring-labels"
 import { SurveillanceTreeStatsBadges } from "./monitoring-tree-stats-badges"
 import { buildMonitoringCardProps } from "./monitoring-card-props"
-import { parseDbDateTime } from "@/lib/date-display"
+import { formatDbDateTime, parseDbDateTime } from "@/lib/date-display"
 import type { StatusCounts } from "@/lib/surveillance-status"
 import type { SurveillanceTreeCounterStats } from "@/lib/api"
 
@@ -55,17 +55,13 @@ function formatDisabledSinceLabel(
   t: Translate,
 ) {
   if (!disabledUntil) return t("grid.disabled_badge")
-  const date = parseDbDateTime(disabledUntil)
-  if (!date) return t("grid.disabled_badge")
-  if (Number.isNaN(date.getTime())) return t("grid.disabled_badge")
-  const formatted = new Intl.DateTimeFormat(locale, {
-    ...(timezone ? { timeZone: timezone } : {}),
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(date)
+  const formatted = formatDbDateTime(disabledUntil, {
+    locale,
+    timeZone: timezone,
+    withSeconds: false,
+    fallback: "",
+  })
+  if (!formatted) return t("grid.disabled_badge")
   return t("grid.disabled_since", { date: formatted })
 }
 

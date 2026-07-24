@@ -22,6 +22,7 @@ import {
 import type { AdjustmentImportResult, AdjustmentInsertData } from "@/components/stepper-file-upload";
 import { useModules } from "@/hooks/useModules";
 import { useSensors } from "@/hooks/useSensors";
+import { formatDbDateTime } from "@/lib/date-display";
 
 import { AdjustmentImportEditDialog } from "./_components/adjustment-import-edit-dialog";
 import { saveAdjustmentsBulk, notifyBulkSaveResult } from "./_components/adjustment-import-save";
@@ -51,17 +52,7 @@ type ModuleAssignment = {
 const COMMON_UNIT_OPTIONS = ["\u00B0C", "C", "%", "Pa", "hPa", "bar", "mbar", "ppm", "lux", "V", "mA"];
 
 const formatDateTime = (value: string | Date | null | undefined, locale: string) => {
-  if (!value) return null;
-  const date = value instanceof Date ? value : new Date(value);
-  if (Number.isNaN(date.getTime())) return null;
-  return new Intl.DateTimeFormat(locale, {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-  }).format(date);
+  return formatDbDateTime(value, { locale, fallback: "" }) || null;
 };
 
 export function AdjustmentImportClient() {

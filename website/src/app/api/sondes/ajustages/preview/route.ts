@@ -7,6 +7,7 @@ import { parseAdjustmentXml } from "@/lib/adjustment-import";
 import { log } from "@/lib/logger";
 import { decodeXmlBytes } from "@/lib/xml-decoding";
 import { getPermissionAliases } from "@/lib/permissions";
+import { serializeDbDateTime } from "@/lib/date-display";
 
 const isXmlFile = (file: File) => {
   const name = file.name.toLowerCase();
@@ -19,13 +20,6 @@ const isXmlFile = (file: File) => {
 const decodeXmlFile = async (file: File) => {
   const bytes = new Uint8Array(await file.arrayBuffer());
   return decodeXmlBytes(bytes).text;
-};
-
-const toIso = (value: Date | string | null | undefined) => {
-  if (!value) return null;
-  if (value instanceof Date) return value.toISOString();
-  const parsed = new Date(value);
-  return Number.isNaN(parsed.getTime()) ? null : parsed.toISOString();
 };
 
 export const POST = withOneOrHigherAnyAuthorizationLogging(getPermissionAliases("METROLOGY_OPERATION_ACCESS"), async (req: NextRequest, ctx) => {
@@ -90,7 +84,7 @@ export const POST = withOneOrHigherAnyAuthorizationLogging(getPermissionAliases(
       unit: parsed.summary.unit,
       warnings: parsed.warnings,
       insertData: {
-        Date_Heure_Ajustage: toIso(parsed.data.Date_Heure_Ajustage ?? null),
+        Date_Heure_Ajustage: serializeDbDateTime(parsed.data.Date_Heure_Ajustage),
         Sonde_Numero_Serie: parsed.data.Sonde_Numero_Serie ?? null,
         Coeff_X2: parsed.data.Coeff_X2 ?? 0,
         Coeff_X: parsed.data.Coeff_X ?? null,
@@ -100,7 +94,7 @@ export const POST = withOneOrHigherAnyAuthorizationLogging(getPermissionAliases(
         Operateur: parsed.data.Operateur ?? null,
         SE_Numero: parsed.data.SE_Numero ?? null,
         SE_Organisme: parsed.data.SE_Organisme ?? null,
-        SE_Date_Certif: toIso(parsed.data.SE_Date_Certif ?? null),
+        SE_Date_Certif: serializeDbDateTime(parsed.data.SE_Date_Certif),
         SE_Numero_Certif: parsed.data.SE_Numero_Certif ?? null,
         Mesure_Etalon1: parsed.data.Mesure_Etalon1 ?? null,
         Mesure_Etalon2: parsed.data.Mesure_Etalon2 ?? null,

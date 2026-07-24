@@ -9,6 +9,7 @@ import { log } from "@/lib/logger"
 import { isSurveillanceActionCommentRequired } from "@/lib/action-comment-policy"
 import { getPermissionAliases } from "@/lib/permissions"
 import { getDbDatePlusMinutes } from "@/lib/sql-provider"
+import { serializeDbDateTime } from "@/lib/date-display"
 
 const alarmToggleSchema = z.object({
   disabled: z.boolean(),
@@ -56,13 +57,13 @@ export const PATCH = withAnyAuthorizationLogging(
       log.data.update("Notifications d'alarme", lieuId, user.username, user.userId, getClientIp(req), {
         disabled: { from: !payload.disabled, to: payload.disabled },
         durationMinutes: { from: null, to: durationMinutes },
-        reactivationAt: { from: null, to: reactivationAt?.toISOString() ?? null },
+        reactivationAt: { from: null, to: serializeDbDateTime(reactivationAt) },
       }, actionComment || undefined)
 
       return apiOk({
         id: updated.Id_Lieu,
         Notification_Active: updated.Notification_Active,
-        Date_Heure_Reactivation_Alarme: updated.Date_Heure_Reactivation_Alarme,
+        Date_Heure_Reactivation_Alarme: serializeDbDateTime(updated.Date_Heure_Reactivation_Alarme),
       })
     } catch (error) {
       if (error instanceof z.ZodError) {

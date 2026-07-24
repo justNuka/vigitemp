@@ -19,6 +19,7 @@ import {
 import { getPermissionAliases } from "@/lib/permissions"
 import { prisma } from "@/lib/prisma"
 import { inferStandardTypeCode } from "@/lib/standard-types"
+import { serializeDbDateTime } from "@/lib/date-display"
 
 const ETALON_READ_CODES = getPermissionAliases("METROLOGY_ACCESS")
 const ETALON_WRITE_CODES = getPermissionAliases("METROLOGY_OPERATION_ACCESS")
@@ -167,7 +168,7 @@ export const GET = withStandardOrExpertAnyAuthorizationLogging(ETALON_READ_CODES
         Coeff_B: extras?.Coeff_B ?? null,
         Coeff_C: extras?.Coeff_C ?? null,
         Incertitude_Max: extras?.Incertitude_Max ?? null,
-        Date_Certif: certif?.Date ? certif.Date.toISOString() : null,
+        Date_Certif: serializeDbDateTime(certif?.Date),
         Organisme: certif?.Organisme || null,
         Num_Certif: certif?.Numero || null,
         Unite: certif?.Unite || null,

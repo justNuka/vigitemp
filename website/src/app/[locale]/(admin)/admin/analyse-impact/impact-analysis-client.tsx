@@ -6,6 +6,7 @@ import { useTranslations, useLocale } from "next-intl"
 import type { Chart as ChartJS } from "chart.js"
 import { fetchJson } from "@/lib/http"
 import { formatDbDateTime } from "@/lib/date-display"
+import { toApiUtcDateTime } from "@/lib/date-range-api"
 import { useMonitoringRangeMeasurements } from "@/components/monitoring-details/use-monitoring-range-measurements"
 import { Button } from "@/components/ui/button"
 import {
@@ -118,8 +119,8 @@ export function ImpactAnalysisClient() {
       try {
         const params = new URLSearchParams({
           idLieu: String(lieu.id),
-          startDate: dateRange.from.toISOString(),
-          endDate: dateRange.to.toISOString(),
+          startDate: toApiUtcDateTime(dateRange.from),
+          endDate: toApiUtcDateTime(dateRange.to),
         })
         const data = await fetchJson<AlarmsRangeResponse>(
           `/api/alarmes/range?${params.toString()}`,
@@ -354,8 +355,8 @@ export function ImpactAnalysisClient() {
             onOpenChange={setSaveDialogOpen}
             lieuId={lieu.id}
             lieuNom={lieu.nom}
-            dateFrom={dateRange?.from.toISOString() ?? ""}
-            dateTo={dateRange?.to.toISOString() ?? ""}
+            dateFrom={dateRange?.from ? toApiUtcDateTime(dateRange.from) : ""}
+            dateTo={dateRange?.to ? toApiUtcDateTime(dateRange.to) : ""}
             newToleranceSup={newSupNum}
             newToleranceInf={newInfNum}
             simAlarmCount={simZones.length}

@@ -6,6 +6,7 @@ import { apiError, apiOk } from "@/lib/api-response"
 import { planningRegleUpdateSchema, type PlanningRegleResponse } from "@/lib/planning-regle-schema"
 import { computeEmt, emtModeFromDb } from "@/lib/emt"
 import { log } from "@/lib/logger"
+import { serializeDbDateTime } from "@/lib/date-display"
 
 // Helper to format a Prisma TIME field (Date with date 1970-01-01) to "HH:MM"
 function formatTime(d: Date | null | undefined): string {
@@ -48,8 +49,8 @@ function toRegleResponse(r: PrismaRegle): PlanningRegleResponse {
     Tolerance_Sup_Calc: r.Tolerance_Sup_Calc,
     Tolerance_Inf_Calc: r.Tolerance_Inf_Calc,
     Retard_Alarme_Changement_Consigne: r.Retard_Alarme_Changement_Consigne,
-    Date_Creation: r.Date_Creation.toISOString(),
-    Date_Maj: r.Date_Maj?.toISOString() ?? null,
+    Date_Creation: serializeDbDateTime(r.Date_Creation) ?? "",
+    Date_Maj: serializeDbDateTime(r.Date_Maj),
   }
 }
 

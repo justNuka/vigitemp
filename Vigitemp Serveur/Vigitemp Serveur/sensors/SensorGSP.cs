@@ -25,7 +25,6 @@ namespace Vigitemp_Serveur.sensors
         private const int ConfigurationResponseSilenceMs = 1200;
         private const int ConfigurationReadTimeoutMs = 10000;
         private const int InterCommandDelayMs = 150;
-        private const int TemperatureRetryDelayMs = 5000;
         private const int ClockCheckIntervalHours = 6;
         private const int ClockDriftWarningSeconds = 120;
         private const int ClockDriftCriticalSeconds = 600;
@@ -86,6 +85,7 @@ namespace Vigitemp_Serveur.sensors
             _synchronizeConfiguration = synchronizeConfiguration;
             _requestGraphDisplay = requestGraphDisplay;
             _commandTarget = GspProtocol.NormalizeCommandTarget(string.IsNullOrWhiteSpace(p_sondeAdresse) ? p_sondeSerialNumber : p_sondeAdresse);
+            m_port.ReadTimeout = ReadTimeoutMs;
         }
 
         protected override bool ShouldApplyMetrology => false;
@@ -161,12 +161,6 @@ namespace Vigitemp_Serveur.sensors
 
                 var tempPayload = _requestGraphDisplay ? "1g" : string.Empty;
                 string response = await SendRequestAndReadAsync("TEMP", tempPayload, allowEmptyResponse: false);
-                if (string.IsNullOrWhiteSpace(response))
-                {
-                    VigitempServeur.Log($"[SONDE][WARN] type=GSP serial={m_sondeSerialNumber} no response on TEMP, retrying TEMP after {TemperatureRetryDelayMs / 1000}s");
-                    await Task.Delay(TemperatureRetryDelayMs);
-                    response = await SendRequestAndReadAsync("TEMP", tempPayload, allowEmptyResponse: false);
-                }
 
                 if (string.IsNullOrWhiteSpace(response))
                 {

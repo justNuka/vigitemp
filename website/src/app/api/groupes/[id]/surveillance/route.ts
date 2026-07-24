@@ -9,6 +9,7 @@ import { log } from "@/lib/logger"
 import { getPermissionAliases } from "@/lib/permissions"
 import { prisma } from "@/lib/prisma"
 import { getDbDatePlusMinutes, getDbNow } from "@/lib/sql-provider"
+import { serializeDbDateTime } from "@/lib/date-display"
 
 const surveillanceToggleSchema = z.object({
   disabled: z.boolean(),
@@ -93,7 +94,7 @@ export const PATCH = withAnyAuthorizationLogging(
       log.data.update("Surveillance groupe", groupId, ctx.user.username, ctx.user.userId, getClientIp(req), {
         disabled: payload.disabled,
         durationMinutes,
-        reactivationAt: reactivationAt?.toISOString() ?? null,
+        reactivationAt: serializeDbDateTime(reactivationAt),
         updated: updatedLieux.count,
         lieuIds,
       }, actionComment || undefined)
@@ -103,10 +104,10 @@ export const PATCH = withAnyAuthorizationLogging(
         lieuIds,
         lieuEtat: nextLieuEtat,
         surveillanceDisabled: payload.disabled,
-        surveillanceDisabledSince: payload.disabled ? changedAt : null,
+        surveillanceDisabledSince: payload.disabled ? serializeDbDateTime(changedAt) : null,
         surveillanceDisabledBy: payload.disabled ? ctx.user.username : null,
         surveillanceDisabledComment: payload.disabled ? actionComment || null : null,
-        surveillanceDisabledUntil: reactivationAt,
+        surveillanceDisabledUntil: serializeDbDateTime(reactivationAt),
       })
     } catch (error) {
       if (error instanceof z.ZodError) {

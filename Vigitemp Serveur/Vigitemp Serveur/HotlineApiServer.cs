@@ -284,6 +284,8 @@ namespace Vigitemp_Serveur
 
         private static SensorTestResult ExecuteSensorTest(SensorTestRequest request)
         {
+            var startedAt = DateTimeOffset.Now;
+            var stopwatch = Stopwatch.StartNew();
             var result = new SensorTestResult
             {
                 SensorType = request.SensorType,
@@ -324,7 +326,7 @@ namespace Vigitemp_Serveur
                         {
                             result.Error = "Sonde introuvable dans la base et aucun port manuel n'a été fourni.";
                             result.Success = false;
-                            LogSensorTestResult(result);
+                            LogSensorTestResult(result, startedAt, stopwatch.ElapsedMilliseconds);
                             return result;
                         }
 
@@ -354,7 +356,7 @@ namespace Vigitemp_Serveur
             }
 
             result.Success = string.IsNullOrWhiteSpace(result.Error);
-            LogSensorTestResult(result);
+            LogSensorTestResult(result, startedAt, stopwatch.ElapsedMilliseconds);
             return result;
         }
 
@@ -473,6 +475,21 @@ namespace Vigitemp_Serveur
                         result.RawValue = response;
                         result.DetectedSerials = GspProtocol.ExtractDetectedSerials(response);
                         result.Unit = "memory";
+                        if (string.IsNullOrWhiteSpace(response))
+                        {
+                            result.Error = "Aucune réponse reçue pour la demande mémoire.";
+                            return;
+                        }
+
+                        if (!GspProtocol.TryParseMemoResponse(response, target, out var parsedMemory))
+                        {
+                            result.Error = IsCommandEchoOnly(response, result.RequestedCommand)
+                                ? "Réponse reçue mais elle correspond uniquement à un écho de la commande."
+                                : "Réponse reçue mais aucune mesure mémoire exploitable n'a été détectée.";
+                            return;
+                        }
+
+                        result.Value = parsedMemory.ReturnedCount ?? parsedMemory.Measurements.Count;
                         return;
                     }
 
@@ -501,7 +518,7 @@ namespace Vigitemp_Serveur
                         }
                         else if (!string.IsNullOrWhiteSpace(response))
                         {
-                            result.Error = "Réponse reçue mais aucune valeur exploitable pour la sonde demandee n'a été detectée.";
+                            result.Error = "Réponse reçue mais aucune valeur exploitable pour la sonde demandée n'a été détectée.";
                         }
                         return;
                     }
@@ -521,8 +538,8 @@ namespace Vigitemp_Serveur
                     if (!GspProtocol.TryExtractTemperature(readResponse, target, out var value, out var unit))
                     {
                         result.Error = IsCommandEchoOnly(readResponse, result.RequestedCommand)
-                            ? "Reponse recue mais elle correspond uniquement a un echo de la commande."
-                            : "Aucune temperature exploitable pour la sonde demandee dans la reponse GSP.";
+                            ? "éponse reçue mais elle correspond uniquement à un écho de la commande."
+                            : "Aucune température exploitable pour la sonde demandée dans la réponse GSP.";
                         return;
                     }
 
@@ -806,12 +823,23 @@ namespace Vigitemp_Serveur
             var command = (sentCommand ?? string.Empty).Trim();
             if (string.IsNullOrWhiteSpace(raw) || string.IsNullOrWhiteSpace(command)) return raw;
 
-            var filtered = System.Text.RegularExpressions.Regex.Split(raw, @"\s+")
-                .Where(token => !string.IsNullOrWhiteSpace(token))
-                .Where(token => !string.Equals(token.Trim(), command, StringComparison.OrdinalIgnoreCase))
+            var normalizedCommand = NormalizeCommandWhitespace(command);
+            if (string.Equals(NormalizeCommandWhitespace(raw), normalizedCommand, StringComparison.OrdinalIgnoreCase))
+            {
+                return string.Empty;
+            }
+
+            var filtered = System.Text.RegularExpressions.Regex.Split(raw, @"\r?\n")
+                .Where(line => !string.IsNullOrWhiteSpace(line))
+                .Where(line => !string.Equals(NormalizeCommandWhitespace(line), normalizedCommand, StringComparison.OrdinalIgnoreCase))
                 .ToList();
 
-            return filtered.Count == 0 ? string.Empty : string.Join(" ", filtered);
+            return filtered.Count == 0 ? string.Empty : string.Join(Environment.NewLine, filtered);
+        }
+
+        private static string NormalizeCommandWhitespace(string value)
+        {
+            return System.Text.RegularExpressions.Regex.Replace((value ?? string.Empty).Trim(), @"\s+", " ");
         }
 
         private static void AddExchange(SensorTestResult result, string direction, string format, string content)
@@ -819,12 +847,14 @@ namespace Vigitemp_Serveur
             result.Exchanges.Add(new SensorExchange { Direction = direction, Format = format, Content = content ?? string.Empty });
         }
 
-        private static void LogSensorTestResult(SensorTestResult result)
+        private static void LogSensorTestResult(SensorTestResult result, DateTimeOffset startedAt, long elapsedMs)
         {
             var detectedSerials = result.DetectedSerials == null || result.DetectedSerials.Count == 0 ? string.Empty : string.Join(",", result.DetectedSerials);
             VigitempServeur.Log(string.Format(CultureInfo.InvariantCulture,
-                "[HOTLINE][DONE] status={0} type={1} serial={2} action={3} command={4} port={5} value={6}{7} detected={8} error={9}",
+                "[HOTLINE][DONE] status={0} startedAt={1} elapsedMs={2} type={3} serial={4} action={5} command={6} port={7} value={8}{9} detected={10} error={11}",
                 result.Success ? "ok" : "error",
+                startedAt.ToString("O", CultureInfo.InvariantCulture),
+                elapsedMs,
                 result.SensorType ?? string.Empty,
                 result.Serial ?? string.Empty,
                 result.Action ?? string.Empty,

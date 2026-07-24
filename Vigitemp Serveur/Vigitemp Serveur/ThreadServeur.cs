@@ -23,6 +23,7 @@ namespace Vigitemp_Serveur
             new ConcurrentDictionary<int, SensorSchedule>();
         private static readonly ConcurrentDictionary<string, SemaphoreSlim> _portLocks =
             new ConcurrentDictionary<string, SemaphoreSlim>(StringComparer.OrdinalIgnoreCase);
+        private static int _gspRecoveryStartupResetDone;
         private readonly ConcurrentDictionary<string, GspMemoJob> _gspMemoJobs =
             new ConcurrentDictionary<string, GspMemoJob>(StringComparer.OrdinalIgnoreCase);
         private readonly ConcurrentQueue<GspMemoProcessingBatch> _gspMemoProcessingQueue =
@@ -53,6 +54,9 @@ namespace Vigitemp_Serveur
         private readonly int _gspGraphDisplayEveryMeasures = GetSettingInt("Vigitemp.Gsp.GraphDisplayEveryMeasures", 0);
         private readonly int _gspConfigModuleBackoffSeconds = GetSettingInt("Vigitemp.Gsp.ConfigModuleBackoffSeconds", 300);
         private readonly int _gspMemoFreeSlotMinSeconds = GetSettingInt("Vigitemp.Gsp.MemoFreeSlotMinSeconds", 10);
+        private readonly int _gspMemoMaxNormalProbes = GetSettingInt("Vigitemp.Gsp.MemoMaxNormalProbes", 20);
+        private readonly int _portSaturationLogIntervalSeconds = GetSettingInt("Vigitemp.Scheduler.PortSaturationLogIntervalSeconds", 300);
+        private readonly int _portSaturationBaselineProbeSeconds = GetSettingInt("Vigitemp.Scheduler.PortSaturationBaselineProbeSeconds", 4);
         private readonly bool _logMetrologyDetailed = GetSettingBool("Vigitemp.Metrology.LogDetailed", false);
         private readonly bool _offsetDisabledForPack;
         private readonly int _alarmPollSeconds = GetSettingInt("Vigitemp.Alarms.PollSeconds", 15);
@@ -88,6 +92,8 @@ namespace Vigitemp_Serveur
         private long _lastMaintenanceHeartbeatUtcTicks;
         private Task _gspMemoProcessingTask;
         private volatile bool _stopRequested;
+        private readonly ConcurrentDictionary<string, DateTime> _lastPortSaturationLogUtc =
+            new ConcurrentDictionary<string, DateTime>(StringComparer.OrdinalIgnoreCase);
 
         private sealed class CachedLieuSettings
         {
@@ -1109,17 +1115,18 @@ namespace Vigitemp_Serveur
                 VigitempServeur.Log("Alarm state seed error (non-fatal): " + ex.Message);
             }
 
-            try
+            if (Interlocked.CompareExchange(ref _gspRecoveryStartupResetDone, 1, 0) == 0)
             {
-                var resetCount = GetDatabase().resetInProgressGspRecoverySpans();
-                if (resetCount > 0)
+                try
                 {
-                    VigitempServeur.Log($"[SONDE][RECOVERY] reset spans en cours au demarrage: {resetCount}");
+                    var resetCount = GetDatabase().resetInProgressGspRecoverySpans();
+                    VigitempServeur.Log($"[SONDE][RECOVERY] startup-reset worker={_idServer} spans={resetCount}");
                 }
-            }
-            catch (Exception ex)
-            {
-                VigitempServeur.Log("[SONDE][RECOVERY] erreur reset spans au demarrage: " + ex.Message);
+                catch (Exception ex)
+                {
+                    Interlocked.Exchange(ref _gspRecoveryStartupResetDone, 0);
+                    VigitempServeur.Log("[SONDE][RECOVERY] erreur reset spans au demarrage: " + ex.Message);
+                }
             }
 
             RefreshSchedule();
@@ -1296,6 +1303,9 @@ namespace Vigitemp_Serveur
                     .ThenBy(s => s.NextDue)
                     .ToList();
 
+                LogSaturatedPorts(now, due);
+
+                var normalGspProbesSinceMemo = 0;
                 foreach (var schedule in due)
                 {
                     schedule.InProgress = true;
@@ -1334,6 +1344,19 @@ namespace Vigitemp_Serveur
                         SetScheduleNextDue(schedule, schedule.LastMeasure.Value.AddSeconds(schedule.FrequencySeconds));
                         schedule.CurrentCycleSchedulingAnchor = null;
                         schedule.InProgress = false;
+                    }
+
+                    if (IsGspSchedule(schedule))
+                    {
+                        normalGspProbesSinceMemo++;
+                        if (_gspMemoMaxNormalProbes > 0 &&
+                            normalGspProbesSinceMemo >= _gspMemoMaxNormalProbes)
+                        {
+                            await ProcessPendingGspMemoBatchAsync(
+                                forceForFairness: true,
+                                preferredPort: schedule.Port);
+                            normalGspProbesSinceMemo = 0;
+                        }
                     }
                 }
 
@@ -1445,10 +1468,29 @@ namespace Vigitemp_Serveur
             return true;
         }
 
-        private async Task ProcessPendingGspMemoBatchAsync()
+        private async Task ProcessPendingGspMemoBatchAsync(
+            bool forceForFairness = false,
+            string preferredPort = null)
         {
-            var job = _gspMemoJobs.Values
-                .Where(j => j != null && !j.InProgress)
+            var candidates = _gspMemoJobs.Values
+                .Where(j => j != null && !j.InProgress);
+
+            if (!string.IsNullOrWhiteSpace(preferredPort))
+            {
+                var normalizedPreferredPort = NormalizePortLockKey(preferredPort);
+                candidates = candidates.Where(j =>
+                {
+                    var candidateSchedule = _schedules.Values.FirstOrDefault(s =>
+                        string.Equals(s.Serial, j.Serial, StringComparison.OrdinalIgnoreCase));
+                    return candidateSchedule != null &&
+                           string.Equals(
+                               NormalizePortLockKey(candidateSchedule.Port),
+                               normalizedPreferredPort,
+                               StringComparison.OrdinalIgnoreCase);
+                });
+            }
+
+            var job = candidates
                 .OrderBy(j => j.LastChunkAtUtc ?? j.CreatedAtUtc)
                 .FirstOrDefault();
 
@@ -1473,6 +1515,16 @@ namespace Vigitemp_Serveur
                 return;
             }
 
+            if (GetDatabase().hasBlockingGspRecoveryAlarm(schedule.IdLieu))
+            {
+                if (_logScheduler)
+                {
+                    VigitempServeur.Log(
+                        $"[SONDE][MEMO-JOB] serial={job.Serial} status=deferred reason=blocking-alarm");
+                }
+                return;
+            }
+
             var remaining = Math.Max(0, job.RequestedCount - job.CompletedCount);
             if (!job.RecoverUntilProbeDateTime.HasValue && remaining <= 0)
             {
@@ -1486,7 +1538,8 @@ namespace Vigitemp_Serveur
                 ? Math.Max(1, job.RequestedCount - job.ScannedCount)
                 : Math.Min(job.RequestSize, remaining);
             var minWindowSeconds = EstimateGspMemoFreeSlotSeconds();
-            if (!HasFreePortWindow(schedule.Port, minWindowSeconds, DateTime.Now, out var nextDue))
+            var hasFreeWindow = HasFreePortWindow(schedule.Port, minWindowSeconds, DateTime.Now, out var nextDue);
+            if (!hasFreeWindow && !forceForFairness)
             {
                 job.LastChunkAtUtc = DateTime.UtcNow;
                 if (_logScheduler)
@@ -1495,6 +1548,12 @@ namespace Vigitemp_Serveur
                         $"[SONDE][MEMO-JOB] serial={job.Serial} status=deferred reason=no-free-slot count={count} minWindowSec={minWindowSeconds} nextDue={FormatDateForLog(nextDue)}");
                 }
                 return;
+            }
+
+            if (!hasFreeWindow && forceForFairness)
+            {
+                VigitempServeur.Log(
+                    $"[SONDE][MEMO-JOB] serial={job.Serial} status=forced reason=fairness port={schedule.Port} afterNormalProbes={_gspMemoMaxNormalProbes} count={count} nextDue={FormatDateForLog(nextDue)}");
             }
 
             job.InProgress = true;
@@ -2587,6 +2646,67 @@ namespace Vigitemp_Serveur
 
             nextDue = dueOnPort[0];
             return (nextDue.Value - now).TotalSeconds >= Math.Max(1, minWindowSeconds);
+        }
+
+        private void LogSaturatedPorts(DateTime now, IReadOnlyCollection<SensorSchedule> dueSchedules)
+        {
+            if (dueSchedules == null || dueSchedules.Count == 0)
+            {
+                return;
+            }
+
+            var nowUtc = DateTime.UtcNow;
+            var baselineSeconds = Math.Max(1, _portSaturationBaselineProbeSeconds);
+            var logIntervalSeconds = Math.Max(30, _portSaturationLogIntervalSeconds);
+
+            foreach (var portGroup in _schedules.Values
+                .Where(s => s != null && !string.IsNullOrWhiteSpace(s.Port))
+                .GroupBy(s => NormalizePortLockKey(s.Port), StringComparer.OrdinalIgnoreCase))
+            {
+                var port = portGroup.Key;
+                var assigned = portGroup.ToList();
+                var due = dueSchedules
+                    .Where(s => string.Equals(
+                        NormalizePortLockKey(s.Port),
+                        port,
+                        StringComparison.OrdinalIgnoreCase))
+                    .ToList();
+
+                if (due.Count == 0)
+                {
+                    continue;
+                }
+
+                var minFrequencySeconds = assigned.Min(s => Math.Max(1, s.FrequencySeconds));
+                var maxLateSeconds = Math.Max(0d, due.Max(s => (now - s.NextDue).TotalSeconds));
+                var estimatedCycleSeconds = assigned.Count * baselineSeconds;
+                var estimatedLoadPercent = assigned.Sum(s =>
+                    (double)baselineSeconds / Math.Max(1, s.FrequencySeconds)) * 100d;
+                var saturated = estimatedLoadPercent >= 100d ||
+                                maxLateSeconds >= Math.Max(60d, minFrequencySeconds * 2d);
+
+                if (!saturated)
+                {
+                    continue;
+                }
+
+                if (_lastPortSaturationLogUtc.TryGetValue(port, out var lastLogUtc) &&
+                    (nowUtc - lastLogUtc).TotalSeconds < logIntervalSeconds)
+                {
+                    continue;
+                }
+
+                _lastPortSaturationLogUtc[port] = nowUtc;
+                var topLate = string.Join(
+                    ",",
+                    due.OrderByDescending(s => (now - s.NextDue).TotalSeconds)
+                        .Take(5)
+                        .Select(s =>
+                            $"{s.Serial}:{Math.Max(0, (int)(now - s.NextDue).TotalSeconds)}s"));
+
+                VigitempServeur.Log(
+                    $"[SCHED][PORT-SATURATION] worker={_idServer} port={port} assigned={assigned.Count} due={due.Count} maxLateSec={(int)maxLateSeconds} minFreqSec={minFrequencySeconds} estimatedCycleSec={estimatedCycleSeconds} estimatedLoadPct={estimatedLoadPercent:0} baselineProbeSec={baselineSeconds} topLate=[{topLate}]");
+            }
         }
 
         private bool IsGspSchedule(SensorSchedule schedule)

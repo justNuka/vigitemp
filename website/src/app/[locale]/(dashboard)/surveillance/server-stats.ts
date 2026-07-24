@@ -11,7 +11,17 @@ export interface DashboardStats {
   ended: number
   critical: number
   activeAlarms: number
+  activeAlarmBreakdown: {
+    high: number
+    low: number
+    noResponse: number
+    sector: number
+    module: number
+    other: number
+  }
 }
+
+const emptyAlarmBreakdown = () => ({ high: 0, low: 0, noResponse: 0, sector: 0, module: 0, other: 0 })
 
 /**
  * Charge les statistiques du tableau de bord (côté serveur)
@@ -33,6 +43,7 @@ export async function ServerDashboardStats(): Promise<DashboardStats> {
         ended: 0,
         critical: 0,
         activeAlarms: 0,
+        activeAlarmBreakdown: emptyAlarmBreakdown(),
       }
     }
 
@@ -68,9 +79,25 @@ export async function ServerDashboardStats(): Promise<DashboardStats> {
     ).length
     const ok = activeLocations.length - preAlarm - ended - critical
 
-    const activeAlarms = await prisma.t_alarme.count({
-      where: applyAccessFilter({ Est_Acquittee: false }, alarmAccessFilter),
+    const currentAlarms = await prisma.t_alarme.findMany({
+      where: applyAccessFilter(
+        {
+          Est_Acquittee: false,
+          Date_Heure_Fin: null,
+        },
+        alarmAccessFilter,
+      ),
+      select: { Type: true },
     })
+    const activeAlarmBreakdown = currentAlarms.reduce((counts, alarm) => {
+      if (alarm.Type === "H") counts.high += 1
+      else if (alarm.Type === "B") counts.low += 1
+      else if (alarm.Type === "N") counts.noResponse += 1
+      else if (alarm.Type === "M") counts.module += 1
+      else if (alarm.Type === "S" || alarm.Type === "A") counts.sector += 1
+      else counts.other += 1
+      return counts
+    }, emptyAlarmBreakdown())
 
     return {
       total,
@@ -79,7 +106,8 @@ export async function ServerDashboardStats(): Promise<DashboardStats> {
       preAlarm,
       ended,
       critical,
-      activeAlarms,
+      activeAlarms: currentAlarms.length,
+      activeAlarmBreakdown,
     }
   } catch (error) {
     log.error("surveillance/stats", "failed_to_load_dashboard_stats", { error })
@@ -91,6 +119,7 @@ export async function ServerDashboardStats(): Promise<DashboardStats> {
       ended: 0,
       critical: 0,
       activeAlarms: 0,
+      activeAlarmBreakdown: emptyAlarmBreakdown(),
     }
   }
 }

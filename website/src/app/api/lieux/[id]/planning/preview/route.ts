@@ -5,6 +5,7 @@ import { withLogging } from "@/lib/api-logger"
 import { apiError, apiOk } from "@/lib/api-response"
 import { isRegleActive } from "@/lib/planning-regle-schema"
 import { log } from "@/lib/logger"
+import { parseDbDateTime, serializeDbDateTime } from "@/lib/date-display"
 
 type ConsignesAttendues = {
   consigne: number | null
@@ -49,8 +50,8 @@ export const GET = withLogging(
 
       // Parse ?at= query param (defaults to now)
       const atParam = req.nextUrl.searchParams.get("at")
-      const atDate = atParam ? new Date(atParam) : new Date()
-      if (isNaN(atDate.getTime())) {
+      const atDate = atParam ? parseDbDateTime(atParam) : new Date()
+      if (!atDate || isNaN(atDate.getTime())) {
         return apiError(400, "invalid_at", "Parametre 'at' invalide (format ISO attendu)")
       }
 
@@ -156,8 +157,8 @@ export const GET = withLogging(
               Tolerance_Sup_Calc: matchedRegle.Tolerance_Sup_Calc,
               Tolerance_Inf_Calc: matchedRegle.Tolerance_Inf_Calc,
               Retard_Alarme_Changement_Consigne: matchedRegle.Retard_Alarme_Changement_Consigne,
-              Date_Creation: matchedRegle.Date_Creation.toISOString(),
-              Date_Maj: matchedRegle.Date_Maj?.toISOString() ?? null,
+              Date_Creation: serializeDbDateTime(matchedRegle.Date_Creation) ?? "",
+              Date_Maj: serializeDbDateTime(matchedRegle.Date_Maj),
             }
           : null
 

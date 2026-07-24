@@ -5,12 +5,12 @@ import { withAuthLogging } from "@/lib/api-wrappers"
 import { apiError, apiOk } from "@/lib/api-response"
 import { getUserLocationScope, buildLieuAccessFilter } from "@/lib/location-access-scope"
 import { log } from "@/lib/logger"
-import { serializeDbDateTime } from "@/lib/date-display"
+import { parseDbDateTime, serializeDbDateTime } from "@/lib/date-display"
 
 const querySchema = z.object({
   idLieu: z.coerce.number().int().positive(),
-  startDate: z.string().datetime({ offset: true }),
-  endDate: z.string().datetime({ offset: true }),
+  startDate: z.string().min(1),
+  endDate: z.string().min(1),
 })
 
 export const GET = withAuthLogging(async (req: NextRequest, ctx) => {
@@ -28,8 +28,11 @@ export const GET = withAuthLogging(async (req: NextRequest, ctx) => {
     }
 
     const { idLieu, startDate, endDate } = parsed.data
-    const from = new Date(startDate)
-    const to = new Date(endDate)
+    const from = parseDbDateTime(startDate)
+    const to = parseDbDateTime(endDate)
+    if (!from || !to || from > to) {
+      return apiError(400, "validation_error", "Plage de dates invalide")
+    }
 
     const scope = await getUserLocationScope(ctx.user.userId)
     const lieuAccessFilter = buildLieuAccessFilter(scope)

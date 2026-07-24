@@ -10,6 +10,7 @@ import { useSensors } from "@/hooks/useSensors";
 import { useAdjustments } from "@/hooks/useAdjustments";
 import { useCalibrations } from "@/hooks/useCalibrations";
 import { fetchJson, getJson } from "@/lib/http";
+import { parseDbDateTime } from "@/lib/date-display";
 
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -81,7 +82,7 @@ export function SensorsClient() {
 
   const adjustmentsTableData: AdjustmentRow[] = (adjustments || []).map((calib) => ({
     Id_Ajustage: calib.Id_Ajustage,
-    Date_Heure_Ajustage: calib.Date_Heure_Ajustage ? new Date(calib.Date_Heure_Ajustage) : null,
+    Date_Heure_Ajustage: parseDbDateTime(calib.Date_Heure_Ajustage),
     Operateur: calib.Operateur,
     Unite: calib.Unite,
     Nb_Decimale: calib.Nb_Decimale,
@@ -89,12 +90,12 @@ export function SensorsClient() {
 
   const calibrationsTableData: CalibrationRow[] = (calibrations || []).map((etal) => ({
     Id_Etalonnage: etal.Id_Etalonnage,
-    Date_Heure_Etalonnage: etal.Date_Heure_Etalonnage ? new Date(etal.Date_Heure_Etalonnage) : null,
-    Date_Validite: etal.Date_Validite ? new Date(etal.Date_Validite) : null,
+    Date_Heure_Etalonnage: parseDbDateTime(etal.Date_Heure_Etalonnage),
+    Date_Validite: parseDbDateTime(etal.Date_Validite),
     Operateur: etal.Operateur,
     Incertitude: etal.Incertitude === null || etal.Incertitude === undefined ? null : String(etal.Incertitude),
     Duree_Validite_Jours: etal.Duree_Validite_Jours ?? null,
-    Valide: etal.Valide ? new Date(etal.Valide) : null,
+    Valide: parseDbDateTime(etal.Valide),
   }));
 
   if (sensorsLoading) {

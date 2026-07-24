@@ -1,4 +1,4 @@
-import { parseDbDateTime } from "@/lib/date-display"
+import { formatDbDateTime, parseDbDateTime } from "@/lib/date-display"
 
 export type MeasureData = {
   id: string
@@ -188,19 +188,10 @@ export function formatTimeAxisLabel(
 
   if (spanMs >= 24 * 60 * 60 * 1000) {
     return [
-      new Intl.DateTimeFormat(locale, {
-        day: "2-digit",
-        month: "2-digit",
-      }).format(date),
-      new Intl.DateTimeFormat(locale, {
-        hour: "2-digit",
-        minute: "2-digit",
-      }).format(date),
+      formatDbDateTime(date, { dateOnly: true, withYear: false, locale }),
+      formatDbDateTime(date, { timeOnly: true, withSeconds: false, locale }),
     ]
   }
 
-  return new Intl.DateTimeFormat(locale, {
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(date)
+  return formatDbDateTime(date, { timeOnly: true, withSeconds: false, locale })
 }

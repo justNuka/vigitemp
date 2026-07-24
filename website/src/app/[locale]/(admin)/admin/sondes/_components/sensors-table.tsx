@@ -6,6 +6,7 @@ import { TanStackTable } from '@/components/data-table/tanstack-table';
 import { Badge } from '@/components/ui/badge';
 import type { Sensor } from '@/hooks/useSensors';
 import { useLocale, useTranslations } from 'next-intl';
+import { formatDbDateTime, parseDbDateTime } from '@/lib/date-display';
 
 type StatusTheme = {
   label: string;
@@ -75,9 +76,7 @@ export function SensorsTable({ sensors, isLoading, selectedSensorId, onSelectSen
 
 
   const parseDate = (value: string | Date | null | undefined): Date | null => {
-    if (!value) return null;
-    const date = value instanceof Date ? value : new Date(value);
-    return Number.isNaN(date.getTime()) ? null : date;
+    return parseDbDateTime(value);
   };
 
   const getCalibrationValidityState = (value: string | Date | null) => {
@@ -112,13 +111,10 @@ export function SensorsTable({ sensors, isLoading, selectedSensorId, onSelectSen
 
 
   const formatValidityDate = (value: string | Date | null) => {
-    const date = parseDate(value);
-    if (!date) return '-';
-    return new Intl.DateTimeFormat(locale.toLowerCase().startsWith('fr') ? 'fr-FR' : locale, {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-    }).format(date);
+    return formatDbDateTime(value, {
+      dateOnly: true,
+      locale: locale.toLowerCase().startsWith('fr') ? 'fr-FR' : locale,
+    });
   };
 
   const getSensorStatusTheme = (status: string | null, label: string | null): StatusTheme => {

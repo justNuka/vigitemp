@@ -12,6 +12,7 @@ import { TanStackTable } from "@/components/data-table/tanstack-table";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useSensors } from "@/hooks/useSensors";
+import { formatDbDateTime } from "@/lib/date-display";
 import StepperCalibrationFileUpload, {
   type CalibrationImportResult,
   type CalibrationInsertData,
@@ -19,28 +20,11 @@ import StepperCalibrationFileUpload, {
 } from "@/components/stepper-calibration-file-upload";
 
 const formatDateTime = (value: string | Date | null | undefined, locale: string) => {
-  if (!value) return null;
-  const date = value instanceof Date ? value : new Date(value);
-  if (Number.isNaN(date.getTime())) return null;
-  return new Intl.DateTimeFormat(locale, {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-  }).format(date);
+  return formatDbDateTime(value, { locale, fallback: "" }) || null;
 };
 
 const formatDate = (value: string | Date | null | undefined, locale: string) => {
-  if (!value) return null;
-  const date = value instanceof Date ? value : new Date(value);
-  if (Number.isNaN(date.getTime())) return null;
-  return new Intl.DateTimeFormat(locale, {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  }).format(date);
+  return formatDbDateTime(value, { locale, dateOnly: true, fallback: "" }) || null;
 };
 
 const normalizeOptionalText = (value: string | null | undefined) => {

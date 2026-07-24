@@ -15,6 +15,7 @@ import { findLocationNameConflict } from "@/lib/location-name-conflicts"
 import { buildLocationValueRangeIssues, getSensorTypeValueRangeBySerial } from "@/lib/sensor-value-range"
 import { getDbDatePlusMinutes, getDbNow } from "@/lib/sql-provider"
 import { syncGspLocationConfiguration } from "@/lib/gsp-config-sync"
+import { parseDbDateTime, serializeDbDateTime } from "@/lib/date-display"
 
 const mailingContactSchema = z.object({
   Id_Tel_Num: z.number().optional(),
@@ -44,8 +45,8 @@ function parseAppliedCalibrationDate(value: unknown) {
   if (value === null || value === "") return null
   if (typeof value !== "string") throw new Error("invalid_calibration_date")
 
-  const parsed = new Date(value)
-  if (Number.isNaN(parsed.getTime())) {
+  const parsed = parseDbDateTime(value)
+  if (!parsed) {
     throw new Error("invalid_calibration_date")
   }
 
@@ -84,7 +85,7 @@ function formatAuditValue(value: unknown): string {
   if (value === null || value === undefined || value === "") return "-"
   if (typeof value === "boolean") return value ? "Oui" : "Non"
   if (typeof value === "number" || typeof value === "bigint") return String(value)
-  if (value instanceof Date) return value.toISOString()
+  if (value instanceof Date) return serializeDbDateTime(value) ?? "-"
   if (Array.isArray(value)) {
     return value.length > 0 ? value.map((item) => formatAuditValue(item)).join(", ") : "-"
   }

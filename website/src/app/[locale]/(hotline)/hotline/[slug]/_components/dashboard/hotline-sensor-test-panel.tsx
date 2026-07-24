@@ -567,7 +567,7 @@ export function HotlineSensorTestPanel() {
                       <div className="space-y-2">
                         <Input value={listenWindowMs} onChange={(e) => setListenWindowMs(e.target.value)} placeholder="500" />
                         <div className="text-xs text-muted-foreground">
-                          Temps de silence apres le dernier octet recu avant de considerer la reponse terminee.
+                          Temps de silence apres le dernier octet reçu avant de considérer la réponse terminée.
                         </div>
                       </div>
                     </Field>

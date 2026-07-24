@@ -4,6 +4,7 @@ import { withAuthLogging, type HandlerContext } from "@/lib/api-wrappers"
 import { apiError, apiOk } from "@/lib/api-response"
 import { prismaMesure } from "@/lib/prisma"
 import { log } from "@/lib/logger"
+import { serializeDbDateTime } from "@/lib/date-display"
 
 /**
  * GET /api/sondes/[idSonde]/mesures
@@ -42,11 +43,17 @@ export const GET = withAuthLogging(
       })
 
       const derniereMaj =
-        mesures.length > 0 ? mesures[0].Date_Heure_Mesure.toISOString() : new Date().toISOString()
+        serializeDbDateTime(mesures[0]?.Date_Heure_Mesure) ?? serializeDbDateTime(new Date())
 
       mesures.reverse()
 
-      const response = apiOk({ mesures, derniereMaj })
+      const response = apiOk({
+        mesures: mesures.map((mesure) => ({
+          ...mesure,
+          Date_Heure_Mesure: serializeDbDateTime(mesure.Date_Heure_Mesure),
+        })),
+        derniereMaj,
+      })
       response.headers.set("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate")
       return response
     } catch (error) {

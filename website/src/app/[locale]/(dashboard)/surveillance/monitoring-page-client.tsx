@@ -60,8 +60,19 @@ interface Stats {
   activeAlarms: number;
 }
 
+interface InitialStats extends Stats {
+  activeAlarmBreakdown: {
+    high: number;
+    low: number;
+    noResponse: number;
+    sector: number;
+    module: number;
+    other: number;
+  };
+}
+
 interface Props {
-  initialStats: Stats;
+  initialStats: InitialStats;
   sites: Site[];
   groups: Group[];
   refreshIntervalSeconds: number;
@@ -806,7 +817,9 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
       <PageHeader
         title={t("title")}
         description={t("description")}
-        activeAlarms={displayedVisibleStats.activeAlarms}
+        activeAlarms={initialStats.activeAlarms}
+        activeAlarmLocations={initialStats.critical}
+        activeAlarmBreakdown={initialStats.activeAlarmBreakdown}
       />
 
       <LazyMotion features={domAnimation}>

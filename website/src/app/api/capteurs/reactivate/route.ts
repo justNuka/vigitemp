@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma"
 import { log } from "@/lib/logger"
 import { getRequestContext } from "@/lib/api-logger"
 import { getDbNow } from "@/lib/sql-provider"
+import { serializeDbDateTime } from "@/lib/date-display"
 
 export const POST = withAuthLogging(async (request: NextRequest, ctx: HandlerContext) => {
   try {
@@ -100,8 +101,8 @@ export const POST = withAuthLogging(async (request: NextRequest, ctx: HandlerCon
         lieuId: lieu.Id_Lieu,
         changes: {
           action: "reactivate_surveillance",
-          scheduledAt: lieu.Date_Heure_Reactivation_Surveillance?.toISOString() ?? null,
-          reactivatedAt: reactivatedAt.toISOString(),
+          scheduledAt: serializeDbDateTime(lieu.Date_Heure_Reactivation_Surveillance),
+          reactivatedAt: serializeDbDateTime(reactivatedAt),
           sensorSerial: lieu.Sonde_Numero_Serie ?? null,
         },
       })
@@ -118,8 +119,8 @@ export const POST = withAuthLogging(async (request: NextRequest, ctx: HandlerCon
         lieuId: lieu.Id_Lieu,
         changes: {
           action: "reactivate_alarm_notifications",
-          scheduledAt: lieu.Date_Heure_Reactivation_Alarme?.toISOString() ?? null,
-          reactivatedAt: reactivatedAt.toISOString(),
+          scheduledAt: serializeDbDateTime(lieu.Date_Heure_Reactivation_Alarme),
+          reactivatedAt: serializeDbDateTime(reactivatedAt),
         },
       })
     }

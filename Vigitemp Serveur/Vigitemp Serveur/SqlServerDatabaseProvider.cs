@@ -706,7 +706,7 @@ namespace Vigitemp_Serveur
                     bool consigneInfActive;
                     int frequence;
                     const int idServeurBdd = 1;
-                    int estEtatAlarme;
+                    var planningActif = false;
 
                     using (var cmdMain = CreateCommand(
                         _connectionMain,
@@ -737,9 +737,42 @@ namespace Vigitemp_Serveur
                             consigneSupActive = GetNullableBool(reader, "Est_Consigne_Sup_Active", false);
                             consigneInfActive = GetNullableBool(reader, "Est_Consigne_Inf_Active", false);
                             frequence = (int)reader["Frequence"];
-                            estEtatAlarme = Convert.ToInt32(reader["Est_Lieu_En_Alarme"]);
                         }
                     }
+
+                    using (var cmdPlanning = CreateCommand(
+                        _connectionMain,
+                        "SELECT TOP (1) COALESCE(Consigne_Apres, @consigne) AS Consigne_Apres, " +
+                        "COALESCE(Tolerance_Surveillance_Sup_Apres, @consignesup) AS Tolerance_Surveillance_Sup_Apres, " +
+                        "COALESCE(Tolerance_Surveillance_Inf_Apres, @consigneinf) AS Tolerance_Surveillance_Inf_Apres " +
+                        "FROM t_lieu_planning_audit " +
+                        "WHERE Id_Lieu = @idlieu AND Type = 'PLAN_APPLY' " +
+                        "AND Date_Heure_Debut_Changement <= @dateheuremesure " +
+                        "AND (Date_Heure_Fin_Changement IS NULL OR Date_Heure_Fin_Changement >= @dateheuremesure) " +
+                        "ORDER BY Date_Heure_Debut_Changement DESC, Id_Audit DESC;"))
+                    {
+                        cmdPlanning.Parameters.AddWithValue("@idlieu", idLieu);
+                        cmdPlanning.Parameters.AddWithValue("@dateheuremesure", measureDateTime);
+                        cmdPlanning.Parameters.AddWithValue("@consigne", consigne);
+                        cmdPlanning.Parameters.AddWithValue("@consignesup", consigneSup);
+                        cmdPlanning.Parameters.AddWithValue("@consigneinf", consigneInf);
+
+                        using (var reader = cmdPlanning.ExecuteReader())
+                        {
+                            if (reader.Read())
+                            {
+                                consigne = GetFloatOrDefault(reader["Consigne_Apres"]);
+                                consigneSup = GetFloatOrDefault(reader["Tolerance_Surveillance_Sup_Apres"]);
+                                consigneInf = GetFloatOrDefault(reader["Tolerance_Surveillance_Inf_Apres"]);
+                                planningActif = true;
+                            }
+                        }
+                    }
+
+                    var isInActiveThresholds =
+                        (!consigneSupActive || p_valeur <= consigneSup) &&
+                        (!consigneInfActive || p_valeur >= consigneInf);
+                    var estEtatAlarme = isInActiveThresholds ? 0 : 1;
 
                     using (var cmdCheck = CreateCommand(
                         _connectionMeasure,
@@ -767,7 +800,8 @@ namespace Vigitemp_Serveur
                         ") UPDATE missing SET Date_Heure_Mesure = @dateheuremesure, Valeur = @valeur," +
                         " Valeur_Brute = @resistance, Est_Valeur_Memoire = 1, Est_Valeur_Null = 0," +
                         " Consigne = @consigne, Consigne_Sup = @consignesup, Consigne_Inf = @consigneinf," +
-                        " Unite = @unite, Frequence = @frequence, Est_Etat_Alarme = @estEtatAlarme;"))
+                        " Unite = @unite, Frequence = @frequence, Est_Etat_Alarme = @estEtatAlarme," +
+                        " Planning_Regle_Existe = @planningactif, Planning_Actif = @planningactif;"))
                     {
                         cmdReplaceNull.Parameters.AddWithValue("@dateheuremesure", measureDateTime);
                         cmdReplaceNull.Parameters.AddWithValue("@valeur", p_valeur);
@@ -780,6 +814,7 @@ namespace Vigitemp_Serveur
                         cmdReplaceNull.Parameters.AddWithValue("@sondenumeroserie", p_numeroSerie);
                         cmdReplaceNull.Parameters.AddWithValue("@idlieu", idLieu);
                         cmdReplaceNull.Parameters.AddWithValue("@estEtatAlarme", estEtatAlarme);
+                        cmdReplaceNull.Parameters.AddWithValue("@planningactif", planningActif ? 1 : 0);
                         cmdReplaceNull.Parameters.AddWithValue("@toleranceSeconds", nullMatchToleranceSeconds);
                         replacedNull = cmdReplaceNull.ExecuteNonQuery() > 0;
                     }
@@ -789,9 +824,9 @@ namespace Vigitemp_Serveur
                         using (var cmdMeasure = CreateCommand(
                             _connectionMeasure,
                             "INSERT INTO tm_mesures " +
-                            "(Id_Serveur_BDD, Date_Heure_Mesure, Valeur, Valeur_Brute, Est_Valeur_Memoire, Consigne, Consigne_Sup, Consigne_Inf, Unite, Frequence, Sonde_Numero_Serie, Id_Lieu, Est_Etat_Alarme) " +
+                            "(Id_Serveur_BDD, Date_Heure_Mesure, Valeur, Valeur_Brute, Est_Valeur_Memoire, Consigne, Consigne_Sup, Consigne_Inf, Unite, Frequence, Sonde_Numero_Serie, Id_Lieu, Est_Etat_Alarme, Planning_Regle_Existe, Planning_Actif) " +
                             "VALUES " +
-                            "(@idserveurbdd, @dateheuremesure, @valeur, @resistance, 1, @consigne, @consignesup, @consigneinf, @unite, @frequence, @sondenumeroserie, @idlieu, @estEtatAlarme)"))
+                            "(@idserveurbdd, @dateheuremesure, @valeur, @resistance, 1, @consigne, @consignesup, @consigneinf, @unite, @frequence, @sondenumeroserie, @idlieu, @estEtatAlarme, @planningactif, @planningactif)"))
                         {
                             cmdMeasure.Parameters.AddWithValue("@idserveurbdd", idServeurBdd);
                             cmdMeasure.Parameters.AddWithValue("@dateheuremesure", measureDateTime);
@@ -805,13 +840,11 @@ namespace Vigitemp_Serveur
                             cmdMeasure.Parameters.AddWithValue("@sondenumeroserie", p_numeroSerie);
                             cmdMeasure.Parameters.AddWithValue("@idlieu", idLieu);
                             cmdMeasure.Parameters.AddWithValue("@estEtatAlarme", estEtatAlarme);
+                            cmdMeasure.Parameters.AddWithValue("@planningactif", planningActif ? 1 : 0);
                             cmdMeasure.ExecuteNonQuery();
                         }
                     }
 
-                    var isInActiveThresholds =
-                        (!consigneSupActive || p_valeur <= consigneSup) &&
-                        (!consigneInfActive || p_valeur >= consigneInf);
                     using (var cmdUpdateLieu = CreateCommand(
                         _connectionMain,
                         "UPDATE t_lieu SET " +
@@ -1865,7 +1898,7 @@ namespace Vigitemp_Serveur
                     using (var cmd = CreateCommand(
                         _connectionMain,
                         "SELECT TOP 1 1 FROM t_alarme " +
-                        "WHERE Id_Lieu = @idLieu AND Type IN ('N', 'M') AND Date_Heure_Fin IS NULL;"))
+                        "WHERE Id_Lieu = @idLieu AND Type IN ('N', 'M', 'A', 'S') AND Date_Heure_Fin IS NULL;"))
                     {
                         cmd.Parameters.AddWithValue("@idLieu", idLieu);
                         var scalar = cmd.ExecuteScalar();

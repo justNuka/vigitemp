@@ -20,6 +20,7 @@ import { Badge } from '@/components/ui/badge';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import { exportStyledExcel } from '@/lib/excel-export';
+import { serializeDbDateTime } from '@/lib/date-display';
 import {
   Select,
   SelectContent,
@@ -350,7 +351,7 @@ export function TanStackTable<TData extends Record<string, any>>({
 
   function formatExportValue(value: unknown): string {
     if (value == null) return "";
-    if (value instanceof Date) return value.toISOString();
+    if (value instanceof Date) return serializeDbDateTime(value) ?? "";
     if (Array.isArray(value)) return value.map((v) => formatExportValue(v)).join(", ");
     if (typeof value === "object") {
       try {

@@ -7,6 +7,7 @@ import { log } from "@/lib/logger";
 import { decodeXmlBytes } from "@/lib/xml-decoding";
 import { withStandardOrExpertAnyAuthorizationLogging } from "@/lib/license-guards";
 import { getPermissionAliases } from "@/lib/permissions";
+import { serializeDbDateTime } from "@/lib/date-display";
 
 const isXmlFile = (file: File) => {
   const name = file.name.toLowerCase();
@@ -18,13 +19,6 @@ const isXmlFile = (file: File) => {
 const decodeXmlFile = async (file: File) => {
   const bytes = new Uint8Array(await file.arrayBuffer());
   return decodeXmlBytes(bytes).text;
-};
-
-const toIso = (value: Date | string | null | undefined) => {
-  if (!value) return null;
-  if (value instanceof Date) return value.toISOString();
-  const parsed = new Date(value);
-  return Number.isNaN(parsed.getTime()) ? null : parsed.toISOString();
 };
 
 const METROLOGY_ACCESS_CODES = getPermissionAliases("METROLOGY_OPERATION_ACCESS");
@@ -91,13 +85,13 @@ export const POST = withStandardOrExpertAnyAuthorizationLogging(METROLOGY_ACCESS
       unit: parsed.summary.unit,
       warnings: parsed.warnings,
       insertData: {
-        Date_Heure_Etalonnage: toIso(parsed.data.Date_Heure_Etalonnage ?? null),
+        Date_Heure_Etalonnage: serializeDbDateTime(parsed.data.Date_Heure_Etalonnage),
         Sonde_Numero_Serie: parsed.data.Sonde_Numero_Serie ?? null,
-        Date_Validite: toIso(parsed.data.Date_Validite ?? null),
+        Date_Validite: serializeDbDateTime(parsed.data.Date_Validite),
         Duree_Validite_Jours: parsed.data.Duree_Validite_Jours ?? null,
         Operateur: parsed.data.Operateur ?? null,
         Etalon_Numero_Serie: parsed.data.Etalon_Numero_Serie ?? null,
-        Date_Certif: toIso(parsed.data.Date_Certif ?? null),
+        Date_Certif: serializeDbDateTime(parsed.data.Date_Certif),
         Organisme: parsed.data.Organisme ?? null,
         Num_Certif: parsed.data.Num_Certif ?? null,
         Unite: parsed.data.Unite ?? null,

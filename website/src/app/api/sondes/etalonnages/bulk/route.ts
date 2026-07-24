@@ -7,6 +7,7 @@ import { withStandardOrExpertAnyAuthorizationLogging } from "@/lib/license-guard
 import { log } from "@/lib/logger";
 import { hasMainDbColumn } from "@/lib/db-schema";
 import { getPermissionAliases } from "@/lib/permissions";
+import { parseDbDateTime } from "@/lib/date-display";
 
 const measureSchema = z.object({
   Numero_Ordre: z.number().int().min(1).max(10),
@@ -122,9 +123,9 @@ export const POST = withStandardOrExpertAnyAuthorizationLogging(METROLOGY_ACCESS
 
       for (const row of validated.rows) {
         const data = row.insertData;
-        const dateEtalonnage = data.Date_Heure_Etalonnage ? new Date(data.Date_Heure_Etalonnage) : null;
-        const dateValidite = data.Date_Validite ? new Date(data.Date_Validite) : null;
-        const dateCertif = data.Date_Certif ? new Date(data.Date_Certif) : null;
+        const dateEtalonnage = parseDbDateTime(data.Date_Heure_Etalonnage);
+        const dateValidite = parseDbDateTime(data.Date_Validite);
+        const dateCertif = parseDbDateTime(data.Date_Certif);
         const dureeValiditeJours = data.Duree_Validite_Jours ?? null;
         const dateValiditeFinale = computeDateValidite(dateEtalonnage, dateValidite, dureeValiditeJours);
 

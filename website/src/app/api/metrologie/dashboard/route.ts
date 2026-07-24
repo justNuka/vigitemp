@@ -7,6 +7,7 @@ import { log } from "@/lib/logger"
 import { getPermissionAliases } from "@/lib/permissions"
 import { prisma } from "@/lib/prisma"
 import { buildMetrologyLookupSerials } from "@/lib/sensor-naming"
+import { parseDbDateTime, serializeDbDateTime } from "@/lib/date-display"
 
 const METROLOGY_READ_CODES = getPermissionAliases("METROLOGY_ACCESS")
 
@@ -25,10 +26,7 @@ function asNumber(value: unknown): number | null {
 }
 
 function asDate(value: unknown): Date | null {
-  if (!value) return null
-  if (value instanceof Date) return Number.isNaN(value.getTime()) ? null : value
-  const parsed = new Date(String(value))
-  return Number.isNaN(parsed.getTime()) ? null : parsed
+  return parseDbDateTime(value as string | number | Date | null | undefined)
 }
 
 function getConformity(dateValidite: Date | null, dateEtalonnage: Date | null, emtMode: ReturnType<typeof emtModeFromDb>) {
@@ -131,14 +129,14 @@ export const GET = withStandardOrExpertAnyAuthorizationLogging(METROLOGY_READ_CO
         toleranceInf: asNumber(lieu.Tolerance_Surveillance_Inf),
         consigne: asNumber(lieu.Consigne),
         toleranceSup: asNumber(lieu.Tolerance_Surveillance_Sup),
-        dateEtalonnage: asDate(dateEtalonnage)?.toISOString() ?? null,
+        dateEtalonnage: serializeDbDateTime(asDate(dateEtalonnage)),
         erreurJustesse,
         incertitudeEtalonnage,
         correctionErreurJustesseActive: Boolean(lieu.Est_Correction_Ej),
         correctionDeriveActive: Boolean(lieu.Est_Correction_derive),
         derive: asNumber(lieu.Derive),
         incertitudeMesure,
-        dateProchainEtalonnage: asDate(dateValidite)?.toISOString() ?? null,
+        dateProchainEtalonnage: serializeDbDateTime(asDate(dateValidite)),
       }
     })
 

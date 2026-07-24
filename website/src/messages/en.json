@@ -4383,7 +4383,19 @@
       "badge": "{count, plural, one {# alarm} other {# alarms}}",
       "banner": "{count, plural, one {# active alarm} other {# active alarms}}",
       "view": "View alarms",
-      "already_here": "You are already on the alarms page"
+      "already_here": "You are already on the alarms page",
+      "live": "Live",
+      "current": "active alarms",
+      "locations": "across {count} critical locations",
+      "summary": "Current alarm monitoring",
+      "types": {
+        "high": "High",
+        "low": "Low",
+        "no_response": "No resp.",
+        "sector": "Power",
+        "module": "Module",
+        "other": "Other"
+      }
     }
   },
   "alarmsTanstack": {

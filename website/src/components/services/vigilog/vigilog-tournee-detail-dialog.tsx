@@ -28,22 +28,22 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { AlertTriangle } from "lucide-react"
+import { formatDbDateTime } from "@/lib/date-display"
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend, Filler)
 
 function formatDateTime(value: string | null, locale: string) {
-  if (!value) return "-"
-  return new Intl.DateTimeFormat(locale === "fr" ? "fr-FR" : "en-GB", {
-    dateStyle: "short",
-    timeStyle: "short",
-  }).format(new Date(value))
+  return formatDbDateTime(value, {
+    withSeconds: false,
+    locale: locale === "fr" ? "fr-FR" : "en-GB",
+  })
 }
 
 function formatDate(value: string | null, locale: string) {
-  if (!value) return "-"
-  return new Intl.DateTimeFormat(locale === "fr" ? "fr-FR" : "en-GB", {
-    dateStyle: "short",
-  }).format(new Date(value))
+  return formatDbDateTime(value, {
+    dateOnly: true,
+    locale: locale === "fr" ? "fr-FR" : "en-GB",
+  })
 }
 
 function formatNumber(value: number | null) {
@@ -202,10 +202,11 @@ export function VigilogTourneeDetailDialog({ open, pending = false, detail, onOp
 
     return {
       labels: measures.map((measure) =>
-        new Intl.DateTimeFormat(locale === "fr" ? "fr-FR" : "en-GB", {
-          hour: "2-digit",
-          minute: "2-digit",
-        }).format(new Date(measure.measuredAt)),
+        formatDbDateTime(measure.measuredAt, {
+          timeOnly: true,
+          withSeconds: false,
+          locale: locale === "fr" ? "fr-FR" : "en-GB",
+        }),
       ),
       datasets: [
         ...(tournee.lowLimitActive

@@ -10,6 +10,7 @@ import {
   extractProbeAddressFromSerial,
   resolveImportedSensorIdentity,
 } from "@/lib/sensor-naming";
+import { parseDbDateTime } from "@/lib/date-display";
 
 const rowSchema = z.object({
   id: z.string().min(1),
@@ -266,8 +267,8 @@ export const POST = withOneOrHigherAnyAuthorizationLogging(getPermissionAliases(
 
       for (const row of normalizedRows) {
         const data = row.insertData;
-        const dateAjustage = data.Date_Heure_Ajustage ? new Date(data.Date_Heure_Ajustage) : null;
-        const dateCertif = data.SE_Date_Certif ? new Date(data.SE_Date_Certif) : null;
+        const dateAjustage = parseDbDateTime(data.Date_Heure_Ajustage);
+        const dateCertif = parseDbDateTime(data.SE_Date_Certif);
 
         const existing = await tx.t_ajustage.findFirst({
           where: {

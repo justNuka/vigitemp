@@ -11,6 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { useMetrologyDashboard, type MetrologyDashboardRow } from "@/hooks/useMetrologyDashboard"
+import { formatDbDateTime } from "@/lib/date-display"
 
 export function MetrologyDashboardClient() {
   const t = useTranslations("metrologyAdmin.dashboard")
@@ -23,10 +24,10 @@ export function MetrologyDashboardClient() {
   }
 
   function formatDate(value: string | null) {
-    if (!value) return "-"
-    const date = new Date(value)
-    if (Number.isNaN(date.getTime())) return "-"
-    return new Intl.DateTimeFormat(locale === "fr" ? "fr-FR" : "en-US", { dateStyle: "short" }).format(date)
+    return formatDbDateTime(value, {
+      dateOnly: true,
+      locale: locale === "fr" ? "fr-FR" : "en-US",
+    })
   }
 
   function yesNoBadge(active: boolean) {

@@ -1,13 +1,14 @@
 import { NextRequest } from "next/server"
 
 import { getClientIp } from "@/lib/api-logger"
+import { serializeDbDateTime } from "@/lib/date-display"
 import { log } from "@/lib/logger"
 import type { JWTPayload } from "@/lib/jwt"
 
 type Primitive = string | number | boolean | null
 
 function normalizeAuditValue(value: unknown): Primitive | Primitive[] | Record<string, unknown> {
-  if (value instanceof Date) return value.toISOString()
+  if (value instanceof Date) return serializeDbDateTime(value)
   if (value === undefined) return null
   if (value === null || typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
     return value

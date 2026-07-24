@@ -3199,9 +3199,9 @@
       "rssi": "RSSI : {value}",
       "tension": "Tension : {value}",
       "battery_state": {
-        "ok": "Etat batterie : OK ({value}V)",
-        "medium": "Etat batterie : Moyen ({value}V)",
-        "low": "Etat batterie : Faible ({value}V)"
+        "ok": "État batterie : OK ({value}V)",
+        "medium": "État batterie : Moyen ({value}V)",
+        "low": "État batterie : Faible ({value}V)"
       }
     },
     "wireless": {
@@ -4377,7 +4377,19 @@
       "badge": "{count, plural, one {# alarme} other {# alarmes}}",
       "banner": "{count, plural, one {# alarme active} other {# alarmes actives}}",
       "view": "Voir les alarmes",
-      "already_here": "Vous êtes déjà sur la page des alarmes"
+      "already_here": "Vous êtes déjà sur la page des alarmes",
+      "live": "Direct",
+      "current": "alarmes en cours",
+      "locations": "sur {count} lieux critiques",
+      "summary": "Surveillance des alarmes en cours",
+      "types": {
+        "high": "Hautes",
+        "low": "Basses",
+        "no_response": "Non-rép.",
+        "sector": "Secteur",
+        "module": "Module",
+        "other": "Autres"
+      }
     }
   },
   "alarmsTanstack": {

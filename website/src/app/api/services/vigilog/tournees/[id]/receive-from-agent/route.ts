@@ -9,6 +9,7 @@ import { prisma } from "@/lib/prisma"
 import { clearVigilogAgent, readVigilogAgent } from "@/lib/vigilog-agent"
 import { normalizeOptionalText, vigilogReceiveSchema, VIGILOG_ACCESS_CODES } from "../../../_shared"
 import { persistVigilogReception } from "../../receive-helpers"
+import { parseDbDateTime } from "@/lib/date-display"
 
 export const POST = withStandardOrExpertAnyAuthorizationLogging(
   VIGILOG_ACCESS_CODES,
@@ -77,13 +78,18 @@ export const POST = withStandardOrExpertAnyAuthorizationLogging(
         now,
         existingComment: existing.Commentaire,
         receiveComment: parsed.data.Commentaire,
-        measures: agentResponse.measures.map((measure) => ({
-          Numero_Ordre: measure.Numero_Ordre,
-          Date_Heure_Mesure: new Date(measure.Date_Heure_Mesure),
-          Valeur: measure.Valeur,
-          Est_Marqueur: measure.Est_Marqueur,
-          Details: measure.Details,
-        })),
+        measures: agentResponse.measures.map((measure) => {
+          const measuredAt = parseDbDateTime(measure.Date_Heure_Mesure)
+          if (!measuredAt) throw new Error("invalid_measure_datetime")
+
+          return {
+            Numero_Ordre: measure.Numero_Ordre,
+            Date_Heure_Mesure: measuredAt,
+            Valeur: measure.Valeur,
+            Est_Marqueur: measure.Est_Marqueur,
+            Details: measure.Details,
+          }
+        }),
         lowActive: existing.Limite_Basse_Active,
         lowLimit: existing.Limite_Basse != null ? Number(existing.Limite_Basse) : null,
         highActive: existing.Limite_Haute_Active,
