@@ -188,15 +188,15 @@ namespace Vigitemp_Serveur.sensors
         internal static string BuildCommand(string prefix, string target, string payload)
         {
             var normalizedPrefix = (prefix ?? string.Empty).Trim();
-            var normalizedTarget = target ?? string.Empty;
-            var normalizedPayload = payload ?? string.Empty;
+            var normalizedTarget = (target ?? string.Empty).Trim();
+            var normalizedPayload = (payload ?? string.Empty).Trim();
 
-            if (string.IsNullOrWhiteSpace(normalizedPayload))
+            if (normalizedPayload.Length == 0)
             {
-                return (normalizedPrefix + normalizedTarget).TrimEnd();
+                return normalizedPrefix + normalizedTarget + " ";
             }
 
-            return normalizedPrefix + normalizedTarget + " " + normalizedPayload.Trim();
+            return normalizedPrefix + normalizedTarget + " " + normalizedPayload;
         }
 
         internal static string BuildDateTimePayload(DateTime value)
