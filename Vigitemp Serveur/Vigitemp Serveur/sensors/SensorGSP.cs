@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.IO.Ports;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace Vigitemp_Serveur.sensors
@@ -611,7 +612,7 @@ namespace Vigitemp_Serveur.sensors
                 }
                 if (!string.IsNullOrWhiteSpace(response))
                 {
-                    VigitempServeur.Log($"[SONDE][RX] type=GSP serial={m_sondeSerialNumber} port={m_comPort} raw={response}");
+                    VigitempServeur.Log($"[SONDE][RX] type=GSP serial={m_sondeSerialNumber} port={m_comPort} raw={FormatResponseForLog(response)}");
                     if (GspProtocol.ContainsForeignSerial(response, _commandTarget))
                     {
                         VigitempServeur.Log($"[SONDE][STALE] type=GSP serial={m_sondeSerialNumber} port={m_comPort} command={commandPrefix} ignored=foreign-serial raw={TrimForLog(response)}");
@@ -1145,9 +1146,77 @@ namespace Vigitemp_Serveur.sensors
 
         private static string EscapeForLog(string value)
         {
-            return value
-                .Replace("\r", "\\r")
-                .Replace("\n", "\\n");
+            var builder = new StringBuilder();
+            foreach (var character in value ?? string.Empty)
+            {
+                switch (character)
+                {
+                    case '\r':
+                        builder.Append("\\r");
+                        break;
+                    case '\n':
+                        builder.Append("\\n");
+                        break;
+                    case '\t':
+                        builder.Append("\\t");
+                        break;
+                    default:
+                        if (char.IsControl(character) || character == '\uFFFD')
+                        {
+                            builder.Append("\\u");
+                            builder.Append(((int)character).ToString("X4", CultureInfo.InvariantCulture));
+                        }
+                        else
+                        {
+                            builder.Append(character);
+                        }
+                        break;
+                }
+            }
+            return builder.ToString();
+        }
+
+        private static string FormatResponseForLog(string value, int maxHexBytes = 192)
+        {
+            var trimmed = (value ?? string.Empty).Trim();
+            if (trimmed.Length == 0)
+            {
+                return "<empty>";
+            }
+
+            var containsBinaryData = false;
+            foreach (var character in trimmed)
+            {
+                if ((char.IsControl(character) && character != '\r' && character != '\n' && character != '\t') ||
+                    character == '\uFFFD')
+                {
+                    containsBinaryData = true;
+                    break;
+                }
+            }
+
+            if (!containsBinaryData)
+            {
+                return TrimForLog(trimmed);
+            }
+
+            var bytes = Encoding.UTF8.GetBytes(trimmed);
+            var displayedLength = Math.Min(bytes.Length, maxHexBytes);
+            var hex = new StringBuilder(displayedLength * 3);
+            for (var index = 0; index < displayedLength; index++)
+            {
+                if (index > 0)
+                {
+                    hex.Append(' ');
+                }
+                hex.Append(bytes[index].ToString("X2", CultureInfo.InvariantCulture));
+            }
+            if (bytes.Length > displayedLength)
+            {
+                hex.Append(" ...");
+            }
+
+            return $"<binary chars={trimmed.Length} bytes={bytes.Length} escaped={TrimForLog(trimmed, 300)} utf8Hex={hex}>";
         }
 
         private static string TrimForLog(string value, int maxLength = 1000)

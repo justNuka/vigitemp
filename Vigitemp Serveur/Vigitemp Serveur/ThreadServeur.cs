@@ -1275,17 +1275,16 @@ namespace Vigitemp_Serveur
                     RefreshSchedule();
                 }
 
-                var now = DateTime.Now;
-
                 // Prioritize explicit GSP config pushes before any normal probe so that
                 // the next measurement is taken with the expected runtime parameters.
-                while (await ProcessPendingGspConfigurationAsync(prioritizeDirtyPushes: true))
+                // Process at most one push per tick so a dirty backlog cannot starve TEMP probes.
+                await ProcessPendingGspConfigurationAsync(prioritizeDirtyPushes: true);
+                if (m_cts.IsCancellationRequested)
                 {
-                    if (m_cts.IsCancellationRequested)
-                    {
-                        return;
-                    }
+                    return;
                 }
+
+                var now = DateTime.Now;
 
                 double ComputePriority(SensorSchedule schedule)
                 {

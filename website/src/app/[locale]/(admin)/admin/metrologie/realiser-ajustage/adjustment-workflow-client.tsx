@@ -151,7 +151,11 @@ export function AdjustmentWorkflowClient() {
   const { data: sessionPayload } = useQuery({
     queryKey: ["metrology-adjustment-session"],
     queryFn: () => getJson<SessionApiPayload>("/api/metrologie/ajustage/session"),
-    refetchInterval: (query) => (isUnauthorizedError(query.state.error) ? false : 2000),
+    refetchInterval: (query) => {
+      if (isUnauthorizedError(query.state.error)) return false
+      const payload = query.state.data as SessionApiPayload | undefined
+      return payload?.session?.status === "running" ? 2000 : false
+    },
   })
 
   const session = sessionPayload?.session ?? null
@@ -816,7 +820,6 @@ export function AdjustmentWorkflowClient() {
                             </>
                           )}
                         </Button>
-                        <p className="text-xs text-muted-foreground">{t("adjustment.cards.run.hint")}</p>
                       </CardContent>
                     </Card>
 

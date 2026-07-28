@@ -730,6 +730,8 @@
       "cancel": "Annuler",
       "confirm": "Acquitter",
       "confirm_many": "Acquitter ({count})",
+      "confirm_stay": "Acquitter et rester",
+      "confirm_close": "Acquitter et fermer",
       "confirm_many_stay": "Acquitter et rester ({count})",
       "confirm_many_close": "Acquitter et fermer ({count})",
       "confirming": "Acquittement...",

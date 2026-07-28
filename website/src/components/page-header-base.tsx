@@ -40,7 +40,6 @@ export function PageHeaderBase({
   title,
   description,
   activeAlarms = 0,
-  activeAlarmLocations,
   activeAlarmBreakdown,
   children,
   className,
@@ -88,7 +87,6 @@ export function PageHeaderBase({
               {activeAlarms > 0 && (
                 <AlarmWeatherWidget
                   count={activeAlarms}
-                  locationCount={activeAlarmLocations}
                   breakdown={activeAlarmBreakdown}
                   disabled={isOnAlarmsPage}
                 />
@@ -117,12 +115,10 @@ export function PageHeaderBase({
 
 function AlarmWeatherWidget({
   count,
-  locationCount,
   breakdown,
   disabled,
 }: {
   count: number;
-  locationCount?: number;
   breakdown?: ActiveAlarmBreakdown;
   disabled: boolean;
 }) {
@@ -147,7 +143,7 @@ function AlarmWeatherWidget({
       exit={{ opacity: 0, y: -6, scale: 0.97 }}
       transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] as const }}
       className={cn(
-        "group relative w-full max-w-[42rem] overflow-hidden rounded-2xl border border-red-300/40 bg-linear-to-r from-red-700 via-rose-600 to-orange-500 px-5 py-3.5 text-white shadow-[0_10px_28px_-15px_rgba(220,38,38,0.9)]",
+        "group relative w-full max-w-[42rem] overflow-hidden rounded-2xl border border-red-300/40 bg-linear-to-r from-red-700 via-rose-600 to-orange-500 px-5 py-2.5 text-white shadow-[0_10px_28px_-15px_rgba(220,38,38,0.9)]",
         !disabled && "transition-transform duration-200 hover:-translate-y-0.5 hover:shadow-[0_14px_34px_-14px_rgba(220,38,38,0.95)]",
         disabled && "cursor-default opacity-90",
       )}
@@ -166,7 +162,7 @@ function AlarmWeatherWidget({
       )}
       <div className="relative flex items-center gap-3">
         <m.div
-          className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-white/20 bg-white/15 shadow-inner backdrop-blur-sm"
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-white/20 bg-white/15 shadow-inner backdrop-blur-sm"
           animate={shouldReduceMotion ? undefined : {
             scale: [1, 1.07, 1],
             boxShadow: [
@@ -177,7 +173,7 @@ function AlarmWeatherWidget({
           }}
           transition={{ duration: 2.8, repeat: Infinity, ease: "easeInOut" }}
         >
-          <AlertTriangle className="h-6 w-6" />
+          <AlertTriangle className="h-5.5 w-5.5" />
         </m.div>
         <div className="min-w-[7.75rem] shrink-0 border-r border-white/25 pr-4">
           <div className="flex items-baseline gap-1.5">
@@ -187,11 +183,6 @@ function AlarmWeatherWidget({
             </span>
           </div>
           <p className="mt-1 text-sm font-semibold text-white/95">{t("current")}</p>
-          {typeof locationCount === "number" && (
-            <p className="mt-0.5 text-xs font-medium text-white/80">
-              {t("locations", { count: locationCount })}
-            </p>
-          )}
         </div>
         <div className="hidden min-w-0 flex-1 grid-cols-6 gap-1.5 sm:grid">
           {categories.length > 0 ? (

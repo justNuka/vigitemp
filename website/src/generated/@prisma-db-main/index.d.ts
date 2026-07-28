@@ -15250,6 +15250,10 @@ export namespace Prisma {
   export type T_etalonAvgAggregateOutputType = {
     Id_Etalon: number | null
     Nb_Decimale: number | null
+    Coeff_A: number | null
+    Coeff_B: number | null
+    Coeff_C: number | null
+    Incertitude_Max: number | null
     Id_Worker: number | null
     Id_Module: number | null
   }
@@ -15257,6 +15261,10 @@ export namespace Prisma {
   export type T_etalonSumAggregateOutputType = {
     Id_Etalon: number | null
     Nb_Decimale: number | null
+    Coeff_A: number | null
+    Coeff_B: number | null
+    Coeff_C: number | null
+    Incertitude_Max: number | null
     Id_Worker: number | null
     Id_Module: number | null
   }
@@ -15271,6 +15279,10 @@ export namespace Prisma {
     Resolution: string | null
     Incertitude: string | null
     Nb_Decimale: number | null
+    Coeff_A: number | null
+    Coeff_B: number | null
+    Coeff_C: number | null
+    Incertitude_Max: number | null
     Reserve_MC2: string | null
     Id_Worker: number | null
     Id_Module: number | null
@@ -15286,6 +15298,10 @@ export namespace Prisma {
     Resolution: string | null
     Incertitude: string | null
     Nb_Decimale: number | null
+    Coeff_A: number | null
+    Coeff_B: number | null
+    Coeff_C: number | null
+    Incertitude_Max: number | null
     Reserve_MC2: string | null
     Id_Worker: number | null
     Id_Module: number | null
@@ -15301,6 +15317,10 @@ export namespace Prisma {
     Resolution: number
     Incertitude: number
     Nb_Decimale: number
+    Coeff_A: number
+    Coeff_B: number
+    Coeff_C: number
+    Incertitude_Max: number
     Reserve_MC2: number
     Id_Worker: number
     Id_Module: number
@@ -15311,6 +15331,10 @@ export namespace Prisma {
   export type T_etalonAvgAggregateInputType = {
     Id_Etalon?: true
     Nb_Decimale?: true
+    Coeff_A?: true
+    Coeff_B?: true
+    Coeff_C?: true
+    Incertitude_Max?: true
     Id_Worker?: true
     Id_Module?: true
   }
@@ -15318,6 +15342,10 @@ export namespace Prisma {
   export type T_etalonSumAggregateInputType = {
     Id_Etalon?: true
     Nb_Decimale?: true
+    Coeff_A?: true
+    Coeff_B?: true
+    Coeff_C?: true
+    Incertitude_Max?: true
     Id_Worker?: true
     Id_Module?: true
   }
@@ -15332,6 +15360,10 @@ export namespace Prisma {
     Resolution?: true
     Incertitude?: true
     Nb_Decimale?: true
+    Coeff_A?: true
+    Coeff_B?: true
+    Coeff_C?: true
+    Incertitude_Max?: true
     Reserve_MC2?: true
     Id_Worker?: true
     Id_Module?: true
@@ -15347,6 +15379,10 @@ export namespace Prisma {
     Resolution?: true
     Incertitude?: true
     Nb_Decimale?: true
+    Coeff_A?: true
+    Coeff_B?: true
+    Coeff_C?: true
+    Incertitude_Max?: true
     Reserve_MC2?: true
     Id_Worker?: true
     Id_Module?: true
@@ -15362,6 +15398,10 @@ export namespace Prisma {
     Resolution?: true
     Incertitude?: true
     Nb_Decimale?: true
+    Coeff_A?: true
+    Coeff_B?: true
+    Coeff_C?: true
+    Incertitude_Max?: true
     Reserve_MC2?: true
     Id_Worker?: true
     Id_Module?: true
@@ -15464,6 +15504,10 @@ export namespace Prisma {
     Resolution: string | null
     Incertitude: string | null
     Nb_Decimale: number | null
+    Coeff_A: number | null
+    Coeff_B: number | null
+    Coeff_C: number | null
+    Incertitude_Max: number | null
     Reserve_MC2: string | null
     Id_Worker: number | null
     Id_Module: number | null
@@ -15498,6 +15542,10 @@ export namespace Prisma {
     Resolution?: boolean
     Incertitude?: boolean
     Nb_Decimale?: boolean
+    Coeff_A?: boolean
+    Coeff_B?: boolean
+    Coeff_C?: boolean
+    Incertitude_Max?: boolean
     Reserve_MC2?: boolean
     Id_Worker?: boolean
     Id_Module?: boolean
@@ -15515,12 +15563,16 @@ export namespace Prisma {
     Resolution?: boolean
     Incertitude?: boolean
     Nb_Decimale?: boolean
+    Coeff_A?: boolean
+    Coeff_B?: boolean
+    Coeff_C?: boolean
+    Incertitude_Max?: boolean
     Reserve_MC2?: boolean
     Id_Worker?: boolean
     Id_Module?: boolean
   }
 
-  export type t_etalonOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"Id_Etalon" | "Etalon_Numero_Serie" | "Est_Archive" | "Etat_Etalon" | "Port_Serie" | "Est_Sonde_Externe" | "Resolution" | "Incertitude" | "Nb_Decimale" | "Reserve_MC2" | "Id_Worker" | "Id_Module", ExtArgs["result"]["t_etalon"]>
+  export type t_etalonOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"Id_Etalon" | "Etalon_Numero_Serie" | "Est_Archive" | "Etat_Etalon" | "Port_Serie" | "Est_Sonde_Externe" | "Resolution" | "Incertitude" | "Nb_Decimale" | "Coeff_A" | "Coeff_B" | "Coeff_C" | "Incertitude_Max" | "Reserve_MC2" | "Id_Worker" | "Id_Module", ExtArgs["result"]["t_etalon"]>
 
   export type $t_etalonPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "t_etalon"
@@ -15535,6 +15587,10 @@ export namespace Prisma {
       Resolution: string | null
       Incertitude: string | null
       Nb_Decimale: number | null
+      Coeff_A: number | null
+      Coeff_B: number | null
+      Coeff_C: number | null
+      Incertitude_Max: number | null
       Reserve_MC2: string | null
       Id_Worker: number | null
       Id_Module: number | null
@@ -15916,6 +15972,10 @@ export namespace Prisma {
     readonly Resolution: FieldRef<"t_etalon", 'String'>
     readonly Incertitude: FieldRef<"t_etalon", 'String'>
     readonly Nb_Decimale: FieldRef<"t_etalon", 'Int'>
+    readonly Coeff_A: FieldRef<"t_etalon", 'Float'>
+    readonly Coeff_B: FieldRef<"t_etalon", 'Float'>
+    readonly Coeff_C: FieldRef<"t_etalon", 'Float'>
+    readonly Incertitude_Max: FieldRef<"t_etalon", 'Float'>
     readonly Reserve_MC2: FieldRef<"t_etalon", 'String'>
     readonly Id_Worker: FieldRef<"t_etalon", 'Int'>
     readonly Id_Module: FieldRef<"t_etalon", 'Int'>
@@ -60649,6 +60709,10 @@ export namespace Prisma {
     Resolution: 'Resolution',
     Incertitude: 'Incertitude',
     Nb_Decimale: 'Nb_Decimale',
+    Coeff_A: 'Coeff_A',
+    Coeff_B: 'Coeff_B',
+    Coeff_C: 'Coeff_C',
+    Incertitude_Max: 'Incertitude_Max',
     Reserve_MC2: 'Reserve_MC2',
     Id_Worker: 'Id_Worker',
     Id_Module: 'Id_Module'
@@ -62677,6 +62741,10 @@ export namespace Prisma {
     Resolution?: StringNullableFilter<"t_etalon"> | string | null
     Incertitude?: StringNullableFilter<"t_etalon"> | string | null
     Nb_Decimale?: IntNullableFilter<"t_etalon"> | number | null
+    Coeff_A?: FloatNullableFilter<"t_etalon"> | number | null
+    Coeff_B?: FloatNullableFilter<"t_etalon"> | number | null
+    Coeff_C?: FloatNullableFilter<"t_etalon"> | number | null
+    Incertitude_Max?: FloatNullableFilter<"t_etalon"> | number | null
     Reserve_MC2?: StringNullableFilter<"t_etalon"> | string | null
     Id_Worker?: IntNullableFilter<"t_etalon"> | number | null
     Id_Module?: IntNullableFilter<"t_etalon"> | number | null
@@ -62692,6 +62760,10 @@ export namespace Prisma {
     Resolution?: SortOrderInput | SortOrder
     Incertitude?: SortOrderInput | SortOrder
     Nb_Decimale?: SortOrderInput | SortOrder
+    Coeff_A?: SortOrderInput | SortOrder
+    Coeff_B?: SortOrderInput | SortOrder
+    Coeff_C?: SortOrderInput | SortOrder
+    Incertitude_Max?: SortOrderInput | SortOrder
     Reserve_MC2?: SortOrderInput | SortOrder
     Id_Worker?: SortOrderInput | SortOrder
     Id_Module?: SortOrderInput | SortOrder
@@ -62711,6 +62783,10 @@ export namespace Prisma {
     Resolution?: StringNullableFilter<"t_etalon"> | string | null
     Incertitude?: StringNullableFilter<"t_etalon"> | string | null
     Nb_Decimale?: IntNullableFilter<"t_etalon"> | number | null
+    Coeff_A?: FloatNullableFilter<"t_etalon"> | number | null
+    Coeff_B?: FloatNullableFilter<"t_etalon"> | number | null
+    Coeff_C?: FloatNullableFilter<"t_etalon"> | number | null
+    Incertitude_Max?: FloatNullableFilter<"t_etalon"> | number | null
     Reserve_MC2?: StringNullableFilter<"t_etalon"> | string | null
     Id_Worker?: IntNullableFilter<"t_etalon"> | number | null
     Id_Module?: IntNullableFilter<"t_etalon"> | number | null
@@ -62726,6 +62802,10 @@ export namespace Prisma {
     Resolution?: SortOrderInput | SortOrder
     Incertitude?: SortOrderInput | SortOrder
     Nb_Decimale?: SortOrderInput | SortOrder
+    Coeff_A?: SortOrderInput | SortOrder
+    Coeff_B?: SortOrderInput | SortOrder
+    Coeff_C?: SortOrderInput | SortOrder
+    Incertitude_Max?: SortOrderInput | SortOrder
     Reserve_MC2?: SortOrderInput | SortOrder
     Id_Worker?: SortOrderInput | SortOrder
     Id_Module?: SortOrderInput | SortOrder
@@ -62749,6 +62829,10 @@ export namespace Prisma {
     Resolution?: StringNullableWithAggregatesFilter<"t_etalon"> | string | null
     Incertitude?: StringNullableWithAggregatesFilter<"t_etalon"> | string | null
     Nb_Decimale?: IntNullableWithAggregatesFilter<"t_etalon"> | number | null
+    Coeff_A?: FloatNullableWithAggregatesFilter<"t_etalon"> | number | null
+    Coeff_B?: FloatNullableWithAggregatesFilter<"t_etalon"> | number | null
+    Coeff_C?: FloatNullableWithAggregatesFilter<"t_etalon"> | number | null
+    Incertitude_Max?: FloatNullableWithAggregatesFilter<"t_etalon"> | number | null
     Reserve_MC2?: StringNullableWithAggregatesFilter<"t_etalon"> | string | null
     Id_Worker?: IntNullableWithAggregatesFilter<"t_etalon"> | number | null
     Id_Module?: IntNullableWithAggregatesFilter<"t_etalon"> | number | null
@@ -67353,6 +67437,10 @@ export namespace Prisma {
     Resolution?: string | null
     Incertitude?: string | null
     Nb_Decimale?: number | null
+    Coeff_A?: number | null
+    Coeff_B?: number | null
+    Coeff_C?: number | null
+    Incertitude_Max?: number | null
     Reserve_MC2?: string | null
     Id_Worker?: number | null
     Id_Module?: number | null
@@ -67368,6 +67456,10 @@ export namespace Prisma {
     Resolution?: string | null
     Incertitude?: string | null
     Nb_Decimale?: number | null
+    Coeff_A?: number | null
+    Coeff_B?: number | null
+    Coeff_C?: number | null
+    Incertitude_Max?: number | null
     Reserve_MC2?: string | null
     Id_Worker?: number | null
     Id_Module?: number | null
@@ -67382,6 +67474,10 @@ export namespace Prisma {
     Resolution?: NullableStringFieldUpdateOperationsInput | string | null
     Incertitude?: NullableStringFieldUpdateOperationsInput | string | null
     Nb_Decimale?: NullableIntFieldUpdateOperationsInput | number | null
+    Coeff_A?: NullableFloatFieldUpdateOperationsInput | number | null
+    Coeff_B?: NullableFloatFieldUpdateOperationsInput | number | null
+    Coeff_C?: NullableFloatFieldUpdateOperationsInput | number | null
+    Incertitude_Max?: NullableFloatFieldUpdateOperationsInput | number | null
     Reserve_MC2?: NullableStringFieldUpdateOperationsInput | string | null
     Id_Worker?: NullableIntFieldUpdateOperationsInput | number | null
     Id_Module?: NullableIntFieldUpdateOperationsInput | number | null
@@ -67397,6 +67493,10 @@ export namespace Prisma {
     Resolution?: NullableStringFieldUpdateOperationsInput | string | null
     Incertitude?: NullableStringFieldUpdateOperationsInput | string | null
     Nb_Decimale?: NullableIntFieldUpdateOperationsInput | number | null
+    Coeff_A?: NullableFloatFieldUpdateOperationsInput | number | null
+    Coeff_B?: NullableFloatFieldUpdateOperationsInput | number | null
+    Coeff_C?: NullableFloatFieldUpdateOperationsInput | number | null
+    Incertitude_Max?: NullableFloatFieldUpdateOperationsInput | number | null
     Reserve_MC2?: NullableStringFieldUpdateOperationsInput | string | null
     Id_Worker?: NullableIntFieldUpdateOperationsInput | number | null
     Id_Module?: NullableIntFieldUpdateOperationsInput | number | null
@@ -67412,6 +67512,10 @@ export namespace Prisma {
     Resolution?: string | null
     Incertitude?: string | null
     Nb_Decimale?: number | null
+    Coeff_A?: number | null
+    Coeff_B?: number | null
+    Coeff_C?: number | null
+    Incertitude_Max?: number | null
     Reserve_MC2?: string | null
     Id_Worker?: number | null
     Id_Module?: number | null
@@ -67426,6 +67530,10 @@ export namespace Prisma {
     Resolution?: NullableStringFieldUpdateOperationsInput | string | null
     Incertitude?: NullableStringFieldUpdateOperationsInput | string | null
     Nb_Decimale?: NullableIntFieldUpdateOperationsInput | number | null
+    Coeff_A?: NullableFloatFieldUpdateOperationsInput | number | null
+    Coeff_B?: NullableFloatFieldUpdateOperationsInput | number | null
+    Coeff_C?: NullableFloatFieldUpdateOperationsInput | number | null
+    Incertitude_Max?: NullableFloatFieldUpdateOperationsInput | number | null
     Reserve_MC2?: NullableStringFieldUpdateOperationsInput | string | null
     Id_Worker?: NullableIntFieldUpdateOperationsInput | number | null
     Id_Module?: NullableIntFieldUpdateOperationsInput | number | null
@@ -67441,6 +67549,10 @@ export namespace Prisma {
     Resolution?: NullableStringFieldUpdateOperationsInput | string | null
     Incertitude?: NullableStringFieldUpdateOperationsInput | string | null
     Nb_Decimale?: NullableIntFieldUpdateOperationsInput | number | null
+    Coeff_A?: NullableFloatFieldUpdateOperationsInput | number | null
+    Coeff_B?: NullableFloatFieldUpdateOperationsInput | number | null
+    Coeff_C?: NullableFloatFieldUpdateOperationsInput | number | null
+    Incertitude_Max?: NullableFloatFieldUpdateOperationsInput | number | null
     Reserve_MC2?: NullableStringFieldUpdateOperationsInput | string | null
     Id_Worker?: NullableIntFieldUpdateOperationsInput | number | null
     Id_Module?: NullableIntFieldUpdateOperationsInput | number | null
@@ -72295,6 +72407,10 @@ export namespace Prisma {
     Resolution?: SortOrder
     Incertitude?: SortOrder
     Nb_Decimale?: SortOrder
+    Coeff_A?: SortOrder
+    Coeff_B?: SortOrder
+    Coeff_C?: SortOrder
+    Incertitude_Max?: SortOrder
     Reserve_MC2?: SortOrder
     Id_Worker?: SortOrder
     Id_Module?: SortOrder
@@ -72303,6 +72419,10 @@ export namespace Prisma {
   export type t_etalonAvgOrderByAggregateInput = {
     Id_Etalon?: SortOrder
     Nb_Decimale?: SortOrder
+    Coeff_A?: SortOrder
+    Coeff_B?: SortOrder
+    Coeff_C?: SortOrder
+    Incertitude_Max?: SortOrder
     Id_Worker?: SortOrder
     Id_Module?: SortOrder
   }
@@ -72317,6 +72437,10 @@ export namespace Prisma {
     Resolution?: SortOrder
     Incertitude?: SortOrder
     Nb_Decimale?: SortOrder
+    Coeff_A?: SortOrder
+    Coeff_B?: SortOrder
+    Coeff_C?: SortOrder
+    Incertitude_Max?: SortOrder
     Reserve_MC2?: SortOrder
     Id_Worker?: SortOrder
     Id_Module?: SortOrder
@@ -72332,6 +72456,10 @@ export namespace Prisma {
     Resolution?: SortOrder
     Incertitude?: SortOrder
     Nb_Decimale?: SortOrder
+    Coeff_A?: SortOrder
+    Coeff_B?: SortOrder
+    Coeff_C?: SortOrder
+    Incertitude_Max?: SortOrder
     Reserve_MC2?: SortOrder
     Id_Worker?: SortOrder
     Id_Module?: SortOrder
@@ -72340,6 +72468,10 @@ export namespace Prisma {
   export type t_etalonSumOrderByAggregateInput = {
     Id_Etalon?: SortOrder
     Nb_Decimale?: SortOrder
+    Coeff_A?: SortOrder
+    Coeff_B?: SortOrder
+    Coeff_C?: SortOrder
+    Incertitude_Max?: SortOrder
     Id_Worker?: SortOrder
     Id_Module?: SortOrder
   }

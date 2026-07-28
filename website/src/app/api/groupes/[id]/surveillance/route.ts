@@ -77,7 +77,6 @@ export const PATCH = withAnyAuthorizationLogging(
             Date_Heure_Reactivation_Surveillance: payload.disabled ? reactivationAt : null,
             Date_Heure_Surveillance_On: payload.disabled ? null : changedAt,
             Date_Heure_Surveillance_Off: payload.disabled ? changedAt : null,
-            Infos_Modifiees_Depuis_Derniere_Mesure: true,
           },
         })
 

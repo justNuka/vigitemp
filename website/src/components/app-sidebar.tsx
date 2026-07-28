@@ -159,7 +159,6 @@ export function AppSidebar({ activeAlarms = 0, currentUser, onLogout }: AppSideb
             size="xs"
             showText
             textClassName="text-sidebar-foreground"
-            iconClassName="brightness-0 invert"
           />
         </Link>
         <span className="inline-flex items-center rounded-md bg-amber-300/20 px-3 py-1 text-xs font-bold text-amber-200 ring-1 ring-inset ring-amber-300/40 mt-2">

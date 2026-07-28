@@ -39,6 +39,28 @@ const STANDARD_METROLOGY_FIELDS = [
 ] as const
 
 const GSO_FIXED_FREQUENCY_SECONDS = 15 * 60
+const GSP_RUNTIME_CONFIG_FIELDS = [
+  "Frequence",
+  "Tolerance_Surveillance_Sup",
+  "Tolerance_Surveillance_Inf",
+  "Retard_Alarme_Haut",
+  "Retard_Alarme_Bas",
+] as const
+
+function areEquivalentConfigValues(left: unknown, right: unknown) {
+  if (left === null || left === undefined) {
+    return right === null || right === undefined
+  }
+  if (right === null || right === undefined) return false
+
+  const leftNumber = Number(left)
+  const rightNumber = Number(right)
+  if (Number.isFinite(leftNumber) && Number.isFinite(rightNumber)) {
+    return Math.abs(leftNumber - rightNumber) < 0.000001
+  }
+
+  return String(left) === String(right)
+}
 
 function parseAppliedCalibrationDate(value: unknown) {
   if (value === undefined) return undefined
@@ -551,6 +573,8 @@ export const PATCH = withAnyAuthorizationLogging(
             Frequence: true,
             Consigne_Sup: true,
             Consigne_Inf: true,
+            Tolerance_Surveillance_Sup: true,
+            Tolerance_Surveillance_Inf: true,
             Retard_Alarme_Haut: true,
             Retard_Alarme_Bas: true,
             Retard_Non_Reponse: true,
@@ -642,7 +666,14 @@ export const PATCH = withAnyAuthorizationLogging(
           !effectiveEstLieuGso &&
           !!effectiveSerial &&
           getSensorFamilyFromSerial(effectiveSerial) === "GSP"
-        if (effectiveEstLieuGsp) {
+        const gspRuntimeConfigChanged =
+          effectiveSerial !== (current?.Sonde_Numero_Serie ?? null) ||
+          GSP_RUNTIME_CONFIG_FIELDS.some(
+            (field) =>
+              Object.prototype.hasOwnProperty.call(lieuPatch, field) &&
+              !areEquivalentConfigValues(lieuPatch[field], current?.[field]),
+          )
+        if (effectiveEstLieuGsp && gspRuntimeConfigChanged) {
           lieuPatch.Infos_Modifiees_Depuis_Derniere_Mesure = true
         }
 

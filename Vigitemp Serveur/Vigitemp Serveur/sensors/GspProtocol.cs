@@ -193,25 +193,10 @@ namespace Vigitemp_Serveur.sensors
 
             if (string.IsNullOrWhiteSpace(normalizedPayload))
             {
-                return EnsureCommandTerminator(normalizedPrefix + normalizedTarget);
+                return (normalizedPrefix + normalizedTarget).TrimEnd();
             }
 
-            var command = normalizedPrefix + normalizedTarget + " " + normalizedPayload.Trim();
-            return string.Equals(normalizedPrefix, "ED-H", StringComparison.OrdinalIgnoreCase)
-                ? EnsureCommandTerminator(command)
-                : command;
-        }
-
-        private static string EnsureCommandTerminator(string command)
-        {
-            if (string.IsNullOrEmpty(command))
-            {
-                return command;
-            }
-
-            return command.EndsWith(" ", StringComparison.Ordinal)
-                ? command
-                : command + " ";
+            return normalizedPrefix + normalizedTarget + " " + normalizedPayload.Trim();
         }
 
         internal static string BuildDateTimePayload(DateTime value)

@@ -55,6 +55,7 @@ namespace Vigitemp_Serveur
             public string ManualPort { get; set; }
             public string ManualAddress { get; set; }
             public string ManualModule { get; set; }
+            public string OperationContext { get; set; }
             public int? BaudRate { get; set; }
             public string Parity { get; set; }
             public int? DataBits { get; set; }
@@ -82,6 +83,7 @@ namespace Vigitemp_Serveur
             public string Port { get; set; }
             public string Address { get; set; }
             public string Module { get; set; }
+            public string OperationContext { get; set; }
             public double? Value { get; set; }
             public string Unit { get; set; }
             public string RawValue { get; set; }
@@ -255,6 +257,7 @@ namespace Vigitemp_Serveur
                 ManualPort = (payload.Value<string>("manualPort") ?? string.Empty).Trim(),
                 ManualAddress = (payload.Value<string>("manualAddress") ?? string.Empty).Trim(),
                 ManualModule = (payload.Value<string>("manualModule") ?? string.Empty).Trim(),
+                OperationContext = NormalizeOperationContext(payload.Value<string>("operationContext")),
                 BaudRate = ValueOrNullInt(payload["baudRate"]),
                 Parity = (payload.Value<string>("parity") ?? string.Empty).Trim(),
                 DataBits = ValueOrNullInt(payload["dataBits"]),
@@ -291,10 +294,13 @@ namespace Vigitemp_Serveur
                 SensorType = request.SensorType,
                 Serial = request.Serial,
                 Action = request.Action,
+                OperationContext = request.OperationContext,
             };
 
+            var logPrefix = GetOperationLogPrefix(request.OperationContext);
             LogHotlineDetailed(string.Format(CultureInfo.InvariantCulture,
-                "Hotline sensor-test request: type={0}; serial={1}; action={2}; manualPort={3}; manualAddress={4}; manualModule={5}; baudRate={6}; parity={7}; dataBits={8}; stopBits={9}; readTimeoutMs={10}; writeTimeoutMs={11}; listenWindowMs={12}",
+                "{0}[REQUEST] type={1}; serial={2}; action={3}; manualPort={4}; manualAddress={5}; manualModule={6}; baudRate={7}; parity={8}; dataBits={9}; stopBits={10}; readTimeoutMs={11}; writeTimeoutMs={12}; listenWindowMs={13}",
+                logPrefix,
                 request.SensorType ?? string.Empty,
                 request.Serial ?? string.Empty,
                 request.Action ?? string.Empty,
@@ -337,6 +343,7 @@ namespace Vigitemp_Serveur
                     }
                 }
 
+                result.Port = NormalizeSerialPortName(result.Port);
                 if (string.IsNullOrWhiteSpace(result.Port))
                 {
                     result.Error = "Port série introuvable pour cette sonde.";
@@ -379,6 +386,7 @@ namespace Vigitemp_Serveur
         private static void ProbeGsp(SensorTestResult result, SensorTestRequest request, string portName, string address)
         {
             var gsp = request.Gsp ?? new GspSensorTestRequest();
+            var logPrefix = GetOperationLogPrefix(request.OperationContext);
             var targetSource = string.IsNullOrWhiteSpace(address) ? request.Serial : address;
             var target = GspProtocol.NormalizeCommandTarget(targetSource);
 
@@ -388,7 +396,7 @@ namespace Vigitemp_Serveur
             {
                 var mutexName = BuildPortMutexName(portName);
                 namedMutex = new Mutex(false, mutexName);
-                LogHotlineDetailed($"[HOTLINE][LOCK] status=waiting port={portName}; mutex={mutexName}; serial={request.Serial}; action={request.Action}");
+                LogHotlineDetailed($"{logPrefix}[LOCK] status=waiting port={portName}; mutex={mutexName}; serial={request.Serial}; action={request.Action}");
                 try
                 {
                     var lockTimeoutMs = GetIntSetting("VigiSensys.Hotline.PortLockTimeoutMs", GetIntSetting("Vigitemp.Hotline.PortLockTimeoutMs", 5000));
@@ -397,17 +405,17 @@ namespace Vigitemp_Serveur
                 catch (AbandonedMutexException)
                 {
                     mutexAcquired = true;
-                    VigitempServeur.Log($"[HOTLINE][LOCK] status=abandoned-acquired port={portName}; serial={request.Serial}; action={request.Action}");
+                    VigitempServeur.Log($"{logPrefix}[LOCK] status=abandoned-acquired port={portName}; serial={request.Serial}; action={request.Action}");
                 }
 
                 if (!mutexAcquired)
                 {
-                    VigitempServeur.Log($"[HOTLINE][LOCK] status=timeout port={portName}; serial={request.Serial}; action={request.Action}");
+                    VigitempServeur.Log($"{logPrefix}[LOCK] status=timeout port={portName}; serial={request.Serial}; action={request.Action}");
                     result.Error = "Port série occupé, impossible d'obtenir le verrou dans le délai imparti.";
                     return;
                 }
 
-                LogHotlineDetailed($"[HOTLINE][LOCK] status=acquired port={portName}; serial={request.Serial}; action={request.Action}");
+                LogHotlineDetailed($"{logPrefix}[LOCK] status=acquired port={portName}; serial={request.Serial}; action={request.Action}");
                 using (var port = CreatePort(portName, request))
                 {
                     port.Open();
@@ -526,7 +534,11 @@ namespace Vigitemp_Serveur
                     var readPrefix = string.Equals(request.Action, "force-read", StringComparison.OrdinalIgnoreCase) ? "FTEM" : "TEMP";
                     result.RequestedCommand = GspProtocol.BuildCommand(readPrefix, target, string.Empty);
                     var readResponse = SendGspCommand(port, result, readPrefix, target, string.Empty, false, gsp.ListenWindowMs);
-                    if (string.IsNullOrWhiteSpace(readResponse))
+                    var isAdjustmentRead = string.Equals(
+                        NormalizeOperationContext(request.OperationContext),
+                        "AJUSTAGE",
+                        StringComparison.Ordinal);
+                    if (string.IsNullOrWhiteSpace(readResponse) && !isAdjustmentRead)
                     {
                         AddExchange(result, "info", "ascii", "<wait-10s-before-retry>");
                         Thread.Sleep(10000);
@@ -537,9 +549,11 @@ namespace Vigitemp_Serveur
                     result.DetectedSerials = GspProtocol.ExtractDetectedSerials(readResponse);
                     if (!GspProtocol.TryExtractTemperature(readResponse, target, out var value, out var unit))
                     {
-                        result.Error = IsCommandEchoOnly(readResponse, result.RequestedCommand)
-                            ? "éponse reçue mais elle correspond uniquement à un écho de la commande."
-                            : "Aucune température exploitable pour la sonde demandée dans la réponse GSP.";
+                        result.Error = string.IsNullOrWhiteSpace(readResponse)
+                            ? "Aucune réponse reçue pour la lecture de la sonde."
+                            : IsCommandEchoOnly(readResponse, result.RequestedCommand)
+                                ? "Réponse reçue mais elle correspond uniquement à un écho de la commande."
+                                : "Aucune température exploitable pour la sonde demandée dans la réponse GSP.";
                         return;
                     }
 
@@ -554,7 +568,7 @@ namespace Vigitemp_Serveur
                     try
                     {
                         namedMutex.ReleaseMutex();
-                        LogHotlineDetailed($"[HOTLINE][LOCK] status=released port={portName}; serial={request.Serial}; action={request.Action}");
+                        LogHotlineDetailed($"{logPrefix}[LOCK] status=released port={portName}; serial={request.Serial}; action={request.Action}");
                     }
                     catch (ApplicationException)
                     {
@@ -574,6 +588,36 @@ namespace Vigitemp_Serveur
                 : portName.Trim().ToUpperInvariant();
             var safe = new string(normalized.Select(ch => char.IsLetterOrDigit(ch) ? ch : '_').ToArray());
             return "Global\\VigitempSerialPort_" + safe;
+        }
+
+        private static string NormalizeOperationContext(string value)
+        {
+            return string.Equals((value ?? string.Empty).Trim(), "AJUSTAGE", StringComparison.OrdinalIgnoreCase)
+                ? "AJUSTAGE"
+                : "HOTLINE";
+        }
+
+        private static string GetOperationLogPrefix(string operationContext)
+        {
+            return "[" + NormalizeOperationContext(operationContext) + "]";
+        }
+
+        private static string NormalizeSerialPortName(string portName)
+        {
+            var normalized = (portName ?? string.Empty).Trim();
+            if (normalized.Length == 0) return string.Empty;
+
+            int numericPort;
+            if (int.TryParse(normalized, NumberStyles.None, CultureInfo.InvariantCulture, out numericPort))
+            {
+                return "COM" + numericPort.ToString(CultureInfo.InvariantCulture);
+            }
+
+            var match = System.Text.RegularExpressions.Regex.Match(
+                normalized,
+                @"^COM\s*(\d+)$",
+                System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+            return match.Success ? "COM" + match.Groups[1].Value : normalized;
         }
 
         private static IEnumerable<KeyValuePair<string, string>> BuildGspSyncCommands(GspSensorTestRequest gsp, string address)
@@ -814,6 +858,11 @@ namespace Vigitemp_Serveur
 
         private static bool IsCommandEchoOnly(string response, string sentCommand)
         {
+            if (string.IsNullOrWhiteSpace(response) || string.IsNullOrWhiteSpace(sentCommand))
+            {
+                return false;
+            }
+
             return string.IsNullOrWhiteSpace(StripCommandEcho(response, sentCommand));
         }
 
@@ -850,8 +899,10 @@ namespace Vigitemp_Serveur
         private static void LogSensorTestResult(SensorTestResult result, DateTimeOffset startedAt, long elapsedMs)
         {
             var detectedSerials = result.DetectedSerials == null || result.DetectedSerials.Count == 0 ? string.Empty : string.Join(",", result.DetectedSerials);
+            var logPrefix = GetOperationLogPrefix(result.OperationContext);
             VigitempServeur.Log(string.Format(CultureInfo.InvariantCulture,
-                "[HOTLINE][DONE] status={0} startedAt={1} elapsedMs={2} type={3} serial={4} action={5} command={6} port={7} value={8}{9} detected={10} error={11}",
+                "{0}[DONE] status={1} startedAt={2} elapsedMs={3} type={4} serial={5} action={6} command={7} port={8} value={9}{10} detected={11} error={12}",
+                logPrefix,
                 result.Success ? "ok" : "error",
                 startedAt.ToString("O", CultureInfo.InvariantCulture),
                 elapsedMs,
@@ -879,7 +930,8 @@ namespace Vigitemp_Serveur
 
             VigitempServeur.Log(string.Format(
                 CultureInfo.InvariantCulture,
-                "[HOTLINE][IO] serial={0} action={1} {2}",
+                "{0}[IO] serial={1} action={2} {3}",
+                logPrefix,
                 result.Serial ?? string.Empty,
                 result.Action ?? string.Empty,
                 TruncateForLog(exchanges, MaxExchangeLogLength)));

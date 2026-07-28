@@ -198,6 +198,10 @@ model t_etalon {
   Resolution          String?  @db.VarChar(50)
   Incertitude         String?  @db.VarChar(50)
   Nb_Decimale         Int?
+  Coeff_A             Float?   @db.Float
+  Coeff_B             Float?   @db.Float
+  Coeff_C             Float?   @db.Float
+  Incertitude_Max     Float?   @db.Float
   Reserve_MC2         String?  @db.VarChar(50)
   Id_Worker           Int?
   Id_Module           Int?

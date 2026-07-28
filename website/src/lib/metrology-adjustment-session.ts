@@ -178,6 +178,14 @@ type GlobalAdjustmentState = {
   sensorLocks?: Map<number, string>
 }
 
+type AdjustmentStandardMeasurementSchema = {
+  hasUnit: boolean
+  hasAddress: boolean
+  dateColumn: "Date_Heure_Mesure" | "Date_Heure"
+}
+
+let adjustmentStandardMeasurementSchemaPromise: Promise<AdjustmentStandardMeasurementSchema> | null = null
+
 const globalState = globalThis as typeof globalThis & GlobalAdjustmentState
 const sessionsByUserId = (globalState.sessionsByUserId ??= new Map<number, AdjustmentSession>())
 const sensorLocks = (globalState.sensorLocks ??= new Map<number, string>())
@@ -295,7 +303,8 @@ async function readHotlineGspMeasurement(request: HotlineReadRequest): Promise<H
       sensorType: "GSP",
       serial: request.serial,
       action: "read",
-      manualPort: request.manualPort?.trim() || undefined,
+      operationContext: "AJUSTAGE",
+      manualPort: normalizeSerialPortName(request.manualPort),
       manualAddress: request.manualAddress?.trim() || undefined,
       manualModule: request.manualModule?.trim() || undefined,
       readTimeoutMs: 6000,
@@ -330,6 +339,52 @@ async function readHotlineGspMeasurement(request: HotlineReadRequest): Promise<H
   }
 }
 
+function normalizeSerialPortName(value: string | null | undefined) {
+  const trimmed = value?.trim()
+  if (!trimmed) return undefined
+  if (/^\d+$/.test(trimmed)) return `COM${trimmed}`
+
+  const comMatch = /^COM\s*(\d+)$/i.exec(trimmed)
+  return comMatch ? `COM${comMatch[1]}` : trimmed
+}
+
+async function getAdjustmentStandardMeasurementSchema(): Promise<AdjustmentStandardMeasurementSchema> {
+  if (adjustmentStandardMeasurementSchemaPromise) return adjustmentStandardMeasurementSchemaPromise
+
+  const schemaPromise: Promise<AdjustmentStandardMeasurementSchema> = (async () => {
+    const rows = isMssqlProvider()
+      ? await prismaMesure.$queryRaw<Array<{ COLUMN_NAME: string }>>`
+          SELECT COLUMN_NAME
+          FROM INFORMATION_SCHEMA.COLUMNS
+          WHERE TABLE_SCHEMA = 'dbo'
+            AND TABLE_NAME = 'tm_mesures_ajustage_etalon'
+        `
+      : await prismaMesure.$queryRaw<Array<{ COLUMN_NAME: string }>>`
+          SELECT COLUMN_NAME
+          FROM INFORMATION_SCHEMA.COLUMNS
+          WHERE TABLE_SCHEMA = DATABASE()
+            AND TABLE_NAME = 'tm_mesures_ajustage_etalon'
+        `
+
+    const columns = new Set(rows.map((row) => String(row.COLUMN_NAME).toLowerCase()))
+    const dateColumn: AdjustmentStandardMeasurementSchema["dateColumn"] = columns.has("date_heure_mesure")
+      ? "Date_Heure_Mesure"
+      : "Date_Heure"
+    return {
+      hasUnit: columns.has("unite"),
+      hasAddress: columns.has("adresse_sonde"),
+      dateColumn,
+    }
+  })().catch(() => ({
+    hasUnit: false,
+    hasAddress: false,
+    dateColumn: "Date_Heure_Mesure",
+  }))
+
+  adjustmentStandardMeasurementSchemaPromise = schemaPromise
+  return schemaPromise
+}
+
 async function persistAdjustmentReading(serial: string, reading: RuntimeReading) {
   await prismaMesure.$executeRaw`
     INSERT INTO tm_mesures_ajustage
@@ -349,21 +404,38 @@ async function persistAdjustmentReading(serial: string, reading: RuntimeReading)
 }
 
 async function persistStandardReading(serial: string, reading: RuntimeReading) {
-  await prismaMesure.$executeRaw`
-    INSERT INTO tm_mesures_ajustage_etalon
-      (Id_Serveur_BDD, Etalon_Numero_Serie, Valeur, Valeur_Brute, Unite, Date_Heure_Mesure, Adresse_Sonde, Est_Valeur_Null)
-    VALUES
-      (
-        ${DEFAULT_SERVER_BDD_ID},
-        ${serial},
-        ${reading.value},
-        ${reading.value},
-        ${reading.unit},
-        ${new Date(reading.measuredAt)},
-        ${serial},
-        ${reading.value == null ? 1 : 0}
-      )
-  `
+  const schema = await getAdjustmentStandardMeasurementSchema()
+  const columns = [
+    "Id_Serveur_BDD",
+    "Etalon_Numero_Serie",
+    "Valeur",
+    "Valeur_Brute",
+    schema.dateColumn,
+    "Est_Valeur_Null",
+  ]
+  const values: unknown[] = [
+    DEFAULT_SERVER_BDD_ID,
+    serial,
+    reading.value,
+    reading.value,
+    new Date(reading.measuredAt),
+    reading.value == null ? 1 : 0,
+  ]
+
+  if (schema.hasUnit) {
+    columns.push("Unite")
+    values.push(reading.unit)
+  }
+  if (schema.hasAddress) {
+    columns.push("Adresse_Sonde")
+    values.push(serial)
+  }
+
+  const placeholders = values.map((_, index) => (isMssqlProvider() ? `@P${index + 1}` : "?"))
+  const sql = `INSERT INTO ${quoteIdentifier("tm_mesures_ajustage_etalon")} (${columns
+    .map(quoteIdentifier)
+    .join(", ")}) VALUES (${placeholders.join(", ")})`
+  await prismaMesure.$executeRawUnsafe(sql, ...values)
 }
 
 function toPublicSession(session: AdjustmentSession): PublicSession {
@@ -1044,7 +1116,7 @@ export async function stopAdjustmentSession(userId: number, cancelResults: boole
     session.currentPoint = null
   }
 
-  await finalizeSession(session, cancelResults ? "cancelled" : "completed", cancelResults ? "Ajustage annule." : "Ajustage arrete.")
+  await finalizeSession(session, cancelResults ? "cancelled" : "completed", cancelResults ? "Ajustage annulé." : "Ajustage arreté.")
 
   log.audit("CA", {
     user: session.username,

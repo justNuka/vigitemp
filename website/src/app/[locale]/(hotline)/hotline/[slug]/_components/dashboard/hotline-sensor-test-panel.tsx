@@ -280,8 +280,8 @@ export function HotlineSensorTestPanel() {
     if (gsp.rawExactMode) {
       return normalizedRawCommandValue
     }
-    return gsp.rawPayload.trim() ? normalizedRawCommandValue : ensureTrailingSpace(normalizedRawCommandValue)
-  }, [gsp.rawExactMode, gsp.rawPayload, normalizedRawCommandValue])
+    return normalizedRawCommandValue
+  }, [gsp.rawExactMode, normalizedRawCommandValue])
 
   const commandPreview = useMemo(() => {
     if (!showGspFields) return "Commande generee selon le protocole de la sonde selectionnee."
@@ -968,11 +968,6 @@ function normalizeRawCommand(command: string) {
   }
 
   return compact
-}
-
-function ensureTrailingSpace(command: string) {
-  if (!command) return ""
-  return command.endsWith(" ") ? command : `${command} `
 }
 
 function ResultRssiItem({ value }: { value: string }) {

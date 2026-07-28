@@ -255,6 +255,10 @@ exports.Prisma.T_etalonScalarFieldEnum = {
   Resolution: 'Resolution',
   Incertitude: 'Incertitude',
   Nb_Decimale: 'Nb_Decimale',
+  Coeff_A: 'Coeff_A',
+  Coeff_B: 'Coeff_B',
+  Coeff_C: 'Coeff_C',
+  Incertitude_Max: 'Incertitude_Max',
   Reserve_MC2: 'Reserve_MC2',
   Id_Worker: 'Id_Worker',
   Id_Module: 'Id_Module'
