@@ -18,7 +18,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Tooltip as UITooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { useIsMobile } from '@/hooks/useIsMobile'
 import { useLieuMeasurements } from '@/hooks/useLieuMeasurements'
-import { formatDbDateTime, parseDbDateTime } from '@/lib/date-display'
+import { formatDbDateTime, parseDbDateTime, serializeDbDateTime } from '@/lib/date-display'
 import type { LieuTypeValue } from '@/lib/lieu-types'
 import { calculateYDomain, formatMeasureValue, getMeasureSummary, sortMeasuresChronologically } from '@/lib/measurements'
 import { cn } from '@/lib/utils'
@@ -122,7 +122,8 @@ export default function MonitoringCard({
   const locale = useLocale()
   const localeTag = locale === 'fr' ? 'fr-FR' : locale
   const queryClient = useQueryClient()
-  const shouldLoadCardMeasurements = !isMobile && !backgroundPaused
+  const isAdjustmentInProgress = lieuEtat === 'A'
+  const shouldLoadCardMeasurements = !isMobile && !backgroundPaused && !isAdjustmentInProgress
   const translateOrFallback = (key: string, fallback: string) => {
     try {
       const translated = t(key)
@@ -161,19 +162,20 @@ export default function MonitoringCard({
     }
 
     const template = lastPoint ?? null
-    const timeLabel = new Intl.DateTimeFormat(localeTag, {
-      hour: "2-digit",
-      minute: "2-digit",
-    }).format(liveMeasurementDate)
-
-    const dateLabel = formatDbDateTime(liveMeasurementDate, { withSeconds: false })
+    const serializedDate = serializeDbDateTime(liveMeasurementDate) ?? ""
+    const timeLabel = formatDbDateTime(serializedDate, {
+      timeOnly: true,
+      withSeconds: false,
+      locale: localeTag,
+    })
+    const dateLabel = formatDbDateTime(serializedDate, { withSeconds: false })
     const livePoint = {
-      id: `live-${idLieu}-${liveMeasurementDate.toISOString()}`,
+      id: `live-${idLieu}-${serializedDate}`,
       Valeur: currentValue,
       Nb_Decimal: template?.Nb_Decimal ?? null,
       Unite: template?.Unite ?? "??C",
       DateHeureMesure: dateLabel,
-      DateHeureMesureIso: liveMeasurementDate.toISOString(),
+      DateHeureMesureIso: serializedDate,
       DateHeureMesureXaxis: timeLabel,
       Consigne: template?.Consigne ?? null,
       Consigne_Sup: template?.Consigne_Sup ?? null,
@@ -348,11 +350,12 @@ export default function MonitoringCard({
   const canAcknowledge =
     hasPermission('ALARM_ACK_ACCESS') &&
     isSurveillanceActive &&
+    !isAdjustmentInProgress &&
     effectiveAlarmId !== null &&
     effectiveAlarmId !== undefined &&
     (effectiveStatus === 'critical' || effectiveStatus === 'technical' || effectiveStatus === 'ended')
-  const canToggleSurveillance = hasPermission('LOCATION_DISABLE_ACCESS')
-  const canEditLocation = hasPermission('LOCATION_CONFIG_ACCESS')
+  const canToggleSurveillance = hasPermission('LOCATION_DISABLE_ACCESS') && !isAdjustmentInProgress
+  const canEditLocation = hasPermission('LOCATION_CONFIG_ACCESS') && !isAdjustmentInProgress
 
   const frequencyMinutes = useMemo(() => {
     if (isGso) return 15
@@ -568,7 +571,12 @@ export default function MonitoringCard({
         />
 
         <div className="p-4 flex flex-col flex-1">
-          {isSurveillanceActive ? (
+          {isAdjustmentInProgress ? (
+            <div className="flex min-h-52 flex-1 flex-col items-center justify-center gap-3 rounded-md border border-dashed border-sky-300 bg-sky-50/70 px-4 text-center dark:border-sky-700 dark:bg-sky-950/30">
+              <div className="h-2.5 w-2.5 animate-pulse rounded-full bg-sky-500" aria-hidden="true" />
+              <div className="font-semibold text-sky-900 dark:text-sky-100">Sonde en ajustage</div>
+            </div>
+          ) : isSurveillanceActive ? (
             <>
               <div className="cursor-pointer relative" onClick={() => setIsModalOpen(true)}>
                 {isMobile ? (
@@ -798,7 +806,7 @@ export default function MonitoringCard({
         </DialogContent>
       </Dialog>
 
-      {isModalOpen ? (
+      {isModalOpen && !isAdjustmentInProgress ? (
         <MonitoringDetailsModal
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}

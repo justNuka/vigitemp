@@ -6,6 +6,7 @@ import { getClientIp } from "@/lib/api-logger"
 import { withStandardOrExpertAnyAuthorizationLogging } from "@/lib/license-guards"
 import { log } from "@/lib/logger"
 import {
+  extendAdjustmentSession,
   getAdjustmentSessionForUser,
   shouldConfirmAdjustmentStop,
   startAdjustmentSession,
@@ -23,6 +24,7 @@ const startSchema = z.object({
   mediumId: z.number().int().positive().nullable().optional(),
   plateauDurationMinutes: z.number().int().min(1).default(30),
   plateauMaxGap: z.number().nonnegative().default(0.2),
+  measurementIntervalSeconds: z.union([z.literal(15), z.literal(30), z.literal(60)]).default(15),
 })
 
 const stopSchema = z.object({
@@ -113,6 +115,26 @@ export const DELETE = withStandardOrExpertAnyAuthorizationLogging(
         400,
         "adjustment_stop_failed",
         getSafeAdjustmentErrorMessage(error, "Impossible d'arreter l'ajustage."),
+      )
+    }
+  },
+)
+
+export const PATCH = withStandardOrExpertAnyAuthorizationLogging(
+  METROLOGY_OPERATION_CODES,
+  async (req: NextRequest, ctx) => {
+    try {
+      const session = await extendAdjustmentSession(ctx.user.userId, getClientIp(req))
+      return apiOk({ session })
+    } catch (error) {
+      log.error("METROLOGY_ADJUSTMENT", "session_extension_failed", {
+        userId: ctx.user.userId,
+        error: error instanceof Error ? error.message : String(error),
+      })
+      return apiError(
+        400,
+        "adjustment_extension_failed",
+        getSafeAdjustmentErrorMessage(error, "Impossible de prolonger l'ajustage."),
       )
     }
   },

@@ -36896,6 +36896,7 @@ export namespace Prisma {
     Est_Gestion_Relais: boolean | null
     Est_Double_Capteur: boolean | null
     Famille_Sonde: string | null
+    Unite: string | null
   }
 
   export type T_sonde_typeMaxAggregateOutputType = {
@@ -36905,6 +36906,7 @@ export namespace Prisma {
     Est_Gestion_Relais: boolean | null
     Est_Double_Capteur: boolean | null
     Famille_Sonde: string | null
+    Unite: string | null
   }
 
   export type T_sonde_typeCountAggregateOutputType = {
@@ -36914,6 +36916,7 @@ export namespace Prisma {
     Est_Gestion_Relais: number
     Est_Double_Capteur: number
     Famille_Sonde: number
+    Unite: number
     _all: number
   }
 
@@ -36933,6 +36936,7 @@ export namespace Prisma {
     Est_Gestion_Relais?: true
     Est_Double_Capteur?: true
     Famille_Sonde?: true
+    Unite?: true
   }
 
   export type T_sonde_typeMaxAggregateInputType = {
@@ -36942,6 +36946,7 @@ export namespace Prisma {
     Est_Gestion_Relais?: true
     Est_Double_Capteur?: true
     Famille_Sonde?: true
+    Unite?: true
   }
 
   export type T_sonde_typeCountAggregateInputType = {
@@ -36951,6 +36956,7 @@ export namespace Prisma {
     Est_Gestion_Relais?: true
     Est_Double_Capteur?: true
     Famille_Sonde?: true
+    Unite?: true
     _all?: true
   }
 
@@ -37047,6 +37053,7 @@ export namespace Prisma {
     Est_Gestion_Relais: boolean | null
     Est_Double_Capteur: boolean
     Famille_Sonde: string
+    Unite: string | null
     _count: T_sonde_typeCountAggregateOutputType | null
     _avg: T_sonde_typeAvgAggregateOutputType | null
     _sum: T_sonde_typeSumAggregateOutputType | null
@@ -37075,6 +37082,7 @@ export namespace Prisma {
     Est_Gestion_Relais?: boolean
     Est_Double_Capteur?: boolean
     Famille_Sonde?: boolean
+    Unite?: boolean
     t_sonde?: boolean | t_sonde_type$t_sondeArgs<ExtArgs>
     _count?: boolean | T_sonde_typeCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["t_sonde_type"]>
@@ -37088,9 +37096,10 @@ export namespace Prisma {
     Est_Gestion_Relais?: boolean
     Est_Double_Capteur?: boolean
     Famille_Sonde?: boolean
+    Unite?: boolean
   }
 
-  export type t_sonde_typeOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"Id_Sonde_Type" | "Sonde_Type" | "Libelle_Sonde_Type" | "Est_Gestion_Relais" | "Est_Double_Capteur" | "Famille_Sonde", ExtArgs["result"]["t_sonde_type"]>
+  export type t_sonde_typeOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"Id_Sonde_Type" | "Sonde_Type" | "Libelle_Sonde_Type" | "Est_Gestion_Relais" | "Est_Double_Capteur" | "Famille_Sonde" | "Unite", ExtArgs["result"]["t_sonde_type"]>
   export type t_sonde_typeInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     t_sonde?: boolean | t_sonde_type$t_sondeArgs<ExtArgs>
     _count?: boolean | T_sonde_typeCountOutputTypeDefaultArgs<ExtArgs>
@@ -37108,6 +37117,7 @@ export namespace Prisma {
       Est_Gestion_Relais: boolean | null
       Est_Double_Capteur: boolean
       Famille_Sonde: string
+      Unite: string | null
     }, ExtArgs["result"]["t_sonde_type"]>
     composites: {}
   }
@@ -37484,6 +37494,7 @@ export namespace Prisma {
     readonly Est_Gestion_Relais: FieldRef<"t_sonde_type", 'Boolean'>
     readonly Est_Double_Capteur: FieldRef<"t_sonde_type", 'Boolean'>
     readonly Famille_Sonde: FieldRef<"t_sonde_type", 'String'>
+    readonly Unite: FieldRef<"t_sonde_type", 'String'>
   }
     
 
@@ -61060,7 +61071,8 @@ export namespace Prisma {
     Libelle_Sonde_Type: 'Libelle_Sonde_Type',
     Est_Gestion_Relais: 'Est_Gestion_Relais',
     Est_Double_Capteur: 'Est_Double_Capteur',
-    Famille_Sonde: 'Famille_Sonde'
+    Famille_Sonde: 'Famille_Sonde',
+    Unite: 'Unite'
   };
 
   export type T_sonde_typeScalarFieldEnum = (typeof T_sonde_typeScalarFieldEnum)[keyof typeof T_sonde_typeScalarFieldEnum]
@@ -61682,7 +61694,8 @@ export namespace Prisma {
   export const t_sonde_typeOrderByRelevanceFieldEnum: {
     Sonde_Type: 'Sonde_Type',
     Libelle_Sonde_Type: 'Libelle_Sonde_Type',
-    Famille_Sonde: 'Famille_Sonde'
+    Famille_Sonde: 'Famille_Sonde',
+    Unite: 'Unite'
   };
 
   export type t_sonde_typeOrderByRelevanceFieldEnum = (typeof t_sonde_typeOrderByRelevanceFieldEnum)[keyof typeof t_sonde_typeOrderByRelevanceFieldEnum]
@@ -64619,6 +64632,7 @@ export namespace Prisma {
     Est_Gestion_Relais?: BoolNullableFilter<"t_sonde_type"> | boolean | null
     Est_Double_Capteur?: BoolFilter<"t_sonde_type"> | boolean
     Famille_Sonde?: StringFilter<"t_sonde_type"> | string
+    Unite?: StringNullableFilter<"t_sonde_type"> | string | null
     t_sonde?: T_sondeListRelationFilter
   }
 
@@ -64629,6 +64643,7 @@ export namespace Prisma {
     Est_Gestion_Relais?: SortOrderInput | SortOrder
     Est_Double_Capteur?: SortOrder
     Famille_Sonde?: SortOrder
+    Unite?: SortOrderInput | SortOrder
     t_sonde?: t_sondeOrderByRelationAggregateInput
     _relevance?: t_sonde_typeOrderByRelevanceInput
   }
@@ -64643,6 +64658,7 @@ export namespace Prisma {
     Est_Gestion_Relais?: BoolNullableFilter<"t_sonde_type"> | boolean | null
     Est_Double_Capteur?: BoolFilter<"t_sonde_type"> | boolean
     Famille_Sonde?: StringFilter<"t_sonde_type"> | string
+    Unite?: StringNullableFilter<"t_sonde_type"> | string | null
     t_sonde?: T_sondeListRelationFilter
   }, "Id_Sonde_Type" | "Sonde_Type">
 
@@ -64653,6 +64669,7 @@ export namespace Prisma {
     Est_Gestion_Relais?: SortOrderInput | SortOrder
     Est_Double_Capteur?: SortOrder
     Famille_Sonde?: SortOrder
+    Unite?: SortOrderInput | SortOrder
     _count?: t_sonde_typeCountOrderByAggregateInput
     _avg?: t_sonde_typeAvgOrderByAggregateInput
     _max?: t_sonde_typeMaxOrderByAggregateInput
@@ -64670,6 +64687,7 @@ export namespace Prisma {
     Est_Gestion_Relais?: BoolNullableWithAggregatesFilter<"t_sonde_type"> | boolean | null
     Est_Double_Capteur?: BoolWithAggregatesFilter<"t_sonde_type"> | boolean
     Famille_Sonde?: StringWithAggregatesFilter<"t_sonde_type"> | string
+    Unite?: StringNullableWithAggregatesFilter<"t_sonde_type"> | string | null
   }
 
   export type t_utilisateurWhereInput = {
@@ -69515,6 +69533,7 @@ export namespace Prisma {
     Est_Gestion_Relais?: boolean | null
     Est_Double_Capteur?: boolean
     Famille_Sonde?: string
+    Unite?: string | null
     t_sonde?: t_sondeCreateNestedManyWithoutT_sonde_typeInput
   }
 
@@ -69525,6 +69544,7 @@ export namespace Prisma {
     Est_Gestion_Relais?: boolean | null
     Est_Double_Capteur?: boolean
     Famille_Sonde?: string
+    Unite?: string | null
     t_sonde?: t_sondeUncheckedCreateNestedManyWithoutT_sonde_typeInput
   }
 
@@ -69534,6 +69554,7 @@ export namespace Prisma {
     Est_Gestion_Relais?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Double_Capteur?: BoolFieldUpdateOperationsInput | boolean
     Famille_Sonde?: StringFieldUpdateOperationsInput | string
+    Unite?: NullableStringFieldUpdateOperationsInput | string | null
     t_sonde?: t_sondeUpdateManyWithoutT_sonde_typeNestedInput
   }
 
@@ -69544,6 +69565,7 @@ export namespace Prisma {
     Est_Gestion_Relais?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Double_Capteur?: BoolFieldUpdateOperationsInput | boolean
     Famille_Sonde?: StringFieldUpdateOperationsInput | string
+    Unite?: NullableStringFieldUpdateOperationsInput | string | null
     t_sonde?: t_sondeUncheckedUpdateManyWithoutT_sonde_typeNestedInput
   }
 
@@ -69554,6 +69576,7 @@ export namespace Prisma {
     Est_Gestion_Relais?: boolean | null
     Est_Double_Capteur?: boolean
     Famille_Sonde?: string
+    Unite?: string | null
   }
 
   export type t_sonde_typeUpdateManyMutationInput = {
@@ -69562,6 +69585,7 @@ export namespace Prisma {
     Est_Gestion_Relais?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Double_Capteur?: BoolFieldUpdateOperationsInput | boolean
     Famille_Sonde?: StringFieldUpdateOperationsInput | string
+    Unite?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type t_sonde_typeUncheckedUpdateManyInput = {
@@ -69571,6 +69595,7 @@ export namespace Prisma {
     Est_Gestion_Relais?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Double_Capteur?: BoolFieldUpdateOperationsInput | boolean
     Famille_Sonde?: StringFieldUpdateOperationsInput | string
+    Unite?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type t_utilisateurCreateInput = {
@@ -74084,6 +74109,7 @@ export namespace Prisma {
     Est_Gestion_Relais?: SortOrder
     Est_Double_Capteur?: SortOrder
     Famille_Sonde?: SortOrder
+    Unite?: SortOrder
   }
 
   export type t_sonde_typeAvgOrderByAggregateInput = {
@@ -74097,6 +74123,7 @@ export namespace Prisma {
     Est_Gestion_Relais?: SortOrder
     Est_Double_Capteur?: SortOrder
     Famille_Sonde?: SortOrder
+    Unite?: SortOrder
   }
 
   export type t_sonde_typeMinOrderByAggregateInput = {
@@ -74106,6 +74133,7 @@ export namespace Prisma {
     Est_Gestion_Relais?: SortOrder
     Est_Double_Capteur?: SortOrder
     Famille_Sonde?: SortOrder
+    Unite?: SortOrder
   }
 
   export type t_sonde_typeSumOrderByAggregateInput = {
@@ -82677,6 +82705,7 @@ export namespace Prisma {
     Est_Gestion_Relais?: boolean | null
     Est_Double_Capteur?: boolean
     Famille_Sonde?: string
+    Unite?: string | null
   }
 
   export type t_sonde_typeUncheckedCreateWithoutT_sondeInput = {
@@ -82686,6 +82715,7 @@ export namespace Prisma {
     Est_Gestion_Relais?: boolean | null
     Est_Double_Capteur?: boolean
     Famille_Sonde?: string
+    Unite?: string | null
   }
 
   export type t_sonde_typeCreateOrConnectWithoutT_sondeInput = {
@@ -82772,6 +82802,7 @@ export namespace Prisma {
     Est_Gestion_Relais?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Double_Capteur?: BoolFieldUpdateOperationsInput | boolean
     Famille_Sonde?: StringFieldUpdateOperationsInput | string
+    Unite?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type t_sonde_typeUncheckedUpdateWithoutT_sondeInput = {
@@ -82781,6 +82812,7 @@ export namespace Prisma {
     Est_Gestion_Relais?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Double_Capteur?: BoolFieldUpdateOperationsInput | boolean
     Famille_Sonde?: StringFieldUpdateOperationsInput | string
+    Unite?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type t_lieuCreateWithoutT_etat_surveillanceInput = {

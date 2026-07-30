@@ -546,7 +546,8 @@ exports.Prisma.T_sonde_typeScalarFieldEnum = {
   Libelle_Sonde_Type: 'Libelle_Sonde_Type',
   Est_Gestion_Relais: 'Est_Gestion_Relais',
   Est_Double_Capteur: 'Est_Double_Capteur',
-  Famille_Sonde: 'Famille_Sonde'
+  Famille_Sonde: 'Famille_Sonde',
+  Unite: 'Unite'
 };
 
 exports.Prisma.T_utilisateurScalarFieldEnum = {
@@ -1024,7 +1025,8 @@ exports.Prisma.t_etat_surveillanceOrderByRelevanceFieldEnum = {
 exports.Prisma.t_sonde_typeOrderByRelevanceFieldEnum = {
   Sonde_Type: 'Sonde_Type',
   Libelle_Sonde_Type: 'Libelle_Sonde_Type',
-  Famille_Sonde: 'Famille_Sonde'
+  Famille_Sonde: 'Famille_Sonde',
+  Unite: 'Unite'
 };
 
 exports.Prisma.t_utilisateurOrderByRelevanceFieldEnum = {

@@ -78,6 +78,30 @@ export function serializeDbDateTime(value: DbDateInput): string | null {
   return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
 }
 
+/**
+ * Serializes a timezone-less DATETIME returned by Prisma.
+ *
+ * Prisma exposes MySQL/MSSQL DATETIME columns as Date objects backed by UTC,
+ * while the stored components already represent the local wall-clock value.
+ * Reading UTC components prevents adding the browser/server timezone offset.
+ */
+export function serializeStoredDbDateTime(value: DbDateInput): string | null {
+  if (!(value instanceof Date)) {
+    return serializeDbDateTime(value);
+  }
+
+  if (Number.isNaN(value.getTime())) return null;
+
+  const year = value.getUTCFullYear();
+  const month = pad2(value.getUTCMonth() + 1);
+  const day = pad2(value.getUTCDate());
+  const hours = pad2(value.getUTCHours());
+  const minutes = pad2(value.getUTCMinutes());
+  const seconds = pad2(value.getUTCSeconds());
+
+  return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
+}
+
 const maybeAlreadyFormatted = (value: string) => {
   const trimmed = value.trim();
   if (!trimmed) return null;

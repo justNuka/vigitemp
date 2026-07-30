@@ -6,6 +6,7 @@ import { withAuthLogging } from "@/lib/api-wrappers"
 import { apiError, apiOk } from "@/lib/api-response"
 import { prisma, prismaMesure } from "@/lib/prisma"
 import { log } from "@/lib/logger"
+import { serializeStoredDbDateTime } from "@/lib/date-display"
 import { normalizeMeasureNumber, normalizeUnitLabel } from "@/lib/measurements"
 
 const NO_STORE_HEADERS = {
@@ -480,7 +481,7 @@ export const GET = withAuthLogging(async (request: NextRequest, ctx) => {
           currentValue: normalizeMeasureNumber(lastMeasurement?.Valeur ?? null, resolvedDecimals),
           minThreshold: normalizeMeasureNumber(minThreshold, 2),
           maxThreshold: normalizeMeasureNumber(maxThreshold, 2),
-          lastMeasurement: lastMeasurement?.Date_Heure_Mesure ?? null,
+          lastMeasurement: serializeStoredDbDateTime(lastMeasurement?.Date_Heure_Mesure),
           isActive: !location.Est_Archive,
           status,
           location: {

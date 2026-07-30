@@ -23,6 +23,10 @@ namespace Vigitemp_Serveur.sensors
         private const int RepeatedDrainWindowSeconds = 120;
         private const int PortPurgeCooldownSeconds = 60;
         private const int EndOfResponseSilenceMs = 500;
+        private const int IncompleteResponseSilenceMs = 1200;
+        private const int ResponseCompletionTimeoutMs = 4000;
+        private const int AcknowledgedIncompleteResponseSilenceMs = 3500;
+        private const int AcknowledgedResponseCompletionTimeoutMs = 8000;
         private const int ConfigurationResponseSilenceMs = 1200;
         private const int ConfigurationReadTimeoutMs = 10000;
         private const int InterCommandDelayMs = 150;
@@ -44,7 +48,7 @@ namespace Vigitemp_Serveur.sensors
 
         private const int MemoBatchReadTimeoutMsShort = 10000;
         private const int MemoBatchReadTimeoutMsMedium = 30000;
-        private const int MemoBatchReadTimeoutMsLarge = 90000;
+        private const int MemoBatchReadTimeoutMsLarge = 120000;
         private const int MemoBatchReadTimeoutMsVeryLarge = 180000;
         private const int MemoBatchListenWindowMsShort = 1000;
         private const int MemoBatchListenWindowMsMedium = 5000;
@@ -116,6 +120,13 @@ namespace Vigitemp_Serveur.sensors
 
         public async Task<bool> SynchronizeConfigurationOnlyAsync(bool fullConfiguration)
         {
+            if (VigitempServeur.InterrogationOnlyMode)
+            {
+                VigitempServeur.Log(
+                    $"[SERVER][MODE] type=GSP serial={m_sondeSerialNumber} command=config status=blocked reason=interrogation-only");
+                return false;
+            }
+
             return await ExecuteWithPortLockAsync(async () =>
             {
                 try
@@ -387,65 +398,63 @@ namespace Vigitemp_Serveur.sensors
                 if (current.MissingConfigurationCodes.Count > 0)
                 {
                     var codes = string.Join("+", current.MissingConfigurationCodes);
-                    var requiresMetrologySync =
-                        current.MissingConfigurationCodes.Contains("A") ||
-                        current.MissingConfigurationCodes.Contains("B") ||
-                        current.MissingConfigurationCodes.Contains("E");
-
                     VigitempServeur.Log(
-                        $"[SONDE][CFG-CHECK] type=GSP serial={m_sondeSerialNumber} status=eeprom-missing codes={codes} action={(requiresMetrologySync ? "full-sync" : "econ-sync")}");
-
-                    if (requiresMetrologySync)
-                    {
-                        var commands = BuildConfigurationCommands(metrology, alarmSettings);
-                        if (commands.Count == 0)
-                        {
-                            VigitempServeur.Log($"[SONDE][CFG-CHECK] type=GSP serial={m_sondeSerialNumber} status=eeprom-missing-no-command codes={codes}");
-                            return false;
-                        }
-
-                        return await TrySynchronizeConfigurationAsync();
-                    }
-
-                    return await SendExpectedEconomyConfigurationAsync(alarmSettings);
+                        $"[SONDE][CFG-CHECK] type=GSP serial={m_sondeSerialNumber} status=eeprom-missing codes={codes} action=econ-sync");
+                    return await SendExpectedConfigurationAsync(metrology, alarmSettings);
                 }
 
+                var expectedCoeffA = metrology?.CoeffX ?? 1d;
+                var expectedCoeffB = (metrology?.CoeffConstant ?? 0d) + (metrology?.Offset ?? 0d);
+                var expectedCorrectionC = metrology?.ErrJustesse ?? 0d;
                 var expectedHigh = alarmSettings.ConsigneSup;
                 var expectedLow = alarmSettings.ConsigneInf;
                 var expectedFrequencyMinutes = Math.Max(1, (int)Math.Round(Math.Max(1, _frequencySeconds) / 60d, MidpointRounding.AwayFromZero));
                 var expectedDelayLowMinutes = Math.Max(0, alarmSettings.RetardAlarmeBasMinutes);
                 var expectedDelayHighMinutes = Math.Max(0, alarmSettings.RetardAlarmeHautMinutes);
 
+                var coeffAMismatch = current.CoeffA.HasValue && !AreClose(current.CoeffA.Value, expectedCoeffA);
+                var coeffBMismatch = current.CoeffB.HasValue && !AreClose(current.CoeffB.Value, expectedCoeffB);
+                var correctionCMismatch = current.CorrectionC.HasValue && !AreClose(current.CorrectionC.Value, expectedCorrectionC);
                 var highMismatch = current.HighLimit.HasValue && expectedHigh.HasValue && !AreClose(current.HighLimit.Value, expectedHigh.Value);
                 var lowMismatch = current.LowLimit.HasValue && expectedLow.HasValue && !AreClose(current.LowLimit.Value, expectedLow.Value);
                 var frequencyMismatch = current.FrequencyMinutes.HasValue && current.FrequencyMinutes.Value != expectedFrequencyMinutes;
                 var lowDelayMismatch = current.AlarmDelayLowMinutes.HasValue && current.AlarmDelayLowMinutes.Value != expectedDelayLowMinutes;
                 var highDelayMismatch = current.AlarmDelayHighMinutes.HasValue && current.AlarmDelayHighMinutes.Value != expectedDelayHighMinutes;
                 var hasUnknownCriticalField =
+                    !current.CoeffA.HasValue ||
+                    !current.CoeffB.HasValue ||
+                    !current.CorrectionC.HasValue ||
                     !current.HighLimit.HasValue ||
                     !current.LowLimit.HasValue ||
                     !current.FrequencyMinutes.HasValue ||
-                    (expectedDelayLowMinutes > 0 && !current.AlarmDelayLowMinutes.HasValue) ||
-                    (expectedDelayHighMinutes > 0 && !current.AlarmDelayHighMinutes.HasValue);
+                    !current.AlarmDelayLowMinutes.HasValue ||
+                    !current.AlarmDelayHighMinutes.HasValue;
 
-                if (!highMismatch && !lowMismatch && !frequencyMismatch && !lowDelayMismatch && !highDelayMismatch)
+                if (!coeffAMismatch &&
+                    !coeffBMismatch &&
+                    !correctionCMismatch &&
+                    !highMismatch &&
+                    !lowMismatch &&
+                    !frequencyMismatch &&
+                    !lowDelayMismatch &&
+                    !highDelayMismatch)
                 {
                     if (hasUnknownCriticalField)
                     {
-                        VigitempServeur.Log($"[SONDE][CFG-CHECK] type=GSP serial={m_sondeSerialNumber} status=partial expectedDelayLowMin={expectedDelayLowMinutes} expectedDelayHighMin={expectedDelayHighMinutes}");
-                        return await SendExpectedEconomyConfigurationAsync(alarmSettings);
+                        VigitempServeur.Log($"[SONDE][CFG-CHECK] type=GSP serial={m_sondeSerialNumber} status=partial action=econ-sync");
+                        return await SendExpectedConfigurationAsync(metrology, alarmSettings);
                     }
 
                     VigitempServeur.Log(
-                        $"[SONDE][CFG-CHECK] type=GSP serial={m_sondeSerialNumber} status=ok high={(current.HighLimit.HasValue ? current.HighLimit.Value.ToString(CultureInfo.InvariantCulture) : "unknown")} low={(current.LowLimit.HasValue ? current.LowLimit.Value.ToString(CultureInfo.InvariantCulture) : "unknown")} freqMin={(current.FrequencyMinutes.HasValue ? current.FrequencyMinutes.Value.ToString(CultureInfo.InvariantCulture) : "unknown")} delayLowMin={(current.AlarmDelayLowMinutes.HasValue ? current.AlarmDelayLowMinutes.Value.ToString(CultureInfo.InvariantCulture) : "unknown")} delayHighMin={(current.AlarmDelayHighMinutes.HasValue ? current.AlarmDelayHighMinutes.Value.ToString(CultureInfo.InvariantCulture) : "unknown")}");
+                        $"[SONDE][CFG-CHECK] type=GSP serial={m_sondeSerialNumber} status=ok a={current.CoeffA.Value.ToString(CultureInfo.InvariantCulture)} b={current.CoeffB.Value.ToString(CultureInfo.InvariantCulture)} c={current.CorrectionC.Value.ToString(CultureInfo.InvariantCulture)} high={current.HighLimit.Value.ToString(CultureInfo.InvariantCulture)} low={current.LowLimit.Value.ToString(CultureInfo.InvariantCulture)} freqMin={current.FrequencyMinutes.Value.ToString(CultureInfo.InvariantCulture)} delayLowMin={current.AlarmDelayLowMinutes.Value.ToString(CultureInfo.InvariantCulture)} delayHighMin={current.AlarmDelayHighMinutes.Value.ToString(CultureInfo.InvariantCulture)}");
 
                     return true;
                 }
 
                 VigitempServeur.Log(
-                    $"[SONDE][CFG-CHECK] type=GSP serial={m_sondeSerialNumber} status=mismatch high={FormatCompare(current.HighLimit, expectedHigh)} low={FormatCompare(current.LowLimit, expectedLow)} freqMin={FormatCompare(current.FrequencyMinutes, expectedFrequencyMinutes)} delayLowMin={FormatCompare(current.AlarmDelayLowMinutes, expectedDelayLowMinutes)} delayHighMin={FormatCompare(current.AlarmDelayHighMinutes, expectedDelayHighMinutes)}");
+                    $"[SONDE][CFG-CHECK] type=GSP serial={m_sondeSerialNumber} status=mismatch a={FormatCompare(current.CoeffA, expectedCoeffA)} b={FormatCompare(current.CoeffB, expectedCoeffB)} c={FormatCompare(current.CorrectionC, expectedCorrectionC)} high={FormatCompare(current.HighLimit, expectedHigh)} low={FormatCompare(current.LowLimit, expectedLow)} freqMin={FormatCompare(current.FrequencyMinutes, expectedFrequencyMinutes)} delayLowMin={FormatCompare(current.AlarmDelayLowMinutes, expectedDelayLowMinutes)} delayHighMin={FormatCompare(current.AlarmDelayHighMinutes, expectedDelayHighMinutes)}");
 
-                return await SendExpectedEconomyConfigurationAsync(alarmSettings);
+                return await SendExpectedConfigurationAsync(metrology, alarmSettings);
             }
             catch (Exception ex)
             {
@@ -454,11 +463,13 @@ namespace Vigitemp_Serveur.sensors
             }
         }
 
-        private async Task<bool> SendExpectedEconomyConfigurationAsync(LieuAlarmSettings alarmSettings)
+        private async Task<bool> SendExpectedConfigurationAsync(
+            SondeMetrologySettings metrology,
+            LieuAlarmSettings alarmSettings)
         {
             var commands = GspProtocol.BuildConfigurationCommands(
                 channel: null,
-                metrology: null,
+                metrology: metrology,
                 alarmSettings: alarmSettings,
                 frequencySeconds: _frequencySeconds);
 
@@ -513,6 +524,13 @@ namespace Vigitemp_Serveur.sensors
 
         public async Task<GspMemoResponse> ReadMemoryChunkAsync(int memoryCount, int memoryOffset)
         {
+            if (VigitempServeur.InterrogationOnlyMode)
+            {
+                VigitempServeur.Log(
+                    $"[SERVER][MODE] type=GSP serial={m_sondeSerialNumber} command=MEMO status=blocked reason=interrogation-only");
+                return null;
+            }
+
             GspMemoResponse response = null;
             await ExecuteWithPortLockAsync(async () =>
             {
@@ -524,8 +542,23 @@ namespace Vigitemp_Serveur.sensors
 
         private async Task<GspMemoResponse> ReadMemoryChunkCoreAsync(int memoryCount, int memoryOffset)
         {
-            var safeCount = Math.Max(1, memoryCount);
-            var safeOffset = Math.Max(0, memoryOffset);
+            if (!GspProtocol.TryNormalizeMemoryRequest(
+                    memoryCount,
+                    memoryOffset,
+                    out var safeCount,
+                    out var safeOffset))
+            {
+                VigitempServeur.Log(
+                    $"[SONDE][MEMO] type=GSP serial={m_sondeSerialNumber} port={m_comPort} status=rejected reason=eeprom-range-exhausted requested={memoryCount} offset={memoryOffset} capacity={GspProtocol.MaxMemoryMeasurementCount}");
+                return null;
+            }
+
+            if (safeCount != memoryCount || safeOffset != memoryOffset)
+            {
+                VigitempServeur.Log(
+                    $"[SONDE][MEMO] type=GSP serial={m_sondeSerialNumber} port={m_comPort} status=limited requested={memoryCount} offset={memoryOffset} count={safeCount} safeOffset={safeOffset} capacity={GspProtocol.MaxMemoryMeasurementCount}");
+            }
+
             var payload = safeCount.ToString(CultureInfo.InvariantCulture) + "x" + safeOffset.ToString(CultureInfo.InvariantCulture) + "o";
             var originalReadTimeout = m_port.ReadTimeout;
 
@@ -580,6 +613,23 @@ namespace Vigitemp_Serveur.sensors
 
         private async Task<string> SendRequestAndReadAsync(string commandPrefix, string payload, bool allowEmptyResponse, int endOfResponseSilenceMs)
         {
+            if (VigitempServeur.InterrogationOnlyMode &&
+                !string.Equals(commandPrefix, "TEMP", StringComparison.OrdinalIgnoreCase))
+            {
+                VigitempServeur.Log(
+                    $"[SERVER][MODE] type=GSP serial={m_sondeSerialNumber} command={commandPrefix} status=blocked reason=interrogation-only");
+                return string.Empty;
+            }
+
+            if (string.Equals(commandPrefix, "ECON", StringComparison.OrdinalIgnoreCase) &&
+                string.IsNullOrWhiteSpace(payload))
+            {
+                VigitempServeur.Log(
+                    $"[SONDE][TX] type=GSP serial={m_sondeSerialNumber} port={m_comPort} " +
+                    "command=ECON status=rejected reason=empty-payload");
+                return string.Empty;
+            }
+
             var command = GspProtocol.BuildCommand(commandPrefix, _commandTarget, payload);
             var candidates = new List<string>(GspProtocol.BuildCandidateCommands(command));
             for (var index = 0; index < candidates.Count; index++)
@@ -597,19 +647,32 @@ namespace Vigitemp_Serveur.sensors
 
                 m_port.DiscardInBuffer();
                 m_port.DiscardOutBuffer();
-                VigitempServeur.Log($"[SONDE][TX] type=GSP serial={m_sondeSerialNumber} port={m_comPort} cmd={EscapeForLog(candidate)}");
-                m_port.Write(candidate);
+                var commandBytes = GspProtocol.EncodeCommand(candidate);
+                VigitempServeur.Log(
+                    $"[SONDE][TX] type=GSP serial={m_sondeSerialNumber} port={m_comPort} " +
+                    $"cmd={EscapeForLog(candidate)}");
+                m_port.Write(commandBytes, 0, commandBytes.Length);
                 await Task.Delay(InterCommandDelayMs);
 
                 string response;
+                var trailingResponse = string.Empty;
                 try
                 {
-                    response = await ReadResponseAsync(endOfResponseSilenceMs);
+                    response = await ReadResponseAsync(candidate, endOfResponseSilenceMs);
                 }
                 finally
                 {
-                    await PurgePortAfterCommandAsync(commandPrefix);
+                    trailingResponse = await PurgePortAfterCommandAsync(commandPrefix);
                 }
+
+                if (!GspProtocol.HasEndTerminator(response) &&
+                    !string.IsNullOrWhiteSpace(trailingResponse))
+                {
+                    response = GspProtocol.StripCommandEcho(
+                        (response ?? string.Empty) + Environment.NewLine + trailingResponse,
+                        candidate).Trim();
+                }
+
                 if (!string.IsNullOrWhiteSpace(response))
                 {
                     VigitempServeur.Log($"[SONDE][RX] type=GSP serial={m_sondeSerialNumber} port={m_comPort} raw={FormatResponseForLog(response)}");
@@ -653,19 +716,43 @@ namespace Vigitemp_Serveur.sensors
             }
         }
 
-        private async Task<string> ReadResponseAsync(int endOfResponseSilenceMs)
+        private async Task<string> ReadResponseAsync(string command, int endOfResponseSilenceMs)
         {
             var startedAt = DateTime.UtcNow;
             var buffer = string.Empty;
-            DateTime? lastDataAt = null;
-            while ((DateTime.UtcNow - startedAt).TotalMilliseconds < m_port.ReadTimeout)
+            DateTime? firstMeaningfulDataAt = null;
+            DateTime? lastMeaningfulDataAt = null;
+            var acknowledgedResponse = false;
+            while (true)
             {
+                var now = DateTime.UtcNow;
+                if (!firstMeaningfulDataAt.HasValue &&
+                    (now - startedAt).TotalMilliseconds >= m_port.ReadTimeout)
+                {
+                    break;
+                }
+
+                if (firstMeaningfulDataAt.HasValue &&
+                    (now - firstMeaningfulDataAt.Value).TotalMilliseconds >= Math.Max(
+                        acknowledgedResponse
+                            ? AcknowledgedResponseCompletionTimeoutMs
+                            : ResponseCompletionTimeoutMs,
+                        m_port.ReadTimeout))
+                {
+                    break;
+                }
+
                 await Task.Delay(50);
 
                 var chunk = m_port.ReadExisting();
                 if (string.IsNullOrEmpty(chunk))
                 {
-                    if (lastDataAt.HasValue && (DateTime.UtcNow - lastDataAt.Value).TotalMilliseconds >= endOfResponseSilenceMs)
+                    var incompleteSilenceMs = acknowledgedResponse
+                        ? AcknowledgedIncompleteResponseSilenceMs
+                        : IncompleteResponseSilenceMs;
+                    if (lastMeaningfulDataAt.HasValue &&
+                        (DateTime.UtcNow - lastMeaningfulDataAt.Value).TotalMilliseconds >=
+                        Math.Max(endOfResponseSilenceMs, incompleteSilenceMs))
                     {
                         break;
                     }
@@ -673,22 +760,39 @@ namespace Vigitemp_Serveur.sensors
                 }
 
                 buffer += chunk;
-                lastDataAt = DateTime.UtcNow;
+                var responseWithoutEcho = GspProtocol.StripCommandEcho(buffer, command);
+                if (string.IsNullOrWhiteSpace(responseWithoutEcho))
+                {
+                    continue;
+                }
+
+                if (!firstMeaningfulDataAt.HasValue)
+                {
+                    firstMeaningfulDataAt = DateTime.UtcNow;
+                }
+                lastMeaningfulDataAt = DateTime.UtcNow;
+                acknowledgedResponse =
+                    responseWithoutEcho.IndexOf("ACK=", StringComparison.OrdinalIgnoreCase) >= 0;
+                if (GspProtocol.HasEndTerminator(responseWithoutEcho))
+                {
+                    break;
+                }
             }
 
-            if (!string.IsNullOrWhiteSpace(buffer) && lastDataAt.HasValue)
+            var response = GspProtocol.StripCommandEcho(buffer, command).Trim();
+            if (!string.IsNullOrWhiteSpace(response) && lastMeaningfulDataAt.HasValue)
             {
-                LastResponseReceivedAtLocal = lastDataAt.Value.ToLocalTime();
+                LastResponseReceivedAtLocal = lastMeaningfulDataAt.Value.ToLocalTime();
             }
 
-            return buffer.Trim();
+            return response;
         }
 
-        private async Task PurgePortAfterCommandAsync(string commandPrefix)
+        private async Task<string> PurgePortAfterCommandAsync(string commandPrefix)
         {
             if (m_port == null || !m_port.IsOpen)
             {
-                return;
+                return string.Empty;
             }
 
             var startedAt = DateTime.UtcNow;
@@ -717,6 +821,7 @@ namespace Vigitemp_Serveur.sensors
 
             VigitempServeur.LogDetailed(
                 $"[SONDE][PORT-PURGE] type=GSP serial={m_sondeSerialNumber} port={m_comPort} command={commandPrefix} reason=post-command durationMs={(DateTime.UtcNow - startedAt).TotalMilliseconds:0} extraBytes={buffer.Length} extraRaw={TrimForLog(buffer)}");
+            return buffer;
         }
 
         private async Task<string> DrainBufferedDataAsync()
@@ -862,6 +967,11 @@ namespace Vigitemp_Serveur.sensors
 
         private async Task<GspTemperatureResponse> CheckAndSynchronizeClockAsync(GspTemperatureResponse parsed, bool hadTimeoutBeforeSuccess)
         {
+            if (VigitempServeur.InterrogationOnlyMode)
+            {
+                return parsed;
+            }
+
             if (!parsed.ProbeDateTime.HasValue)
             {
                 return parsed;

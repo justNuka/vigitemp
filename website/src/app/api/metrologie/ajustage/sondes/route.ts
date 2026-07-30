@@ -24,12 +24,17 @@ export const GET = withStandardOrExpertAnyAuthorizationLogging(
           Sonde_Numero_Serie: true,
           Id_Module: true,
           Sonde_Offset: true,
+          Est_Sonde_GSO: true,
+          t_sonde_type: {
+            select: {
+              Unite: true,
+            },
+          },
           t_lieu: {
             where: { Est_Archive: false },
             select: {
               Id_Lieu: true,
               Nom_Lieu: true,
-              Derniere_Unite: true,
             },
             take: 1,
           },
@@ -90,9 +95,9 @@ export const GET = withStandardOrExpertAnyAuthorizationLogging(
         locationName: sonde.t_lieu[0]?.Nom_Lieu ?? null,
         unit: sonde.Sonde_Numero_Serie
           ? latestAdjustmentUnitBySerial.get(sonde.Sonde_Numero_Serie.trim()) ||
-            sonde.t_lieu[0]?.Derniere_Unite?.trim() ||
+            sonde.t_sonde_type?.Unite?.trim() ||
             null
-          : sonde.t_lieu[0]?.Derniere_Unite?.trim() || null,
+          : sonde.t_sonde_type?.Unite?.trim() || null,
         moduleId: sonde.Id_Module ?? null,
         moduleName:
           (typeof sonde.Id_Module === "number" ? moduleById.get(sonde.Id_Module)?.Module_Numero_Serie : null) ??
@@ -101,6 +106,7 @@ export const GET = withStandardOrExpertAnyAuthorizationLogging(
         modulePort:
           (typeof sonde.Id_Module === "number" ? moduleById.get(sonde.Id_Module)?.Port_Serie : null) ?? null,
         currentCalibrationValue: typeof sonde.Sonde_Offset === "number" ? sonde.Sonde_Offset : 0,
+        isGso: Boolean(sonde.Est_Sonde_GSO),
       }))
 
       return apiOk(data)

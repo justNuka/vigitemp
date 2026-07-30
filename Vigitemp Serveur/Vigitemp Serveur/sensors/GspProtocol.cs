@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Text;
 using System.Text.RegularExpressions;
 
 namespace Vigitemp_Serveur.sensors
@@ -22,6 +23,9 @@ namespace Vigitemp_Serveur.sensors
     internal sealed class GspConfigurationResponse
     {
         public string Serial { get; set; }
+        public double? CoeffA { get; set; }
+        public double? CoeffB { get; set; }
+        public double? CorrectionC { get; set; }
         public double? HighLimit { get; set; }
         public double? LowLimit { get; set; }
         public int? FrequencyMinutes { get; set; }
@@ -47,6 +51,42 @@ namespace Vigitemp_Serveur.sensors
 
     internal static class GspProtocol
     {
+        internal const int MaxMemoryMeasurementCount = 5330;
+        internal const int MaxMemoryMeasurementsPerRequest = 500;
+
+        internal static bool TryNormalizeMemoryRequest(
+            int requestedCount,
+            int requestedOffset,
+            out int count,
+            out int offset)
+        {
+            offset = Math.Max(0, requestedOffset);
+            if (offset >= MaxMemoryMeasurementCount)
+            {
+                count = 0;
+                return false;
+            }
+
+            count = Math.Min(
+                Math.Min(Math.Max(1, requestedCount), MaxMemoryMeasurementsPerRequest),
+                MaxMemoryMeasurementCount - offset);
+            return count > 0;
+        }
+
+        internal static bool HasEndTerminator(string response)
+        {
+            if (string.IsNullOrWhiteSpace(response))
+            {
+                return false;
+            }
+
+            var normalized = response
+                .Replace("\r\n", "\n")
+                .Replace('\r', '\n')
+                .TrimEnd();
+            return Regex.IsMatch(normalized, @"(?:^|\n)\s*END\s*$", RegexOptions.IgnoreCase);
+        }
+
         private static readonly string[] GspTypePrefixes =
         {
             "SPNB", "SPNG", "SPPS", "SPAL", "SPPC", "SPAU", "SPCF", "SPMI",
@@ -86,49 +126,29 @@ namespace Vigitemp_Serveur.sensors
                 "ED-H",
                 BuildDateTimePayload(now)));
 
-            if (metrology != null)
-            {
-                // For GSP probes, metrology is pushed into the probe itself.
-                // The local sensor offset is an additive correction, so it is folded into ECAL's B coefficient.
-                var effectiveCoeffConstant = metrology.CoeffConstant + (metrology.Offset ?? 0d);
-                commands.Add(new KeyValuePair<string, string>(
-                    "ECAL",
-                    string.Format(
-                        CultureInfo.InvariantCulture,
-                        "{0}a{1}b",
-                        FormatNumericPayload(metrology.CoeffX),
-                        FormatNumericPayload(effectiveCoeffConstant))));
+            // DCON/ECON carry the complete probe configuration. The local sensor
+            // offset is an additive correction and is therefore folded into B.
+            var coeffA = metrology?.CoeffX ?? 1d;
+            var coeffB = (metrology?.CoeffConstant ?? 0d) + (metrology?.Offset ?? 0d);
+            var correctionC = metrology?.ErrJustesse ?? 0d;
+            var frequencyMinutes = Math.Max(
+                1,
+                (int)Math.Round(
+                    Math.Max(1, frequencySeconds) / 60d,
+                    MidpointRounding.AwayFromZero));
+            var payload = string.Format(
+                CultureInfo.InvariantCulture,
+                "{0}a{1}b{2}c{3}h{4}l{5}f{6}r{7}t",
+                FormatNumericPayload(coeffA),
+                FormatNumericPayload(coeffB),
+                FormatNumericPayload(correctionC),
+                FormatNumericPayload(highLimit ?? 0d),
+                FormatNumericPayload(lowLimit ?? 0d),
+                frequencyMinutes,
+                Math.Max(0, alarmDelayLowMinutes),
+                Math.Max(0, alarmDelayHighMinutes));
 
-                if (metrology.ErrJustesse.HasValue)
-                {
-                    commands.Add(new KeyValuePair<string, string>(
-                        "EETA",
-                        FormatNumericPayload(metrology.ErrJustesse.Value) + "c"));
-                }
-            }
-
-            if (highLimit.HasValue || lowLimit.HasValue || frequencySeconds > 0 || alarmDelayLowMinutes > 0 || alarmDelayHighMinutes > 0)
-            {
-                var payload = string.Format(
-                    CultureInfo.InvariantCulture,
-                    "{0}h{1}l{2}f",
-                    FormatNumericPayload(highLimit ?? 0d),
-                    FormatNumericPayload(lowLimit ?? 0d),
-                    Math.Max(1, (int)Math.Round(Math.Max(1, frequencySeconds) / 60d, MidpointRounding.AwayFromZero)));
-
-                if (alarmDelayLowMinutes > 0 || alarmDelayHighMinutes > 0)
-                {
-                    payload += string.Format(
-                        CultureInfo.InvariantCulture,
-                        "{0}r{1}t",
-                        Math.Max(0, alarmDelayLowMinutes),
-                        Math.Max(0, alarmDelayHighMinutes));
-                }
-
-                commands.Add(new KeyValuePair<string, string>(
-                    "ECON",
-                    payload));
-            }
+            commands.Add(new KeyValuePair<string, string>("ECON", payload));
 
             if (!string.IsNullOrWhiteSpace(channel))
             {
@@ -197,6 +217,58 @@ namespace Vigitemp_Serveur.sensors
             }
 
             return normalizedPrefix + normalizedTarget + " " + normalizedPayload;
+        }
+
+        internal static byte[] EncodeCommand(string command)
+        {
+            return Encoding.ASCII.GetBytes(command ?? string.Empty);
+        }
+
+        internal static bool IsCommandEchoOnly(string response, string command)
+        {
+            if (string.IsNullOrWhiteSpace(response) || string.IsNullOrWhiteSpace(command))
+            {
+                return false;
+            }
+
+            return string.IsNullOrWhiteSpace(StripCommandEcho(response, command));
+        }
+
+        internal static string StripCommandEcho(string response, string command)
+        {
+            var raw = (response ?? string.Empty).Trim();
+            var normalizedCommand = NormalizeCommandWhitespace(command);
+            if (string.IsNullOrWhiteSpace(raw) || string.IsNullOrWhiteSpace(normalizedCommand))
+            {
+                return raw;
+            }
+
+            var commandWithoutTrailingWhitespace = (command ?? string.Empty).Trim();
+            if (raw.StartsWith(commandWithoutTrailingWhitespace, StringComparison.OrdinalIgnoreCase))
+            {
+                var remainder = raw.Substring(commandWithoutTrailingWhitespace.Length);
+                if (remainder.Length == 0 || char.IsWhiteSpace(remainder[0]))
+                {
+                    raw = remainder.TrimStart();
+                }
+            }
+
+            var filtered = Regex.Split(raw, @"\r?\n")
+                .Where(line => !string.IsNullOrWhiteSpace(line))
+                .Where(line => !string.Equals(
+                    NormalizeCommandWhitespace(line),
+                    normalizedCommand,
+                    StringComparison.OrdinalIgnoreCase))
+                .ToList();
+
+            return filtered.Count == 0
+                ? string.Empty
+                : string.Join(Environment.NewLine, filtered);
+        }
+
+        private static string NormalizeCommandWhitespace(string value)
+        {
+            return Regex.Replace((value ?? string.Empty).Trim(), @"\s+", " ");
         }
 
         internal static string BuildDateTimePayload(DateTime value)
@@ -388,18 +460,31 @@ namespace Vigitemp_Serveur.sensors
                 Serial = !string.IsNullOrWhiteSpace(extractedSerial)
                     ? extractedSerial.Trim().ToUpperInvariant()
                     : ExtractDetectedSerials(response).FirstOrDefault(),
-                HighLimit = TryExtractDoubleLineValue(response, "LimiteHaute")
+                CoeffA = TryExtractDoubleLineValue(response, "A")
+                    ?? TryExtractDoubleLineValue(response, "CoeffA")
+                    ?? TryExtractCompactNumeric(response, 'a'),
+                CoeffB = TryExtractDoubleLineValue(response, "B")
+                    ?? TryExtractDoubleLineValue(response, "CoeffB")
+                    ?? TryExtractCompactNumeric(response, 'b'),
+                CorrectionC = TryExtractDoubleLineValue(response, "C")
+                    ?? TryExtractDoubleLineValue(response, "Etalonnage")
+                    ?? TryExtractCompactNumeric(response, 'c'),
+                HighLimit = TryExtractDoubleLineValue(response, "LimH")
+                    ?? TryExtractDoubleLineValue(response, "LimiteHaute")
                     ?? TryExtractDoubleLineValue(response, "ConsigneSup")
                     ?? TryExtractDoubleLineValue(response, "High")
                     ?? TryExtractCompactNumeric(response, 'h'),
-                LowLimit = TryExtractDoubleLineValue(response, "LimiteBasse")
+                LowLimit = TryExtractDoubleLineValue(response, "LimB")
+                    ?? TryExtractDoubleLineValue(response, "LimiteBasse")
                     ?? TryExtractDoubleLineValue(response, "ConsigneInf")
                     ?? TryExtractDoubleLineValue(response, "Low")
                     ?? TryExtractCompactNumeric(response, 'l'),
-                FrequencyMinutes = TryExtractRoundedIntLineValue(response, "Frequence")
+                FrequencyMinutes = TryExtractRoundedIntLineValue(response, "F")
+                    ?? TryExtractRoundedIntLineValue(response, "Frequence")
                     ?? TryExtractRoundedIntLineValue(response, "FrequenceMinutes")
                     ?? TryExtractCompactInt(response, 'f'),
-                AlarmDelayLowMinutes = TryExtractRoundedIntLineValue(response, "RetardBas")
+                AlarmDelayLowMinutes = TryExtractRoundedIntLineValue(response, "RetB")
+                    ?? TryExtractRoundedIntLineValue(response, "RetardBas")
                     ?? TryExtractRoundedIntLineValue(response, "RetardAlarmeBas")
                     ?? TryExtractRoundedIntLineValue(response, "RetardAlarmeBasMinutes")
                     ?? TryExtractCompactInt(response, 'r')
@@ -407,7 +492,8 @@ namespace Vigitemp_Serveur.sensors
                     ?? TryExtractRoundedIntLineValue(response, "RetardAlarme")
                     ?? TryExtractRoundedIntLineValue(response, "RetardAlarmeMinutes")
                     ?? TryExtractCompactInt(response, 'd'),
-                AlarmDelayHighMinutes = TryExtractRoundedIntLineValue(response, "RetardHaut")
+                AlarmDelayHighMinutes = TryExtractRoundedIntLineValue(response, "RetH")
+                    ?? TryExtractRoundedIntLineValue(response, "RetardHaut")
                     ?? TryExtractRoundedIntLineValue(response, "RetardAlarmeHaut")
                     ?? TryExtractRoundedIntLineValue(response, "RetardAlarmeHautMinutes")
                     ?? TryExtractCompactInt(response, 't')
@@ -422,7 +508,10 @@ namespace Vigitemp_Serveur.sensors
                 result.MissingConfigurationCodes.Add(code);
             }
 
-            if (!result.HighLimit.HasValue &&
+            if (!result.CoeffA.HasValue &&
+                !result.CoeffB.HasValue &&
+                !result.CorrectionC.HasValue &&
+                !result.HighLimit.HasValue &&
                 !result.LowLimit.HasValue &&
                 !result.FrequencyMinutes.HasValue &&
                 !result.AlarmDelayLowMinutes.HasValue &&
@@ -443,7 +532,7 @@ namespace Vigitemp_Serveur.sensors
                 return new List<string>();
             }
 
-            return Regex.Matches(response, @"(?:R?TEMP|R?FTEM|FTEM|DCAL|DETA|DCON|ECAL|EETA|ECON|ED-H|MEMO|DD-H)((?:SP[A-Z0-9]{2}-\d+)|[PN]\d+)", RegexOptions.IgnoreCase)
+            return Regex.Matches(response, @"(?:R?TEMP|R?FTEM|FTEM|DCON|ECON|ED-H|MEMO|DD-H)((?:SP[A-Z0-9]{2}-\d+)|[PN]\d+)", RegexOptions.IgnoreCase)
                 .Cast<Match>()
                 .Where(match => match.Success && match.Groups.Count >= 2)
                 .Select(match => (match.Groups[1].Value ?? string.Empty).Trim().ToUpperInvariant())

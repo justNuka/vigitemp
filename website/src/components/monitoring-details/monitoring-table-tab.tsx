@@ -4,7 +4,7 @@ import type { ColumnDef, SortingState, Updater } from "@tanstack/react-table"
 
 import { TanStackTable } from "@/components/data-table/tanstack-table"
 import { Button } from "@/components/ui/button"
-import { parseDbDateTime } from "@/lib/date-display"
+import { formatDbDateTime, parseDbDateTime } from "@/lib/date-display"
 import type { MeasureData } from "@/lib/measurements"
 import { formatMeasureValue } from "@/lib/measurements"
 import { exportStyledExcel } from "@/lib/excel-export"
@@ -76,7 +76,9 @@ export function MonitoringTableTab({
     return tableMeasurements.map((measure) => ({
       id: measure.id,
       dateIso: measure.DateHeureMesureIso ?? measure.DateHeureMesure,
-      dateLabel: measure.DateHeureMesure,
+      dateLabel: formatDbDateTime(measure.DateHeureMesureIso ?? measure.DateHeureMesure, {
+        withSeconds: true,
+      }),
       sensorSerial: sondeNumeroSerie,
       value: measure.Valeur,
       unit: unite,

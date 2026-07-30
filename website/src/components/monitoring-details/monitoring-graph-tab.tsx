@@ -344,7 +344,9 @@ export function MonitoringGraphTab({
     <div className="space-y-4 pt-4 min-h-[68vh]">
       <div className="flex items-center justify-between gap-2">
         <span className="text-sm text-muted-foreground">
-          {t("chart.measure_count", { count: graphMeasureCount })}
+          {t(isRangeSelected ? "chart.measure_count" : "chart.latest_measure_count", {
+            count: graphMeasureCount,
+          })}
         </span>
         <div className="flex flex-wrap items-center justify-end gap-2">
           {memoryMeasureRanges.length > 0 ? (

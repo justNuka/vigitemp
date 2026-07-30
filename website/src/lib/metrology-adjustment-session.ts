@@ -13,8 +13,10 @@ import type { JWTPayload } from "@/lib/jwt"
 
 const DEFAULT_SERVER_PORT = 5310
 const DEFAULT_SERVER_BDD_ID = 1
-const DEFAULT_LOOP_INTERVAL_MS = 10_000
-const EXTRA_LOOP_INTERVAL_MS = 2_000
+const MIN_MEASUREMENT_INTERVAL_SECONDS = 15
+const ADJUSTMENT_MAX_DURATION_MS = 90 * 60 * 1000
+const ADJUSTMENT_EXTENSION_MS = 30 * 60 * 1000
+const ADJUSTMENT_EXTENSION_THRESHOLD_MS = 30 * 60 * 1000
 
 type PointIndex = 1 | 2
 type SessionStatus = "idle" | "running" | "completed" | "cancelled" | "failed"
@@ -44,20 +46,42 @@ type ValidatedPoint = {
 
 type RunningPoint = {
   pointIndex: PointIndex
-  targetValue: number
-  startedAt: number
+  startedAt: number | null
   standardSamples: PlateauSample[]
   sensorSamples: Record<number, PlateauSample[]>
   lastStandardValue: number | null
 }
 
+type PlateauStatus = {
+  status: "idle" | "running" | "waiting" | "failed" | "ready" | "validated"
+  pointIndex: PointIndex | null
+  startedAt: string | null
+  endedAt: string | null
+  standardSampleCount: number
+  lastGap: number | null
+  maxGap: number
+  resetCount: number
+  lastResetAt: string | null
+}
+
 type ManagedSensor = AdjustmentSensorRow & {
   address: string | null
   previousSensorState: string
-  previousLocationState: string | null
-  previousLocationStateN1: string | null
+  previousSensorStateN1: string | null
+  locations: Array<{
+    id: number
+    previousState: string | null
+    previousStateN1: string | null
+  }>
   previousCoeffX: number
   previousCoeffConstant: number
+}
+
+type GsoAdjustmentMeasurementRow = {
+  Valeur: number | string | null
+  Valeur_Brute: number | string | null
+  Unite: string | null
+  Date_Heure_Mesure: Date | string
 }
 
 type PersistedAdjustment = {
@@ -74,6 +98,8 @@ type AdjustmentSession = {
   username: string
   userProfile: string
   startedAt: string
+  expiresAt: string
+  extensionCount: number
   operator: string
   displayDecimals: number
   standardId: number
@@ -93,18 +119,21 @@ type AdjustmentSession = {
   mediumId: number | null
   plateauDurationMinutes: number
   plateauMaxGap: number
+  measurementIntervalSeconds: number
   sensors: ManagedSensor[]
   status: SessionStatus
   stopRequested: boolean
   latestStandardReading: RuntimeReading | null
   latestSensorReadings: Record<number, RuntimeReading>
   currentPoint: RunningPoint | null
+  plateauStatus: PlateauStatus
   validatedPoints: Partial<Record<PointIndex, ValidatedPoint>>
   message: string | null
   lastError: string | null
   lastUpdatedAt: string
   persistedAdjustments: PersistedAdjustment[]
   loopTimer: ReturnType<typeof setTimeout> | null
+  expirationTimer: ReturnType<typeof setTimeout> | null
 }
 
 type StartAdjustmentInput = {
@@ -115,12 +144,16 @@ type StartAdjustmentInput = {
   mediumId: number | null
   plateauDurationMinutes: number
   plateauMaxGap: number
+  measurementIntervalSeconds: number
 }
 
 type PublicSession = {
   id: string
   status: SessionStatus
   startedAt: string
+  expiresAt: string
+  extensionCount: number
+  canExtend: boolean
   operator: string
   displayDecimals: number
   standardId: number
@@ -139,6 +172,7 @@ type PublicSession = {
   mediumId: number | null
   plateauDurationMinutes: number
   plateauMaxGap: number
+  measurementIntervalSeconds: number
   sensors: Array<{
     id: number
     serialNumber: string
@@ -147,14 +181,15 @@ type PublicSession = {
     moduleId: number | null
     moduleName: string | null
     modulePort: string | null
+    isGso: boolean
   }>
   latestStandardReading: RuntimeReading | null
   latestSensorReadings: Record<number, RuntimeReading>
   currentPoint: {
     pointIndex: PointIndex
-    targetValue: number
-    startedAt: string
+    startedAt: string | null
   } | null
+  plateauStatus: PlateauStatus
   validatedPoints: Partial<Record<PointIndex, ValidatedPoint>>
   message: string | null
   lastError: string | null
@@ -236,6 +271,11 @@ function averageValues(values: Array<number | null>, decimals: number) {
   return roundValue(average, decimals)
 }
 
+function keepLatestValidReading(previous: RuntimeReading | null | undefined, next: RuntimeReading) {
+  if (next.value != null || previous?.value == null) return next
+  return previous
+}
+
 async function ensureAdjustmentStateExists() {
   const state = await prisma.t_etat_surveillance.findUnique({
     where: { Surveillance_Etat: "A" },
@@ -259,9 +299,9 @@ async function updateSensorMetrologyFlags(
   const assignments: string[] = []
   const params: number[] = []
 
-  if (values.metrologyInProgress !== undefined && (await hasMainDbColumn("t_sonde", "Metrologie_En_Cours"))) {
+  if (values.metrologyInProgress !== undefined && (await hasMainDbColumn("t_sonde", "Metrologie_en_cours"))) {
     assignments.push(
-      `${quoteIdentifier("Metrologie_En_Cours")} = ${isMssqlProvider() ? `@P${params.length + 1}` : "?"}`,
+      `${quoteIdentifier("Metrologie_en_cours")} = ${isMssqlProvider() ? `@P${params.length + 1}` : "?"}`,
     )
     params.push(values.metrologyInProgress)
   }
@@ -403,6 +443,64 @@ async function persistAdjustmentReading(serial: string, reading: RuntimeReading)
   `
 }
 
+async function readLatestGsoAdjustmentMeasurement(
+  session: AdjustmentSession,
+  sensor: ManagedSensor,
+): Promise<RuntimeReading | null> {
+  const previousReading = session.latestSensorReadings[sensor.id]
+  const cutoff = new Date(previousReading?.measuredAt ?? session.startedAt)
+  const address = sensor.address?.trim() || sensor.serialNumber
+  const rows = isMssqlProvider()
+    ? await prismaMesure.$queryRawUnsafe<GsoAdjustmentMeasurementRow[]>(
+        `SELECT TOP (1)
+           ${quoteIdentifier("Valeur")},
+           ${quoteIdentifier("Valeur_Brute")},
+           ${quoteIdentifier("Unite")},
+           ${quoteIdentifier("Date_Heure_Mesure")}
+         FROM ${quoteIdentifier("tm_mesures_ajustage")}
+         WHERE (
+           ${quoteIdentifier("Sonde_Numero_Serie")} = @P1
+           OR ${quoteIdentifier("Adresse_Sonde")} = @P2
+         )
+           AND ${quoteIdentifier("Date_Heure_Mesure")} > @P3
+         ORDER BY ${quoteIdentifier("Date_Heure_Mesure")} DESC, ${quoteIdentifier("Id_Mesure_Ajustage")} DESC`,
+        sensor.serialNumber,
+        address,
+        cutoff,
+      )
+    : await prismaMesure.$queryRawUnsafe<GsoAdjustmentMeasurementRow[]>(
+        `SELECT
+           ${quoteIdentifier("Valeur")},
+           ${quoteIdentifier("Valeur_Brute")},
+           ${quoteIdentifier("Unite")},
+           ${quoteIdentifier("Date_Heure_Mesure")}
+         FROM ${quoteIdentifier("tm_mesures_ajustage")}
+         WHERE (
+           ${quoteIdentifier("Sonde_Numero_Serie")} = ?
+           OR ${quoteIdentifier("Adresse_Sonde")} = ?
+         )
+           AND ${quoteIdentifier("Date_Heure_Mesure")} > ?
+         ORDER BY ${quoteIdentifier("Date_Heure_Mesure")} DESC, ${quoteIdentifier("Id_Mesure_Ajustage")} DESC
+         LIMIT 1`,
+        sensor.serialNumber,
+        address,
+        cutoff,
+      )
+
+  const row = rows[0]
+  if (!row) return null
+
+  const measuredAt = new Date(row.Date_Heure_Mesure)
+  const value = asFiniteNumber(row.Valeur) ?? asFiniteNumber(row.Valeur_Brute)
+  return {
+    value,
+    rawValue: null,
+    unit: row.Unite?.trim() || sensor.unit,
+    error: value == null ? "Mesure GSO invalide" : null,
+    measuredAt: Number.isNaN(measuredAt.getTime()) ? nowIso() : measuredAt.toISOString(),
+  }
+}
+
 async function persistStandardReading(serial: string, reading: RuntimeReading) {
   const schema = await getAdjustmentStandardMeasurementSchema()
   const columns = [
@@ -439,10 +537,19 @@ async function persistStandardReading(serial: string, reading: RuntimeReading) {
 }
 
 function toPublicSession(session: AdjustmentSession): PublicSession {
+  const remainingMs = new Date(session.expiresAt).getTime() - Date.now()
+
   return {
     id: session.id,
     status: session.status,
     startedAt: session.startedAt,
+    expiresAt: session.expiresAt,
+    extensionCount: session.extensionCount,
+    canExtend:
+      session.status === "running" &&
+      session.extensionCount === 0 &&
+      remainingMs > 0 &&
+      remainingMs <= ADJUSTMENT_EXTENSION_THRESHOLD_MS,
     operator: session.operator,
     displayDecimals: session.displayDecimals,
     standardId: session.standardId,
@@ -461,6 +568,7 @@ function toPublicSession(session: AdjustmentSession): PublicSession {
     mediumId: session.mediumId,
     plateauDurationMinutes: session.plateauDurationMinutes,
     plateauMaxGap: session.plateauMaxGap,
+    measurementIntervalSeconds: session.measurementIntervalSeconds,
     sensors: session.sensors.map((sensor) => ({
       id: sensor.id,
       serialNumber: sensor.serialNumber,
@@ -469,20 +577,27 @@ function toPublicSession(session: AdjustmentSession): PublicSession {
       moduleId: sensor.moduleId,
       moduleName: sensor.moduleName,
       modulePort: sensor.modulePort,
+      isGso: sensor.isGso,
     })),
     latestStandardReading: session.latestStandardReading,
     latestSensorReadings: session.latestSensorReadings,
     currentPoint: session.currentPoint
       ? {
           pointIndex: session.currentPoint.pointIndex,
-          targetValue: session.currentPoint.targetValue,
-          startedAt: new Date(session.currentPoint.startedAt).toISOString(),
+          startedAt:
+            session.currentPoint.startedAt == null
+              ? null
+              : new Date(session.currentPoint.startedAt).toISOString(),
         }
       : null,
+    plateauStatus: session.plateauStatus,
     validatedPoints: session.validatedPoints,
     message: session.message,
     lastError: session.lastError,
-    canStartPointTwo: Boolean(session.validatedPoints[1]) && !session.validatedPoints[2] && !session.currentPoint,
+    canStartPointTwo:
+      Boolean(session.validatedPoints[1]) &&
+      !session.validatedPoints[2] &&
+      session.currentPoint?.pointIndex === 2,
     hasValidatedPoint: Boolean(session.validatedPoints[1] || session.validatedPoints[2]),
     persistedAdjustments: session.persistedAdjustments,
     lastUpdatedAt: session.lastUpdatedAt,
@@ -586,18 +701,20 @@ async function restoreSessionStates(session: AdjustmentSession) {
       where: { Id_Sonde: sensor.id },
       data: {
         Surveillance_Etat: sensor.previousSensorState,
+        Etat_Sonde_N1: sensor.previousSensorStateN1,
       },
     }),
   )
 
   const locationMap = new Map<number, { previousState: string | null; previousStateN1: string | null }>()
   for (const sensor of session.sensors) {
-    if (!sensor.locationId) continue
-    if (locationMap.has(sensor.locationId)) continue
-    locationMap.set(sensor.locationId, {
-      previousState: sensor.previousLocationState,
-      previousStateN1: sensor.previousLocationStateN1,
-    })
+    for (const location of sensor.locations) {
+      if (locationMap.has(location.id)) continue
+      locationMap.set(location.id, {
+        previousState: location.previousState,
+        previousStateN1: location.previousStateN1,
+      })
+    }
   }
 
   const locationUpdates = Array.from(locationMap.entries()).map(([locationId, value]) =>
@@ -610,14 +727,36 @@ async function restoreSessionStates(session: AdjustmentSession) {
     }),
   )
 
-  await prisma.$transaction([...sensorUpdates, ...locationUpdates])
-  await updateSensorMetrologyFlags(
-    session.sensors.map((sensor) => sensor.id),
-    {
-      metrologyInProgress: 0,
-      metrologyCommandSent: 0,
-    },
-  )
+  let stateRestoreError: unknown = null
+  try {
+    await prisma.$transaction([...sensorUpdates, ...locationUpdates])
+  } catch (error) {
+    stateRestoreError = error
+  }
+
+  try {
+    await updateSensorMetrologyFlags(
+      session.sensors.map((sensor) => sensor.id),
+      {
+        metrologyInProgress: 0,
+        metrologyCommandSent: 0,
+      },
+    )
+  } catch (flagRestoreError) {
+    if (stateRestoreError) {
+      log.error("METROLOGY_ADJUSTMENT", "adjustment_state_and_flags_restore_failed", {
+        sessionId: session.id,
+        stateError: stateRestoreError,
+        flagError: flagRestoreError,
+      })
+      throw stateRestoreError
+    }
+    throw flagRestoreError
+  }
+
+  if (stateRestoreError) {
+    throw stateRestoreError
+  }
 }
 
 function releaseSensorLocks(session: AdjustmentSession) {
@@ -628,10 +767,26 @@ function releaseSensorLocks(session: AdjustmentSession) {
   }
 }
 
+function ensureSessionDeadline(session: AdjustmentSession) {
+  const expiresAtMs = new Date(session.expiresAt).getTime()
+  if (!Number.isFinite(expiresAtMs)) {
+    session.expiresAt = new Date(
+      new Date(session.startedAt).getTime() + ADJUSTMENT_MAX_DURATION_MS,
+    ).toISOString()
+  }
+  if (!Number.isFinite(session.extensionCount)) {
+    session.extensionCount = 0
+  }
+}
+
 async function finalizeSession(session: AdjustmentSession, status: SessionStatus, message: string | null) {
   if (session.loopTimer) {
     clearTimeout(session.loopTimer)
     session.loopTimer = null
+  }
+  if (session.expirationTimer) {
+    clearTimeout(session.expirationTimer)
+    session.expirationTimer = null
   }
 
   session.stopRequested = true
@@ -651,74 +806,218 @@ async function finalizeSession(session: AdjustmentSession, status: SessionStatus
   }
 }
 
-async function runOneLoop(session: AdjustmentSession) {
-  const standardReading = await readHotlineGspMeasurement({
-    serial: session.standardSerial,
-    manualPort: session.standardPort,
-    manualModule: session.standardModuleName,
+async function expireSession(session: AdjustmentSession) {
+  if (session.status !== "running" && session.status !== "idle") return
+
+  session.validatedPoints = {}
+  session.currentPoint = null
+  await finalizeSession(
+    session,
+    "cancelled",
+    "Ajustage annule automatiquement apres expiration de la duree maximale.",
+  )
+
+  log.warn("METROLOGY_ADJUSTMENT", "session_expired", {
+    sessionId: session.id,
+    userId: session.userId,
+    startedAt: session.startedAt,
+    expiresAt: session.expiresAt,
   })
-
-  session.latestStandardReading = standardReading
-  session.lastUpdatedAt = nowIso()
-  await persistStandardReading(session.standardSerial, standardReading).catch((error) => {
-    log.warn("METROLOGY_ADJUSTMENT", "standard_read_persist_failed", {
-      sessionId: session.id,
-      standardSerial: session.standardSerial,
-      error: error instanceof Error ? error.message : String(error),
-    })
+  log.audit("CA", {
+    user: session.username,
+    userId: session.userId,
+    userProfile: session.userProfile,
+    resource: "Ajustage (Expiration)",
+    resourceId: session.id,
+    changes: {
+      automaticCancellation: true,
+      expiresAt: session.expiresAt,
+    },
+    success: true,
   })
+}
 
-  if (session.currentPoint) {
-    session.currentPoint.standardSamples.push({
-      measuredAt: standardReading.measuredAt,
-      value: standardReading.value,
-      rawValue: standardReading.rawValue,
-    })
-
-    if (
-      session.currentPoint.lastStandardValue != null &&
-      standardReading.value != null &&
-      Math.abs(standardReading.value - session.currentPoint.lastStandardValue) > session.plateauMaxGap
-    ) {
-      const failedPoint = session.currentPoint.pointIndex
-      session.currentPoint = null
-      session.message = `Le point ${failedPoint} a ete invalide : ecart de stabilite depasse.`
-      session.lastError = session.message
-      session.lastUpdatedAt = nowIso()
-    } else if (standardReading.value != null) {
-      session.currentPoint.lastStandardValue = standardReading.value
-    }
+function scheduleSessionExpiration(session: AdjustmentSession) {
+  if (session.expirationTimer) {
+    clearTimeout(session.expirationTimer)
   }
 
-  for (const sensor of session.sensors) {
-    const reading = await readHotlineGspMeasurement({
-      serial: sensor.serialNumber,
-      manualPort: sensor.modulePort,
-      manualAddress: sensor.address,
-      manualModule: sensor.moduleName,
-    })
-
-    session.latestSensorReadings[sensor.id] = reading
-    await persistAdjustmentReading(sensor.serialNumber, reading).catch((error) => {
-      log.warn("METROLOGY_ADJUSTMENT", "sensor_read_persist_failed", {
+  const remainingMs = new Date(session.expiresAt).getTime() - Date.now()
+  if (remainingMs <= 0) {
+    session.expirationTimer = null
+    void expireSession(session).catch((error) => {
+      log.error("METROLOGY_ADJUSTMENT", "session_expiration_failed", {
         sessionId: session.id,
-        serial: sensor.serialNumber,
         error: error instanceof Error ? error.message : String(error),
       })
     })
+    return
+  }
 
-    if (!session.currentPoint) continue
+  session.expirationTimer = setTimeout(() => {
+    session.expirationTimer = null
+    void expireSession(session).catch((error) => {
+      log.error("METROLOGY_ADJUSTMENT", "session_expiration_failed", {
+        sessionId: session.id,
+        error: error instanceof Error ? error.message : String(error),
+      })
+    })
+  }, remainingMs)
+}
+
+function createRunningPoint(pointIndex: PointIndex): RunningPoint {
+  return {
+    pointIndex,
+    startedAt: null,
+    standardSamples: [],
+    sensorSamples: {},
+    lastStandardValue: null,
+  }
+}
+
+function createWaitingPlateauStatus(
+  pointIndex: PointIndex,
+  maxGap: number,
+  resetCount = 0,
+): PlateauStatus {
+  return {
+    status: "waiting",
+    pointIndex,
+    startedAt: null,
+    endedAt: null,
+    standardSampleCount: 0,
+    lastGap: null,
+    maxGap,
+    resetCount,
+    lastResetAt: null,
+  }
+}
+
+function applyStandardReadingToPlateau(session: AdjustmentSession, reading: RuntimeReading) {
+  if (!session.currentPoint || reading.value == null) return
+
+  const currentPoint = session.currentPoint
+  const sample = {
+    measuredAt: reading.measuredAt,
+    value: reading.value,
+    rawValue: reading.rawValue,
+  }
+  const previousStandardValue = currentPoint.lastStandardValue
+  const measuredGap =
+    previousStandardValue == null ? null : Math.abs(reading.value - previousStandardValue)
+
+  if (currentPoint.startedAt == null) {
+    const startedAt = Date.now()
+    currentPoint.startedAt = startedAt
+    currentPoint.standardSamples = [sample]
+    currentPoint.sensorSamples = {}
+    currentPoint.lastStandardValue = reading.value
+    session.plateauStatus = {
+      status: "running",
+      pointIndex: currentPoint.pointIndex,
+      startedAt: new Date(startedAt).toISOString(),
+      endedAt: null,
+      standardSampleCount: 1,
+      lastGap: null,
+      maxGap: session.plateauMaxGap,
+      resetCount: session.plateauStatus.resetCount,
+      lastResetAt: session.plateauStatus.lastResetAt,
+    }
+    session.message = `Plateau de stabilite demarre pour le point ${currentPoint.pointIndex}.`
+  } else if (measuredGap != null && measuredGap > session.plateauMaxGap) {
+    const restartedAt = Date.now()
+    currentPoint.startedAt = restartedAt
+    currentPoint.standardSamples = [sample]
+    currentPoint.sensorSamples = {}
+    currentPoint.lastStandardValue = reading.value
+    session.plateauStatus = {
+      status: "running",
+      pointIndex: currentPoint.pointIndex,
+      startedAt: new Date(restartedAt).toISOString(),
+      endedAt: null,
+      standardSampleCount: 1,
+      lastGap: measuredGap,
+      maxGap: session.plateauMaxGap,
+      resetCount: session.plateauStatus.resetCount + 1,
+      lastResetAt: new Date(restartedAt).toISOString(),
+    }
+    session.message =
+      `Plateau du point ${currentPoint.pointIndex} redemarre : ` +
+      `ecart ${measuredGap} superieur au maximum ${session.plateauMaxGap}.`
+  } else {
+    currentPoint.standardSamples.push(sample)
+    currentPoint.lastStandardValue = reading.value
+    session.plateauStatus = {
+      ...session.plateauStatus,
+      status: "running",
+      standardSampleCount: currentPoint.standardSamples.length,
+      lastGap: measuredGap,
+    }
+  }
+
+  session.lastError = null
+  session.lastUpdatedAt = nowIso()
+}
+
+async function runOneLoop(session: AdjustmentSession) {
+  if (!session.standardIsExternal) {
+    const standardReading = await readHotlineGspMeasurement({
+      serial: session.standardSerial,
+      manualPort: session.standardPort,
+      manualModule: session.standardModuleName,
+    })
+    session.latestStandardReading = keepLatestValidReading(session.latestStandardReading, standardReading)
+    session.lastUpdatedAt = nowIso()
+    await persistStandardReading(session.standardSerial, standardReading).catch((error) => {
+      log.warn("METROLOGY_ADJUSTMENT", "standard_read_persist_failed", {
+        sessionId: session.id,
+        standardSerial: session.standardSerial,
+        error: error instanceof Error ? error.message : String(error),
+      })
+    })
+    applyStandardReadingToPlateau(session, standardReading)
+  }
+
+  for (const sensor of session.sensors) {
+    const reading = sensor.isGso
+      ? await readLatestGsoAdjustmentMeasurement(session, sensor)
+      : await readHotlineGspMeasurement({
+          serial: sensor.serialNumber,
+          manualPort: sensor.modulePort,
+          manualAddress: sensor.address,
+          manualModule: sensor.moduleName,
+        })
+
+    if (!reading) continue
+
+    session.latestSensorReadings[sensor.id] = keepLatestValidReading(
+      session.latestSensorReadings[sensor.id],
+      reading,
+    )
+    if (!sensor.isGso) {
+      await persistAdjustmentReading(sensor.serialNumber, reading).catch((error) => {
+        log.warn("METROLOGY_ADJUSTMENT", "sensor_read_persist_failed", {
+          sessionId: session.id,
+          serial: sensor.serialNumber,
+          error: error instanceof Error ? error.message : String(error),
+        })
+      })
+    }
+
+    if (!session.currentPoint || session.currentPoint.startedAt == null) continue
     if (!session.currentPoint.sensorSamples[sensor.id]) {
       session.currentPoint.sensorSamples[sensor.id] = []
     }
-    session.currentPoint.sensorSamples[sensor.id].push({
-      measuredAt: reading.measuredAt,
-      value: reading.value,
-      rawValue: reading.rawValue,
-    })
+    if (reading.value != null) {
+      session.currentPoint.sensorSamples[sensor.id].push({
+        measuredAt: reading.measuredAt,
+        value: reading.value,
+        rawValue: reading.rawValue,
+      })
+    }
   }
 
-  if (!session.currentPoint) {
+  if (!session.currentPoint || session.currentPoint.startedAt == null) {
     session.lastUpdatedAt = nowIso()
     return
   }
@@ -731,48 +1030,47 @@ async function runOneLoop(session: AdjustmentSession) {
 
   const currentPoint = session.currentPoint
   const pointIndex = currentPoint.pointIndex
-  const standardAverage = averageValues(
-    currentPoint.standardSamples.map((sample) => sample.value),
-    session.displayDecimals,
+  const validStandardSampleCount = currentPoint.standardSamples.filter((sample) => sample.value != null).length
+  const sensorsWithoutSample = session.sensors.filter(
+    (sensor) => !(currentPoint.sensorSamples[sensor.id] ?? []).some((sample) => sample.value != null),
   )
 
-  if (standardAverage == null) {
-    session.currentPoint = null
-    session.message = `Le point ${pointIndex} a ete invalide : aucune mesure etalon exploitable.`
-    session.lastError = session.message
+  if (validStandardSampleCount < 2 || sensorsWithoutSample.length > 0) {
+    const pendingParts: string[] = []
+    if (validStandardSampleCount < 2) {
+      pendingParts.push(`${2 - validStandardSampleCount} mesure(s) etalon`)
+    }
+    if (sensorsWithoutSample.length > 0) {
+      pendingParts.push(`${sensorsWithoutSample.length} sonde(s)`)
+    }
+    session.plateauStatus = {
+      ...session.plateauStatus,
+      status: "waiting",
+      standardSampleCount: validStandardSampleCount,
+    }
+    session.message = `Plateau termine pour le point ${pointIndex}, attente de ${pendingParts.join(" et ")}.`
+    session.lastError = null
     session.lastUpdatedAt = nowIso()
     return
   }
 
-  const sensorAverages: Record<number, number | null> = {}
-  for (const sensor of session.sensors) {
-    sensorAverages[sensor.id] = averageValues(
-      (currentPoint.sensorSamples[sensor.id] ?? []).map((sample) => sample.value),
-      session.displayDecimals,
-    )
-  }
-
-  session.validatedPoints[pointIndex] = {
+  session.plateauStatus = {
+    ...session.plateauStatus,
+    status: "ready",
     pointIndex,
-    targetValue: currentPoint.targetValue,
-    startedAt: new Date(currentPoint.startedAt).toISOString(),
-    completedAt: nowIso(),
-    standardAverage,
-    sensorAverages,
+    endedAt: null,
+    standardSampleCount: validStandardSampleCount,
   }
-  session.currentPoint = null
-  session.message = `Point ${pointIndex} valide.`
+  session.message = `Plateau stable pour le point ${pointIndex}. Le point peut etre valide.`
   session.lastError = null
   session.lastUpdatedAt = nowIso()
-
-  if (session.validatedPoints[1] && session.validatedPoints[2]) {
-    await finalizeSession(session, "completed", "Les deux points d'ajustage sont valides.")
-  }
 }
 
 async function scheduleLoop(session: AdjustmentSession) {
   if (session.stopRequested || session.status !== "running") return
+  session.loopTimer = null
 
+  const loopStartedAt = Date.now()
   try {
     await runOneLoop(session)
   } catch (error) {
@@ -788,13 +1086,24 @@ async function scheduleLoop(session: AdjustmentSession) {
   }
 
   if (session.stopRequested || session.status !== "running") return
+  if (session.plateauStatus.status === "ready") return
+  const elapsedMs = Date.now() - loopStartedAt
+  const remainingDelayMs = Math.max(0, session.measurementIntervalSeconds * 1000 - elapsedMs)
   session.loopTimer = setTimeout(() => {
     void scheduleLoop(session)
-  }, DEFAULT_LOOP_INTERVAL_MS + EXTRA_LOOP_INTERVAL_MS)
+  }, remainingDelayMs)
 }
 
 export async function getAdjustmentSessionForUser(userId: number) {
   const session = sessionsByUserId.get(userId) ?? null
+  if (session && (session.status === "running" || session.status === "idle")) {
+    ensureSessionDeadline(session)
+    if (new Date(session.expiresAt).getTime() <= Date.now()) {
+      await expireSession(session)
+    } else if (!session.expirationTimer) {
+      scheduleSessionExpiration(session)
+    }
+  }
   return session ? toPublicSession(session) : null
 }
 
@@ -828,11 +1137,7 @@ export async function startAdjustmentSession(user: JWTPayload, input: StartAdjus
   })
   const standardType = inferStandardTypeCode(standard.Etalon_Numero_Serie, standardTypeRows)
 
-  if (standard.Est_Sonde_Externe) {
-    throw new Error("L'ajustage automatique n'est pas disponible avec une sonde etalon externe.")
-  }
-
-  if (standardType !== "SPET") {
+  if (!standard.Est_Sonde_Externe && standardType !== "SPET") {
     throw new Error("L'ajustage automatique est actuellement limite aux etalons SPET.")
   }
 
@@ -862,7 +1167,7 @@ export async function startAdjustmentSession(user: JWTPayload, input: StartAdjus
     : null
 
   const standardPort = standardModule?.Port_Serie?.trim() || standard.Port_Serie?.trim() || ""
-  if (!standardPort) {
+  if (!standard.Est_Sonde_Externe && !standardPort) {
     throw new Error("Aucun port serie n'est defini pour l'etalon selectionne.")
   }
 
@@ -876,17 +1181,22 @@ export async function startAdjustmentSession(user: JWTPayload, input: StartAdjus
       Sonde_Numero_Serie: true,
       Adresse_Sonde: true,
       Surveillance_Etat: true,
+      Etat_Sonde_N1: true,
       Id_Module: true,
       Sonde_Offset: true,
+      Est_Sonde_GSO: true,
+      t_sonde_type: {
+        select: {
+          Unite: true,
+        },
+      },
       t_lieu: {
         where: { Est_Archive: false },
-        take: 1,
         select: {
           Id_Lieu: true,
           Nom_Lieu: true,
           Lieu_Etat: true,
           Lieu_Etat_N1: true,
-          Derniere_Unite: true,
         },
       },
     },
@@ -942,12 +1252,13 @@ export async function startAdjustmentSession(user: JWTPayload, input: StartAdjus
   const sensors: ManagedSensor[] = sensorRows.map((sensor) => {
     const serial = sensor.Sonde_Numero_Serie?.trim() ?? ""
     if (!serial) throw new Error("Une sonde selectionnee ne possede pas de numero de serie.")
-    if (getSensorFamilyFromSerial(serial) !== "GSP") {
-      throw new Error(`L'ajustage automatique est actuellement limite aux sondes GSP (${serial}).`)
+    const isGso = Boolean(sensor.Est_Sonde_GSO)
+    if (!isGso && getSensorFamilyFromSerial(serial) !== "GSP") {
+      throw new Error(`La sonde ${serial} n'est ni une GSP ni une GSO ajustable.`)
     }
 
-    const module = sensor.Id_Module ? moduleById.get(sensor.Id_Module) ?? null : null
-    if (!module?.Port_Serie) {
+    const sensorModule = sensor.Id_Module ? moduleById.get(sensor.Id_Module) ?? null : null
+    if (!isGso && !sensorModule?.Port_Serie) {
       throw new Error(`Le port serie est introuvable pour la sonde ${serial}.`)
     }
 
@@ -963,25 +1274,33 @@ export async function startAdjustmentSession(user: JWTPayload, input: StartAdjus
       locationId: sensor.t_lieu[0]?.Id_Lieu ?? null,
       locationName: sensor.t_lieu[0]?.Nom_Lieu ?? null,
       moduleId: sensor.Id_Module ?? null,
-      moduleName: module?.Module_Numero_Serie ?? module?.Emplacement ?? null,
-      modulePort: module?.Port_Serie ?? null,
+      moduleName: sensorModule?.Module_Numero_Serie ?? sensorModule?.Emplacement ?? null,
+      modulePort: sensorModule?.Port_Serie ?? null,
       currentCalibrationValue: typeof sensor.Sonde_Offset === "number" ? sensor.Sonde_Offset : 0,
-      unit: previousAdjustment?.unit ?? sensor.t_lieu[0]?.Derniere_Unite?.trim() ?? null,
+      isGso,
+      unit: previousAdjustment?.unit ?? sensor.t_sonde_type?.Unite?.trim() ?? null,
       address: sensor.Adresse_Sonde?.trim() || null,
       previousSensorState: sensor.Surveillance_Etat,
-      previousLocationState: sensor.t_lieu[0]?.Lieu_Etat ?? null,
-      previousLocationStateN1: sensor.t_lieu[0]?.Lieu_Etat_N1 ?? null,
+      previousSensorStateN1: sensor.Etat_Sonde_N1 ?? null,
+      locations: sensor.t_lieu.map((location) => ({
+        id: location.Id_Lieu,
+        previousState: location.Lieu_Etat ?? null,
+        previousStateN1: location.Lieu_Etat_N1 ?? null,
+      })),
       previousCoeffX: previousAdjustment?.coeffX ?? 1,
       previousCoeffConstant: previousAdjustment?.coeffConstant ?? 0,
     }
   })
 
+  const startedAt = nowIso()
   const session: AdjustmentSession = {
     id: randomUUID(),
     userId: user.userId,
     username: user.username,
     userProfile: user.profile,
-    startedAt: nowIso(),
+    startedAt,
+    expiresAt: new Date(new Date(startedAt).getTime() + ADJUSTMENT_MAX_DURATION_MS).toISOString(),
+    extensionCount: 0,
     operator: input.operator.trim() || user.username,
     displayDecimals: Math.max(0, Math.min(input.displayDecimals, 6)),
     standardId: standard.Id_Etalon,
@@ -1002,57 +1321,84 @@ export async function startAdjustmentSession(user: JWTPayload, input: StartAdjus
     mediumId: input.mediumId,
     plateauDurationMinutes: Math.max(1, input.plateauDurationMinutes),
     plateauMaxGap: Math.max(0, input.plateauMaxGap),
+    measurementIntervalSeconds: sensors.some((sensor) => sensor.isGso)
+      ? 60
+      : input.measurementIntervalSeconds === 30
+        ? 30
+        : MIN_MEASUREMENT_INTERVAL_SECONDS,
     sensors,
     status: "running",
     stopRequested: false,
     latestStandardReading: null,
     latestSensorReadings: {},
-    currentPoint: null,
+    currentPoint: createRunningPoint(1),
+    plateauStatus: createWaitingPlateauStatus(1, Math.max(0, input.plateauMaxGap)),
     validatedPoints: {},
-    message: "Sequence d'ajustage demarree.",
+    message: "Sequence d'ajustage demarree. Attente de la premiere mesure etalon du point 1.",
     lastError: null,
     lastUpdatedAt: nowIso(),
     persistedAdjustments: [],
     loopTimer: null,
+    expirationTimer: null,
   }
 
-  await prisma.$transaction(async (tx) => {
-    for (const sensor of sensors) {
-      await tx.t_sonde.update({
-        where: { Id_Sonde: sensor.id },
-        data: {
-          Surveillance_Etat: "A",
-          Etat_Sonde_N1: sensor.previousSensorState,
-        },
-      })
-    }
+  let sessionStatesApplied = false
+  try {
+    await prisma.$transaction(async (tx) => {
+      for (const sensor of sensors) {
+        await tx.t_sonde.update({
+          where: { Id_Sonde: sensor.id },
+          data: {
+            Surveillance_Etat: "A",
+            Etat_Sonde_N1: sensor.previousSensorState,
+          },
+        })
+      }
 
-    const updatedLocationIds = new Set<number>()
-    for (const sensor of sensors) {
-      if (!sensor.locationId || updatedLocationIds.has(sensor.locationId)) continue
-      updatedLocationIds.add(sensor.locationId)
-      await tx.t_lieu.update({
-        where: { Id_Lieu: sensor.locationId },
-        data: {
-          Lieu_Etat: "A",
-          Lieu_Etat_N1: sensor.previousLocationState,
-        },
-      })
-    }
-  })
+      const updatedLocationIds = new Set<number>()
+      for (const sensor of sensors) {
+        for (const location of sensor.locations) {
+          if (updatedLocationIds.has(location.id)) continue
+          updatedLocationIds.add(location.id)
+          await tx.t_lieu.update({
+            where: { Id_Lieu: location.id },
+            data: {
+              Lieu_Etat: "A",
+              Lieu_Etat_N1: location.previousState,
+            },
+          })
+        }
+      }
+    })
+    sessionStatesApplied = true
 
-  await updateSensorMetrologyFlags(
-    sensors.map((sensor) => sensor.id),
-    {
-      metrologyInProgress: 1,
-    },
-  )
+    await updateSensorMetrologyFlags(
+      sensors.map((sensor) => sensor.id),
+      {
+        metrologyInProgress: 1,
+      },
+    )
+  } catch (error) {
+    if (sessionStatesApplied) {
+      try {
+        await restoreSessionStates(session)
+      } catch (cleanupError) {
+        log.error("METROLOGY_ADJUSTMENT", "adjustment_start_cleanup_failed", {
+          sessionId: session.id,
+          startError: error,
+          cleanupError,
+        })
+      }
+    }
+    throw error
+  }
 
   for (const sensor of sensors) {
     sensorLocks.set(sensor.id, session.id)
   }
 
   sessionsByUserId.set(user.userId, session)
+  scheduleSessionExpiration(session)
   log.audit("CA", {
     user: user.username,
     userId: user.userId,
@@ -1066,6 +1412,7 @@ export async function startAdjustmentSession(user: JWTPayload, input: StartAdjus
       sensorSerials: sensors.map((sensor) => sensor.serialNumber),
       plateauDurationMinutes: session.plateauDurationMinutes,
       plateauMaxGap: session.plateauMaxGap,
+      measurementIntervalSeconds: session.measurementIntervalSeconds,
     },
     success: true,
   })
@@ -1074,33 +1421,157 @@ export async function startAdjustmentSession(user: JWTPayload, input: StartAdjus
   return toPublicSession(session)
 }
 
+export async function extendAdjustmentSession(userId: number, ip?: string) {
+  const session = sessionsByUserId.get(userId)
+  if (!session || session.status !== "running") {
+    throw new Error("Aucun ajustage en cours.")
+  }
+
+  ensureSessionDeadline(session)
+  const remainingMs = new Date(session.expiresAt).getTime() - Date.now()
+  if (remainingMs <= 0) {
+    await expireSession(session)
+    throw new Error("La duree maximale de l'ajustage est expiree.")
+  }
+  if (session.extensionCount > 0) {
+    throw new Error("La prolongation de 30 minutes a deja ete utilisee.")
+  }
+  if (remainingMs > ADJUSTMENT_EXTENSION_THRESHOLD_MS) {
+    throw new Error("La prolongation sera disponible dans les 30 dernieres minutes.")
+  }
+
+  session.expiresAt = new Date(
+    new Date(session.expiresAt).getTime() + ADJUSTMENT_EXTENSION_MS,
+  ).toISOString()
+  session.extensionCount += 1
+  session.lastUpdatedAt = nowIso()
+  scheduleSessionExpiration(session)
+
+  log.audit("CA", {
+    user: session.username,
+    userId: session.userId,
+    userProfile: session.userProfile,
+    ip,
+    resource: "Ajustage (Prolongation)",
+    resourceId: session.id,
+    changes: {
+      addedMinutes: ADJUSTMENT_EXTENSION_MS / 60_000,
+      expiresAt: session.expiresAt,
+    },
+    success: true,
+  })
+
+  return toPublicSession(session)
+}
+
 export async function validateAdjustmentPoint(
   userId: number,
   pointIndex: PointIndex,
-  targetValue: number,
+  _targetValue: number,
 ) {
   const session = sessionsByUserId.get(userId)
   if (!session) throw new Error("Aucune session d'ajustage en cours.")
   if (session.status !== "running") throw new Error("La session d'ajustage n'est plus active.")
-  if (session.currentPoint) throw new Error("Un point est deja en cours de validation.")
   if (pointIndex === 2 && !session.validatedPoints[1]) {
     throw new Error("Le premier point doit etre valide avant le second.")
   }
   if (session.validatedPoints[pointIndex]) {
     throw new Error(`Le point ${pointIndex} a deja ete valide.`)
   }
-
-  session.currentPoint = {
-    pointIndex,
-    targetValue,
-    startedAt: Date.now(),
-    standardSamples: [],
-    sensorSamples: {},
-    lastStandardValue: null,
+  const currentPoint = session.currentPoint
+  if (!currentPoint || currentPoint.pointIndex !== pointIndex) {
+    throw new Error(`Le plateau du point ${pointIndex} n'est pas en cours.`)
   }
-  session.message = `Validation du point ${pointIndex} en cours.`
+  if (session.plateauStatus.status !== "ready" || currentPoint.startedAt == null) {
+    throw new Error(`Le plateau du point ${pointIndex} n'est pas encore stable.`)
+  }
+
+  const currentStandardValue = roundValue(
+    session.latestStandardReading?.value ?? currentPoint.lastStandardValue,
+    session.displayDecimals,
+  )
+  if (currentStandardValue == null) {
+    throw new Error(`Aucune mesure etalon exploitable pour le point ${pointIndex}.`)
+  }
+
+  const sensorAverages: Record<number, number | null> = {}
+  for (const sensor of session.sensors) {
+    const sensorAverage = averageValues(
+      (currentPoint.sensorSamples[sensor.id] ?? []).map((sample) => sample.value),
+      session.displayDecimals,
+    )
+    if (sensorAverage == null) {
+      throw new Error(`Aucune mesure exploitable pour la sonde ${sensor.serialNumber}.`)
+    }
+    sensorAverages[sensor.id] = sensorAverage
+  }
+
+  session.validatedPoints[pointIndex] = {
+    pointIndex,
+    targetValue: currentStandardValue,
+    startedAt: new Date(currentPoint.startedAt).toISOString(),
+    completedAt: nowIso(),
+    standardAverage: currentStandardValue,
+    sensorAverages,
+  }
+  session.plateauStatus = {
+    ...session.plateauStatus,
+    status: "validated",
+    endedAt: nowIso(),
+  }
+  session.currentPoint = null
+  session.message = `Point ${pointIndex} valide.`
   session.lastError = null
   session.lastUpdatedAt = nowIso()
+
+  if (pointIndex === 1) {
+    session.currentPoint = createRunningPoint(2)
+    session.plateauStatus = createWaitingPlateauStatus(
+      2,
+      session.plateauMaxGap,
+      session.plateauStatus.resetCount,
+    )
+    session.message = "Point 1 valide. Attente de la premiere mesure du point 2."
+    void scheduleLoop(session)
+  } else {
+    await finalizeSession(session, "completed", "Les deux points d'ajustage sont valides.")
+  }
+
+  return toPublicSession(session)
+}
+
+export async function submitExternalStandardReading(userId: number, value: number) {
+  const session = sessionsByUserId.get(userId)
+  if (!session || session.status !== "running") {
+    throw new Error("Aucun ajustage en cours.")
+  }
+  if (!session.standardIsExternal) {
+    throw new Error("La saisie manuelle est reservee aux etalons externes.")
+  }
+  if (!Number.isFinite(value)) {
+    throw new Error("La mesure etalon doit etre un nombre valide.")
+  }
+  if (session.plateauStatus.status === "ready") {
+    throw new Error("Le plateau est deja stable et peut etre valide.")
+  }
+
+  const reading: RuntimeReading = {
+    value,
+    rawValue: String(value),
+    unit: session.standardUnit,
+    error: null,
+    measuredAt: nowIso(),
+  }
+  session.latestStandardReading = reading
+  applyStandardReadingToPlateau(session, reading)
+  await persistStandardReading(session.standardSerial, reading).catch((error) => {
+    log.warn("METROLOGY_ADJUSTMENT", "external_standard_persist_failed", {
+      sessionId: session.id,
+      standardSerial: session.standardSerial,
+      error: error instanceof Error ? error.message : String(error),
+    })
+  })
+
   return toPublicSession(session)
 }
 

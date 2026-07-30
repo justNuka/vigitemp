@@ -8,6 +8,7 @@ import { VersionChangelogModal } from "@/components/version-changelog-modal";
 import { LicenseProvider } from "@/components/license/license-provider";
 import { TimezoneProvider } from "@/components/timezone-provider";
 import { AppAccessProvider } from "@/components/access/app-access-provider";
+import { AdjustmentOperationTimer } from "@/components/metrology/adjustment-operation-timer";
 
 let queryClientInstanceCounter = 0
 
@@ -150,7 +151,12 @@ export function Providers({
         <TimezoneProvider timezone={timezone}>
           <GlobalAppEffects />
           <VersionChangelogModal />
-          <LicenseProvider><AppAccessProvider>{children}</AppAccessProvider></LicenseProvider>
+          <LicenseProvider>
+            <AppAccessProvider>
+              <AdjustmentOperationTimer />
+              {children}
+            </AppAccessProvider>
+          </LicenseProvider>
         </TimezoneProvider>
       </ThemeProvider>
     </QueryClientProvider>

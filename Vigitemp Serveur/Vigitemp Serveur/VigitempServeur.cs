@@ -28,6 +28,7 @@ namespace Vigitemp_Serveur
         private static readonly bool _detailedLogsEnabled =
             GetSettingBool("Vigitemp.Log.Detailed", false);
         private static int _exceptionHooksInitialized = 0;
+        public static bool InterrogationOnlyMode { get; private set; }
         private System.Timers.Timer _timer;
         private HotlineApiServer _hotlineApi;
         private volatile bool _powerSuspendRequested;
@@ -323,6 +324,28 @@ namespace Vigitemp_Serveur
             }
         }
 
+        private static void ConfigureRuntimeMode(string[] args)
+        {
+            var interrogationOnly = GetSettingBool("Vigitemp.Runtime.InterrogationOnly", false);
+
+            foreach (var rawArg in args ?? Array.Empty<string>())
+            {
+                var arg = (rawArg ?? string.Empty).Trim();
+                if (arg.Equals("--interrogation-only", StringComparison.OrdinalIgnoreCase) ||
+                    arg.Equals("--mode=interrogation-only", StringComparison.OrdinalIgnoreCase))
+                {
+                    interrogationOnly = true;
+                }
+                else if (arg.Equals("--normal", StringComparison.OrdinalIgnoreCase) ||
+                         arg.Equals("--mode=normal", StringComparison.OrdinalIgnoreCase))
+                {
+                    interrogationOnly = false;
+                }
+            }
+
+            InterrogationOnlyMode = interrogationOnly;
+        }
+
         private IReadOnlyList<int> GetConfiguredWorkerServerIdsSnapshot()
         {
             return GetConfiguredWorkerServerIds();
@@ -412,7 +435,12 @@ namespace Vigitemp_Serveur
 
             EnsureGlobalExceptionHooks();
 
+            ConfigureRuntimeMode(args);
             VigitempServeur.Log("Demarrage du service VigiSensys");
+            VigitempServeur.Log(
+                InterrogationOnlyMode
+                    ? "[SERVER][MODE] mode=interrogation-only commands=measurement-only config=off memory=off clock-sync=off graph-command=off hotline=off background-jobs=off"
+                    : "[SERVER][MODE] mode=normal");
             AppContext.SetSwitch("Switch.System.Threading.UseNetCoreTimer", true);
 
             var licenseResult = LicenseManager.ValidateFromConfig();
@@ -472,15 +500,22 @@ namespace Vigitemp_Serveur
             _timer.Start();
             VigitempServeur.Log("OnStart: maintenance timer started (60s).");
 
-            try
+            if (!InterrogationOnlyMode)
             {
-                _hotlineApi = new HotlineApiServer();
-                _hotlineApi.Start();
-                VigitempServeur.Log("OnStart: hotline API started.");
+                try
+                {
+                    _hotlineApi = new HotlineApiServer();
+                    _hotlineApi.Start();
+                    VigitempServeur.Log("OnStart: hotline API started.");
+                }
+                catch (Exception ex)
+                {
+                    VigitempServeur.Log("Hotline API start failed: " + ex.Message);
+                }
             }
-            catch (Exception ex)
+            else
             {
-                VigitempServeur.Log("Hotline API start failed: " + ex.Message);
+                VigitempServeur.Log("[SERVER][MODE] hotline API disabled by interrogation-only mode.");
             }
 
             VigitempServeur.Log("OnStart: completed.");

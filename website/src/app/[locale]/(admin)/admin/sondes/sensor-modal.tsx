@@ -42,6 +42,7 @@ import { patchJson, postJson } from "@/lib/http";
 import { isLegacyGenericSensorTypeCode } from "@/lib/sensor-types";
 import { toast } from "sonner";
 import { useRouter } from '@/i18n/navigation';
+import { AdjustmentsPanel, type AdjustmentRow } from "./_components/adjustments-panel";
 
 interface SensorModalProps {
   open: boolean;
@@ -51,6 +52,10 @@ interface SensorModalProps {
   isPack?: boolean;
   moduleOnly?: boolean;
   onSuccess?: () => void;
+  adjustments?: AdjustmentRow[];
+  adjustmentsLoading?: boolean;
+  selectedAdjustmentId?: number | null;
+  onSelectAdjustment?: (id: number) => void;
 }
 
 export function SensorModal({
@@ -61,6 +66,10 @@ export function SensorModal({
   isPack = false,
   moduleOnly = false,
   onSuccess,
+  adjustments = [],
+  adjustmentsLoading = false,
+  selectedAdjustmentId = null,
+  onSelectAdjustment = () => undefined,
 }: SensorModalProps) {
   const queryClient = useQueryClient();
   const router = useRouter();
@@ -186,7 +195,10 @@ export function SensorModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent key={contentKey} className="sm:max-w-125 bg-white dark:bg-popover dark:text-popover-foreground">
+      <DialogContent
+        key={contentKey}
+        className="max-h-[90vh] overflow-y-auto bg-white dark:bg-popover dark:text-popover-foreground sm:max-w-4xl"
+      >
         <DialogHeader>
           <DialogTitle>{isEdit ? t('title_edit') : t('title_create')}</DialogTitle>
         </DialogHeader>
@@ -351,6 +363,15 @@ export function SensorModal({
                     <FormMessage />
                   </FormItem>
                 )}
+              />
+            ) : null}
+
+            {isEdit ? (
+              <AdjustmentsPanel
+                adjustments={adjustments}
+                isLoading={adjustmentsLoading}
+                selectedAdjustmentId={selectedAdjustmentId}
+                onSelectAdjustment={onSelectAdjustment}
               />
             ) : null}
 

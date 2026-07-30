@@ -199,7 +199,7 @@ export type SensorWithLocation = {
   currentValue: number | null;
   minThreshold: number | null;
   maxThreshold: number | null;
-  lastMeasurement: Date | null;
+  lastMeasurement: Date | string | null;
   isActive: boolean;
   location: Location;
   status: "ok" | "warning" | "critical" | "technical" | "ended";
@@ -304,7 +304,7 @@ export type Sensor = {
   measurementFrequency: number;
   alarmDelay: number;
   isActive: boolean;
-  lastMeasurement: Date | null;
+  lastMeasurement: Date | string | null;
 };
 
 export type Alarm = {

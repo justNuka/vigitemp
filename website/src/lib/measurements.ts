@@ -106,7 +106,12 @@ export function getMeasureSummary(
   const lastWithValue = isLastNullMeasurement ? null : [...measures].reverse().find((item) => item.Valeur !== null)
   const formattedValue = lastWithValue ? formatMeasureValue(lastWithValue.Valeur, decimals) : ""
   const lastMeasureText = lastWithValue ? `${formattedValue}${normalizeUnitLabel(lastWithValue.Unite || unite)}` : "N/A"
-  const lastDateTime = last?.DateHeureMesure || ""
+  const lastDateTime = last
+    ? formatDbDateTime(last.DateHeureMesureIso ?? last.DateHeureMesure, {
+        withSeconds: false,
+        fallback: "",
+      })
+    : ""
 
   return {
     consigneSup: normalizeMeasureNumber(last?.Consigne_Sup ?? first?.Consigne_Sup ?? fallback?.consigneSup ?? null),

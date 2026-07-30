@@ -379,7 +379,7 @@ BEGIN
     [Derniere_Nb_Decimal] INT NULL DEFAULT(2),
     [Est_Lieu_En_Alarme] TINYINT NULL DEFAULT(0),
     [Est_Lieu_Alarme_Terminee_Non_Acquittee] TINYINT NULL DEFAULT(0),
-    [Est_Acc_Auto_Alarme_NR] BIT NOT NULL DEFAULT(0),
+    [Est_Acq_Auto_Alarme_NR] BIT NOT NULL DEFAULT(0),
     [Est_Lieu_Alarme_Terminee_Non_Acquittee_T1] TINYINT NULL DEFAULT(0),
     [Est_Lieu_En_Pre_Alarme] TINYINT NULL DEFAULT(0),
     [Id_Alarme] INT NULL DEFAULT(0),
@@ -641,6 +641,7 @@ BEGIN
     [Est_Gestion_Relais] BIT NULL,
     [Est_Double_Capteur] BIT NOT NULL DEFAULT(0),
     [Famille_Sonde] VARCHAR(16) NOT NULL,
+    [Unite] VARCHAR(10) NULL,
     CONSTRAINT [PK_t_sonde_type] PRIMARY KEY ([Id_Sonde_Type])
   );
 END;

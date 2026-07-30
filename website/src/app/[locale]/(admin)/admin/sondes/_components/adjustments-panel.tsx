@@ -4,9 +4,11 @@ import type { ColumnDef } from '@tanstack/react-table';
 import { TanStackTable } from '@/components/data-table/tanstack-table';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Button } from '@/components/ui/button';
 import { formatDateTimeFr } from './date-format';
 import { useLocale, useTranslations } from 'next-intl';
 import { useAppTimezone } from '@/components/timezone-provider';
+import { Download, FileText } from 'lucide-react';
 
 export type AdjustmentRow = {
   Id_Ajustage: number;
@@ -52,7 +54,36 @@ export function AdjustmentsPanel({
     {
       accessorKey: 'Nb_Decimale',
       header: t('panels.adjustments.columns.decimals'),
-      cell: ({ row }) => row.getValue('Nb_Decimale') || '-',
+      cell: ({ row }) => row.original.Nb_Decimale ?? '-',
+    },
+    {
+      id: 'actions',
+      header: '',
+      enableSorting: false,
+      cell: ({ row }) => (
+        <div className="flex justify-end gap-2" onClick={(event) => event.stopPropagation()}>
+          <Button asChild variant="outline" size="sm" className="h-8 whitespace-nowrap">
+            <a
+              href={`/api/metrologie/ajustage/export/${row.original.Id_Ajustage}`}
+              download
+              title={t('panels.adjustments.actions.generate_file')}
+            >
+              <Download className="mr-1.5 h-3.5 w-3.5" />
+              XML
+            </a>
+          </Button>
+          <Button asChild variant="outline" size="sm" className="h-8 whitespace-nowrap">
+            <a
+              href={`/api/metrologie/ajustage/report/${row.original.Id_Ajustage}`}
+              download
+              title={t('panels.adjustments.actions.print')}
+            >
+              <FileText className="mr-1.5 h-3.5 w-3.5" />
+              PDF
+            </a>
+          </Button>
+        </div>
+      ),
     },
   ];
 

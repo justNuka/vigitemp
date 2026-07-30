@@ -54,7 +54,7 @@ export function useSurveillanceLiveUpdates({
             return {
               ...s,
               currentValue: payload.currentValue ?? s.currentValue,
-              lastMeasurement: payload.lastMeasurement ? new Date(payload.lastMeasurement) : s.lastMeasurement,
+              lastMeasurement: payload.lastMeasurement ?? s.lastMeasurement,
               status: payload.status ?? s.status,
             }
           })

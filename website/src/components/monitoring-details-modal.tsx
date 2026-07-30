@@ -73,15 +73,6 @@ type GuidePositions = {
   preInf: number | null;
 };
 
-function buildCurrentDayRange(): DateRangeValue {
-  const now = new Date();
-  const from = new Date(now);
-  from.setHours(0, 0, 0, 0);
-  const to = new Date(now);
-  to.setHours(23, 59, 59, 999);
-  return { from, to };
-}
-
 export default function MonitoringDetailsModal({
   isOpen,
   onClose,
@@ -127,7 +118,7 @@ export default function MonitoringDetailsModal({
     };
   }, []);
 
-  const [dateRange, setDateRange] = useState<DateRangeValue | null>(initialRange ?? buildCurrentDayRange());
+  const [dateRange, setDateRange] = useState<DateRangeValue | null>(initialRange ?? null);
   const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 200 });
   const [guidePositions, setGuidePositions] = useState<GuidePositions>({
     sup: null,
@@ -164,7 +155,7 @@ export default function MonitoringDetailsModal({
 
   useEffect(() => {
     if (!isOpen) return;
-    setDateRange(initialRange ?? buildCurrentDayRange());
+    setDateRange(initialRange ?? null);
   }, [idLieu, initialRange, isOpen]);
 
   useEffect(() => {

@@ -389,6 +389,7 @@ export const PATCH = withAnyAuthorizationLogging(
         Derive,
         Applied_Etalonnage_Id,
         Commentaire_Action,
+        Apply_Mailing_To_Groups,
         ...lieuPatchRest
       } = validated
       // Cast to Record<string, unknown> so derived DB columns (_Base, EMT_*, Est_Correction_*)
@@ -523,7 +524,7 @@ export const PATCH = withAnyAuthorizationLogging(
 
       const shouldUpdateMailingContacts = Object.prototype.hasOwnProperty.call(body, "MailingContacts")
       const mailingContacts = shouldUpdateMailingContacts ? normalizeMailingContacts(MailingContacts) : []
-      const applyMailingToGroups = validated.Apply_Mailing_To_Groups === true
+      const applyMailingToGroups = Apply_Mailing_To_Groups === true
       let mailingPropagationTargetIds: number[] = []
 
       const hasIdSite = Object.prototype.hasOwnProperty.call(validated, "Id_Site")
@@ -1222,10 +1223,11 @@ export const PATCH = withAnyAuthorizationLogging(
       if (error instanceof z.ZodError) {
         return apiError(400, "validation_error", "Validation impossible", { issues: error.issues })
       }
-      log.error("lieux", "lieu_update_error", { error: error });
-      const errorDetail = error instanceof Error ? error.message : String(error)
-      const extra = process.env.NODE_ENV === "production" ? { detail: errorDetail } : undefined
-      return apiError(500, "lieu_update_failed", "Erreur lors de la modification du lieu", extra)
+      log.error("lieux", "lieu_update_error", {
+        error,
+        errorMessage: error instanceof Error ? error.message : String(error),
+      })
+      return apiError(500, "lieu_update_failed", "Erreur lors de la modification du lieu")
     }
   },
 )

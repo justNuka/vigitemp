@@ -371,7 +371,7 @@ namespace Vigitemp_Serveur
         {
             if (memoryCount <= 20) return 10000;
             if (memoryCount <= 100) return 30000;
-            if (memoryCount <= 500) return 90000;
+            if (memoryCount <= 500) return 120000;
             return 180000;
         }
 
@@ -424,7 +424,7 @@ namespace Vigitemp_Serveur
 
                     if (request.Action == "sync-config" || gsp.SyncConfiguration)
                     {
-                        foreach (var command in BuildGspSyncCommands(gsp, address))
+                        foreach (var command in BuildGspSyncCommands(gsp))
                         {
                             result.RequestedCommand = GspProtocol.BuildCommand(command.Key, target, command.Value);
                             var response = SendGspCommand(port, result, command.Key, target, command.Value, true, gsp.ListenWindowMs);
@@ -440,7 +440,7 @@ namespace Vigitemp_Serveur
 
                     if (request.Action == "read-config")
                     {
-                        foreach (var prefix in new[] { "DD-H", "DCAL", "DETA", "DCON" })
+                        foreach (var prefix in new[] { "DD-H", "DCON" })
                         {
                             result.RequestedCommand = GspProtocol.BuildCommand(prefix, target, string.Empty);
                             var response = SendGspCommand(port, result, prefix, target, string.Empty, true, gsp.ListenWindowMs);
@@ -456,7 +456,21 @@ namespace Vigitemp_Serveur
 
                     if (request.Action == "read-memory")
                     {
-                        var memoryCount = Math.Max(1, gsp.MemoryCount ?? 1);
+                        var requestedMemoryCount = Math.Max(1, gsp.MemoryCount ?? 1);
+                        var requestedMemoryOffset = Math.Max(0, gsp.MemoryOffset ?? 0);
+                        if (!GspProtocol.TryNormalizeMemoryRequest(
+                                requestedMemoryCount,
+                                requestedMemoryOffset,
+                                out var memoryCount,
+                                out var memoryOffset))
+                        {
+                            result.Error = string.Format(
+                                CultureInfo.InvariantCulture,
+                                "La plage demandée dépasse la capacité mémoire de la sonde ({0} mesures maximum).",
+                                GspProtocol.MaxMemoryMeasurementCount);
+                            return;
+                        }
+
                         var recommendedReadTimeoutMs = GetRecommendedMemoReadTimeoutMs(memoryCount);
                         var recommendedListenWindowMs = GetRecommendedMemoListenWindowMs(memoryCount);
                         var effectiveReadTimeoutMs = Math.Max(port.ReadTimeout, recommendedReadTimeoutMs);
@@ -476,7 +490,7 @@ namespace Vigitemp_Serveur
                         var payload = memoryCount.ToString(CultureInfo.InvariantCulture) + "x";
                         if (gsp.MemoryOffset.HasValue)
                         {
-                            payload += gsp.MemoryOffset.Value.ToString(CultureInfo.InvariantCulture) + "o";
+                            payload += memoryOffset.ToString(CultureInfo.InvariantCulture) + "o";
                         }
                         result.RequestedCommand = GspProtocol.BuildCommand("MEMO", target, payload);
                         var response = SendGspCommand(port, result, "MEMO", target, payload, false, effectiveListenWindowMs);
@@ -620,9 +634,11 @@ namespace Vigitemp_Serveur
             return match.Success ? "COM" + match.Groups[1].Value : normalized;
         }
 
-        private static IEnumerable<KeyValuePair<string, string>> BuildGspSyncCommands(GspSensorTestRequest gsp, string address)
+        private static IEnumerable<KeyValuePair<string, string>> BuildGspSyncCommands(GspSensorTestRequest gsp)
         {
-            var channel = string.IsNullOrWhiteSpace(gsp.Channel) ? (address ?? string.Empty).Trim() : gsp.Channel.Trim();
+            // CHAN is never inferred from the probe address. It is only sent when
+            // the hotline caller explicitly provides a channel.
+            var channel = (gsp.Channel ?? string.Empty).Trim();
             SondeMetrologySettings metrology = null;
             if (gsp.CoeffA.HasValue || gsp.CoeffB.HasValue || gsp.AccuracyError.HasValue)
             {
@@ -659,13 +675,14 @@ namespace Vigitemp_Serveur
                 port.DiscardInBuffer();
                 port.DiscardOutBuffer();
                 AddExchange(result, "tx", "ascii", EscapeForLog(command));
-                port.Write(command);
+                var commandBytes = GspProtocol.EncodeCommand(command);
+                port.Write(commandBytes, 0, commandBytes.Length);
                 Thread.Sleep(150);
 
                 string response;
                 try
                 {
-                    response = ReadGspResponse(port, listenWindowMs);
+                    response = ReadGspResponse(port, command, listenWindowMs);
                 }
                 finally
                 {
@@ -701,13 +718,14 @@ namespace Vigitemp_Serveur
                 port.DiscardInBuffer();
                 port.DiscardOutBuffer();
                 AddExchange(result, "tx", "ascii", EscapeForLog(command));
-                port.Write(command);
+                var commandBytes = GspProtocol.EncodeCommand(command);
+                port.Write(commandBytes, 0, commandBytes.Length);
                 Thread.Sleep(200);
 
                 string response;
                 try
                 {
-                    response = ReadGspResponse(port, listenWindowMs);
+                    response = ReadGspResponse(port, command, listenWindowMs);
                 }
                 finally
                 {
@@ -743,6 +761,10 @@ namespace Vigitemp_Serveur
                 }
                 buffer += chunk;
                 lastDataAt = DateTime.UtcNow;
+                if (GspProtocol.HasEndTerminator(buffer))
+                {
+                    break;
+                }
             }
             return buffer.Trim();
         }
@@ -776,27 +798,43 @@ namespace Vigitemp_Serveur
             }
         }
 
-        private static string ReadGspResponse(SerialPort port, int? listenWindowMs)
+        private static string ReadGspResponse(SerialPort port, string command, int? listenWindowMs)
         {
             var endOfResponseSilenceMs = listenWindowMs.HasValue && listenWindowMs.Value > 0
                 ? listenWindowMs.Value
                 : GspEndOfResponseSilenceMs;
             var startedAt = DateTime.UtcNow;
             var buffer = string.Empty;
-            DateTime? lastDataAt = null;
+            DateTime? lastMeaningfulDataAt = null;
             while ((DateTime.UtcNow - startedAt).TotalMilliseconds < port.ReadTimeout)
             {
                 Thread.Sleep(50);
                 var chunk = port.ReadExisting();
                 if (string.IsNullOrEmpty(chunk))
                 {
-                    if (lastDataAt.HasValue && (DateTime.UtcNow - lastDataAt.Value).TotalMilliseconds >= endOfResponseSilenceMs) break;
+                    if (lastMeaningfulDataAt.HasValue &&
+                        (DateTime.UtcNow - lastMeaningfulDataAt.Value).TotalMilliseconds >= endOfResponseSilenceMs)
+                    {
+                        break;
+                    }
                     continue;
                 }
+
                 buffer += chunk;
-                lastDataAt = DateTime.UtcNow;
+                var responseWithoutEcho = GspProtocol.StripCommandEcho(buffer, command);
+                if (string.IsNullOrWhiteSpace(responseWithoutEcho))
+                {
+                    continue;
+                }
+
+                lastMeaningfulDataAt = DateTime.UtcNow;
+                if (GspProtocol.HasEndTerminator(responseWithoutEcho))
+                {
+                    break;
+                }
             }
-            return buffer.Trim();
+
+            return GspProtocol.StripCommandEcho(buffer, command).Trim();
         }
 
         private static SerialPort CreatePort(string portName, SensorTestRequest request)
@@ -858,37 +896,12 @@ namespace Vigitemp_Serveur
 
         private static bool IsCommandEchoOnly(string response, string sentCommand)
         {
-            if (string.IsNullOrWhiteSpace(response) || string.IsNullOrWhiteSpace(sentCommand))
-            {
-                return false;
-            }
-
-            return string.IsNullOrWhiteSpace(StripCommandEcho(response, sentCommand));
+            return GspProtocol.IsCommandEchoOnly(response, sentCommand);
         }
 
         private static string StripCommandEcho(string response, string sentCommand)
         {
-            var raw = (response ?? string.Empty).Trim();
-            var command = (sentCommand ?? string.Empty).Trim();
-            if (string.IsNullOrWhiteSpace(raw) || string.IsNullOrWhiteSpace(command)) return raw;
-
-            var normalizedCommand = NormalizeCommandWhitespace(command);
-            if (string.Equals(NormalizeCommandWhitespace(raw), normalizedCommand, StringComparison.OrdinalIgnoreCase))
-            {
-                return string.Empty;
-            }
-
-            var filtered = System.Text.RegularExpressions.Regex.Split(raw, @"\r?\n")
-                .Where(line => !string.IsNullOrWhiteSpace(line))
-                .Where(line => !string.Equals(NormalizeCommandWhitespace(line), normalizedCommand, StringComparison.OrdinalIgnoreCase))
-                .ToList();
-
-            return filtered.Count == 0 ? string.Empty : string.Join(Environment.NewLine, filtered);
-        }
-
-        private static string NormalizeCommandWhitespace(string value)
-        {
-            return System.Text.RegularExpressions.Regex.Replace((value ?? string.Empty).Trim(), @"\s+", " ");
+            return GspProtocol.StripCommandEcho(response, sentCommand);
         }
 
         private static void AddExchange(SensorTestResult result, string direction, string format, string content)

@@ -3298,6 +3298,7 @@
       "show_audit_markers": "Afficher les audits sur le graphique",
       "show_no_response": "Afficher les non-réponses",
       "measure_count": "Mesures dans le graphique: {count}",
+      "latest_measure_count": "{count} dernieres mesures",
       "drag_zoom_hint": "Molette pour zoomer, glisser pour se déplacer, double-clic pour réinitialiser.",
       "reset_zoom": "Réinitialiser le zoom",
       "export_image": "Exporter la courbe",
@@ -4135,7 +4136,12 @@
     },
     "gso": {
       "rssi": "RSSI : {value}",
-      "tension": "Tension : {value}"
+      "tension": "Tension : {value}",
+      "battery_state": {
+        "ok": "État de la batterie: OK ({value}V)",
+        "medium": "État de la batterie: Moyen ({value}V)",
+        "low": "État de la batterie: Faible ({value}V)"
+      }
     },
     "wireless": {
       "battery": "Batterie : {value}%"
@@ -4321,7 +4327,7 @@
         "details": "Détails"
       },
       "status": {
-        "success": "Réussi",
+        "success": "Réussie",
         "in_progress": "En cours",
         "failed": "Échoué"
       }
@@ -5681,6 +5687,21 @@
         "title": "Réaliser un ajustage",
         "description": "Sélection des sondes puis préparation de l'ajustage/calibrage."
       },
+      "operationTimer": {
+        "title": "Ajustage en cours",
+        "sensorCount": "{count, plural, one {# sonde concernee} other {# sondes concernees}}",
+        "remaining": "Temps restant avant annulation automatique",
+        "extend": "Ajouter 30 minutes",
+        "extending": "Prolongation...",
+        "extensionError": "Impossible de prolonger l'ajustage.",
+        "stop": "Arrêter l'ajustage",
+        "stopTitle": "Arrêter l'ajustage ?",
+        "stopDescription": "L'arrêt annule l'opération et tous les résultats en cours. Les sondes concernées retrouveront leur état précédent.",
+        "cancel": "Continuer l'ajustage",
+        "confirmStop": "Arrêter et annuler",
+        "stopping": "Arrêt...",
+        "stopError": "Impossible d'arrêter l'ajustage."
+      },
       "selection": {
         "title": "Étape 1 - Sélection des sondes",
         "description": "Choisissez une ou plusieurs sondes à inclure dans l'opération d'ajustage.",
@@ -5730,6 +5751,13 @@
             "coefficientsAlertDescription": "Vérifiez les coefficients et les informations du certificat avant de poursuivre.",
             "externalProbe": "Sonde externe",
             "externalProbeHint": "L'ajustage n'est actuellement pas possible avec une sonde externe.",
+            "externalProbeEnabledHint": "Les mesures de cet étalon seront saisies manuellement pendant l'ajustage.",
+            "internalGroup": "Sondes étalons",
+            "externalGroup": "Sondes étalons externes",
+            "externalAutoSelected": "Cet étalon est externe : la saisie manuelle a été activée automatiquement.",
+            "internalAutoSelected": "Cet étalon n'est pas externe : la lecture automatique a été réactivée.",
+            "externalModeEnabled": "Mode étalon externe activé. Un étalon externe compatible a été sélectionné.",
+            "internalModeEnabled": "Mode étalon externe désactivé. Un étalon interne compatible a été sélectionné.",
             "standardProbe": "Sonde étalon",
             "standardProbePlaceholder": "Choisir une sonde étalon",
             "standardProbeSearchPlaceholder": "Rechercher une sonde étalon",
@@ -5780,13 +5808,27 @@
             "description": "Affiche la derniere mesure acquise depuis l'étalon.",
             "lastMeasure": "Dernière mesure",
             "empty": "-",
-            "waiting": "En attente de lecture"
+            "waiting": "En attente de lecture",
+            "externalValue": "Mesure de l'étalon externe",
+            "externalValuePlaceholder": "Ex. 23,45",
+            "externalValueHelp": "La première mesure démarre le plateau. Un écart supérieur au maximum redémarre le timer avec cette nouvelle mesure.",
+            "invalidExternalValue": "La mesure saisie doit être un nombre valide.",
+            "record": "Enregistrer"
           },
           "plateau": {
             "title": "Plateau de stabilité",
             "description": "Configurer la fenêtre de stabilisation avant l'enregistrement des valeurs.",
             "durationMinutes": "Durée (min)",
-            "maxGap": "Écart max"
+            "maxGap": "Écart max",
+            "measurementIntervalSeconds": "Durée en <strong>secondes</strong> entre les mesures",
+            "measurementIntervalHelp": "Choisissez une durée de 15 ou 30 secondes.",
+            "gsoFixedInterval": "Une sonde GSO est sélectionnée : la durée entre les mesures est fixée a 60 secondes.",
+            "invalidIntervalTitle": "Durée invalide",
+            "invalidIntervalDescription": "La durée entre deux mesures doit être un nombre entier supérieur ou égal à 12 secondes.",
+            "longIntervalTitle": "Durée de mesure élevée",
+            "longIntervalDescription": "Une durée élevée entre les mesures peut impacter la surveillance de la sonde.",
+            "mismatchTitle": "Configuration du plateau à vérifier",
+            "mismatchDescription": "Cette configuration représente environ {count} cycles de mesure pendant le plateau. Adaptez la durée du plateau ou la durée entre les mesures."
           }
         },
         "selectedSensors": {

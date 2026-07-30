@@ -3,7 +3,12 @@ import { prisma, prismaMesure } from "@/lib/prisma"
 import { withAuthLogging, type HandlerContext } from "@/lib/api-wrappers"
 import { getCachedMeasurements, setCachedMeasurements } from "@/lib/measurement-cache"
 import { apiError, apiOk } from "@/lib/api-response"
-import { formatDbDateTime, parseDbDateTime, serializeDbDateTime } from "@/lib/date-display"
+import {
+  formatDbDateTime,
+  parseDbDateTime,
+  serializeDbDateTime,
+  serializeStoredDbDateTime,
+} from "@/lib/date-display"
 import { getGlobalNonResponseDefault } from "@/lib/non-response-preference"
 import { canUserAccessLieu } from "@/lib/location-access-scope"
 import { log } from "@/lib/logger"
@@ -205,7 +210,10 @@ export const GET = withAuthLogging(
       const chronologicalMeasurements = shouldReverseMeasurements ? measurements.reverse() : measurements
 
       const formattedMeasurements = chronologicalMeasurements.map((m) => {
-        const dateHeure = parseDbDateTime(m.Date_Heure_Mesure) ?? new Date()
+        const dateHeure =
+          serializeStoredDbDateTime(m.Date_Heure_Mesure) ??
+          serializeDbDateTime(new Date()) ??
+          ""
         const isNullMeasurement =
           typeof m.Est_Valeur_Null === "number" ? m.Est_Valeur_Null !== 0 : Boolean(m.Est_Valeur_Null)
         const isMemoryMeasurement =
@@ -233,7 +241,7 @@ export const GET = withAuthLogging(
           Nb_Decimal: resolvedDecimals,
           Unite: normalizeDisplayUnit(calibration?.Unite ?? lieu?.Derniere_Unite ?? m.Unite),
           DateHeureMesure: dateDisplay,
-          DateHeureMesureIso: serializeDbDateTime(dateHeure) ?? "",
+          DateHeureMesureIso: dateHeure,
           DateHeureMesureXaxis: dateXaxis,
           Consigne:
             m.Consigne !== null

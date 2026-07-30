@@ -215,6 +215,12 @@ namespace Vigitemp_Serveur
 
         public bool EnqueueGspMemo(string serialNumber, int totalCount, int batchSize, int? startOffset = null)
         {
+            if (VigitempServeur.InterrogationOnlyMode)
+            {
+                VigitempServeur.Log("[SERVER][MODE] memory request rejected: interrogation-only mode.");
+                return false;
+            }
+
             var serial = (serialNumber ?? string.Empty).Trim();
             if (string.IsNullOrWhiteSpace(serial))
             {
@@ -230,9 +236,9 @@ namespace Vigitemp_Serveur
             var schedule = _schedules.Values.FirstOrDefault(s => string.Equals(s.Serial, serial, StringComparison.OrdinalIgnoreCase));
 
             var requestedCount = Math.Max(1, totalCount);
-            // Keep the legacy parameter for API compatibility, but request the
-            // complete range in one command: the GSP protocol has no batch cap.
-            var requestSize = requestedCount;
+            var requestSize = Math.Min(
+                Math.Max(1, batchSize),
+                GspProtocol.MaxMemoryMeasurementsPerRequest);
             var safeOffset = Math.Max(0, startOffset ?? 0);
 
             _gspMemoJobs.AddOrUpdate(
@@ -293,6 +299,12 @@ namespace Vigitemp_Serveur
 
         public bool EnqueueGspRecovery(string serialNumber, DateTime recoverFromProbeDateTime, DateTime recoverUntilProbeDateTime, int expectedMissingCount)
         {
+            if (VigitempServeur.InterrogationOnlyMode)
+            {
+                VigitempServeur.Log("[SERVER][MODE] memory recovery rejected: interrogation-only mode.");
+                return false;
+            }
+
             var serial = (serialNumber ?? string.Empty).Trim();
             if (string.IsNullOrWhiteSpace(serial))
             {
@@ -305,7 +317,9 @@ namespace Vigitemp_Serveur
             }
 
             var requestedCount = Math.Max(1, expectedMissingCount);
-            var requestSize = requestedCount;
+            var requestSize = Math.Min(
+                requestedCount,
+                GspProtocol.MaxMemoryMeasurementsPerRequest);
             _gspMemoJobs.AddOrUpdate(
                 serial,
                 _ => new GspMemoJob
@@ -488,7 +502,9 @@ namespace Vigitemp_Serveur
             var frequencySeconds = Math.Max(1, row.FrequenceSecondes);
             var currentOffset = ComputeGspMemoOffset(now, recoverUntil, frequencySeconds);
             var requestedCount = ComputeGspMemoRequestedCount(recoverFrom, recoverUntil, frequencySeconds);
-            var requestSize = requestedCount;
+            var requestSize = Math.Min(
+                requestedCount,
+                GspProtocol.MaxMemoryMeasurementsPerRequest);
 
             var spanIds = spans.Select(s => s.Id).Where(id => id > 0).Distinct().ToList();
             if (spanIds.Count == 0)
@@ -1099,7 +1115,10 @@ namespace Vigitemp_Serveur
         public void Start()
         {
             VigitempServeur.Log("Starting Thread#" + _idServer + "...");
-            AlarmWebNotifier.ValidateConfig();
+            if (!VigitempServeur.InterrogationOnlyMode)
+            {
+                AlarmWebNotifier.ValidateConfig();
+            }
             _stopRequested = false;
             try
             {
@@ -1115,7 +1134,8 @@ namespace Vigitemp_Serveur
                 VigitempServeur.Log("Alarm state seed error (non-fatal): " + ex.Message);
             }
 
-            if (Interlocked.CompareExchange(ref _gspRecoveryStartupResetDone, 1, 0) == 0)
+            if (!VigitempServeur.InterrogationOnlyMode &&
+                Interlocked.CompareExchange(ref _gspRecoveryStartupResetDone, 1, 0) == 0)
             {
                 try
                 {
@@ -1130,7 +1150,10 @@ namespace Vigitemp_Serveur
             }
 
             RefreshSchedule();
-            _gspMemoProcessingTask = Task.Run(async () => await RunGspMemoProcessingLoopAsync());
+            if (!VigitempServeur.InterrogationOnlyMode)
+            {
+                _gspMemoProcessingTask = Task.Run(async () => await RunGspMemoProcessingLoopAsync());
+            }
 
             _schedulerTimer = new System.Timers.Timer(_schedulerTickMs);
             _schedulerTimer.Elapsed += ProcessSchedulerTick;
@@ -1278,7 +1301,10 @@ namespace Vigitemp_Serveur
                 // Prioritize explicit GSP config pushes before any normal probe so that
                 // the next measurement is taken with the expected runtime parameters.
                 // Process at most one push per tick so a dirty backlog cannot starve TEMP probes.
-                await ProcessPendingGspConfigurationAsync(prioritizeDirtyPushes: true);
+                if (!VigitempServeur.InterrogationOnlyMode)
+                {
+                    await ProcessPendingGspConfigurationAsync(prioritizeDirtyPushes: true);
+                }
                 if (m_cts.IsCancellationRequested)
                 {
                     return;
@@ -1307,6 +1333,15 @@ namespace Vigitemp_Serveur
                 var normalGspProbesSinceMemo = 0;
                 foreach (var schedule in due)
                 {
+                    if (!GetDatabase().isSondeAvailableForSurveillance(schedule.IdLieu, schedule.Serial))
+                    {
+                        _schedules.TryRemove(schedule.IdLieu, out _);
+                        VigitempServeur.Log(
+                            $"[SONDE][SKIP] idLieu={schedule.IdLieu} serial={schedule.Serial} " +
+                            "reason=surveillance-suspended-or-metrology");
+                        continue;
+                    }
+
                     schedule.InProgress = true;
                     schedule.CurrentCycleSchedulingAnchor = null;
                     try
@@ -1345,7 +1380,7 @@ namespace Vigitemp_Serveur
                         schedule.InProgress = false;
                     }
 
-                    if (IsGspSchedule(schedule))
+                    if (!VigitempServeur.InterrogationOnlyMode && IsGspSchedule(schedule))
                     {
                         normalGspProbesSinceMemo++;
                         if (_gspMemoMaxNormalProbes > 0 &&
@@ -1359,10 +1394,13 @@ namespace Vigitemp_Serveur
                     }
                 }
 
-                await ProcessPendingGspConfigurationAsync(prioritizeDirtyPushes: false);
-                await ProcessPendingGspMemoBatchAsync();
-                await PollNewAlarmsAsync();
-                await PollEndedAlarmsAsync();
+                if (!VigitempServeur.InterrogationOnlyMode)
+                {
+                    await ProcessPendingGspConfigurationAsync(prioritizeDirtyPushes: false);
+                    await ProcessPendingGspMemoBatchAsync();
+                    await PollNewAlarmsAsync();
+                    await PollEndedAlarmsAsync();
+                }
             }
             finally
             {
@@ -1375,6 +1413,11 @@ namespace Vigitemp_Serveur
 
         private async Task<bool> ProcessPendingGspConfigurationAsync(bool prioritizeDirtyPushes)
         {
+            if (VigitempServeur.InterrogationOnlyMode)
+            {
+                return false;
+            }
+
             var now = DateTime.Now;
             IEnumerable<SensorSchedule> candidates = _schedules.Values
                 .Where(s => s != null &&
@@ -1404,6 +1447,25 @@ namespace Vigitemp_Serveur
 
             if (schedule == null)
             {
+                return false;
+            }
+
+            if (!GetDatabase().isSondeAvailableForSurveillance(schedule.IdLieu, schedule.Serial))
+            {
+                _schedules.TryRemove(schedule.IdLieu, out _);
+                VigitempServeur.Log(
+                    $"[SONDE][CFG-JOB] serial={schedule.Serial} status=deferred " +
+                    "reason=surveillance-suspended-or-metrology");
+                return false;
+            }
+
+            if (GetDatabase().isSondeInNoResponse(schedule.IdLieu, schedule.Serial))
+            {
+                schedule.ConfigNextAttemptUtc = DateTime.UtcNow.AddSeconds(
+                    Math.Max(10, Math.Min(60, schedule.FrequencySeconds)));
+                VigitempServeur.Log(
+                    $"[SONDE][CFG-JOB] serial={schedule.Serial} status=deferred " +
+                    "reason=no-response configPending=true");
                 return false;
             }
 
@@ -1471,6 +1533,11 @@ namespace Vigitemp_Serveur
             bool forceForFairness = false,
             string preferredPort = null)
         {
+            if (VigitempServeur.InterrogationOnlyMode)
+            {
+                return;
+            }
+
             var candidates = _gspMemoJobs.Values
                 .Where(j => j != null && !j.InProgress);
 
@@ -1514,6 +1581,18 @@ namespace Vigitemp_Serveur
                 return;
             }
 
+            if (!GetDatabase().isSondeAvailableForSurveillance(schedule.IdLieu, schedule.Serial))
+            {
+                _schedules.TryRemove(schedule.IdLieu, out _);
+                if (_logScheduler)
+                {
+                    VigitempServeur.Log(
+                        $"[SONDE][MEMO-JOB] serial={job.Serial} status=deferred " +
+                        "reason=surveillance-suspended-or-metrology");
+                }
+                return;
+            }
+
             if (GetDatabase().hasBlockingGspRecoveryAlarm(schedule.IdLieu))
             {
                 if (_logScheduler)
@@ -1534,8 +1613,42 @@ namespace Vigitemp_Serveur
             }
 
             var count = job.RecoverUntilProbeDateTime.HasValue
-                ? Math.Max(1, job.RequestedCount - job.ScannedCount)
+                ? Math.Min(
+                    GspProtocol.MaxMemoryMeasurementsPerRequest,
+                    Math.Max(1, job.RequestedCount - job.ScannedCount))
                 : Math.Min(job.RequestSize, remaining);
+
+            if (!GspProtocol.TryNormalizeMemoryRequest(
+                    count,
+                    job.CurrentOffset,
+                    out var limitedCount,
+                    out var limitedOffset))
+            {
+                var reason =
+                    $"memory-range-outside-eeprom:offset={job.CurrentOffset}:capacity={GspProtocol.MaxMemoryMeasurementCount}";
+                if (job.SpanIds.Count > 0)
+                {
+                    MarkGspRecoveryJobFailed(job, reason, "request");
+                }
+                else
+                {
+                    _gspMemoJobs.TryRemove(job.Serial, out _);
+                    GetDatabase().setLieuGspRecoveryPending(schedule.IdLieu, false);
+                }
+
+                VigitempServeur.Log(
+                    $"[SONDE][MEMO-JOB] serial={job.Serial} status=failed reason=eeprom-range-exhausted requested={count} offset={job.CurrentOffset} capacity={GspProtocol.MaxMemoryMeasurementCount}");
+                return;
+            }
+
+            if (limitedCount != count || limitedOffset != job.CurrentOffset)
+            {
+                VigitempServeur.Log(
+                    $"[SONDE][MEMO-JOB] serial={job.Serial} status=limited requested={count} offset={job.CurrentOffset} count={limitedCount} safeOffset={limitedOffset} capacity={GspProtocol.MaxMemoryMeasurementCount}");
+            }
+
+            count = limitedCount;
+            job.CurrentOffset = limitedOffset;
             var minWindowSeconds = EstimateGspMemoFreeSlotSeconds();
             var hasFreeWindow = HasFreePortWindow(schedule.Port, minWindowSeconds, DateTime.Now, out var nextDue);
             if (!hasFreeWindow && !forceForFairness)
@@ -2038,7 +2151,10 @@ namespace Vigitemp_Serveur
 
         private void RegisterGspSuccessfulProbe(SensorSchedule schedule)
         {
-            if (schedule == null || schedule.ConfigDirty || !IsGspSchedule(schedule))
+            if (VigitempServeur.InterrogationOnlyMode ||
+                schedule == null ||
+                schedule.ConfigDirty ||
+                !IsGspSchedule(schedule))
             {
                 return;
             }
@@ -2145,6 +2261,10 @@ namespace Vigitemp_Serveur
                 }
 
                 RefreshSchedule();
+                if (VigitempServeur.InterrogationOnlyMode)
+                {
+                    return;
+                }
 
                 //cherche les lieux avec une dateReactivationAlarme passe pour reactiver les alarmes
                 //VigitempServeur.Log("process 1 minute");
@@ -2757,7 +2877,9 @@ namespace Vigitemp_Serveur
 
         private bool ShouldRequestGspGraphDisplay(SensorSchedule schedule)
         {
-            if (schedule == null || !IsGspSchedule(schedule))
+            if (VigitempServeur.InterrogationOnlyMode ||
+                schedule == null ||
+                !IsGspSchedule(schedule))
             {
                 return false;
             }

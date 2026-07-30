@@ -630,7 +630,7 @@
     },
     "group_modal": {
       "title": "Confirmation",
-      "description": "Do you want to {action} monitoring for group {group}?",
+      "description": "Do you want to {action} monitoring for group {group} ?",
       "action_disable": "disable",
       "action_enable": "enable",
       "toggle_disable": "Disable group monitoring",
@@ -713,7 +713,7 @@
       "action_comment_placeholder_required": "Add a comment (required)",
       "action_comment_required": "Comment is required for this action.",
       "unsaved_changes_title": "Unsaved changes",
-      "unsaved_changes_confirm": "Unsaved changes will be lost. Close anyway?"
+      "unsaved_changes_confirm": "Unsaved changes will be lost. Close anyway ?"
     },
     "general": {
       "sections": {
@@ -975,7 +975,7 @@
       },
       "deleteConfirm": {
         "title": "Delete rule",
-        "description": "What to do with the setpoints after deletion?",
+        "description": "What to do with the setpoints after deletion ?",
         "optionBase": "Restore base setpoints",
         "optionRegle": "Apply this rule's setpoints as new permanent base values",
         "ruleValues": "Setpoint: {consigne}  |  Sup: {sup}  |  Inf: {inf}",
@@ -998,7 +998,7 @@
     },
     "archive": {
       "title": "Archive module",
-      "description": "Are you sure you want to archive this module? This action cannot be undone.",
+      "description": "Are you sure you want to archive this module ? This action cannot be undone.",
       "confirm": "Archive"
     },
     "archive_blocked": {
@@ -1124,7 +1124,7 @@
     },
     "archive": {
       "title": "Confirm archive",
-      "description": "Are you sure you want to archive this actuator? This action cannot be undone.",
+      "description": "Are you sure you want to archive this actuator ? This action cannot be undone.",
       "confirm": "Archive"
     },
     "toast": {
@@ -1764,7 +1764,7 @@
       "add": "New",
       "delete": "Delete",
       "delete_title": "Delete measurement",
-      "delete_description": "Are you sure you want to delete this measurement point?",
+      "delete_description": "Are you sure you want to delete this measurement point ?",
       "columns": {
         "point": "Point",
         "reference": "Reference TÂ°",
@@ -2069,13 +2069,13 @@
     "dialogs": {
       "archive": {
         "title": "Archive location",
-        "description": "This location will switch to disabled monitoring and its sensor will be unassigned. Do you want to continue?",
+        "description": "This location will switch to disabled monitoring and its sensor will be unassigned. Do you want to continue ?",
         "submitting": "Archiving...",
         "confirm": "Archive"
       },
       "create_no_sensor": {
-        "title": "Create location without sensor?",
-        "description": "This location will be created without an associated sensor. You can assign one later in location management. Do you want to continue?",
+        "title": "Create location without sensor ?",
+        "description": "This location will be created without an associated sensor. You can assign one later in location management. Do you want to continue ?",
         "submitting": "Creating...",
         "confirm": "Continue"
       }
@@ -2546,8 +2546,8 @@
     },
     "clear_confirm": {
       "title": "Confirm deletion",
-      "description_selected": "Delete the {count} selected calibration(s) from the list?",
-      "description_all": "Clear the entire import list?"
+      "description_selected": "Delete the {count} selected calibration(s) from the list ?",
+      "description_all": "Clear the entire import list ?"
     },
     "toast": {
       "save_success": "{count} row(s) inserted into database.",
@@ -2667,7 +2667,7 @@
     },
     "archive": {
       "title": "Confirm archive",
-      "description": "Are you sure you want to archive this standard? This action cannot be undone.",
+      "description": "Are you sure you want to archive this standard  This action cannot be undone.",
       "cancel": "Cancel",
       "confirm": "Archive"
     },
@@ -2783,7 +2783,7 @@
     "edit_title": "Edit site",
     "edit_description": "Update the site information",
     "archive_title": "Archive site",
-    "archive_description": "Are you sure you want to archive site {code}? This action cannot be undone.",
+    "archive_description": "Are you sure you want to archive site {code} ? This action cannot be undone.",
     "submit_create": "Create",
     "submit_creating": "Creating...",
     "submit_updating": "Updating...",
@@ -2859,7 +2859,7 @@
     "buttons": {
       "sign_in": "Sign in",
       "signing_in": "Signing in...",
-      "forgot_password": "Forgot password?",
+      "forgot_password": "Forgot password ?",
       "send": "Send",
       "sending": "Sending..."
     },
@@ -2871,7 +2871,7 @@
       "tagline": "Environmental and metrological monitoring"
     },
     "reset_modal": {
-      "title": "Forgot password?",
+      "title": "Forgot password ?",
       "description": "Enter your email address to receive a reset link.",
       "success_message": "If an account exists with this email, you will receive a reset link shortly."
     },
@@ -3157,7 +3157,7 @@
   },
   "deleteProfileDialog": {
     "title": "Archive profile",
-    "description": "Are you sure you want to archive the profile \"{name}\"?",
+    "description": "Are you sure you want to archive the profile \"{name}\" ?",
     "blocked": "Warning: {count, plural, one {# user uses} other {# users use}} this profile. Archiving is not possible.",
     "actions": {
       "cancel": "Cancel",
@@ -3296,6 +3296,7 @@
       "show_audit_markers": "Show audits on chart",
       "show_no_response": "Show no-response values",
       "measure_count": "Points in chart: {count}",
+      "latest_measure_count": "Latest {count} measurements",
       "drag_zoom_hint": "Use the wheel to zoom, drag to pan, and double-click to reset.",
       "reset_zoom": "Reset zoom",
       "export_image": "Export chart",
@@ -3581,7 +3582,7 @@
       "cta": "View channel"
     },
     "note": {
-      "title": "Need a summary?",
+      "title": "Need a summary ?",
       "subtitle": "We can share a tailored monthly update.",
       "cta": "Talk to an expert"
     }
@@ -3986,29 +3987,29 @@
       "subtitle": "Everything you need to know before moving to Standard.",
       "items": {
         "0": {
-          "question": "Does data leave our site?",
+          "question": "Does data leave our site ?",
           "answer": "No. VigiSensys runs 100% on-premise. No data goes through the cloud. Everything stays on your local infrastructure."
         },
         "1": {
-          "question": "Does it work without internet?",
+          "question": "Does it work without internet ?",
           "answer": "Yes. The system runs on a full LAN. Internet is not required for daily operations."
         },
         "2": {
-          "question": "How does the upgrade work?",
+          "question": "How does the upgrade work ?",
           "answer": "Simple: a new license key and a service restart if needed. You can move from Pack to One, Standard, or Expert without data loss."
         },
         "3": {
-          "question": "What MC2 support is available?",
+          "question": "What MC2 support is available ?",
           "answer": "Technical support, on-site interventions, training. Options tailored to your needs."
         },
         "4": {
-          "question": "What is the update policy?",
+          "question": "What is the update policy ?",
           "answer": "Updates are included with the active license. Deployment is controlled by your IT teams, at your pace."
         }
       }
     },
     "contact": {
-      "title": "Ready to move to advanced metrology?",
+      "title": "Ready to move to advanced metrology ?",
       "subtitle": "Contact us for a demo or a tailored quote.",
       "ctaPrimary": "Request a quote",
       "ctaSecondary": "Talk to an expert",
@@ -4165,8 +4166,8 @@
     },
     "confirm": {
       "title": "Confirmation",
-      "description_surveillance": "Do you want to {action} monitoring for this location?",
-      "description_alarms": "Do you want to {action} alarms for this location?",
+      "description_surveillance": "Do you want to {action} monitoring for this location ?",
+      "description_alarms": "Do you want to {action} alarms for this location ?",
       "action_disable": "disable",
       "action_enable": "enable",
       "action_type": {
@@ -4494,7 +4495,7 @@
       }
     },
     "push_prompt": {
-      "title": "Enable Windows notifications?",
+      "title": "Enable Windows notifications ?",
       "description": "Receive alarms even when the site is closed.",
       "action": "Enable",
       "denied": "Notifications denied",
@@ -4515,7 +4516,7 @@
     "export": "Export",
     "export_count_prompt": {
       "title": "Export measurements",
-      "message": "How many measurements should be exported? (1 to {max})",
+      "message": "How many measurements should be exported ? (1 to {max})",
       "invalid": "Invalid value. Enter a number between 1 and {max}.",
       "input_label": "Number of measurements to export",
       "cancel": "Cancel",
@@ -4759,7 +4760,7 @@
     "dialogs": {
       "archive": {
         "title": "Archive account",
-        "description": "Are you sure you want to archive {username}'s account? The account will be disabled and the user will no longer be able to sign in.",
+        "description": "Are you sure you want to archive {username}'s account ? The account will be disabled and the user will no longer be able to sign in.",
         "cancel": "Cancel",
         "confirm": "Archive",
         "submitting": "Archiving..."
@@ -4933,7 +4934,7 @@
         "open_tool": "Open {title}"
       },
       "guide": {
-        "title": "How to use performance tests?",
+        "title": "How to use performance tests ?",
         "step1_title": "1. Measure cold cache (first load)",
         "step1_description": "Open DevTools > Network, clear cache (Ctrl+Shift+Del), reload. Note the timing (~1000-2000ms without cache).",
         "step2_title": "2. Measure warm cache (active cache)",
@@ -4949,7 +4950,7 @@
       "description": "Overview of monitored sensors and locations",
       "stats_title": "Real-time statistics",
       "locations_title": "Locations",
-      "how_to_test_title": "How to test?",
+      "how_to_test_title": "How to test ?",
       "how_to_test": {
         "refresh": "1. Refresh: reloads from cache (instant ~10ms)",
         "invalidate": "2. Invalidate cache: forces reload from MySQL (~200ms)",
@@ -5685,8 +5686,23 @@
         "title": "Run an adjustment",
         "description": "Probe selection then preparation of the adjustment/calibration operation."
       },
+      "operationTimer": {
+        "title": "Adjustment in progress",
+        "sensorCount": "{count, plural, one {# affected probe} other {# affected probes}}",
+        "remaining": "Time remaining before automatic cancellation",
+        "extend": "Add 30 minutes",
+        "extending": "Extending...",
+        "extensionError": "Unable to extend the adjustment.",
+        "stop": "Stop adjustment",
+        "stopTitle": "Stop the adjustment ?",
+        "stopDescription": "Stopping cancels the operation and all current results. The affected probes will return to their previous state.",
+        "cancel": "Continue adjustment",
+        "confirmStop": "Stop and cancel",
+        "stopping": "Stopping...",
+        "stopError": "Unable to stop the adjustment."
+      },
       "selection": {
-        "title": "Step 1 ? Probe selection",
+        "title": "Step 1 - Probe selection",
         "description": "Choose one or more probes to include in the adjustment operation.",
         "banner": {
           "title": "{count, plural, one {# selected probe} other {# selected probes}}",
@@ -5752,6 +5768,13 @@
             "coefficientsAlertDescription": "Check the coefficients and certificate information before continuing.",
             "externalProbe": "External probe",
             "externalProbeHint": "Adjustment is currently not available with an external probe.",
+            "externalProbeEnabledHint": "Measurements from this standard will be entered manually during the adjustment.",
+            "internalGroup": "Standard probes",
+            "externalGroup": "External standard probes",
+            "externalAutoSelected": "This standard is external: manual input was enabled automatically.",
+            "internalAutoSelected": "This standard is internal: automatic reading was enabled again.",
+            "externalModeEnabled": "External standard mode enabled. A compatible external standard was selected.",
+            "internalModeEnabled": "External standard mode disabled. A compatible internal standard was selected.",
             "standardProbe": "Reference probe",
             "standardProbePlaceholder": "Choose a reference probe",
             "standardProbeSearchPlaceholder": "Search a reference probe",
@@ -5764,7 +5787,7 @@
             "standardDecimals": "Reference decimals count"
           },
           "module": {
-            "title": "Reference standard ? module / serial port",
+            "title": "Reference standard - module / serial port",
             "description": "Module and serial port associated with the selected reference probe.",
             "module": "Module",
             "serialPort": "Serial port",
@@ -5802,13 +5825,27 @@
             "description": "Displays the latest measurement acquired from the reference standard.",
             "lastMeasure": "Latest measurement",
             "empty": "-",
-            "waiting": "Waiting for reading"
+            "waiting": "Waiting for reading",
+            "externalValue": "External standard measurement",
+            "externalValuePlaceholder": "E.g. 23.45",
+            "externalValueHelp": "The first measurement starts the plateau. A gap above the maximum restarts the timer from the new measurement.",
+            "invalidExternalValue": "The entered measurement must be a valid number.",
+            "record": "Record"
           },
           "plateau": {
             "title": "Stability plateau",
             "description": "Configure the stabilization window before recording the adjustment values.",
             "durationMinutes": "Duration (min)",
-            "maxGap": "Maximum gap"
+            "maxGap": "Maximum gap",
+            "measurementIntervalSeconds": "Time in <strong>seconds</strong> between measurements",
+            "measurementIntervalHelp": "Choose an interval of 15 or 30 seconds.",
+            "gsoFixedInterval": "A GSO probe is selected: the time between measurements is fixed at 60 seconds.",
+            "invalidIntervalTitle": "Invalid duration",
+            "invalidIntervalDescription": "The time between two measurements must be an integer greater than or equal to 12 seconds.",
+            "longIntervalTitle": "High measurement interval",
+            "longIntervalDescription": "A long interval between measurements may affect probe monitoring.",
+            "mismatchTitle": "Check the stability plateau settings",
+            "mismatchDescription": "This configuration represents approximately {count} measurement cycles during the plateau. Adjust the plateau duration or the time between measurements."
           }
         },
         "status": {

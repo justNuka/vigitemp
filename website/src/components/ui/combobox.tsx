@@ -18,6 +18,7 @@ import { useTranslations } from "next-intl";
 export type ComboboxOption = {
   value: string;
   label: string;
+  group?: string;
   searchText?: string;
   disabled?: boolean;
   className?: string;
@@ -69,6 +70,16 @@ export function Combobox({
       return haystack.includes(normalizedQuery);
     });
   }, [options, query]);
+  const groupedOptions = useMemo(() => {
+    const groups = new Map<string, ComboboxOption[]>();
+    for (const option of filteredOptions) {
+      const group = option.group ?? "";
+      const entries = groups.get(group) ?? [];
+      entries.push(option);
+      groups.set(group, entries);
+    }
+    return Array.from(groups.entries());
+  }, [filteredOptions]);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -103,28 +114,30 @@ export function Combobox({
             {filteredOptions.length === 0 ? (
               <CommandEmpty>{resolvedEmptyMessage}</CommandEmpty>
             ) : (
-              <CommandGroup>
-                {filteredOptions.map((option) => (
-                  <CommandItem
-                    key={option.value}
-                    value={option.label}
-                    className={option.className}
-                    onSelect={() => {
-                      onValueChange(option.value);
-                      setOpen(false);
-                    }}
-                    disabled={option.disabled}
-                  >
-                    <Check
-                      className={cn(
-                        "mr-2 h-4 w-4",
-                        value === option.value ? "opacity-100" : "opacity-0"
-                      )}
-                    />
-                    {option.label}
-                  </CommandItem>
-                ))}
-              </CommandGroup>
+              groupedOptions.map(([group, groupOptions]) => (
+                <CommandGroup key={group || "__default"} heading={group || undefined}>
+                  {groupOptions.map((option) => (
+                    <CommandItem
+                      key={option.value}
+                      value={option.label}
+                      className={option.className}
+                      onSelect={() => {
+                        onValueChange(option.value);
+                        setOpen(false);
+                      }}
+                      disabled={option.disabled}
+                    >
+                      <Check
+                        className={cn(
+                          "mr-2 h-4 w-4",
+                          value === option.value ? "opacity-100" : "opacity-0"
+                        )}
+                      />
+                      {option.label}
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              ))
             )}
           </CommandList>
         </Command>

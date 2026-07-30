@@ -889,10 +889,17 @@ namespace Vigitemp_Serveur
                         (!consigneInfActive || p_valeur >= consigneInf);
                     var estEtatAlarme = isInActiveThresholds ? 0 : 1;
 
+                    var duplicateGuardSeconds = GetDuplicateGuardSeconds();
                     var cmdCheck = this.connection_vigitemp_mesure.CreateCommand();
-                    cmdCheck.CommandText = "SELECT 1 FROM tm_mesures WHERE Sonde_Numero_Serie = @serial AND Date_Heure_Mesure = @dateheuremesure AND IFNULL(Est_Valeur_Null, 0) = 0 LIMIT 1;";
+                    cmdCheck.CommandText = duplicateGuardSeconds > 0
+                        ? "SELECT 1 FROM tm_mesures WHERE Sonde_Numero_Serie = @serial AND ABS(TIMESTAMPDIFF(SECOND, Date_Heure_Mesure, @dateheuremesure)) <= @duplicateGuardSeconds AND IFNULL(Est_Valeur_Null, 0) = 0 LIMIT 1;"
+                        : "SELECT 1 FROM tm_mesures WHERE Sonde_Numero_Serie = @serial AND Date_Heure_Mesure = @dateheuremesure AND IFNULL(Est_Valeur_Null, 0) = 0 LIMIT 1;";
                     cmdCheck.Parameters.AddWithValue("@serial", p_numeroSerie);
                     cmdCheck.Parameters.AddWithValue("@dateheuremesure", measureDateTime.ToString("yyyy-MM-dd HH:mm:ss.fff"));
+                    if (duplicateGuardSeconds > 0)
+                    {
+                        cmdCheck.Parameters.AddWithValue("@duplicateGuardSeconds", duplicateGuardSeconds);
+                    }
                     var existing = cmdCheck.ExecuteScalar();
                     if (existing != null && existing != DBNull.Value)
                     {
@@ -1154,6 +1161,83 @@ namespace Vigitemp_Serveur
         public List<SondeScheduleInfo> getSondesActivesAllServeurs()
         {
             return getSondesActivesInternal();
+        }
+
+        public bool isSondeAvailableForSurveillance(int idLieu, string sondeNumeroSerie)
+        {
+            lock (_lock)
+            {
+                try
+                {
+                    if (!EnsureConnected())
+                    {
+                        return true;
+                    }
+
+                    using (var cmd = connection_vigitemp.CreateCommand())
+                    {
+                        cmd.CommandText =
+                            "SELECT COUNT(*) " +
+                            "FROM t_lieu " +
+                            "INNER JOIN t_sonde ON t_sonde.Sonde_Numero_Serie = t_lieu.Sonde_Numero_Serie " +
+                            "WHERE t_lieu.Id_Lieu = @idLieu " +
+                            "AND t_sonde.Sonde_Numero_Serie = @serial " +
+                            "AND t_lieu.Lieu_Etat = 'S' " +
+                            "AND t_sonde.Etat_Sonde = 'S' " +
+                            "AND IFNULL(t_sonde.Metrologie_en_cours, 0) = 0;";
+                        cmd.Parameters.AddWithValue("@idLieu", idLieu);
+                        cmd.Parameters.AddWithValue("@serial", sondeNumeroSerie ?? string.Empty);
+                        return Convert.ToInt32(cmd.ExecuteScalar()) > 0;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // A database read failure must not suspend all normal surveillance.
+                    VigitempServeur.Log($"[SCHEDULER][STATE-CHECK] status=error provider=mysql idLieu={idLieu} serial={sondeNumeroSerie} error={ex.Message}");
+                    return true;
+                }
+            }
+        }
+
+        public bool isSondeInNoResponse(int idLieu, string sondeNumeroSerie)
+        {
+            lock (_lock)
+            {
+                try
+                {
+                    if (!EnsureConnected())
+                    {
+                        return true;
+                    }
+
+                    using (var cmd = connection_vigitemp.CreateCommand())
+                    {
+                        cmd.CommandText =
+                            "SELECT 1 FROM t_lieu " +
+                            "WHERE Id_Lieu = @idLieu " +
+                            "AND Sonde_Numero_Serie = @serial " +
+                            "AND (" +
+                            "  IFNULL(Derniere_Valeur_Null, 0) = 1 " +
+                            "  OR EXISTS (" +
+                            "    SELECT 1 FROM t_alarme " +
+                            "    WHERE t_alarme.Id_Lieu = t_lieu.Id_Lieu " +
+                            "    AND t_alarme.Type IN ('N', 'M') " +
+                            "    AND t_alarme.Date_Heure_Fin IS NULL" +
+                            "  )" +
+                            ") LIMIT 1;";
+                        cmd.Parameters.AddWithValue("@idLieu", idLieu);
+                        cmd.Parameters.AddWithValue("@serial", sondeNumeroSerie ?? string.Empty);
+                        var scalar = cmd.ExecuteScalar();
+                        return scalar != null && scalar != DBNull.Value;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    VigitempServeur.Log(
+                        $"[SONDE][STATE-CHECK] status=error provider=mysql idLieu={idLieu} serial={sondeNumeroSerie} error={ex.Message}");
+                    return true;
+                }
+            }
         }
 
         private List<SondeScheduleInfo> getSondesActivesInternal()
@@ -2168,7 +2252,7 @@ namespace Vigitemp_Serveur
         {
             var cmdEnabled = connection_vigitemp.CreateCommand();
             cmdEnabled.CommandText =
-                "SELECT Est_Acc_Auto_Alarme_NR FROM t_lieu WHERE Id_Lieu = @idLieu LIMIT 1;";
+                "SELECT Est_Acq_Auto_Alarme_NR FROM t_lieu WHERE Id_Lieu = @idLieu LIMIT 1;";
             cmdEnabled.Parameters.AddWithValue("@idLieu", idLieu);
             var enabled = cmdEnabled.ExecuteScalar();
             if (enabled == null || enabled == DBNull.Value || Convert.ToInt32(enabled) != 1)

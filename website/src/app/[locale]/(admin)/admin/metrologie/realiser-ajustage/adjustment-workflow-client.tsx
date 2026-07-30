@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import type { ColumnDef } from "@tanstack/react-table"
 import { AnimatePresence, LazyMotion, domAnimation, m } from "motion/react"
-import { ArrowRight, BadgeInfo, ChevronLeft, FlaskConical, GaugeCircle, Play, Square, Waves } from "lucide-react"
+import { ArrowRight, BadgeInfo, CheckCircle2, ChevronLeft, CircleX, FlaskConical, GaugeCircle, Play, Square, TimerReset, Waves } from "lucide-react"
 import { useLocale, useTranslations } from "next-intl"
 
 import { TanStackTable } from "@/components/data-table/tanstack-table"
@@ -27,15 +27,24 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Combobox } from "@/components/ui/combobox"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Progress } from "@/components/ui/progress"
 import { Select, SelectContent, SelectEmpty, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { useAdjustmentSensors } from "@/hooks/useAdjustmentSensors"
+import { useAdjustmentSensors, type AdjustmentSensorRow } from "@/hooks/useAdjustmentSensors"
 import { useIntercomparisonMedia } from "@/hooks/useIntercomparisonMedia"
 import { useModules } from "@/hooks/useModules"
 import { useStandards } from "@/hooks/useStandards"
 import { fetchJson, getJson, isUnauthorizedError } from "@/lib/http"
+import { formatDbDateTime } from "@/lib/date-display"
+import { formatMeasureValue } from "@/lib/measurements"
 import { MetrologySubpagesCards } from "../_components/metrology-subpages-cards"
 
 type Step = "selection" | "adjustment"
+
+function readGspFrameField(rawValue: string | null, field: string) {
+  if (!rawValue) return null
+  const match = new RegExp(`(?:^|\\r?\\n)\\s*${field}\\s*=\\s*([^\\r\\n]+)`, "i").exec(rawValue)
+  return match?.[1]?.trim() || null
+}
 
 type SessionApiPayload = {
   session: {
@@ -47,7 +56,9 @@ type SessionApiPayload = {
     mediumId: number | null
     plateauDurationMinutes: number
     plateauMaxGap: number
+    measurementIntervalSeconds: number
     standardSerial: string
+    standardIsExternal: boolean
     sensors: Array<{
       id: number
       serialNumber: string
@@ -56,6 +67,7 @@ type SessionApiPayload = {
       moduleId: number | null
       moduleName: string | null
       modulePort: string | null
+      isGso: boolean
     }>
     latestStandardReading: {
       value: number | null
@@ -76,9 +88,19 @@ type SessionApiPayload = {
     >
     currentPoint: {
       pointIndex: 1 | 2
-      targetValue: number
-      startedAt: string
+      startedAt: string | null
     } | null
+    plateauStatus: {
+      status: "idle" | "running" | "waiting" | "failed" | "ready" | "validated"
+      pointIndex: 1 | 2 | null
+      startedAt: string | null
+      endedAt: string | null
+      standardSampleCount: number
+      lastGap: number | null
+      maxGap: number
+      resetCount: number
+      lastResetAt: string | null
+    }
     validatedPoints: Partial<
       Record<
         1 | 2,
@@ -119,7 +141,11 @@ function formatDecimalDisplay(value: unknown, maxFractionDigits = 6) {
 }
 
 function normalizeUnit(value: string | null | undefined) {
-  return value?.trim().toLowerCase() || null
+  const normalized = value?.trim().toLowerCase().replace(/\s+/g, "") || null
+  if (!normalized) return null
+  if (["c", "°c", "degc", "celsius"].includes(normalized)) return "température: °C"
+  if (["%", "%rh", "rh", "%hr", "hr"].includes(normalized)) return "humidité: %"
+  return normalized
 }
 
 export function AdjustmentWorkflowClient() {
@@ -142,8 +168,11 @@ export function AdjustmentWorkflowClient() {
   const [selectedMediumId, setSelectedMediumId] = useState<string>("")
   const [stabilityPlateauDuration, setStabilityPlateauDuration] = useState("30")
   const [stabilityPlateauMaxGap, setStabilityPlateauMaxGap] = useState("0.2")
+  const [measurementIntervalSeconds, setMeasurementIntervalSeconds] = useState("15")
   const [pointOne, setPointOne] = useState("")
   const [pointTwo, setPointTwo] = useState("")
+  const [externalStandardMeasure, setExternalStandardMeasure] = useState("")
+  const [standardModeNotice, setStandardModeNotice] = useState<string | null>(null)
   const [currentDateTime, setCurrentDateTime] = useState(() => new Date())
   const [actionError, setActionError] = useState<string | null>(null)
   const [showStopConfirm, setShowStopConfirm] = useState(false)
@@ -161,16 +190,39 @@ export function AdjustmentWorkflowClient() {
   const session = sessionPayload?.session ?? null
   const shouldConfirmStop = sessionPayload?.shouldConfirmStop ?? false
   const isAdjustmentRunning = session?.status === "running"
+  const localeTag = locale === "fr" ? "fr-FR" : "en-US"
   const signalReadings = session?.latestSensorReadings ?? {}
   const validatedPoints = {
     pointOne: Boolean(session?.validatedPoints?.[1]),
     pointTwo: Boolean(session?.validatedPoints?.[2]),
   }
+  const pointOneReady =
+    session?.plateauStatus.status === "ready" &&
+    session.plateauStatus.pointIndex === 1 &&
+    session.currentPoint?.pointIndex === 1
+  const pointTwoReady =
+    session?.plateauStatus.status === "ready" &&
+    session.plateauStatus.pointIndex === 2 &&
+    session.currentPoint?.pointIndex === 2
   const latestStandardMeasure = session?.latestStandardReading
     ? session.latestStandardReading.value != null
       ? `${session.latestStandardReading.value}${session.latestStandardReading.unit ? ` ${session.latestStandardReading.unit}` : ""}`
       : session.latestStandardReading.error || t("adjustment.cards.standardMeasure.waiting")
     : ""
+  const plateauDurationMs = Math.max(1, session?.plateauDurationMinutes ?? 1) * 60_000
+  const plateauStartedAt = session?.plateauStatus.startedAt
+    ? new Date(session.plateauStatus.startedAt).getTime()
+    : null
+  const plateauElapsedMs =
+    plateauStartedAt == null ? 0 : Math.max(0, currentDateTime.getTime() - plateauStartedAt)
+  const plateauRemainingSeconds = Math.max(
+    0,
+    Math.ceil((plateauDurationMs - plateauElapsedMs) / 1000),
+  )
+  const plateauProgress = Math.min(100, (plateauElapsedMs / plateauDurationMs) * 100)
+  const plateauTimerLabel = `${String(Math.floor(plateauRemainingSeconds / 60)).padStart(2, "0")}:${String(
+    plateauRemainingSeconds % 60,
+  ).padStart(2, "0")}`
 
   const refreshSession = async () => {
     await queryClient.invalidateQueries({ queryKey: ["metrology-adjustment-session"] })
@@ -189,6 +241,13 @@ export function AdjustmentWorkflowClient() {
           mediumId: selectedMediumId ? Number(selectedMediumId) : null,
           plateauDurationMinutes: Number(stabilityPlateauDuration || 30),
           plateauMaxGap: Number(stabilityPlateauMaxGap || 0.2),
+          measurementIntervalSeconds: sensors.some(
+            (sensor) => selectedSensorIds.includes(sensor.id) && sensor.isGso,
+          )
+            ? 60
+            : measurementIntervalSeconds === "30"
+              ? 30
+              : 15,
         }),
       }),
     onSuccess: async () => {
@@ -236,6 +295,26 @@ export function AdjustmentWorkflowClient() {
     },
   })
 
+  const externalStandardReadingMutation = useMutation({
+    mutationFn: async (value: number) =>
+      fetchJson<{ session: SessionApiPayload["session"] }>(
+        "/api/metrologie/ajustage/session/standard-reading",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ value }),
+        },
+      ),
+    onSuccess: async () => {
+      setActionError(null)
+      setExternalStandardMeasure("")
+      await refreshSession()
+    },
+    onError: (error) => {
+      setActionError(error instanceof Error ? error.message : String(error))
+    },
+  })
+
   useEffect(() => {
     const interval = window.setInterval(() => setCurrentDateTime(new Date()), 1000)
     return () => window.clearInterval(interval)
@@ -263,19 +342,16 @@ export function AdjustmentWorkflowClient() {
   )
 
   useEffect(() => {
-    if (!selectedStandard) return
-    setIsExternalStandard(Boolean(selectedStandard.Est_Sonde_Externe))
-  }, [selectedStandard])
-
-  useEffect(() => {
-    if (!session) return
+    if (!session || session.status !== "running") return
     setSelectedSensorIds(session.sensors.map((sensor) => sensor.id))
     setOperator(session.operator)
     setDisplayDecimals(String(session.displayDecimals))
     setSelectedStandardId(String(session.standardId))
+    setIsExternalStandard(session.standardIsExternal)
     setSelectedMediumId(session.mediumId != null ? String(session.mediumId) : "")
     setStabilityPlateauDuration(String(session.plateauDurationMinutes))
     setStabilityPlateauMaxGap(String(session.plateauMaxGap))
+    setMeasurementIntervalSeconds(String(session.measurementIntervalSeconds))
     if (step === "selection") {
       setDirection(1)
       setStep("adjustment")
@@ -286,6 +362,10 @@ export function AdjustmentWorkflowClient() {
     () => sensors.filter((sensor) => selectedSensorIds.includes(sensor.id)),
     [selectedSensorIds, sensors],
   )
+  const hasSelectedGso = useMemo(
+    () => selectedSensors.some((sensor) => sensor.isGso),
+    [selectedSensors],
+  )
   const lockedUnit = useMemo(() => {
     const knownSelectedUnits = selectedSensors
       .map((sensor) => normalizeUnit(sensor.unit))
@@ -294,16 +374,18 @@ export function AdjustmentWorkflowClient() {
     return knownSelectedUnits[0] ?? null
   }, [selectedSensors])
 
-  useEffect(() => {
-    if (!lockedUnit) return
-    setSelectedSensorIds((current) =>
-      current.filter((sensorId) => {
-        const sensor = sensors.find((item) => item.id === sensorId)
-        return normalizeUnit(sensor?.unit) === lockedUnit
-      }),
-    )
-  }, [lockedUnit, sensors])
   const allSensorIds = useMemo(() => sensors.map((sensor) => sensor.id), [sensors])
+  const availableUnits = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          sensors
+            .map((sensor) => normalizeUnit(sensor.unit))
+            .filter((unit): unit is string => unit !== null),
+        ),
+      ),
+    [sensors],
+  )
   const selectableSensorIds = useMemo(
     () =>
       lockedUnit === null
@@ -313,11 +395,28 @@ export function AdjustmentWorkflowClient() {
             .map((sensor) => sensor.id),
     [allSensorIds, lockedUnit, sensors],
   )
+  const canSelectAll = lockedUnit !== null || availableUnits.length <= 1
   const allSelected =
     selectableSensorIds.length > 0 && selectableSensorIds.every((id) => selectedSensorIds.includes(id))
   const someSelected = selectableSensorIds.some((id) => selectedSensorIds.includes(id))
 
-  const selectedSensorsColumns = useMemo<ColumnDef<(typeof selectedSensors)[number]>[]>(
+  const adjustmentSensors = useMemo<AdjustmentSensorRow[]>(() => {
+    if (!isAdjustmentRunning || !session) return selectedSensors
+
+    const sensorsById = new Map(sensors.map((sensor) => [sensor.id, sensor]))
+    return session.sensors.map((sessionSensor) => {
+      const sensor = sensorsById.get(sessionSensor.id)
+      return (
+        sensor ?? {
+          ...sessionSensor,
+          unit: null,
+          currentCalibrationValue: 0,
+        }
+      )
+    })
+  }, [isAdjustmentRunning, selectedSensors, sensors, session])
+
+  const selectedSensorsColumns = useMemo<ColumnDef<AdjustmentSensorRow>[]>(
     () => [
       {
         accessorKey: "serialNumber",
@@ -339,7 +438,11 @@ export function AdjustmentWorkflowClient() {
           const reading = signalReadings[row.original.id]
           if (!reading) return t("adjustment.selectedSensors.pending")
           if (reading.value == null) return reading.error || t("adjustment.selectedSensors.pending")
-          return `${reading.value}${reading.unit ? ` ${reading.unit}` : ""}`
+          return `${formatMeasureValue(
+            reading.value,
+            session?.displayDecimals ?? null,
+            localeTag,
+          )}${reading.unit ? ` ${reading.unit}` : ""}`
         },
       },
       {
@@ -347,11 +450,56 @@ export function AdjustmentWorkflowClient() {
         header: t("adjustment.selectedSensors.columns.signalRead"),
         cell: ({ row }) => {
           const reading = signalReadings[row.original.id]
-          return reading?.rawValue ?? reading?.error ?? t("adjustment.selectedSensors.pending")
+          if (!reading) return t("adjustment.selectedSensors.pending")
+          if (reading.value == null) return reading.error || t("adjustment.selectedSensors.pending")
+
+          const sensorDateTime = formatDbDateTime(
+            readGspFrameField(reading.rawValue, "DateHeure") ?? reading.measuredAt,
+            {
+              locale: localeTag,
+              timeZone: "Europe/Paris",
+              withSeconds: true,
+            },
+          )
+          const measurement = formatMeasureValue(
+            reading.value,
+            session?.displayDecimals ?? null,
+            localeTag,
+          )
+
+          return (
+            <div className="grid gap-0.5">
+              <span>{sensorDateTime}</span>
+              <span className="font-medium">
+                {measurement}
+                {reading.unit ? ` ${reading.unit}` : ""}
+              </span>
+            </div>
+          )
         },
       },
     ],
-    [signalReadings, t],
+    [localeTag, session?.displayDecimals, signalReadings, t],
+  )
+
+  const selectionSummaryColumns = useMemo<ColumnDef<AdjustmentSensorRow>[]>(
+    () => [
+      {
+        accessorKey: "serialNumber",
+        header: t("selection.table.columns.serial"),
+      },
+      {
+        accessorKey: "locationName",
+        header: t("selection.table.columns.location"),
+        cell: ({ row }) => row.original.locationName ?? t("selection.table.unassigned"),
+      },
+      {
+        accessorKey: "unit",
+        header: t("selection.table.columns.unit"),
+        cell: ({ row }) => row.original.unit ?? t("selection.table.unitUnknown"),
+      },
+    ],
+    [t],
   )
 
   const sensorsColumns = useMemo<ColumnDef<(typeof sensors)[number]>[]>(
@@ -363,9 +511,13 @@ export function AdjustmentWorkflowClient() {
           <div className="flex justify-center">
             <Checkbox
               checked={allSelected ? true : someSelected ? "indeterminate" : false}
-              disabled={isAdjustmentRunning}
+              disabled={isAdjustmentRunning || !canSelectAll}
               onCheckedChange={(checked) => {
-                setSelectedSensorIds(checked === true ? selectableSensorIds : [])
+                setSelectedSensorIds((current) =>
+                  checked === true
+                    ? Array.from(new Set([...current, ...selectableSensorIds]))
+                    : current.filter((id) => !selectableSensorIds.includes(id)),
+                )
               }}
               aria-label={t("selection.table.selectAll")}
             />
@@ -407,12 +559,38 @@ export function AdjustmentWorkflowClient() {
         cell: ({ row }) => row.original.unit ?? t("selection.table.unitUnknown"),
       },
     ],
-    [allSelected, selectableSensorIds, selectedSensorIds, someSelected, t],
+    [
+      allSelected,
+      canSelectAll,
+      isAdjustmentRunning,
+      lockedUnit,
+      selectableSensorIds,
+      selectedSensorIds,
+      someSelected,
+      t,
+    ],
   )
 
-  const standardDisabled = isExternalStandard || isAdjustmentRunning
+  const standardDisabled = isAdjustmentRunning
+  const measurementIntervalValue =
+    hasSelectedGso ? 60 : measurementIntervalSeconds === "30" ? 30 : 15
+  const plateauDurationValue = Number(stabilityPlateauDuration)
+  const isMeasurementIntervalValid =
+    hasSelectedGso
+      ? measurementIntervalValue === 60
+      : measurementIntervalValue === 15 || measurementIntervalValue === 30
+  const expectedPlateauCycles =
+    isMeasurementIntervalValid && Number.isFinite(plateauDurationValue) && plateauDurationValue > 0
+      ? Math.ceil((plateauDurationValue * 60) / measurementIntervalValue)
+      : null
+  const hasPlateauIntervalMismatch =
+    expectedPlateauCycles != null && (expectedPlateauCycles > 120 || expectedPlateauCycles < 2)
   const canRunAdjustment =
-    !isAdjustmentRunning && selectedSensors.length > 0 && !isExternalStandard && !!selectedStandardId && !startMutation.isPending
+    !isAdjustmentRunning &&
+    selectedSensors.length > 0 &&
+    !!selectedStandardId &&
+    isMeasurementIntervalValid &&
+    !startMutation.isPending
 
   const formattedDateTime = new Intl.DateTimeFormat(locale === "fr" ? "fr-FR" : "en-US", {
     dateStyle: "short",
@@ -535,6 +713,29 @@ export function AdjustmentWorkflowClient() {
                       />
                     </CardContent>
                   </Card>
+
+                  {selectedSensors.length > 0 ? (
+                    <Card className="border-primary/20 bg-primary/[0.02]">
+                      <CardHeader>
+                        <CardTitle>{t("adjustment.selectionSummary.title")}</CardTitle>
+                        <CardDescription>
+                          {t("adjustment.selectionSummary.description")}
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <TanStackTable
+                          columns={selectionSummaryColumns}
+                          data={selectedSensors}
+                          emptyMessage={t("adjustment.selectedSensors.empty")}
+                          maxHeight="32vh"
+                          headerClassName="!bg-sidebar !text-sidebar-foreground"
+                          headerCellClassName="!bg-sidebar !text-sidebar-foreground !border-r !border-white/25 hover:!bg-sidebar-accent/80"
+                          tableClassName="border-separate border-spacing-0 [&_thead_th]:!border-r [&_thead_th]:!border-white/25 [&_thead_th:last-child]:!border-r-0"
+                          exportFileName={t("selection.table.exportFileName")}
+                        />
+                      </CardContent>
+                    </Card>
+                  ) : null}
                 </m.div>
               ) : (
                 <m.div
@@ -614,7 +815,26 @@ export function AdjustmentWorkflowClient() {
                             <Checkbox
                               id="adjustment-external-standard"
                               checked={isExternalStandard}
-                              onCheckedChange={(checked) => setIsExternalStandard(checked === true)}
+                              onCheckedChange={(checked) => {
+                                const external = checked === true
+                                setIsExternalStandard(external)
+                                const replacement = standards.find(
+                                  (item) => Boolean(item.Est_Sonde_Externe) === external,
+                                )
+                                if (
+                                  selectedStandard &&
+                                  Boolean(selectedStandard.Est_Sonde_Externe) !== external
+                                ) {
+                                  setSelectedStandardId(
+                                    replacement ? String(replacement.Id_Etalon) : "",
+                                  )
+                                }
+                                setStandardModeNotice(
+                                  external
+                                    ? t("adjustment.cards.standard.externalModeEnabled")
+                                    : t("adjustment.cards.standard.internalModeEnabled"),
+                                )
+                              }}
                               disabled={isAdjustmentRunning}
                             />
                             <Label htmlFor="adjustment-external-standard">
@@ -623,8 +843,14 @@ export function AdjustmentWorkflowClient() {
                           </div>
                           {isExternalStandard ? (
                             <p className="text-sm text-amber-700">
-                              {t("adjustment.cards.standard.externalProbeHint")}
+                              {t("adjustment.cards.standard.externalProbeEnabledHint")}
                             </p>
+                          ) : null}
+                          {standardModeNotice ? (
+                            <Alert className="border-sky-200 bg-sky-50 text-sky-900">
+                              <BadgeInfo className="h-4 w-4" />
+                              <AlertDescription>{standardModeNotice}</AlertDescription>
+                            </Alert>
                           ) : null}
                         </div>
 
@@ -633,7 +859,18 @@ export function AdjustmentWorkflowClient() {
                           <Combobox
                             triggerId="adjustment-standard-probe"
                             value={selectedStandardId}
-                            onValueChange={setSelectedStandardId}
+                            onValueChange={(value) => {
+                              const nextStandard =
+                                standards.find((item) => String(item.Id_Etalon) === value) ?? null
+                              const external = Boolean(nextStandard?.Est_Sonde_Externe)
+                              setSelectedStandardId(value)
+                              setIsExternalStandard(external)
+                              setStandardModeNotice(
+                                external
+                                  ? t("adjustment.cards.standard.externalAutoSelected")
+                                  : t("adjustment.cards.standard.internalAutoSelected"),
+                              )
+                            }}
                             disabled={standardDisabled || isStandardsLoading}
                             placeholder={t("adjustment.cards.standard.standardProbePlaceholder")}
                             searchPlaceholder={t("adjustment.cards.standard.standardProbeSearchPlaceholder")}
@@ -641,6 +878,9 @@ export function AdjustmentWorkflowClient() {
                             options={standards.map((item) => ({
                               value: String(item.Id_Etalon),
                               label: item.Etalon_Numero_Serie ?? `#${item.Id_Etalon}`,
+                              group: item.Est_Sonde_Externe
+                                ? t("adjustment.cards.standard.externalGroup")
+                                : t("adjustment.cards.standard.internalGroup"),
                               searchText: [
                                 item.Etalon_Numero_Serie,
                                 item.Organisme,
@@ -736,7 +976,7 @@ export function AdjustmentWorkflowClient() {
                         <Select
                           value={selectedMediumId}
                           onValueChange={setSelectedMediumId}
-                          disabled={isExternalStandard || isMediaLoading || isAdjustmentRunning}
+                          disabled={isMediaLoading || isAdjustmentRunning}
                         >
                           <SelectTrigger>
                             <SelectValue placeholder={t("adjustment.cards.medium.selectPlaceholder")} />
@@ -758,18 +998,17 @@ export function AdjustmentWorkflowClient() {
                       <div className="grid gap-4 md:grid-cols-4">
                         <div className="space-y-2">
                           <Label>{t("adjustment.cards.medium.model")}</Label>
-                          <Input value={selectedMedium?.Model ?? ""} readOnly disabled={isExternalStandard} />
+                          <Input value={selectedMedium?.Model ?? ""} readOnly />
                         </div>
                         <div className="space-y-2">
                           <Label>{t("adjustment.cards.medium.reference")}</Label>
-                          <Input value={selectedMedium?.Reference ?? ""} readOnly disabled={isExternalStandard} />
+                          <Input value={selectedMedium?.Reference ?? ""} readOnly />
                         </div>
                         <div className="space-y-2">
                           <Label>{t("adjustment.cards.medium.stability")}</Label>
                           <Input
                             value={formatDecimalDisplay(selectedMedium?.Stabilite)}
                             readOnly
-                            disabled={isExternalStandard}
                           />
                         </div>
                         <div className="space-y-2">
@@ -777,7 +1016,6 @@ export function AdjustmentWorkflowClient() {
                           <Input
                             value={formatDecimalDisplay(selectedMedium?.Homogeneite)}
                             readOnly
-                            disabled={isExternalStandard}
                           />
                         </div>
                       </div>
@@ -834,11 +1072,13 @@ export function AdjustmentWorkflowClient() {
                             <Label htmlFor="adjustment-point-one">{t("adjustment.cards.points.pointOne")}</Label>
                             <Input
                               id="adjustment-point-one"
-                              value={pointOne}
-                              onChange={(event) => {
-                                setPointOne(event.target.value)
-                              }}
-                              disabled={!isAdjustmentRunning || isExternalStandard || Boolean(session?.validatedPoints?.[1])}
+                              value={
+                                session?.validatedPoints?.[1]?.targetValue != null
+                                  ? formatDecimalDisplay(session.validatedPoints[1].targetValue)
+                                  : pointOne
+                              }
+                              readOnly
+                              disabled={!isAdjustmentRunning || Boolean(session?.validatedPoints?.[1])}
                             />
                           </div>
                           <Button
@@ -846,18 +1086,18 @@ export function AdjustmentWorkflowClient() {
                             variant="outline"
                             disabled={
                               !isAdjustmentRunning ||
-                              isExternalStandard ||
-                              pointOne.trim().length === 0 ||
                               Boolean(session?.validatedPoints?.[1]) ||
-                              Boolean(session?.currentPoint) ||
+                              !pointOneReady ||
+                              session?.latestStandardReading?.value == null ||
                               validatePointMutation.isPending
                             }
                             onClick={() => {
-                              const value = Number(pointOne.replace(",", "."))
-                              if (!Number.isFinite(value)) {
+                              const value = session?.latestStandardReading?.value
+                              if (value == null || !Number.isFinite(value)) {
                                 setActionError(t("adjustment.cards.points.invalidValue"))
                                 return
                               }
+                              setPointOne(formatDecimalDisplay(value))
                               validatePointMutation.mutate({ pointIndex: 1, targetValue: value })
                             }}
                           >
@@ -869,11 +1109,13 @@ export function AdjustmentWorkflowClient() {
                             <Label htmlFor="adjustment-point-two">{t("adjustment.cards.points.pointTwo")}</Label>
                             <Input
                               id="adjustment-point-two"
-                              value={pointTwo}
-                              onChange={(event) => {
-                                setPointTwo(event.target.value)
-                              }}
-                              disabled={!isAdjustmentRunning || isExternalStandard || !validatedPoints.pointOne || Boolean(session?.validatedPoints?.[2])}
+                              value={
+                                session?.validatedPoints?.[2]?.targetValue != null
+                                  ? formatDecimalDisplay(session.validatedPoints[2].targetValue)
+                                  : pointTwo
+                              }
+                              readOnly
+                              disabled={!isAdjustmentRunning || !validatedPoints.pointOne || Boolean(session?.validatedPoints?.[2])}
                             />
                           </div>
                           <Button
@@ -881,19 +1123,19 @@ export function AdjustmentWorkflowClient() {
                             variant="outline"
                             disabled={
                               !isAdjustmentRunning ||
-                              isExternalStandard ||
-                              pointTwo.trim().length === 0 ||
                               !validatedPoints.pointOne ||
                               Boolean(session?.validatedPoints?.[2]) ||
-                              Boolean(session?.currentPoint) ||
+                              !pointTwoReady ||
+                              session?.latestStandardReading?.value == null ||
                               validatePointMutation.isPending
                             }
                             onClick={() => {
-                              const value = Number(pointTwo.replace(",", "."))
-                              if (!Number.isFinite(value)) {
+                              const value = session?.latestStandardReading?.value
+                              if (value == null || !Number.isFinite(value)) {
                                 setActionError(t("adjustment.cards.points.invalidValue"))
                                 return
                               }
+                              setPointTwo(formatDecimalDisplay(value))
                               validatePointMutation.mutate({ pointIndex: 2, targetValue: value })
                             }}
                           >
@@ -913,7 +1155,7 @@ export function AdjustmentWorkflowClient() {
                         <CardTitle>{t("adjustment.cards.standardMeasure.title")}</CardTitle>
                         <CardDescription>{t("adjustment.cards.standardMeasure.description")}</CardDescription>
                       </CardHeader>
-                      <CardContent>
+                      <CardContent className="space-y-3">
                         <div className="rounded-xl border border-dashed border-border bg-muted/20 px-4 py-6 text-center">
                           <p className="text-xs uppercase tracking-wide text-muted-foreground">
                             {t("adjustment.cards.standardMeasure.lastMeasure")}
@@ -922,6 +1164,48 @@ export function AdjustmentWorkflowClient() {
                             {latestStandardMeasure || t("adjustment.cards.standardMeasure.empty")}
                           </p>
                         </div>
+                        {session?.standardIsExternal && isAdjustmentRunning ? (
+                          <form
+                            className="space-y-2"
+                            onSubmit={(event) => {
+                              event.preventDefault()
+                              const value = Number(externalStandardMeasure.replace(",", "."))
+                              if (!Number.isFinite(value)) {
+                                setActionError(t("adjustment.cards.standardMeasure.invalidExternalValue"))
+                                return
+                              }
+                              externalStandardReadingMutation.mutate(value)
+                            }}
+                          >
+                            <Label htmlFor="external-standard-measure">
+                              {t("adjustment.cards.standardMeasure.externalValue")}
+                            </Label>
+                            <div className="flex gap-2">
+                              <Input
+                                id="external-standard-measure"
+                                inputMode="decimal"
+                                value={externalStandardMeasure}
+                                onChange={(event) => setExternalStandardMeasure(event.target.value)}
+                                placeholder={t(
+                                  "adjustment.cards.standardMeasure.externalValuePlaceholder",
+                                )}
+                              />
+                              <Button
+                                type="submit"
+                                disabled={
+                                  externalStandardMeasure.trim().length === 0 ||
+                                  externalStandardReadingMutation.isPending ||
+                                  session.plateauStatus.status === "ready"
+                                }
+                              >
+                                {t("adjustment.cards.standardMeasure.record")}
+                              </Button>
+                            </div>
+                            <p className="text-xs text-muted-foreground">
+                              {t("adjustment.cards.standardMeasure.externalValueHelp")}
+                            </p>
+                          </form>
+                        ) : null}
                       </CardContent>
                     </Card>
 
@@ -959,6 +1243,126 @@ export function AdjustmentWorkflowClient() {
                             disabled={isExternalStandard || isAdjustmentRunning}
                           />
                         </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="adjustment-measurement-interval">
+                            {t.rich("adjustment.cards.plateau.measurementIntervalSeconds", {
+                              strong: (chunks) => <strong>{chunks}</strong>,
+                            })}
+                          </Label>
+                          <Select
+                            value={hasSelectedGso ? "60" : measurementIntervalSeconds === "30" ? "30" : "15"}
+                            onValueChange={setMeasurementIntervalSeconds}
+                            disabled={isExternalStandard || isAdjustmentRunning || hasSelectedGso}
+                          >
+                            <SelectTrigger id="adjustment-measurement-interval">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {hasSelectedGso ? (
+                                <SelectItem value="60">60 s</SelectItem>
+                              ) : (
+                                <>
+                                  <SelectItem value="15">15 s</SelectItem>
+                                  <SelectItem value="30">30 s</SelectItem>
+                                </>
+                              )}
+                            </SelectContent>
+                          </Select>
+                          <p className="text-xs text-muted-foreground">
+                            {hasSelectedGso
+                              ? t("adjustment.cards.plateau.gsoFixedInterval")
+                              : t("adjustment.cards.plateau.measurementIntervalHelp")}
+                          </p>
+                        </div>
+                        {!isMeasurementIntervalValid ? (
+                          <Alert variant="destructive">
+                            <AlertTitle>{t("adjustment.cards.plateau.invalidIntervalTitle")}</AlertTitle>
+                            <AlertDescription>
+                              {t("adjustment.cards.plateau.invalidIntervalDescription")}
+                            </AlertDescription>
+                          </Alert>
+                        ) : null}
+                        {hasPlateauIntervalMismatch ? (
+                          <Alert className="border-amber-300 bg-amber-50 text-amber-950">
+                            <BadgeInfo className="h-4 w-4" />
+                            <AlertTitle>{t("adjustment.cards.plateau.mismatchTitle")}</AlertTitle>
+                            <AlertDescription>
+                              {t("adjustment.cards.plateau.mismatchDescription", {
+                                count: expectedPlateauCycles ?? 0,
+                              })}
+                            </AlertDescription>
+                          </Alert>
+                        ) : null}
+                        {session?.plateauStatus.status === "running" ? (
+                          <div className="grid gap-3 rounded-xl border border-sky-300 bg-sky-50 p-4 text-sky-950">
+                            <div className="flex items-center justify-between gap-3">
+                              <div className="flex items-center gap-2 font-medium">
+                                <TimerReset className="size-4 animate-pulse" />
+                                {t("adjustment.cards.points.collecting", {
+                                  point: session.plateauStatus.pointIndex ?? 1,
+                                })}
+                              </div>
+                              <span className="font-mono text-lg font-semibold">{plateauTimerLabel}</span>
+                            </div>
+                            <Progress
+                              value={plateauProgress}
+                              className="h-2 bg-sky-100"
+                              indicatorClassName="bg-sky-500"
+                            />
+                            <div className="flex justify-between text-xs text-sky-800">
+                              <span>{session.plateauStatus.standardSampleCount} mesure(s)</span>
+                              <span>
+                                {session.plateauStatus.lastGap == null
+                                  ? `- / ${formatDecimalDisplay(session.plateauStatus.maxGap)}`
+                                  : `${formatDecimalDisplay(session.plateauStatus.lastGap)} / ${formatDecimalDisplay(session.plateauStatus.maxGap)}`}
+                              </span>
+                            </div>
+                            {session.plateauStatus.lastResetAt ? (
+                              <p className="text-xs font-medium text-amber-800">
+                                {session.message}
+                              </p>
+                            ) : null}
+                          </div>
+                        ) : null}
+                        {session?.plateauStatus.status === "waiting" ? (
+                          <div className="grid gap-2 rounded-xl border border-amber-300 bg-amber-50 p-4 text-amber-950">
+                            <div className="flex items-center gap-2 font-medium">
+                              <TimerReset className="size-4" />
+                              {session.message}
+                            </div>
+                            {session.plateauStatus.startedAt ? (
+                              <Progress
+                                value={100}
+                                className="h-2 bg-amber-100"
+                                indicatorClassName="bg-amber-500"
+                              />
+                            ) : null}
+                          </div>
+                        ) : null}
+                        {session?.plateauStatus.status === "failed" ? (
+                          <div className="grid gap-2 rounded-xl border border-red-300 bg-red-50 p-4 text-red-950">
+                            <div className="flex items-center gap-2 font-semibold">
+                              <CircleX className="size-5" />
+                              {session.message}
+                            </div>
+                            <div className="font-mono text-sm">
+                              {formatDecimalDisplay(session.plateauStatus.lastGap)} &gt;{" "}
+                              {formatDecimalDisplay(session.plateauStatus.maxGap)}
+                            </div>
+                          </div>
+                        ) : null}
+                        {session?.plateauStatus.status === "validated" ? (
+                          <div className="flex items-center gap-2 rounded-xl border border-emerald-300 bg-emerald-50 p-4 font-medium text-emerald-950">
+                            <CheckCircle2 className="size-5" />
+                            {session.message}
+                          </div>
+                        ) : null}
+                        {session?.plateauStatus.status === "ready" ? (
+                          <div className="flex items-center gap-2 rounded-xl border border-emerald-300 bg-emerald-50 p-4 font-medium text-emerald-950">
+                            <CheckCircle2 className="size-5" />
+                            {session.message}
+                          </div>
+                        ) : null}
                       </CardContent>
                     </Card>
                   </div>
@@ -971,7 +1375,7 @@ export function AdjustmentWorkflowClient() {
                     <CardContent>
                       <TanStackTable
                         columns={selectedSensorsColumns}
-                        data={selectedSensors}
+                        data={adjustmentSensors}
                         isLoading={isSensorsLoading}
                         emptyMessage={t("adjustment.selectedSensors.empty")}
                         maxHeight="40vh"

@@ -22,7 +22,7 @@ import { LazyMotion, domAnimation, m } from "motion/react";
 import { fadeInUp } from "@/lib/motion-variants";
 
 import { SensorModal } from "./sensor-modal";
-import { AdjustmentsPanel, type AdjustmentRow } from "./_components/adjustments-panel";
+import type { AdjustmentRow } from "./_components/adjustments-panel";
 import { CalibrationsPanel, type CalibrationRow } from "./_components/calibrations-panel";
 import { SensorsTable, toSensorRows } from "./_components/sensors-table";
 
@@ -207,13 +207,7 @@ export function SensorsClient() {
         </CardContent>
       </Card>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-12">
-        <AdjustmentsPanel
-          adjustments={adjustmentsTableData}
-          isLoading={adjustmentsLoading}
-          selectedAdjustmentId={selectedAdjustmentId}
-          onSelectAdjustment={setSelectedAdjustmentId}
-        />
+      <div className="mb-12">
         <CalibrationsPanel
           calibrations={calibrationsTableData}
           isLoading={calibrationsLoading}
@@ -233,6 +227,10 @@ export function SensorsClient() {
         sensor={selectedSensor || null}
         isEditing={isEditing}
         isPack={isPack}
+        adjustments={adjustmentsTableData}
+        adjustmentsLoading={adjustmentsLoading}
+        selectedAdjustmentId={selectedAdjustmentId}
+        onSelectAdjustment={setSelectedAdjustmentId}
       />
       </m.div>
     </LazyMotion>
