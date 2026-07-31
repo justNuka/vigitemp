@@ -29,7 +29,7 @@ export const GET = withAuthLogging(
       const pageParam = parseInt(searchParams.get("page") || "1")
       const pageSizeParam = parseInt(searchParams.get("pageSize") || "200")
       const page = Number.isFinite(pageParam) && pageParam > 0 ? pageParam : 1
-      const pageSize = Number.isFinite(pageSizeParam) && pageSizeParam > 0 ? Math.min(pageSizeParam, 200) : 200
+      const pageSize = Number.isFinite(pageSizeParam) && pageSizeParam > 0 ? Math.min(pageSizeParam, 1000) : 200
       const startDate = searchParams.get("startDate")
       const endDate = searchParams.get("endDate")
       const sortByParam = searchParams.get("sortBy")
@@ -40,7 +40,11 @@ export const GET = withAuthLogging(
       const maxRowNumber = source === "mesures" ? 2000 : 500
       const rowNumber = Math.min(rowNumberParam, maxRowNumber)
       const usePagination = source === "mesures" && (searchParams.has("page") || searchParams.has("pageSize"))
-      const includeNullNonResponse = await getGlobalNonResponseDefault()
+      const includeNullNonResponseParam = searchParams.get("includeNullNonResponse")
+      const includeNullNonResponse =
+        includeNullNonResponseParam === null
+          ? await getGlobalNonResponseDefault()
+          : includeNullNonResponseParam === "1" || includeNullNonResponseParam === "true"
       const sortBy = sortByParam === "value" ? "value" : sortByParam === "date" ? "date" : null
       const sortDirection: "asc" | "desc" = sortDirectionParam === "asc" ? "asc" : "desc"
 

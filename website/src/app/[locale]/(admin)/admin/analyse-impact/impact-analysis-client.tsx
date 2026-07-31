@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback, useRef, useMemo } from "react"
-import { TrendingUp, Save, Download } from "lucide-react"
+import { TrendingUp, Save, Download, Printer } from "lucide-react"
 import { useTranslations, useLocale } from "next-intl"
 import type { Chart as ChartJS } from "chart.js"
 import { fetchJson } from "@/lib/http"
@@ -202,6 +202,10 @@ export function ImpactAnalysisClient() {
     link.click()
   }, [lieu])
 
+  const handlePrint = useCallback(() => {
+    window.print()
+  }, [])
+
   const handleExportPdf = useCallback(async () => {
     if (!lieu) return
 
@@ -297,6 +301,15 @@ export function ImpactAnalysisClient() {
 
           {/* Actions bar */}
           <div className="flex items-center justify-end gap-2 mx-6 mt-2 mb-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handlePrint}
+              className="flex items-center gap-1.5"
+            >
+              <Printer className="h-4 w-4" />
+              {t("print")}
+            </Button>
             <Button
               variant="outline"
               size="sm"

@@ -1585,6 +1585,7 @@
       "noSimAlarms": "No simulated alarms with these tolerances.",
       "noRealAlarms": "No real alarms during this period."
     },
+    "print": "Print",
     "export": {
       "button": "Export",
       "csv": "Export CSV (alarms)",

@@ -171,7 +171,6 @@ export function AdjustmentWorkflowClient() {
   const [measurementIntervalSeconds, setMeasurementIntervalSeconds] = useState("15")
   const [pointOne, setPointOne] = useState("")
   const [pointTwo, setPointTwo] = useState("")
-  const [externalStandardMeasure, setExternalStandardMeasure] = useState("")
   const [standardModeNotice, setStandardModeNotice] = useState<string | null>(null)
   const [currentDateTime, setCurrentDateTime] = useState(() => new Date())
   const [actionError, setActionError] = useState<string | null>(null)
@@ -196,14 +195,32 @@ export function AdjustmentWorkflowClient() {
     pointOne: Boolean(session?.validatedPoints?.[1]),
     pointTwo: Boolean(session?.validatedPoints?.[2]),
   }
-  const pointOneReady =
-    session?.plateauStatus.status === "ready" &&
-    session.plateauStatus.pointIndex === 1 &&
-    session.currentPoint?.pointIndex === 1
-  const pointTwoReady =
-    session?.plateauStatus.status === "ready" &&
-    session.plateauStatus.pointIndex === 2 &&
-    session.currentPoint?.pointIndex === 2
+  const isExternalSession = Boolean(session?.standardIsExternal)
+  const usesExternalStandard = isAdjustmentRunning
+    ? isExternalSession
+    : isExternalStandard
+  const allSensorReadingsAvailable = Boolean(
+    session?.sensors.length &&
+      session.sensors.every((sensor) => Number.isFinite(session.latestSensorReadings[sensor.id]?.value)),
+  )
+  const pointOneManualValue = Number(pointOne.trim().replace(",", "."))
+  const pointTwoManualValue = Number(pointTwo.trim().replace(",", "."))
+  const pointOneReady = isExternalSession
+    ? session?.currentPoint?.pointIndex === 1 &&
+      pointOne.trim().length > 0 &&
+      Number.isFinite(pointOneManualValue) &&
+      allSensorReadingsAvailable
+    : session?.plateauStatus.status === "ready" &&
+      session.plateauStatus.pointIndex === 1 &&
+      session.currentPoint?.pointIndex === 1
+  const pointTwoReady = isExternalSession
+    ? session?.currentPoint?.pointIndex === 2 &&
+      pointTwo.trim().length > 0 &&
+      Number.isFinite(pointTwoManualValue) &&
+      allSensorReadingsAvailable
+    : session?.plateauStatus.status === "ready" &&
+      session.plateauStatus.pointIndex === 2 &&
+      session.currentPoint?.pointIndex === 2
   const latestStandardMeasure = session?.latestStandardReading
     ? session.latestStandardReading.value != null
       ? `${session.latestStandardReading.value}${session.latestStandardReading.unit ? ` ${session.latestStandardReading.unit}` : ""}`
@@ -252,6 +269,8 @@ export function AdjustmentWorkflowClient() {
       }),
     onSuccess: async () => {
       setActionError(null)
+      setPointOne("")
+      setPointTwo("")
       setDirection(1)
       setStep("adjustment")
       await refreshSession()
@@ -288,26 +307,6 @@ export function AdjustmentWorkflowClient() {
       }),
     onSuccess: async () => {
       setActionError(null)
-      await refreshSession()
-    },
-    onError: (error) => {
-      setActionError(error instanceof Error ? error.message : String(error))
-    },
-  })
-
-  const externalStandardReadingMutation = useMutation({
-    mutationFn: async (value: number) =>
-      fetchJson<{ session: SessionApiPayload["session"] }>(
-        "/api/metrologie/ajustage/session/standard-reading",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ value }),
-        },
-      ),
-    onSuccess: async () => {
-      setActionError(null)
-      setExternalStandardMeasure("")
       await refreshSession()
     },
     onError: (error) => {
@@ -1022,7 +1021,11 @@ export function AdjustmentWorkflowClient() {
                     </CardContent>
                   </Card>
 
-                  <div className="grid gap-4 xl:grid-cols-4">
+                  <div
+                    className={`grid gap-4 ${
+                      usesExternalStandard ? "xl:grid-cols-3" : "xl:grid-cols-4"
+                    }`}
+                  >
                     <Card>
                       <CardHeader>
                         <CardTitle>{t("adjustment.cards.run.title")}</CardTitle>
@@ -1077,7 +1080,8 @@ export function AdjustmentWorkflowClient() {
                                   ? formatDecimalDisplay(session.validatedPoints[1].targetValue)
                                   : pointOne
                               }
-                              readOnly
+                              readOnly={!isExternalSession}
+                              onChange={(event) => setPointOne(event.target.value)}
                               disabled={!isAdjustmentRunning || Boolean(session?.validatedPoints?.[1])}
                             />
                           </div>
@@ -1088,11 +1092,13 @@ export function AdjustmentWorkflowClient() {
                               !isAdjustmentRunning ||
                               Boolean(session?.validatedPoints?.[1]) ||
                               !pointOneReady ||
-                              session?.latestStandardReading?.value == null ||
+                              (!isExternalSession && session?.latestStandardReading?.value == null) ||
                               validatePointMutation.isPending
                             }
                             onClick={() => {
-                              const value = session?.latestStandardReading?.value
+                              const value = isExternalSession
+                                ? pointOneManualValue
+                                : session?.latestStandardReading?.value
                               if (value == null || !Number.isFinite(value)) {
                                 setActionError(t("adjustment.cards.points.invalidValue"))
                                 return
@@ -1114,7 +1120,8 @@ export function AdjustmentWorkflowClient() {
                                   ? formatDecimalDisplay(session.validatedPoints[2].targetValue)
                                   : pointTwo
                               }
-                              readOnly
+                              readOnly={!isExternalSession}
+                              onChange={(event) => setPointTwo(event.target.value)}
                               disabled={!isAdjustmentRunning || !validatedPoints.pointOne || Boolean(session?.validatedPoints?.[2])}
                             />
                           </div>
@@ -1126,11 +1133,13 @@ export function AdjustmentWorkflowClient() {
                               !validatedPoints.pointOne ||
                               Boolean(session?.validatedPoints?.[2]) ||
                               !pointTwoReady ||
-                              session?.latestStandardReading?.value == null ||
+                              (!isExternalSession && session?.latestStandardReading?.value == null) ||
                               validatePointMutation.isPending
                             }
                             onClick={() => {
-                              const value = session?.latestStandardReading?.value
+                              const value = isExternalSession
+                                ? pointTwoManualValue
+                                : session?.latestStandardReading?.value
                               if (value == null || !Number.isFinite(value)) {
                                 setActionError(t("adjustment.cards.points.invalidValue"))
                                 return
@@ -1150,7 +1159,14 @@ export function AdjustmentWorkflowClient() {
                       </CardContent>
                     </Card>
 
-                    <Card>
+                    <Card
+                      className={
+                        usesExternalStandard
+                          ? "border-dashed bg-muted/40 opacity-60"
+                          : undefined
+                      }
+                      aria-disabled={usesExternalStandard}
+                    >
                       <CardHeader>
                         <CardTitle>{t("adjustment.cards.standardMeasure.title")}</CardTitle>
                         <CardDescription>{t("adjustment.cards.standardMeasure.description")}</CardDescription>
@@ -1164,57 +1180,16 @@ export function AdjustmentWorkflowClient() {
                             {latestStandardMeasure || t("adjustment.cards.standardMeasure.empty")}
                           </p>
                         </div>
-                        {session?.standardIsExternal && isAdjustmentRunning ? (
-                          <form
-                            className="space-y-2"
-                            onSubmit={(event) => {
-                              event.preventDefault()
-                              const value = Number(externalStandardMeasure.replace(",", "."))
-                              if (!Number.isFinite(value)) {
-                                setActionError(t("adjustment.cards.standardMeasure.invalidExternalValue"))
-                                return
-                              }
-                              externalStandardReadingMutation.mutate(value)
-                            }}
-                          >
-                            <Label htmlFor="external-standard-measure">
-                              {t("adjustment.cards.standardMeasure.externalValue")}
-                            </Label>
-                            <div className="flex gap-2">
-                              <Input
-                                id="external-standard-measure"
-                                inputMode="decimal"
-                                value={externalStandardMeasure}
-                                onChange={(event) => setExternalStandardMeasure(event.target.value)}
-                                placeholder={t(
-                                  "adjustment.cards.standardMeasure.externalValuePlaceholder",
-                                )}
-                              />
-                              <Button
-                                type="submit"
-                                disabled={
-                                  externalStandardMeasure.trim().length === 0 ||
-                                  externalStandardReadingMutation.isPending ||
-                                  session.plateauStatus.status === "ready"
-                                }
-                              >
-                                {t("adjustment.cards.standardMeasure.record")}
-                              </Button>
-                            </div>
-                            <p className="text-xs text-muted-foreground">
-                              {t("adjustment.cards.standardMeasure.externalValueHelp")}
-                            </p>
-                          </form>
-                        ) : null}
                       </CardContent>
                     </Card>
 
-                    <Card>
-                      <CardHeader>
-                        <CardTitle>{t("adjustment.cards.plateau.title")}</CardTitle>
-                        <CardDescription>{t("adjustment.cards.plateau.description")}</CardDescription>
-                      </CardHeader>
-                      <CardContent className="grid gap-4">
+                    {!usesExternalStandard ? (
+                      <Card>
+                        <CardHeader>
+                          <CardTitle>{t("adjustment.cards.plateau.title")}</CardTitle>
+                          <CardDescription>{t("adjustment.cards.plateau.description")}</CardDescription>
+                        </CardHeader>
+                        <CardContent className="grid gap-4">
                         <div className="space-y-2">
                           <Label htmlFor="adjustment-plateau-duration">
                             {t("adjustment.cards.plateau.durationMinutes")}
@@ -1363,8 +1338,9 @@ export function AdjustmentWorkflowClient() {
                             {session.message}
                           </div>
                         ) : null}
-                      </CardContent>
-                    </Card>
+                        </CardContent>
+                      </Card>
+                    ) : null}
                   </div>
 
                   <Card>

@@ -93,7 +93,7 @@ export const GET = withStandardOrExpertAnyAuthorizationLogging(
       return new NextResponse(xmlBuffer, {
         status: 200,
         headers: {
-          "Content-Type": "application/xml; charset=ISO-8859-1",
+          "Content-Type": "application/xml; charset=UTF-8",
           "Content-Disposition": `attachment; filename="${fileName}"`,
           "Cache-Control": "no-store",
         },

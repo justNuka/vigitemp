@@ -1293,6 +1293,7 @@ export async function startAdjustmentSession(user: JWTPayload, input: StartAdjus
   })
 
   const startedAt = nowIso()
+  const standardIsExternal = Boolean(standard.Est_Sonde_Externe)
   const session: AdjustmentSession = {
     id: randomUUID(),
     userId: user.userId,
@@ -1317,7 +1318,7 @@ export async function startAdjustmentSession(user: JWTPayload, input: StartAdjus
     standardDecimals: standard.Nb_Decimale ?? null,
     standardUncertainty:
       standard.Incertitude_Max == null ? null : Number(String(standard.Incertitude_Max).replace(",", ".")),
-    standardIsExternal: Boolean(standard.Est_Sonde_Externe),
+    standardIsExternal,
     mediumId: input.mediumId,
     plateauDurationMinutes: Math.max(1, input.plateauDurationMinutes),
     plateauMaxGap: Math.max(0, input.plateauMaxGap),
@@ -1332,9 +1333,16 @@ export async function startAdjustmentSession(user: JWTPayload, input: StartAdjus
     latestStandardReading: null,
     latestSensorReadings: {},
     currentPoint: createRunningPoint(1),
-    plateauStatus: createWaitingPlateauStatus(1, Math.max(0, input.plateauMaxGap)),
+    plateauStatus: standardIsExternal
+      ? {
+          ...createWaitingPlateauStatus(1, Math.max(0, input.plateauMaxGap)),
+          status: "idle",
+        }
+      : createWaitingPlateauStatus(1, Math.max(0, input.plateauMaxGap)),
     validatedPoints: {},
-    message: "Sequence d'ajustage demarree. Attente de la premiere mesure etalon du point 1.",
+    message: standardIsExternal
+      ? "Séquence d'ajustage demarrée. Saisissez le premier point lorsque les mesures des sondes sont disponibles."
+      : "Séquence d'ajustage demarrée. Attente de la première mesure étalon du point 1.",
     lastError: null,
     lastUpdatedAt: nowIso(),
     persistedAdjustments: [],
@@ -1467,7 +1475,7 @@ export async function extendAdjustmentSession(userId: number, ip?: string) {
 export async function validateAdjustmentPoint(
   userId: number,
   pointIndex: PointIndex,
-  _targetValue: number,
+  targetValue: number,
 ) {
   const session = sessionsByUserId.get(userId)
   if (!session) throw new Error("Aucune session d'ajustage en cours.")
@@ -1480,14 +1488,19 @@ export async function validateAdjustmentPoint(
   }
   const currentPoint = session.currentPoint
   if (!currentPoint || currentPoint.pointIndex !== pointIndex) {
-    throw new Error(`Le plateau du point ${pointIndex} n'est pas en cours.`)
+    throw new Error(`Le point ${pointIndex} n'est pas en cours.`)
   }
-  if (session.plateauStatus.status !== "ready" || currentPoint.startedAt == null) {
+  if (
+    !session.standardIsExternal &&
+    (session.plateauStatus.status !== "ready" || currentPoint.startedAt == null)
+  ) {
     throw new Error(`Le plateau du point ${pointIndex} n'est pas encore stable.`)
   }
 
   const currentStandardValue = roundValue(
-    session.latestStandardReading?.value ?? currentPoint.lastStandardValue,
+    session.standardIsExternal
+      ? targetValue
+      : session.latestStandardReading?.value ?? currentPoint.lastStandardValue,
     session.displayDecimals,
   )
   if (currentStandardValue == null) {
@@ -1496,10 +1509,12 @@ export async function validateAdjustmentPoint(
 
   const sensorAverages: Record<number, number | null> = {}
   for (const sensor of session.sensors) {
-    const sensorAverage = averageValues(
-      (currentPoint.sensorSamples[sensor.id] ?? []).map((sample) => sample.value),
-      session.displayDecimals,
-    )
+    const sensorAverage = session.standardIsExternal
+      ? roundValue(session.latestSensorReadings[sensor.id]?.value, session.displayDecimals)
+      : averageValues(
+          (currentPoint.sensorSamples[sensor.id] ?? []).map((sample) => sample.value),
+          session.displayDecimals,
+        )
     if (sensorAverage == null) {
       throw new Error(`Aucune mesure exploitable pour la sonde ${sensor.serialNumber}.`)
     }
@@ -1509,7 +1524,7 @@ export async function validateAdjustmentPoint(
   session.validatedPoints[pointIndex] = {
     pointIndex,
     targetValue: currentStandardValue,
-    startedAt: new Date(currentPoint.startedAt).toISOString(),
+    startedAt: new Date(currentPoint.startedAt ?? Date.now()).toISOString(),
     completedAt: nowIso(),
     standardAverage: currentStandardValue,
     sensorAverages,
@@ -1526,15 +1541,23 @@ export async function validateAdjustmentPoint(
 
   if (pointIndex === 1) {
     session.currentPoint = createRunningPoint(2)
-    session.plateauStatus = createWaitingPlateauStatus(
-      2,
-      session.plateauMaxGap,
-      session.plateauStatus.resetCount,
-    )
-    session.message = "Point 1 valide. Attente de la premiere mesure du point 2."
-    void scheduleLoop(session)
+    if (session.standardIsExternal) {
+      session.plateauStatus = {
+        ...createWaitingPlateauStatus(2, session.plateauMaxGap),
+        status: "idle",
+      }
+      session.message = "Point 1 validé. Le point 2 peut être saisi quand l'opérateur le souhaite."
+    } else {
+      session.plateauStatus = createWaitingPlateauStatus(
+        2,
+        session.plateauMaxGap,
+        session.plateauStatus.resetCount,
+      )
+      session.message = "Point 1 validé. Attente de la première mesure du point 2."
+      void scheduleLoop(session)
+    }
   } else {
-    await finalizeSession(session, "completed", "Les deux points d'ajustage sont valides.")
+    await finalizeSession(session, "completed", "Les deux points d'ajustage sont validés.")
   }
 
   return toPublicSession(session)
@@ -1563,7 +1586,6 @@ export async function submitExternalStandardReading(userId: number, value: numbe
     measuredAt: nowIso(),
   }
   session.latestStandardReading = reading
-  applyStandardReadingToPlateau(session, reading)
   await persistStandardReading(session.standardSerial, reading).catch((error) => {
     log.warn("METROLOGY_ADJUSTMENT", "external_standard_persist_failed", {
       sessionId: session.id,

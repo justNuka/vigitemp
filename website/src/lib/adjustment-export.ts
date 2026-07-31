@@ -79,13 +79,20 @@ function xmlTag(tag: string, value: string | null | undefined) {
   return `<${tag}>${escapeXml(value)}</${tag}>`
 }
 
+function normalizeUnit(value: string | null | undefined) {
+  const unit = value?.trim() ?? ""
+  return unit
+    .replace(/\uFFFD\s*C/gi, "°C")
+    .replace(/Â°\s*C/gi, "°C")
+}
+
 export function buildAdjustmentXml(input: AdjustmentExportInput) {
   const adjustedAt = toDate(input.adjustedAt) ?? new Date()
   const sensorSerial = (input.sensorSerial ?? "").trim()
   const sensorAddress = (input.sensorAddress ?? "").trim() || extractProbeAddressFromSerial(sensorSerial)
 
   const xml = [
-    '<?xml version="1.0" encoding="ISO-8859-1"?>',
+    '<?xml version="1.0" encoding="UTF-8"?>',
     "<CALIBRAGE>",
     xmlTag("VERSION", "10.0"),
     xmlTag("DATE_CALIBRAGE", formatXmlDate(adjustedAt)),
@@ -97,8 +104,8 @@ export function buildAdjustmentXml(input: AdjustmentExportInput) {
     xmlTag("ORGANISME", input.standardOrganization?.trim() || ""),
     xmlTag("DATE_CERTIFICAT", formatXmlDate(input.standardCertificateDate)),
     xmlTag("NUM_CERTIFICAT", input.standardCertificateNumber?.trim() || ""),
-    xmlTag("UNITE", input.standardUnit?.trim() || ""),
-    xmlTag("PORt_SERIE", input.standardPort?.trim() || "-1"),
+    xmlTag("UNITE", normalizeUnit(input.standardUnit)),
+    xmlTag("PORT_SERIE", (input.standardPort?.trim() || "-1").toUpperCase()),
     xmlTag("SONDE_EXTERNE", input.standardIsExternal ? "1" : "0"),
     xmlTag("INCERTITUDE", formatNumber(input.standardUncertainty)),
     xmlTag("RESOLUTION", formatNumber(input.standardResolution)),
@@ -121,7 +128,7 @@ export function buildAdjustmentXml(input: AdjustmentExportInput) {
     "</CALIBRAGE>",
   ].join("")
 
-  return Buffer.from(xml, "latin1")
+  return Buffer.from(xml, "utf8")
 }
 
 export function buildAdjustmentExportFileName(serial: string | null | undefined, adjustedAt: Date | string | null | undefined) {

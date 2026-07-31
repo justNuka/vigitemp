@@ -35,7 +35,6 @@ import { useLieuMeasurementsPaged } from "@/hooks/useLieuMeasurementsPaged";
 import { calculateYDomain, getMeasureSummary, sortMeasuresChronologically } from "@/lib/measurements";
 import { cn } from "@/lib/utils";
 import type { MeasureData } from "@/lib/measurements";
-import { parseDbDateTime } from "@/lib/date-display";
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, ChartTooltip, Legend, Filler);
 
@@ -241,29 +240,17 @@ export default function MonitoringDetailsModal({
         : []
     : rangeGraphData;
   const data = rangeEnabled ? rangeGraphData : baseData;
-  const fallbackHistoryRange = useMemo(() => {
-    if (rangeEnabled || !isSurveillanceActive || data.length === 0) return null;
-    const sorted = sortMeasuresChronologically(data);
-    const firstIso = sorted[0]?.DateHeureMesureIso;
-    const lastIso = sorted[sorted.length - 1]?.DateHeureMesureIso;
-    if (!firstIso || !lastIso) return null;
-    const start = parseDbDateTime(firstIso);
-    const end = parseDbDateTime(lastIso);
-    if (!start || !end) return null;
-    return {
-      start,
-      end,
-    };
-  }, [data, isSurveillanceActive, rangeEnabled]);
-  const historyRangeStart = rangeEnabled ? explicitRangeStart : fallbackHistoryRange?.start ?? null;
-  const historyRangeEnd = rangeEnabled ? explicitRangeEnd : fallbackHistoryRange?.end ?? null;
+  // The chart intentionally defaults to the latest measurements. The table must
+  // remain independently paginated over the complete history.
+  const historyRangeStart = rangeEnabled ? explicitRangeStart : null;
+  const historyRangeEnd = rangeEnabled ? explicitRangeEnd : null;
 
   const measurementSortBy = tableSorting[0]?.id === "value" ? "value" : tableSorting[0]?.id === "date" ? "date" : null;
   const measurementSortDirection =
     tableSorting[0]?.desc === true ? "desc" : tableSorting[0] ? "asc" : null;
 
   const { data: historyData, isLoading: isHistoryLoading, totalRows, pageCount } = useLieuMeasurementsPaged(idLieu, {
-    enabled: isOpen && !baseLoading && (isSurveillanceActive || rangeEnabled),
+    enabled: isOpen && !baseLoading,
     pageIndex: pagination.pageIndex,
     pageSize: pagination.pageSize,
     startDate: historyRangeStart,

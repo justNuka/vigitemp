@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
 import { Chart as ChartJS, CategoryScale, Filler, Legend, LineElement, LinearScale, PointElement, Title, Tooltip } from 'chart.js'
-import { BatteryWarning, Power, PowerOff, Settings } from 'lucide-react'
+import { BatteryWarning, History, Power, PowerOff, Settings } from 'lucide-react'
 import { m } from 'motion/react'
 import { useQueryClient } from '@tanstack/react-query'
 
@@ -674,6 +674,26 @@ export default function MonitoringCard({
           <div className={`mt-4 border-t border-border pt-3 ${isSurveillanceActive ? '' : 'border-white/20'}`}>
             <TooltipProvider>
               <div className="flex justify-center gap-4">
+                {!isSurveillanceActive && !isAdjustmentInProgress ? (
+                  <UITooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        type="button"
+                        onClick={(event) => {
+                          event.stopPropagation()
+                          setIsModalOpen(true)
+                        }}
+                        className={`p-1 rounded-md transition-colors ${actionButtonClassName}`}
+                      >
+                        <History className={`w-4 h-4 ${actionIconClassName}`} />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p className="text-xs">{t('actions.details')}</p>
+                    </TooltipContent>
+                  </UITooltip>
+                ) : null}
+
                 <UITooltip>
                   <TooltipTrigger asChild>
                     <span>

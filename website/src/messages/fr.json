@@ -1929,6 +1929,7 @@
       "noSimAlarms": "Aucune alarme simulée avec ces tolérances.",
       "noRealAlarms": "Aucune alarme réelle sur cette période."
     },
+    "print": "Imprimer",
     "export": {
       "button": "Exporter",
       "csv": "Exporter CSV (alarmes)",
