@@ -9,16 +9,22 @@ export interface IntercomparisonMedium {
   Stabilite: number | null
   Homogeneite: number | null
   Contenu: string | null
+  Est_Archive: boolean | number | null
 }
 
-async function fetchIntercomparisonMedia(): Promise<IntercomparisonMedium[]> {
-  return getJson<IntercomparisonMedium[]>("/api/metrologie/milieux")
+export type IntercomparisonMediumArchiveStatus = "active" | "archived" | "all"
+
+async function fetchIntercomparisonMedia(status: IntercomparisonMediumArchiveStatus): Promise<IntercomparisonMedium[]> {
+  return getJson<IntercomparisonMedium[]>(`/api/metrologie/milieux?status=${status}`)
 }
 
-export function useIntercomparisonMedia(enabled: boolean = true) {
+export function useIntercomparisonMedia(
+  enabled: boolean = true,
+  status: IntercomparisonMediumArchiveStatus = "active",
+) {
   return useQuery({
-    queryKey: ["metrology-intercomparison-media"],
-    queryFn: fetchIntercomparisonMedia,
+    queryKey: ["metrology-intercomparison-media", status],
+    queryFn: () => fetchIntercomparisonMedia(status),
     enabled,
     staleTime: 60000,
   })

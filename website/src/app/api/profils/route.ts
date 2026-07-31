@@ -25,13 +25,20 @@ const createProfileSchema = z.object({
  * GET /api/profils
  * Récupère la liste de tous les profils avec leurs autorisations (GERER_PROFIL).
  */
-export const GET = withAuthorizationLogging("GERER_PROFIL", async (_req: NextRequest) => {
+export const GET = withAuthorizationLogging("GERER_PROFIL", async (req: NextRequest) => {
   try {
+    const status = new URL(req.url).searchParams.get("status")
+    const archiveWhere = status === "all"
+      ? {}
+      : { Est_Archive: status === "archived" }
+
     const profiles = await prisma.t_profil.findMany({
+      where: archiveWhere,
       select: {
         Id_Profil: true,
         Profil_Utilisateur: true,
         Commentaire: true,
+        Est_Archive: true,
         t_liaison_profil_autorisation: {
           select: {
             t_autorisation: true,
@@ -51,7 +58,7 @@ export const GET = withAuthorizationLogging("GERER_PROFIL", async (_req: NextReq
           id: profile.Id_Profil,
           name: profile.Profil_Utilisateur,
           description: profile.Commentaire,
-          estArchive: false,
+          estArchive: Boolean(profile.Est_Archive),
           userCount,
           authorizations: profile.t_liaison_profil_autorisation.map((liaison) => ({
             id: liaison.t_autorisation.Id_Autorisation,

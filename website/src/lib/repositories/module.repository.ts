@@ -30,8 +30,13 @@ export const ModuleRepository = {
    * Returns all modules with sonde count and type label.
    * Uses batch queries to avoid N+1 (1 groupBy + 1 findMany instead of 2N queries).
    */
-  async findAllWithDetails(): Promise<ModuleWithDetails[]> {
+  async findAllWithDetails(status: "active" | "archived" | "all" = "active"): Promise<ModuleWithDetails[]> {
+    const where = status === "all"
+      ? undefined
+      : { Archive: status === "archived" ? 1 : { not: 1 } }
+
     const modulesRaw = await prisma.t_module.findMany({
+      where,
       select: {
         Id_Module: true,
         Module_Numero_Serie: true,

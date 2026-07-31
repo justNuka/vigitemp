@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { TanStackTable } from "@/components/data-table/tanstack-table"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { toast } from "sonner"
 import { useRouter } from '@/i18n/navigation'
 import { StandardModal } from "./standard-modal"
@@ -34,7 +35,7 @@ type StandardRow = {
 }
 
 export function StandardsClient() {
-  const { data: standards, isLoading } = useStandards()
+  const { data: standards, isLoading } = useStandards("all")
   const queryClient = useQueryClient()
   const router = useRouter()
   const t = useTranslations('standardsPage')
@@ -43,6 +44,11 @@ export function StandardsClient() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
   const [isArchiveDialogOpen, setIsArchiveDialogOpen] = useState(false)
+  const [statusTab, setStatusTab] = useState<"active" | "archived">("active")
+
+  const activeStandards = (standards || []).filter((item) => !item.Est_Archive)
+  const archivedStandards = (standards || []).filter((item) => Boolean(item.Est_Archive))
+  const displayedStandards = statusTab === "active" ? activeStandards : archivedStandards
 
   useEffect(() => {
     if (isLoading || didPrefetchRef.current) return
@@ -115,7 +121,7 @@ export function StandardsClient() {
     },
   ]
 
-  const tableData: StandardRow[] = (standards || []).map((e) => ({
+  const tableData: StandardRow[] = displayedStandards.map((e) => ({
     Id_Etalon: e.Id_Etalon,
     Etalon_Numero_Serie: e.Etalon_Numero_Serie,
     Etat_Etalon: e.Etat_Etalon,
@@ -134,7 +140,7 @@ export function StandardsClient() {
             <div>
               <CardTitle>{t('title')}</CardTitle>
               <p className="text-sm text-muted-foreground mt-1">
-                {t('count', { count: standards?.length || 0 })}
+                {t('count', { count: displayedStandards.length })}
               </p>
             </div>
             <div className="flex gap-2">
@@ -142,21 +148,37 @@ export function StandardsClient() {
                 <Plus className="h-4 w-4" />
                 {t('actions.add')}
               </Button>
-              <Button onClick={handleEditClick} disabled={!selectedStandard} variant="outline" size="sm" className="gap-2">
+              <Button onClick={handleEditClick} disabled={!selectedStandard || statusTab === "archived"} variant="outline" size="sm" className="gap-2">
                 <Pencil className="h-4 w-4" />
                 {t('actions.edit')}
               </Button>
-              <Button onClick={handleArchiveClick} disabled={!selectedStandard} variant="outline" size="sm" className="gap-2">
+              <Button onClick={handleArchiveClick} disabled={!selectedStandard || statusTab === "archived"} variant="outline" size="sm" className="gap-2">
                 <Archive className="h-4 w-4" />
                 {t('actions.archive')}
               </Button>
-              <Button onClick={handleTestClick} disabled={!selectedStandard} variant="outline" size="sm" className="gap-2">
+              <Button onClick={handleTestClick} disabled={!selectedStandard || statusTab === "archived"} variant="outline" size="sm" className="gap-2">
                 <TestTube2 className="h-4 w-4" />
                 {t('actions.test')}
               </Button>
             </div>
           </CardHeader>
           <CardContent className="p-2 md:p-4 xl:p-4">
+            <Tabs
+              value={statusTab}
+              onValueChange={(value) => {
+                setStatusTab(value as "active" | "archived")
+                setSelectedStandard(null)
+              }}
+              className="space-y-4"
+            >
+              <TabsList className="grid w-full max-w-md grid-cols-2 bg-primary/10 text-primary">
+                <TabsTrigger value="active" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+                  {t('tabs.active', { count: activeStandards.length })}
+                </TabsTrigger>
+                <TabsTrigger value="archived" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+                  {t('tabs.archived', { count: archivedStandards.length })}
+                </TabsTrigger>
+              </TabsList>
             <TanStackTable
               columns={columns}
               data={tableData}
@@ -169,8 +191,8 @@ export function StandardsClient() {
                 setSelectedStandard(standards?.find((e) => e.Id_Etalon === row.Id_Etalon) || null)
               }}
               onRowDoubleClick={(row: StandardRow) => {
-                const standard = standards?.find((e) => e.Id_Etalon === row.Id_Etalon) || null
-                if (!standard) return
+                const standard = displayedStandards.find((e) => e.Id_Etalon === row.Id_Etalon) || null
+                if (!standard || statusTab === "archived") return
                 setSelectedStandard(standard)
                 setIsEditing(true)
                 setIsModalOpen(true)
@@ -180,6 +202,7 @@ export function StandardsClient() {
               headerCellClassName="!bg-sidebar !text-sidebar-foreground !border-r !border-white/25 hover:!bg-sidebar-accent/80"
               tableClassName="border-separate border-spacing-0 [&_thead_th]:!border-r [&_thead_th]:!border-white/25 [&_thead_th:last-child]:!border-r-0"
             />
+            </Tabs>
           </CardContent>
         </Card>
 

@@ -103,8 +103,8 @@ function getSensorTestTimeoutMs(payload: z.infer<typeof bodySchema>) {
 
   let commandBudget = 1
   if (sensorType === "GSP") {
-    if (action === "read-config") commandBudget = 4
-    else if (action === "sync-config") commandBudget = 4
+    if (action === "read-config") commandBudget = 2
+    else if (action === "sync-config") commandBudget = payload.gsp?.channel?.trim() ? 3 : 2
     else if (action === "read-memory") commandBudget = 2
   }
 

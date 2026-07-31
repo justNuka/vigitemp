@@ -173,7 +173,7 @@ export default function MonitoringCard({
       id: `live-${idLieu}-${serializedDate}`,
       Valeur: currentValue,
       Nb_Decimal: template?.Nb_Decimal ?? null,
-      Unite: template?.Unite ?? "??C",
+      Unite: template?.Unite ?? "°C",
       DateHeureMesure: dateLabel,
       DateHeureMesureIso: serializedDate,
       DateHeureMesureXaxis: timeLabel,

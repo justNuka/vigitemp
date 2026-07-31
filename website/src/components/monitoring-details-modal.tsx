@@ -482,6 +482,19 @@ export default function MonitoringDetailsModal({
     setPagination((prev) => ({ ...prev, pageIndex: 0 }));
   }, []);
 
+  useEffect(() => {
+    if (!isOpen) return;
+    setPagination((current) =>
+      current.pageIndex === 0 ? current : { ...current, pageIndex: 0 },
+    );
+  }, [
+    explicitRangeEnd,
+    explicitRangeStart,
+    idLieu,
+    isOpen,
+    showNullNonResponse,
+  ]);
+
   return (
       <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className={cn(

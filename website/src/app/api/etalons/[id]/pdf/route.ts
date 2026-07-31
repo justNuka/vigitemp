@@ -54,6 +54,9 @@ export const GET = withStandardOrExpertAnyAuthorizationLogging(
           "Content-Type": "application/pdf",
           "Content-Disposition": `inline; filename="${pdf.Nom_PDF || `etalon-${etalonId}.pdf`}"`,
           "Cache-Control": "private, max-age=60",
+          "X-Frame-Options": "SAMEORIGIN",
+          "Content-Security-Policy": "frame-ancestors 'self'; default-src 'none'",
+          "X-Content-Type-Options": "nosniff",
         },
       })
     } catch (error) {

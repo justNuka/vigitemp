@@ -28,11 +28,13 @@ export interface ModuleWorkerSummary {
   manualWorkerIds: number[];
 }
 
-export function useModules(enabled: boolean = true) {
+export type ModuleArchiveStatus = "active" | "archived" | "all";
+
+export function useModules(enabled: boolean = true, status: ModuleArchiveStatus = "active") {
   return useQuery({
-    queryKey: ["modules"],
+    queryKey: ["modules", status],
     queryFn: async () => {
-      return getJson<Module[]>("/api/modules");
+      return getJson<Module[]>(`/api/modules?status=${status}`);
     },
     staleTime: 60000, // 1 minute
     enabled,

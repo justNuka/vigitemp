@@ -6,8 +6,8 @@ import { toast } from "sonner"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Combobox } from "@/components/ui/combobox"
 import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Separator } from "@/components/ui/separator"
 import { getJson, patchJson } from "@/lib/http"
 import { useStandards, type Standard } from "@/hooks/useStandards"
@@ -26,7 +26,7 @@ const ASSIGNED_STANDARD_KEY = "tools:assigned_standard_serial"
 
 export function StandardReaderTab() {
   const t = useTranslations("toolsPage.standard_reader")
-    const queryClient = useQueryClient()
+  const queryClient = useQueryClient()
   const { data: standards = [], isLoading } = useStandards()
   const { data: standardTypes = [] } = useStandardTypes(true)
   const [selectedSerial, setSelectedSerial] = useState("")
@@ -43,12 +43,14 @@ export function StandardReaderTab() {
     },
   })
 
-  const eligibleStandards = useMemo(() => {
-    return standards.filter((standard) => {
-      const hasCertificate = Boolean(standard.Date_Certif || standard.Num_Certif || standard.Organisme)
-      return hasCertificate && !standard.Est_Archive
-    })
+  const availableStandards = useMemo(() => {
+    return standards.filter((standard) => !standard.Est_Archive && standard.Etalon_Numero_Serie)
   }, [standards])
+
+  const assignableStandards = useMemo(
+    () => availableStandards.filter((standard) => !standard.Est_Sonde_Externe),
+    [availableStandards],
+  )
 
   useEffect(() => {
     const assignedValue = assignedQuery.data?.value
@@ -64,8 +66,8 @@ export function StandardReaderTab() {
   }, [assignedQuery.data?.value])
 
   const assignedStandard = useMemo(() => {
-    return eligibleStandards.find((standard) => standard.Etalon_Numero_Serie === selectedSerial) ?? null
-  }, [eligibleStandards, selectedSerial])
+    return availableStandards.find((standard) => standard.Etalon_Numero_Serie === selectedSerial) ?? null
+  }, [availableStandards, selectedSerial])
 
   const assignedType = useMemo(() => {
     if (!assignedStandard) return null
@@ -97,7 +99,7 @@ export function StandardReaderTab() {
   })
 
   const handleAssign = () => {
-    if (!selectedSerial) return
+    if (!selectedSerial || !assignedStandard || assignedStandard.Est_Sonde_Externe) return
     saveAssignmentMutation.mutate(selectedSerial)
   }
 
@@ -117,23 +119,41 @@ export function StandardReaderTab() {
             <div className="space-y-4 rounded-xl border bg-card p-4">
               <div className="space-y-2">
                 <Label>{t("select_label")}</Label>
-                <Select value={selectedSerial} onValueChange={setSelectedSerial}>
-                  <SelectTrigger>
-                    <SelectValue placeholder={t("select_placeholder")} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {eligibleStandards.map((standard) => (
-                      <SelectItem key={standard.Id_Etalon} value={standard.Etalon_Numero_Serie ?? String(standard.Id_Etalon)}>
-                        {standard.Etalon_Numero_Serie}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <p className="text-xs text-muted-foreground">{t("eligible_count", { count: eligibleStandards.length })}</p>
+                <Combobox
+                  triggerId="tools-standard-reader-probe"
+                  value={selectedSerial}
+                  onValueChange={setSelectedSerial}
+                  disabled={isLoading}
+                  placeholder={t("select_placeholder")}
+                  searchPlaceholder={t("search_placeholder")}
+                  emptyMessage={t("select_empty")}
+                  options={availableStandards.map((standard) => {
+                    const serial = standard.Etalon_Numero_Serie ?? `#${standard.Id_Etalon}`
+                    const isExternal = Boolean(standard.Est_Sonde_Externe)
+
+                    return {
+                      value: serial,
+                      label: isExternal ? `${serial} - ${t("external_unavailable_short")}` : serial,
+                      group: isExternal ? t("groups.external") : t("groups.internal"),
+                      searchText: [serial, standard.Organisme, standard.Num_Certif, standard.Unite]
+                        .filter(Boolean)
+                        .join(" "),
+                      disabled: isExternal,
+                      className: isExternal ? "cursor-not-allowed opacity-60" : undefined,
+                    }
+                  })}
+                />
+                <p className="text-xs text-muted-foreground">{t("eligible_count", { count: assignableStandards.length })}</p>
+                <p className="text-xs text-amber-700">{t("external_unavailable_hint")}</p>
               </div>
 
               <div className="flex flex-wrap gap-2">
-                <Button type="button" onClick={handleAssign} disabled={!selectedSerial || saveAssignmentMutation.isPending} className="gap-2">
+                <Button
+                  type="button"
+                  onClick={handleAssign}
+                  disabled={!selectedSerial || !assignedStandard || Boolean(assignedStandard.Est_Sonde_Externe) || saveAssignmentMutation.isPending}
+                  className="gap-2"
+                >
                   <TestTube2 className="h-4 w-4" />
                   {t("actions.assign")}
                 </Button>

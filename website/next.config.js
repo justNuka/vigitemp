@@ -145,6 +145,14 @@ const nextConfig = {
                     },
                 ],
             },
+            {
+                source: "/api/etalons/:id/pdf",
+                headers: [
+                    { key: "X-Frame-Options", value: "SAMEORIGIN" },
+                    { key: "Content-Security-Policy", value: "frame-ancestors 'self'; default-src 'none'" },
+                    { key: "X-Content-Type-Options", value: "nosniff" },
+                ],
+            },
         ]
     },
     cacheComponents: true,

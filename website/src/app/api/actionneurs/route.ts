@@ -18,9 +18,12 @@ const createActionneurSchema = z.object({
   lieuId: z.coerce.number().int().positive().optional().nullable(),
 })
 
-export const GET = withOneOrHigherAnyAuthorizationLogging(ACTIONNEUR_ACCESS_CODES, async (_req: NextRequest) => {
+export const GET = withOneOrHigherAnyAuthorizationLogging(ACTIONNEUR_ACCESS_CODES, async (req: NextRequest) => {
   try {
-    const actionneursWithLieu = await ActionneurRepository.findAllWithLieu()
+    const status = new URL(req.url).searchParams.get("status")
+    const actionneursWithLieu = await ActionneurRepository.findAllWithLieu(
+      status === "all" ? "all" : status === "archived" ? "archived" : "active",
+    )
     return apiOk(actionneursWithLieu)
   } catch (error) {
     log.error("actionneurs", "actionneurs_fetch_error", { error })

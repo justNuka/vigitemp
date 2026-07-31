@@ -33,12 +33,16 @@ function formatDecimalNumber(value: unknown, maxFractionDigits = 6): number | nu
   return Number(parsed.toFixed(maxFractionDigits))
 }
 
-export const GET = withStandardOrExpertAnyAuthorizationLogging(READ_CODES, async () => {
+export const GET = withStandardOrExpertAnyAuthorizationLogging(READ_CODES, async (req: NextRequest) => {
   try {
-    const rows = await fetchIntercomparisonMediaRows()
+    const status = new URL(req.url).searchParams.get("status")
+    const rows = await fetchIntercomparisonMediaRows(
+      status === "all" ? "all" : status === "archived" ? "archived" : "active",
+    )
     return apiOk(
       rows.map((row) => ({
         ...row,
+        Est_Archive: Boolean(Number((row as Record<string, unknown>).Est_Archive ?? 0)),
         Stabilite: formatDecimalNumber((row as Record<string, unknown>).Stabilite),
         Homogeneite: formatDecimalNumber((row as Record<string, unknown>).Homogeneite),
       })),

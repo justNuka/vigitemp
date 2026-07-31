@@ -150,7 +150,9 @@ export function useLieuMeasurementsPaged(
     const run = async () => {
       setIsLoading(true)
       try {
-        const entry = await fetchPage(pageIndex, true)
+        // The measurement table must reflect the database on every load.
+        // Cached pages are only used for speculative prefetching.
+        const entry = await fetchPage(pageIndex, false)
         if (!isActive) return
         setData(entry.data)
         setTotalRows(entry.total)

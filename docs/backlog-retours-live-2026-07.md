@@ -170,6 +170,13 @@
 | R-158 | Graphiques: ne pas afficher les audits par defaut | mineur | rapide | fait | Les audits restent activables manuellement dans les graphiques de lieu et d'analyse d'alarme. |
 | R-159 | Graphiques: prevoir un export de la courbe | moyen | moyen | fait | Export PNG ajoute au composant partage, disponible dans les details de lieu et l'analyse d'alarme. |
 
+## 16. Retours backlog du 2026-07-31
+| ID | Sujet | Impact | Complexite | Statut | Notes |
+|---|---|---|---|---|---|
+| R-160 | Analyse d'impact: ajouter un bouton imprimer | mineur | rapide | fait | Fonction deja presente: le bouton declenche l'impression de la page avec la mise en page dediee. |
+| R-161 | Lieux desactives: permettre d'ouvrir l'historique des mesures | majeur | rapide | fait | Le bouton historique est present sur les cartes desactivees et ouvre la modale de details avec acces au choix de plage et au tableau. |
+| R-162 | Tableau des mesures: afficher correctement toutes les mesures | majeur | moyen | fait | Pagination rendue fraiche a chaque chargement, ordre serveur conserve entre les pages et retour automatique a la premiere page lors d'un changement de lieu, plage ou preference de non-reponse. |
+
 ## Proposition d'ordre de traitement
 1. R-011 remontees memoire non visibles
 2. R-012 aucun lieu/aucune sonde si filtre actif sans resultat charge -> si on met un filtre sur la page de surveillance (par exemple une recherche de lieu), qu'on change de page, et qu'on revient, si le lieu ne fait pas parti des 50 lieux chargés de base, alors on voit aucun résultat

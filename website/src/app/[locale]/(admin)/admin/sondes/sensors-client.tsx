@@ -147,7 +147,7 @@ export function SensorsClient() {
               <Button
                 size="sm"
                 variant="outline"
-                disabled={!selectedSensorId}
+                disabled={!selectedSensorId || statusTab === "archived"}
                 className="gap-2"
                 onClick={() => {
                   setIsEditing(true);
@@ -196,6 +196,7 @@ export function SensorsClient() {
               }}
               warningWindowDays={etalonnageWarningDays}
               onEditSensor={(id) => {
+                if (statusTab === "archived") return;
                 setSelectedSensorId(id);
                 setSelectedAdjustmentId(null);
                 setSelectedCalibrationId(null);

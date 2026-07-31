@@ -64,8 +64,9 @@ export function HotlineSensorTestTool() {
     accuracyError: "",
     highLimit: "",
     lowLimit: "",
-    frequencySeconds: "",
-    alarmDelayMinutes: "",
+    frequencyMinutes: "",
+    alarmDelayLowMinutes: "",
+    alarmDelayHighMinutes: "",
     channel: "",
     memoryCount: "",
     customCommandPrefix: "",
@@ -90,6 +91,7 @@ export function HotlineSensorTestTool() {
     setResult(null)
 
     try {
+      const frequencyMinutes = parseOptionalInteger(gsp.frequencyMinutes)
       const response = await fetch("/api/hotline/sensor-test", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -107,8 +109,9 @@ export function HotlineSensorTestTool() {
                 accuracyError: parseOptionalNumber(gsp.accuracyError),
                 highLimit: parseOptionalNumber(gsp.highLimit),
                 lowLimit: parseOptionalNumber(gsp.lowLimit),
-                frequencySeconds: parseOptionalInteger(gsp.frequencySeconds),
-                alarmDelayMinutes: parseOptionalInteger(gsp.alarmDelayMinutes),
+                frequencySeconds: frequencyMinutes !== null && frequencyMinutes > 0 ? frequencyMinutes * 60 : null,
+                alarmDelayLowMinutes: parseOptionalInteger(gsp.alarmDelayLowMinutes),
+                alarmDelayHighMinutes: parseOptionalInteger(gsp.alarmDelayHighMinutes),
                 channel: gsp.channel.trim() || undefined,
                 memoryCount: parseOptionalInteger(gsp.memoryCount),
                 customCommandPrefix: gsp.customCommandPrefix.trim() || undefined,
@@ -206,11 +209,14 @@ export function HotlineSensorTestTool() {
                   <Field label="Limite basse">
                     <Input value={gsp.lowLimit} onChange={(e) => setGsp((prev) => ({ ...prev, lowLimit: e.target.value }))} />
                   </Field>
-                  <Field label="Frequence (s)">
-                    <Input value={gsp.frequencySeconds} onChange={(e) => setGsp((prev) => ({ ...prev, frequencySeconds: e.target.value }))} />
+                  <Field label="Frequence (min)">
+                    <Input value={gsp.frequencyMinutes} onChange={(e) => setGsp((prev) => ({ ...prev, frequencyMinutes: e.target.value }))} />
                   </Field>
-                  <Field label="Retard alarme (min)">
-                    <Input value={gsp.alarmDelayMinutes} onChange={(e) => setGsp((prev) => ({ ...prev, alarmDelayMinutes: e.target.value }))} />
+                  <Field label="Retard bas (min)">
+                    <Input value={gsp.alarmDelayLowMinutes} onChange={(e) => setGsp((prev) => ({ ...prev, alarmDelayLowMinutes: e.target.value }))} />
+                  </Field>
+                  <Field label="Retard haut (min)">
+                    <Input value={gsp.alarmDelayHighMinutes} onChange={(e) => setGsp((prev) => ({ ...prev, alarmDelayHighMinutes: e.target.value }))} />
                   </Field>
                 </div>
               ) : null}

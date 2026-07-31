@@ -10,19 +10,25 @@ export interface Group {
   nombre_utilisateurs?: number;
 }
 
-async function fetchGroups(regroupement?: string): Promise<Group[]> {
+export type GroupArchiveStatus = "active" | "archived" | "all";
+
+async function fetchGroups(regroupement?: string, status: GroupArchiveStatus = "active"): Promise<Group[]> {
   const normalizedRegroupement = regroupement && regroupement !== "all" ? regroupement : undefined;
-  const url = normalizedRegroupement
-    ? `/api/groupes?regroupement=${encodeURIComponent(normalizedRegroupement)}`
-    : "/api/groupes";
+  const params = new URLSearchParams({ status });
+  if (normalizedRegroupement) params.set("regroupement", normalizedRegroupement);
+  const url = `/api/groupes?${params.toString()}`;
 
   return getJson<Group[]>(url);
 }
 
-export function useGroups(regroupement?: string, enabled: boolean = true) {
+export function useGroups(
+  regroupement?: string,
+  enabled: boolean = true,
+  status: GroupArchiveStatus = "active",
+) {
   return useQuery({
-    queryKey: ["groups", regroupement],
-    queryFn: () => fetchGroups(regroupement),
+    queryKey: ["groups", regroupement, status],
+    queryFn: () => fetchGroups(regroupement, status),
     enabled,
     refetchInterval: (query) => (isUnauthorizedError(query.state.error) ? false : 60000),
   });

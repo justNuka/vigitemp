@@ -47,7 +47,7 @@ export function ModulesClient() {
   const [statusTab, setStatusTab] = useState<"active" | "archived">("active");
   const [isSensorModalOpen, setIsSensorModalOpen] = useState(false);
 
-  const { data: modules, isLoading: modulesLoading, refetch: refetchModules } = useModules();
+  const { data: modules, isLoading: modulesLoading, refetch: refetchModules } = useModules(true, "all");
   const { data: sondes, isLoading: sondesLoading } = useModuleSondes(selectedModuleId);
   const { data: allSensors = [] } = useSensors();
   const selectedSensor = selectedSondeId
@@ -171,7 +171,7 @@ export function ModulesClient() {
                   <Pencil className="w-4 h-4" />
                   {t('actions.edit')}
                 </Button>
-                <Button size="sm" variant="outline" disabled={!selectedModuleId} className="gap-2" onClick={() => setArchiveConfirmOpen(true)}>
+                <Button size="sm" variant="outline" disabled={!selectedModuleId || statusTab === "archived"} className="gap-2" onClick={() => setArchiveConfirmOpen(true)}>
                   <Archive className="w-4 h-4" />
                   {t('actions.archive')}
                 </Button>

@@ -26,14 +26,16 @@ export interface Standard {
   Pdf_Name: string | null;
 }
 
-async function fetchStandards(): Promise<Standard[]> {
-  return getJson<Standard[]>("/api/etalons");
+export type StandardArchiveStatus = "active" | "archived" | "all";
+
+async function fetchStandards(status: StandardArchiveStatus): Promise<Standard[]> {
+  return getJson<Standard[]>(`/api/etalons?status=${status}`);
 }
 
-export function useStandards() {
+export function useStandards(status: StandardArchiveStatus = "active") {
   return useQuery({
-    queryKey: ["etalons"],
-    queryFn: fetchStandards,
+    queryKey: ["etalons", status],
+    queryFn: () => fetchStandards(status),
     refetchInterval: (query) => (isUnauthorizedError(query.state.error) ? false : 60000),
   });
 }

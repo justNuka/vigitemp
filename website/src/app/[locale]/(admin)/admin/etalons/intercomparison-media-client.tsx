@@ -11,6 +11,7 @@ import { deleteJson } from "@/lib/http"
 import { useIntercomparisonMedia, type IntercomparisonMedium } from "@/hooks/useIntercomparisonMedia"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { TanStackTable } from "@/components/data-table/tanstack-table"
 import {
   AlertDialog,
@@ -27,10 +28,15 @@ import { IntercomparisonMediumModal } from "./intercomparison-medium-modal"
 export function IntercomparisonMediaClient() {
   const t = useTranslations("metrologyAdmin.intercomparisonTable")
   const queryClient = useQueryClient()
-  const { data, isLoading } = useIntercomparisonMedia()
+  const { data, isLoading } = useIntercomparisonMedia(true, "all")
   const [selectedMedium, setSelectedMedium] = useState<IntercomparisonMedium | null>(null)
   const [modalOpen, setModalOpen] = useState(false)
   const [archiveOpen, setArchiveOpen] = useState(false)
+  const [statusTab, setStatusTab] = useState<"active" | "archived">("active")
+
+  const activeMedia = (data || []).filter((item) => !item.Est_Archive)
+  const archivedMedia = (data || []).filter((item) => Boolean(item.Est_Archive))
+  const displayedMedia = statusTab === "active" ? activeMedia : archivedMedia
 
   function formatDecimalDisplay(value: unknown, maxFractionDigits = 6) {
     if (value === null || value === undefined || value === "") return ""
@@ -100,7 +106,7 @@ export function IntercomparisonMediaClient() {
               variant="outline"
               size="sm"
               className="gap-2"
-              disabled={!selectedMedium}
+              disabled={!selectedMedium || statusTab === "archived"}
               onClick={() => setModalOpen(true)}
             >
               <Pencil className="h-4 w-4" />
@@ -111,7 +117,7 @@ export function IntercomparisonMediaClient() {
               variant="outline"
               size="sm"
               className="gap-2"
-              disabled={!selectedMedium}
+              disabled={!selectedMedium || statusTab === "archived"}
               onClick={() => setArchiveOpen(true)}
             >
               <Archive className="h-4 w-4" />
@@ -120,9 +126,25 @@ export function IntercomparisonMediaClient() {
           </div>
         </CardHeader>
         <CardContent className="p-2 md:p-4 xl:p-4">
+          <Tabs
+            value={statusTab}
+            onValueChange={(value) => {
+              setStatusTab(value as "active" | "archived")
+              setSelectedMedium(null)
+            }}
+            className="space-y-4"
+          >
+            <TabsList className="grid w-full max-w-md grid-cols-2 bg-primary/10 text-primary">
+              <TabsTrigger value="active" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+                {t("tabs.active", { count: activeMedia.length })}
+              </TabsTrigger>
+              <TabsTrigger value="archived" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+                {t("tabs.archived", { count: archivedMedia.length })}
+              </TabsTrigger>
+            </TabsList>
           <TanStackTable
             columns={columns}
-            data={data || []}
+            data={displayedMedia}
             searchField="Model"
             searchPlaceholder={t("searchPlaceholder")}
             isLoading={isLoading}
@@ -130,6 +152,7 @@ export function IntercomparisonMediaClient() {
             selectedRowId={selectedMedium?.Id_Milieu}
             onRowClick={(row) => setSelectedMedium(row)}
             onRowDoubleClick={(row) => {
+              if (statusTab === "archived") return
               setSelectedMedium(row)
               setModalOpen(true)
             }}
@@ -138,6 +161,7 @@ export function IntercomparisonMediaClient() {
             headerCellClassName="!bg-sidebar !text-sidebar-foreground !border-r !border-white/25 hover:!bg-sidebar-accent/80"
             tableClassName="border-separate border-spacing-0 [&_thead_th]:!border-r [&_thead_th]:!border-white/25 [&_thead_th:last-child]:!border-r-0"
           />
+          </Tabs>
         </CardContent>
       </Card>
 

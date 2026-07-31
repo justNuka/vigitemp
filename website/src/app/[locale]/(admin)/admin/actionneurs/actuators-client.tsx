@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { TanStackTable } from "@/components/data-table/tanstack-table"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { toast } from "sonner"
 import { useRouter } from '@/i18n/navigation'
 import { ActuatorModal } from "./actuator-modal"
@@ -38,7 +39,7 @@ type ActuatorRow = {
 export function ActuatorsClient() {
   const t = useTranslations('actuatorsPage')
   const tCommon = useTranslations('common')
-  const { data: actuators, isLoading } = useActuators()
+  const { data: actuators, isLoading } = useActuators("all")
   const queryClient = useQueryClient()
   const router = useRouter()
   const didPrefetchRef = useRef(false)
@@ -46,6 +47,11 @@ export function ActuatorsClient() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
+  const [statusTab, setStatusTab] = useState<"active" | "archived">("active")
+
+  const activeActuators = (actuators || []).filter((item) => !item.Est_Archive)
+  const archivedActuators = (actuators || []).filter((item) => Boolean(item.Est_Archive))
+  const displayedActuators = statusTab === "active" ? activeActuators : archivedActuators
 
   useEffect(() => {
     if (isLoading || didPrefetchRef.current) return
@@ -119,7 +125,7 @@ export function ActuatorsClient() {
     },
   ]
 
-  const tableData: ActuatorRow[] = (actuators || []).map((a) => ({
+  const tableData: ActuatorRow[] = displayedActuators.map((a) => ({
     Id_Actionneur: a.Id_Actionneur,
     Num_Serie: a.Num_Serie,
     Type: a.Type,
@@ -140,7 +146,7 @@ export function ActuatorsClient() {
             <div>
               <CardTitle>{t('title')}</CardTitle>
               <p className="text-sm text-muted-foreground mt-1">
-                {t('count', { count: actuators?.length || 0 })}
+                {t('count', { count: displayedActuators.length })}
               </p>
             </div>
             <div className="flex gap-2">
@@ -148,17 +154,33 @@ export function ActuatorsClient() {
                 <Plus className="h-4 w-4" />
                 {t('actions.new')}
               </Button>
-              <Button onClick={handleEditClick} disabled={!selectedActuator} variant="outline" size="sm" className="gap-2">
+              <Button onClick={handleEditClick} disabled={!selectedActuator || statusTab === "archived"} variant="outline" size="sm" className="gap-2">
                 <Pencil className="h-4 w-4" />
                 {t('actions.edit')}
               </Button>
-              <Button onClick={handleDeleteClick} disabled={!selectedActuator} variant="outline" size="sm" className="gap-2">
+              <Button onClick={handleDeleteClick} disabled={!selectedActuator || statusTab === "archived"} variant="outline" size="sm" className="gap-2">
                 <Archive className="h-4 w-4" />
                 {t('actions.archive')}
               </Button>
             </div>
           </CardHeader>
           <CardContent>
+            <Tabs
+              value={statusTab}
+              onValueChange={(value) => {
+                setStatusTab(value as "active" | "archived")
+                setSelectedActuator(null)
+              }}
+              className="space-y-4"
+            >
+              <TabsList className="grid w-full max-w-md grid-cols-2 bg-primary/10 text-primary">
+                <TabsTrigger value="active" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+                  {t('tabs.active', { count: activeActuators.length })}
+                </TabsTrigger>
+                <TabsTrigger value="archived" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+                  {t('tabs.archived', { count: archivedActuators.length })}
+                </TabsTrigger>
+              </TabsList>
             <TanStackTable
               columns={columns}
               data={tableData}
@@ -172,8 +194,8 @@ export function ActuatorsClient() {
                 setSelectedActuator(actuators?.find((a) => a.Id_Actionneur === row.Id_Actionneur) || null)
               }}
               onRowDoubleClick={(row: ActuatorRow) => {
-                const actuator = actuators?.find((a) => a.Id_Actionneur === row.Id_Actionneur) || null
-                if (!actuator) return
+                const actuator = displayedActuators.find((a) => a.Id_Actionneur === row.Id_Actionneur) || null
+                if (!actuator || statusTab === "archived") return
                 setSelectedActuator(actuator)
                 setIsEditing(true)
                 setIsModalOpen(true)
@@ -182,6 +204,7 @@ export function ActuatorsClient() {
               headerCellClassName="!bg-sidebar !text-sidebar-foreground !border-r !border-white/25 hover:!bg-sidebar-accent/80"
               tableClassName="border-separate border-spacing-0 [&_thead_th]:!border-r [&_thead_th]:!border-white/25 [&_thead_th:last-child]:!border-r-0"
             />
+            </Tabs>
           </CardContent>
         </Card>
 

@@ -14,7 +14,7 @@ export interface SiteSimple {
 }
 
 async function fetchSitesAdmin(): Promise<SiteAdmin[]> {
-  return getJson<SiteAdmin[]>("/api/sites?format=admin");
+  return getJson<SiteAdmin[]>("/api/sites?format=admin&status=all");
 }
 
 async function fetchSitesSimple(): Promise<SiteSimple[]> {
@@ -23,7 +23,7 @@ async function fetchSitesSimple(): Promise<SiteSimple[]> {
 
 export function useSites(enabled = true) {
   return useQuery({
-    queryKey: ["sites"],
+    queryKey: ["sites", "all"],
     queryFn: fetchSitesAdmin,
     enabled,
     refetchInterval: (query) => (isUnauthorizedError(query.state.error) ? false : 60000), // 1 minute

@@ -8,7 +8,7 @@ export const MOCK_SENSORS: SensorWithSelection[] = [
     Port_Serie: "COM1",
     Lieu: "Salle froide 1",
     Module: "MOD-001",
-    Signal_Lu: "23,4 ?C",
+    Signal_Lu: "23,4 °C",
     Taux_Reponse: 98.5,
   },
   {

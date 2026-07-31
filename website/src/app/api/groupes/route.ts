@@ -13,8 +13,13 @@ export const GET = withOneOrHigherAnyAuthorizationLogging(GROUP_ACCESS_CODES, as
   try {
     const { searchParams } = new URL(req.url)
     const regroupement = searchParams.get("regroupement")
+    const status = searchParams.get("status")
 
     const where: Record<string, unknown> = {}
+
+    if (status !== "all") {
+      where.Est_Archive = status === "archived"
+    }
 
     if (regroupement) {
       where.Numero_Regroupement = regroupement

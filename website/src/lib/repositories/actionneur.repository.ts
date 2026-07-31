@@ -15,7 +15,11 @@ export const ActionneurRepository = {
    * Returns all non-archived actionneurs with their associated lieu ID.
    * Uses a batch lookup to avoid N+1 queries.
    */
-  async findAllWithLieu(): Promise<ActionneurWithLieu[]> {
+  async findAllWithLieu(status: "active" | "archived" | "all" = "active"): Promise<ActionneurWithLieu[]> {
+    const where = status === "all"
+      ? undefined
+      : { Est_Archive: status === "archived" }
+
     const actionneurs = await prisma.t_actionneur.findMany({
       select: {
         Id_Actionneur: true,
@@ -25,7 +29,7 @@ export const ActionneurRepository = {
         Est_Etat: true,
         Est_Archive: true,
       },
-      where: { Est_Archive: false },
+      where,
       orderBy: { Num_Serie: "asc" },
     })
 

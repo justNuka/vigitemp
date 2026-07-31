@@ -13,6 +13,10 @@ const updateSettingSchema = z.object({
   value: z.string(),
 })
 
+const OPTIONAL_SETTING_DEFAULTS = new Map([
+  ["tools:assigned_standard_serial", ""],
+])
+
 function getCaseCandidates(section: string, motCle: string) {
   const sectionLower = section.toLowerCase()
   const sectionUpper = section.toUpperCase()
@@ -60,6 +64,17 @@ export const GET = withAuthorizationLogging(
       }
 
       if (!setting) {
+        const optionalDefault = OPTIONAL_SETTING_DEFAULTS.get(`${sectionVal}:${motCleVal}`.toLowerCase())
+        if (optionalDefault !== undefined) {
+          return apiOk({
+            key: `${sectionVal}:${motCleVal}`,
+            section: sectionVal,
+            motCle: motCleVal,
+            value: optionalDefault,
+            description: null,
+          })
+        }
+
         return apiError(404, "not_found", "Setting not found")
       }
 

@@ -11,14 +11,16 @@ export interface Actuator {
   Id_Lieu: number | null;
 }
 
-async function fetchActuators(): Promise<Actuator[]> {
-  return getJson<Actuator[]>("/api/actionneurs");
+export type ActuatorArchiveStatus = "active" | "archived" | "all";
+
+async function fetchActuators(status: ActuatorArchiveStatus): Promise<Actuator[]> {
+  return getJson<Actuator[]>(`/api/actionneurs?status=${status}`);
 }
 
-export function useActuators() {
+export function useActuators(status: ActuatorArchiveStatus = "active") {
   return useQuery({
-    queryKey: ["actionneurs"],
-    queryFn: fetchActuators,
+    queryKey: ["actionneurs", status],
+    queryFn: () => fetchActuators(status),
     refetchInterval: (query) => (isUnauthorizedError(query.state.error) ? false : 60000),
   });
 }

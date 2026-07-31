@@ -22,11 +22,13 @@ export interface Authorization {
   fenVigiLog: boolean | null;
 }
 
-export function useProfiles(enabled: boolean = true) {
+export type ProfileArchiveStatus = "active" | "archived" | "all";
+
+export function useProfiles(enabled: boolean = true, status: ProfileArchiveStatus = "active") {
   return useQuery({
-    queryKey: ["profiles"],
+    queryKey: ["profiles", status],
     queryFn: async () => {
-      return getJson<Profile[]>("/api/profils");
+      return getJson<Profile[]>(`/api/profils?status=${status}`);
     },
     enabled,
   });

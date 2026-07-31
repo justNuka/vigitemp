@@ -87,9 +87,12 @@ async function fetchEtalonExtras(etalonIds: number[]) {
   return result
 }
 
-export const GET = withStandardOrExpertAnyAuthorizationLogging(ETALON_READ_CODES, async (_req: NextRequest) => {
+export const GET = withStandardOrExpertAnyAuthorizationLogging(ETALON_READ_CODES, async (req: NextRequest) => {
   try {
-    const rows = await fetchEtalonRows()
+    const status = new URL(req.url).searchParams.get("status")
+    const rows = await fetchEtalonRows(
+      status === "all" ? "all" : status === "archived" ? "archived" : "active",
+    )
     const etalons = rows.map((row) => ({
       Id_Etalon: Number(row.Id_Etalon),
       Etalon_Numero_Serie: row.Etalon_Numero_Serie == null ? null : String(row.Etalon_Numero_Serie),
@@ -100,7 +103,7 @@ export const GET = withStandardOrExpertAnyAuthorizationLogging(ETALON_READ_CODES
       Resolution: formatDecimalValue(row.Resolution),
       Incertitude: formatDecimalValue(row.Incertitude),
       Nb_Decimale: row.Nb_Decimale == null ? null : Number(row.Nb_Decimale),
-      Est_Archive: Boolean(row.Est_Archive),
+      Est_Archive: Boolean(Number(row.Est_Archive ?? 0)),
       Est_Sonde_Externe: row.Est_Sonde_Externe == null ? null : Boolean(Number(row.Est_Sonde_Externe)),
     }))
 

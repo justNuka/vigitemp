@@ -46,7 +46,7 @@ export function GroupsClient() {
   const [archiveBlockedMessage, setArchiveBlockedMessage] = useState<string | null>(null);
   const [statusTab, setStatusTab] = useState<'active' | 'archived'>('active');
 
-  const { data: groups = [], isLoading } = useGroups(regroupement);
+  const { data: groups = [], isLoading } = useGroups(regroupement, true, 'all');
   const activeGroups = groups.filter((group) => !group.Est_Archive);
   const archivedGroups = groups.filter((group) => Boolean(group.Est_Archive));
   const displayedGroups = statusTab === 'active' ? activeGroups : archivedGroups;

@@ -1092,6 +1092,10 @@
     "empty": "No associated equipment"
   },
   "actuatorsPage": {
+    "tabs": {
+      "active": "Active ({count})",
+      "archived": "Archived ({count})"
+    },
     "title": "Actuator management",
     "count": "{count, plural, one {{count} actuator} other {{count} actuators}}",
     "actions": {
@@ -1181,9 +1185,17 @@
     "standard_reader": {
       "title": "Standard probe reader",
       "description": "Assign a certified standard probe for tool measurements.",
-      "helper": "Only standards created with certificate information are available for assignment.",
+      "helper": "Select an internal standard for tool readings. External standards are displayed for information only.",
       "select_label": "Assignable standard probe",
       "select_placeholder": "Select a standard probe",
+      "search_placeholder": "Search for a standard...",
+      "select_empty": "No standard available",
+      "groups": {
+        "internal": "Standard probes",
+        "external": "External standard probes"
+      },
+      "external_unavailable_short": "external - cannot be assigned",
+      "external_unavailable_hint": "External standard probes cannot be selected for reading.",
       "eligible_count": "{count, plural, one {{count} eligible standard} other {{count} eligible standards}}",
       "actions": {
         "assign": "Assign for readings",
@@ -2631,6 +2643,10 @@
     }
   },
   "standardsPage": {
+    "tabs": {
+      "active": "Active ({count})",
+      "archived": "Archived ({count})"
+    },
     "title": "Standard management",
     "count": "{count, plural, one {# standard} other {# standards}}",
     "actions": {
@@ -5903,6 +5919,10 @@
       }
     },
     "intercomparisonTable": {
+      "tabs": {
+        "active": "Active ({count})",
+        "archived": "Archived ({count})"
+      },
       "title": "Intercomparison media",
       "description": "Manage baths and other media used for comparisons.",
       "searchPlaceholder": "Search a medium",

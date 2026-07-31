@@ -22,9 +22,12 @@ const createModuleSchema = z.object({
   Est_Module_GSO: z.boolean().optional(),
 })
 
-export const GET = withOneOrHigherAnyAuthorizationLogging(MODULE_ACCESS_CODES, async (_req: NextRequest) => {
+export const GET = withOneOrHigherAnyAuthorizationLogging(MODULE_ACCESS_CODES, async (req: NextRequest) => {
   try {
-    const modulesWithDetails = await ModuleRepository.findAllWithDetails()
+    const status = new URL(req.url).searchParams.get("status")
+    const modulesWithDetails = await ModuleRepository.findAllWithDetails(
+      status === "all" ? "all" : status === "archived" ? "archived" : "active",
+    )
     return apiOk(modulesWithDetails)
   } catch (error) {
     log.error("modules", "modules_fetch_error", { error })

@@ -210,7 +210,9 @@ export const GET = withAuthLogging(
       const consigneLieu = lieu?.Consigne ?? null
       const decimalsLieu = lieu?.Derniere_Nb_Decimal ?? null
 
-      const shouldReverseMeasurements = source === "graphique" || sortBy === null
+      // Graph points are chronological. Paginated table rows keep the exact
+      // server ordering so page boundaries remain stable and predictable.
+      const shouldReverseMeasurements = source === "graphique" || (source === "mesures" && !usePagination && sortBy === null)
       const chronologicalMeasurements = shouldReverseMeasurements ? measurements.reverse() : measurements
 
       const formattedMeasurements = chronologicalMeasurements.map((m) => {

@@ -23,9 +23,13 @@ export const GET = withOneOrHigherAnyAuthorizationLogging(SITE_ACCESS_CODES, asy
   try {
     const { searchParams } = new URL(req.url)
     const format = searchParams.get("format")
+    const status = searchParams.get("status")
+    const archiveWhere = status === "all"
+      ? {}
+      : { Est_Archive: status === "archived" }
 
     const sites = await prisma.t_site.findMany({
-      where: { Est_Archive: false },
+      where: archiveWhere,
       orderBy: { Libelle_Site: "asc" },
     })
 

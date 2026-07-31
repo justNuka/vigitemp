@@ -85,7 +85,7 @@ const GSP_ACTIONS: Array<{ value: GspAction; label: string }> = [
   { value: "raw", label: "Commande brute" },
 ]
 
-const RAW_COMMAND_PREFIXES = ["DD-H", "ED-H", "TEMP", "FTEM", "DCAL", "DETA", "DCON", "MEMO", "ECAL", "EETA", "ECON", "CHAN"]
+const RAW_COMMAND_PREFIXES = ["DD-H", "ED-H", "TEMP", "FTEM", "DCON", "MEMO", "ECON", "CHAN"]
 
 export function HotlineSensorTestPanel() {
   const [submitting, setSubmitting] = useState(false)
@@ -115,7 +115,8 @@ export function HotlineSensorTestPanel() {
     highLimit: "",
     lowLimit: "",
     frequencyMinutes: "",
-    alarmDelayMinutes: "",
+    alarmDelayLowMinutes: "",
+    alarmDelayHighMinutes: "",
     channel: "",
     memoryCount: "",
     memoryOffset: "",
@@ -211,28 +212,38 @@ export function HotlineSensorTestPanel() {
       parsed.push({ label: "Etat alarme", value: alarmStateMatch[1] })
     }
 
-    for (const match of combined.matchAll(/Coef([AB])=(-?\d+(?:[.,]\d+)?)/gi)) {
-      parsed.push({ label: `Coef ${match[1].toUpperCase()}`, value: match[2].replace(".", ",") })
+    for (const key of ["A", "B", "C"] as const) {
+      const coefficientMatch = combined.match(
+        new RegExp(`(?:^|\\r?\\n)(?:${key}|Coef${key}|${key === "C" ? "Etalonnage|Etal" : "__never__"})=(-?\\d+(?:[.,]\\d+)?)(?:\\r?\\n|$)`, "i"),
+      )
+      if (coefficientMatch) {
+        parsed.push({ label: `Coef ${key}`, value: coefficientMatch[1].replace(".", ",") })
+      }
     }
 
-    const etalMatch = combined.match(/Etal=(-?\d+(?:[.,]\d+)?)/i)
-    if (etalMatch) {
-      parsed.push({ label: "Etal", value: etalMatch[1].replace(".", ",") })
-    }
-
-    const highMatch = combined.match(/LimiteHaute=(-?\d+(?:[.,]\d+)?)/i)
+    const highMatch = combined.match(/(?:^|\r?\n)(?:LimH|LimiteHaute)=(-?\d+(?:[.,]\d+)?)(?:\r?\n|$)/i)
     if (highMatch) {
       parsed.push({ label: "Limite haute", value: highMatch[1].replace(".", ",") })
     }
 
-    const lowMatch = combined.match(/LimiteBasse=(-?\d+(?:[.,]\d+)?)/i)
+    const lowMatch = combined.match(/(?:^|\r?\n)(?:LimB|LimiteBasse)=(-?\d+(?:[.,]\d+)?)(?:\r?\n|$)/i)
     if (lowMatch) {
       parsed.push({ label: "Limite basse", value: lowMatch[1].replace(".", ",") })
     }
 
-    const frequencyMatch = combined.match(/Frequence=(-?\d+(?:[.,]\d+)?)/i)
+    const frequencyMatch = combined.match(/(?:^|\r?\n)(?:F|Frequence)=(-?\d+(?:[.,]\d+)?)(?:\r?\n|$)/i)
     if (frequencyMatch) {
       parsed.push({ label: "Frequence", value: frequencyMatch[1].replace(".", ",") })
+    }
+
+    const delayLowMatch = combined.match(/(?:^|\r?\n)(?:RetB|RetardBas)=(-?\d+(?:[.,]\d+)?)(?:\r?\n|$)/i)
+    if (delayLowMatch) {
+      parsed.push({ label: "Retard bas", value: delayLowMatch[1].replace(".", ",") })
+    }
+
+    const delayHighMatch = combined.match(/(?:^|\r?\n)(?:RetH|RetardHaut)=(-?\d+(?:[.,]\d+)?)(?:\r?\n|$)/i)
+    if (delayHighMatch) {
+      parsed.push({ label: "Retard haut", value: delayHighMatch[1].replace(".", ",") })
     }
 
     if (memoMeasureCount > 0) {
@@ -295,13 +306,13 @@ export function HotlineSensorTestPanel() {
       case "force-read":
         return `FTEM${target}`
       case "read-config":
-        return `DD-H${target}, DCAL${target}, DETA${target}, DCON${target}`
+        return `DD-H${target}, DCON${target}`
       case "read-memory":
         return `MEMO${target} ${(gsp.memoryCount || "1")}x${gsp.memoryOffset.trim() ? `${gsp.memoryOffset}o` : ""}`
       case "raw":
         return normalizedRawCommandValue || "Saisissez une commande GSP."
       case "sync-config":
-        return `ED-H${target}..., ECAL${target}..., EETA${target}..., ECON${target}...`
+        return `ED-H${target}..., ECON${target}...`
       default:
         return ""
     }
@@ -349,7 +360,8 @@ export function HotlineSensorTestPanel() {
                 highLimit: parseOptionalNumber(gsp.highLimit),
                 lowLimit: parseOptionalNumber(gsp.lowLimit),
                 frequencySeconds,
-                alarmDelayMinutes: parseOptionalInteger(gsp.alarmDelayMinutes),
+                alarmDelayLowMinutes: parseOptionalInteger(gsp.alarmDelayLowMinutes),
+                alarmDelayHighMinutes: parseOptionalInteger(gsp.alarmDelayHighMinutes),
                 channel: gsp.channel.trim() || undefined,
                 memoryCount: parseOptionalInteger(gsp.memoryCount),
                 memoryOffset: parseOptionalInteger(gsp.memoryOffset),
@@ -628,8 +640,11 @@ export function HotlineSensorTestPanel() {
                   <Field label="Frequence (min)">
                     <Input value={gsp.frequencyMinutes} onChange={(e) => setGsp((prev) => ({ ...prev, frequencyMinutes: e.target.value }))} />
                   </Field>
-                  <Field label="Retard alarme (min)">
-                    <Input value={gsp.alarmDelayMinutes} onChange={(e) => setGsp((prev) => ({ ...prev, alarmDelayMinutes: e.target.value }))} />
+                  <Field label="Retard bas (min)">
+                    <Input value={gsp.alarmDelayLowMinutes} onChange={(e) => setGsp((prev) => ({ ...prev, alarmDelayLowMinutes: e.target.value }))} />
+                  </Field>
+                  <Field label="Retard haut (min)">
+                    <Input value={gsp.alarmDelayHighMinutes} onChange={(e) => setGsp((prev) => ({ ...prev, alarmDelayHighMinutes: e.target.value }))} />
                   </Field>
                 </div>
               ) : null}
@@ -719,7 +734,7 @@ export function HotlineSensorTestPanel() {
                   )}
                   <div className="rounded-md border border-border/60 bg-muted/20 px-3 py-2 text-xs text-muted-foreground dark:bg-muted/15">
                     <div className="mb-1 font-medium">Préfixes disponibles</div>
-                    <div className="font-mono">TEMP, FTEM, DD-H, DCAL, DETA, DCON, MEMO, ED-H, ECAL, EETA, ECON, CHAN</div>
+                    <div className="font-mono">TEMP, FTEM, DD-H, DCON, MEMO, ED-H, ECON, CHAN</div>
                     <div className="mt-1 text-muted-foreground">Pour les commandes avec séparateur, utiliser `-` et non `/`.</div>
                     <div className="mt-1 text-muted-foreground">Les payloads sont séparés de la commande par un espace.</div>
                   </div>

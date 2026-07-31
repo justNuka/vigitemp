@@ -969,10 +969,6 @@
       "tolerances": "Tolérances",
       "alarm_delays": "Retards d'alarme"
     },
-    "status": {
-      "active": "Surveillance active",
-      "disabled": "Surveillance désactivée"
-    },
     "placeholders": {
       "na": "N/A",
       "no_sensor": "Sans sonde"
@@ -986,7 +982,12 @@
     },
     "frequency_value": "Toutes les {count} min",
     "search_placeholder": "Rechercher un lieu...",
-    "empty": "Aucun lieu trouvé"
+    "empty": "Aucun lieu trouvé",
+    "planning_value": "{count} règle{count, plural, one {} other {s}}",
+    "status": {
+      "active": "Monitoring active",
+      "disabled": "Monitoring disabled"
+    }
   },
   "locationsForm": {
     "dialog": {
@@ -1418,6 +1419,10 @@
     "empty": "Aucun matériel associé"
   },
   "actuatorsPage": {
+    "tabs": {
+      "active": "Actifs ({count})",
+      "archived": "Archives ({count})"
+    },
     "title": "Gestion des actionneurs",
     "count": "{count, plural, one {{count} actionneur} other {{count} actionneurs}}",
     "actions": {
@@ -1507,9 +1512,17 @@
     "standard_reader": {
       "title": "Lecture sonde étalon",
       "description": "Assigner une sonde étalon avec certificat pour les relevés de l'outil.",
-      "helper": "Seuls les étalons créés avec des informations de certificat sont proposés à l'assignation.",
+      "helper": "Sélectionnez un étalon interne pour les relevés de l'outil. Les étalons externes sont affichés à titre informatif uniquement.",
       "select_label": "Sonde étalon assignable",
       "select_placeholder": "Sélectionner une sonde étalon",
+      "search_placeholder": "Rechercher un étalon...",
+      "select_empty": "Aucun étalon disponible",
+      "groups": {
+        "internal": "Sondes étalon",
+        "external": "Sondes étalon externes"
+      },
+      "external_unavailable_short": "externe - non assignable",
+      "external_unavailable_hint": "Les sondes étalon externes ne peuvent pas être sélectionnées pour la lecture.",
       "eligible_count": "{count, plural, one {{count} étalon éligible} other {{count} étalons éligibles}}",
       "actions": {
         "assign": "Assigner pour les relevés",
@@ -1629,7 +1642,8 @@
         "relay3": "Relai 3",
         "relay4": "Relai 4",
         "signal": "Signal lu",
-        "response_rate": "Taux réponse"
+        "response_rate": "Taux réponse",
+        "location": "Lieu"
       },
       "aria": {
         "select_all": "Sélectionner toutes les sondes",
@@ -2632,6 +2646,10 @@
     }
   },
   "standardsPage": {
+    "tabs": {
+      "active": "Actifs ({count})",
+      "archived": "Archives ({count})"
+    },
     "title": "Gestion des étalons",
     "count": "{count, plural, one {# étalon} other {# étalons}}",
     "actions": {
@@ -5904,6 +5922,10 @@
       }
     },
     "intercomparisonTable": {
+      "tabs": {
+        "active": "Actifs ({count})",
+        "archived": "Archives ({count})"
+      },
       "title": "Milieux d'inter-comparaison",
       "description": "Gestion des bains et autres milieux utilisés pour les comparaisons.",
       "searchPlaceholder": "Rechercher un milieu",

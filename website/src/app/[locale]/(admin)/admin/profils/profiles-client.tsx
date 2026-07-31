@@ -17,7 +17,7 @@ export function ProfilesClient() {
   const t = useTranslations('profilesPage')
   const tCommon = useTranslations('common')
   const didPrefetchRef = useRef(false)
-  const { data: profiles = [], isLoading: profilesLoading } = useProfiles()
+  const { data: profiles = [], isLoading: profilesLoading } = useProfiles(true, 'all')
   const [statusTab, setStatusTab] = useState<'active' | 'archived'>('active')
 
   const [isCreateOpen, setIsCreateOpen] = useState(false)

@@ -40,6 +40,7 @@ export const GET = withAuthorizationLogging(
           Profil_Utilisateur: true,
           Commentaire: true,
           Est_MC2: true,
+          Est_Archive: true,
           t_liaison_profil_autorisation: {
             select: {
               t_autorisation: true,
@@ -62,7 +63,7 @@ export const GET = withAuthorizationLogging(
         name: profile.Profil_Utilisateur,
         description: profile.Commentaire,
         mc2: profile.Est_MC2,
-        estArchive: false,
+        estArchive: Boolean(profile.Est_Archive),
         userCount: users.length,
         users: users.map((u) => ({
           id: u.Id_Utilisateur,
@@ -123,6 +124,7 @@ export const PATCH = withAuthorizationLogging(
       if (data.name !== undefined) updateData.Profil_Utilisateur = data.name
       if (data.description !== undefined) updateData.Commentaire = data.description
       if (data.mc2 !== undefined) updateData.Est_MC2 = data.mc2
+      if (data.estArchive !== undefined) updateData.Est_Archive = data.estArchive
 
       if (Object.keys(updateData).length > 0) {
         await prisma.t_profil.update({
@@ -173,6 +175,7 @@ export const PATCH = withAuthorizationLogging(
           Profil_Utilisateur: true,
           Commentaire: true,
           Est_MC2: true,
+          Est_Archive: true,
           t_liaison_profil_autorisation: {
             select: {
               Id_Autorisation: true,
@@ -224,7 +227,7 @@ export const PATCH = withAuthorizationLogging(
         name: updatedProfile!.Profil_Utilisateur,
         description: updatedProfile!.Commentaire,
         mc2: updatedProfile!.Est_MC2,
-        estArchive: false,
+        estArchive: Boolean(updatedProfile!.Est_Archive),
         authorizations: updatedProfile!.t_liaison_profil_autorisation.map((liaison) => ({
           id: liaison.t_autorisation.Id_Autorisation,
           code: liaison.t_autorisation.Code_Autorisation,

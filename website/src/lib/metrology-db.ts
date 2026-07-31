@@ -93,7 +93,7 @@ export async function resolveEtalonBaseFlags() {
   }
 }
 
-export async function fetchEtalonRows() {
+export async function fetchEtalonRows(status: "active" | "archived" | "all" = "active") {
   const flags = await resolveEtalonBaseFlags()
   const selectParts = [
     `${quoteIdentifier("Id_Etalon")} AS Id_Etalon`,
@@ -109,7 +109,9 @@ export async function fetchEtalonRows() {
     flags.estSondeExterne ? `${quoteIdentifier("Est_Sonde_Externe")} AS Est_Sonde_Externe` : `0 AS Est_Sonde_Externe`,
   ]
 
-  const whereClause = flags.estArchive ? `WHERE ${sqlNullToZero("Est_Archive")} = 0` : ""
+  const whereClause = !flags.estArchive || status === "all"
+    ? ""
+    : `WHERE ${sqlNullToZero("Est_Archive")} = ${status === "archived" ? 1 : 0}`
   const sql = `SELECT ${selectParts.join(", ")} FROM ${getTableReference("t_etalon")} ${whereClause} ORDER BY ${quoteIdentifier("Etalon_Numero_Serie")} ASC`
   return prisma.$queryRawUnsafe<Array<Record<string, unknown>>>(sql)
 }
@@ -257,15 +259,18 @@ export async function archiveEtalonById(etalonId: number) {
   await prisma.$executeRawUnsafe(sql, etalonId)
 }
 
-export async function fetchIntercomparisonMediaRows() {
+export async function fetchIntercomparisonMediaRows(status: "active" | "archived" | "all" = "active") {
   const tableName = await resolveIntercomparisonTableName()
   const supportsArchive = await hasIntercomparisonArchiveColumn()
   const tableRef = getTableReference(tableName)
 
+  const archiveWhere = !supportsArchive || status === "all"
+    ? ""
+    : `WHERE ${sqlNullToZero("Est_Archive")} = ${status === "archived" ? 1 : 0}`
   const sql = supportsArchive
     ? `SELECT ${quoteIdentifier("Id_Milieu")} AS Id_Milieu, ${quoteIdentifier("Model")} AS Model, ${quoteIdentifier("Reference")} AS Reference, ${quoteIdentifier("Stabilite")} AS Stabilite, ${quoteIdentifier("Homogeneite")} AS Homogeneite, ${quoteIdentifier("Contenu")} AS Contenu, ${quoteIdentifier("Est_Reserve_MC2")} AS Est_Reserve_MC2, ${quoteIdentifier("Est_Archive")} AS Est_Archive
        FROM ${tableRef}
-       WHERE ${sqlNullToZero("Est_Archive")} = 0
+       ${archiveWhere}
        ORDER BY ${quoteIdentifier("Model")} ASC, ${quoteIdentifier("Reference")} ASC`
     : `SELECT ${quoteIdentifier("Id_Milieu")} AS Id_Milieu, ${quoteIdentifier("Model")} AS Model, ${quoteIdentifier("Reference")} AS Reference, ${quoteIdentifier("Stabilite")} AS Stabilite, ${quoteIdentifier("Homogeneite")} AS Homogeneite, ${quoteIdentifier("Contenu")} AS Contenu, ${quoteIdentifier("Est_Reserve_MC2")} AS Est_Reserve_MC2
        FROM ${tableRef}
