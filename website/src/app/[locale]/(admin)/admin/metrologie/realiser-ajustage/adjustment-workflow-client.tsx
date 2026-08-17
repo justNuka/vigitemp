@@ -36,6 +36,7 @@ import { useStandards } from "@/hooks/useStandards"
 import { fetchJson, getJson, isUnauthorizedError } from "@/lib/http"
 import { formatDbDateTime } from "@/lib/date-display"
 import { formatMeasureValue } from "@/lib/measurements"
+import type { MetrologyPreviewReading } from "@/lib/metrology-reading-preview"
 import { MetrologySubpagesCards } from "../_components/metrology-subpages-cards"
 
 type Step = "selection" | "adjustment"
@@ -175,6 +176,7 @@ export function AdjustmentWorkflowClient() {
   const [currentDateTime, setCurrentDateTime] = useState(() => new Date())
   const [actionError, setActionError] = useState<string | null>(null)
   const [showStopConfirm, setShowStopConfirm] = useState(false)
+  const [previewReadingEnabled, setPreviewReadingEnabled] = useState(false)
 
   const { data: sessionPayload } = useQuery({
     queryKey: ["metrology-adjustment-session"],
@@ -190,7 +192,40 @@ export function AdjustmentWorkflowClient() {
   const shouldConfirmStop = sessionPayload?.shouldConfirmStop ?? false
   const isAdjustmentRunning = session?.status === "running"
   const localeTag = locale === "fr" ? "fr-FR" : "en-US"
-  const signalReadings = session?.latestSensorReadings ?? {}
+  const previewIntervalMs = sensors.some(
+    (sensor) => selectedSensorIds.includes(sensor.id) && sensor.isGso,
+  )
+    ? 60_000
+    : measurementIntervalSeconds === "30"
+      ? 30_000
+      : 15_000
+  const previewReadingQuery = useQuery({
+    queryKey: ["metrology-reading-preview", "AJUSTAGE", selectedSensorIds],
+    queryFn: ({ signal }) =>
+      fetchJson<{
+        readings: Record<number, MetrologyPreviewReading>
+        readAt: string
+      }>("/api/metrologie/lecture-sondes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        signal,
+        body: JSON.stringify({ selectedSensorIds, operation: "AJUSTAGE" }),
+      }),
+    enabled:
+      previewReadingEnabled &&
+      selectedSensorIds.length > 0 &&
+      !isAdjustmentRunning &&
+      step === "adjustment",
+    refetchInterval: previewReadingEnabled ? previewIntervalMs : false,
+    refetchIntervalInBackground: false,
+  })
+  const signalReadings = useMemo(
+    () => isAdjustmentRunning
+      ? session?.latestSensorReadings ?? {}
+      : previewReadingQuery.data?.readings ?? {},
+    [isAdjustmentRunning, previewReadingQuery.data?.readings, session?.latestSensorReadings],
+  )
   const validatedPoints = {
     pointOne: Boolean(session?.validatedPoints?.[1]),
     pointTwo: Boolean(session?.validatedPoints?.[2]),
@@ -657,6 +692,7 @@ export function AdjustmentWorkflowClient() {
                   type="button"
                   variant="outline"
                   onClick={() => {
+                    setPreviewReadingEnabled(false)
                     setDirection(-1)
                     setStep("selection")
                   }}
@@ -1035,8 +1071,55 @@ export function AdjustmentWorkflowClient() {
                         <Button
                           type="button"
                           className="w-full"
+                          variant="outline"
+                          disabled={
+                            isAdjustmentRunning ||
+                            selectedSensorIds.length === 0
+                          }
+                          onClick={() => {
+                            if (previewReadingEnabled) {
+                              setPreviewReadingEnabled(false)
+                              return
+                            }
+                            setActionError(null)
+                            setPreviewReadingEnabled(true)
+                          }}
+                        >
+                          {previewReadingEnabled ? (
+                            <>
+                              <Square className="mr-2 h-4 w-4" />
+                              {t("adjustment.cards.run.stopReading")}
+                            </>
+                          ) : (
+                            <>
+                              <Play className="mr-2 h-4 w-4" />
+                              {t("adjustment.cards.run.startReading")}
+                            </>
+                          )}
+                        </Button>
+                        {previewReadingEnabled ? (
+                          <p className="text-xs text-muted-foreground">
+                            {previewReadingQuery.isFetching
+                              ? t("adjustment.cards.run.reading")
+                              : t("adjustment.cards.run.readingActive")}
+                          </p>
+                        ) : null}
+                        {previewReadingQuery.error ? (
+                          <p className="text-xs text-destructive">
+                            {previewReadingQuery.error instanceof Error
+                              ? previewReadingQuery.error.message
+                              : t("adjustment.cards.run.readingError")}
+                          </p>
+                        ) : null}
+                        <Button
+                          type="button"
+                          className="w-full"
                           variant={isAdjustmentRunning ? "destructive" : "default"}
-                          disabled={isAdjustmentRunning ? stopMutation.isPending : !canRunAdjustment}
+                          disabled={
+                            isAdjustmentRunning
+                              ? stopMutation.isPending
+                              : !canRunAdjustment || previewReadingQuery.isFetching
+                          }
                           onClick={() => {
                             if (isAdjustmentRunning) {
                               if (shouldConfirmStop) {
@@ -1046,6 +1129,7 @@ export function AdjustmentWorkflowClient() {
                               stopMutation.mutate(false)
                               return
                             }
+                            setPreviewReadingEnabled(false)
                             startMutation.mutate()
                           }}
                         >

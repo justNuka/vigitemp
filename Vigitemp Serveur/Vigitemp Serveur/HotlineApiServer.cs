@@ -548,11 +548,10 @@ namespace Vigitemp_Serveur
                     var readPrefix = string.Equals(request.Action, "force-read", StringComparison.OrdinalIgnoreCase) ? "FTEM" : "TEMP";
                     result.RequestedCommand = GspProtocol.BuildCommand(readPrefix, target, string.Empty);
                     var readResponse = SendGspCommand(port, result, readPrefix, target, string.Empty, false, gsp.ListenWindowMs);
-                    var isAdjustmentRead = string.Equals(
-                        NormalizeOperationContext(request.OperationContext),
-                        "AJUSTAGE",
-                        StringComparison.Ordinal);
-                    if (string.IsNullOrWhiteSpace(readResponse) && !isAdjustmentRead)
+                    var operationContext = NormalizeOperationContext(request.OperationContext);
+                    var isMetrologyRead = string.Equals(operationContext, "AJUSTAGE", StringComparison.Ordinal)
+                        || string.Equals(operationContext, "ETALONNAGE", StringComparison.Ordinal);
+                    if (string.IsNullOrWhiteSpace(readResponse) && !isMetrologyRead)
                     {
                         AddExchange(result, "info", "ascii", "<wait-10s-before-retry>");
                         Thread.Sleep(10000);
@@ -606,9 +605,10 @@ namespace Vigitemp_Serveur
 
         private static string NormalizeOperationContext(string value)
         {
-            return string.Equals((value ?? string.Empty).Trim(), "AJUSTAGE", StringComparison.OrdinalIgnoreCase)
-                ? "AJUSTAGE"
-                : "HOTLINE";
+            var normalized = (value ?? string.Empty).Trim();
+            if (string.Equals(normalized, "AJUSTAGE", StringComparison.OrdinalIgnoreCase)) return "AJUSTAGE";
+            if (string.Equals(normalized, "ETALONNAGE", StringComparison.OrdinalIgnoreCase)) return "ETALONNAGE";
+            return "HOTLINE";
         }
 
         private static string GetOperationLogPrefix(string operationContext)

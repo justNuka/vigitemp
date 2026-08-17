@@ -10,6 +10,8 @@ Formule:
 
 `temperature = temperature_ajustee + offset`
 
+offset est le coeff b pour les GSP
+
 ### Coefficients `a` et `b` (ajustage)
 Les coefficients `a` et `b` sont issus de l'ajustage.
 Ils s'appliquent ? la lecture brute de la sonde.

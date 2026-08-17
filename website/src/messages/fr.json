@@ -5809,6 +5809,11 @@
           "run": {
             "title": "Pilotage de l'ajustage",
             "description": "Démarrer ou arrêter la séquence d'ajustage en cours.",
+            "startReading": "Lancer la lecture des sondes",
+            "stopReading": "Arrêter la lecture des sondes",
+            "reading": "Lecture des sondes en cours...",
+            "readingActive": "Lecture active. Les mesures sont actualisées automatiquement.",
+            "readingError": "Impossible de lire les sondes sélectionnées.",
             "start": "Démarrer l'ajustage",
             "stop": "Arrêter l'ajustage",
             "hint": "La logique d'exécution sera branchée sur le workflow d'acquisition."
@@ -5887,12 +5892,90 @@
     "calibrationPage": {
       "header": {
         "title": "Réaliser un étalonnage",
-        "description": "Cette page accueillera le workflow d'étalonnage."
+        "description": "Sélectionner les sondes et suivre leurs mesures pendant l'étalonnage."
       },
       "card": {
         "title": "Étalonnage",
         "description": "Écran préparatoire en attente du workflow mêtier complet.",
         "content": "Le module d'étalonnage sera branché ici avec la sélection du lieu, de la sonde étalon, du milieu d'inter-comparaison et des documents associés."
+      },
+      "workflow": {
+        "common": {
+          "loading": "Chargement des sondes...",
+          "error": "Impossible de poursuivre"
+        },
+        "selection": {
+          "title": "Sélection des sondes",
+          "description": "Sélectionnez une ou plusieurs sondes. La sélection est conservée pendant les recherches.",
+          "search": "Rechercher une sonde, un lieu ou un module",
+          "selectAll": "Sélectionner toutes les sondes affichées",
+          "empty": "Aucune sonde ne correspond à la recherche.",
+          "unassigned": "Non assignée à un lieu",
+          "summary": "Sondes sélectionnées ({count})",
+          "summaryDescription": "Récapitulatif des sondes qui seront prises en compte dans l'étalonnage.",
+          "noneSelected": "Aucune sonde sélectionnée.",
+          "remove": "Retirer {serial}",
+          "continue": "Préparer l'étalonnage",
+          "banner": {
+            "title": "{count, plural, one {# sonde sélectionnée} other {# sondes sélectionnées}}",
+            "description": "La sélection est prête. Passez à l'étape d'étalonnage pour préparer l'opération."
+          },
+          "unitLock": {
+            "title": "Sélection verrouillée sur l'unité {unit}",
+            "description": "Seules les sondes ayant la même unité de mesure peuvent être étalonnées ensemble."
+          },
+          "table": {
+            "searchPlaceholder": "Rechercher une sonde ou un lieu",
+            "exportFileName": "selection-sondes-etalonnage",
+            "selectOne": "Sélectionner la sonde {serial}",
+            "unitUnknown": "Unité inconnue",
+            "columns": {
+              "serial": "Numéro de série de la sonde",
+              "location": "Lieu associé",
+              "unit": "Unité"
+            }
+          }
+        },
+        "calibration": {
+          "back": "Revenir à la sélection",
+          "general": "Informations générales",
+          "operator": "Opérateur",
+          "cadence": "Fréquence de lecture",
+          "cadenceDescription": "Les sondes GSP sont interrogées toutes les minutes. Les nouvelles mesures GSO sont lues depuis la base de mesures.",
+          "session": "Session d'étalonnage",
+          "startReading": "Lancer la lecture des sondes",
+          "stopReading": "Arrêter la lecture des sondes",
+          "reading": "Lecture des sondes en cours...",
+          "readingActive": "Lecture active. Les mesures sont actualisées automatiquement.",
+          "readingError": "Impossible de lire les sondes sélectionnées.",
+          "start": "Démarrer l'étalonnage",
+          "stop": "Arrêter l'étalonnage"
+        },
+        "readings": {
+          "title": "Mesures d'étalonnage",
+          "description": "Dernière mesure obtenue pour chaque sonde sélectionnée."
+        },
+        "table": {
+          "serial": "Numéro de série",
+          "location": "Lieu associé",
+          "module": "Module",
+          "family": "Famille",
+          "value": "Dernière valeur",
+          "measuredAt": "Date et heure",
+          "count": "Mesures",
+          "status": "État"
+        },
+        "status": {
+          "running": "En cours",
+          "completed": "Terminée",
+          "ready": "Prête à démarrer",
+          "read": "Mesure reçue",
+          "waiting": "En attente"
+        },
+        "navigation": {
+          "title": "Navigation métrologie",
+          "description": "Accéder aux autres fonctions de métrologie."
+        }
       }
     },
     "subpagesCards": {

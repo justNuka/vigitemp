@@ -5824,6 +5824,11 @@
           "run": {
             "title": "Adjustment control",
             "description": "Start or stop the ongoing adjustment sequence.",
+            "startReading": "Start probe reading",
+            "stopReading": "Stop probe reading",
+            "reading": "Reading probes...",
+            "readingActive": "Reading is active. Measurements update automatically.",
+            "readingError": "Unable to read the selected probes.",
             "start": "Start adjustment",
             "stop": "Stop adjustment",
             "hint": "The execution logic will be connected to the acquisition workflow."
@@ -5884,12 +5889,90 @@
     "calibrationPage": {
       "header": {
         "title": "Run a calibration",
-        "description": "This page will host the calibration workflow."
+        "description": "Select probes and monitor their readings during calibration."
       },
       "card": {
         "title": "Calibration",
         "description": "Preparation screen waiting for the full business workflow.",
         "content": "The calibration module will be connected here with location, reference probe, intercomparison medium and associated documents selection."
+      },
+      "workflow": {
+        "common": {
+          "loading": "Loading probes...",
+          "error": "Unable to continue"
+        },
+        "selection": {
+          "title": "Probe selection",
+          "description": "Select one or more probes. The selection is preserved while searching.",
+          "search": "Search for a probe, location or module",
+          "selectAll": "Select all displayed probes",
+          "empty": "No probe matches the search.",
+          "unassigned": "Not assigned to a location",
+          "summary": "Selected probes ({count})",
+          "summaryDescription": "Summary of the probes that will be included in the calibration operation.",
+          "noneSelected": "No probe selected.",
+          "remove": "Remove {serial}",
+          "continue": "Prepare calibration",
+          "banner": {
+            "title": "{count, plural, one {# selected probe} other {# selected probes}}",
+            "description": "The selection is ready. Move to the calibration step to prepare the operation."
+          },
+          "unitLock": {
+            "title": "Selection locked to unit {unit}",
+            "description": "Only probes with the same measurement unit can be calibrated together."
+          },
+          "table": {
+            "searchPlaceholder": "Search a probe or a location",
+            "exportFileName": "calibration-probe-selection",
+            "selectOne": "Select probe {serial}",
+            "unitUnknown": "Unknown unit",
+            "columns": {
+              "serial": "Probe serial number",
+              "location": "Assigned location",
+              "unit": "Unit"
+            }
+          }
+        },
+        "calibration": {
+          "back": "Back to selection",
+          "general": "General information",
+          "operator": "Operator",
+          "cadence": "Reading interval",
+          "cadenceDescription": "GSP probes are queried every minute. New GSO readings are loaded from the measurements database.",
+          "session": "Calibration session",
+          "startReading": "Start probe reading",
+          "stopReading": "Stop probe reading",
+          "reading": "Reading probes...",
+          "readingActive": "Reading is active. Measurements update automatically.",
+          "readingError": "Unable to read the selected probes.",
+          "start": "Start calibration",
+          "stop": "Stop calibration"
+        },
+        "readings": {
+          "title": "Calibration readings",
+          "description": "Latest reading obtained for each selected probe."
+        },
+        "table": {
+          "serial": "Serial number",
+          "location": "Assigned location",
+          "module": "Module",
+          "family": "Family",
+          "value": "Latest value",
+          "measuredAt": "Date and time",
+          "count": "Readings",
+          "status": "Status"
+        },
+        "status": {
+          "running": "Running",
+          "completed": "Completed",
+          "ready": "Ready to start",
+          "read": "Reading received",
+          "waiting": "Waiting"
+        },
+        "navigation": {
+          "title": "Metrology navigation",
+          "description": "Open the other metrology features."
+        }
       }
     },
     "subpagesCards": {
