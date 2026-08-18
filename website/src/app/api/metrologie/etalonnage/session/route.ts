@@ -9,9 +9,15 @@ import {
   startCalibrationSession,
   stopCalibrationSession,
 } from "@/lib/metrology-calibration-session"
+import {
+  clearMetrologySessionWatchdog,
+  hasMetrologySessionWatchdog,
+  scheduleMetrologySessionWatchdog,
+} from "@/lib/metrology-session-watchdog"
 import { getPermissionAliases } from "@/lib/permissions"
 
 const METROLOGY_OPERATION_CODES = getPermissionAliases("METROLOGY_OPERATION_ACCESS")
+const CALIBRATION_MAX_DURATION_MS = 90 * 60 * 1000
 
 const startSchema = z.object({
   selectedSensorIds: z.array(z.number().int().positive()).min(1),
@@ -25,10 +31,62 @@ function safeErrorMessage(error: unknown, fallback: string) {
   return message
 }
 
+function calibrationWatchdogKey(userId: number) {
+  return `calibration:${userId}`
+}
+
+async function ensureCalibrationExpiration(userId: number) {
+  const session = await getCalibrationSessionForUser(userId)
+  const key = calibrationWatchdogKey(userId)
+
+  if (!session || session.status !== "running") {
+    clearMetrologySessionWatchdog(key)
+    return session
+  }
+
+  const startedAtMs = new Date(session.startedAt).getTime()
+  const expiresAtMs = startedAtMs + CALIBRATION_MAX_DURATION_MS
+
+  if (!Number.isFinite(startedAtMs) || Date.now() >= expiresAtMs) {
+    clearMetrologySessionWatchdog(key)
+    const stoppedSession = await stopCalibrationSession(userId)
+    log.warn("METROLOGY_CALIBRATION", "session_expired", {
+      sessionId: session.id,
+      userId,
+      startedAt: session.startedAt,
+      maxDurationMinutes: CALIBRATION_MAX_DURATION_MS / 60_000,
+    })
+    return stoppedSession
+  }
+
+  if (!hasMetrologySessionWatchdog(key)) {
+    scheduleMetrologySessionWatchdog(key, expiresAtMs, async () => {
+      try {
+        const current = await getCalibrationSessionForUser(userId)
+        if (!current || current.status !== "running") return
+        await stopCalibrationSession(userId)
+        log.warn("METROLOGY_CALIBRATION", "session_expired", {
+          sessionId: current.id,
+          userId,
+          startedAt: current.startedAt,
+          maxDurationMinutes: CALIBRATION_MAX_DURATION_MS / 60_000,
+        })
+      } catch (error) {
+        log.error("METROLOGY_CALIBRATION", "session_expiration_failed", {
+          userId,
+          error: error instanceof Error ? error.message : String(error),
+        })
+      }
+    })
+  }
+
+  return session
+}
+
 export const GET = withStandardOrExpertAnyAuthorizationLogging(
   METROLOGY_OPERATION_CODES,
   async (_req: NextRequest, ctx) => apiOk({
-    session: await getCalibrationSessionForUser(ctx.user.userId),
+    session: await ensureCalibrationExpiration(ctx.user.userId),
   }),
 )
 
@@ -38,6 +96,25 @@ export const POST = withStandardOrExpertAnyAuthorizationLogging(
     try {
       const input = startSchema.parse(await req.json())
       const session = await startCalibrationSession(ctx.user, input)
+      const expiresAtMs = new Date(session.startedAt).getTime() + CALIBRATION_MAX_DURATION_MS
+      scheduleMetrologySessionWatchdog(calibrationWatchdogKey(ctx.user.userId), expiresAtMs, async () => {
+        try {
+          const current = await getCalibrationSessionForUser(ctx.user.userId)
+          if (!current || current.status !== "running") return
+          await stopCalibrationSession(ctx.user.userId)
+          log.warn("METROLOGY_CALIBRATION", "session_expired", {
+            sessionId: current.id,
+            userId: ctx.user.userId,
+            startedAt: current.startedAt,
+            maxDurationMinutes: CALIBRATION_MAX_DURATION_MS / 60_000,
+          })
+        } catch (error) {
+          log.error("METROLOGY_CALIBRATION", "session_expiration_failed", {
+            userId: ctx.user.userId,
+            error: error instanceof Error ? error.message : String(error),
+          })
+        }
+      })
       return apiOk({ session }, { status: 201 })
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -56,6 +133,7 @@ export const DELETE = withStandardOrExpertAnyAuthorizationLogging(
   METROLOGY_OPERATION_CODES,
   async (_req: NextRequest, ctx) => {
     try {
+      clearMetrologySessionWatchdog(calibrationWatchdogKey(ctx.user.userId))
       const session = await stopCalibrationSession(ctx.user.userId)
       return apiOk({ session })
     } catch (error) {
