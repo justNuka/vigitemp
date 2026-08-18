@@ -72,6 +72,12 @@ type GuidePositions = {
   preInf: number | null;
 };
 
+function getTodayRange(): DateRangeValue {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return { from: today, to: today };
+}
+
 export default function MonitoringDetailsModal({
   isOpen,
   onClose,
@@ -117,7 +123,7 @@ export default function MonitoringDetailsModal({
     };
   }, []);
 
-  const [dateRange, setDateRange] = useState<DateRangeValue | null>(initialRange ?? null);
+  const [dateRange, setDateRange] = useState<DateRangeValue | null>(() => initialRange ?? getTodayRange());
   const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 200 });
   const [guidePositions, setGuidePositions] = useState<GuidePositions>({
     sup: null,
@@ -154,7 +160,7 @@ export default function MonitoringDetailsModal({
 
   useEffect(() => {
     if (!isOpen) return;
-    setDateRange(initialRange ?? null);
+    setDateRange(initialRange ?? getTodayRange());
   }, [idLieu, initialRange, isOpen]);
 
   useEffect(() => {
@@ -183,7 +189,9 @@ export default function MonitoringDetailsModal({
 
   const explicitRangeStart = useMemo(() => {
     if (!effectiveRange?.from) return null;
-    return new Date(effectiveRange.from);
+    const start = new Date(effectiveRange.from);
+    start.setHours(0, 0, 0, 0);
+    return start;
   }, [effectiveRange]);
 
   const explicitRangeEnd = useMemo(() => {
@@ -194,7 +202,6 @@ export default function MonitoringDetailsModal({
   }, [effectiveRange]);
 
   const rangeEnabled = Boolean(explicitRangeStart && explicitRangeEnd);
-
 
   const selectedRangeLabel = useMemo(() => {
     if (!effectiveRange?.from) return null;
@@ -225,13 +232,13 @@ export default function MonitoringDetailsModal({
   const hasLocalMeasurements = Boolean(initialMeasurements?.length);
   const shouldLoadBase = isOpen && isSurveillanceActive;
   const { data: fetchedData, isLoading } = useLieuMeasurements(idLieu, {
-    enabled: shouldLoadBase,
+    enabled: shouldLoadBase && !rangeEnabled,
     source: "mesures",
     includeNullNonResponse: showNullNonResponse,
   });
 
   const hasFetchedMeasurements = fetchedData.length > 0;
-  const baseLoading = isSurveillanceActive && shouldLoadBase && isLoading && !hasLocalMeasurements;
+  const baseLoading = isSurveillanceActive && shouldLoadBase && !rangeEnabled && isLoading && !hasLocalMeasurements;
   const baseData = isSurveillanceActive
     ? hasFetchedMeasurements
       ? fetchedData
@@ -240,8 +247,6 @@ export default function MonitoringDetailsModal({
         : []
     : rangeGraphData;
   const data = rangeEnabled ? rangeGraphData : baseData;
-  // The chart intentionally defaults to the latest measurements. The table must
-  // remain independently paginated over the complete history.
   const historyRangeStart = rangeEnabled ? explicitRangeStart : null;
   const historyRangeEnd = rangeEnabled ? explicitRangeEnd : null;
 
@@ -533,6 +538,8 @@ export default function MonitoringDetailsModal({
               <div className="w-full max-w-5xl flex-1 space-y-2">
                 <DateRangePicker
                   allowEmpty
+                  initialDateFrom={dateRange?.from}
+                  initialDateTo={dateRange?.to ?? dateRange?.from}
                   onUpdate={({ range }) => {
                     if (!range.from) {
                       setDateRange(null);
