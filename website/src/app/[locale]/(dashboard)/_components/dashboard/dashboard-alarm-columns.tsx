@@ -5,7 +5,7 @@ import type { Locale } from "date-fns"
 
 import { Button } from "@/components/ui/button"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import { formatDbDateTime, parseDbDateTime } from "@/lib/date-display"
+import { formatDbDateTime, parseDbDateTime, serializeStoredDbDateTime } from "@/lib/date-display"
 import { formatMeasureValue } from "@/lib/measurements"
 import { cn } from "@/lib/utils"
 import type { AlarmWithDetails } from "@/lib/api"
@@ -17,6 +17,21 @@ type Translate = (key: string, values?: Record<string, string | number>) => stri
 const hasConfiguredThresholds = (alarm: { sensor: AlarmWithDetails["sensor"] }): boolean => {
   const sensorWithMeta = alarm.sensor as AlarmWithDetails["sensor"] & { hasThresholds?: boolean }
   return sensorWithMeta.hasThresholds !== false
+}
+
+function parseStoredAlarmDate(value: string | Date): Date | null {
+  if (value instanceof Date) {
+    const serialized = serializeStoredDbDateTime(value)
+    return serialized ? parseDbDateTime(serialized) : null
+  }
+
+  const trimmed = value.trim()
+  if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z$/i.test(trimmed)) {
+    const serialized = serializeStoredDbDateTime(new Date(trimmed))
+    return serialized ? parseDbDateTime(serialized) : null
+  }
+
+  return parseDbDateTime(trimmed)
 }
 
 export function buildAlarmRows(alarms: AlarmWithDetails[]): AlarmRow[] {
@@ -132,7 +147,7 @@ export function createDashboardAlarmColumns({
       header: t("table.columns.triggered"),
       cell: ({ row }) => {
         const rawTriggeredAt = row.getValue("triggeredAt") as string | Date
-        const triggeredDate = parseDbDateTime(rawTriggeredAt)
+        const triggeredDate = parseStoredAlarmDate(rawTriggeredAt)
         if (!triggeredDate) return "-"
         return (
           <div className="flex items-center gap-1.5 text-sm">
@@ -145,7 +160,7 @@ export function createDashboardAlarmColumns({
                   </span>
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p className="text-xs">{formatDbDateTime(rawTriggeredAt)}</p>
+                  <p className="text-xs">{formatDbDateTime(triggeredDate)}</p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
