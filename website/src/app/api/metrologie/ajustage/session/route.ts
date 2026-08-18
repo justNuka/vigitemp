@@ -20,6 +20,7 @@ import {
 import { getPermissionAliases } from "@/lib/permissions"
 
 const METROLOGY_OPERATION_CODES = getPermissionAliases("METROLOGY_OPERATION_ACCESS")
+const ADJUSTMENT_WATCHDOG_GRACE_MS = 1_000
 
 const startSchema = z.object({
   selectedSensorIds: z.array(z.number().int().positive()).min(1),
@@ -61,6 +62,10 @@ function adjustmentWatchdogKey(userId: number) {
   return `adjustment:${userId}`
 }
 
+function adjustmentWatchdogDeadline(expiresAt: string) {
+  return new Date(expiresAt).getTime() + ADJUSTMENT_WATCHDOG_GRACE_MS
+}
+
 function ensureAdjustmentWatchdog(userId: number, session: Awaited<ReturnType<typeof getAdjustmentSessionForUser>>) {
   const key = adjustmentWatchdogKey(userId)
 
@@ -69,11 +74,11 @@ function ensureAdjustmentWatchdog(userId: number, session: Awaited<ReturnType<ty
     return
   }
 
-  const expiresAtMs = new Date(session.expiresAt).getTime()
-  if (!Number.isFinite(expiresAtMs)) return
+  const deadline = adjustmentWatchdogDeadline(session.expiresAt)
+  if (!Number.isFinite(deadline)) return
 
   if (!hasMetrologySessionWatchdog(key)) {
-    scheduleMetrologySessionWatchdog(key, expiresAtMs, async () => {
+    scheduleMetrologySessionWatchdog(key, deadline, async () => {
       try {
         await getAdjustmentSessionForUser(userId)
       } catch (error) {
@@ -104,6 +109,7 @@ export const POST = withStandardOrExpertAnyAuthorizationLogging(
     try {
       const body = await req.json()
       const data = startSchema.parse(body)
+      const userId = ctx.user.userId
       const session = await startAdjustmentSession(
         ctx.user,
         {
@@ -113,14 +119,14 @@ export const POST = withStandardOrExpertAnyAuthorizationLogging(
         getClientIp(req),
       )
       scheduleMetrologySessionWatchdog(
-        adjustmentWatchdogKey(ctx.user.userId),
-        session.expiresAt,
+        adjustmentWatchdogKey(userId),
+        adjustmentWatchdogDeadline(session.expiresAt),
         async () => {
           try {
-            await getAdjustmentSessionForUser(ctx.user.userId)
+            await getAdjustmentSessionForUser(userId)
           } catch (error) {
             log.error("METROLOGY_ADJUSTMENT", "session_watchdog_failed", {
-              userId: ctx.user.userId,
+              userId,
               error: error instanceof Error ? error.message : String(error),
             })
           }
@@ -174,16 +180,17 @@ export const PATCH = withStandardOrExpertAnyAuthorizationLogging(
   METROLOGY_OPERATION_CODES,
   async (req: NextRequest, ctx) => {
     try {
-      const session = await extendAdjustmentSession(ctx.user.userId, getClientIp(req))
+      const userId = ctx.user.userId
+      const session = await extendAdjustmentSession(userId, getClientIp(req))
       scheduleMetrologySessionWatchdog(
-        adjustmentWatchdogKey(ctx.user.userId),
-        session.expiresAt,
+        adjustmentWatchdogKey(userId),
+        adjustmentWatchdogDeadline(session.expiresAt),
         async () => {
           try {
-            await getAdjustmentSessionForUser(ctx.user.userId)
+            await getAdjustmentSessionForUser(userId)
           } catch (error) {
             log.error("METROLOGY_ADJUSTMENT", "session_watchdog_failed", {
-              userId: ctx.user.userId,
+              userId,
               error: error instanceof Error ? error.message : String(error),
             })
           }
