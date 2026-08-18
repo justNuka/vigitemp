@@ -5,7 +5,7 @@ import { withAuthLogging } from "@/lib/api-wrappers"
 import { apiError, apiOk } from "@/lib/api-response"
 import { getUserLocationScope, buildLieuAccessFilter } from "@/lib/location-access-scope"
 import { log } from "@/lib/logger"
-import { parseDbDateTime, serializeDbDateTime } from "@/lib/date-display"
+import { parseDbDateTime, serializeStoredDbDateTime } from "@/lib/date-display"
 
 const querySchema = z.object({
   idLieu: z.coerce.number().int().positive(),
@@ -47,17 +47,15 @@ export const GET = withAuthLogging(async (req: NextRequest, ctx) => {
       }
     }
 
-    const dateFilter = {
-      Date_Heure_Debut: { lte: to },
-      OR: [
-        { Date_Heure_Fin: null },
-        { Date_Heure_Fin: { gte: from } },
-      ],
-    }
-
+    // L'analyse d'impact porte sur les alarmes DECLENCHEES pendant la plage
+    // choisie. Une vieille alarme encore ouverte ne doit donc pas remonter
+    // simplement parce que sa date de fin est nulle.
     const impactAlarmFilter = {
       Type: { in: ["H", "B"] },
-      ...dateFilter,
+      Date_Heure_Debut: {
+        gte: from,
+        lte: to,
+      },
     }
 
     const [activeAlarms, histoAlarms] = await Promise.all([
@@ -114,8 +112,8 @@ export const GET = withAuthLogging(async (req: NextRequest, ctx) => {
 
     const alarms = merged.map((a) => ({
       Id_Alarme: a.Id_Alarme,
-      Date_Heure_Debut: serializeDbDateTime(a.Date_Heure_Debut) ?? startDate,
-      Date_Heure_Fin: serializeDbDateTime(a.Date_Heure_Fin) ?? null,
+      Date_Heure_Debut: serializeStoredDbDateTime(a.Date_Heure_Debut) ?? startDate,
+      Date_Heure_Fin: serializeStoredDbDateTime(a.Date_Heure_Fin) ?? null,
       Type: a.Type,
     }))
 
