@@ -12,9 +12,15 @@ import {
   startAdjustmentSession,
   stopAdjustmentSession,
 } from "@/lib/metrology-adjustment-session"
+import {
+  clearMetrologySessionWatchdog,
+  hasMetrologySessionWatchdog,
+  scheduleMetrologySessionWatchdog,
+} from "@/lib/metrology-session-watchdog"
 import { getPermissionAliases } from "@/lib/permissions"
 
 const METROLOGY_OPERATION_CODES = getPermissionAliases("METROLOGY_OPERATION_ACCESS")
+const ADJUSTMENT_WATCHDOG_GRACE_MS = 1_000
 
 const startSchema = z.object({
   selectedSensorIds: z.array(z.number().int().positive()).min(1),
@@ -52,10 +58,44 @@ function getSafeAdjustmentErrorMessage(error: unknown, fallback: string) {
   return message
 }
 
+function adjustmentWatchdogKey(userId: number) {
+  return `adjustment:${userId}`
+}
+
+function adjustmentWatchdogDeadline(expiresAt: string) {
+  return new Date(expiresAt).getTime() + ADJUSTMENT_WATCHDOG_GRACE_MS
+}
+
+function ensureAdjustmentWatchdog(userId: number, session: Awaited<ReturnType<typeof getAdjustmentSessionForUser>>) {
+  const key = adjustmentWatchdogKey(userId)
+
+  if (!session || session.status !== "running") {
+    clearMetrologySessionWatchdog(key)
+    return
+  }
+
+  const deadline = adjustmentWatchdogDeadline(session.expiresAt)
+  if (!Number.isFinite(deadline)) return
+
+  if (!hasMetrologySessionWatchdog(key)) {
+    scheduleMetrologySessionWatchdog(key, deadline, async () => {
+      try {
+        await getAdjustmentSessionForUser(userId)
+      } catch (error) {
+        log.error("METROLOGY_ADJUSTMENT", "session_watchdog_failed", {
+          userId,
+          error: error instanceof Error ? error.message : String(error),
+        })
+      }
+    })
+  }
+}
+
 export const GET = withStandardOrExpertAnyAuthorizationLogging(
   METROLOGY_OPERATION_CODES,
   async (_req: NextRequest, ctx) => {
     const session = await getAdjustmentSessionForUser(ctx.user.userId)
+    ensureAdjustmentWatchdog(ctx.user.userId, session)
     return apiOk({
       session,
       shouldConfirmStop: shouldConfirmAdjustmentStop(ctx.user.userId),
@@ -69,6 +109,7 @@ export const POST = withStandardOrExpertAnyAuthorizationLogging(
     try {
       const body = await req.json()
       const data = startSchema.parse(body)
+      const userId = ctx.user.userId
       const session = await startAdjustmentSession(
         ctx.user,
         {
@@ -76,6 +117,20 @@ export const POST = withStandardOrExpertAnyAuthorizationLogging(
           mediumId: data.mediumId ?? null,
         },
         getClientIp(req),
+      )
+      scheduleMetrologySessionWatchdog(
+        adjustmentWatchdogKey(userId),
+        adjustmentWatchdogDeadline(session.expiresAt),
+        async () => {
+          try {
+            await getAdjustmentSessionForUser(userId)
+          } catch (error) {
+            log.error("METROLOGY_ADJUSTMENT", "session_watchdog_failed", {
+              userId,
+              error: error instanceof Error ? error.message : String(error),
+            })
+          }
+        },
       )
       return apiOk({ session }, { status: 201 })
     } catch (error) {
@@ -101,6 +156,7 @@ export const DELETE = withStandardOrExpertAnyAuthorizationLogging(
     try {
       const body = await req.json().catch(() => ({}))
       const data = stopSchema.parse(body)
+      clearMetrologySessionWatchdog(adjustmentWatchdogKey(ctx.user.userId))
       const session = await stopAdjustmentSession(ctx.user.userId, data.cancelResults, getClientIp(req))
       return apiOk({
         session,
@@ -124,7 +180,22 @@ export const PATCH = withStandardOrExpertAnyAuthorizationLogging(
   METROLOGY_OPERATION_CODES,
   async (req: NextRequest, ctx) => {
     try {
-      const session = await extendAdjustmentSession(ctx.user.userId, getClientIp(req))
+      const userId = ctx.user.userId
+      const session = await extendAdjustmentSession(userId, getClientIp(req))
+      scheduleMetrologySessionWatchdog(
+        adjustmentWatchdogKey(userId),
+        adjustmentWatchdogDeadline(session.expiresAt),
+        async () => {
+          try {
+            await getAdjustmentSessionForUser(userId)
+          } catch (error) {
+            log.error("METROLOGY_ADJUSTMENT", "session_watchdog_failed", {
+              userId,
+              error: error instanceof Error ? error.message : String(error),
+            })
+          }
+        },
+      )
       return apiOk({ session })
     } catch (error) {
       log.error("METROLOGY_ADJUSTMENT", "session_extension_failed", {
