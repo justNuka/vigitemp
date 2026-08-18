@@ -22,6 +22,7 @@ import { getPermissionAliases } from "@/lib/permissions"
 
 const METROLOGY_OPERATION_CODES = getPermissionAliases("METROLOGY_OPERATION_ACCESS")
 const ADJUSTMENT_WATCHDOG_GRACE_MS = 1_000
+const TERMINAL_RESULT_GRACE_MS = 60_000
 
 const startSchema = z.object({
   selectedSensorIds: z.array(z.number().int().positive()).min(1),
@@ -67,6 +68,21 @@ function adjustmentWatchdogDeadline(expiresAt: string) {
   return new Date(expiresAt).getTime() + ADJUSTMENT_WATCHDOG_GRACE_MS
 }
 
+function shouldExposeAdjustmentSession(
+  session: Awaited<ReturnType<typeof getAdjustmentSessionForUser>>,
+) {
+  if (!session) return false
+  if (session.status === "running" || session.status === "idle") return true
+
+  const lastUpdatedAt = new Date(session.lastUpdatedAt).getTime()
+  if (!Number.isFinite(lastUpdatedAt)) return false
+
+  // A just-completed session remains visible long enough for the current screen
+  // to expose its message and XML exports. Older terminal sessions must not be
+  // restored as the current adjustment when the user later reopens the page.
+  return Date.now() - lastUpdatedAt <= TERMINAL_RESULT_GRACE_MS
+}
+
 function ensureAdjustmentWatchdog(userId: number, session: Awaited<ReturnType<typeof getAdjustmentSessionForUser>>) {
   const key = adjustmentWatchdogKey(userId)
 
@@ -97,9 +113,10 @@ export const GET = withStandardOrExpertAnyAuthorizationLogging(
   async (_req: NextRequest, ctx) => {
     const session = await getAdjustmentSessionForUser(ctx.user.userId)
     ensureAdjustmentWatchdog(ctx.user.userId, session)
+    const exposedSession = shouldExposeAdjustmentSession(session) ? session : null
     return apiOk({
-      session,
-      shouldConfirmStop: shouldConfirmAdjustmentStop(ctx.user.userId),
+      session: exposedSession,
+      shouldConfirmStop: exposedSession ? shouldConfirmAdjustmentStop(ctx.user.userId) : false,
     })
   },
 )
