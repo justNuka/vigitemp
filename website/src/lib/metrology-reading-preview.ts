@@ -134,7 +134,7 @@ async function readGso(
            ${quoteIdentifier("Valeur_Brute")},
            ${quoteIdentifier("Unite")},
            ${quoteIdentifier("Date_Heure_Mesure")}
-         FROM ${getTableReference(tableName, "mesures")}
+         FROM ${getTableReference(tableName)}
          WHERE (
            ${quoteIdentifier(serialColumn)} = @P1
            OR ${quoteIdentifier("Adresse_Sonde")} = @P2
@@ -152,7 +152,7 @@ async function readGso(
            ${quoteIdentifier("Valeur_Brute")},
            ${quoteIdentifier("Unite")},
            ${quoteIdentifier("Date_Heure_Mesure")}
-         FROM ${getTableReference(tableName, "mesures")}
+         FROM ${getTableReference(tableName)}
          WHERE (
            ${quoteIdentifier(serialColumn)} = ?
            OR ${quoteIdentifier("Adresse_Sonde")} = ?
