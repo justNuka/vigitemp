@@ -24,6 +24,7 @@ Objectif : permettre une reprise immédiate du travail dans une nouvelle convers
 - PR #19 : B17-006, graphique Surveillance limité aux 125 dernières mesures du jour — **mergée dans `dev`**.
 - PR #20 : B17-011, temps relatif des alarmes actives du dashboard — **mergée dans `dev` le 18/08/2026**, merge `3810c88dc4ff52b72432aa74b1333705611a4f61`.
 - PR #21 : B17-003 + B17-004, anciennes sessions d’ajustage non restaurées comme session courante — **mergée dans `dev` le 18/08/2026**, merge `11cd817614f00d61dd2ffe2cb341662202d4fa3b`.
+- PR #22 : B17-005, suivi global ajustage/étalonnage et panneau déplaçable — **ouverte vers `dev`**.
 
 ### Statuts
 
@@ -151,7 +152,7 @@ Le même filtrage de session côté endpoint empêche les `validatedPoints`, `pe
 
 ## B17-005 — Suivi global des opérations d’ajustage / étalonnage
 
-**Statut : `EN_COURS` — branche `agent/metrology-operation-progress`**
+**Statut : `PR_OUVERTE` — PR #22 — branche `agent/metrology-operation-progress`**
 
 ### Retour
 
@@ -161,7 +162,7 @@ Le panneau flottant global de suivi pouvait recouvrir des boutons et n’était 
 
 Le composant global `AdjustmentOperationTimer`, monté dans les providers de l’application, ne surveillait que `GET /api/metrologie/ajustage/session`. La session d’étalonnage disposait bien de son endpoint `GET /api/metrologie/etalonnage/session`, mais aucun suivi global ne l’utilisait.
 
-### Correctif en préparation
+### Correctif PR #22
 
 Fichier principal :
 
@@ -308,7 +309,7 @@ Un helper local normalise les `Date` Prisma / chaînes ISO UTC en heure murale d
 
 ## Ordre de traitement actuel
 
-1. **B17-005** — branche `agent/metrology-operation-progress` en cours; restaurer le suivi global étalonnage/ajustage et rendre le panneau déplaçable.
+1. **B17-005** — PR #22 ouverte; attendre validation/merge.
 2. **B17-002** — investiguer la durée réelle des sessions d’authentification.
 3. **B17-010** — reproduire puis corriger les libellés de seuil uniquement si encore nécessaire.
 
