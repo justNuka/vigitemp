@@ -222,7 +222,11 @@ export default function MonitoringDetailsModal({
       .replace(/^-|-$/g, "");
   }, [idLieu, localeTag, nomLieu, selectedRangeLabel]);
 
-  const { data: rangeGraphData, isLoading: rangeGraphLoading } = useMonitoringRangeMeasurements(idLieu, {
+  const {
+    data: rangeGraphData,
+    isLoading: rangeGraphLoading,
+    useDefaultTodayLimit,
+  } = useMonitoringRangeMeasurements(idLieu, {
     enabled: isOpen && rangeEnabled,
     rangeStart: explicitRangeStart,
     rangeEnd: explicitRangeEnd,
@@ -588,7 +592,7 @@ export default function MonitoringDetailsModal({
                   chartRef={chartRef}
                   orderedData={orderedData}
                   graphMeasureCount={orderedData.length}
-                  isRangeSelected={rangeEnabled}
+                  isRangeSelected={rangeEnabled && !useDefaultTodayLimit}
                   auditLogs={auditLogs}
                   showAuditMarkers={showGraphAudits}
                   onShowAuditMarkersChange={setShowGraphAudits}
