@@ -89,6 +89,14 @@ export function CalibrationWorkflowClient() {
     ? session?.latestReadings ?? {}
     : previewReadingQuery.data?.readings ?? {}
 
+  const stopPreviewReading = () => {
+    setPreviewReadingEnabled(false)
+    return fetchJson<{ stopped: boolean }>("/api/metrologie/lecture-sondes", {
+      method: "DELETE",
+      credentials: "include",
+    }).catch(() => null)
+  }
+
   const startMutation = useMutation({
     mutationFn: () => fetchJson<SessionPayload>("/api/metrologie/etalonnage/session", {
       method: "POST",
@@ -232,7 +240,7 @@ export function CalibrationWorkflowClient() {
                   type="button"
                   variant="outline"
                   onClick={() => {
-                    setPreviewReadingEnabled(false)
+                    void stopPreviewReading()
                     setStep("selection")
                   }}
                 >
@@ -354,7 +362,7 @@ export function CalibrationWorkflowClient() {
                         }
                         onClick={() => {
                           if (previewReadingEnabled) {
-                            setPreviewReadingEnabled(false)
+                            void stopPreviewReading()
                             return
                           }
                           setPreviewReadingEnabled(true)
@@ -388,8 +396,7 @@ export function CalibrationWorkflowClient() {
                       ) : null}
                       {running ? (
                         <Button variant="destructive" className="w-full" onClick={() => stopMutation.mutate()} disabled={stopMutation.isPending}>
-                          <Square className="mr-2 h-4 w-4" />{t("workflow.calibration.stop")}
-                        </Button>
+                          <Square className="mr-2 h-4 w-4" />{t("workflow.calibration.stop")}</Button>
                       ) : (
                         <Button
                           className="w-full"

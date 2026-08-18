@@ -7,6 +7,10 @@ import { log } from "@/lib/logger"
 import { getAdjustmentSessionForUser } from "@/lib/metrology-adjustment-session"
 import { getCalibrationSessionForUser } from "@/lib/metrology-calibration-session"
 import { readMetrologySensorsPreview } from "@/lib/metrology-reading-preview"
+import {
+  ensureMetrologyReadingPreviewSession,
+  stopMetrologyReadingPreviewSession,
+} from "@/lib/metrology-reading-preview-session"
 import { getPermissionAliases } from "@/lib/permissions"
 
 const METROLOGY_OPERATION_CODES = getPermissionAliases("METROLOGY_OPERATION_ACCESS")
@@ -30,7 +34,19 @@ export const POST = withStandardOrExpertAnyAuthorizationLogging(
           "La lecture seule n'est pas disponible pendant une operation en cours.",
         )
       }
-      return apiOk(await readMetrologySensorsPreview(input.selectedSensorIds, input.operation))
+
+      const previewSession = await ensureMetrologyReadingPreviewSession(
+        ctx.user.userId,
+        input.selectedSensorIds,
+        input.operation,
+      )
+      const startedAt = new Date(previewSession.startedAt)
+
+      return apiOk(await readMetrologySensorsPreview(
+        input.selectedSensorIds,
+        input.operation,
+        startedAt,
+      ))
     } catch (error) {
       if (error instanceof z.ZodError) {
         return apiError(400, "validation_error", "Donnees invalides", { details: error.issues })
@@ -39,7 +55,29 @@ export const POST = withStandardOrExpertAnyAuthorizationLogging(
         userId: ctx.user.userId,
         error: error instanceof Error ? error.message : String(error),
       })
-      return apiError(400, "metrology_reading_failed", "Impossible de lire les sondes selectionnees.")
+      return apiError(
+        400,
+        "metrology_reading_failed",
+        error instanceof Error && error.message && !/prisma|sql|column|invocation|p20\d\d/i.test(error.message)
+          ? error.message
+          : "Impossible de lire les sondes selectionnees.",
+      )
+    }
+  },
+)
+
+export const DELETE = withStandardOrExpertAnyAuthorizationLogging(
+  METROLOGY_OPERATION_CODES,
+  async (_req: NextRequest, ctx) => {
+    try {
+      const stopped = await stopMetrologyReadingPreviewSession(ctx.user.userId)
+      return apiOk({ stopped })
+    } catch (error) {
+      log.error("METROLOGY_READING", "preview_stop_failed", {
+        userId: ctx.user.userId,
+        error: error instanceof Error ? error.message : String(error),
+      })
+      return apiError(400, "metrology_reading_stop_failed", "Impossible d'arreter la lecture simple.")
     }
   },
 )

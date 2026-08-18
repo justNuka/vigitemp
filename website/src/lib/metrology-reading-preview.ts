@@ -1,7 +1,16 @@
 import { getHotlineServerConfig } from "@/lib/hotline-config"
+import { getTableReference, isMssqlProvider, quoteIdentifier } from "@/lib/metrology-db"
+import type { MetrologyPreviewOperation } from "@/lib/metrology-reading-preview-session"
 import { prisma, prismaMesure } from "@/lib/prisma"
 
 const DEFAULT_SERVER_PORT = 5310
+
+type PreviewMeasurementRow = {
+  Valeur: unknown
+  Valeur_Brute: unknown
+  Unite: string | null
+  Date_Heure_Mesure: Date | string
+}
 
 export type MetrologyPreviewReading = {
   sensorId: number
@@ -50,7 +59,7 @@ async function readGsp(
     moduleName: string | null
     modulePort: string | null
   },
-  operationContext: "AJUSTAGE" | "ETALONNAGE",
+  operationContext: MetrologyPreviewOperation,
 ): Promise<MetrologyPreviewReading> {
   const measuredAt = new Date().toISOString()
   const config = await getHotlineServerConfig()
@@ -103,43 +112,80 @@ async function readGsp(
   }
 }
 
-async function readGso(sensor: {
-  id: number
-  serialNumber: string
-  address: string | null
-  unit: string | null
-}): Promise<MetrologyPreviewReading> {
-  const row = await prismaMesure.tm_mesures.findFirst({
-    where: {
-      OR: [
-        { Sonde_Numero_Serie: sensor.serialNumber },
-        ...(sensor.address ? [{ Adresse_Sonde: sensor.address }] : []),
-      ],
-    },
-    orderBy: [{ Date_Heure_Mesure: "desc" }, { Id_Mesure: "desc" }],
-    select: {
-      Valeur: true,
-      Valeur_Brute: true,
-      Unite: true,
-      Date_Heure_Mesure: true,
-    },
-  })
+async function readGso(
+  sensor: {
+    id: number
+    serialNumber: string
+    address: string | null
+    unit: string | null
+  },
+  operationContext: MetrologyPreviewOperation,
+  after: Date,
+): Promise<MetrologyPreviewReading> {
+  const tableName = operationContext === "ETALONNAGE" ? "tm_mesures_etalonnage" : "tm_mesures_ajustage"
+  const serialColumn = operationContext === "ETALONNAGE" ? "Sonde_Numero_serie" : "Sonde_Numero_Serie"
+  const idColumn = operationContext === "ETALONNAGE" ? "Id_Mesure_Etalonnage" : "Id_Mesure_Ajustage"
+  const address = sensor.address?.trim() || sensor.serialNumber
+
+  const rows = isMssqlProvider()
+    ? await prismaMesure.$queryRawUnsafe<PreviewMeasurementRow[]>(
+        `SELECT TOP (1)
+           ${quoteIdentifier("Valeur")},
+           ${quoteIdentifier("Valeur_Brute")},
+           ${quoteIdentifier("Unite")},
+           ${quoteIdentifier("Date_Heure_Mesure")}
+         FROM ${getTableReference(tableName)}
+         WHERE (
+           ${quoteIdentifier(serialColumn)} = @P1
+           OR ${quoteIdentifier("Adresse_Sonde")} = @P2
+         )
+           AND ${quoteIdentifier("Date_Heure_Mesure")} > @P3
+         ORDER BY ${quoteIdentifier("Date_Heure_Mesure")} DESC,
+                  ${quoteIdentifier(idColumn)} DESC`,
+        sensor.serialNumber,
+        address,
+        after,
+      )
+    : await prismaMesure.$queryRawUnsafe<PreviewMeasurementRow[]>(
+        `SELECT
+           ${quoteIdentifier("Valeur")},
+           ${quoteIdentifier("Valeur_Brute")},
+           ${quoteIdentifier("Unite")},
+           ${quoteIdentifier("Date_Heure_Mesure")}
+         FROM ${getTableReference(tableName)}
+         WHERE (
+           ${quoteIdentifier(serialColumn)} = ?
+           OR ${quoteIdentifier("Adresse_Sonde")} = ?
+         )
+           AND ${quoteIdentifier("Date_Heure_Mesure")} > ?
+         ORDER BY ${quoteIdentifier("Date_Heure_Mesure")} DESC,
+                  ${quoteIdentifier(idColumn)} DESC
+         LIMIT 1`,
+        sensor.serialNumber,
+        address,
+        after,
+      )
+
+  const row = rows[0]
+  const measuredAt = row ? new Date(row.Date_Heure_Mesure) : null
+  const value = row ? asFiniteNumber(row.Valeur) ?? asFiniteNumber(row.Valeur_Brute) : null
 
   return {
     sensorId: sensor.id,
     serialNumber: sensor.serialNumber,
-    value: asFiniteNumber(row?.Valeur),
+    value,
     rawValue: row?.Valeur_Brute == null ? null : String(row.Valeur_Brute),
     unit: row?.Unite?.trim() || sensor.unit,
-    measuredAt: row?.Date_Heure_Mesure.toISOString() ?? new Date().toISOString(),
+    measuredAt: measuredAt && !Number.isNaN(measuredAt.getTime()) ? measuredAt.toISOString() : new Date().toISOString(),
     source: "GSO",
-    error: row ? null : "Aucune mesure disponible",
+    error: row ? (value == null ? "Mesure GSO invalide" : null) : "En attente d'une nouvelle mesure metrologique",
   }
 }
 
 export async function readMetrologySensorsPreview(
   selectedSensorIds: number[],
-  operationContext: "AJUSTAGE" | "ETALONNAGE",
+  operationContext: MetrologyPreviewOperation,
+  after: Date,
 ) {
   const ids = [...new Set(selectedSensorIds)]
   const rows = await prisma.t_sonde.findMany({
@@ -179,7 +225,7 @@ export async function readMetrologySensorsPreview(
       modulePort: moduleRow?.Port_Serie ?? null,
     }
     readings[row.Id_Sonde] = row.Est_Sonde_GSO
-      ? await readGso(sensor)
+      ? await readGso(sensor, operationContext, after)
       : await readGsp(sensor, operationContext)
   }
 

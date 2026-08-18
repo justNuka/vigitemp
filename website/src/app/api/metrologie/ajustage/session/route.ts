@@ -12,6 +12,7 @@ import {
   startAdjustmentSession,
   stopAdjustmentSession,
 } from "@/lib/metrology-adjustment-session"
+import { stopMetrologyReadingPreviewSession } from "@/lib/metrology-reading-preview-session"
 import {
   clearMetrologySessionWatchdog,
   hasMetrologySessionWatchdog,
@@ -110,6 +111,11 @@ export const POST = withStandardOrExpertAnyAuthorizationLogging(
       const body = await req.json()
       const data = startSchema.parse(body)
       const userId = ctx.user.userId
+
+      // The preview mode deliberately keeps probes in A/E between polls. Always
+      // release it before taking ownership for a real adjustment session.
+      await stopMetrologyReadingPreviewSession(userId)
+
       const session = await startAdjustmentSession(
         ctx.user,
         {
