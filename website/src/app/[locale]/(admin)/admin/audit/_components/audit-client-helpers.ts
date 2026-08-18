@@ -22,8 +22,31 @@ type ParsedDetails = {
   raw?: string
 }
 
+const RESOURCE_LABEL_MAP: Record<string, { fr: string; en: string }> = {
+  'dashboard:audit_graph_openings': {
+    fr: "Affichage des ouvertures d'audit sur les graphiques",
+    en: 'Display audit openings on charts',
+  },
+}
+
 function joinParts(parts: string[], separator = ' - ') {
   return parts.filter(Boolean).join(separator)
+}
+
+function humanizeIdentifier(value: string, localeTag: string): string {
+  const normalized = value.trim().toLowerCase()
+  const configured = RESOURCE_LABEL_MAP[normalized]
+  if (configured) return localeTag.toLowerCase().startsWith('fr') ? configured.fr : configured.en
+
+  const words = value
+    .replace(/[.:/_-]+/g, ' ')
+    .replace(/([a-z])([A-Z])/g, '$1 $2')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLowerCase()
+
+  if (!words) return value
+  return `${words.charAt(0).toUpperCase()}${words.slice(1)}`
 }
 
 export function formatDateSafe(value: string, localeTag: string, timezone?: string): string | null {
@@ -67,7 +90,10 @@ export function parseAuditDetails(
     }
   }
 
-  const rawTitle = joinParts([resource, idPart], ' ').trim()
+  const resourceLabel = resource && !resource.startsWith('{') && !resource.toLowerCase().startsWith('ip:')
+    ? humanizeIdentifier(resource, localeTag)
+    : resource
+  const rawTitle = joinParts([resourceLabel, idPart], ' ').trim()
   const title = rawTitle || normalizedDetails
   const subtitleParts: string[] = []
 
@@ -93,13 +119,13 @@ export function parseAuditDetails(
     }
 
     if (from !== undefined || to !== undefined) {
-      const fromText = from !== undefined ? t('details.from', { value: String(from) }) : ''
-      const toText = to !== undefined ? t('details.to', { value: String(to) }) : ''
+      const fromText = from !== undefined ? t('details.from', { value: formatFieldValue('from', from, localeTag, timezone) }) : ''
+      const toText = to !== undefined ? t('details.to', { value: formatFieldValue('to', to, localeTag, timezone) }) : ''
       subtitleParts.push(joinParts([fromText, toText]))
     }
 
     if (action && subtitleParts.length === 0) {
-      subtitleParts.push(t('details.action', { action }))
+      subtitleParts.push(t('details.action', { action: humanizeIdentifier(action, localeTag) }))
     }
   }
 
@@ -107,9 +133,12 @@ export function parseAuditDetails(
     subtitleParts.push(t('details.ip', { ip }))
   }
 
-  if (subtitleParts.length === 0 && normalizedDetails !== title) {
+  if (subtitleParts.length === 0 && normalizedDetails !== resource && normalizedDetails !== title) {
     if (!(normalizedDetails.startsWith('IP:') && (ip || title.startsWith('IP:')))) {
-      subtitleParts.push(normalizedDetails)
+      const readableParts = parts
+        .slice(1)
+        .filter((part) => !part.startsWith('{') && !part.toLowerCase().startsWith('ip:'))
+      if (readableParts.length > 0) subtitleParts.push(readableParts.join(' - '))
     }
   }
 
@@ -243,7 +272,7 @@ export function renderChangesAsRows(
     if (value === null || value === undefined) continue
 
     const labelDef = FIELD_LABEL_MAP[key]
-    const label = labelDef ? (isFr ? labelDef.fr : labelDef.en) : key
+    const label = labelDef ? (isFr ? labelDef.fr : labelDef.en) : humanizeIdentifier(key, localeTag)
 
     if (isFromToChange(value)) {
       const beforeLabel = isFr ? 'Avant' : 'Before'
