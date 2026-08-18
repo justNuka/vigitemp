@@ -23,7 +23,8 @@ Objectif : permettre une reprise immédiate du travail dans une nouvelle convers
 - PR #18 : création et centralisation de ce backlog.
 - PR #19 : B17-006, graphique Surveillance limité aux 125 dernières mesures du jour — **mergée dans `dev`**.
 - PR #20 : B17-011, temps relatif des alarmes actives du dashboard — **mergée dans `dev` le 18/08/2026**, merge `3810c88dc4ff52b72432aa74b1333705611a4f61`.
-- PR #21 : B17-003 + B17-004, anciennes sessions d’ajustage non restaurées comme session courante — **ouverte vers `dev`**.
+- PR #21 : B17-003 + B17-004, anciennes sessions d’ajustage non restaurées comme session courante — **mergée dans `dev` le 18/08/2026**, merge `11cd817614f00d61dd2ffe2cb341662202d4fa3b`.
+- PR #22 : B17-005, suivi global ajustage/étalonnage et panneau déplaçable — **ouverte vers `dev`**.
 
 ### Statuts
 
@@ -84,7 +85,7 @@ Après plus de 24 h sans utilisation, un poste peut rouvrir VigiSensys et retrou
 
 ## B17-003 — Anciennes informations / exports d’ajustage visibles lors d’une nouvelle opération
 
-**Statut : `PR_OUVERTE` — PR #21 — branche `agent/clear-stale-adjustment-session`**
+**Statut : `CORRIGE_DEV` — PR #21 — branche `agent/clear-stale-adjustment-session`**
 
 ### Retour
 
@@ -122,7 +123,7 @@ Comportement :
 
 ## B17-004 — Anciennes valeurs / points d’ajustage conservés
 
-**Statut : `PR_OUVERTE` — PR #21**
+**Statut : `CORRIGE_DEV` — PR #21**
 
 ### Retour
 
@@ -149,24 +150,46 @@ Le même filtrage de session côté endpoint empêche les `validatedPoints`, `pe
 
 ---
 
-## B17-005 — Bandeau global `Ajustage en cours` masque des boutons
+## B17-005 — Suivi global des opérations d’ajustage / étalonnage
 
-**Statut : `A_FAIRE`**
+**Statut : `PR_OUVERTE` — PR #22 — branche `agent/metrology-operation-progress`**
 
 ### Retour
 
-Le panneau flottant global en haut à droite (`Ajustage en cours`, timer, arrêt) peut recouvrir des boutons de Surveillance et n’est pas déplaçable.
+Le panneau flottant global de suivi pouvait recouvrir des boutons et n’était pas déplaçable. Le retest du 18/08/2026 a également confirmé une régression plus importante : aucun panneau global n’apparaissait lors d’un étalonnage, alors que l’ajustage et l’étalonnage doivent proposer le même suivi d’opération.
 
-### Cible UX
+### Cause confirmée le 18/08/2026
 
-Le suivi doit rester disponible partout sans bloquer l’application. Options à privilégier : panneau déplaçable borné à la fenêtre, panneau minimisable/repliable, ou emplacement ne recouvrant pas les actions.
+Le composant global `AdjustmentOperationTimer`, monté dans les providers de l’application, ne surveillait que `GET /api/metrologie/ajustage/session`. La session d’étalonnage disposait bien de son endpoint `GET /api/metrologie/etalonnage/session`, mais aucun suivi global ne l’utilisait.
 
-### Critères
+### Correctif PR #22
 
-- aucun bouton inaccessible;
-- timer et arrêt toujours disponibles;
-- panneau récupérable et responsive;
-- aucune position hors écran permanente.
+Fichier principal :
+
+- `website/src/components/metrology/adjustment-operation-timer.tsx`
+
+Comportement :
+
+- le panneau global surveille maintenant les sessions d’ajustage **et** d’étalonnage;
+- une session `running` d’étalonnage affiche `Étalonnage en cours`, le nombre de sondes, un compte à rebours calculé sur la limite serveur de 90 minutes et une action d’arrêt;
+- l’ajustage conserve son compte à rebours basé sur `expiresAt`, son extension conditionnelle de 30 minutes et son arrêt existant;
+- les clés React Query utilisées sont les mêmes que dans les écrans métier, ce qui permet au panneau d’être mis à jour immédiatement après le démarrage/arrêt d’une opération dans l’onglet courant;
+- le panneau peut être déplacé par sa barre supérieure;
+- sa position est bornée à la fenêtre et recalée lors d’un redimensionnement afin qu’il reste récupérable;
+- le backend des opérations et les mécanismes de restauration d’état des sondes ne sont pas modifiés.
+
+### Validation terrain
+
+- démarrer un étalonnage : le panneau global doit apparaître immédiatement avec `Étalonnage en cours`;
+- naviguer vers Surveillance pendant l’étalonnage : panneau, timer et arrêt restent disponibles;
+- vérifier que le compte à rebours d’étalonnage part de la durée maximale serveur de 1 h 30;
+- arrêter l’étalonnage depuis le panneau et confirmer la fin de session ainsi que la restauration des états des sondes;
+- démarrer un ajustage et vérifier le même suivi global;
+- vérifier que l’extension reste proposée uniquement pour l’ajustage lorsque ses conditions sont remplies;
+- déplacer le panneau aux quatre bords de la fenêtre : il ne doit jamais devenir inaccessible;
+- redimensionner la fenêtre après déplacement : le panneau doit être recalé dans la zone visible;
+- vérifier qu’une session terminée/annulée/échouée n’affiche pas de panneau global;
+- thème clair/sombre et affichage FR/EN.
 
 ---
 
@@ -286,12 +309,11 @@ Un helper local normalise les `Date` Prisma / chaînes ISO UTC en heure murale d
 
 ## Ordre de traitement actuel
 
-1. **B17-003 + B17-004** — PR #21 ouverte; attendre validation/merge.
-2. **B17-005** — rendre le bandeau global d’ajustage non bloquant.
-3. **B17-002** — investiguer la durée réelle des sessions d’authentification.
-4. **B17-010** — reproduire puis corriger les libellés de seuil uniquement si encore nécessaire.
+1. **B17-005** — PR #22 ouverte; attendre validation/merge.
+2. **B17-002** — investiguer la durée réelle des sessions d’authentification.
+3. **B17-010** — reproduire puis corriger les libellés de seuil uniquement si encore nécessaire.
 
-B17-001, B17-006, B17-007, B17-008, B17-009 et B17-011 sont déjà corrigés dans `dev` et ne doivent pas être recodés avant validation terrain.
+B17-001, B17-003, B17-004, B17-006, B17-007, B17-008, B17-009 et B17-011 sont déjà corrigés dans `dev` et ne doivent pas être recodés avant validation terrain.
 
 ## Règle de reprise pour une nouvelle conversation
 
