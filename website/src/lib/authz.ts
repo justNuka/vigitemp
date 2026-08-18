@@ -8,20 +8,6 @@ function normalizeCode(code: string | null | undefined): string {
   return (code ?? "").trim().toUpperCase()
 }
 
-function profileHasAnyAuthorization(
-  profil: Awaited<ReturnType<typeof getUserProfile>>,
-  codes: readonly string[],
-): boolean {
-  if (!profil) return false
-
-  const expected = new Set(codes.map((code) => normalizeCode(code)).filter(Boolean))
-  if (expected.size === 0) return false
-
-  return profil.t_liaison_profil_autorisation.some((liaison) =>
-    expected.has(normalizeCode(liaison.t_autorisation.Code_Autorisation)),
-  )
-}
-
 /**
  * Cached per-request: deduplicates identical userId profile lookups within
  * a single Next.js App Router request tree (React 19 cache() scoping).
@@ -52,6 +38,20 @@ const getUserProfile = cache(async (userId: number) => {
     },
   })
 })
+
+function profileHasAnyAuthorization(
+  profil: Awaited<ReturnType<typeof getUserProfile>>,
+  codes: readonly string[],
+): boolean {
+  if (!profil) return false
+
+  const expected = new Set(codes.map((code) => normalizeCode(code)).filter(Boolean))
+  if (expected.size === 0) return false
+
+  return profil.t_liaison_profil_autorisation.some((liaison) =>
+    expected.has(normalizeCode(liaison.t_autorisation.Code_Autorisation)),
+  )
+}
 
 export async function isAdminUser(userId: number): Promise<boolean> {
   const profil = await getUserProfile(userId)
