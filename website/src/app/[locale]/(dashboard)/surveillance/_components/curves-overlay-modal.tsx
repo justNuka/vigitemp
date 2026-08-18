@@ -20,7 +20,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { DateRangePicker } from "@/components/ui/date-range-picker"
 import { getJson } from "@/lib/http"
 import { toApiUtcDateTime } from "@/lib/date-range-api"
-import { formatTimeAxisLabel } from "@/lib/measurements"
+import { formatMeasureValue, formatTimeAxisLabel, normalizeMeasureNumber } from "@/lib/measurements"
 import { formatDbDateTime, parseDbDateTime } from "@/lib/date-display"
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend)
@@ -114,7 +114,10 @@ export function CurvesOverlayModal({ open, onOpenChange, locations }: Props) {
     const datasets = appliedLocations.map((location, index) => {
       const map = new Map<string, number | null>()
       for (const point of dataByLocation[location.id] ?? []) {
-        map.set(point.DateHeureMesureIso ?? point.DateHeureMesure, point.Valeur)
+        map.set(
+          point.DateHeureMesureIso ?? point.DateHeureMesure,
+          normalizeMeasureNumber(point.Valeur, 4),
+        )
       }
 
       return {
@@ -225,7 +228,7 @@ export function CurvesOverlayModal({ open, onOpenChange, locations }: Props) {
     const rows = chartPayload.labels.map((label, rowIndex) => {
       const values = chartPayload.datasets.map((dataset) => {
         const value = dataset.data[rowIndex]
-        return value === null || value === undefined ? "" : String(value)
+        return value === null || value === undefined ? "" : formatMeasureValue(value, null, localeTag)
       })
       return [formatDbDateTime(label, { locale: localeTag, fallback: label }), ...values]
     })
@@ -272,7 +275,6 @@ export function CurvesOverlayModal({ open, onOpenChange, locations }: Props) {
     popup.focus()
     popup.print()
   }
-
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -343,9 +345,7 @@ export function CurvesOverlayModal({ open, onOpenChange, locations }: Props) {
             </p>
             {appliedIds.length >= 2 ? (
               <p className="mt-1 text-xs text-muted-foreground">
-                {appliedRange?.from
-                  ? `${locale === "fr" ? "Superposition affich?e" : "Displayed overlay"} : ${appliedLocations.length} ${locale === "fr" ? "lieux" : "locations"}`
-                  : `${locale === "fr" ? "Superposition affich?e" : "Displayed overlay"} : ${appliedLocations.length} ${locale === "fr" ? "lieux" : "locations"}`}
+                {`${locale === "fr" ? "Superposition affichée" : "Displayed overlay"} : ${appliedLocations.length} ${locale === "fr" ? "lieux" : "locations"}`}
               </p>
             ) : null}
           </div>
@@ -364,38 +364,47 @@ export function CurvesOverlayModal({ open, onOpenChange, locations }: Props) {
             {chartPayload.datasets.length >= 2 && chartPayload.labels.length > 0 ? (
               <div className="min-h-0 flex-1">
                 <Line
-                ref={chartRef}
-                data={chartPayload}
-                options={{
-                  responsive: true,
-                  maintainAspectRatio: false,
-                  plugins: {
-                    legend: {
-                      position: "bottom",
-                    },
-                  },
-                  scales: {
-                    x: {
-                      ticks: {
-                        autoSkip: true,
-                        maxTicksLimit: chartSpanMs >= 24 * 60 * 60 * 1000 ? 10 : 8,
-                        maxRotation: 0,
-                        minRotation: 0,
-                        callback: (_value, index) => {
-                          const rawValue = chartPayload.labels[index]
-                          return rawValue ? formatTimeAxisLabel(rawValue, localeTag, chartSpanMs) : ""
+                  ref={chartRef}
+                  data={chartPayload}
+                  options={{
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                      legend: {
+                        position: "bottom",
+                      },
+                      tooltip: {
+                        callbacks: {
+                          label: (context) => {
+                            const value = typeof context.parsed.y === "number" ? context.parsed.y : null
+                            const formatted = formatMeasureValue(value, null, localeTag)
+                            return `${context.dataset.label ?? ""}: ${formatted}`
+                          },
                         },
                       },
                     },
-                    y: {
-                      ticks: {
-                        callback: (value) => `${value}`,
+                    scales: {
+                      x: {
+                        ticks: {
+                          autoSkip: true,
+                          maxTicksLimit: chartSpanMs >= 24 * 60 * 60 * 1000 ? 10 : 8,
+                          maxRotation: 0,
+                          minRotation: 0,
+                          callback: (_value, index) => {
+                            const rawValue = chartPayload.labels[index]
+                            return rawValue ? formatTimeAxisLabel(rawValue, localeTag, chartSpanMs) : ""
+                          },
+                        },
+                      },
+                      y: {
+                        ticks: {
+                          callback: (value) => formatMeasureValue(Number(value), null, localeTag),
+                        },
                       },
                     },
-                  },
-                }}
-                height={340}
-              />
+                  }}
+                  height={340}
+                />
               </div>
             ) : (
               <div className="min-h-0 flex-1 flex items-center justify-center text-sm text-muted-foreground">

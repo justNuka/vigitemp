@@ -5,7 +5,7 @@ import { apiError, apiOk } from "@/lib/api-response"
 import { prisma } from "@/lib/prisma"
 import { log } from "@/lib/logger"
 import { applyAccessFilter, buildAlarmAccessFilter, getUserLocationScope } from "@/lib/location-access-scope"
-import { serializeDbDateTime } from "@/lib/date-display"
+import { serializeStoredDbDateTime } from "@/lib/date-display"
 import { normalizeMeasureNumber } from "@/lib/measurements"
 
 function mapAlarmType(type: string | null | undefined) {
@@ -98,8 +98,8 @@ export const GET = withAuthLogging(
               2,
             )
           : null,
-        triggeredAt: serializeDbDateTime(alarm.Date_Heure_Debut) || null,
-        endedAt: serializeDbDateTime(alarm.Date_Heure_Fin) || null,
+        triggeredAt: serializeStoredDbDateTime(alarm.Date_Heure_Debut) || null,
+        endedAt: serializeStoredDbDateTime(alarm.Date_Heure_Fin) || null,
       })
     } catch (error) {
       log.error("alarmes/[id]", "get_alarm_detail_failed", { error })
