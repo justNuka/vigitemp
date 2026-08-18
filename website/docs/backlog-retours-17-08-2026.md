@@ -4,54 +4,55 @@
 
 Ce document centralise les retours terrain transmis sous forme de captures annotées autour du 17 août 2026.
 
-Objectif : permettre une reprise immédiate du travail dans une nouvelle conversation, sans avoir à reconstituer le contexte. Chaque point décrit donc le symptôme, l'état du code, le comportement attendu, les zones à vérifier, les critères d'acceptation et, lorsqu'il existe, le lot GitHub associé.
+Objectif : permettre une reprise immédiate du travail dans une nouvelle conversation. Chaque point décrit le symptôme, l’état vérifié dans le code, le comportement attendu, les correctifs déjà livrés, les fichiers principaux et la validation terrain restante.
 
 ## Référence de travail
 
 - Dépôt : `justNuka/vigitemp`
-- Branche cible : `dev`
-- Workflow : une branche dédiée par lot, PR vers `dev`, puis attente du merge avant de démarrer le lot suivant.
+- Branche d’intégration : `dev`
+- Ne pas travailler directement sur `dev`.
+- Workflow : vérifier le HEAD réel de `dev` et les PR avant chaque lot, créer `agent/<sujet>`, limiter le diff, mettre à jour ce backlog, ouvrir une PR vers `dev`, attendre le merge utilisateur, puis revérifier `dev` avant le lot suivant.
+
+### PR récentes utiles
+
 - PR #13 : expiration automatique des sessions de métrologie.
-- PR #14 : état `E` des sondes pendant l'étalonnage.
+- PR #14 : état `E` des sondes pendant l’étalonnage.
 - PR #15 : droits administrateur basés sur les autorisations.
 - PR #16 : fiabilisation des états des sondes et de la lecture simple en métrologie.
-- PR #17 : corrections affichage mesures, dates, analyse d'impact, superposition de courbes et audit.
+- PR #17 : corrections affichage mesures, dates, analyse d’impact, superposition de courbes et audit.
 - PR #18 : création et centralisation de ce backlog.
-- PR #19 : complément B17-006, graphique Surveillance limité aux 125 dernières mesures du jour. **Mergée dans `dev` le 18/08/2026.**
-- PR #20 : correction B17-011 sur le temps relatif des alarmes actives du dashboard. **PR ouverte, en attente de validation/merge.**
+- PR #19 : B17-006, graphique Surveillance limité aux 125 dernières mesures du jour — **mergée dans `dev`**.
+- PR #20 : B17-011, temps relatif des alarmes actives du dashboard — **mergée dans `dev` le 18/08/2026**, merge `3810c88dc4ff52b72432aa74b1333705611a4f61`.
 
-### Statuts utilisés
+### Statuts
 
-- `CORRIGE_DEV` : correctif déjà mergé dans `dev`; validation terrain encore possible.
-- `PR_OUVERTE` : correctif implémenté sur une branche et PR ouverte vers `dev`, mais pas encore mergée.
-- `A_VALIDER` : un correctif existe ou un ancien backlog indique le point comme traité, mais il faut le retester sur la dernière version de `dev`.
-- `A_FAIRE` : comportement non couvert et nécessitant une modification.
-- `A_INVESTIGUER` : la cause exacte doit être confirmée avant modification.
+- `CORRIGE_DEV` : correctif mergé dans `dev`; validation terrain encore possible.
+- `PR_OUVERTE` : correctif présent sur une branche avec PR ouverte, pas encore mergée.
+- `EN_COURS` : branche en cours de préparation.
+- `A_VALIDER` : un correctif existe ou le défaut pourrait déjà être traité; retest nécessaire.
+- `A_FAIRE` : modification nécessaire.
+- `A_INVESTIGUER` : cause à confirmer avant modification.
 
 ---
 
-## B17-001 — Décalage de +2 h dans le détail d'une alarme
+## B17-001 — Décalage de +2 h dans le détail d’une alarme
 
 **Statut : `CORRIGE_DEV` — PR #17**
 
 ### Retour
 
-Dans le détail/analyse d'une alarme, les champs de début et de fin ainsi que les points du graphique apparaissaient environ deux heures après l'heure réellement stockée.
+Les heures de début/fin d’alarme et les points du graphique pouvaient apparaître environ deux heures après les valeurs réellement stockées.
 
-### Cause identifiée
+### Cause / correctif
 
-Des `DATETIME` MySQL stockés sans information de fuseau étaient interprétés comme des dates UTC puis reconvertis en heure locale.
+Les `DATETIME` MySQL sans fuseau étaient réinterprétés comme UTC. La PR #17 utilise la sérialisation dédiée aux dates stockées (`serializeStoredDbDateTime()`) afin de préserver l’heure murale de la base.
 
-### Correctif présent
+### Validation terrain
 
-La PR #17 fait utiliser la sérialisation dédiée aux dates stockées en base (`serializeStoredDbDateTime()`) sur les routes concernées afin de ne plus ajouter artificiellement le décalage local.
-
-### Validation terrain attendue
-
-- comparer `Debut_Alarme` et `Fin_Alarme` en base avec le détail affiché ;
-- vérifier la même heure dans le tooltip du graphique ;
-- vérifier un cas d'alarme ouverte et un cas d'alarme terminée ;
-- aucun décalage de +1 h / +2 h ne doit réapparaître.
+- comparer `Debut_Alarme` / `Fin_Alarme` en base avec le détail;
+- contrôler le tooltip du graphique;
+- vérifier une alarme ouverte et une terminée;
+- garder un contrôle lors du changement heure été/hiver.
 
 ---
 
@@ -61,89 +62,89 @@ La PR #17 fait utiliser la sérialisation dédiée aux dates stockées en base (
 
 ### Retour
 
-Un poste n'ayant pas accédé à VigiSensys depuis plus de 24 heures peut rouvrir le site et retrouver une session authentifiée sans nouvelle demande d'identifiant/mot de passe.
-
-### Comportement attendu
-
-La durée de session doit être explicite et cohérente avec la politique produit. Si la session applicative est expirée, l'ouverture d'une route protégée doit demander une nouvelle authentification, sauf si un mécanisme SSO volontaire est activé.
+Après plus de 24 h sans utilisation, un poste peut rouvrir VigiSensys et retrouver une session authentifiée sans nouvelle saisie d’identifiants.
 
 ### Investigation à mener
 
-- retrouver le mécanisme de création et de validation du cookie/session côté Next.js ;
-- vérifier `maxAge`, `expires`, éventuel refresh silencieux et durée du JWT/token ;
-- vérifier si la session est prolongée à chaque requête ;
-- distinguer authentification interne et éventuel SSO Windows/AD ;
-- vérifier la persistance après fermeture complète du navigateur puis après redémarrage du poste.
+- création/validation du cookie ou JWT;
+- `maxAge`, `expires`, durée du token et éventuel refresh;
+- éventuelle prolongation à chaque requête;
+- différencier authentification interne et SSO Windows/AD;
+- fermeture navigateur et redémarrage poste.
 
-### Critères d'acceptation
+### Critères
 
-- la durée réelle correspond à la durée configurée/documentée ;
-- une session expirée ne donne plus accès aux routes protégées ;
-- aucune reconnexion silencieuse n'a lieu hors SSO explicitement configuré ;
-- le comportement est identique entre dashboard utilisateur et administration.
-
----
-
-## B17-003 — Anciennes informations d'ajustage visibles lors d'une nouvelle opération
-
-**Statut : `A_FAIRE`**
-
-### Retour
-
-La page **Réaliser un ajustage** peut afficher, alors qu'aucune nouvelle opération n'est réellement en cours, le bandeau `Ajustage en cours` ainsi que les exports XML issus d'une ancienne session de métrologie.
-
-### Comportement attendu
-
-Une nouvelle entrée sur l'écran d'ajustage ne doit réafficher que :
-
-- une session serveur réellement active et non expirée ; ou
-- les données explicitement rattachées à l'opération que l'utilisateur vient de reprendre.
-
-Les exports d'une opération terminée ne doivent pas être présentés comme appartenant à la future opération.
-
-### Pistes de vérification
-
-- état de session d'ajustage côté API/backend ;
-- distinction entre dernière opération terminée et session active ;
-- données restaurées depuis `localStorage`, `sessionStorage`, React state ou cache de requêtes ;
-- logique de chargement de la liste des exports ;
-- nettoyage lors de la fin, expiration ou annulation d'une session.
-
-### Critères d'acceptation
-
-- aucune ancienne liste d'exports n'apparaît au démarrage d'une nouvelle opération ;
-- une session réellement active reste récupérable après rechargement de page ;
-- la fin/annulation/expiration nettoie l'état présenté à l'écran ;
-- le nettoyage ne supprime pas les exports historiques enregistrés en base.
+- durée réelle explicite et cohérente avec la politique produit;
+- session expirée = plus d’accès aux routes protégées;
+- pas de reconnexion silencieuse hors SSO volontaire;
+- comportement cohérent entre dashboard et administration.
 
 ---
 
-## B17-004 — Anciennes valeurs de formulaire et anciens points d'ajustage conservés
+## B17-003 — Anciennes informations / exports d’ajustage visibles lors d’une nouvelle opération
 
-**Statut : `A_FAIRE` — à traiter avec B17-003 si la cause est commune**
+**Statut : `EN_COURS` — branche `agent/clear-stale-adjustment-session`**
 
 ### Retour
 
-Dans l'écran d'ajustage, des informations provenant d'une ancienne session peuvent être retrouvées dans le milieu d'inter-comparaison et dans les points d'ajustage, par exemple des anciennes valeurs de premier/deuxième point.
+La page **Réaliser un ajustage** peut réafficher le message de fin et les boutons d’exports XML d’une ancienne opération alors qu’aucun ajustage n’est réellement actif.
 
-### Comportement attendu
+### Investigation réalisée le 18/08/2026
 
-Lorsqu'une nouvelle opération est créée, les champs spécifiques à l'opération précédente doivent repartir de leur valeur initiale. Une reprise de session ne doit restaurer ces valeurs que si le backend confirme que la session correspondante est toujours active.
+La session d’ajustage est conservée dans la map serveur `sessionsByUserId` même après `completed`, `cancelled` ou `failed`. C’est volontairement utile juste après la fin pour exposer le message final et les exports, mais `GET /api/metrologie/ajustage/session` renvoyait ensuite encore cette même session lors d’un futur chargement de page.
 
-### Points à auditer
+L’UI lit directement `session.message`, `session.persistedAdjustments` et `session.validatedPoints`. Une session terminale conservée côté serveur était donc présentée comme si elle faisait encore partie du parcours courant.
 
-- initialisation du formulaire ;
-- effets React de restauration de session ;
-- cache des endpoints métrologie ;
-- valeurs par défaut venant de la dernière opération enregistrée ;
-- reset effectué après arrêt, annulation et expiration 1 h 30.
+### Correctif implémenté sur la branche
 
-### Critères d'acceptation
+Fichier principal :
 
-- nouvelle opération = points d'ajustage vides/non validés ;
-- nouvelle opération = aucun état transitoire de l'ancienne opération ;
-- reprise d'une session active = valeurs courantes correctement restaurées ;
-- terminer puis démarrer une autre session ne mélange aucune donnée entre les deux.
+- `website/src/app/api/metrologie/ajustage/session/route.ts`
+
+Comportement :
+
+- une session `running` ou `idle` reste toujours restaurable après rechargement;
+- une session qui vient de terminer reste brièvement exposable afin que le rafraîchissement déclenché immédiatement après la validation conserve le message et les liens XML dans l’écran courant;
+- une ancienne session terminale n’est plus restaurée comme session courante lors d’un retour ultérieur sur la page;
+- aucun export historique ni ligne `t_ajustage` n’est supprimé de la base;
+- le watchdog n’est pas modifié pour les sessions réellement actives.
+
+### Validation terrain
+
+- terminer un ajustage à deux points et vérifier que les exports sont bien proposés immédiatement;
+- quitter puis rouvrir **Réaliser un ajustage** : les exports de l’ancienne opération ne doivent plus apparaître comme exports courants;
+- recharger pendant une session `running` : la session doit être récupérée normalement;
+- annuler/laisser expirer une session puis revenir plus tard : aucun ancien message d’opération courante;
+- vérifier que les exports historiques restent accessibles par leurs mécanismes dédiés et que les données en base sont intactes.
+
+---
+
+## B17-004 — Anciennes valeurs / points d’ajustage conservés
+
+**Statut : `EN_COURS` — traité dans le même lot que B17-003**
+
+### Retour
+
+Lors d’une nouvelle préparation, le premier/deuxième point et d’autres informations d’une ancienne session pouvaient réapparaître.
+
+### Cause commune confirmée
+
+Les inputs des points utilisent en priorité `session.validatedPoints[1/2]`. Tant que l’API renvoyait l’ancienne session terminale, les valeurs validées de l’opération précédente pouvaient donc être réinjectées dans l’écran.
+
+La restauration des paramètres de formulaire (sondes, opérateur, étalon, milieu, plateau, intervalle) est déjà protégée côté React par `session.status === "running"`; le problème persistant identifié dans le retour est donc principalement la présence de la session terminale dans le payload courant.
+
+### Correctif du lot
+
+Le même filtrage de session côté endpoint empêche les `validatedPoints`, `persistedAdjustments` et messages d’une ancienne session terminale d’être réutilisés lors d’un futur chargement. Une session réellement active reste restaurée avec ses valeurs courantes.
+
+### Validation terrain
+
+- terminer un ajustage avec deux points non triviaux;
+- quitter/revenir sur la page et préparer une autre opération;
+- vérifier que les points sont vides/non validés avant le nouveau démarrage;
+- vérifier qu’un ancien milieu/étalon n’est pas restauré par une session terminale;
+- pendant une vraie session active, recharger et vérifier au contraire que les valeurs de session sont conservées;
+- démarrer la seconde opération et confirmer qu’aucune donnée transitoire de la première n’est mélangée.
 
 ---
 
@@ -153,257 +154,155 @@ Lorsqu'une nouvelle opération est créée, les champs spécifiques à l'opérat
 
 ### Retour
 
-Pendant un ajustage, le panneau flottant global en haut à droite (`Ajustage en cours`, chronomètre et bouton d'arrêt) recouvre des boutons et zones interactives de la page Surveillance. Il n'est pas déplaçable.
+Le panneau flottant global en haut à droite (`Ajustage en cours`, timer, arrêt) peut recouvrir des boutons de Surveillance et n’est pas déplaçable.
 
-### Comportement attendu
+### Cible UX
 
-Le suivi de session doit rester disponible partout sans empêcher l'utilisation de l'application.
+Le suivi doit rester disponible partout sans bloquer l’application. Options à privilégier : panneau déplaçable borné à la fenêtre, panneau minimisable/repliable, ou emplacement ne recouvrant pas les actions.
 
-### Solution UX à privilégier
+### Critères
 
-Rendre le bandeau non bloquant, par exemple :
-
-- panneau déplaçable avec position bornée à la fenêtre ;
-- panneau repliable/minimisable avec un état compact ;
-- ou emplacement fixe réservé dans la mise en page ne recouvrant pas les actions.
-
-Le choix final doit conserver un accès simple à l'arrêt de l'ajustage et au temps restant.
-
-### Critères d'acceptation
-
-- aucun bouton ne devient inaccessible à cause du bandeau ;
-- le bandeau reste visible ou facilement récupérable ;
-- son déplacement/repli ne casse pas en responsive ;
-- le bouton d'arrêt et le timer restent fonctionnels ;
-- la position éventuelle ne peut pas sortir définitivement de l'écran.
+- aucun bouton inaccessible;
+- timer et arrêt toujours disponibles;
+- panneau récupérable et responsive;
+- aucune position hors écran permanente.
 
 ---
 
-## B17-006 — Détail Surveillance : plage par défaut du jour + graphique limité aux 125 dernières mesures
+## B17-006 — Détail Surveillance : journée courante + 125 dernières mesures
 
 **Statut : `CORRIGE_DEV` — PR #19**
 
-### Retour initial
+### Comportement livré
 
-Un clic sur le graphique d'une carte Surveillance pouvait charger l'intégralité de l'historique du lieu dans la modale, notamment dans l'onglet tableau.
+- journée actuelle sélectionnée par défaut;
+- graphique limité aux 125 mesures les plus récentes de cette journée;
+- points retriés chronologiquement;
+- compteur `X dernières mesures` sur le jour courant;
+- tableau indépendant et paginé sur toutes les mesures de la journée;
+- autre plage explicite = chargement complet de cette plage avec compteur classique.
 
-### Socle déjà présent dans `dev`
-
-La PR #17 :
-
-- sélectionne automatiquement la journée courante à l'ouverture ;
-- construit une vraie plage 00:00:00 → 23:59:59.999 ;
-- interroge le backend avec cette plage pour le graphique et le tableau ;
-- initialise visuellement le sélecteur sur la journée courante.
-
-### Complément livré par la PR #19
-
-Branche : `agent/surveillance-default-125-measures`
-
-Fichiers principaux :
+### Fichiers principaux
 
 - `website/src/components/monitoring-details-modal.tsx`
 - `website/src/components/monitoring-details/use-monitoring-range-measurements.ts`
 
-Comportement :
+### Validation terrain
 
-- la journée courante reste la plage visible par défaut ;
-- le graphique charge au maximum les 125 mesures les plus récentes de cette journée ;
-- les points sont retriés chronologiquement avant affichage ;
-- le tableau reste indépendant et paginé sur toutes les mesures de la journée ;
-- le compteur affiche `X dernières mesures` sur la plage du jour ;
-- une autre plage de dates continue à charger l'ensemble de la plage avec le compteur classique.
-
-### Validation terrain à faire
-
-- ouvrir un lieu depuis Surveillance sans changer la plage ;
-- vérifier que la plage affichée est aujourd'hui ;
-- si au moins 125 mesures existent aujourd'hui, vérifier le libellé `125 dernières mesures` ;
-- si moins de 125 mesures existent, vérifier que le nombre réel est affiché ;
-- vérifier qu'aucune mesure de la veille ne remonte dans le graphique ;
-- ouvrir l'onglet tableau et vérifier qu'il contient bien toutes les mesures de la journée avec pagination ;
-- sélectionner une autre plage et vérifier que le graphique recharge toutes les mesures de cette plage avec un compteur de plage classique.
+- aucune mesure de la veille dans le graphique par défaut;
+- 125 points maximum si disponibles;
+- nombre réel si moins de 125;
+- tableau complet de la journée avec pagination;
+- autre plage correctement rechargée.
 
 ---
 
-## B17-007 — Analyse d'impact : ancienne alarme hors période affichée
+## B17-007 — Analyse d’impact : ancienne alarme hors période
 
 **Statut : `CORRIGE_DEV` — PR #17**
 
-### Retour
+Les alarmes réelles sont désormais retenues selon leur date de déclenchement dans la période analysée. Une ancienne alarme ouverte hors période ne doit plus apparaître uniquement parce que sa fin est `NULL`.
 
-L'analyse d'impact pouvait inclure une ancienne alarme encore ouverte, par exemple démarrée en mars, dans une analyse portant sur une période de juin/juillet.
+### Validation
 
-### Correctif présent
-
-Les alarmes réelles sont désormais retenues selon leur date de déclenchement dans la période analysée. Une alarme historique dont la fin est `NULL` ne suffit plus à la faire entrer dans une période ultérieure.
-
-### Validation terrain attendue
-
-- analyser une période ne contenant pas le début d'une vieille alarme ouverte ;
-- vérifier qu'elle n'apparaît pas ;
-- vérifier qu'une alarme réellement déclenchée pendant la période apparaît ;
-- vérifier les bornes exactes début/fin de période.
+Tester une vieille alarme ouverte hors période, puis une alarme dont le début appartient réellement à la période.
 
 ---
 
-## B17-008 — Journal d'audit : identifiants techniques visibles
+## B17-008 — Journal d’audit : identifiants techniques visibles
 
 **Statut : `CORRIGE_DEV` — PR #17**
 
-### Retour
+La PR #17 ajoute des mappings/humanisations, `Oui/Non` pour les booléens et des blocs Avant/Après lisibles.
 
-Le journal affichait directement des clés internes comme `dashboard:audit_graph_openings` ou `DASHBOARD:AUDIT_GRAPH_OPENINGS...` ainsi que des valeurs techniques `false/true`.
+### Validation
 
-### Correctif présent
-
-La PR #17 ajoute :
-
-- un mapping explicite pour les ouvertures de graphique ;
-- une humanisation des clés inconnues ;
-- `Oui/Non` pour les booléens ;
-- des blocs Avant/Après plus lisibles.
-
-### Validation terrain attendue
-
-- ouvrir un graphique puis consulter le journal ;
-- vérifier qu'aucune clé de code brute n'est visible ;
-- vérifier le rendu des paramètres connus et inconnus ;
-- vérifier les changements booléens et numériques.
+Ouvrir un graphique puis contrôler le journal : aucune clé brute du type `dashboard:audit_graph_openings`, rendu lisible des paramètres connus/inconnus.
 
 ---
 
-## B17-009 — Superposition des courbes : décimales flottantes sur l'axe et les tooltips
+## B17-009 — Superposition : artefacts de décimales flottantes
 
 **Statut : `CORRIGE_DEV` — PR #17**
 
-### Retour
+Les helpers `normalizeMeasureNumber()` et `formatMeasureValue()` sont réutilisés pour datasets, axe Y, tooltips et export CSV.
 
-La superposition pouvait afficher des valeurs telles que `25.800000000000004`, `25.400000000000006`, etc.
+### Validation
 
-### Correctif présent
-
-La PR #17 réutilise les helpers centraux `normalizeMeasureNumber()` et `formatMeasureValue()` pour les datasets, l'axe Y, les infobulles et l'export CSV.
-
-### Validation terrain attendue
-
-- superposer au moins deux courbes avec valeurs décimales ;
-- aucune valeur ne doit exposer les artefacts IEEE 754 ;
-- vérifier axe Y, tooltip et CSV.
-
-### Note sur `Superposition affichée : 2 lieux`
-
-La capture pointe également le texte de statut sous les contrôles. Aucun besoin fonctionnel explicite de suppression n'est formulé dans l'annotation. Il est donc conservé pour l'instant.
+Superposer plusieurs courbes décimales et vérifier axe, tooltip et CSV.
 
 ---
 
-## B17-010 — Libellés des seuils/consignes du graphique coupés ou trop proches du bord
+## B17-010 — Libellés de seuils/consignes coupés sur le graphique
 
 **Statut : `A_VALIDER`**
 
 ### Retour
 
-Une capture du détail Surveillance montre le libellé de seuil supérieur partiellement hors de la zone visible à gauche du graphique.
+Un libellé de seuil supérieur apparaît partiellement hors de la zone visible à gauche.
 
 ### Historique
 
-Le backlog précédent contient déjà des travaux sur :
+Des travaux précédents existent déjà sur le positionnement des tolérances. Il faut reproduire sur le `dev` actuel avant de recoder.
 
-- l'affichage des tolérances à gauche ;
-- le dépassement des libellés par rapport aux pointillés.
+### Zone
 
-Ces points sont indiqués comme faits, mais la capture impose un nouveau test avec la version actuelle de `dev`.
+`website/src/components/monitoring-details/monitoring-graph-tab.tsx`, notamment `guideLabelStyle`.
 
-### Zone de code
+### Validation
 
-`website/src/components/monitoring-details/monitoring-graph-tab.tsx`, notamment le positionnement des guide labels (`guideLabelStyle`).
-
-### Critères d'acceptation
-
-- `Max`, `Consigne`, `Min` et éventuelles pré-alarmes restent entièrement lisibles ;
-- aucun texte n'est coupé par le bord gauche de la modale ou du canvas ;
-- le rendu reste correct en affichage standard et agrandi ;
-- vérifier thème clair et sombre.
-
-Si le problème se reproduit sur `dev`, passer le statut à `A_FAIRE` et corriger dans un lot UI graphique.
+- Max / Consigne / Min / pré-alarmes entièrement lisibles;
+- modes standard et agrandi;
+- thème clair et sombre.
 
 ---
 
-## B17-011 — Dashboard : certaines alarmes actives semblent déclenchées dans le futur
+## B17-011 — Alarmes actives affichées comme déclenchées dans le futur
 
-**Statut : `PR_OUVERTE` — PR #20**
+**Statut : `CORRIGE_DEV` — PR #20**
 
-Branche : `agent/fix-active-alarm-relative-time`
+### Cause
 
-### Retour
+`Date_Heure_Debut` est un `DATETIME` MySQL sans fuseau. Après Prisma / sérialisation serveur-client, la valeur pouvait être interprétée avec un décalage local avant `formatDistanceToNow()`, donnant `dans ...` pour une alarme déjà passée.
 
-Dans le tableau `Alarmes actives`, la colonne **Déclenchée** pouvait afficher des libellés tels que :
+### Correctif
 
-- `dans environ 1 heure` ;
-- `dans 29 minutes` ;
-
-alors que l'alarme était déjà active.
-
-### Cause identifiée
-
-La date de début provient d'un `DATETIME` MySQL sans information de fuseau. Prisma représente cette valeur comme un objet `Date` adossé à UTC et React/Next peut également la sérialiser en chaîne ISO terminée par `Z` pendant le passage serveur → client.
-
-Dans le tableau du dashboard, `parseDbDateTime()` était appelé directement sur cette valeur avant `formatDistanceToNow()`. Le navigateur pouvait donc réappliquer son décalage local (+1 h / +2 h en France) à une heure qui représentait déjà l'heure murale stockée en base, ce qui faisait apparaître une alarme passée comme future.
-
-### Correctif PR #20
-
-Fichier principal :
+Fichier :
 
 - `website/src/app/[locale]/(dashboard)/_components/dashboard/dashboard-alarm-columns.tsx`
 
-Modifications :
+Un helper local normalise les `Date` Prisma / chaînes ISO UTC en heure murale de base via `serializeStoredDbDateTime()` puis `parseDbDateTime()`. Le texte relatif et le tooltip utilisent la même date normalisée.
 
-- ajout d'un helper local `parseStoredAlarmDate()` spécifique à cette date de `DATETIME` stockée ;
-- si la valeur reçue est un `Date` Prisma, ses composantes UTC sont récupérées avec `serializeStoredDbDateTime()` puis reparsées comme heure locale sans fuseau ;
-- le même traitement est appliqué aux chaînes ISO UTC (`...Z`) susceptibles de provenir de la sérialisation React Server Components ;
-- les chaînes déjà sans fuseau continuent à passer directement par `parseDbDateTime()` ;
-- le texte relatif (`il y a ...`) et le tooltip utilisent désormais la même date normalisée.
+### Validation terrain
 
-Le correctif est volontairement local au dashboard afin de ne pas changer la sémantique générale de `parseDbDateTime()` pour les autres types de dates de l'application.
-
-### Vérification technique avant PR
-
-- branche créée depuis le HEAD exact de `dev` après merge #19 : `b8e053c0835619a3953486e83f2830fce8236a7a` ;
-- avant mise à jour du backlog : 1 commit d'avance, 0 de retard ;
-- un seul fichier applicatif modifié ;
-- 18 ajouts / 3 suppressions ;
-- aucun changement parasite identifié.
-
-### Validation terrain après merge
-
-- récupérer une alarme active récente et noter `Date_Heure_Debut` directement en base ;
-- sur le dashboard, vérifier que le tooltip affiche exactement cette heure murale ;
-- vérifier que le texte relatif indique `il y a ...` et jamais `dans ...` pour une alarme déjà active ;
-- tester une alarme de moins d'une heure et une alarme de plusieurs heures ;
-- comparer la même alarme avec sa page de détail ;
-- valider en heure d'été ;
-- garder un contrôle lors du passage à l'heure d'hiver afin de s'assurer qu'aucun décalage saisonnier ne revient.
+- comparer `Date_Heure_Debut` brute avec le tooltip;
+- alarme active passée = toujours `il y a ...`;
+- tester <1 h et plusieurs heures;
+- comparer avec le détail d’alarme;
+- garder un contrôle heure été/hiver.
 
 ---
 
 ## Ordre de traitement actuel
 
-1. **B17-011** — PR #20 ouverte, attendre validation/merge.
-2. **B17-003 + B17-004** — nettoyage/reprise d'état d'ajustage, à traiter ensemble si la cause est commune.
-3. **B17-005** — bandeau de session d'ajustage non bloquant.
-4. **B17-002** — durée réelle des sessions d'authentification, après investigation de la politique actuelle.
-5. **B17-010** — validation puis correctif des libellés de seuil si le défaut est encore reproductible.
+1. **B17-003 + B17-004** — branche `agent/clear-stale-adjustment-session`, préparer la PR puis attendre le merge.
+2. **B17-005** — rendre le bandeau global d’ajustage non bloquant.
+3. **B17-002** — investiguer la durée réelle des sessions d’authentification.
+4. **B17-010** — reproduire puis corriger les libellés de seuil uniquement si encore nécessaire.
 
-Les points B17-001, B17-006, B17-007, B17-008 et B17-009 sont déjà corrigés dans `dev` et ne doivent pas être recodés avant validation terrain.
+B17-001, B17-006, B17-007, B17-008, B17-009 et B17-011 sont déjà corrigés dans `dev` et ne doivent pas être recodés avant validation terrain.
 
-## Règle de workflow GitHub
+## Règle de reprise pour une nouvelle conversation
 
-- avant tout nouveau lot, vérifier le HEAD réel de `dev`, les PR ouvertes/mergées et le statut de ce backlog ;
-- chaque lot part du dernier HEAD de `dev` ;
-- créer une branche dédiée de type `agent/<sujet>` ;
-- limiter le diff au sujet traité ;
-- mettre à jour ce backlog dans la même branche ;
-- ouvrir une PR vers `dev` à la fin du lot ;
-- ne pas démarrer le lot suivant tant que la PR précédente n'est pas mergée, sauf demande explicite contraire ;
-- après merge, revérifier que `dev` pointe bien sur le commit de merge avant de créer la branche suivante ;
-- pour chaque point traité, renseigner ici la PR, les fichiers principaux, le comportement implémenté et les validations à effectuer.
+Avant tout changement :
+
+1. lire ce fichier;
+2. vérifier le HEAD réel de `dev`;
+3. vérifier les PR ouvertes et les dernières PR mergées;
+4. vérifier si une branche liée au prochain point existe déjà;
+5. comparer le backlog au code actuel avant de conclure qu’un point est encore à faire;
+6. partir du dernier `dev` pour la nouvelle branche;
+7. avant PR, comparer le diff complet à `dev` et éliminer tout changement parasite;
+8. mettre à jour ce backlog avec branche, PR, cause, fichiers et checklist;
+9. ne jamais merger la PR à la place de l’utilisateur;
+10. après annonce du merge, vérifier réellement la PR et le nouveau HEAD de `dev` avant le lot suivant.
