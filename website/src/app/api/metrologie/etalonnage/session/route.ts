@@ -106,12 +106,14 @@ export const POST = withStandardOrExpertAnyAuthorizationLogging(
   METROLOGY_OPERATION_CODES,
   async (req: NextRequest, ctx) => {
     let sensorStatesCaptured = false
+    let calibrationStarted = false
     try {
       const input = startSchema.parse(await req.json())
       await captureCalibrationSensorStates(ctx.user.userId, input.selectedSensorIds)
       sensorStatesCaptured = true
 
       const session = await startCalibrationSession(ctx.user, input)
+      calibrationStarted = true
       await setCalibrationSensorsToCalibrationState(ctx.user.userId)
 
       const expiresAtMs = new Date(session.startedAt).getTime() + CALIBRATION_MAX_DURATION_MS
@@ -135,6 +137,14 @@ export const POST = withStandardOrExpertAnyAuthorizationLogging(
       })
       return apiOk({ session }, { status: 201 })
     } catch (error) {
+      if (calibrationStarted) {
+        await stopCalibrationSession(ctx.user.userId).catch((stopError) => {
+          log.error("METROLOGY_CALIBRATION", "session_start_rollback_failed", {
+            userId: ctx.user.userId,
+            error: stopError instanceof Error ? stopError.message : String(stopError),
+          })
+        })
+      }
       if (sensorStatesCaptured) {
         await restoreCalibrationSensorStates(ctx.user.userId).catch((restoreError) => {
           log.error("METROLOGY_CALIBRATION", "sensor_state_restore_failed", {
