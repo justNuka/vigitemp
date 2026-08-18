@@ -18,8 +18,6 @@ type PermissionRule = {
   aliases: string[];
 };
 
-const ADMIN_PROFILES = new Set(["administrateurs", "administrateur", "admin"]);
-
 const RULES: Record<AppPermission, PermissionRule> = {
   DASHBOARD_USER_ACCESS: {
     aliases: ["ACCES_DASHBOARD_UTILISATEUR", "ACCES_TABLEAU_BORD_UTILISATEUR", "ACCES_DASHBOARD_USER"],
@@ -75,8 +73,23 @@ function normalizeCode(code: string | null | undefined): string {
   return (code ?? "").trim().toUpperCase();
 }
 
-function isAdminProfile(profile: string | null | undefined): boolean {
-  return ADMIN_PROFILES.has((profile ?? "").trim().toLowerCase());
+function hasAnyAuthorization(
+  authorizations: readonly Authorization[] | null | undefined,
+  codes: readonly string[],
+): boolean {
+  const normalizedRequested = new Set(codes.map((code) => normalizeCode(code)).filter(Boolean));
+  if (normalizedRequested.size === 0) return false;
+
+  return (authorizations ?? []).some((authorization) =>
+    normalizedRequested.has(normalizeCode(authorization.code)),
+  );
+}
+
+export function hasAdminAuthorization(
+  user: Pick<CurrentUser, "authorizations"> | null | undefined,
+): boolean {
+  if (!user) return false;
+  return hasAnyAuthorization(user.authorizations, RULES.DASHBOARD_ADMIN_ACCESS.aliases);
 }
 
 export function hasAuthorizationCode(
@@ -84,12 +97,9 @@ export function hasAuthorizationCode(
   codes: readonly string[],
 ): boolean {
   if (!user) return false;
-  if (isAdminProfile(user.profil ?? user.Profil_Utilisateur)) return true;
+  if (hasAdminAuthorization(user)) return true;
 
-  const normalizedRequested = new Set(codes.map((c) => normalizeCode(c)).filter(Boolean));
-  if (normalizedRequested.size === 0) return false;
-
-  return (user.authorizations ?? []).some((a) => normalizedRequested.has(normalizeCode(a.code)));
+  return hasAnyAuthorization(user.authorizations, codes);
 }
 
 export function hasPermission(
@@ -97,12 +107,12 @@ export function hasPermission(
   permission: AppPermission,
 ): boolean {
   if (!user) return false;
-  if (isAdminProfile(user.profil ?? user.Profil_Utilisateur)) return true;
+  if (hasAdminAuthorization(user)) return true;
 
   const rule = RULES[permission];
   if (!rule) return false;
 
-  return hasAuthorizationCode(user, rule.aliases);
+  return hasAnyAuthorization(user.authorizations, rule.aliases);
 }
 
 export function getPermissionAliases(permission: AppPermission): readonly string[] {

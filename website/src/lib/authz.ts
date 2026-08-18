@@ -1,6 +1,12 @@
 import { cache } from "react"
 import { prisma } from "@/lib/prisma"
-import { isAdminDomainCode } from "@/lib/authorization-domain"
+import { getPermissionAliases } from "@/lib/permissions"
+
+const ADMIN_ACCESS_CODES = getPermissionAliases("DASHBOARD_ADMIN_ACCESS")
+
+function normalizeCode(code: string | null | undefined): string {
+  return (code ?? "").trim().toUpperCase()
+}
 
 /**
  * Cached per-request: deduplicates identical userId profile lookups within
@@ -33,13 +39,23 @@ const getUserProfile = cache(async (userId: number) => {
   })
 })
 
-export async function isAdminUser(userId: number): Promise<boolean> {
-  const profil = await getUserProfile(userId)
+function profileHasAnyAuthorization(
+  profil: Awaited<ReturnType<typeof getUserProfile>>,
+  codes: readonly string[],
+): boolean {
   if (!profil) return false
 
+  const expected = new Set(codes.map((code) => normalizeCode(code)).filter(Boolean))
+  if (expected.size === 0) return false
+
   return profil.t_liaison_profil_autorisation.some((liaison) =>
-    isAdminDomainCode(liaison.t_autorisation.Code_Autorisation),
+    expected.has(normalizeCode(liaison.t_autorisation.Code_Autorisation)),
   )
+}
+
+export async function isAdminUser(userId: number): Promise<boolean> {
+  const profil = await getUserProfile(userId)
+  return profileHasAnyAuthorization(profil, ADMIN_ACCESS_CODES)
 }
 
 export async function hasUserAuthorizationCode(
@@ -48,10 +64,14 @@ export async function hasUserAuthorizationCode(
 ): Promise<boolean> {
   const profil = await getUserProfile(userId)
   if (!profil) return false
-  if (profil.Profil_Utilisateur === "Administrateurs") return true
+
+  if (profileHasAnyAuthorization(profil, ADMIN_ACCESS_CODES)) return true
+
+  const expected = normalizeCode(code)
+  if (!expected) return false
 
   return profil.t_liaison_profil_autorisation.some(
-    (liaison) => liaison.t_autorisation.Code_Autorisation === code,
+    (liaison) => normalizeCode(liaison.t_autorisation.Code_Autorisation) === expected,
   )
 }
 
@@ -63,16 +83,8 @@ export async function hasUserAnyAuthorizationCode(
 
   const profil = await getUserProfile(userId)
   if (!profil) return false
-  if (profil.Profil_Utilisateur === "Administrateurs") return true
 
-  const expected = new Set(
-    codes.map((c) => c.trim().toUpperCase()).filter(Boolean),
-  )
-  if (expected.size === 0) return false
+  if (profileHasAnyAuthorization(profil, ADMIN_ACCESS_CODES)) return true
 
-  return profil.t_liaison_profil_autorisation.some((liaison) =>
-    expected.has(
-      (liaison.t_autorisation.Code_Autorisation || "").trim().toUpperCase(),
-    ),
-  )
+  return profileHasAnyAuthorization(profil, codes)
 }
