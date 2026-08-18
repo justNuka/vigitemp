@@ -17,7 +17,8 @@ Objectif : permettre une reprise immédiate du travail dans une nouvelle convers
 - PR #16 : fiabilisation des états des sondes et de la lecture simple en métrologie.
 - PR #17 : corrections affichage mesures, dates, analyse d'impact, superposition de courbes et audit.
 - PR #18 : création et centralisation de ce backlog.
-- PR #19 : complément B17-006, graphique Surveillance limité aux 125 dernières mesures du jour. **PR ouverte, en attente de validation/merge.**
+- PR #19 : complément B17-006, graphique Surveillance limité aux 125 dernières mesures du jour. **Mergée dans `dev` le 18/08/2026.**
+- PR #20 : correction B17-011 sur le temps relatif des alarmes actives du dashboard. **PR ouverte, en attente de validation/merge.**
 
 ### Statuts utilisés
 
@@ -180,7 +181,7 @@ Le choix final doit conserver un accès simple à l'arrêt de l'ajustage et au t
 
 ## B17-006 — Détail Surveillance : plage par défaut du jour + graphique limité aux 125 dernières mesures
 
-**Statut : `PR_OUVERTE` — PR #19**
+**Statut : `CORRIGE_DEV` — PR #19**
 
 ### Retour initial
 
@@ -195,44 +196,25 @@ La PR #17 :
 - interroge le backend avec cette plage pour le graphique et le tableau ;
 - initialise visuellement le sélecteur sur la journée courante.
 
-### Complément demandé le 18/08/2026
-
-Dans l'onglet **Graphique**, l'affichage par défaut doit correspondre aux **125 dernières mesures de la journée actuelle**, et le libellé doit l'indiquer clairement.
-
-Le tableau doit rester indépendant et paginé sur toutes les mesures de la journée.
-
-### Implémentation PR #19
+### Complément livré par la PR #19
 
 Branche : `agent/surveillance-default-125-measures`
 
-Fichiers modifiés :
+Fichiers principaux :
 
 - `website/src/components/monitoring-details-modal.tsx`
 - `website/src/components/monitoring-details/use-monitoring-range-measurements.ts`
 
-Comportement implémenté :
+Comportement :
 
 - la journée courante reste la plage visible par défaut ;
-- le hook du graphique détecte que la plage correspond à aujourd'hui ;
-- pour cette plage par défaut, une seule page de 125 mesures maximum est demandée à l'API ;
-- l'API renvoyant les mesures les plus récentes en premier, les 125 dernières mesures du jour sont ainsi retenues ;
-- les points sont ensuite retriés chronologiquement avant affichage sur la courbe ;
-- le tableau continue à utiliser son hook paginé indépendant sur toute la journée ;
-- le compteur du graphique utilise le libellé existant `X dernières mesures` lorsque la limitation du jour est active ;
-- pour une autre plage de dates, le hook continue à charger l'ensemble de la plage et le compteur redevient `Mesures dans le graphique: X`.
+- le graphique charge au maximum les 125 mesures les plus récentes de cette journée ;
+- les points sont retriés chronologiquement avant affichage ;
+- le tableau reste indépendant et paginé sur toutes les mesures de la journée ;
+- le compteur affiche `X dernières mesures` sur la plage du jour ;
+- une autre plage de dates continue à charger l'ensemble de la plage avec le compteur classique.
 
-### Vérification technique effectuée avant ouverture de la PR
-
-Comparaison branche → `dev` :
-
-- base exacte : `de674a34bf3c9726b3d93725b79b2cb6f76650bf`, merge de la PR #18 ;
-- branche en avance de 2 commits, retard 0 ;
-- uniquement 2 fichiers applicatifs modifiés avant la mise à jour de ce backlog ;
-- `monitoring-details-modal.tsx` : 7 ajouts / 3 suppressions ;
-- `use-monitoring-range-measurements.ts` : 23 ajouts / 5 suppressions ;
-- aucun changement parasite détecté.
-
-### Validation terrain à faire après merge
+### Validation terrain à faire
 
 - ouvrir un lieu depuis Surveillance sans changer la plage ;
 - vérifier que la plage affichée est aujourd'hui ;
@@ -349,47 +331,70 @@ Si le problème se reproduit sur `dev`, passer le statut à `A_FAIRE` et corrige
 
 ## B17-011 — Dashboard : certaines alarmes actives semblent déclenchées dans le futur
 
-**Statut : `A_INVESTIGUER`**
+**Statut : `PR_OUVERTE` — PR #20**
+
+Branche : `agent/fix-active-alarm-relative-time`
 
 ### Retour
 
-Dans le tableau `Alarmes actives`, la colonne **Déclenchée** peut afficher des libellés tels que :
+Dans le tableau `Alarmes actives`, la colonne **Déclenchée** pouvait afficher des libellés tels que :
 
 - `dans environ 1 heure` ;
 - `dans 29 minutes` ;
 
-alors que l'alarme est déjà active.
+alors que l'alarme était déjà active.
 
-### Hypothèse principale
+### Cause identifiée
 
-Le problème ressemble à une incohérence de parsing/fuseau sur la date de déclenchement utilisée pour le temps relatif. Le correctif PR #17 couvre le détail d'alarme et l'analyse d'impact, mais cette vue dashboard doit être contrôlée séparément.
+La date de début provient d'un `DATETIME` MySQL sans information de fuseau. Prisma représente cette valeur comme un objet `Date` adossé à UTC et React/Next peut également la sérialiser en chaîne ISO terminée par `Z` pendant le passage serveur → client.
 
-### Investigation à mener
+Dans le tableau du dashboard, `parseDbDateTime()` était appelé directement sur cette valeur avant `formatDistanceToNow()`. Le navigateur pouvait donc réappliquer son décalage local (+1 h / +2 h en France) à une heure qui représentait déjà l'heure murale stockée en base, ce qui faisait apparaître une alarme passée comme future.
 
-- identifier la source de date de la table d'alarmes actives du dashboard ;
-- vérifier si un `DATETIME` sans timezone passe par `new Date(...)` directement ;
-- comparer avec les helpers de `date-display` et la sérialisation utilisée par la PR #17 ;
-- comparer heure brute DB, payload API et rendu navigateur.
+### Correctif PR #20
 
-### Critères d'acceptation
+Fichier principal :
 
-- une alarme déjà déclenchée n'affiche jamais un temps relatif futur ;
-- un déclenchement passé affiche `il y a ...` ;
-- un éventuel déclenchement programmé/futur ne doit être présenté comme actif que si le métier l'autorise explicitement ;
-- résultat cohérent avec la page Alarmes et le détail de l'alarme.
+- `website/src/app/[locale]/(dashboard)/_components/dashboard/dashboard-alarm-columns.tsx`
+
+Modifications :
+
+- ajout d'un helper local `parseStoredAlarmDate()` spécifique à cette date de `DATETIME` stockée ;
+- si la valeur reçue est un `Date` Prisma, ses composantes UTC sont récupérées avec `serializeStoredDbDateTime()` puis reparsées comme heure locale sans fuseau ;
+- le même traitement est appliqué aux chaînes ISO UTC (`...Z`) susceptibles de provenir de la sérialisation React Server Components ;
+- les chaînes déjà sans fuseau continuent à passer directement par `parseDbDateTime()` ;
+- le texte relatif (`il y a ...`) et le tooltip utilisent désormais la même date normalisée.
+
+Le correctif est volontairement local au dashboard afin de ne pas changer la sémantique générale de `parseDbDateTime()` pour les autres types de dates de l'application.
+
+### Vérification technique avant PR
+
+- branche créée depuis le HEAD exact de `dev` après merge #19 : `b8e053c0835619a3953486e83f2830fce8236a7a` ;
+- avant mise à jour du backlog : 1 commit d'avance, 0 de retard ;
+- un seul fichier applicatif modifié ;
+- 18 ajouts / 3 suppressions ;
+- aucun changement parasite identifié.
+
+### Validation terrain après merge
+
+- récupérer une alarme active récente et noter `Date_Heure_Debut` directement en base ;
+- sur le dashboard, vérifier que le tooltip affiche exactement cette heure murale ;
+- vérifier que le texte relatif indique `il y a ...` et jamais `dans ...` pour une alarme déjà active ;
+- tester une alarme de moins d'une heure et une alarme de plusieurs heures ;
+- comparer la même alarme avec sa page de détail ;
+- valider en heure d'été ;
+- garder un contrôle lors du passage à l'heure d'hiver afin de s'assurer qu'aucun décalage saisonnier ne revient.
 
 ---
 
 ## Ordre de traitement actuel
 
-1. **B17-006** — PR #19 ouverte, attendre validation/merge.
-2. **B17-011** — temps relatif futur sur les alarmes actives.
-3. **B17-003 + B17-004** — nettoyage/reprise d'état d'ajustage, à traiter ensemble si la cause est commune.
-4. **B17-005** — bandeau de session d'ajustage non bloquant.
-5. **B17-002** — durée réelle des sessions d'authentification, après investigation de la politique actuelle.
-6. **B17-010** — validation puis correctif des libellés de seuil si le défaut est encore reproductible.
+1. **B17-011** — PR #20 ouverte, attendre validation/merge.
+2. **B17-003 + B17-004** — nettoyage/reprise d'état d'ajustage, à traiter ensemble si la cause est commune.
+3. **B17-005** — bandeau de session d'ajustage non bloquant.
+4. **B17-002** — durée réelle des sessions d'authentification, après investigation de la politique actuelle.
+5. **B17-010** — validation puis correctif des libellés de seuil si le défaut est encore reproductible.
 
-Les points B17-001, B17-007, B17-008 et B17-009 ne doivent pas être recodés avant validation : ils sont déjà couverts par la PR #17.
+Les points B17-001, B17-006, B17-007, B17-008 et B17-009 sont déjà corrigés dans `dev` et ne doivent pas être recodés avant validation terrain.
 
 ## Règle de workflow GitHub
 
