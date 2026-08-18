@@ -9,12 +9,31 @@ type CalibrationSensorStateSnapshot = {
 
 type GlobalCalibrationSensorState = {
   calibrationSensorStateSnapshots?: Map<number, CalibrationSensorStateSnapshot[]>
+  calibrationSensorRestoreTimers?: Map<number, ReturnType<typeof setTimeout>>
 }
 
+const RESTORE_RETRY_MS = 10_000
 const globalState = globalThis as typeof globalThis & GlobalCalibrationSensorState
 const snapshotsByUserId = (globalState.calibrationSensorStateSnapshots ??= new Map<number, CalibrationSensorStateSnapshot[]>())
+const restoreTimersByUserId = (globalState.calibrationSensorRestoreTimers ??= new Map<number, ReturnType<typeof setTimeout>>())
+
+function clearRestoreTimer(userId: number) {
+  const timer = restoreTimersByUserId.get(userId)
+  if (timer) clearTimeout(timer)
+  restoreTimersByUserId.delete(userId)
+}
+
+function scheduleRestoreRetry(userId: number) {
+  clearRestoreTimer(userId)
+  const timer = setTimeout(() => {
+    restoreTimersByUserId.delete(userId)
+    void restoreCalibrationSensorStates(userId).catch(() => undefined)
+  }, RESTORE_RETRY_MS)
+  restoreTimersByUserId.set(userId, timer)
+}
 
 export async function captureCalibrationSensorStates(userId: number, sensorIds: number[]) {
+  clearRestoreTimer(userId)
   const ids = [...new Set(sensorIds)]
   const sensors = await prisma.t_sonde.findMany({
     where: { Id_Sonde: { in: ids } },
@@ -40,6 +59,7 @@ export async function captureCalibrationSensorStates(userId: number, sensorIds: 
 }
 
 export function clearCalibrationSensorStates(userId: number) {
+  clearRestoreTimer(userId)
   snapshotsByUserId.delete(userId)
 }
 
@@ -63,6 +83,7 @@ export async function setCalibrationSensorsToCalibrationState(userId: number) {
 }
 
 export async function restoreCalibrationSensorStates(userId: number) {
+  clearRestoreTimer(userId)
   const snapshots = snapshotsByUserId.get(userId)
   if (!snapshots?.length) return
 
@@ -92,8 +113,9 @@ export async function restoreCalibrationSensorStates(userId: number) {
         error: failure.error instanceof Error ? failure.error.message : String(failure.error),
       })),
     })
-    // Keep the snapshots so a subsequent stop/expiration attempt can retry the
-    // probes that could not be restored.
+    // Keep the original snapshots and retry independently from the calibration
+    // session status. This also covers a session already marked as failed.
+    scheduleRestoreRetry(userId)
     throw new Error("Une ou plusieurs sondes n'ont pas pu retrouver leur etat initial.")
   }
 
