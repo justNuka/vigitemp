@@ -23,6 +23,7 @@ Objectif : permettre une reprise immédiate du travail dans une nouvelle convers
 - PR #18 : création et centralisation de ce backlog.
 - PR #19 : B17-006, graphique Surveillance limité aux 125 dernières mesures du jour — **mergée dans `dev`**.
 - PR #20 : B17-011, temps relatif des alarmes actives du dashboard — **mergée dans `dev` le 18/08/2026**, merge `3810c88dc4ff52b72432aa74b1333705611a4f61`.
+- PR #21 : B17-003 + B17-004, anciennes sessions d’ajustage non restaurées comme session courante — **ouverte vers `dev`**.
 
 ### Statuts
 
@@ -83,7 +84,7 @@ Après plus de 24 h sans utilisation, un poste peut rouvrir VigiSensys et retrou
 
 ## B17-003 — Anciennes informations / exports d’ajustage visibles lors d’une nouvelle opération
 
-**Statut : `EN_COURS` — branche `agent/clear-stale-adjustment-session`**
+**Statut : `PR_OUVERTE` — PR #21 — branche `agent/clear-stale-adjustment-session`**
 
 ### Retour
 
@@ -91,11 +92,11 @@ La page **Réaliser un ajustage** peut réafficher le message de fin et les bout
 
 ### Investigation réalisée le 18/08/2026
 
-La session d’ajustage est conservée dans la map serveur `sessionsByUserId` même après `completed`, `cancelled` ou `failed`. C’est volontairement utile juste après la fin pour exposer le message final et les exports, mais `GET /api/metrologie/ajustage/session` renvoyait ensuite encore cette même session lors d’un futur chargement de page.
+La session d’ajustage est conservée dans la map serveur `sessionsByUserId` même après `completed`, `cancelled` ou `failed`. C’est utile juste après la fin pour exposer le message final et les exports, mais `GET /api/metrologie/ajustage/session` renvoyait ensuite encore cette même session lors d’un futur chargement de page.
 
 L’UI lit directement `session.message`, `session.persistedAdjustments` et `session.validatedPoints`. Une session terminale conservée côté serveur était donc présentée comme si elle faisait encore partie du parcours courant.
 
-### Correctif implémenté sur la branche
+### Correctif PR #21
 
 Fichier principal :
 
@@ -115,13 +116,13 @@ Comportement :
 - quitter puis rouvrir **Réaliser un ajustage** : les exports de l’ancienne opération ne doivent plus apparaître comme exports courants;
 - recharger pendant une session `running` : la session doit être récupérée normalement;
 - annuler/laisser expirer une session puis revenir plus tard : aucun ancien message d’opération courante;
-- vérifier que les exports historiques restent accessibles par leurs mécanismes dédiés et que les données en base sont intactes.
+- vérifier que les données historiques et exports enregistrés restent intacts.
 
 ---
 
 ## B17-004 — Anciennes valeurs / points d’ajustage conservés
 
-**Statut : `EN_COURS` — traité dans le même lot que B17-003**
+**Statut : `PR_OUVERTE` — PR #21**
 
 ### Retour
 
@@ -129,7 +130,7 @@ Lors d’une nouvelle préparation, le premier/deuxième point et d’autres inf
 
 ### Cause commune confirmée
 
-Les inputs des points utilisent en priorité `session.validatedPoints[1/2]`. Tant que l’API renvoyait l’ancienne session terminale, les valeurs validées de l’opération précédente pouvaient donc être réinjectées dans l’écran.
+Les inputs des points utilisent en priorité `session.validatedPoints[1/2]`. Tant que l’API renvoyait l’ancienne session terminale, les valeurs validées de l’opération précédente pouvaient être réinjectées dans l’écran.
 
 La restauration des paramètres de formulaire (sondes, opérateur, étalon, milieu, plateau, intervalle) est déjà protégée côté React par `session.status === "running"`; le problème persistant identifié dans le retour est donc principalement la présence de la session terminale dans le payload courant.
 
@@ -285,7 +286,7 @@ Un helper local normalise les `Date` Prisma / chaînes ISO UTC en heure murale d
 
 ## Ordre de traitement actuel
 
-1. **B17-003 + B17-004** — branche `agent/clear-stale-adjustment-session`, préparer la PR puis attendre le merge.
+1. **B17-003 + B17-004** — PR #21 ouverte; attendre validation/merge.
 2. **B17-005** — rendre le bandeau global d’ajustage non bloquant.
 3. **B17-002** — investiguer la durée réelle des sessions d’authentification.
 4. **B17-010** — reproduire puis corriger les libellés de seuil uniquement si encore nécessaire.
