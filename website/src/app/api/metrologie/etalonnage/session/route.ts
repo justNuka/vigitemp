@@ -11,7 +11,6 @@ import {
 } from "@/lib/metrology-calibration-session"
 import {
   captureCalibrationSensorStates,
-  clearCalibrationSensorStates,
   restoreCalibrationSensorStates,
   setCalibrationSensorsToCalibrationState,
 } from "@/lib/metrology-calibration-sensor-state"
@@ -185,15 +184,14 @@ export const POST = withStandardOrExpertAnyAuthorizationLogging(
           })
         })
       } else if (sensorStatesCaptured) {
+        // restoreCalibrationSensorStates keeps the snapshot and schedules a
+        // retry on partial failure, so never clear it unconditionally here.
         await restoreCalibrationSensorStates(ctx.user.userId).catch((restoreError) => {
           log.error("METROLOGY_CALIBRATION", "sensor_state_restore_failed", {
             userId: ctx.user.userId,
             error: restoreError instanceof Error ? restoreError.message : String(restoreError),
           })
         })
-      }
-      if (!calibrationStarted && sensorStatesCaptured) {
-        clearCalibrationSensorStates(ctx.user.userId)
       }
       if (error instanceof z.ZodError) {
         return apiError(400, "validation_error", "Donnees invalides", { details: error.issues })
