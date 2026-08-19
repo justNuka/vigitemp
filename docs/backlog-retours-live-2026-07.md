@@ -22,8 +22,8 @@
 | ID | Sujet | Impact | Complexite | Statut | Notes |
 |---|---|---|---|---|---|
 | R-010 | Verifier le cache global et possiblement supprimer la notion de cache | majeur | lourd | fait | Les donnees dynamiques (surveillance, mesures, graphiques, dashboards et audits) ne sont plus servies depuis un cache HTTP ou un cache UI considere frais. React Query reste utilise pour l'etat de pagination, mais les vues sont invalidees et rechargees au montage |
-| R-011 | Remontees memoire: le graphique ne se met pas a jour apres recuperation serveur | majeur | moyen | en cours | Correctif applique sur la modale de detail: elle recharge maintenant les mesures fraiches au lieu de rester figee sur le snapshot initial de la carte. Validation terrain encore necessaire |
-| R-012 | Si filtre actif mais lieu non charge, afficher explicitement `Aucune sonde` | mineur | rapide | en cours | Le refresh recharge maintenant toutes les pages correspondantes quand un filtre serveur est actif, et le bouton `charger plus` a ete replace dans chaque section. Validation terrain encore necessaire |
+| R-011 | Remontees memoire: le graphique ne se met pas a jour apres recuperation serveur | majeur | moyen | fait | Verification du `dev` le 19/08/2026: le detail lieu recharge les mesures serveur fraiches au lieu de rester sur le snapshot initial de la carte, et le refresh Surveillance emet `vigitemp:measurements-refresh`. Aucun nouveau correctif necessaire; validation terrain recommandee sur une vraie remontee memoire. |
+| R-012 | Si filtre actif mais lieu non charge, afficher explicitement `Aucune sonde` | mineur | rapide | fait | Verification du `dev` le 19/08/2026: avec un filtre serveur, Surveillance utilise des pages de 500 puis charge automatiquement les pages restantes; le refresh recharge toutes les pages filtrees, l'etat vide filtre dedie est affiche si aucun lieu ne correspond, et `Charger plus` reste separe par section en fonctionnement normal. Validation terrain recommandee avec un lieu hors premiere page. |
 
 ## 3. Dates, heures et formatage
 | ID | Sujet | Impact | Complexite | Statut | Notes |
