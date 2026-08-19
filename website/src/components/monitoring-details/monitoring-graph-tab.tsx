@@ -333,9 +333,12 @@ export function MonitoringGraphTab({
     anchor.click()
   }
 
+  const chartAreaLeft = chartRef.current?.chartArea?.left
+  const guideLabelLeft =
+    typeof chartAreaLeft === "number" && Number.isFinite(chartAreaLeft) ? chartAreaLeft + 8 : 8
   const guideLabelMaxWidth = { maxWidth: "min(18rem, calc(100vw - 4rem))" }
   const guideLabelStyle = {
-    left: "-42px",
+    left: `${guideLabelLeft}px`,
     transform: "translateY(-50%)",
     ...guideLabelMaxWidth,
   } as const
