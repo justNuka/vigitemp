@@ -9,7 +9,6 @@ if (!jwtSecretEnv) {
 }
 const JWT_SECRET: string = jwtSecretEnv
 
-export const ACCESS_TOKEN_EXPIRES_IN = "1h";
 export const ACCESS_COOKIE_MAX_AGE_SECONDS = 60 * 60; // 1h
 export const SESSION_MAX_AGE_SECONDS = 60 * 60 * 24; // 24h absolues depuis la connexion
 export const REFRESH_COOKIE_MAX_AGE_SECONDS = SESSION_MAX_AGE_SECONDS;
@@ -25,10 +24,22 @@ export interface JWTPayload {
   exp?: number;
 }
 
-export function generateAccessToken(payload: Omit<JWTPayload, "iat" | "exp" | "tokenType" | "sessionExpiresAt">): string {
-  return jwt.sign({ ...payload, tokenType: "access" }, JWT_SECRET, {
-    expiresIn: ACCESS_TOKEN_EXPIRES_IN,
-  });
+function getRemainingLifetimeSeconds(maxAgeSeconds: number, absoluteExpiry?: number): number {
+  if (absoluteExpiry === undefined) return maxAgeSeconds;
+
+  const nowSeconds = Math.floor(Date.now() / 1000);
+  return Math.max(1, Math.min(maxAgeSeconds, absoluteExpiry - nowSeconds));
+}
+
+export function generateAccessToken(
+  payload: Omit<JWTPayload, "iat" | "exp" | "tokenType" | "sessionExpiresAt">,
+  sessionExpiresAt?: number,
+): string {
+  return jwt.sign(
+    { ...payload, tokenType: "access" },
+    JWT_SECRET,
+    { expiresIn: getRemainingLifetimeSeconds(ACCESS_COOKIE_MAX_AGE_SECONDS, sessionExpiresAt) },
+  );
 }
 
 export function getRefreshSessionExpiresAt(payload: JWTPayload): number | null {
@@ -51,12 +62,11 @@ export function generateRefreshToken(
 ): string {
   const nowSeconds = Math.floor(Date.now() / 1000);
   const absoluteExpiry = sessionExpiresAt ?? nowSeconds + SESSION_MAX_AGE_SECONDS;
-  const remainingSeconds = Math.max(1, absoluteExpiry - nowSeconds);
 
   return jwt.sign(
     { ...payload, tokenType: "refresh", sessionExpiresAt: absoluteExpiry },
     JWT_SECRET,
-    { expiresIn: remainingSeconds },
+    { expiresIn: getRemainingLifetimeSeconds(SESSION_MAX_AGE_SECONDS, absoluteExpiry) },
   );
 }
 
