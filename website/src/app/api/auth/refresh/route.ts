@@ -48,12 +48,15 @@ export async function POST(req: NextRequest) {
     return clearAuthCookies(req, apiError(401, "session_expired", "Session expirée"))
   }
 
-  const nextAccessToken = generateAccessToken({
-    userId: payload.userId,
-    username: payload.username,
-    profile: payload.profile,
-    authorizations: payload.authorizations ?? [],
-  })
+  const nextAccessToken = generateAccessToken(
+    {
+      userId: payload.userId,
+      username: payload.username,
+      profile: payload.profile,
+      authorizations: payload.authorizations ?? [],
+    },
+    sessionExpiresAt,
+  )
 
   // Rotate le refresh token sans repousser la fin absolue de la session.
   const nextRefreshToken = generateRefreshToken(
@@ -70,7 +73,7 @@ export async function POST(req: NextRequest) {
     httpOnly: true,
     secure: shouldUseSecureCookies(req),
     sameSite: "lax",
-    maxAge: ACCESS_COOKIE_MAX_AGE_SECONDS,
+    maxAge: Math.min(ACCESS_COOKIE_MAX_AGE_SECONDS, remainingSessionSeconds),
     path: "/",
   })
   response.cookies.set("refresh-token", nextRefreshToken, {
