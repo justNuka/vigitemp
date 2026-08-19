@@ -24,7 +24,10 @@ Objectif : permettre une reprise immédiate du travail dans une nouvelle convers
 - PR #19 : B17-006, graphique Surveillance limité aux 125 dernières mesures du jour — **mergée dans `dev`**.
 - PR #20 : B17-011, temps relatif des alarmes actives du dashboard — **mergée dans `dev` le 18/08/2026**, merge `3810c88dc4ff52b72432aa74b1333705611a4f61`.
 - PR #21 : B17-003 + B17-004, anciennes sessions d’ajustage non restaurées comme session courante — **mergée dans `dev` le 18/08/2026**, merge `11cd817614f00d61dd2ffe2cb341662202d4fa3b`.
-- PR #22 : B17-005, suivi global ajustage/étalonnage et panneau déplaçable — **ouverte vers `dev`**.
+- PR #22 : B17-005, suivi global ajustage/étalonnage et panneau déplaçable — **mergée dans `dev` le 18/08/2026**, merge `34bf5979041406ce9045deb542f6b10a58cfcc51`.
+- PR #23 : B17-002, borne absolue des sessions utilisateur à 24 h — **mergée dans `dev` le 19/08/2026**, merge `e8972b6dd6e073cb8549077c196f36ac3d0b756f`.
+- PR #24 : hotfix du build du panneau de métrologie après #22 — **mergée dans `dev` le 19/08/2026**, merge `27c0a55503b19deb486b955ce36c571a9aab0086`.
+- PR #25 : B17-010, libellés de seuils du graphique Surveillance — **mergée dans `dev` le 19/08/2026**, merge `e6867c6c3a72a52d28bde9540160b374ec227646`.
 
 ### Statuts
 
@@ -60,26 +63,49 @@ Les `DATETIME` MySQL sans fuseau étaient réinterprétés comme UTC. La PR #17 
 
 ## B17-002 — Session utilisateur encore utilisable après plus de 24 h
 
-**Statut : `A_INVESTIGUER`**
+**Statut : `CORRIGE_DEV` — PR #23 — branche `agent/fix-session-expiration`**
 
 ### Retour
 
-Après plus de 24 h sans utilisation, un poste peut rouvrir VigiSensys et retrouver une session authentifiée sans nouvelle saisie d’identifiants.
+Après plus de 24 h sans utilisation, un poste pouvait rouvrir VigiSensys et retrouver une session authentifiée sans nouvelle saisie d’identifiants.
 
-### Investigation à mener
+### Cause confirmée le 19/08/2026
 
-- création/validation du cookie ou JWT;
-- `maxAge`, `expires`, durée du token et éventuel refresh;
-- éventuelle prolongation à chaque requête;
-- différencier authentification interne et SSO Windows/AD;
-- fermeture navigateur et redémarrage poste.
+L’access token expirait bien au bout d’une heure, mais le refresh token restait valable 7 jours et était régénéré avec une nouvelle durée complète à chaque refresh. Le helper HTTP renouvelle automatiquement l’access token après un `401`; la session persistante était donc glissante et pouvait être prolongée au fil des retours dans l’application.
 
-### Critères
+Le verrouillage d’inactivité `TEMPS_DECONNEXION_MINUTES` reste un mécanisme navigateur : il peut déconnecter plus tôt tant que la page est active, mais ne peut pas s’exécuter pendant une fermeture du navigateur ou du poste. Le SSO Windows/LDAP est documenté comme une évolution à implémenter et n’est pas actif dans ce parcours.
 
-- durée réelle explicite et cohérente avec la politique produit;
-- session expirée = plus d’accès aux routes protégées;
-- pas de reconnexion silencieuse hors SSO volontaire;
-- comportement cohérent entre dashboard et administration.
+### Correctif PR #23
+
+Fichiers principaux :
+
+- `website/src/lib/jwt.ts`;
+- `website/src/app/api/auth/refresh/route.ts`;
+- `website/src/proxy.ts`.
+
+Comportement :
+
+- la session persistante est bornée à **24 h depuis la connexion**;
+- le refresh token transporte une échéance absolue signée `sessionExpiresAt`;
+- les rotations de refresh conservent cette échéance au lieu de la repousser;
+- un access token renouvelé est lui aussi limité au temps restant avant cette échéance;
+- les cookies renouvelés utilisent la durée réellement restante;
+- les anciens refresh tokens sans `sessionExpiresAt` restent compatibles, avec leur `iat` comme référence et une borne de 24 h;
+- le proxy ne considère plus la seule présence d’un refresh cookie comme suffisante : il contrôle son `exp` et la borne absolue avant de laisser poursuivre une navigation protégée;
+- le verrouillage d’inactivité configurable reste inchangé et peut toujours déconnecter plus tôt.
+
+Le build et le déploiement après les PR #23/#24 ont été confirmés comme réussis le 19/08/2026. La validation fonctionnelle nécessitant réellement d’attendre l’échéance de 24 h reste à effectuer.
+
+### Validation terrain restante
+
+- connexion normale : accès immédiat inchangé;
+- après expiration de l’access token mais avant 24 h : refresh transparent et poursuite de session;
+- vérifier que plusieurs refresh successifs ne décalent jamais l’échéance absolue;
+- après 24 h depuis la connexion : Surveillance et Administration redirigent vers la connexion;
+- après 24 h, un appel API avec l’ancien cookie obtient `401` et nettoie les cookies;
+- fermer complètement le navigateur / redémarrer le poste puis revenir après l’échéance : aucune reconnexion silencieuse;
+- vérifier que `TEMPS_DECONNEXION_MINUTES` continue de déconnecter plus tôt lorsqu’il est activé;
+- contrôler un refresh proche de la borne de 24 h : le nouvel access token ne doit pas survivre au-delà de la session.
 
 ---
 
@@ -152,7 +178,7 @@ Le même filtrage de session côté endpoint empêche les `validatedPoints`, `pe
 
 ## B17-005 — Suivi global des opérations d’ajustage / étalonnage
 
-**Statut : `PR_OUVERTE` — PR #22 — branche `agent/metrology-operation-progress`**
+**Statut : `CORRIGE_DEV` — PR #22 + hotfix #24**
 
 ### Retour
 
@@ -178,7 +204,15 @@ Comportement :
 - sa position est bornée à la fenêtre et recalée lors d’un redimensionnement afin qu’il reste récupérable;
 - le backend des opérations et les mécanismes de restauration d’état des sondes ne sont pas modifiés.
 
-### Validation terrain
+### Hotfix build PR #24
+
+Après le merge de #22, le build Next.js a révélé une incompatibilité de types dans la mutation d’arrêt commune : les réponses d’ajustage et d’étalonnage exposaient des unions de `status` différentes, alors que TanStack Query devait inférer un unique `TData`.
+
+La PR #24 a limité la mutation à `useMutation<void, Error, OperationType>` et `await` les deux appels `DELETE`; le payload de réponse, inutilisé par l’UI, n’est plus propagé comme résultat de mutation. Aucun comportement backend n’a été modifié.
+
+Le build et le déploiement après #24 ont été confirmés comme réussis le 19/08/2026.
+
+### Validation terrain restante
 
 - démarrer un étalonnage : le panneau global doit apparaître immédiatement avec `Étalonnage en cours`;
 - naviguer vers Surveillance pendant l’étalonnage : panneau, timer et arrêt restent disponibles;
@@ -259,25 +293,38 @@ Superposer plusieurs courbes décimales et vérifier axe, tooltip et CSV.
 
 ## B17-010 — Libellés de seuils/consignes coupés sur le graphique
 
-**Statut : `A_VALIDER`**
+**Statut : `CORRIGE_DEV` — PR #25 — branche `agent/fix-monitoring-guide-labels`**
 
 ### Retour
 
-Un libellé de seuil supérieur apparaît partiellement hors de la zone visible à gauche.
+Un libellé de seuil supérieur pouvait apparaître partiellement hors de la zone visible à gauche.
 
-### Historique
+### Cause confirmée le 19/08/2026
 
-Des travaux précédents existent déjà sur le positionnement des tolérances. Il faut reproduire sur le `dev` actuel avant de recoder.
+Les labels HTML superposés au graphique étaient positionnés avec un décalage horizontal fixe `left: -42px`, tandis que la modale de détail masque le débordement horizontal avec `overflow-x-hidden`. Une partie du label pouvait donc être correctement positionnée verticalement mais coupée par le conteneur.
 
-### Zone
+### Correctif PR #25
 
-`website/src/components/monitoring-details/monitoring-graph-tab.tsx`, notamment `guideLabelStyle`.
+Fichier :
 
-### Validation
+- `website/src/components/monitoring-details/monitoring-graph-tab.tsx`.
+
+Comportement :
+
+- suppression du décalage fixe négatif;
+- récupération du bord gauche réel de la zone de tracé via `chartRef.current.chartArea.left`;
+- ancrage des labels à `chartArea.left + 8px`;
+- fallback à `8px` avant disponibilité de `chartArea`;
+- calcul vertical, seuils, datasets et zoom inchangés.
+
+### Validation terrain restante
 
 - Max / Consigne / Min / pré-alarmes entièrement lisibles;
 - modes standard et agrandi;
-- thème clair et sombre.
+- redimensionnement de fenêtre;
+- thème clair et sombre;
+- FR/EN;
+- alignement des labels avec leurs lignes horizontales.
 
 ---
 
@@ -307,13 +354,17 @@ Un helper local normalise les `Date` Prisma / chaînes ISO UTC en heure murale d
 
 ---
 
-## Ordre de traitement actuel
+## État du lot au 19/08/2026
 
-1. **B17-005** — PR #22 ouverte; attendre validation/merge.
-2. **B17-002** — investiguer la durée réelle des sessions d’authentification.
-3. **B17-010** — reproduire puis corriger les libellés de seuil uniquement si encore nécessaire.
+Tous les points B17-001 à B17-011 disposent désormais d’un correctif mergé dans `dev`. Aucun nouveau développement ne doit être lancé sur ce lot tant qu’une validation terrain n’a pas reproduit un défaut résiduel.
 
-B17-001, B17-003, B17-004, B17-006, B17-007, B17-008, B17-009 et B17-011 sont déjà corrigés dans `dev` et ne doivent pas être recodés avant validation terrain.
+Validations prioritaires encore utiles :
+
+1. **B17-002** — attendre réellement la borne de 24 h et confirmer l’absence de reconnexion silencieuse;
+2. **B17-005** — valider le panneau global sur un ajustage et un étalonnage réels, notamment l’arrêt et la restauration des sondes;
+3. **B17-010** — valider visuellement tous les libellés de seuils en standard/agrandi et clair/sombre.
+
+Le `dev` de référence après le merge de la PR #25 est `e6867c6c3a72a52d28bde9540160b374ec227646`.
 
 ## Règle de reprise pour une nouvelle conversation
 
