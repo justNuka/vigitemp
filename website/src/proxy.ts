@@ -3,7 +3,7 @@ import type { NextRequest } from "next/server"
 
 import createMiddleware from "next-intl/middleware"
 import { routing } from "./i18n/routing"
-import { ACCESS_COOKIE_MAX_AGE_SECONDS } from "@/lib/jwt"
+import { ACCESS_COOKIE_MAX_AGE_SECONDS, SESSION_MAX_AGE_SECONDS } from "@/lib/jwt"
 import { shouldUseSecureCookies } from "@/lib/cookie-security"
 import { getCompatEnv } from "@/lib/vigisensys-compat"
 
@@ -29,7 +29,13 @@ const authRoutes = ["/login"]
 
 const TEST_ROUTES = ["/surveillance-cached", "/admin/test", "/test", "/debug"]
 
-function readTokenExpiry(token: string | undefined): number | null {
+type TokenTiming = {
+  exp?: number
+  iat?: number
+  sessionExpiresAt?: number
+}
+
+function readTokenTiming(token: string | undefined): TokenTiming | null {
   if (!token) return null
   const parts = token.split('.')
   if (parts.length !== 3) return null
@@ -38,18 +44,34 @@ function readTokenExpiry(token: string | undefined): number | null {
     const b64 = parts[1].replace(/-/g, "+").replace(/_/g, "/")
     const padded = b64.padEnd(Math.ceil(b64.length / 4) * 4, "=")
     const json = atob(padded)
-    const payload = JSON.parse(json) as { exp?: number }
-    return typeof payload.exp === "number" ? payload.exp : null
+    return JSON.parse(json) as TokenTiming
   } catch {
     return null
   }
 }
 
 function isTokenCurrentlyValid(token: string | undefined): boolean {
-  const exp = readTokenExpiry(token)
-  if (!exp) return false
+  const timing = readTokenTiming(token)
+  if (typeof timing?.exp !== "number") return false
   const nowSec = Math.floor(Date.now() / 1000)
-  return exp > nowSec
+  return timing.exp > nowSec
+}
+
+function isRefreshTokenCurrentlyValid(token: string | undefined): boolean {
+  const timing = readTokenTiming(token)
+  if (typeof timing?.exp !== "number") return false
+
+  const nowSec = Math.floor(Date.now() / 1000)
+  if (timing.exp <= nowSec) return false
+
+  const absoluteExpiry =
+    typeof timing.sessionExpiresAt === "number"
+      ? timing.sessionExpiresAt
+      : typeof timing.iat === "number"
+        ? timing.iat + SESSION_MAX_AGE_SECONDS
+        : null
+
+  return absoluteExpiry !== null && absoluteExpiry > nowSec
 }
 
 function clearAuthCookies(response: NextResponse, request: NextRequest) {
@@ -83,11 +105,13 @@ export default function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
   const rawToken = request.cookies.get("token")?.value ?? request.cookies.get("auth-token")?.value
   const refreshToken = request.cookies.get("refresh-token")?.value
-  const hasRefreshToken = Boolean(refreshToken)
+  const hasValidRefreshToken = isRefreshTokenCurrentlyValid(refreshToken)
   const hasValidToken = isTokenCurrentlyValid(rawToken)
 
   if (shouldLog) {
-    console.log(`[Proxy] ${pathname} - Token valid: ${hasValidToken ? "YES" : "NO"}`)
+    console.log(
+      `[Proxy] ${pathname} - Access valid: ${hasValidToken ? "YES" : "NO"} - Refresh valid: ${hasValidRefreshToken ? "YES" : "NO"}`,
+    )
   }
 
   const maybeLocale = pathname.split("/")[1]
@@ -121,7 +145,6 @@ export default function middleware(request: NextRequest) {
     return intlResponse
   }
 
-
   if (pathnameWithoutLocale === "/login" && localizedLoginPath !== "/login") {
     const redirectUrl = new URL(`/${locale}${localizedLoginPath}${request.nextUrl.search}`, request.url)
     return NextResponse.redirect(redirectUrl)
@@ -136,9 +159,9 @@ export default function middleware(request: NextRequest) {
     (route) => pathnameWithoutLocale === route || pathnameWithoutLocale.startsWith(`${route}/`),
   ) || pathnameWithoutLocale === localizedLoginPath
 
-  if (isProtectedRoute && !hasValidToken && !hasRefreshToken) {
+  if (isProtectedRoute && !hasValidToken && !hasValidRefreshToken) {
     if (shouldLog) {
-      console.log(`[Proxy] No valid token for protected route ${pathname}, redirecting to login`)
+      console.log(`[Proxy] No valid session for protected route ${pathname}, redirecting to login`)
     }
     const loginUrl = new URL(`/${locale}${localizedLoginPath}`, request.url)
     loginUrl.searchParams.set("from", `${pathnameWithoutLocale}${request.nextUrl.search}`)
@@ -146,7 +169,6 @@ export default function middleware(request: NextRequest) {
     clearAuthCookies(response, request)
     return response
   }
-
 
   if (isAuthRoute && hasValidToken) {
     if (shouldLog) {
@@ -162,7 +184,7 @@ export default function middleware(request: NextRequest) {
     return response
   }
 
-  if (isAuthRoute && rawToken && !hasValidToken && !hasRefreshToken) {
+  if (isAuthRoute && (rawToken || refreshToken) && !hasValidToken && !hasValidRefreshToken) {
     clearAuthCookies(intlResponse, request)
   } else if (rawToken && hasValidToken) {
     refreshAuthCookie(intlResponse, request, rawToken)
