@@ -10,9 +10,9 @@ if (!jwtSecretEnv) {
 const JWT_SECRET: string = jwtSecretEnv
 
 export const ACCESS_TOKEN_EXPIRES_IN = "1h";
-export const REFRESH_TOKEN_EXPIRES_IN = "7d";
 export const ACCESS_COOKIE_MAX_AGE_SECONDS = 60 * 60; // 1h
-export const REFRESH_COOKIE_MAX_AGE_SECONDS = 60 * 60 * 24 * 7; // 7j
+export const SESSION_MAX_AGE_SECONDS = 60 * 60 * 24; // 24h absolues depuis la connexion
+export const REFRESH_COOKIE_MAX_AGE_SECONDS = SESSION_MAX_AGE_SECONDS;
 
 export interface JWTPayload {
   userId: number;
@@ -20,24 +20,48 @@ export interface JWTPayload {
   profile: string;
   authorizations?: string[];
   tokenType?: "access" | "refresh";
+  sessionExpiresAt?: number;
   iat?: number;
   exp?: number;
 }
 
-export function generateAccessToken(payload: Omit<JWTPayload, "iat" | "exp" | "tokenType">): string {
+export function generateAccessToken(payload: Omit<JWTPayload, "iat" | "exp" | "tokenType" | "sessionExpiresAt">): string {
   return jwt.sign({ ...payload, tokenType: "access" }, JWT_SECRET, {
     expiresIn: ACCESS_TOKEN_EXPIRES_IN,
   });
 }
 
-export function generateRefreshToken(payload: Omit<JWTPayload, "iat" | "exp" | "authorizations" | "tokenType">): string {
-  return jwt.sign({ ...payload, tokenType: "refresh" }, JWT_SECRET, {
-    expiresIn: REFRESH_TOKEN_EXPIRES_IN,
-  });
+export function getRefreshSessionExpiresAt(payload: JWTPayload): number | null {
+  if (typeof payload.sessionExpiresAt === "number" && Number.isFinite(payload.sessionExpiresAt)) {
+    return payload.sessionExpiresAt;
+  }
+
+  // Compatibilite avec les refresh tokens emis avant l'ajout de la borne absolue.
+  // Ils restent utilisables au maximum 24 h apres leur derniere emission.
+  if (typeof payload.iat === "number" && Number.isFinite(payload.iat)) {
+    return payload.iat + SESSION_MAX_AGE_SECONDS;
+  }
+
+  return null;
+}
+
+export function generateRefreshToken(
+  payload: Omit<JWTPayload, "iat" | "exp" | "authorizations" | "tokenType" | "sessionExpiresAt">,
+  sessionExpiresAt?: number,
+): string {
+  const nowSeconds = Math.floor(Date.now() / 1000);
+  const absoluteExpiry = sessionExpiresAt ?? nowSeconds + SESSION_MAX_AGE_SECONDS;
+  const remainingSeconds = Math.max(1, absoluteExpiry - nowSeconds);
+
+  return jwt.sign(
+    { ...payload, tokenType: "refresh", sessionExpiresAt: absoluteExpiry },
+    JWT_SECRET,
+    { expiresIn: remainingSeconds },
+  );
 }
 
 // Compat legacy
-export function generateToken(payload: Omit<JWTPayload, "iat" | "exp" | "tokenType">): string {
+export function generateToken(payload: Omit<JWTPayload, "iat" | "exp" | "tokenType" | "sessionExpiresAt">): string {
   return generateAccessToken(payload);
 }
 
