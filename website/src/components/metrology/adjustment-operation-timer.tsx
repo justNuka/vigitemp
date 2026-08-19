@@ -239,15 +239,16 @@ export function AdjustmentOperationTimer() {
     },
   })
 
-  const stopMutation = useMutation({
-    mutationFn: (operationType: OperationType) => {
+  const stopMutation = useMutation<void, Error, OperationType>({
+    mutationFn: async (operationType) => {
       if (operationType === "calibration") {
-        return fetchJson<{ session: CalibrationTimerSession | null }>("/api/metrologie/etalonnage/session", {
+        await fetchJson<CalibrationTimerPayload>("/api/metrologie/etalonnage/session", {
           method: "DELETE",
         })
+        return
       }
 
-      return fetchJson<{ session: AdjustmentTimerSession | null }>("/api/metrologie/ajustage/session", {
+      await fetchJson<AdjustmentTimerPayload>("/api/metrologie/ajustage/session", {
         method: "DELETE",
         body: JSON.stringify({ cancelResults: true }),
       })
@@ -419,8 +420,10 @@ export function AdjustmentOperationTimer() {
       <AlertDialog
         open={stopDialogOpen}
         onOpenChange={(open) => {
-          setStopDialogOpen(open)
-          if (!open && !stopMutation.isPending) setStopOperationType(null)
+          if (!stopMutation.isPending) {
+            setStopDialogOpen(open)
+            if (!open) setStopOperationType(null)
+          }
         }}
       >
         <AlertDialogContent>
@@ -430,10 +433,9 @@ export function AdjustmentOperationTimer() {
           </AlertDialogHeader>
           {stopError ? <p className="text-sm text-destructive">{stopError}</p> : null}
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={stopMutation.isPending}>{t("cancel")}</AlertDialogCancel>
+            <AlertDialogCancel disabled={stopMutation.isPending}>{t("cancelStop")}</AlertDialogCancel>
             <AlertDialogAction
               disabled={stopMutation.isPending || !stopOperationType}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               onClick={(event) => {
                 event.preventDefault()
                 if (stopOperationType) stopMutation.mutate(stopOperationType)
