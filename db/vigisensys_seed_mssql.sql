@@ -1798,10 +1798,10 @@ USING (VALUES
   (31, N'GSP-FN-BL', N'Gemsense Pro filaire numérique blanc', N'Bus d’alimentation de data RS485' + CHAR(13) + '' + CHAR(10) + 'Capteur numérique' + CHAR(13) + '' + CHAR(10) + 'Température d''utilisation : -30°C à 125°C' + CHAR(13) + '' + CHAR(10) + 'Capteur numérique Ø 6mm l, 50mm  / -30°C à 125 °C | Câble long 3 m BLANC', N'GSP', N'FILAIRE', NULL),
   (32, N'GSP-FN-GR', N'Gemsense Pro filaire numérique gris', N'Bus d’alimentation de data RS485' + CHAR(13) + '' + CHAR(10) + 'Capteur numérique' + CHAR(13) + '' + CHAR(10) + 'Température d''utilisation : -30°C à 70°C' + CHAR(13) + '' + CHAR(10) + 'Capteur numérique Ø 6mm l, 50mm  / -30°C à 70 °C | Câble long 3 m GRIS PLAT', N'GSP', N'FILAIRE', NULL),
   (33, N'GSP-FP', N'Gemsense Pro Filaire platine', N'Bus d’alimentation de data RS485' + CHAR(13) + '' + CHAR(10) + 'Gaine de protection : acier inox 316 L, Ø 6 ' + CHAR(13) + '' + CHAR(10) + 'Température d''utilisation : -200 à 200°C' + CHAR(13) + '' + CHAR(10) + 'Sonde : Pt 100 céramique CEI 60751 classe A, en montage 4 fils' + CHAR(13) + '' + CHAR(10) + 'Câble de raccordement : PFA/PFA', N'GSP', N'FILAIRE', NULL)
-) AS source (Id_Materiel, Ref_Materiel, Nom_Materiel, Descriptif, Type_Materiel, Famille_Materiel, Archive)
+) AS source (Id_Materiel, Ref_Commercial, Nom_Materiel, Descriptif, Type_Materiel, Famille_Materiel, Archive)
 ON target.Id_Materiel = source.Id_Materiel
-WHEN MATCHED THEN UPDATE SET Ref_Materiel = source.Ref_Materiel, Nom_Materiel = source.Nom_Materiel, Descriptif = source.Descriptif, Type_Materiel = source.Type_Materiel, Famille_Materiel = source.Famille_Materiel, Archive = source.Archive
-WHEN NOT MATCHED THEN INSERT (Id_Materiel, Ref_Materiel, Nom_Materiel, Descriptif, Type_Materiel, Famille_Materiel, Archive) VALUES (source.Id_Materiel, source.Ref_Materiel, source.Nom_Materiel, source.Descriptif, source.Type_Materiel, source.Famille_Materiel, source.Archive);
+WHEN MATCHED THEN UPDATE SET Ref_Commercial = source.Ref_Commercial, Nom_Materiel = source.Nom_Materiel, Descriptif = source.Descriptif, Type_Materiel = source.Type_Materiel, Famille_Materiel = source.Famille_Materiel, Archive = source.Archive
+WHEN NOT MATCHED THEN INSERT (Id_Materiel, Ref_Commercial, Nom_Materiel, Descriptif, Type_Materiel, Famille_Materiel, Archive) VALUES (source.Id_Materiel, source.Ref_Commercial, source.Nom_Materiel, source.Descriptif, source.Type_Materiel, source.Famille_Materiel, source.Archive);
 SET IDENTITY_INSERT dbo.t_materiel OFF;
 GO
 

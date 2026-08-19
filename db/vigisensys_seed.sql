@@ -1242,7 +1242,7 @@ ON DUPLICATE KEY UPDATE
   `Commentaire` = VALUES(`Commentaire`);
 
 -- DONNEES COMPLEMENTAIRES (missing_data.sql)
-INSERT IGNORE INTO `t_materiel` (`Id_Materiel`,`Ref_Materiel`,`Nom_Materiel`,`Descriptif`,`Type_Materiel`,`Famille_Materiel`,`Archive`) VALUES
+INSERT IGNORE INTO `t_materiel` (`Id_Materiel`,`Ref_Commercial`,`Nom_Materiel`,`Descriptif`,`Type_Materiel`,`Famille_Materiel`,`Archive`) VALUES
   (1, 'M-GSO-U', 'Module de réception pour sondes GemSense One USB', 'USB\\r\\nLed d’activité\\r\\nAlimentation sur secteur', 'GSO', 'RADIO', NULL),
   (2, 'M-GSO-E', 'Module de réception pour sondes GemSense One Ethernet', 'Ethernet RJ 45\\r\\nLed activité\\r\\nAlimentation sur secteur', 'GSO', 'RADIO', NULL),
   (3, 'GSO-IT', 'Gemsense One Température interne', 'Fréquence de mesure 15 min fixe \\r\\nFonction mémoire (700 valeurs)\\r\\nPiles AAA*2 (2 ans selon utilisation)\\r\\nTempérature d\'utilisation : -20°C à 40°C', 'GSO', 'RADIO', NULL),
@@ -1496,6 +1496,7 @@ CREATE TABLE `tm_mesures` (
   `Sonde_Numero_Serie` varchar(50) DEFAULT NULL,
   `Adresse_Sonde` varchar(50) DEFAULT NULL,
   `COM_sonde` float DEFAULT NULL,
+  `Est_Mesure_Repeteur_GSO` FLOAT NULL DEFAULT '0',
   `Id_Lieu` int NOT NULL DEFAULT '0',
   `Est_Valeur_Null` tinyint NOT NULL DEFAULT '0',
   `Frequence` int DEFAULT NULL,
@@ -1777,6 +1778,7 @@ CREATE TABLE `tm_mesures_gso_build` (
   `Sonde_Numero_Serie` varchar(50) DEFAULT NULL,
   `Adresse_Sonde` varchar(50) DEFAULT NULL,
   `COM_sonde` float DEFAULT NULL,
+  `Est_Mesure_Repeteur_GSO` FLOAT NULL DEFAULT '0',
   `Id_Lieu` int NOT NULL DEFAULT '0',
   `Consigne_Inf_Pre_Alarme` float DEFAULT NULL,
   `Consigne_Sup_Pre_Alarme` float DEFAULT NULL,
@@ -1967,34 +1969,34 @@ ON SCHEDULE
   ENABLE
   COMMENT ''
   DO BEGIN
-  UPDATE vigi_main.t_lieu
-  JOIN v_tm_mesures_dernier ON v_tm_mesures_dernier.Id_Lieu=vigi_main.t_lieu.Id_Lieu
-  SET
-  vigi_main.t_lieu.Derniere_Date_Heure=v_tm_mesures_dernier.Date_Heure_Mesure,
-  vigi_main.t_lieu.Derniere_Valeur=v_tm_mesures_dernier.Dernier_Releve,
-  vigi_main.t_lieu.Derniere_Unite=v_tm_mesures_dernier.Unite,
-  vigi_main.t_lieu.Date_Heure_Derniere_Reponse=v_tm_mesures_dernier.Date_Heure_Mesure,
-  vigi_main.t_lieu.Derniere_Val_Rssi=v_tm_mesures_dernier.Signal_Radio,
-  vigi_main.t_lieu.Derniere_Val_Tension=v_tm_mesures_dernier.Tension_Piles;
+UPDATE vigi_main.t_lieu
+JOIN v_tm_mesures_dernier ON v_tm_mesures_dernier.Id_Lieu=vigi_main.t_lieu.Id_Lieu
+SET
+vigi_main.t_lieu.Derniere_Date_Heure=v_tm_mesures_dernier.Date_Heure_Mesure,
+vigi_main.t_lieu.Derniere_Valeur=v_tm_mesures_dernier.Dernier_Releve,
+vigi_main.t_lieu.Derniere_Unite=v_tm_mesures_dernier.Unite,
+vigi_main.t_lieu.Date_Heure_Derniere_Reponse=v_tm_mesures_dernier.Date_Heure_Mesure,
+vigi_main.t_lieu.Derniere_Val_Rssi=v_tm_mesures_dernier.Signal_Radio,
+vigi_main.t_lieu.Derniere_Val_Tension=v_tm_mesures_dernier.Tension_Piles;
 
 
-  UPDATE vigi_main.t_lieu
-  SET vigi_main.t_lieu.Date_Heure_Derniere_Reponse_Recue_OK=vigi_main.t_lieu.Derniere_Date_Heure
-  WHERE (vigi_main.t_lieu.Derniere_Valeur <= vigi_main.t_lieu.Tolerance_Surveillance_Sup AND vigi_main.t_lieu.Derniere_Valeur >= vigi_main.t_lieu.Tolerance_Surveillance_Inf)
-  AND vigi_main.t_lieu.Est_Lieu_GSO=1 AND vigi_main.t_lieu.Lieu_Etat='S';
+UPDATE vigi_main.t_lieu
+SET vigi_main.t_lieu.Date_Heure_Derniere_Reponse_Recue_OK=vigi_main.t_lieu.Derniere_Date_Heure
+WHERE (vigi_main.t_lieu.Derniere_Valeur <= vigi_main.t_lieu.Tolerance_Surveillance_Sup AND vigi_main.t_lieu.Derniere_Valeur >= vigi_main.t_lieu.Tolerance_Surveillance_Inf)
+AND vigi_main.t_lieu.Est_Lieu_GSO=1 AND vigi_main.t_lieu.Lieu_Etat='S';
 
-  UPDATE vigi_main.t_lieu
-  SET vigi_main.t_lieu.Date_Heure_Derniere_Reponse_Recue_OK=vigi_main.t_lieu.Derniere_Date_Heure
-  WHERE vigi_main.t_lieu.Derniere_Valeur IS NOT NULL AND (vigi_main.t_lieu.Tolerance_Surveillance_Sup IS NULL OR vigi_main.t_lieu.Tolerance_Surveillance_Inf IS NULL)
-  AND vigi_main.t_lieu.Est_Lieu_GSO=1 AND vigi_main.t_lieu.Lieu_Etat='S';
+UPDATE vigi_main.t_lieu
+SET vigi_main.t_lieu.Date_Heure_Derniere_Reponse_Recue_OK=vigi_main.t_lieu.Derniere_Date_Heure
+WHERE vigi_main.t_lieu.Derniere_Valeur IS NOT NULL AND (vigi_main.t_lieu.Tolerance_Surveillance_Sup IS NULL OR vigi_main.t_lieu.Tolerance_Surveillance_Inf IS NULL)
+AND vigi_main.t_lieu.Est_Lieu_GSO=1 AND vigi_main.t_lieu.Lieu_Etat='S';
 
-  UPDATE vigi_main.t_lieu SET vigi_main.t_lieu.Date_Heure_Last_Update_EVT_GSO=NOW() WHERE vigi_main.t_lieu.Est_Lieu_GSO=1 AND vigi_main.t_lieu.Lieu_Etat='S';
+UPDATE vigi_main.t_lieu SET vigi_main.t_lieu.Date_Heure_Last_Update_EVT_GSO=NOW() WHERE vigi_main.t_lieu.Est_Lieu_GSO=1 AND vigi_main.t_lieu.Lieu_Etat='S';
 
-  UPDATE vigi_main.t_parametre
-  SET vigi_main.t_parametre.Champ_DATETIME = (SELECT v_tm_mesures_dernier.Date_Heure_Mesure FROM v_tm_mesures_dernier ORDER BY v_tm_mesures_dernier.Date_Heure_Mesure DESC LIMIT 1)
-  WHERE vigi_main.t_parametre.Mot_Cle='GSO_DERNIER_DATE_HEURE';
+UPDATE vigi_main.t_parametre
+SET vigi_main.t_parametre.Champ_DATETIME = (SELECT v_tm_mesures_dernier.Date_Heure_Mesure FROM v_tm_mesures_dernier ORDER BY v_tm_mesures_dernier.Date_Heure_Mesure DESC LIMIT 1)
+WHERE vigi_main.t_parametre.Mot_Cle='GSO_DERNIER_DATE_HEURE';
 
-  DELETE FROM t_lieu_planning_audit WHERE ((t_lieu_planning_audit.Date_Heure_Fin_Changement<DATE_SUB(NOW(), INTERVAL 240 HOUR)));
+DELETE FROM t_lieu_planning_audit WHERE ((t_lieu_planning_audit.Date_Heure_Fin_Changement<DATE_SUB(NOW(), INTERVAL 240 HOUR)));
 
 END$$
 DELIMITER ;
@@ -2171,119 +2173,119 @@ CREATE EVENT `vigi_mesures`.`EVT_CALCUL_MESURE_MEM_GSO`
 ON SCHEDULE EVERY 15 MINUTE
 DO
 BEGIN
-  DELETE FROM tm_mesures_gso_count_mem;
+INSERT IGNORE INTO tm_mesures_gso_count_mem
+(GSO_SN,Missing_Data_Begin,Missing_Data_End,Missing_Data_Total,Commande_Mem,date_calcul)
 
-  INSERT IGNORE INTO tm_mesures_gso_count_mem
-  (GSO_SN,Port_Serie_Send_GSO,Missing_Data_Begin,Missing_Data_End,Missing_Data_Total,Commande_Mem,date_calcul)
-  WITH RECURSIVE slots AS (
-      SELECT 1 AS slot_index
-      UNION ALL
-      SELECT slot_index + 1
-      FROM slots
-      WHERE slot_index < 699
-  ),
-  base_time AS (
-      SELECT FROM_UNIXTIME(FLOOR(UNIX_TIMESTAMP(NOW()) / 900) * 900) AS ref_time
-  ),
-  sondes_param AS (
-      SELECT
-          s.Adresse_Sonde,
-          c.Port_Serie_Send_GSO,
-          s.Date_Heure_Surveillance_On,
-          LEAST(
-              699,
-              FLOOR(
-                  TIMESTAMPDIFF(
-                      MINUTE,
-                      s.Date_Heure_Surveillance_On,
-                      b.ref_time
-                  ) / 15
-              )
-          ) AS max_slot
-      FROM vigi_mesures.v_config_lieu_sonde s
-      LEFT JOIN vigi_mesures.v_config_sonde_com c
-        ON c.GSO_SN = LEFT(s.Adresse_Sonde,(LENGTH(s.Adresse_Sonde) - 2))
-      CROSS JOIN base_time b
-      WHERE s.Adresse_Sonde IS NOT NULL
-        AND s.Date_Heure_Surveillance_On IS NOT NULL
-  ),
-  mesures_indexees AS (
-      SELECT
-          m.Adresse_Sonde,
-          FLOOR(
-              TIMESTAMPDIFF(
-                  MINUTE,
-                  m.Date_Heure_Mesure,
-                  b.ref_time
-              ) / 15
-          ) AS slot_index
-      FROM tm_mesures m
-      CROSS JOIN base_time b
-      WHERE m.Date_Heure_Mesure >= b.ref_time - INTERVAL 10500 MINUTE
-        AND m.Adresse_Sonde IS NOT NULL
-  ),
-  slots_sondes AS (
-      SELECT
-          sp.Adresse_Sonde,
-          sp.Port_Serie_Send_GSO,
-          sl.slot_index,
-          CAST(700 - sl.slot_index AS SIGNED) AS numero_releve
-      FROM sondes_param sp
-      JOIN slots sl
-        ON sl.slot_index <= sp.max_slot
-  ),
-  manquants AS (
-      SELECT
-          ss.Adresse_Sonde,
-          ss.Port_Serie_Send_GSO,
-          ss.slot_index,
-          ss.numero_releve
-      FROM slots_sondes ss
-      LEFT JOIN mesures_indexees mi
-          ON mi.Adresse_Sonde = ss.Adresse_Sonde
-         AND mi.slot_index = ss.slot_index
-      WHERE mi.slot_index IS NULL
-  ),
-  groupes AS (
-      SELECT
-          Adresse_Sonde,
-          Port_Serie_Send_GSO,
-          numero_releve,
-          CAST(numero_releve AS SIGNED) -
-          CAST(
-              ROW_NUMBER() OVER (
-                  PARTITION BY Adresse_Sonde
-                  ORDER BY numero_releve
-              ) AS SIGNED
-          ) AS grp
-      FROM manquants
-  )
-  SELECT
-      LEFT(Adresse_Sonde,(length(Adresse_Sonde) - 2)) AS GSO_SN,
-      MAX(Port_Serie_Send_GSO) AS Port_Serie_Send_GSO,
-      MIN(numero_releve) AS debut,
-      MAX(numero_releve) AS fin,
-      COUNT(*) AS taille,
-      CONCAT(
-          '$<EDDT:',
-          LEFT(Adresse_Sonde,(length(Adresse_Sonde) - 2)),
-          '(',
-          MIN(numero_releve),
-          '-',
-          MAX(numero_releve),
-          ')>'
-      ) AS commande,
-      NOW() AS Date_Heure_Requete
-  FROM groupes
-  GROUP BY Adresse_Sonde, grp
-  HAVING COUNT(*) >= 3;
+WITH RECURSIVE slots AS (
+    SELECT 1 AS slot_index
+    UNION ALL
+    SELECT slot_index + 1
+    FROM slots
+    WHERE slot_index < 699
+),
 
-  INSERT IGNORE INTO tm_mesures_gso_commandes_mem
-  (GSO_SN,Port_Serie_Send_GSO,Commande_Globale_Begin,Commande_Globale_End,Missing_Data_Total,Commande_Mem_Globale,Date_Calcul)
-  SELECT GSO_SN, Port_Serie_Send_GSO,Missing_Data_Begin,Missing_Data_End,Missing_Data_Total,Commande_Mem,date_calcul
-  FROM tm_mesures_gso_count_mem;
+base_time AS (
+    SELECT FROM_UNIXTIME(
+        FLOOR(UNIX_TIMESTAMP(NOW()) / 900) * 900
+    ) AS ref_time
+),
 
-  DELETE FROM tm_mesures_gso_count_mem;
+sondes_param AS (
+    SELECT
+        s.Adresse_Sonde,
+        s.Date_Heure_Surveillance_On,
+        LEAST(
+            699,
+            FLOOR(
+                TIMESTAMPDIFF(
+                    MINUTE,
+                    s.Date_Heure_Surveillance_On,
+                    b.ref_time
+                ) / 15
+            )
+        ) AS max_slot
+    FROM v_config_lieu_sonde s
+    CROSS JOIN base_time b
+),
+
+mesures_indexees AS (
+    SELECT
+        m.Adresse_Sonde,
+        FLOOR(
+            TIMESTAMPDIFF(
+                MINUTE,
+                m.Date_Heure_Mesure,
+                b.ref_time
+            ) / 15
+        ) AS slot_index
+    FROM tm_mesures m
+    CROSS JOIN base_time b
+    WHERE m.Date_Heure_Mesure >= b.ref_time - INTERVAL 10500 MINUTE
+),
+
+slots_sondes AS (
+    SELECT
+        sp.Adresse_Sonde,
+        sl.slot_index,
+        CAST(700 - sl.slot_index AS SIGNED) AS numero_releve
+    FROM sondes_param sp
+    JOIN slots sl
+      ON sl.slot_index <= sp.max_slot
+),
+
+manquants AS (
+    SELECT
+        ss.Adresse_Sonde,
+        ss.slot_index,
+        ss.numero_releve
+    FROM slots_sondes ss
+    LEFT JOIN mesures_indexees mi
+        ON mi.Adresse_Sonde = ss.Adresse_Sonde
+       AND mi.slot_index = ss.slot_index
+    WHERE mi.slot_index IS NULL
+),
+
+groupes AS (
+    SELECT
+        Adresse_Sonde,
+        numero_releve,
+        CAST(numero_releve AS SIGNED) -
+        CAST(
+            ROW_NUMBER() OVER (
+                PARTITION BY Adresse_Sonde
+                ORDER BY numero_releve
+            ) AS SIGNED
+        ) AS grp
+    FROM manquants
+)
+
+SELECT
+    LEFT(Adresse_Sonde,(length(Adresse_Sonde) - 2)) AS GSO_SN,
+    MIN(numero_releve) AS debut,
+    MAX(numero_releve) AS fin,
+    COUNT(*) AS taille,
+    CONCAT(
+        '$<EDDT:',
+        LEFT(Adresse_Sonde,(length(Adresse_Sonde) - 2)),
+        '(',
+        GREATEST (MIN(numero_releve)-3,1),
+        '-',
+        LEAST (MAX(numero_releve)+3,700),
+        ')>'
+    ) AS commande,
+    NOW() AS Date_Heure_Requete
+FROM groupes
+GROUP BY Adresse_Sonde, grp
+HAVING COUNT(*) >= 3;
+
+INSERT IGNORE INTO tm_mesures_gso_commandes_mem
+(GSO_SN,Port_Serie_Send_GSO,Commande_Globale_Begin,Commande_Globale_End,Missing_Data_Total,Commande_Mem_Globale,Date_Calcul)
+
+SELECT GSO_SN, Port_Serie_Send_GSO,Missing_Data_Begin,Missing_Data_End,Missing_Data_Total,Commande_Mem,date_calcul
+FROM tm_mesures_gso_count_mem;
+
+DELETE FROM tm_mesures_gso_count_mem;
+
 END$$
 DELIMITER ;
 
@@ -2294,18 +2296,17 @@ CREATE EVENT `vigi_mesures`.`EVT_CLEAN_GRAPH_MES_GSO`
 ON SCHEDULE EVERY 1 HOUR
 DO
 BEGIN
-  DELETE FROM tm_graphique WHERE ((tm_graphique.Date_Heure_Mesure<DATE_SUB(NOW(), INTERVAL 72 HOUR)));
-  DELETE FROM tm_graphique WHERE ((tm_graphique.Date_Heure_Mesure>DATE_SUB(NOW(), INTERVAL -48 HOUR)));
-  DELETE FROM tm_mesures WHERE ((tm_mesures.Date_Heure_Mesure>DATE_SUB(NOW(), INTERVAL -48 HOUR)));
-  DELETE FROM tm_mesures_gso WHERE ((tm_mesures_gso.date_mesure<DATE_SUB(NOW(), INTERVAL 720 HOUR)));
-  DELETE FROM tm_mesures_gso_build WHERE ((tm_mesures_gso_build.Date_Heure_Mesure<DATE_SUB(NOW(), INTERVAL 720 HOUR)));
-  DELETE FROM tm_mesures_gso_commandes_mem WHERE ((tm_mesures_gso_commandes_mem.Date_Calcul<DATE_SUB(NOW(), INTERVAL 24 HOUR)));
-  DELETE FROM tm_mesures WHERE tm_mesures.Id_Lieu=0;
-  DELETE FROM tm_graphique WHERE tm_graphique.Id_Lieu=0;
-  DELETE FROM tm_mesures_ajustage WHERE ((tm_mesures_ajustage.Date_Heure_Mesure<DATE_SUB(NOW(), INTERVAL 24 HOUR)));
-  DELETE FROM tm_mesures_ajustage_etalon WHERE ((tm_mesures_ajustage_etalon.Date_Heure_Mesure<DATE_SUB(NOW(), INTERVAL 24 HOUR)));
-  DELETE FROM tm_mesures_etalonnage WHERE ((tm_mesures_etalonnage.Date_Heure_Mesure<DATE_SUB(NOW(), INTERVAL 24 HOUR)));
-  DELETE FROM tm_mesures_gso_read_metro WHERE ((tm_mesures_gso_read_metro.Dernier_Date_MAJ<DATE_SUB(NOW(), INTERVAL 2 HOUR)));
+DELETE FROM tm_graphique WHERE ((tm_graphique.Date_Heure_Mesure<DATE_SUB(NOW(), INTERVAL 72 HOUR)));
+DELETE FROM tm_graphique WHERE ((tm_graphique.Date_Heure_Mesure>DATE_SUB(NOW(), INTERVAL -48 HOUR)));
+DELETE FROM tm_mesures WHERE ((tm_mesures.Date_Heure_Mesure>DATE_SUB(NOW(), INTERVAL -48 HOUR)));
+DELETE FROM tm_mesures_gso WHERE ((tm_mesures_gso.date_mesure<DATE_SUB(NOW(), INTERVAL 720 HOUR)));
+DELETE FROM tm_mesures_gso_build WHERE ((tm_mesures_gso_build.Date_Heure_Mesure<DATE_SUB(NOW(), INTERVAL 720 HOUR)));
+DELETE FROM tm_mesures_gso_commandes_mem WHERE ((tm_mesures_gso_commandes_mem.Date_Calcul<DATE_SUB(NOW(), INTERVAL 24 HOUR)));
+DELETE FROM tm_mesures WHERE tm_mesures.Id_Lieu=0;
+DELETE FROM tm_graphique WHERE tm_graphique.Id_Lieu=0;
+DELETE FROM tm_mesures_ajustage WHERE ((tm_mesures_ajustage.Date_Heure_Mesure<DATE_SUB(NOW(), INTERVAL 24 HOUR)));
+DELETE FROM tm_mesures_etalonnage WHERE ((tm_mesures_etalonnage.Date_Heure_Mesure<DATE_SUB(NOW(), INTERVAL 24 HOUR)));
+DELETE FROM tm_mesures_gso_read_metro WHERE ((tm_mesures_gso_read_metro.Dernier_Date_MAJ<DATE_SUB(NOW(), INTERVAL 2 HOUR)));
 END$$
 DELIMITER ;
 
@@ -2353,6 +2354,7 @@ main_block: BEGIN
 	  LEAVE main_block;
 	END IF;
 
+
     /* ==========================================================================================
        1. BLOCAGE APRES ACQUITTEMENT ALARME EN COURS : ne pas redeclencher l'alarme immediatement
        ========================================================================================== */
@@ -2377,8 +2379,9 @@ main_block: BEGIN
       AND Date_Heure_Fin IS NULL
     LIMIT 1;	
 
+
     /* ==========================================================
-       3. CAS : AUCUNE ALARME OUVERTE Ã¢â€ â€™ CREATION
+       3. CAS : AUCUNE ALARME OUVERTE → CREATION
        ========================================================== */
     IF v_Id_Alarme IS NULL THEN
 	
@@ -2442,6 +2445,7 @@ main_block: BEGIN
 		IF NEW.Est_Lieu_GSO=1
 			AND NEW.Lieu_Etat = 'S'
 			AND TIMESTAMPDIFF(SECOND, NEW.Date_Heure_Derniere_Reponse, NOW()) >= NEW.Retard_Non_Reponse * 60
+			AND TIMESTAMPDIFF(SECOND, NEW.Date_Heure_Surveillance_On, NOW()) >= NEW.Retard_Non_Reponse * 60
 		THEN
             INSERT INTO t_alarme
                 (Date_Heure_Debut, Valeur, Type,
@@ -2468,16 +2472,17 @@ main_block: BEGIN
 		
 
     /* ==========================================================
-       4. CAS : ALARME OUVERTE Ã¢â€ â€™ SUIVI / TRANSITION / FIN
+       4. CAS : ALARME OUVERTE → SUIVI / TRANSITION / FIN
        ========================================================== */
     ELSE
 		
-		/* --- TRANSITION N > BAS --- */
+		/* --- TRANSITION N, Est_Acq_Auto_Alarme_NR=0 > BAS --- */
 		IF  v_TypeAlarme = 'N'
 			AND NEW.Est_Lieu_GSO=1
 			AND NEW.Lieu_Etat = 'S'
 			AND TIMESTAMPDIFF(SECOND, NEW.Date_Heure_Derniere_Reponse, NOW()) <= NEW.Retard_Non_Reponse * 60
 			AND NEW.Derniere_Valeur < NEW.Tolerance_Surveillance_Inf
+			AND NEW.Est_Acq_Auto_Alarme_NR = 0
 		THEN
 			UPDATE t_alarme
             SET Date_Heure_Fin = NEW.Derniere_Date_Heure,
@@ -2503,13 +2508,48 @@ main_block: BEGIN
             SET NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee = 0;
             SET NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee_T1 = 0;
             LEAVE main_block;
+            
+      /* --- TRANSITION N, Est_Acq_Auto_Alarme_NR=1 > BAS --- */
+		ELSEIF  v_TypeAlarme = 'N'
+			AND NEW.Est_Lieu_GSO=1
+			AND NEW.Lieu_Etat = 'S'
+			AND TIMESTAMPDIFF(SECOND, NEW.Date_Heure_Derniere_Reponse, NOW()) <= NEW.Retard_Non_Reponse * 60
+			AND NEW.Derniere_Valeur < NEW.Tolerance_Surveillance_Inf
+			AND NEW.Est_Acq_Auto_Alarme_NR = 1
+		THEN
+			UPDATE t_alarme
+            SET Date_Heure_Fin = NEW.Derniere_Date_Heure,
+                Valeur = NEW.Derniere_Valeur,
+                Date_Heure_Derniere_Mesure = NEW.Derniere_Date_Heure
+            WHERE Id_Alarme = v_Id_Alarme;
+         DELETE FROM t_alarme WHERE Id_Alarme = v_Id_Alarme;
 			
-		/* --- TRANSITION N > HAUT --- */
+			INSERT INTO t_alarme
+                (Date_Heure_Debut, Valeur, Type,
+                 Id_Lieu, Sonde_Numero_Serie, Date_Heure_Derniere_Mesure,Unite)
+            VALUES
+                (NEW.Derniere_Date_Heure,
+                 NEW.Derniere_Valeur,
+                 'B',
+                 NEW.Id_Lieu,
+                 NEW.Sonde_Numero_Serie,
+                 NEW.Derniere_Date_Heure,
+					  NEW.Derniere_Unite);
+
+            SET NEW.Id_Alarme = LAST_INSERT_ID();
+            SET NEW.Est_Lieu_En_Alarme = 1;
+            SET NEW.Est_Lieu_En_Pre_Alarme = 0;
+            SET NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee = 0;
+            SET NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee_T1 = 0;
+            LEAVE main_block;
+			
+		/* --- TRANSITION N, Est_Acq_Auto_Alarme_NR=0 > HAUT --- */
 		ELSEIF  v_TypeAlarme = 'N'
 			AND NEW.Est_Lieu_GSO=1
 			AND NEW.Lieu_Etat = 'S'
 			AND TIMESTAMPDIFF(SECOND, NEW.Date_Heure_Derniere_Reponse, NOW()) <= NEW.Retard_Non_Reponse * 60
 			AND NEW.Derniere_Valeur > NEW.Tolerance_Surveillance_Sup
+			AND NEW.Est_Acq_Auto_Alarme_NR = 0
 		THEN
 			UPDATE t_alarme
             SET Date_Heure_Fin = NEW.Derniere_Date_Heure,
@@ -2535,12 +2575,47 @@ main_block: BEGIN
             SET NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee = 0;	
             SET NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee_T1 = 0;
             LEAVE main_block;
+            
+		/* --- TRANSITION N, Est_Acq_Auto_Alarme_NR=1 > HAUT --- */
+		ELSEIF  v_TypeAlarme = 'N'
+			AND NEW.Est_Lieu_GSO=1
+			AND NEW.Lieu_Etat = 'S'
+			AND TIMESTAMPDIFF(SECOND, NEW.Date_Heure_Derniere_Reponse, NOW()) <= NEW.Retard_Non_Reponse * 60
+			AND NEW.Derniere_Valeur > NEW.Tolerance_Surveillance_Sup
+			AND NEW.Est_Acq_Auto_Alarme_NR = 1
+		THEN
+			UPDATE t_alarme
+            SET Date_Heure_Fin = NEW.Derniere_Date_Heure,
+                Valeur = NEW.Derniere_Valeur,
+                Date_Heure_Derniere_Mesure = NEW.Derniere_Date_Heure
+            WHERE Id_Alarme = v_Id_Alarme;
+            DELETE FROM t_alarme WHERE Id_Alarme = v_Id_Alarme;
+			
+			INSERT INTO t_alarme
+                (Date_Heure_Debut, Valeur, Type,
+                 Id_Lieu, Sonde_Numero_Serie, Date_Heure_Derniere_Mesure,Unite)
+            VALUES
+                (NEW.Derniere_Date_Heure,
+                 NEW.Derniere_Valeur,
+                 'H',
+                 NEW.Id_Lieu,
+                 NEW.Sonde_Numero_Serie,
+                 NEW.Derniere_Date_Heure,
+					  NEW.Derniere_Unite);
+
+            SET NEW.Id_Alarme = LAST_INSERT_ID();
+            SET NEW.Est_Lieu_En_Alarme = 1;
+            SET NEW.Est_Lieu_En_Pre_Alarme = 0;
+            SET NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee = 0;	
+            SET NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee_T1 = 0;
+            LEAVE main_block;            
 		
-		/* --- TRANSITION BAS Ã¢â€ â€™ N --- */
+		/* --- TRANSITION BAS → N --- */
 		ELSEIF v_TypeAlarme = 'B'
 			AND NEW.Est_Lieu_GSO=1
 			AND NEW.Lieu_Etat = 'S'
 			AND TIMESTAMPDIFF(SECOND, NEW.Date_Heure_Derniere_Reponse, NOW()) >= NEW.Retard_Non_Reponse * 60
+			AND TIMESTAMPDIFF(SECOND, NEW.Date_Heure_Surveillance_On, NOW()) >= NEW.Retard_Non_Reponse * 60
 		THEN
             UPDATE t_alarme
             SET Date_Heure_Fin = NEW.Derniere_Date_Heure,
@@ -2569,11 +2644,12 @@ main_block: BEGIN
             SET NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee_T1 = 0;
             LEAVE main_block;
 
-		/* --- TRANSITION HAUT Ã¢â€ â€™ N --- */
+		/* --- TRANSITION HAUT → N --- */
 		ELSEIF v_TypeAlarme = 'H'
 			AND NEW.Est_Lieu_GSO=1
 			AND NEW.Lieu_Etat = 'S'
 			AND TIMESTAMPDIFF(SECOND, NEW.Date_Heure_Derniere_Reponse, NOW()) >= NEW.Retard_Non_Reponse * 60
+			AND TIMESTAMPDIFF(SECOND, NEW.Date_Heure_Surveillance_On, NOW()) >= NEW.Retard_Non_Reponse * 60
 		THEN
             UPDATE t_alarme
             SET Date_Heure_Fin = NEW.Derniere_Date_Heure,
@@ -2603,7 +2679,7 @@ main_block: BEGIN
             LEAVE main_block;
 			
 		
-        /* --- TRANSITION BAS Ã¢â€ â€™ HAUT --- */
+        /* --- TRANSITION BAS → HAUT --- */
         ELSEIF v_TypeAlarme = 'B'
 			AND NEW.Est_Lieu_GSO=1
 			AND NEW.Lieu_Etat = 'S'
@@ -2634,7 +2710,7 @@ main_block: BEGIN
             SET NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee_T1 = 0;
             LEAVE main_block;
 
-        /* --- TRANSITION HAUT Ã¢â€ â€™ BAS --- */
+        /* --- TRANSITION HAUT → BAS --- */
         ELSEIF v_TypeAlarme = 'H'
 			AND NEW.Est_Lieu_GSO=1
 			AND NEW.Lieu_Etat = 'S'
@@ -2700,9 +2776,10 @@ main_block: BEGIN
             SET NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee_T1 = 0;
             LEAVE main_block;
 			
-        /* --- FIN DÃ¢â‚¬â„¢ALARME N --- */
+        /* --- FIN D’ALARME N, Est_Acq_Auto_Alarme_NR=0  --- */
 		ELSEIF v_TypeAlarme = 'N'
 		AND TIMESTAMPDIFF(SECOND, NEW.Date_Heure_Derniere_Reponse, NOW()) < NEW.Retard_Non_Reponse * 60
+		AND NEW.Est_Acq_Auto_Alarme_NR=0
 		THEN
 		UPDATE t_alarme
 		SET Date_Heure_Fin = NEW.Derniere_Date_Heure,
@@ -2714,8 +2791,26 @@ main_block: BEGIN
 		SET NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee = 1;
 		SET NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee_T1 = 0;
 		LEAVE main_block;
+		
+		/* --- FIN D’ALARME N, Est_Acq_Auto_Alarme_NR=1  --- */
+		ELSEIF v_TypeAlarme = 'N'
+		AND TIMESTAMPDIFF(SECOND, NEW.Date_Heure_Derniere_Reponse, NOW()) < NEW.Retard_Non_Reponse * 60
+		AND NEW.Est_Acq_Auto_Alarme_NR=1
+		THEN
+		UPDATE t_alarme
+		SET Date_Heure_Fin = NEW.Derniere_Date_Heure,
+        Date_Heure_Derniere_Mesure = NEW.Derniere_Date_Heure
+		WHERE Id_Alarme = v_Id_Alarme;
+		DELETE FROM t_alarme
+		WHERE Id_Alarme = v_Id_Alarme;
 
-/* --- FIN DÃ¢â‚¬â„¢ALARME B/H --- */
+		SET NEW.Id_Alarme = 0;
+		SET NEW.Est_Lieu_En_Alarme = 0;
+		SET NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee = 0;
+		SET NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee_T1 = 0;
+		LEAVE main_block;
+
+/* --- FIN D’ALARME B/H --- */
 	ELSEIF v_TypeAlarme IN('B','H') THEN 
 		UPDATE t_alarme
 		SET Date_Heure_Fin = NEW.Derniere_Date_Heure,
@@ -2743,41 +2838,42 @@ main_block: BEGIN
 /* --- PRE-ALARME BASSE --- */
 IF NEW.Est_Consigne_Inf_Pre_Alarme_Active = 1 THEN
 
-    /* EntrÃƒÂ©e en prÃƒÂ©-alarme basse d'un lieu en alarme terminee non acquittee */
+    /* Entrée en pré-alarme basse d'un lieu en alarme terminee non acquittee */
     IF NEW.Derniere_Valeur < NEW.Consigne_Inf_Pre_Alarme AND NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee=1 THEN
         SET NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee=0; SET NEW.Est_Lieu_En_Pre_Alarme = 1; SET NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee_T1 = 1;
         
-       /* EntrÃƒÂ©e en prÃƒÂ©-alarme basse d'un lieu sans etat d'alarme */
+       /* Entrée en pré-alarme basse d'un lieu sans etat d'alarme */
     ELSEIF NEW.Derniere_Valeur < NEW.Consigne_Inf_Pre_Alarme THEN
         SET NEW.Est_Lieu_En_Pre_Alarme = 1;     
 
-    /* Sortie de prÃƒÂ©-alarme basse (retour zone normale) puis retour a TermineeNonAcquitee */
+    /* Sortie de pré-alarme basse (retour zone normale) puis retour a TermineeNonAcquitee */
     ELSEIF NEW.Derniere_Valeur >= NEW.Consigne_Inf_Pre_Alarme AND NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee_T1 = 1 THEN
         SET NEW.Est_Lieu_En_Pre_Alarme = 0; SET NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee=1; SET NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee_T1 = 0;
         
-     /* Sortie de prÃƒÂ©-alarme basse (retour zone normale) sans retour a TermineeNonAcquitee */
+     /* Sortie de pré-alarme basse (retour zone normale) sans retour a TermineeNonAcquitee */
     ELSEIF NEW.Derniere_Valeur >= NEW.Consigne_Inf_Pre_Alarme AND NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee_T1 = 0 THEN
         SET NEW.Est_Lieu_En_Pre_Alarme = 0;    
     END IF;
 
 END IF;
 
+
 /* --- PRE-ALARME HAUTE --- */
 IF NEW.Est_Consigne_Sup_Pre_Alarme_Active = 1 THEN
 
-    /* EntrÃƒÂ©e en prÃƒÂ©-alarme haute d'un lieu en alarme terminee non acquittee */
+    /* Entrée en pré-alarme haute d'un lieu en alarme terminee non acquittee */
     IF NEW.Derniere_Valeur > NEW.Consigne_Sup_Pre_Alarme AND NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee=1 THEN
         SET NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee=0; SET NEW.Est_Lieu_En_Pre_Alarme = 1; SET NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee_T1 = 1;
         
-       /* EntrÃƒÂ©e en prÃƒÂ©-alarme haute d'un lieu sans etat d'alarme */
+       /* Entrée en pré-alarme haute d'un lieu sans etat d'alarme */
     ELSEIF NEW.Derniere_Valeur > NEW.Consigne_Sup_Pre_Alarme THEN
         SET NEW.Est_Lieu_En_Pre_Alarme = 1;     
 
-    /* Sortie de prÃƒÂ©-alarme haute (retour zone normale) puis retour a TermineeNonAcquitee */
+    /* Sortie de pré-alarme haute (retour zone normale) puis retour a TermineeNonAcquitee */
     ELSEIF NEW.Derniere_Valeur <= NEW.Consigne_Sup_Pre_Alarme AND NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee_T1 = 1 THEN
         SET NEW.Est_Lieu_En_Pre_Alarme = 0; SET NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee=1; SET NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee_T1 = 0;
         
-     /* Sortie de prÃƒÂ©-alarme haute (retour zone normale) sans retour a TermineeNonAcquitee */
+     /* Sortie de pré-alarme haute (retour zone normale) sans retour a TermineeNonAcquitee */
     ELSEIF NEW.Derniere_Valeur <= NEW.Consigne_Sup_Pre_Alarme AND NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee_T1 = 0 THEN
         SET NEW.Est_Lieu_En_Pre_Alarme = 0;    
     END IF;
@@ -2786,7 +2882,7 @@ END IF;
 
 END IF;
 
-    END
+END
 
 /** vigi_mesures **/$$
 DELIMITER ;
@@ -2825,9 +2921,9 @@ CREATE TRIGGER `TRG_AFT_INS_MES_GSO`
 AFTER INSERT ON `tm_mesures_gso`
 FOR EACH ROW
 BEGIN
-IF NEW.id_capteur IN(SELECT Adresse_Sonde from v_config_lieu_sonde) AND NEW.trame IN(00000000,00000001) AND NEW.date_mesure >= NOW() - INTERVAL 175 HOUR THEN
+IF NEW.id_capteur IN(SELECT Adresse_Sonde from v_config_lieu_sonde) AND NEW.trame IN(00000000,00000001,10000000) AND NEW.date_mesure >= NOW() - INTERVAL 192 HOUR THEN
         INSERT INTO tm_mesures_gso_build
-            (Date_Heure_Mesure, Valeur_Brute, Unite, Adresse_Sonde, Rssi, Tension,COM_sonde,Id_Lieu,Est_Valeur_Memoire,Planning_Actif,Planning_Regle_Existe)
+            (Date_Heure_Mesure, Valeur_Brute, Unite, Adresse_Sonde, Rssi, Tension,COM_sonde,Est_Mesure_Repeteur_GSO,Id_Lieu,Est_Valeur_Memoire,Planning_Actif,Planning_Regle_Existe)
         VALUES
             (NEW.date_mesure,
              NEW.tep,
@@ -2836,6 +2932,7 @@ IF NEW.id_capteur IN(SELECT Adresse_Sonde from v_config_lieu_sonde) AND NEW.tram
              NEW.rssi,
              NEW.tension,
 				 NEW.COM_sonde,
+				 (IF (NEW.trame=10000000,1,0)),
 				 (SELECT Id_Lieu from v_config_lieu_sonde WHERE NEW.id_capteur=v_config_lieu_sonde.Adresse_Sonde),
 				 (IF (NEW.date_mesure <= NOW() - INTERVAL 45 MINUTE,1,0)),
 				 (SELECT Planning_Actif from v_config_lieu_sonde WHERE NEW.id_capteur=v_config_lieu_sonde.Adresse_Sonde),
@@ -2858,7 +2955,8 @@ IF NEW.id_capteur IN(SELECT Adresse_Sonde from v_config_sonde_com) AND NEW.trame
             (Valeur,Date_Heure_Mesure, Valeur_Brute, Unite, Adresse_Sonde)
         VALUES(
         (ROUND(((NEW.tep) * (SELECT v_config_sonde_com.coeff_a FROM v_config_sonde_com WHERE NEW.id_capteur=v_config_sonde_com.Adresse_Sonde))
-		+ (SELECT v_config_sonde_com.coeff_b FROM v_config_sonde_com WHERE NEW.id_capteur=v_config_sonde_com.Adresse_Sonde),2)),			 
+		+ (SELECT v_config_sonde_com.coeff_b FROM v_config_sonde_com WHERE NEW.id_capteur=v_config_sonde_com.Adresse_Sonde)
+		+ (SELECT v_config_sonde_com.Sonde_Offset FROM v_config_sonde_com WHERE NEW.id_capteur=v_config_sonde_com.Adresse_Sonde),2)),			 
 			 NEW.date_mesure,
              NEW.tep,
              NEW.unite,
@@ -2866,276 +2964,13 @@ IF NEW.id_capteur IN(SELECT Adresse_Sonde from v_config_sonde_com) AND NEW.trame
 );
 END IF;
 
+
 IF NEW.trame=00000010 AND NEW.date_mesure >= NOW() - INTERVAL 2 HOUR THEN
 	UPDATE tm_mesures_gso_read_metro
 	SET
 	tm_mesures_gso_read_metro.Metro_en_cours=1,
 	tm_mesures_gso_read_metro.Dernier_Date_MAJ=NEW.date_mesure
 	WHERE tm_mesures_gso_read_metro.GSO_SN=left(NEW.id_capteur,(length(NEW.id_capteur)-2));
-END IF;
-
-END$$
-DELIMITER ;
-
-DROP TRIGGER IF EXISTS `TRG_AFT_INS_MES_GSO_BUILD`;
-DELIMITER $$
-CREATE TRIGGER `TRG_AFT_INS_MES_GSO_BUILD`
-AFTER INSERT ON `tm_mesures_gso_build`
-FOR EACH ROW
-BEGIN
-
-IF NEW.Id_Lieu IN (SELECT Id_Lieu FROM v_config_lieu_sonde) AND NEW.Planning_Actif=0 AND NEW.Est_Valeur_Memoire=0 AND (NEW.Planning_Regle_Existe=0 OR NEW.Planning_Regle_Existe=1) THEN
-INSERT INTO tm_mesures (Valeur,Sonde_Numero_Serie,Consigne,Consigne_Sup,Consigne_Inf,Consigne_Sup_Pre_Alarme,Consigne_Inf_Pre_Alarme,Date_Heure_Mesure,Valeur_Brute,Unite,Adresse_Sonde,COM_sonde,Id_Lieu,Rssi,Tension,Est_Valeur_Memoire,Planning_Actif,Planning_Regle_Existe)
-VALUES(
-(ROUND((((NEW.Valeur_Brute) * (SELECT v_config_lieu_sonde.coeff_a FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu))
-+ (SELECT v_config_lieu_sonde.coeff_b FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu))
-+ (SELECT Sonde_Offset FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu)
-+ (SELECT `-(EJ)` FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),2)),
-(SELECT Sonde_Numero_Serie FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),
-(SELECT Consigne FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),
-(SELECT Consigne_Sup_Corr FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),
-(SELECT Consigne_Inf_Corr FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),
-(SELECT Consigne_Sup_Pre_Alarme FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),
-(SELECT Consigne_Inf_Pre_Alarme FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),
-NEW.Date_Heure_Mesure, NEW.Valeur_Brute, NEW.Unite, NEW.Adresse_Sonde, NEW.COM_sonde, NEW.Id_Lieu, NEW.Rssi, NEW.Tension, NEW.Est_Valeur_Memoire, NEW.Planning_Actif, NEW.Planning_Regle_Existe
-);
-END IF;
-
-IF NEW.Id_Lieu IN (SELECT Id_Lieu FROM v_config_lieu_sonde) AND NEW.Planning_Actif=0 AND NEW.Est_Valeur_Memoire=0 AND (NEW.Planning_Regle_Existe=0 OR NEW.Planning_Regle_Existe=1) THEN
-INSERT INTO tm_graphique (Valeur,Sonde_Numero_Serie,Consigne,Consigne_Sup,Consigne_Inf,Consigne_Sup_Pre_Alarme,Consigne_Inf_Pre_Alarme,Date_Heure_Mesure,Valeur_Brute,Unite,Adresse_Sonde,Id_Lieu)
-VALUES(
-(ROUND((((NEW.Valeur_Brute) * (SELECT v_config_lieu_sonde.coeff_a FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu))
-+ (SELECT v_config_lieu_sonde.coeff_b FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu))
-+ (SELECT Sonde_Offset FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu)
-+ (SELECT `-(EJ)` FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),2)),
-(SELECT Sonde_Numero_Serie FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),
-(SELECT Consigne FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),
-(SELECT Consigne_Sup_Corr FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),
-(SELECT Consigne_Inf_Corr FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),
-(SELECT Consigne_Sup_Pre_Alarme FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),
-(SELECT Consigne_Inf_Pre_Alarme FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),
-NEW.Date_Heure_Mesure, NEW.Valeur_Brute, NEW.Unite, NEW.Adresse_Sonde, NEW.Id_Lieu
-);
-END IF;
-
-IF NEW.Id_Lieu IN (SELECT Id_Lieu FROM v_config_lieu_sonde) AND NEW.Planning_Actif=0 AND NEW.Est_Valeur_Memoire=1 AND NEW.Planning_Regle_Existe=0 THEN
-INSERT INTO tm_mesures (Valeur,Sonde_Numero_Serie,Consigne,Consigne_Sup,Consigne_Inf,Consigne_Sup_Pre_Alarme,Consigne_Inf_Pre_Alarme,Date_Heure_Mesure,Valeur_Brute,Unite,Adresse_Sonde,COM_sonde,Id_Lieu,Rssi,Tension,Est_Valeur_Memoire,Planning_Actif,Planning_Regle_Existe)
-VALUES(
-(ROUND((((NEW.Valeur_Brute) * (SELECT v_config_lieu_sonde.coeff_a FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu))
-+ (SELECT v_config_lieu_sonde.coeff_b FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu))
-+ (SELECT Sonde_Offset FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu)
-+ (SELECT `-(EJ)` FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),2)),
-(SELECT Sonde_Numero_Serie FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),
-(SELECT Consigne FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),
-(SELECT Consigne_Sup_Corr FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),
-(SELECT Consigne_Inf_Corr FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),
-(SELECT Consigne_Sup_Pre_Alarme FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),
-(SELECT Consigne_Inf_Pre_Alarme FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),
-NEW.Date_Heure_Mesure, NEW.Valeur_Brute, NEW.Unite, NEW.Adresse_Sonde, NEW.COM_sonde, NEW.Id_Lieu, NEW.Rssi, NEW.Tension, NEW.Est_Valeur_Memoire, NEW.Planning_Actif, NEW.Planning_Regle_Existe
-);
-END IF;
-
-IF NEW.Id_Lieu IN (SELECT Id_Lieu FROM v_config_lieu_sonde) AND NEW.Planning_Actif=0 AND NEW.Est_Valeur_Memoire=1 AND NEW.Planning_Regle_Existe=0 THEN
-INSERT INTO tm_graphique (Valeur,Sonde_Numero_Serie,Consigne,Consigne_Sup,Consigne_Inf,Consigne_Sup_Pre_Alarme,Consigne_Inf_Pre_Alarme,Date_Heure_Mesure,Valeur_Brute,Unite,Adresse_Sonde,Id_Lieu)
-VALUES(
-(ROUND((((NEW.Valeur_Brute) * (SELECT v_config_lieu_sonde.coeff_a FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu))
-+ (SELECT v_config_lieu_sonde.coeff_b FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu))
-+ (SELECT Sonde_Offset FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu)
-+ (SELECT `-(EJ)` FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),2)),
-(SELECT Sonde_Numero_Serie FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),
-(SELECT Consigne FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),
-(SELECT Consigne_Sup_Corr FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),
-(SELECT Consigne_Inf_Corr FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),
-(SELECT Consigne_Sup_Pre_Alarme FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),
-(SELECT Consigne_Inf_Pre_Alarme FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),
-NEW.Date_Heure_Mesure, NEW.Valeur_Brute, NEW.Unite, NEW.Adresse_Sonde, NEW.Id_Lieu
-);
-END IF;
-
-IF NEW.Id_Lieu IN (SELECT Id_Lieu FROM v_config_lieu_sonde) AND NEW.Planning_Actif=0 AND NEW.Est_Valeur_Memoire=1 AND NEW.Planning_Regle_Existe=1 THEN
-INSERT INTO tm_mesures (Valeur,Sonde_Numero_Serie,Consigne,Consigne_Sup,Consigne_Inf,Consigne_Sup_Pre_Alarme,Consigne_Inf_Pre_Alarme,Date_Heure_Mesure,Valeur_Brute,Unite,Adresse_Sonde,COM_sonde,Id_Lieu,Rssi,Tension,Est_Valeur_Memoire,Planning_Actif, Planning_Regle_Existe)
-VALUES(
-(ROUND((((NEW.Valeur_Brute) * (SELECT v_config_lieu_sonde.coeff_a FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu))
-+ (SELECT v_config_lieu_sonde.coeff_b FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu))
-+ (SELECT Sonde_Offset FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu)
-+ (SELECT `-(EJ)` FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),2)),
-(SELECT Sonde_Numero_Serie FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),
-(SELECT IFNULL((SELECT Consigne_Apres FROM v_config_lieu_planning_consignes WHERE (NEW.Id_Lieu=v_config_lieu_planning_consignes.Id_Lieu)
-AND ((NEW.Date_Heure_Mesure BETWEEN v_config_lieu_planning_consignes.Date_Heure_Debut_Changement AND v_config_lieu_planning_consignes.Date_Heure_Fin_Changement)
-OR (NEW.Date_Heure_Mesure>v_config_lieu_planning_consignes.Date_Heure_Debut_Changement AND v_config_lieu_planning_consignes.Date_Heure_Fin_Changement IS NULL)))
-,(SELECT Consigne FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu))),
-(SELECT IFNULL((SELECT Tolerance_Surveillance_Sup_Apres FROM v_config_lieu_planning_consignes WHERE (NEW.Id_Lieu=v_config_lieu_planning_consignes.Id_Lieu)
-AND ((NEW.Date_Heure_Mesure BETWEEN v_config_lieu_planning_consignes.Date_Heure_Debut_Changement AND v_config_lieu_planning_consignes.Date_Heure_Fin_Changement)
-OR (NEW.Date_Heure_Mesure>v_config_lieu_planning_consignes.Date_Heure_Debut_Changement AND v_config_lieu_planning_consignes.Date_Heure_Fin_Changement IS NULL)))
-,(SELECT Consigne_Sup_Corr FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu))),
-(SELECT IFNULL((SELECT Tolerance_Surveillance_Inf_Apres FROM v_config_lieu_planning_consignes WHERE (NEW.Id_Lieu=v_config_lieu_planning_consignes.Id_Lieu)
-AND ((NEW.Date_Heure_Mesure BETWEEN v_config_lieu_planning_consignes.Date_Heure_Debut_Changement AND v_config_lieu_planning_consignes.Date_Heure_Fin_Changement)
-OR (NEW.Date_Heure_Mesure>v_config_lieu_planning_consignes.Date_Heure_Debut_Changement AND v_config_lieu_planning_consignes.Date_Heure_Fin_Changement IS NULL))),
-(SELECT Consigne_Inf_Corr FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu))),
-(SELECT Consigne_Sup_Pre_Alarme FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),
-(SELECT Consigne_Inf_Pre_Alarme FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),
-NEW.Date_Heure_Mesure, NEW.Valeur_Brute, NEW.Unite, NEW.Adresse_Sonde, NEW.COM_sonde, NEW.Id_Lieu, NEW.Rssi, NEW.Tension, NEW.Est_Valeur_Memoire, NEW.Planning_Actif, NEW.Planning_Regle_Existe
-);
-END IF;
-
-IF NEW.Id_Lieu IN (SELECT Id_Lieu FROM v_config_lieu_sonde) AND NEW.Planning_Actif=0 AND NEW.Est_Valeur_Memoire=1 AND NEW.Planning_Regle_Existe=1 THEN
-INSERT INTO tm_graphique (Valeur,Sonde_Numero_Serie,Consigne,Consigne_Sup,Consigne_Inf,Consigne_Sup_Pre_Alarme,Consigne_Inf_Pre_Alarme,Date_Heure_Mesure,Valeur_Brute,Unite,Adresse_Sonde,Id_Lieu)
-VALUES(
-(ROUND((((NEW.Valeur_Brute) * (SELECT v_config_lieu_sonde.coeff_a FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu))
-+ (SELECT v_config_lieu_sonde.coeff_b FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu))
-+ (SELECT Sonde_Offset FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu)
-+ (SELECT `-(EJ)` FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),2)),
-(SELECT Sonde_Numero_Serie FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),
-(SELECT IFNULL((SELECT Consigne_Apres FROM v_config_lieu_planning_consignes WHERE (NEW.Id_Lieu=v_config_lieu_planning_consignes.Id_Lieu)
-AND ((NEW.Date_Heure_Mesure BETWEEN v_config_lieu_planning_consignes.Date_Heure_Debut_Changement AND v_config_lieu_planning_consignes.Date_Heure_Fin_Changement)
-OR (NEW.Date_Heure_Mesure>v_config_lieu_planning_consignes.Date_Heure_Debut_Changement AND v_config_lieu_planning_consignes.Date_Heure_Fin_Changement IS NULL)))
-,(SELECT Consigne FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu))),
-(SELECT IFNULL((SELECT Tolerance_Surveillance_Sup_Apres FROM v_config_lieu_planning_consignes WHERE (NEW.Id_Lieu=v_config_lieu_planning_consignes.Id_Lieu)
-AND ((NEW.Date_Heure_Mesure BETWEEN v_config_lieu_planning_consignes.Date_Heure_Debut_Changement AND v_config_lieu_planning_consignes.Date_Heure_Fin_Changement)
-OR (NEW.Date_Heure_Mesure>v_config_lieu_planning_consignes.Date_Heure_Debut_Changement AND v_config_lieu_planning_consignes.Date_Heure_Fin_Changement IS NULL)))
-,(SELECT Consigne_Sup_Corr FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu))),
-(SELECT IFNULL((SELECT Tolerance_Surveillance_Inf_Apres FROM v_config_lieu_planning_consignes WHERE (NEW.Id_Lieu=v_config_lieu_planning_consignes.Id_Lieu)
-AND ((NEW.Date_Heure_Mesure BETWEEN v_config_lieu_planning_consignes.Date_Heure_Debut_Changement AND v_config_lieu_planning_consignes.Date_Heure_Fin_Changement)
-OR (NEW.Date_Heure_Mesure>v_config_lieu_planning_consignes.Date_Heure_Debut_Changement AND v_config_lieu_planning_consignes.Date_Heure_Fin_Changement IS NULL))),
-(SELECT Consigne_Inf_Corr FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu))),
-(SELECT Consigne_Sup_Pre_Alarme FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),
-(SELECT Consigne_Inf_Pre_Alarme FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),
-NEW.Date_Heure_Mesure, NEW.Valeur_Brute, NEW.Unite, NEW.Adresse_Sonde, NEW.Id_Lieu
-);
-END IF;
-
-IF NEW.Id_Lieu IN (SELECT Id_Lieu FROM v_config_lieu_sonde) AND NEW.Planning_Actif=1 AND NEW.Est_Valeur_Memoire=0 THEN
-INSERT INTO tm_mesures (Valeur,Sonde_Numero_Serie,Consigne,Consigne_Sup,Consigne_Inf,Consigne_Sup_Pre_Alarme,Consigne_Inf_Pre_Alarme,Date_Heure_Mesure,Valeur_Brute,Unite,Adresse_Sonde,COM_sonde,Id_Lieu,Rssi,Tension,Est_Valeur_Memoire,Planning_Actif, Planning_Regle_Existe)
-VALUES(
-(ROUND((((NEW.Valeur_Brute) * (SELECT v_config_lieu_sonde.coeff_a FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu))
-+ (SELECT v_config_lieu_sonde.coeff_b FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu))
-+ (SELECT Sonde_Offset FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu)
-+ (SELECT `-(EJ)` FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),2)),
-(SELECT Sonde_Numero_Serie FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),
-(SELECT Consigne_Apres FROM v_config_lieu_planning_consignes
-WHERE (NEW.Id_Lieu=v_config_lieu_planning_consignes.Id_Lieu)
-AND ((NEW.Date_Heure_Mesure BETWEEN v_config_lieu_planning_consignes.Date_Heure_Debut_Changement AND v_config_lieu_planning_consignes.Date_Heure_Fin_Changement)
-OR (NEW.Date_Heure_Mesure>v_config_lieu_planning_consignes.Date_Heure_Debut_Changement AND v_config_lieu_planning_consignes.Date_Heure_Fin_Changement IS NULL))),
-(SELECT Tolerance_Surveillance_Sup_Apres FROM v_config_lieu_planning_consignes
-WHERE (NEW.Id_Lieu=v_config_lieu_planning_consignes.Id_Lieu)
-AND ((NEW.Date_Heure_Mesure BETWEEN v_config_lieu_planning_consignes.Date_Heure_Debut_Changement AND v_config_lieu_planning_consignes.Date_Heure_Fin_Changement)
-OR (NEW.Date_Heure_Mesure>v_config_lieu_planning_consignes.Date_Heure_Debut_Changement AND v_config_lieu_planning_consignes.Date_Heure_Fin_Changement IS NULL))),
-(SELECT Tolerance_Surveillance_Inf_Apres FROM v_config_lieu_planning_consignes
-WHERE (NEW.Id_Lieu=v_config_lieu_planning_consignes.Id_Lieu)
-AND ((NEW.Date_Heure_Mesure BETWEEN v_config_lieu_planning_consignes.Date_Heure_Debut_Changement AND v_config_lieu_planning_consignes.Date_Heure_Fin_Changement)
-OR (NEW.Date_Heure_Mesure>v_config_lieu_planning_consignes.Date_Heure_Debut_Changement AND v_config_lieu_planning_consignes.Date_Heure_Fin_Changement IS NULL))),
-(SELECT Consigne_Sup_Pre_Alarme FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),
-(SELECT Consigne_Inf_Pre_Alarme FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),
-NEW.Date_Heure_Mesure, NEW.Valeur_Brute, NEW.Unite, NEW.Adresse_Sonde, NEW.COM_sonde, NEW.Id_Lieu, NEW.Rssi, NEW.Tension, NEW.Est_Valeur_Memoire, NEW.Planning_Actif, NEW.Planning_Regle_Existe
-);
-END IF;
-
-IF NEW.Id_Lieu IN (SELECT Id_Lieu FROM v_config_lieu_sonde) AND NEW.Planning_Actif=1 AND NEW.Est_Valeur_Memoire=0 THEN
-INSERT INTO tm_graphique (Valeur,Sonde_Numero_Serie,Consigne,Consigne_Sup,Consigne_Inf,Consigne_Sup_Pre_Alarme,Consigne_Inf_Pre_Alarme,Date_Heure_Mesure,Valeur_Brute,Unite,Adresse_Sonde,Id_Lieu)
-VALUES(
-(ROUND((((NEW.Valeur_Brute) * (SELECT v_config_lieu_sonde.coeff_a FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu))
-+ (SELECT v_config_lieu_sonde.coeff_b FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu))
-+ (SELECT Sonde_Offset FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu)
-+ (SELECT `-(EJ)` FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),2)),
-(SELECT Sonde_Numero_Serie FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),
-(SELECT Consigne_Apres FROM v_config_lieu_planning_consignes
-WHERE (NEW.Id_Lieu=v_config_lieu_planning_consignes.Id_Lieu)
-AND ((NEW.Date_Heure_Mesure BETWEEN v_config_lieu_planning_consignes.Date_Heure_Debut_Changement AND v_config_lieu_planning_consignes.Date_Heure_Fin_Changement)
-OR (NEW.Date_Heure_Mesure>v_config_lieu_planning_consignes.Date_Heure_Debut_Changement AND v_config_lieu_planning_consignes.Date_Heure_Fin_Changement IS NULL))),
-(SELECT Tolerance_Surveillance_Sup_Apres FROM v_config_lieu_planning_consignes
-WHERE (NEW.Id_Lieu=v_config_lieu_planning_consignes.Id_Lieu)
-AND ((NEW.Date_Heure_Mesure BETWEEN v_config_lieu_planning_consignes.Date_Heure_Debut_Changement AND v_config_lieu_planning_consignes.Date_Heure_Fin_Changement)
-OR (NEW.Date_Heure_Mesure>v_config_lieu_planning_consignes.Date_Heure_Debut_Changement AND v_config_lieu_planning_consignes.Date_Heure_Fin_Changement IS NULL))),
-(SELECT Tolerance_Surveillance_Inf_Apres FROM v_config_lieu_planning_consignes
-WHERE (NEW.Id_Lieu=v_config_lieu_planning_consignes.Id_Lieu)
-AND ((NEW.Date_Heure_Mesure BETWEEN v_config_lieu_planning_consignes.Date_Heure_Debut_Changement AND v_config_lieu_planning_consignes.Date_Heure_Fin_Changement)
-OR (NEW.Date_Heure_Mesure>v_config_lieu_planning_consignes.Date_Heure_Debut_Changement AND v_config_lieu_planning_consignes.Date_Heure_Fin_Changement IS NULL))),
-(SELECT Consigne_Sup_Pre_Alarme FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),
-(SELECT Consigne_Inf_Pre_Alarme FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),
-NEW.Date_Heure_Mesure, NEW.Valeur_Brute, NEW.Unite, NEW.Adresse_Sonde, NEW.Id_Lieu
-);
-END IF;
-
-IF NEW.Id_Lieu IN (SELECT Id_Lieu FROM v_config_lieu_sonde) AND NEW.Planning_Actif=1 AND NEW.Est_Valeur_Memoire=1 THEN
-INSERT INTO tm_mesures (Valeur,Sonde_Numero_Serie,Consigne,Consigne_Sup,Consigne_Inf,Consigne_Sup_Pre_Alarme,Consigne_Inf_Pre_Alarme,Date_Heure_Mesure,Valeur_Brute,Unite,Adresse_Sonde,COM_sonde,Id_Lieu,Rssi,Tension,Est_Valeur_Memoire,Planning_Actif, Planning_Regle_Existe)
-VALUES(
-(ROUND((((NEW.Valeur_Brute) * (SELECT v_config_lieu_sonde.coeff_a FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu))
-+ (SELECT v_config_lieu_sonde.coeff_b FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu))
-+ (SELECT Sonde_Offset FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu)
-+ (SELECT `-(EJ)` FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),2)),
-(SELECT Sonde_Numero_Serie FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),
-(SELECT IFNULL
-(
-(SELECT Consigne_Apres FROM v_config_lieu_planning_consignes
-WHERE (NEW.Id_Lieu=v_config_lieu_planning_consignes.Id_Lieu)
-AND ((NEW.Date_Heure_Mesure BETWEEN v_config_lieu_planning_consignes.Date_Heure_Debut_Changement AND v_config_lieu_planning_consignes.Date_Heure_Fin_Changement)
-OR (NEW.Date_Heure_Mesure>v_config_lieu_planning_consignes.Date_Heure_Debut_Changement AND v_config_lieu_planning_consignes.Date_Heure_Fin_Changement IS NULL))LIMIT 1)
-,(SELECT Consigne_Base FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu)
-)
-),
-(SELECT IFNULL
-(
-(SELECT Tolerance_Surveillance_Sup_Apres FROM v_config_lieu_planning_consignes
-WHERE (NEW.Id_Lieu=v_config_lieu_planning_consignes.Id_Lieu)
-AND ((NEW.Date_Heure_Mesure BETWEEN v_config_lieu_planning_consignes.Date_Heure_Debut_Changement AND v_config_lieu_planning_consignes.Date_Heure_Fin_Changement)
-OR (NEW.Date_Heure_Mesure>v_config_lieu_planning_consignes.Date_Heure_Debut_Changement AND v_config_lieu_planning_consignes.Date_Heure_Fin_Changement IS NULL))LIMIT 1)
-,(SELECT Tolerance_Surveillance_Sup_Base FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu)
-)
-),
-(SELECT IFNULL
-(
-(SELECT Tolerance_Surveillance_Inf_Apres FROM v_config_lieu_planning_consignes
-WHERE (NEW.Id_Lieu=v_config_lieu_planning_consignes.Id_Lieu)
-AND ((NEW.Date_Heure_Mesure BETWEEN v_config_lieu_planning_consignes.Date_Heure_Debut_Changement AND v_config_lieu_planning_consignes.Date_Heure_Fin_Changement)
-OR (NEW.Date_Heure_Mesure>v_config_lieu_planning_consignes.Date_Heure_Debut_Changement AND v_config_lieu_planning_consignes.Date_Heure_Fin_Changement IS NULL))LIMIT 1)
-,(SELECT Tolerance_Surveillance_Inf_Base FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu)
-)
-),
-(SELECT Consigne_Sup_Pre_Alarme FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),
-(SELECT Consigne_Inf_Pre_Alarme FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),
-NEW.Date_Heure_Mesure, NEW.Valeur_Brute, NEW.Unite, NEW.Adresse_Sonde, NEW.COM_sonde, NEW.Id_Lieu, NEW.Rssi, NEW.Tension, NEW.Est_Valeur_Memoire, NEW.Planning_Actif, NEW.Planning_Regle_Existe
-);
-END IF;
-
-IF NEW.Id_Lieu IN (SELECT Id_Lieu FROM v_config_lieu_sonde) AND NEW.Planning_Actif=1 AND NEW.Est_Valeur_Memoire=1 THEN
-INSERT INTO tm_graphique (Valeur,Sonde_Numero_Serie,Consigne,Consigne_Sup,Consigne_Inf,Consigne_Sup_Pre_Alarme,Consigne_Inf_Pre_Alarme,Date_Heure_Mesure,Valeur_Brute,Unite,Adresse_Sonde,Id_Lieu)
-VALUES(
-(ROUND((((NEW.Valeur_Brute) * (SELECT v_config_lieu_sonde.coeff_a FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu))
-+ (SELECT v_config_lieu_sonde.coeff_b FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu))
-+ (SELECT Sonde_Offset FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu)
-+ (SELECT `-(EJ)` FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),2)),
-(SELECT Sonde_Numero_Serie FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),
-(SELECT IFNULL
-(
-(SELECT Consigne_Apres FROM v_config_lieu_planning_consignes
-WHERE (NEW.Id_Lieu=v_config_lieu_planning_consignes.Id_Lieu)
-AND ((NEW.Date_Heure_Mesure BETWEEN v_config_lieu_planning_consignes.Date_Heure_Debut_Changement AND v_config_lieu_planning_consignes.Date_Heure_Fin_Changement)
-OR (NEW.Date_Heure_Mesure>v_config_lieu_planning_consignes.Date_Heure_Debut_Changement AND v_config_lieu_planning_consignes.Date_Heure_Fin_Changement IS NULL))LIMIT 1)
-,(SELECT Consigne_Base FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu)
-)
-),
-(SELECT IFNULL
-(
-(SELECT Tolerance_Surveillance_Sup_Apres FROM v_config_lieu_planning_consignes
-WHERE (NEW.Id_Lieu=v_config_lieu_planning_consignes.Id_Lieu)
-AND ((NEW.Date_Heure_Mesure BETWEEN v_config_lieu_planning_consignes.Date_Heure_Debut_Changement AND v_config_lieu_planning_consignes.Date_Heure_Fin_Changement)
-OR (NEW.Date_Heure_Mesure>v_config_lieu_planning_consignes.Date_Heure_Debut_Changement AND v_config_lieu_planning_consignes.Date_Heure_Fin_Changement IS NULL))LIMIT 1)
-,(SELECT Tolerance_Surveillance_Sup_Base FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu)
-)
-),
-(SELECT IFNULL
-(
-(SELECT Tolerance_Surveillance_Inf_Apres FROM v_config_lieu_planning_consignes
-WHERE (NEW.Id_Lieu=v_config_lieu_planning_consignes.Id_Lieu)
-AND ((NEW.Date_Heure_Mesure BETWEEN v_config_lieu_planning_consignes.Date_Heure_Debut_Changement AND v_config_lieu_planning_consignes.Date_Heure_Fin_Changement)
-OR (NEW.Date_Heure_Mesure>v_config_lieu_planning_consignes.Date_Heure_Debut_Changement AND v_config_lieu_planning_consignes.Date_Heure_Fin_Changement IS NULL))LIMIT 1)
-,(SELECT Tolerance_Surveillance_Inf_Base FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu)
-)
-),
-(SELECT Consigne_Sup_Pre_Alarme FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),
-(SELECT Consigne_Inf_Pre_Alarme FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),
-NEW.Date_Heure_Mesure, NEW.Valeur_Brute, NEW.Unite, NEW.Adresse_Sonde, NEW.Id_Lieu
-);
 END IF;
 
 END$$
@@ -3149,6 +2984,270 @@ FOR EACH ROW
 BEGIN
 SET NEW.Port_Serie_Send_GSO=(SELECT DISTINCT v_config_sonde_com.Port_Serie_Send_GSO FROM v_config_sonde_com
 WHERE v_config_sonde_com.GSO_SN = NEW.GSO_SN);
+END$$
+DELIMITER ;
+
+DROP TRIGGER IF EXISTS `TRG_AFT_INS_MES_GSO_BUILD`;
+DELIMITER $$
+CREATE TRIGGER `TRG_AFT_INS_MES_GSO_BUILD`
+AFTER INSERT ON `tm_mesures_gso_build`
+FOR EACH ROW
+BEGIN
+
+IF NEW.Id_Lieu IN (SELECT Id_Lieu FROM v_config_lieu_sonde) AND NEW.Planning_Actif=0 AND NEW.Est_Valeur_Memoire=0 AND (NEW.Planning_Regle_Existe=0 OR NEW.Planning_Regle_Existe=1) THEN
+INSERT INTO tm_mesures (Valeur,Sonde_Numero_Serie,Consigne,Consigne_Sup,Consigne_Inf,Consigne_Sup_Pre_Alarme,Consigne_Inf_Pre_Alarme,Date_Heure_Mesure,Valeur_Brute,Unite,Adresse_Sonde,COM_sonde,Est_Mesure_Repeteur_GSO,Id_Lieu,Rssi,Tension,Est_Valeur_Memoire,Planning_Actif,Planning_Regle_Existe)
+VALUES(
+(ROUND((((NEW.Valeur_Brute) * (SELECT v_config_lieu_sonde.coeff_a FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu))
++ (SELECT v_config_lieu_sonde.coeff_b FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu))
++ (SELECT Sonde_Offset FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu)
++ (SELECT `-(EJ)` FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),2)),
+(SELECT Sonde_Numero_Serie FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),
+(SELECT Consigne FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),
+(SELECT Consigne_Sup_Corr FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),
+(SELECT Consigne_Inf_Corr FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),
+(SELECT Consigne_Sup_Pre_Alarme FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),
+(SELECT Consigne_Inf_Pre_Alarme FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),
+NEW.Date_Heure_Mesure, NEW.Valeur_Brute, NEW.Unite, NEW.Adresse_Sonde, NEW.COM_sonde, NEW.Est_Mesure_Repeteur_GSO,NEW.Id_Lieu, NEW.Rssi, NEW.Tension, NEW.Est_Valeur_Memoire, NEW.Planning_Actif, NEW.Planning_Regle_Existe
+);
+END IF;
+
+IF NEW.Id_Lieu IN (SELECT Id_Lieu FROM v_config_lieu_sonde) AND NEW.Planning_Actif=0 AND NEW.Est_Valeur_Memoire=0 AND (NEW.Planning_Regle_Existe=0 OR NEW.Planning_Regle_Existe=1) THEN
+INSERT INTO tm_graphique (Valeur,Sonde_Numero_Serie,Consigne,Consigne_Sup,Consigne_Inf,Consigne_Sup_Pre_Alarme,Consigne_Inf_Pre_Alarme,Date_Heure_Mesure,Valeur_Brute,Unite,Adresse_Sonde,Id_Lieu)
+VALUES(
+(ROUND((((NEW.Valeur_Brute) * (SELECT v_config_lieu_sonde.coeff_a FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu))
++ (SELECT v_config_lieu_sonde.coeff_b FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu))
++ (SELECT Sonde_Offset FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu)
++ (SELECT `-(EJ)` FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),2)),
+(SELECT Sonde_Numero_Serie FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),
+(SELECT Consigne FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),
+(SELECT Consigne_Sup_Corr FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),
+(SELECT Consigne_Inf_Corr FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),
+(SELECT Consigne_Sup_Pre_Alarme FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),
+(SELECT Consigne_Inf_Pre_Alarme FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),
+NEW.Date_Heure_Mesure, NEW.Valeur_Brute, NEW.Unite, NEW.Adresse_Sonde, NEW.Id_Lieu
+);
+END IF;
+
+IF NEW.Id_Lieu IN (SELECT Id_Lieu FROM v_config_lieu_sonde) AND NEW.Planning_Actif=0 AND NEW.Est_Valeur_Memoire=1 AND NEW.Planning_Regle_Existe=0 THEN
+INSERT INTO tm_mesures (Valeur,Sonde_Numero_Serie,Consigne,Consigne_Sup,Consigne_Inf,Consigne_Sup_Pre_Alarme,Consigne_Inf_Pre_Alarme,Date_Heure_Mesure,Valeur_Brute,Unite,Adresse_Sonde,COM_sonde,Est_Mesure_Repeteur_GSO,Id_Lieu,Rssi,Tension,Est_Valeur_Memoire,Planning_Actif,Planning_Regle_Existe)
+VALUES(
+(ROUND((((NEW.Valeur_Brute) * (SELECT v_config_lieu_sonde.coeff_a FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu))
++ (SELECT v_config_lieu_sonde.coeff_b FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu))
++ (SELECT Sonde_Offset FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu)
++ (SELECT `-(EJ)` FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),2)),
+(SELECT Sonde_Numero_Serie FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),
+(SELECT Consigne FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),
+(SELECT Consigne_Sup_Corr FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),
+(SELECT Consigne_Inf_Corr FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),
+(SELECT Consigne_Sup_Pre_Alarme FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),
+(SELECT Consigne_Inf_Pre_Alarme FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),
+NEW.Date_Heure_Mesure, NEW.Valeur_Brute, NEW.Unite, NEW.Adresse_Sonde, NEW.COM_sonde, NEW.Est_Mesure_Repeteur_GSO, NEW.Id_Lieu, NEW.Rssi, NEW.Tension, NEW.Est_Valeur_Memoire, NEW.Planning_Actif, NEW.Planning_Regle_Existe
+);
+END IF;
+
+IF NEW.Id_Lieu IN (SELECT Id_Lieu FROM v_config_lieu_sonde) AND NEW.Planning_Actif=0 AND NEW.Est_Valeur_Memoire=1 AND NEW.Planning_Regle_Existe=0 THEN
+INSERT INTO tm_graphique (Valeur,Sonde_Numero_Serie,Consigne,Consigne_Sup,Consigne_Inf,Consigne_Sup_Pre_Alarme,Consigne_Inf_Pre_Alarme,Date_Heure_Mesure,Valeur_Brute,Unite,Adresse_Sonde,Id_Lieu)
+VALUES(
+(ROUND((((NEW.Valeur_Brute) * (SELECT v_config_lieu_sonde.coeff_a FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu))
++ (SELECT v_config_lieu_sonde.coeff_b FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu))
++ (SELECT Sonde_Offset FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu)
++ (SELECT `-(EJ)` FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),2)),
+(SELECT Sonde_Numero_Serie FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),
+(SELECT Consigne FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),
+(SELECT Consigne_Sup_Corr FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),
+(SELECT Consigne_Inf_Corr FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),
+(SELECT Consigne_Sup_Pre_Alarme FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),
+(SELECT Consigne_Inf_Pre_Alarme FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),
+NEW.Date_Heure_Mesure, NEW.Valeur_Brute, NEW.Unite, NEW.Adresse_Sonde, NEW.Id_Lieu
+);
+END IF;
+
+IF NEW.Id_Lieu IN (SELECT Id_Lieu FROM v_config_lieu_sonde) AND NEW.Planning_Actif=0 AND NEW.Est_Valeur_Memoire=1 AND NEW.Planning_Regle_Existe=1 THEN
+INSERT INTO tm_mesures (Valeur,Sonde_Numero_Serie,Consigne,Consigne_Sup,Consigne_Inf,Consigne_Sup_Pre_Alarme,Consigne_Inf_Pre_Alarme,Date_Heure_Mesure,Valeur_Brute,Unite,Adresse_Sonde,COM_sonde,Est_Mesure_Repeteur_GSO,Id_Lieu,Rssi,Tension,Est_Valeur_Memoire,Planning_Actif, Planning_Regle_Existe)
+VALUES(
+(ROUND((((NEW.Valeur_Brute) * (SELECT v_config_lieu_sonde.coeff_a FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu))
++ (SELECT v_config_lieu_sonde.coeff_b FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu))
++ (SELECT Sonde_Offset FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu)
++ (SELECT `-(EJ)` FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),2)),
+(SELECT Sonde_Numero_Serie FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),
+(SELECT IFNULL((SELECT Consigne_Apres FROM v_config_lieu_planning_consignes WHERE (NEW.Id_Lieu=v_config_lieu_planning_consignes.Id_Lieu)
+AND ((NEW.Date_Heure_Mesure BETWEEN v_config_lieu_planning_consignes.Date_Heure_Debut_Changement AND v_config_lieu_planning_consignes.Date_Heure_Fin_Changement)
+OR (NEW.Date_Heure_Mesure>v_config_lieu_planning_consignes.Date_Heure_Debut_Changement AND v_config_lieu_planning_consignes.Date_Heure_Fin_Changement IS NULL)))
+,(SELECT Consigne FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu))),
+(SELECT IFNULL((SELECT Tolerance_Surveillance_Sup_Apres FROM v_config_lieu_planning_consignes WHERE (NEW.Id_Lieu=v_config_lieu_planning_consignes.Id_Lieu)
+AND ((NEW.Date_Heure_Mesure BETWEEN v_config_lieu_planning_consignes.Date_Heure_Debut_Changement AND v_config_lieu_planning_consignes.Date_Heure_Fin_Changement)
+OR (NEW.Date_Heure_Mesure>v_config_lieu_planning_consignes.Date_Heure_Debut_Changement AND v_config_lieu_planning_consignes.Date_Heure_Fin_Changement IS NULL)))
+,(SELECT Consigne_Sup_Corr FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu))),
+(SELECT IFNULL((SELECT Tolerance_Surveillance_Inf_Apres FROM v_config_lieu_planning_consignes WHERE (NEW.Id_Lieu=v_config_lieu_planning_consignes.Id_Lieu)
+AND ((NEW.Date_Heure_Mesure BETWEEN v_config_lieu_planning_consignes.Date_Heure_Debut_Changement AND v_config_lieu_planning_consignes.Date_Heure_Fin_Changement)
+OR (NEW.Date_Heure_Mesure>v_config_lieu_planning_consignes.Date_Heure_Debut_Changement AND v_config_lieu_planning_consignes.Date_Heure_Fin_Changement IS NULL))),
+(SELECT Consigne_Inf_Corr FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu))),
+(SELECT Consigne_Sup_Pre_Alarme FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),
+(SELECT Consigne_Inf_Pre_Alarme FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),
+NEW.Date_Heure_Mesure, NEW.Valeur_Brute, NEW.Unite, NEW.Adresse_Sonde, NEW.COM_sonde, NEW.Est_Mesure_Repeteur_GSO, NEW.Id_Lieu, NEW.Rssi, NEW.Tension, NEW.Est_Valeur_Memoire, NEW.Planning_Actif, NEW.Planning_Regle_Existe
+);
+END IF;
+
+IF NEW.Id_Lieu IN (SELECT Id_Lieu FROM v_config_lieu_sonde) AND NEW.Planning_Actif=0 AND NEW.Est_Valeur_Memoire=1 AND NEW.Planning_Regle_Existe=1 THEN
+INSERT INTO tm_graphique (Valeur,Sonde_Numero_Serie,Consigne,Consigne_Sup,Consigne_Inf,Consigne_Sup_Pre_Alarme,Consigne_Inf_Pre_Alarme,Date_Heure_Mesure,Valeur_Brute,Unite,Adresse_Sonde,Id_Lieu)
+VALUES(
+(ROUND((((NEW.Valeur_Brute) * (SELECT v_config_lieu_sonde.coeff_a FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu))
++ (SELECT v_config_lieu_sonde.coeff_b FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu))
++ (SELECT Sonde_Offset FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu)
++ (SELECT `-(EJ)` FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),2)),
+(SELECT Sonde_Numero_Serie FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),
+(SELECT IFNULL((SELECT Consigne_Apres FROM v_config_lieu_planning_consignes WHERE (NEW.Id_Lieu=v_config_lieu_planning_consignes.Id_Lieu)
+AND ((NEW.Date_Heure_Mesure BETWEEN v_config_lieu_planning_consignes.Date_Heure_Debut_Changement AND v_config_lieu_planning_consignes.Date_Heure_Fin_Changement)
+OR (NEW.Date_Heure_Mesure>v_config_lieu_planning_consignes.Date_Heure_Debut_Changement AND v_config_lieu_planning_consignes.Date_Heure_Fin_Changement IS NULL)))
+,(SELECT Consigne FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu))),
+(SELECT IFNULL((SELECT Tolerance_Surveillance_Sup_Apres FROM v_config_lieu_planning_consignes WHERE (NEW.Id_Lieu=v_config_lieu_planning_consignes.Id_Lieu)
+AND ((NEW.Date_Heure_Mesure BETWEEN v_config_lieu_planning_consignes.Date_Heure_Debut_Changement AND v_config_lieu_planning_consignes.Date_Heure_Fin_Changement)
+OR (NEW.Date_Heure_Mesure>v_config_lieu_planning_consignes.Date_Heure_Debut_Changement AND v_config_lieu_planning_consignes.Date_Heure_Fin_Changement IS NULL)))
+,(SELECT Consigne_Sup_Corr FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu))),
+(SELECT IFNULL((SELECT Tolerance_Surveillance_Inf_Apres FROM v_config_lieu_planning_consignes WHERE (NEW.Id_Lieu=v_config_lieu_planning_consignes.Id_Lieu)
+AND ((NEW.Date_Heure_Mesure BETWEEN v_config_lieu_planning_consignes.Date_Heure_Debut_Changement AND v_config_lieu_planning_consignes.Date_Heure_Fin_Changement)
+OR (NEW.Date_Heure_Mesure>v_config_lieu_planning_consignes.Date_Heure_Debut_Changement AND v_config_lieu_planning_consignes.Date_Heure_Fin_Changement IS NULL))),
+(SELECT Consigne_Inf_Corr FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu))),
+(SELECT Consigne_Sup_Pre_Alarme FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),
+(SELECT Consigne_Inf_Pre_Alarme FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),
+NEW.Date_Heure_Mesure, NEW.Valeur_Brute, NEW.Unite, NEW.Adresse_Sonde, NEW.Id_Lieu
+);
+END IF;
+
+IF NEW.Id_Lieu IN (SELECT Id_Lieu FROM v_config_lieu_sonde) AND NEW.Planning_Actif=1 AND NEW.Est_Valeur_Memoire=0 THEN
+INSERT INTO tm_mesures (Valeur,Sonde_Numero_Serie,Consigne,Consigne_Sup,Consigne_Inf,Consigne_Sup_Pre_Alarme,Consigne_Inf_Pre_Alarme,Date_Heure_Mesure,Valeur_Brute,Unite,Adresse_Sonde,COM_sonde,Est_Mesure_Repeteur_GSO,Id_Lieu,Rssi,Tension,Est_Valeur_Memoire,Planning_Actif, Planning_Regle_Existe)
+VALUES(
+(ROUND((((NEW.Valeur_Brute) * (SELECT v_config_lieu_sonde.coeff_a FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu))
++ (SELECT v_config_lieu_sonde.coeff_b FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu))
++ (SELECT Sonde_Offset FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu)
++ (SELECT `-(EJ)` FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),2)),
+(SELECT Sonde_Numero_Serie FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),
+(SELECT Consigne_Apres FROM v_config_lieu_planning_consignes
+WHERE (NEW.Id_Lieu=v_config_lieu_planning_consignes.Id_Lieu)
+AND ((NEW.Date_Heure_Mesure BETWEEN v_config_lieu_planning_consignes.Date_Heure_Debut_Changement AND v_config_lieu_planning_consignes.Date_Heure_Fin_Changement)
+OR (NEW.Date_Heure_Mesure>v_config_lieu_planning_consignes.Date_Heure_Debut_Changement AND v_config_lieu_planning_consignes.Date_Heure_Fin_Changement IS NULL))),
+(SELECT Tolerance_Surveillance_Sup_Apres FROM v_config_lieu_planning_consignes
+WHERE (NEW.Id_Lieu=v_config_lieu_planning_consignes.Id_Lieu)
+AND ((NEW.Date_Heure_Mesure BETWEEN v_config_lieu_planning_consignes.Date_Heure_Debut_Changement AND v_config_lieu_planning_consignes.Date_Heure_Fin_Changement)
+OR (NEW.Date_Heure_Mesure>v_config_lieu_planning_consignes.Date_Heure_Debut_Changement AND v_config_lieu_planning_consignes.Date_Heure_Fin_Changement IS NULL))),
+(SELECT Tolerance_Surveillance_Inf_Apres FROM v_config_lieu_planning_consignes
+WHERE (NEW.Id_Lieu=v_config_lieu_planning_consignes.Id_Lieu)
+AND ((NEW.Date_Heure_Mesure BETWEEN v_config_lieu_planning_consignes.Date_Heure_Debut_Changement AND v_config_lieu_planning_consignes.Date_Heure_Fin_Changement)
+OR (NEW.Date_Heure_Mesure>v_config_lieu_planning_consignes.Date_Heure_Debut_Changement AND v_config_lieu_planning_consignes.Date_Heure_Fin_Changement IS NULL))),
+(SELECT Consigne_Sup_Pre_Alarme FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),
+(SELECT Consigne_Inf_Pre_Alarme FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),
+NEW.Date_Heure_Mesure, NEW.Valeur_Brute, NEW.Unite, NEW.Adresse_Sonde, NEW.COM_sonde, NEW.Est_Mesure_Repeteur_GSO, NEW.Id_Lieu, NEW.Rssi, NEW.Tension, NEW.Est_Valeur_Memoire, NEW.Planning_Actif, NEW.Planning_Regle_Existe
+);
+END IF;
+
+IF NEW.Id_Lieu IN (SELECT Id_Lieu FROM v_config_lieu_sonde) AND NEW.Planning_Actif=1 AND NEW.Est_Valeur_Memoire=0 THEN
+INSERT INTO tm_graphique (Valeur,Sonde_Numero_Serie,Consigne,Consigne_Sup,Consigne_Inf,Consigne_Sup_Pre_Alarme,Consigne_Inf_Pre_Alarme,Date_Heure_Mesure,Valeur_Brute,Unite,Adresse_Sonde,Id_Lieu)
+VALUES(
+(ROUND((((NEW.Valeur_Brute) * (SELECT v_config_lieu_sonde.coeff_a FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu))
++ (SELECT v_config_lieu_sonde.coeff_b FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu))
++ (SELECT Sonde_Offset FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu)
++ (SELECT `-(EJ)` FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),2)),
+(SELECT Sonde_Numero_Serie FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),
+(SELECT Consigne_Apres FROM v_config_lieu_planning_consignes
+WHERE (NEW.Id_Lieu=v_config_lieu_planning_consignes.Id_Lieu)
+AND ((NEW.Date_Heure_Mesure BETWEEN v_config_lieu_planning_consignes.Date_Heure_Debut_Changement AND v_config_lieu_planning_consignes.Date_Heure_Fin_Changement)
+OR (NEW.Date_Heure_Mesure>v_config_lieu_planning_consignes.Date_Heure_Debut_Changement AND v_config_lieu_planning_consignes.Date_Heure_Fin_Changement IS NULL))),
+(SELECT Tolerance_Surveillance_Sup_Apres FROM v_config_lieu_planning_consignes
+WHERE (NEW.Id_Lieu=v_config_lieu_planning_consignes.Id_Lieu)
+AND ((NEW.Date_Heure_Mesure BETWEEN v_config_lieu_planning_consignes.Date_Heure_Debut_Changement AND v_config_lieu_planning_consignes.Date_Heure_Fin_Changement)
+OR (NEW.Date_Heure_Mesure>v_config_lieu_planning_consignes.Date_Heure_Debut_Changement AND v_config_lieu_planning_consignes.Date_Heure_Fin_Changement IS NULL))),
+(SELECT Tolerance_Surveillance_Inf_Apres FROM v_config_lieu_planning_consignes
+WHERE (NEW.Id_Lieu=v_config_lieu_planning_consignes.Id_Lieu)
+AND ((NEW.Date_Heure_Mesure BETWEEN v_config_lieu_planning_consignes.Date_Heure_Debut_Changement AND v_config_lieu_planning_consignes.Date_Heure_Fin_Changement)
+OR (NEW.Date_Heure_Mesure>v_config_lieu_planning_consignes.Date_Heure_Debut_Changement AND v_config_lieu_planning_consignes.Date_Heure_Fin_Changement IS NULL))),
+(SELECT Consigne_Sup_Pre_Alarme FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),
+(SELECT Consigne_Inf_Pre_Alarme FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),
+NEW.Date_Heure_Mesure, NEW.Valeur_Brute, NEW.Unite, NEW.Adresse_Sonde, NEW.Id_Lieu
+);
+END IF;
+
+IF NEW.Id_Lieu IN (SELECT Id_Lieu FROM v_config_lieu_sonde) AND NEW.Planning_Actif=1 AND NEW.Est_Valeur_Memoire=1 THEN
+INSERT INTO tm_mesures (Valeur,Sonde_Numero_Serie,Consigne,Consigne_Sup,Consigne_Inf,Consigne_Sup_Pre_Alarme,Consigne_Inf_Pre_Alarme,Date_Heure_Mesure,Valeur_Brute,Unite,Adresse_Sonde,COM_sonde,Est_Mesure_Repeteur_GSO,Id_Lieu,Rssi,Tension,Est_Valeur_Memoire,Planning_Actif, Planning_Regle_Existe)
+VALUES(
+(ROUND((((NEW.Valeur_Brute) * (SELECT v_config_lieu_sonde.coeff_a FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu))
++ (SELECT v_config_lieu_sonde.coeff_b FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu))
++ (SELECT Sonde_Offset FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu)
++ (SELECT `-(EJ)` FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),2)),
+(SELECT Sonde_Numero_Serie FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),
+(SELECT IFNULL
+(
+(SELECT Consigne_Apres FROM v_config_lieu_planning_consignes
+WHERE (NEW.Id_Lieu=v_config_lieu_planning_consignes.Id_Lieu)
+AND ((NEW.Date_Heure_Mesure BETWEEN v_config_lieu_planning_consignes.Date_Heure_Debut_Changement AND v_config_lieu_planning_consignes.Date_Heure_Fin_Changement)
+OR (NEW.Date_Heure_Mesure>v_config_lieu_planning_consignes.Date_Heure_Debut_Changement AND v_config_lieu_planning_consignes.Date_Heure_Fin_Changement IS NULL))LIMIT 1)
+,(SELECT Consigne_Base FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu)
+)
+),
+(SELECT IFNULL
+(
+(SELECT Tolerance_Surveillance_Sup_Apres FROM v_config_lieu_planning_consignes
+WHERE (NEW.Id_Lieu=v_config_lieu_planning_consignes.Id_Lieu)
+AND ((NEW.Date_Heure_Mesure BETWEEN v_config_lieu_planning_consignes.Date_Heure_Debut_Changement AND v_config_lieu_planning_consignes.Date_Heure_Fin_Changement)
+OR (NEW.Date_Heure_Mesure>v_config_lieu_planning_consignes.Date_Heure_Debut_Changement AND v_config_lieu_planning_consignes.Date_Heure_Fin_Changement IS NULL))LIMIT 1)
+,(SELECT Tolerance_Surveillance_Sup_Base FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu)
+)
+),
+(SELECT IFNULL
+(
+(SELECT Tolerance_Surveillance_Inf_Apres FROM v_config_lieu_planning_consignes
+WHERE (NEW.Id_Lieu=v_config_lieu_planning_consignes.Id_Lieu)
+AND ((NEW.Date_Heure_Mesure BETWEEN v_config_lieu_planning_consignes.Date_Heure_Debut_Changement AND v_config_lieu_planning_consignes.Date_Heure_Fin_Changement)
+OR (NEW.Date_Heure_Mesure>v_config_lieu_planning_consignes.Date_Heure_Debut_Changement AND v_config_lieu_planning_consignes.Date_Heure_Fin_Changement IS NULL))LIMIT 1)
+,(SELECT Tolerance_Surveillance_Inf_Base FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu)
+)
+),
+(SELECT Consigne_Sup_Pre_Alarme FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),
+(SELECT Consigne_Inf_Pre_Alarme FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),
+NEW.Date_Heure_Mesure, NEW.Valeur_Brute, NEW.Unite, NEW.Adresse_Sonde, NEW.COM_sonde, NEW.Est_Mesure_Repeteur_GSO, NEW.Id_Lieu, NEW.Rssi, NEW.Tension, NEW.Est_Valeur_Memoire, NEW.Planning_Actif, NEW.Planning_Regle_Existe
+);
+END IF;
+
+IF NEW.Id_Lieu IN (SELECT Id_Lieu FROM v_config_lieu_sonde) AND NEW.Planning_Actif=1 AND NEW.Est_Valeur_Memoire=1 THEN
+INSERT INTO tm_graphique (Valeur,Sonde_Numero_Serie,Consigne,Consigne_Sup,Consigne_Inf,Consigne_Sup_Pre_Alarme,Consigne_Inf_Pre_Alarme,Date_Heure_Mesure,Valeur_Brute,Unite,Adresse_Sonde,Id_Lieu)
+VALUES(
+(ROUND((((NEW.Valeur_Brute) * (SELECT v_config_lieu_sonde.coeff_a FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu))
++ (SELECT v_config_lieu_sonde.coeff_b FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu))
++ (SELECT Sonde_Offset FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu)
++ (SELECT `-(EJ)` FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),2)),
+(SELECT Sonde_Numero_Serie FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),
+(SELECT IFNULL
+(
+(SELECT Consigne_Apres FROM v_config_lieu_planning_consignes
+WHERE (NEW.Id_Lieu=v_config_lieu_planning_consignes.Id_Lieu)
+AND ((NEW.Date_Heure_Mesure BETWEEN v_config_lieu_planning_consignes.Date_Heure_Debut_Changement AND v_config_lieu_planning_consignes.Date_Heure_Fin_Changement)
+OR (NEW.Date_Heure_Mesure>v_config_lieu_planning_consignes.Date_Heure_Debut_Changement AND v_config_lieu_planning_consignes.Date_Heure_Fin_Changement IS NULL))LIMIT 1)
+,(SELECT Consigne_Base FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu)
+)
+),
+(SELECT IFNULL
+(
+(SELECT Tolerance_Surveillance_Sup_Apres FROM v_config_lieu_planning_consignes
+WHERE (NEW.Id_Lieu=v_config_lieu_planning_consignes.Id_Lieu)
+AND ((NEW.Date_Heure_Mesure BETWEEN v_config_lieu_planning_consignes.Date_Heure_Debut_Changement AND v_config_lieu_planning_consignes.Date_Heure_Fin_Changement)
+OR (NEW.Date_Heure_Mesure>v_config_lieu_planning_consignes.Date_Heure_Debut_Changement AND v_config_lieu_planning_consignes.Date_Heure_Fin_Changement IS NULL))LIMIT 1)
+,(SELECT Tolerance_Surveillance_Sup_Base FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu)
+)
+),
+(SELECT IFNULL
+(
+(SELECT Tolerance_Surveillance_Inf_Apres FROM v_config_lieu_planning_consignes
+WHERE (NEW.Id_Lieu=v_config_lieu_planning_consignes.Id_Lieu)
+AND ((NEW.Date_Heure_Mesure BETWEEN v_config_lieu_planning_consignes.Date_Heure_Debut_Changement AND v_config_lieu_planning_consignes.Date_Heure_Fin_Changement)
+OR (NEW.Date_Heure_Mesure>v_config_lieu_planning_consignes.Date_Heure_Debut_Changement AND v_config_lieu_planning_consignes.Date_Heure_Fin_Changement IS NULL))LIMIT 1)
+,(SELECT Tolerance_Surveillance_Inf_Base FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu)
+)
+),
+(SELECT Consigne_Sup_Pre_Alarme FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),
+(SELECT Consigne_Inf_Pre_Alarme FROM v_config_lieu_sonde WHERE NEW.Id_Lieu=v_config_lieu_sonde.Id_Lieu),
+NEW.Date_Heure_Mesure, NEW.Valeur_Brute, NEW.Unite, NEW.Adresse_Sonde, NEW.Id_Lieu
+);
+END IF;
+
 END$$
 DELIMITER ;
 
