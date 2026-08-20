@@ -32,8 +32,7 @@ function scheduleRestoreRetry(userId: number) {
   restoreTimersByUserId.set(userId, timer)
 }
 
-export async function captureCalibrationSensorStates(userId: number, sensorIds: number[]) {
-  clearRestoreTimer(userId)
+async function readSnapshots(sensorIds: number[]) {
   const ids = [...new Set(sensorIds)]
   const sensors = await prisma.t_sonde.findMany({
     where: { Id_Sonde: { in: ids } },
@@ -48,14 +47,40 @@ export async function captureCalibrationSensorStates(userId: number, sensorIds: 
     throw new Error("Une ou plusieurs sondes sont introuvables.")
   }
 
-  const snapshots = sensors.map((sensor) => ({
+  return sensors.map((sensor) => ({
     id: sensor.Id_Sonde,
     surveillanceState: sensor.Surveillance_Etat,
     previousState: sensor.Etat_Sonde_N1,
   }))
+}
 
+export async function captureCalibrationSensorStates(userId: number, sensorIds: number[]) {
+  clearRestoreTimer(userId)
+  const snapshots = await readSnapshots(sensorIds)
   snapshotsByUserId.set(userId, snapshots)
   return snapshots
+}
+
+export async function appendCalibrationSensorStates(userId: number, sensorIds: number[]) {
+  clearRestoreTimer(userId)
+  const existing = snapshotsByUserId.get(userId) ?? []
+  const existingIds = new Set(existing.map((snapshot) => snapshot.id))
+  const idsToCapture = [...new Set(sensorIds)].filter((id) => !existingIds.has(id))
+  if (idsToCapture.length === 0) return existing
+
+  const added = await readSnapshots(idsToCapture)
+  const merged = [...existing, ...added]
+  snapshotsByUserId.set(userId, merged)
+  return merged
+}
+
+export function removeCalibrationSensorStateSnapshots(userId: number, sensorIds: number[]) {
+  const existing = snapshotsByUserId.get(userId)
+  if (!existing?.length) return
+  const ids = new Set(sensorIds)
+  const remaining = existing.filter((snapshot) => !ids.has(snapshot.id))
+  if (remaining.length > 0) snapshotsByUserId.set(userId, remaining)
+  else snapshotsByUserId.delete(userId)
 }
 
 export function clearCalibrationSensorStates(userId: number) {
