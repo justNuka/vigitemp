@@ -40,6 +40,7 @@ export function AdjustmentsPanel({
   onSelectAdjustment,
 }: AdjustmentsPanelProps) {
   const t = useTranslations('sensorsPage');
+  const tCommon = useTranslations('common');
   const locale = useLocale();
   const localeTag = locale.toLowerCase().startsWith('fr') ? 'fr-FR' : locale;
   const timezone = useAppTimezone();
@@ -86,7 +87,7 @@ export function AdjustmentsPanel({
       });
 
       if (!response.ok) {
-        throw new Error(t('panels.adjustments.bulk_export.error'));
+        throw new Error('bulk_adjustment_export_failed');
       }
 
       const blob = await response.blob();
@@ -98,9 +99,9 @@ export function AdjustmentsPanel({
       anchor.click();
       document.body.removeChild(anchor);
       URL.revokeObjectURL(url);
-      toast.success(t('panels.adjustments.bulk_export.success', { count: selectedExportIds.size }));
+      toast.success(tCommon('success'));
     } catch {
-      toast.error(t('panels.adjustments.bulk_export.error'));
+      toast.error(tCommon('error'));
     } finally {
       setIsBulkExporting(false);
     }
@@ -114,7 +115,7 @@ export function AdjustmentsPanel({
           <Checkbox
             checked={allSelected ? true : partiallySelected ? 'indeterminate' : false}
             onCheckedChange={(checked) => toggleAll(checked === true)}
-            aria-label={t('panels.adjustments.bulk_export.select_all')}
+            aria-label={tCommon('export')}
           />
         </div>
       ),
@@ -124,7 +125,7 @@ export function AdjustmentsPanel({
           <Checkbox
             checked={selectedExportIds.has(row.original.Id_Ajustage)}
             onCheckedChange={(checked) => toggleOne(row.original.Id_Ajustage, checked === true)}
-            aria-label={t('panels.adjustments.bulk_export.select_row')}
+            aria-label={tCommon('export')}
           />
         </div>
       ),
@@ -178,7 +179,7 @@ export function AdjustmentsPanel({
         </div>
       ),
     },
-  ], [allSelected, localeTag, partiallySelected, selectedExportIds, t, timezone]);
+  ], [allSelected, localeTag, partiallySelected, selectedExportIds, t, tCommon, timezone]);
 
   return (
     <Card>
@@ -187,8 +188,8 @@ export function AdjustmentsPanel({
           <CardTitle className="text-base">{t('panels.adjustments.title')}</CardTitle>
           <div className="flex items-center gap-2">
             {selectedExportIds.size > 0 ? (
-              <span className="text-xs text-muted-foreground">
-                {t('panels.adjustments.bulk_export.selected_count', { count: selectedExportIds.size })}
+              <span className="min-w-6 rounded-full bg-muted px-2 py-0.5 text-center text-xs text-muted-foreground">
+                {selectedExportIds.size}
               </span>
             ) : null}
             <Button
@@ -198,11 +199,10 @@ export function AdjustmentsPanel({
               className="h-8 gap-2"
               disabled={selectedExportIds.size === 0 || isBulkExporting}
               onClick={handleBulkExport}
+              title={t('panels.adjustments.actions.generate_file')}
             >
               <FileArchive className="h-3.5 w-3.5" />
-              {isBulkExporting
-                ? t('panels.adjustments.bulk_export.exporting')
-                : t('panels.adjustments.bulk_export.action')}
+              {isBulkExporting ? tCommon('loading') : tCommon('export')} XML
             </Button>
           </div>
         </div>
