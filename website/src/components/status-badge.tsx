@@ -37,19 +37,14 @@ const statusConfig: Record<Status, {
 };
 
 function useStatusLabel(status: Status) {
-  const tCommon = useTranslations("common");
   const tMonitoring = useTranslations("monitoringCard");
-  const tSurveillance = useTranslations("surveillance");
+  const tStatus = useTranslations("surveillanceStatus");
   const tAlerts = useTranslations("alerts");
 
   if (status === "ok") return tMonitoring("status.ok");
-  if (status === "warning") return tCommon("warning");
-  if (status === "offline") return tAlerts("offline");
-
-  const translated = tSurveillance("stats.critical", { count: 1 }).replace(/^\s*1\s*/, "");
-  return translated.length > 0
-    ? translated.charAt(0).toLocaleUpperCase() + translated.slice(1)
-    : tCommon("error");
+  if (status === "warning") return tStatus("warning");
+  if (status === "critical") return tStatus("critical");
+  return tAlerts("offline");
 }
 
 export function StatusBadge({
