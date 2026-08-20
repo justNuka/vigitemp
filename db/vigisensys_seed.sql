@@ -2940,7 +2940,7 @@ IF NEW.id_capteur IN(SELECT Adresse_Sonde from v_config_lieu_sonde) AND NEW.tram
 				 );
 END IF;
 
-IF NEW.id_capteur IN(SELECT Adresse_Sonde from v_config_sonde_com) AND NEW.trame=00000010 AND NEW.date_mesure >= NOW() - INTERVAL 2 HOUR THEN
+IF NEW.id_capteur IN(SELECT Adresse_Sonde from v_config_sonde_com) AND NEW.trame IN(00000010,00000110) AND NEW.date_mesure >= NOW() - INTERVAL 2 HOUR THEN
         INSERT INTO tm_mesures_ajustage
             (Date_Heure_Mesure, Valeur_Brute, Unite, Adresse_Sonde)
         VALUES
@@ -2950,7 +2950,7 @@ IF NEW.id_capteur IN(SELECT Adresse_Sonde from v_config_sonde_com) AND NEW.trame
              NEW.id_capteur);
 END IF;
 
-IF NEW.id_capteur IN(SELECT Adresse_Sonde from v_config_sonde_com) AND NEW.trame=00000010 AND NEW.date_mesure >= NOW() - INTERVAL 2 HOUR THEN
+IF NEW.id_capteur IN(SELECT Adresse_Sonde from v_config_sonde_com) AND NEW.trame IN(00000010,00000110) AND NEW.date_mesure >= NOW() - INTERVAL 2 HOUR THEN
         INSERT INTO tm_mesures_etalonnage
             (Valeur,Date_Heure_Mesure, Valeur_Brute, Unite, Adresse_Sonde)
         VALUES(
@@ -2965,7 +2965,7 @@ IF NEW.id_capteur IN(SELECT Adresse_Sonde from v_config_sonde_com) AND NEW.trame
 END IF;
 
 
-IF NEW.trame=00000010 AND NEW.date_mesure >= NOW() - INTERVAL 2 HOUR THEN
+IF NEW.trame IN(00000010,00000110) AND NEW.date_mesure >= NOW() - INTERVAL 2 HOUR THEN
 	UPDATE tm_mesures_gso_read_metro
 	SET
 	tm_mesures_gso_read_metro.Metro_en_cours=1,
