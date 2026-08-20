@@ -408,7 +408,7 @@ export function AttachmentPreview({ attachment, isOwn, previewUrl }: Props) {
         type="button"
         onClick={() => void downloadFile(downloadUrl, previewUrl, attachment.fileName)}
         className="shrink-0 opacity-60 hover:opacity-100 transition-opacity"
-        aria-label="Télécharger"
+        aria-label={t("download")}
       >
         <Download className="h-3.5 w-3.5" />
       </button>
