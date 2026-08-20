@@ -1,9 +1,14 @@
 import { readFile, readdir } from "node:fs/promises";
 import path from "node:path";
+import ts from "typescript";
 
 const ROOT = process.cwd();
 const MESSAGES_DIR = path.join(ROOT, "src", "messages");
 const SOURCE_DIRS = [path.join(ROOT, "src", "app"), path.join(ROOT, "src", "components")];
+const EXCLUDED_PATH_PARTS = [
+  "/src/app/[locale]/(admin)/admin/test/",
+  "/src/components/react-grid-layout/",
+];
 
 function flattenKeys(value: unknown, prefix = ""): string[] {
   if (!value || typeof value !== "object" || Array.isArray(value)) return prefix ? [prefix] : [];
@@ -22,6 +27,8 @@ async function collectSourceFiles(directory: string): Promise<string[]> {
   const files = await Promise.all(
     entries.map(async (entry) => {
       const fullPath = path.join(directory, entry.name);
+      const normalized = fullPath.replaceAll("\\", "/");
+      if (EXCLUDED_PATH_PARTS.some((part) => normalized.includes(part))) return [];
       if (entry.isDirectory()) return collectSourceFiles(fullPath);
       return /\.(tsx|jsx)$/.test(entry.name) ? [fullPath] : [];
     }),
@@ -32,37 +39,52 @@ async function collectSourceFiles(directory: string): Promise<string[]> {
 const ALLOWED_LITERAL_PATTERNS = [
   /^[-–—+*/#%°.:,()\[\]{}<>|]+$/,
   /^\d+(?:[.,]\d+)?(?:\s?(?:ms|s|min|h|px|rem|vh|vw|%|V|°C))?$/i,
-  /^(?:VigiSensys|MC2)(?:\s+logo)?$/i,
-  /^(?:GSO|GSP|RSSI|CFR21|XML|PDF|CSV|Excel|MySQL|MSSQL|COM\d*)$/i,
+  /^(?:Vigi|Sensys|VigiSensys|VigiTemp|VigiServ|VigiTel|MC2)(?:\s+Lab|\s+logo)?$/i,
+  /^(?:GSO|GSP|RSSI|CFR21|XML|PDF|CSV|Excel|MySQL|MSSQL|COM\w*|TX|RX)$/i,
+  /^(?:TEMP|FTEM|DD-H|DCON|MEMO|ED-H|ECON|CHAN)$/i,
+  /^(?:None|Odd|Even|Mark|Space|One|Two|OnePointFive)$/,
+  /^(?:AC|SK|AK|AS|CK)[x.]+$/i,
+  /^(?:https?:\/\/|127\.0\.0\.1|\+?\d)[^\s]*$/,
 ];
 
+function normalizeText(text: string) {
+  return text.replace(/\s+/g, " ").trim();
+}
+
 function isAllowedLiteral(text: string) {
-  const normalized = text.replace(/\s+/g, " ").trim();
+  const normalized = normalizeText(text);
   if (!normalized) return true;
   return ALLOWED_LITERAL_PATTERNS.some((pattern) => pattern.test(normalized));
 }
 
-function lineNumber(source: string, index: number) {
-  return source.slice(0, index).split("\n").length;
-}
-
-function findHardcodedUiStrings(source: string) {
+function findHardcodedUiStrings(source: string, fileName: string) {
   const findings: Array<{ line: number; text: string }> = [];
+  const scriptKind = fileName.endsWith(".jsx") ? ts.ScriptKind.JSX : ts.ScriptKind.TSX;
+  const sourceFile = ts.createSourceFile(fileName, source, ts.ScriptTarget.Latest, true, scriptKind);
 
-  const jsxText = />\s*([^<{][^<{]*?)\s*</g;
-  for (const match of source.matchAll(jsxText)) {
-    const text = match[1]?.replace(/\s+/g, " ").trim() ?? "";
-    if (!text || isAllowedLiteral(text)) continue;
-    findings.push({ line: lineNumber(source, match.index ?? 0), text });
-  }
+  const addFinding = (node: ts.Node, rawText: string) => {
+    const text = normalizeText(rawText);
+    if (!text || isAllowedLiteral(text)) return;
+    const { line } = sourceFile.getLineAndCharacterOfPosition(node.getStart(sourceFile));
+    findings.push({ line: line + 1, text });
+  };
 
-  const userFacingProps = /\b(?:title|placeholder|aria-label|aria-description|alt)=(["'])(.*?)\1/g;
-  for (const match of source.matchAll(userFacingProps)) {
-    const text = match[2]?.trim() ?? "";
-    if (!text || isAllowedLiteral(text)) continue;
-    findings.push({ line: lineNumber(source, match.index ?? 0), text });
-  }
+  const visit = (node: ts.Node) => {
+    if (ts.isJsxText(node)) {
+      addFinding(node, node.getText(sourceFile));
+    }
 
+    if (ts.isJsxAttribute(node) && node.initializer && ts.isStringLiteral(node.initializer)) {
+      const propName = node.name.getText(sourceFile);
+      if (["title", "placeholder", "aria-label", "aria-description", "alt"].includes(propName)) {
+        addFinding(node.initializer, node.initializer.text);
+      }
+    }
+
+    ts.forEachChild(node, visit);
+  };
+
+  visit(sourceFile);
   return findings;
 }
 
@@ -85,7 +107,7 @@ async function main() {
 
   for (const file of files) {
     const source = await readFile(file, "utf8");
-    for (const finding of findHardcodedUiStrings(source)) {
+    for (const finding of findHardcodedUiStrings(source, file)) {
       hardcoded.push({
         file: path.relative(ROOT, file).replaceAll("\\", "/"),
         ...finding,
