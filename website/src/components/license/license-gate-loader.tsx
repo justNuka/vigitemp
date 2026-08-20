@@ -1,8 +1,11 @@
 "use client";
 
 import { LazyMotion, domAnimation, m } from "motion/react";
+import { useTranslations } from "next-intl";
 
 export function LicenseGateLoader() {
+  const tCommon = useTranslations("common");
+
   return (
     <div className="fixed inset-0 z-100 flex items-center justify-center bg-background/80 backdrop-blur-sm">
       <LazyMotion features={domAnimation}>
@@ -19,7 +22,7 @@ export function LicenseGateLoader() {
           />
           <div className="text-center">
             <p className="text-sm font-medium text-foreground">VigiSensys</p>
-            <p className="text-xs text-muted-foreground">Vérification de la licence...</p>
+            <p className="text-xs text-muted-foreground">{tCommon("loading")}</p>
           </div>
         </m.div>
       </LazyMotion>
