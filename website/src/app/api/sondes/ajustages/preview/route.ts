@@ -8,6 +8,7 @@ import { log } from "@/lib/logger";
 import { decodeXmlBytes } from "@/lib/xml-decoding";
 import { getPermissionAliases } from "@/lib/permissions";
 import { serializeDbDateTime } from "@/lib/date-display";
+import { buildImportedSensorStorageIdentity, resolveImportedSensorIdentity } from "@/lib/sensor-naming";
 
 const isXmlFile = (file: File) => {
   const name = file.name.toLowerCase();
@@ -59,6 +60,12 @@ export const POST = withOneOrHigherAnyAuthorizationLogging(getPermissionAliases(
 
     const xml = await decodeXmlFile(file);
     const parsed = parseAdjustmentXml(xml, file.name);
+    if (parsed.data.Sonde_Numero_Serie) {
+      const sensorIdentity = resolveImportedSensorIdentity(parsed.data.Sonde_Numero_Serie, file.name);
+      const storageIdentity = buildImportedSensorStorageIdentity(sensorIdentity);
+      parsed.data.Sonde_Numero_Serie = storageIdentity.serial;
+      parsed.summary.sensor = storageIdentity.serial;
+    }
 
     log.info("ADJUSTMENT_PREVIEW", "Ajustage preview parsed", {
       user: user.username,
