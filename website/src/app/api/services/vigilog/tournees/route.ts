@@ -180,7 +180,7 @@ export const POST = withStandardOrExpertAnyAuthorizationLogging(
       const body = await req.json()
       const parsed = vigilogDepartureSchema.safeParse(body)
       if (!parsed.success) {
-        return apiError(400, "validation_error", "TournÃ©e VigiLog invalide", {
+        return apiError(400, "validation_error", "Tournée VigiLog invalide", {
           issues: parsed.error.issues,
         })
       }

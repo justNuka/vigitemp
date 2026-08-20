@@ -16,13 +16,13 @@ export const POST = withStandardOrExpertAnyAuthorizationLogging(
       const { id } = await routeContext.params
       const tourneeId = Number(id)
       if (!Number.isInteger(tourneeId) || tourneeId <= 0) {
-        return apiError(400, "invalid_id", "Identifiant de tournÃ©e invalide")
+        return apiError(400, "invalid_id", "Identifiant de tournée invalide")
       }
 
       const body = await req.json().catch(() => ({}))
       const parsed = vigilogReceiveSchema.safeParse(body)
       if (!parsed.success) {
-        return apiError(400, "validation_error", "RÃ©ception VigiLog invalide", {
+        return apiError(400, "validation_error", "Réception VigiLog invalide", {
           issues: parsed.error.issues,
         })
       }
@@ -31,10 +31,10 @@ export const POST = withStandardOrExpertAnyAuthorizationLogging(
         where: { Id_VigiLog_Tournee: tourneeId },
       })
       if (!existing) {
-        return apiError(404, "not_found", "TournÃ©e VigiLog introuvable")
+        return apiError(404, "not_found", "Tournée VigiLog introuvable")
       }
       if (existing.Statut !== "EN_ATTENTE_RECEPTION") {
-        return apiError(409, "invalid_status", "Cette tournÃ©e n'est pas en attente de rÃ©ception")
+        return apiError(409, "invalid_status", "Cette tournée n'est pas en attente de réception")
       }
 
       const linkedLogger = existing.Id_VigiLog
@@ -115,7 +115,7 @@ export const POST = withStandardOrExpertAnyAuthorizationLogging(
       log.error("services/vigilog/tournees/[id]/receive", "vigilog_tournee_receive_failed", {
         error,
       })
-      return apiError(500, "vigilog_tournee_receive_failed", "Erreur lors de la rÃ©ception de la tournÃ©e VigiLog")
+      return apiError(500, "vigilog_tournee_receive_failed", "Erreur lors de la réception de la tournée VigiLog")
     }
   },
 )

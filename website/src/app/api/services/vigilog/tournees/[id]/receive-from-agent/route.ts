@@ -36,7 +36,7 @@ export const POST = withStandardOrExpertAnyAuthorizationLogging(
         return apiError(404, "not_found", "Tournee VigiLog introuvable")
       }
       if (existing.Statut !== "EN_ATTENTE_RECEPTION") {
-        return apiError(409, "invalid_status", "Cette tournee n'est pas en attente de rÃ©ception")
+        return apiError(409, "invalid_status", "Cette tournee n'est pas en attente de réception")
       }
 
       const linkedLogger = existing.Id_VigiLog

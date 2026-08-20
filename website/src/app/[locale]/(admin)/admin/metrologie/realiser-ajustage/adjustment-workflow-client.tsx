@@ -750,7 +750,7 @@ export function AdjustmentWorkflowClient() {
                   </Card>
 
                   {selectedSensors.length > 0 ? (
-                    <Card className="border-primary/20 bg-primary/[0.02]">
+                    <Card className="border-primary/20 bg-primary/2">
                       <CardHeader>
                         <CardTitle>{t("adjustment.selectionSummary.title")}</CardTitle>
                         <CardDescription>

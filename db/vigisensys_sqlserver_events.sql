@@ -462,10 +462,10 @@ GO
 
 
 /* =====================================================================
-   CrÃƒÂ©ation optionnelle des SQL Server Agent Jobs
+   Création optionnelle des SQL Server Agent Jobs
 
-   PrÃƒÂ©requis :
-   - SQL Server Agent disponible et dÃƒÂ©marrÃƒÂ©.
+   Prérequis :
+   - SQL Server Agent disponible et démarré.
    - Droits suffisants sur msdb.
    - Non disponible sur SQL Server Express.
    ===================================================================== */
