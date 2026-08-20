@@ -7,17 +7,13 @@ import { useTranslations } from "next-intl"
 import { cn } from "@/lib/utils"
 import { ButtonProps, buttonVariants } from "@/components/ui/button"
 
-const Pagination = ({ className, ...props }: React.ComponentProps<"nav">) => {
-  const tCommon = useTranslations("common")
-  return (
-    <nav
-      role="navigation"
-      aria-label={tCommon("next")}
-      className={cn("mx-auto flex w-full justify-center", className)}
-      {...props}
-    />
-  )
-}
+const Pagination = ({ className, ...props }: React.ComponentProps<"nav">) => (
+  <nav
+    role="navigation"
+    className={cn("mx-auto flex w-full justify-center", className)}
+    {...props}
+  />
+)
 Pagination.displayName = "Pagination"
 
 const PaginationContent = React.forwardRef<
@@ -101,19 +97,15 @@ PaginationNext.displayName = "PaginationNext"
 const PaginationEllipsis = ({
   className,
   ...props
-}: React.ComponentProps<"span">) => {
-  const tCommon = useTranslations("common")
-  return (
-    <span
-      aria-hidden
-      className={cn("flex h-9 w-9 items-center justify-center", className)}
-      {...props}
-    >
-      <MoreHorizontal className="h-4 w-4" />
-      <span className="sr-only">{tCommon("next")}</span>
-    </span>
-  )
-}
+}: React.ComponentProps<"span">) => (
+  <span
+    aria-hidden
+    className={cn("flex h-9 w-9 items-center justify-center", className)}
+    {...props}
+  >
+    <MoreHorizontal className="h-4 w-4" />
+  </span>
+)
 PaginationEllipsis.displayName = "PaginationEllipsis"
 
 export {
