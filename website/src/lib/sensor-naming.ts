@@ -25,6 +25,7 @@ const normalizeKnownTypeCodes = (knownTypeCodes?: Iterable<string> | null) => {
 };
 
 export const isDualGsoType = (type: string) => DUAL_GSO_TYPES.has(normalizeType(type));
+export const isSingleTemperatureGsoType = (type: string) => SINGLE_TEMPERATURE_GSO_TYPES.has(normalizeType(type));
 
 export const isGsoType = (type: string) => {
   const normalized = normalizeType(type);
@@ -121,6 +122,39 @@ export type ImportedSensorIdentity = {
   serial: string;
   typeCode: string;
   isGso: boolean;
+};
+
+export type ImportedSensorStorageIdentity = {
+  serial: string;
+  address: string;
+};
+
+export const buildImportedSensorStorageIdentity = (
+  identity: ImportedSensorIdentity,
+  knownTypeCodes?: Iterable<string> | null,
+): ImportedSensorStorageIdentity => {
+  const typeCode = normalizeType(identity.typeCode);
+
+  if (SINGLE_TEMPERATURE_GSO_TYPES.has(typeCode)) {
+    const typedParts = getGsoTypedParts(identity.serial);
+    const baseAddress = stripGsoSuffix((typedParts?.address ?? identity.serial).replace(/^-+/, ""));
+    return {
+      serial: `${typeCode}-${baseAddress}`,
+      address: `${baseAddress}-T`,
+    };
+  }
+
+  if (identity.isGso || isGsoType(typeCode)) {
+    return {
+      serial: identity.serial,
+      address: identity.serial,
+    };
+  }
+
+  return {
+    serial: identity.serial,
+    address: extractProbeAddressFromSerial(identity.serial, knownTypeCodes),
+  };
 };
 
 export const resolveImportedSensorIdentity = (
@@ -316,7 +350,6 @@ export const buildSensorSerialsFromInput = (rawType: string, rawSerieNum: string
     serials: [address],
   };
 };
-
 
 export const extractTypeCodeFromSerial = (serial: string, knownTypeCodes?: Iterable<string> | null) => {
   const normalized = normalizeSerial(serial);
