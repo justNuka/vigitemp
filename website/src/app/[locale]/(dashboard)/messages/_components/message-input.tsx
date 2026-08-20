@@ -188,7 +188,7 @@ export function MessageInput({ onSend, convId, disabled = false }: MessageInputP
           className="shrink-0"
           disabled={isDisabled}
           onClick={() => fileInputRef.current?.click()}
-          aria-label={t("attach")}
+          aria-label={t("attach_file")}
         >
           <Paperclip className="h-5 w-5" />
         </Button>
@@ -198,7 +198,7 @@ export function MessageInput({ onSend, convId, disabled = false }: MessageInputP
           value={content}
           onChange={handleChange}
           onKeyDown={handleKeyDown}
-          placeholder={t("placeholder")}
+          placeholder={t("input_placeholder")}
           disabled={disabled || isSending}
           rows={1}
           className={cn(
