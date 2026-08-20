@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useMemo, useState } from "react"
-import { useLocale } from "next-intl"
+import { useLocale, useTranslations } from "next-intl"
 import { KeyRound, Loader2, Phone } from "lucide-react"
 import { toast } from "sonner"
 
@@ -20,6 +20,7 @@ import type { ProviderId, TelephonyDraft } from "./telephony/telephony-settings-
 
 export function TelephonySettingsCard() {
   const locale = useLocale()
+  const tCommon = useTranslations("common")
   const copy = COPY[locale === "en" ? "en" : "fr"]
   const [draft, setDraft] = useState<TelephonyDraft>(DEFAULT_DRAFT)
   const [savedAt, setSavedAt] = useState<string | null>(null)
@@ -166,7 +167,7 @@ export function TelephonySettingsCard() {
         </div>
 
         {loading ? (
-          <div className="flex items-center gap-2 text-sm text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin" /> Chargement de la configuration...</div>
+          <div className="flex items-center gap-2 text-sm text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin" /> {tCommon("loading")}</div>
         ) : (
           <>
             <TelephonyProviderFields draft={draft} copy={copy} summary={summary} setField={setField} />
