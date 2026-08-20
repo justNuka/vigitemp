@@ -12,9 +12,7 @@ async function getCachedLocations() {
     include: {
       t_sonde: {
         where: { Est_Sonde_Reformee: false },
-        select: {
-          Id_Sonde: true,
-        },
+        select: { Id_Sonde: true },
       },
     },
     orderBy: { Nom_Lieu: "asc" },
@@ -22,16 +20,14 @@ async function getCachedLocations() {
 }
 
 export async function CachedLocationsList() {
-  const [locations, tDashboard, tTables, tMonitoring, tCommon, tSurveillance] = await Promise.all([
+  const [locations, tDashboard, tTables, tMonitoring, tStatus, tSurveillance] = await Promise.all([
     getCachedLocations(),
     getTranslations("dashboard.fallback"),
     getTranslations("tables"),
     getTranslations("monitoringCard"),
-    getTranslations("common"),
+    getTranslations("surveillanceStatus"),
     getTranslations("surveillance"),
   ]);
-
-  const criticalLabel = tSurveillance("stats.critical", { count: 1 }).replace(/^\s*1\s*/, "");
 
   const formatted = locations.map((loc) => {
     const sensors = Array.isArray(loc.t_sonde) ? loc.t_sonde : [];
@@ -78,13 +74,11 @@ export async function CachedLocationsList() {
             </div>
             <div className="rounded bg-warning/10 p-2">
               <div className="text-lg font-bold text-warning">{location.warningSensors}</div>
-              <div className="text-xs text-muted-foreground">{tCommon("warning")}</div>
+              <div className="text-xs text-muted-foreground">{tStatus("warning")}</div>
             </div>
             <div className="rounded bg-destructive/10 p-2">
               <div className="text-lg font-bold text-destructive">{location.criticalSensors}</div>
-              <div className="text-xs text-muted-foreground">
-                {criticalLabel.charAt(0).toLocaleUpperCase() + criticalLabel.slice(1)}
-              </div>
+              <div className="text-xs text-muted-foreground">{tStatus("critical")}</div>
             </div>
           </div>
 
