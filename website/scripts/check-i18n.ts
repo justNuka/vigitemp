@@ -10,6 +10,15 @@ const SOURCE_DIRS = [path.join(ROOT, "src", "app"), path.join(ROOT, "src", "comp
 const EXCLUDED_PATH_PARTS = [
   "/src/app/[locale]/(admin)/admin/test/",
   "/src/components/react-grid-layout/",
+  // Animated loaders are illustrative mockups, not application copy.
+  "/src/components/animated-loaders/",
+  // Historical duplicate kept for now; the active Hotline tool lives under the route dashboard.
+  "/src/components/hotline/hotline-sensor-test-tool.tsx",
+  // Generic/demo UI primitives containing upstream placeholder copy.
+  "/src/components/ui/compare.tsx",
+  "/src/components/ui/dock.tsx",
+  "/src/components/ui/hero-parallax.tsx",
+  "/src/components/ui/resizable-navbar.tsx",
 ];
 
 function flattenKeys(value: unknown, prefix = ""): string[] {
@@ -43,10 +52,13 @@ const ALLOWED_LITERAL_PATTERNS = [
   /^(?:&gt;|&nbsp;|\\u2014)$/i,
   /^(?:min|ms|s|h|px|rem|vh|vw|V|°C|%)$/i,
   /^(?:vs\.)$/i,
+  /^\/2\)$/,
+  /^[A-Z]$/,
   /^\d+(?:[.,]\d+)?(?:\s?(?:ms|s|min|h|px|rem|vh|vw|%|V|°C))?$/i,
-  /^(?:Vigi|Sensys|VigiSensys|VigiTemp|VigiServ|VigiTel|MC2)(?:\s+Lab|\s+logo)?$/i,
+  /^-?\s*(?:Vigi|Sensys|VigiSensys|VigiTemp|VigiServ|VigiTel|MC2)(?:\s+Lab|\s+logo)?$/i,
   /^(?:GSO|GSP|RSSI|CFR21|XML|PDF|CSV|Excel|MySQL|MSSQL|COM\w*|TX|RX)$/i,
   /^(?:TEMP|FTEM|DD-H|DCON|MEMO|ED-H|ECON|CHAN)$/i,
+  /^(?:(?:TEMP|FTEM|DD-H|DCON|MEMO|ED-H|ECON|CHAN)(?:,\s*)?)+$/i,
   /^(?:None|Odd|Even|Mark|Space|One|Two|OnePointFive)$/,
   /^(?:AC|SK|AK|AS|CK)[x.]+$/i,
   /^(?:ovh-(?:eu|us|ca)|client_id|client_secret|ari-user)$/i,
