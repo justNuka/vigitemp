@@ -32,7 +32,8 @@ async function collectSourceFiles(directory: string): Promise<string[]> {
 const ALLOWED_LITERAL_PATTERNS = [
   /^[-–—+*/#%°.:,()\[\]{}<>|]+$/,
   /^\d+(?:[.,]\d+)?(?:\s?(?:ms|s|min|h|px|rem|vh|vw|%|V|°C))?$/i,
-  /^(?:VigiSensys|MC2|GSO|GSP|RSSI|CFR21|XML|PDF|CSV|Excel|MySQL|MSSQL|COM\d*)$/i,
+  /^(?:VigiSensys|MC2)(?:\s+logo)?$/i,
+  /^(?:GSO|GSP|RSSI|CFR21|XML|PDF|CSV|Excel|MySQL|MSSQL|COM\d*)$/i,
 ];
 
 function isAllowedLiteral(text: string) {
