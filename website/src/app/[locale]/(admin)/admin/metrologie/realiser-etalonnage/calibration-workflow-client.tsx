@@ -1,10 +1,10 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import type { ColumnDef } from "@tanstack/react-table"
 import { AnimatePresence, LazyMotion, domAnimation, m } from "motion/react"
-import { ArrowRight, BadgeInfo, ChevronLeft, Clock3, Play, Square, Timer, UserRound } from "lucide-react"
+import { ArrowRight, BadgeInfo, ChevronLeft, Clock3, Plus, Play, Square, Timer, UserRound, X } from "lucide-react"
 import { useTranslations } from "next-intl"
 
 import { useAppAccess } from "@/components/access/app-access-provider"
@@ -39,8 +39,8 @@ type SessionPayload = { session: PublicCalibrationSession | null }
 function normalizeUnit(value: string | null | undefined) {
   const normalized = value?.trim().toLowerCase().replace(/\s+/g, "") || null
   if (!normalized) return null
-  if (["c", "Â°c", "degc", "celsius"].includes(normalized)) return "tempÃ©rature: Â°C"
-  if (["%", "%rh", "rh", "%hr", "hr"].includes(normalized)) return "humiditÃ©: %"
+  if (["c", "°c", "degc", "celsius"].includes(normalized)) return "température: °C"
+  if (["%", "%rh", "rh", "%hr", "hr"].includes(normalized)) return "humidité: %"
   return normalized
 }
 
@@ -53,6 +53,7 @@ export function CalibrationWorkflowClient() {
   const [selectedSensorIds, setSelectedSensorIds] = useState<number[]>([])
   const [operator, setOperator] = useState("")
   const [previewReadingEnabled, setPreviewReadingEnabled] = useState(false)
+  const [addSensorSearch, setAddSensorSearch] = useState("")
   const defaultOperator = [user?.Prenom, user?.Nom].filter(Boolean).join(" ").trim() || user?.Login || ""
   const operatorValue = operator || defaultOperator
 
@@ -89,6 +90,11 @@ export function CalibrationWorkflowClient() {
     ? session?.latestReadings ?? {}
     : previewReadingQuery.data?.readings ?? {}
 
+  useEffect(() => {
+    if (!running || !session) return
+    setSelectedSensorIds(session.sensors.map((sensor) => sensor.id))
+  }, [running, session])
+
   const stopPreviewReading = () => {
     setPreviewReadingEnabled(false)
     return fetchJson<{ stopped: boolean }>("/api/metrologie/lecture-sondes", {
@@ -107,6 +113,20 @@ export function CalibrationWorkflowClient() {
     onSuccess: (data) => {
       queryClient.setQueryData(["metrology-calibration-session"], data)
       setStep("calibration")
+    },
+  })
+
+  const addSensorMutation = useMutation({
+    mutationFn: (sensorId: number) => fetchJson<SessionPayload>("/api/metrologie/etalonnage/session", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ sensorId }),
+    }),
+    onSuccess: (data) => {
+      queryClient.setQueryData(["metrology-calibration-session"], data)
+      if (data.session) setSelectedSensorIds(data.session.sensors.map((sensor) => sensor.id))
+      setAddSensorSearch("")
     },
   })
 
@@ -135,20 +155,21 @@ export function CalibrationWorkflowClient() {
 
     return knownSelectedUnits[0] ?? null
   }, [selectedSensors])
-  const allSensorIds = useMemo(() => sensors.map((sensor) => sensor.id), [sensors])
-  const availableUnits = useMemo(
-    () => Array.from(new Set(sensors.map((sensor) => normalizeUnit(sensor.unit)).filter((unit): unit is string => unit !== null))),
-    [sensors],
-  )
-  const selectableSensorIds = useMemo(
-    () => lockedUnit === null
-      ? allSensorIds
-      : sensors.filter((sensor) => normalizeUnit(sensor.unit) === lockedUnit).map((sensor) => sensor.id),
-    [allSensorIds, lockedUnit, sensors],
-  )
-  const canSelectAll = lockedUnit !== null || availableUnits.length <= 1
-  const allSelected = selectableSensorIds.length > 0 && selectableSensorIds.every((id) => selectedSensorIds.includes(id))
-  const someSelected = selectableSensorIds.some((id) => selectedSensorIds.includes(id))
+
+  const runningUnit = normalizeUnit(session?.sensors[0]?.unit)
+  const addSensorCandidates = useMemo(() => {
+    if (!running || !session) return []
+    const ids = new Set(session.sensors.map((sensor) => sensor.id))
+    const query = addSensorSearch.trim().toLowerCase()
+    return sensors
+      .filter((sensor) => !ids.has(sensor.id))
+      .filter((sensor) => runningUnit === null || normalizeUnit(sensor.unit) === runningUnit)
+      .filter((sensor) => {
+        if (!query) return true
+        return sensor.serialNumber.toLowerCase().includes(query) || sensor.locationName?.toLowerCase().includes(query)
+      })
+      .slice(0, 8)
+  }, [addSensorSearch, running, runningUnit, sensors, session])
 
   const selectionSummaryColumns = useMemo<ColumnDef<AdjustmentSensorRow>[]>(
     () => [
@@ -163,6 +184,22 @@ export function CalibrationWorkflowClient() {
         header: t("workflow.selection.table.columns.unit"),
         cell: ({ row }) => row.original.unit ?? t("workflow.selection.table.unitUnknown"),
       },
+      {
+        id: "remove",
+        enableSorting: false,
+        header: "Actions",
+        cell: ({ row }) => (
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => setSelectedSensorIds((current) => current.filter((id) => id !== row.original.id))}
+          >
+            <X className="mr-1 h-4 w-4" />
+            Retirer
+          </Button>
+        ),
+      },
     ],
     [t],
   )
@@ -172,20 +209,35 @@ export function CalibrationWorkflowClient() {
       {
         id: "select",
         enableSorting: false,
-        header: () => (
-          <div className="flex justify-center">
-            <Checkbox
-              checked={allSelected ? true : someSelected ? "indeterminate" : false}
-              disabled={running || !canSelectAll}
-              onCheckedChange={(checked) => {
-                setSelectedSensorIds((current) => checked === true
-                  ? Array.from(new Set([...current, ...selectableSensorIds]))
-                  : current.filter((id) => !selectableSensorIds.includes(id)))
-              }}
-              aria-label={t("workflow.selection.selectAll")}
-            />
-          </div>
-        ),
+        header: ({ table }) => {
+          const filteredRows = table.getFilteredRowModel().rows
+          const filteredSensors = filteredRows.map((row) => row.original)
+          const filteredUnits = new Set(
+            filteredSensors.map((sensor) => normalizeUnit(sensor.unit)).filter((unit): unit is string => Boolean(unit)),
+          )
+          const canSelectFiltered = lockedUnit !== null || filteredUnits.size <= 1
+          const filteredSelectableIds = filteredSensors
+            .filter((sensor) => lockedUnit === null || normalizeUnit(sensor.unit) === lockedUnit)
+            .map((sensor) => sensor.id)
+          const allFilteredSelected =
+            filteredSelectableIds.length > 0 && filteredSelectableIds.every((id) => selectedSensorIds.includes(id))
+          const someFilteredSelected = filteredSelectableIds.some((id) => selectedSensorIds.includes(id))
+
+          return (
+            <div className="flex justify-center">
+              <Checkbox
+                checked={allFilteredSelected ? true : someFilteredSelected ? "indeterminate" : false}
+                disabled={running || !canSelectFiltered || filteredSelectableIds.length === 0}
+                onCheckedChange={(checked) => {
+                  setSelectedSensorIds((current) => checked === true
+                    ? Array.from(new Set([...current, ...filteredSelectableIds]))
+                    : current.filter((id) => !filteredSelectableIds.includes(id)))
+                }}
+                aria-label={t("workflow.selection.selectAll")}
+              />
+            </div>
+          )
+        },
         cell: ({ row }) => {
           const id = row.original.id
           return (
@@ -216,10 +268,10 @@ export function CalibrationWorkflowClient() {
         cell: ({ row }) => row.original.unit ?? t("workflow.selection.table.unitUnknown"),
       },
     ],
-    [allSelected, canSelectAll, lockedUnit, running, selectableSensorIds, selectedSensorIds, someSelected, t],
+    [lockedUnit, running, selectedSensorIds, t],
   )
 
-  const error = startMutation.error ?? stopMutation.error
+  const error = startMutation.error ?? addSensorMutation.error ?? stopMutation.error
 
   return (
     <>
@@ -356,10 +408,7 @@ export function CalibrationWorkflowClient() {
                         type="button"
                         variant="outline"
                         className="w-full"
-                        disabled={
-                          running ||
-                          selectedSensorIds.length === 0
-                        }
+                        disabled={running || selectedSensorIds.length === 0}
                         onClick={() => {
                           if (previewReadingEnabled) {
                             void stopPreviewReading()
@@ -369,34 +418,25 @@ export function CalibrationWorkflowClient() {
                         }}
                       >
                         {previewReadingEnabled ? (
-                          <>
-                            <Square className="mr-2 h-4 w-4" />
-                            {t("workflow.calibration.stopReading")}
-                          </>
+                          <><Square className="mr-2 h-4 w-4" />{t("workflow.calibration.stopReading")}</>
                         ) : (
-                          <>
-                            <Play className="mr-2 h-4 w-4" />
-                            {t("workflow.calibration.startReading")}
-                          </>
+                          <><Play className="mr-2 h-4 w-4" />{t("workflow.calibration.startReading")}</>
                         )}
                       </Button>
                       {previewReadingEnabled ? (
                         <p className="text-xs text-muted-foreground">
-                          {previewReadingQuery.isFetching
-                            ? t("workflow.calibration.reading")
-                            : t("workflow.calibration.readingActive")}
+                          {previewReadingQuery.isFetching ? t("workflow.calibration.reading") : t("workflow.calibration.readingActive")}
                         </p>
                       ) : null}
                       {previewReadingQuery.error ? (
                         <p className="text-xs text-destructive">
-                          {previewReadingQuery.error instanceof Error
-                            ? previewReadingQuery.error.message
-                            : t("workflow.calibration.readingError")}
+                          {previewReadingQuery.error instanceof Error ? previewReadingQuery.error.message : t("workflow.calibration.readingError")}
                         </p>
                       ) : null}
                       {running ? (
                         <Button variant="destructive" className="w-full" onClick={() => stopMutation.mutate()} disabled={stopMutation.isPending}>
-                          <Square className="mr-2 h-4 w-4" />{t("workflow.calibration.stop")}</Button>
+                          <Square className="mr-2 h-4 w-4" />{t("workflow.calibration.stop")}
+                        </Button>
                       ) : (
                         <Button
                           className="w-full"
@@ -404,12 +444,7 @@ export function CalibrationWorkflowClient() {
                             setPreviewReadingEnabled(false)
                             startMutation.mutate()
                           }}
-                          disabled={
-                            !operatorValue.trim() ||
-                            selectedSensorIds.length === 0 ||
-                            startMutation.isPending ||
-                            previewReadingQuery.isFetching
-                          }
+                          disabled={!operatorValue.trim() || selectedSensorIds.length === 0 || startMutation.isPending || previewReadingQuery.isFetching}
                         >
                           <Play className="mr-2 h-4 w-4" />{t("workflow.calibration.start")}
                         </Button>
@@ -417,6 +452,46 @@ export function CalibrationWorkflowClient() {
                     </CardContent>
                   </Card>
                 </div>
+
+                {running ? (
+                  <Card className="border-primary/20 bg-primary/[0.02]">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2"><Plus className="h-5 w-5" />Ajouter une sonde</CardTitle>
+                      <CardDescription>
+                        Ajoutez une sonde compatible sans interrompre l'étalonnage. Elle commencera à être lue au prochain cycle.
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <Input
+                        value={addSensorSearch}
+                        onChange={(event) => setAddSensorSearch(event.target.value)}
+                        placeholder="Rechercher par numéro de série ou lieu..."
+                      />
+                      <div className="max-h-56 space-y-2 overflow-y-auto">
+                        {addSensorCandidates.length === 0 ? (
+                          <p className="text-sm text-muted-foreground">Aucune sonde compatible disponible.</p>
+                        ) : addSensorCandidates.map((sensor) => (
+                          <div key={sensor.id} className="flex items-center justify-between gap-3 rounded-md border p-3">
+                            <div className="min-w-0">
+                              <div className="font-medium">{sensor.serialNumber}</div>
+                              <div className="truncate text-xs text-muted-foreground">
+                                {sensor.locationName ?? t("workflow.selection.unassigned")} · {sensor.unit ?? "-"}
+                              </div>
+                            </div>
+                            <Button
+                              type="button"
+                              size="sm"
+                              onClick={() => addSensorMutation.mutate(sensor.id)}
+                              disabled={addSensorMutation.isPending}
+                            >
+                              <Plus className="mr-1 h-4 w-4" />Ajouter
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                ) : null}
 
                 <Card>
                   <CardHeader>
@@ -446,14 +521,10 @@ export function CalibrationWorkflowClient() {
                                 <TableCell>{sensor.locationName || t("workflow.selection.unassigned")}</TableCell>
                                 <TableCell>{sensor.moduleName || "-"}</TableCell>
                                 <TableCell>
-                                  {reading?.value == null
-                                    ? "-"
-                                    : `${formatMeasureValue(reading.value, 2)}${reading.unit ? ` ${reading.unit}` : ""}`}
+                                  {reading?.value == null ? "-" : `${formatMeasureValue(reading.value, 2)}${reading.unit ? ` ${reading.unit}` : ""}`}
                                 </TableCell>
                                 <TableCell>{reading ? formatDbDateTime(reading.measuredAt) : "-"}</TableCell>
-                                <TableCell>
-                                  {running ? session?.readingCounts[sensor.id] ?? 0 : reading ? 1 : 0}
-                                </TableCell>
+                                <TableCell>{running ? session?.readingCounts[sensor.id] ?? 0 : reading ? 1 : 0}</TableCell>
                                 <TableCell>
                                   {reading?.error
                                     ? <span className="text-destructive">{reading.error}</span>
