@@ -23,6 +23,7 @@ type MessageInputProps = {
 
 export function MessageInput({ onSend, convId, disabled = false }: MessageInputProps) {
   const t = useTranslations("messaging.thread")
+  const tCommon = useTranslations("common")
   const [content, setContent] = useState("")
   const [isSending, setIsSending] = useState(false)
   const [pendingAttachments, setPendingAttachments] = useState<PendingAttachment[]>([])
@@ -157,7 +158,7 @@ export function MessageInput({ onSend, convId, disabled = false }: MessageInputP
                 type="button"
                 onClick={() => removeAttachment(attachment.id)}
                 className="absolute right-2 top-2 z-10 rounded-full bg-background/85 p-1 opacity-80 shadow-sm hover:opacity-100"
-                aria-label="Remove attachment"
+                aria-label={`${tCommon("delete")} ${attachment.fileName}`}
               >
                 <X className="h-3 w-3" />
               </button>
@@ -172,61 +173,49 @@ export function MessageInput({ onSend, convId, disabled = false }: MessageInputP
         </div>
       )}
 
-      <div
-        className={cn(
-          "flex items-end gap-2 rounded-xl border bg-background px-3 py-2 transition-colors",
-          "focus-within:border-primary/50 focus-within:ring-1 focus-within:ring-primary/20",
-        )}
-      >
+      <div className="flex items-end gap-2">
+        <input
+          ref={fileInputRef}
+          type="file"
+          className="hidden"
+          multiple
+          onChange={handleFileChange}
+        />
         <Button
           type="button"
           variant="ghost"
           size="icon"
-          onClick={() => fileInputRef.current?.click()}
+          className="shrink-0"
           disabled={isDisabled}
-          className="h-8 w-8 shrink-0 rounded-lg text-muted-foreground hover:text-foreground"
-          aria-label={t("attach_file")}
+          onClick={() => fileInputRef.current?.click()}
+          aria-label={t("attach")}
         >
-          <Paperclip className="h-4 w-4" />
+          <Paperclip className="h-5 w-5" />
         </Button>
-
-        <input
-          ref={fileInputRef}
-          type="file"
-          multiple
-          accept="image/*,application/pdf,.doc,.docx,.xls,.xlsx,.txt,.csv,.zip"
-          className="hidden"
-          onChange={handleFileChange}
-        />
 
         <Textarea
           ref={textareaRef}
           value={content}
           onChange={handleChange}
           onKeyDown={handleKeyDown}
-          placeholder={t("input_placeholder")}
-          disabled={isDisabled}
+          placeholder={t("placeholder")}
+          disabled={disabled || isSending}
           rows={1}
           className={cn(
-            "min-h-6 max-h-24 flex-1 resize-none overflow-y-auto border-0 bg-transparent p-0 text-sm leading-6 shadow-none",
-            "focus-visible:ring-0 focus-visible:ring-offset-0",
-            "placeholder:text-muted-foreground/60",
+            "min-h-10 max-h-24 flex-1 resize-none py-2.5",
+            "overflow-y-auto",
           )}
-          style={{ height: "24px" }}
         />
 
         <Button
           type="button"
           size="icon"
+          className="shrink-0"
+          disabled={isDisabled || isEmpty}
           onClick={() => void handleSend()}
-          disabled={isEmpty || isDisabled}
-          className={cn(
-            "h-8 w-8 shrink-0 rounded-lg transition-all",
-            isEmpty || isDisabled ? "opacity-40" : "opacity-100 shadow-sm hover:shadow-md",
-          )}
+          aria-label={t("send")}
         >
-          <Send className="h-3.5 w-3.5" />
-          <span className="sr-only">{t("send")}</span>
+          <Send className="h-5 w-5" />
         </Button>
       </div>
     </div>
