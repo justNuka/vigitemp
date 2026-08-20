@@ -42,6 +42,7 @@ const ALLOWED_LITERAL_PATTERNS = [
   /^[-–—+*/#%°.:,()\[\]{}<>|@·•]+$/,
   /^(?:&gt;|&nbsp;|\\u2014)$/i,
   /^(?:min|ms|s|h|px|rem|vh|vw|V|°C|%)$/i,
+  /^(?:vs\.)$/i,
   /^\d+(?:[.,]\d+)?(?:\s?(?:ms|s|min|h|px|rem|vh|vw|%|V|°C))?$/i,
   /^(?:Vigi|Sensys|VigiSensys|VigiTemp|VigiServ|VigiTel|MC2)(?:\s+Lab|\s+logo)?$/i,
   /^(?:GSO|GSP|RSSI|CFR21|XML|PDF|CSV|Excel|MySQL|MSSQL|COM\w*|TX|RX)$/i,
