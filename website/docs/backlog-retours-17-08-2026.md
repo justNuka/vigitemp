@@ -28,6 +28,8 @@ Objectif : permettre une reprise immédiate du travail dans une nouvelle convers
 - PR #23 : B17-002, borne absolue des sessions utilisateur à 24 h — **mergée dans `dev` le 19/08/2026**, merge `e8972b6dd6e073cb8549077c196f36ac3d0b756f`.
 - PR #24 : hotfix du build du panneau de métrologie après #22 — **mergée dans `dev` le 19/08/2026**, merge `27c0a55503b19deb486b955ce36c571a9aab0086`.
 - PR #25 : B17-010, libellés de seuils du graphique Surveillance — **mergée dans `dev` le 19/08/2026**, merge `e6867c6c3a72a52d28bde9540160b374ec227646`.
+- PR #27 : retours métrologie étalonnage/ajustage, dont feedback visuel de nouvelles mesures — **mergée dans `dev` le 20/08/2026**, merge `a34fee90c63fc5639984c360b9a8b9f0c1ebecd5`.
+- PR #32 : fin du nettoyage i18n FR/EN — **mergée dans `dev` le 20/08/2026**, merge `0b12e2c1e025283c6ed105f05b17dc8afc747478`.
 
 ### Statuts
 
@@ -354,17 +356,147 @@ Un helper local normalise les `Date` Prisma / chaînes ISO UTC en heure murale d
 
 ---
 
-## État du lot au 19/08/2026
+## B20-001 — Nom des exports XML d’ajustage encore préfixé `Calibrage`
 
-Tous les points B17-001 à B17-011 disposent désormais d’un correctif mergé dans `dev`. Aucun nouveau développement ne doit être lancé sur ce lot tant qu’une validation terrain n’a pas reproduit un défaut résiduel.
+**Statut : `EN_COURS` — branche `agent/xml-ajustage-import-export`**
 
-Validations prioritaires encore utiles :
+### Retour du 20/08/2026
 
-1. **B17-002** — attendre réellement la borne de 24 h et confirmer l’absence de reconnexion silencieuse;
-2. **B17-005** — valider le panneau global sur un ajustage et un étalonnage réels, notamment l’arrêt et la restauration des sondes;
-3. **B17-010** — valider visuellement tous les libellés de seuils en standard/agrandi et clair/sombre.
+Depuis **Administration > Sondes > détail d’une sonde > Ajustages**, le téléchargement XML utilise encore un nom de fichier commençant par `Calibrage_...xml`. Le vocabulaire produit doit être cohérent avec l’opération réellement effectuée : **Ajustage**.
 
-Le `dev` de référence après le merge de la PR #25 est `e6867c6c3a72a52d28bde9540160b374ec227646`.
+### État vérifié dans le code
+
+- l’action XML de la modale de sonde pointe sur `/api/metrologie/ajustage/export/[id]`;
+- `buildAdjustmentExportFileName()` dans `website/src/lib/adjustment-export.ts` retourne actuellement `Calibrage_${serial}_${timestamp}.xml`;
+- le contenu XML conserve volontairement des balises historiques `CALIBRAGE` / `CALIBRAGE_SONDE` pour compatibilité d’import, sauf décision métier distincte.
+
+### Attendu
+
+- remplacer uniquement le **nom du fichier téléchargé** par `Ajustage_<sonde>_<timestamp>.xml`;
+- ne pas casser l’import des anciens fichiers XML;
+- ne pas modifier les balises historiques sans validation de compatibilité.
+
+### Validation terrain
+
+- exporter un ajustage depuis la fiche sonde;
+- vérifier le nom `Ajustage_...xml`;
+- réimporter ce fichier et vérifier qu’il reste accepté;
+- vérifier un ancien fichier `Calibrage_...xml`.
+
+---
+
+## B20-002 — Import ajustage : identité d’une GSO simple capteur incorrecte
+
+**Statut : `EN_COURS` — branche `agent/xml-ajustage-import-export`**
+
+### Retour du 20/08/2026
+
+Lorsqu’un XML d’ajustage crée automatiquement une **GSO simple capteur**, les valeurs stockées ne suivent pas la convention attendue.
+
+Exemple terrain fourni :
+
+- attendu : `Adresse = 10007909-T`, `Numéro de série = SOET-10007909`;
+- actuel après import : `Adresse = 10007909`, `Numéro de série = 10007909`.
+
+Les GSO doubles capteurs sont déjà considérées correctes et ne doivent pas régresser.
+
+### Cause identifiée dans le code
+
+`resolveImportedSensorIdentity()` normalise actuellement les types simples `SOIT` / `SOET` vers le seul numéro numérique (`stripGsoSuffix(address)`), puis la route d’import utilise `sensorIdentity.serial` directement comme `Sonde_Numero_Serie` et, pour une famille GSO, aussi comme `Adresse_Sonde`.
+
+Cette convention est cohérente avec l’ancienne normalisation interne mais ne correspond pas au format attendu en base pour les GSO simples lors de la création par import.
+
+### Attendu
+
+Pour une GSO simple température :
+
+- `Sonde_Numero_Serie` = `<TYPE>-<chiffres>` (ex. `SOET-10007909`);
+- `Adresse_Sonde` = `<chiffres>-T` (ex. `10007909-T`);
+- `Sonde_Type` reste le type détecté (`SOIT` / `SOET`);
+- `Est_Sonde_GSO = true`;
+- aucune modification du comportement des doubles `SOIH` / `SOEH`.
+
+### Validation terrain
+
+- importer un XML SOET simple et vérifier exactement les deux colonnes montrées dans les captures;
+- refaire avec SOIT;
+- tester SOIH/SOEH pour confirmer absence de régression;
+- tester un import sur une sonde déjà existante;
+- vérifier que l’ajustage importé référence le même numéro de série que la sonde créée.
+
+---
+
+## B20-003 — Export multiple des XML d’ajustage depuis les sondes
+
+**Statut : `A_INVESTIGUER`**
+
+### Retour du 20/08/2026
+
+Pouvoir exporter plusieurs fichiers XML d’ajustage en une seule action, avec une interaction intuitive pour l’utilisateur.
+
+### Piste UX à étudier
+
+Le tableau des ajustages d’une sonde possède déjà une action XML par ligne. Une solution naturelle est d’ajouter une sélection multiple des lignes puis une action **Exporter les XML sélectionnés**. Pour plusieurs fichiers, un téléchargement ZIP côté serveur évite une série de téléchargements navigateur potentiellement bloqués et garde une seule action utilisateur.
+
+### Points à vérifier avant implémentation
+
+- capacité du composant `TanStackTable` à exposer une sélection multiple sans perturber la sélection actuelle de détail;
+- possibilité de réutiliser `buildAdjustmentXml()` pour générer chaque entrée du ZIP;
+- taille maximale raisonnable d’un lot;
+- convention de nom du ZIP et des fichiers internes;
+- droits identiques à l’export unitaire.
+
+### Validation attendue
+
+- sélectionner 1, plusieurs ou toutes les lignes visibles;
+- action désactivée si aucune ligne n’est sélectionnée;
+- un seul téléchargement pour un lot;
+- noms de fichiers internes corrects et uniques;
+- comportement FR/EN, clavier et thème clair/sombre.
+
+---
+
+## B20-004 — Ajustage / étalonnage : transition colorée progressive sur nouvelle mesure
+
+**Statut : `A_FAIRE`**
+
+### Retour du 20/08/2026
+
+La PR #27 rend déjà une nouvelle mesure plus visible via un feedback et un flash temporaire. Le retour terrain demande maintenant un effet plus lisible et plus doux : la valeur ou la ligne doit prendre une couleur distincte lorsqu’une nouvelle mesure arrive, puis **revenir progressivement** vers sa couleur de base.
+
+### Attendu visuel
+
+- nouvelle mesure : accent temporaire bleu ou vert suffisamment visible en clair/sombre;
+- retour progressif sur quelques secondes vers la couleur de base, sans coupure brutale;
+- effet déclenché uniquement lorsqu’une mesure réellement nouvelle est reçue;
+- même principe sur ajustage et étalonnage;
+- ne pas animer en boucle les anciennes mesures lors d’un simple rerender.
+
+### Base existante à réutiliser
+
+La PR #27 a déjà introduit la détection/feedback de lignes mises à jour. Le nouveau lot doit réutiliser ce mécanisme plutôt que recréer une seconde logique de comparaison des mesures.
+
+### Validation terrain
+
+- observer plusieurs cycles successifs sur GSP et GSO;
+- confirmer que seule la/les lignes réellement mises à jour sont animées;
+- vérifier le retour progressif à la couleur normale;
+- vérifier clair/sombre et FR/EN;
+- confirmer que l’animation ne provoque pas de saut de layout ni de coût notable avec beaucoup de sondes.
+
+---
+
+## État du lot au 20/08/2026
+
+Les points historiques B17-001 à B17-011 sont corrigés dans `dev`. Les nouveaux retours B20-001 à B20-004 constituent le lot de suivi du 20/08/2026.
+
+Ordre de travail prévu :
+
+1. **B20-001 + B20-002** — correctifs XML ciblés sur `agent/xml-ajustage-import-export`;
+2. **B20-003** — étude puis implémentation de l’export multiple, à garder dans le même lot uniquement si le diff reste cohérent et limité;
+3. **B20-004** — lot séparé après merge du lot XML, basé sur le nouveau HEAD de `dev`.
+
+Le `dev` de référence au démarrage de ce lot est `0b12e2c1e025283c6ed105f05b17dc8afc747478` (merge PR #32).
 
 ## Règle de reprise pour une nouvelle conversation
 
