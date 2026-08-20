@@ -48,13 +48,13 @@ interface MonitoringCardsGridProps {
   sortMode?: SurveillanceSortMode
 }
 
-function MonitoringCardsGridSkeleton({ title }: { title: string }) {
+function MonitoringCardsGridSkeleton({ keyPrefix }: { keyPrefix: string }) {
   return (
     <div className="space-y-2">
       <div className="h-px w-full bg-slate-200 dark:bg-slate-700" />
       <div className="grid gap-4 grid-cols-[repeat(auto-fit,minmax(260px,1fr))]">
         {Array.from({ length: 4 }).map((_, i) => (
-          <MonitoringCardSkeleton key={`${title}-${i}`} />
+          <MonitoringCardSkeleton key={`${keyPrefix}-${i}`} />
         ))}
       </div>
     </div>
@@ -112,11 +112,11 @@ export function MonitoringCardsGrid({
       <div className="p-4 md:p-6 space-y-8">
         <div className="space-y-6">
           <MonitoringSectionHeader title={t("grid.active_title")} icon={<Power className="h-5 w-5 text-sky-500" />} />
-          <MonitoringCardsGridSkeleton title="active" />
+          <MonitoringCardsGridSkeleton keyPrefix="active" />
         </div>
         <div className="space-y-4">
           <MonitoringSectionHeader title={t("grid.disabled_title")} icon={<PowerOff className="h-5 w-5 text-slate-400" />} />
-          <MonitoringCardsGridSkeleton title="disabled" />
+          <MonitoringCardsGridSkeleton keyPrefix="disabled" />
         </div>
       </div>
     )
