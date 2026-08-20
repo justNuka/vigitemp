@@ -8,8 +8,11 @@ import { useTranslations } from "next-intl"
 import { cn } from "@/lib/utils"
 
 const Dialog = DialogPrimitive.Root
+
 const DialogTrigger = DialogPrimitive.Trigger
+
 const DialogPortal = DialogPrimitive.Portal
+
 const DialogClose = DialogPrimitive.Close
 
 const DialogOverlay = React.forwardRef<
@@ -37,6 +40,7 @@ const DialogContent = React.forwardRef<
 >(({ className, children, draggable = true, style, ...props }, ref) => {
   const tCommon = useTranslations("common")
   const contentRef = React.useRef<React.ComponentRef<typeof DialogPrimitive.Content> | null>(null)
+  // Fix 3: use a ref instead of state — direct DOM mutation, zero re-renders during drag
   const offsetRef = React.useRef({ x: 0, y: 0 })
   const dragStateRef = React.useRef<{
     startX: number
@@ -53,6 +57,7 @@ const DialogContent = React.forwardRef<
     const x = dragState.offsetX + event.clientX - dragState.startX
     const y = dragState.offsetY + event.clientY - dragState.startY
     offsetRef.current = { x, y }
+    // Mutate the DOM directly — no setState, no re-render
     el.style.transform = `translate(calc(-50% + ${x}px), calc(-50% + ${y}px))`
   }, [])
 
@@ -79,10 +84,18 @@ const DialogContent = React.forwardRef<
   const handlePointerDownCapture = React.useCallback(
     (event: React.PointerEvent<HTMLDivElement>) => {
       if (!draggable || event.button !== 0) return
+
       const content = contentRef.current
       if (!content) return
+
       const target = event.target as HTMLElement | null
-      if (!target || !content.contains(target)) return
+      if (!target) return
+
+      // Fix 1: reject clicks from nested dialog portals — they bubble up through
+      // React's virtual tree even though they're not DOM children of this dialog
+      if (!content.contains(target)) return
+
+      // Fix 2: only allow drag from the dedicated handle, not the whole header zone
       if (!target.closest("[data-drag-handle]")) return
 
       dragStateRef.current = {
@@ -96,6 +109,7 @@ const DialogContent = React.forwardRef<
       document.body.style.cursor = "grabbing"
       window.addEventListener("pointermove", handlePointerMove)
       window.addEventListener("pointerup", stopDragging)
+      // Fix 1: stop propagation so a parent dialog doesn't also start dragging
       event.stopPropagation()
     },
     [draggable, handlePointerMove, stopDragging],
@@ -134,13 +148,31 @@ const DialogContent = React.forwardRef<
 })
 DialogContent.displayName = DialogPrimitive.Content.displayName
 
-const DialogHeader = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
-  <div className={cn("flex flex-col space-y-1.5 text-center sm:text-left", className)} {...props} />
+const DialogHeader = ({
+  className,
+  ...props
+}: React.HTMLAttributes<HTMLDivElement>) => (
+  <div
+    className={cn(
+      "flex flex-col space-y-1.5 text-center sm:text-left",
+      className
+    )}
+    {...props}
+  />
 )
 DialogHeader.displayName = "DialogHeader"
 
-const DialogFooter = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
-  <div className={cn("flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2", className)} {...props} />
+const DialogFooter = ({
+  className,
+  ...props
+}: React.HTMLAttributes<HTMLDivElement>) => (
+  <div
+    className={cn(
+      "flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2",
+      className
+    )}
+    {...props}
+  />
 )
 DialogFooter.displayName = "DialogFooter"
 
@@ -148,7 +180,14 @@ const DialogTitle = React.forwardRef<
   React.ComponentRef<typeof DialogPrimitive.Title>,
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Title>
 >(({ className, ...props }, ref) => (
-  <DialogPrimitive.Title ref={ref} className={cn("text-lg font-semibold leading-none tracking-tight", className)} {...props} />
+  <DialogPrimitive.Title
+    ref={ref}
+    className={cn(
+      "text-lg font-semibold leading-none tracking-tight",
+      className
+    )}
+    {...props}
+  />
 ))
 DialogTitle.displayName = DialogPrimitive.Title.displayName
 
@@ -156,7 +195,11 @@ const DialogDescription = React.forwardRef<
   React.ComponentRef<typeof DialogPrimitive.Description>,
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Description>
 >(({ className, ...props }, ref) => (
-  <DialogPrimitive.Description ref={ref} className={cn("text-sm text-muted-foreground", className)} {...props} />
+  <DialogPrimitive.Description
+    ref={ref}
+    className={cn("text-sm text-muted-foreground", className)}
+    {...props}
+  />
 ))
 DialogDescription.displayName = DialogPrimitive.Description.displayName
 
