@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useTranslations } from "next-intl";
 
 type MenuItem = {
   key: string;
@@ -33,6 +34,7 @@ export function MoreMenu({
   buttonClassName,
   menuClassName,
 }: MoreMenuProps) {
+  const tNavbar = useTranslations("mainNavbar");
   const [open, setOpen] = React.useState(false);
   const rootRef = React.useRef<HTMLDivElement | null>(null);
 
@@ -65,7 +67,7 @@ export function MoreMenu({
     >
       <button
         type="button"
-        aria-label="Menu Button"
+        aria-label={tNavbar("menu")}
         aria-haspopup="menu"
         aria-expanded={open}
         onClick={() => setOpen((v) => !v)}
@@ -134,7 +136,6 @@ export function MoreMenu({
             </span>
             <span>{it.label}</span>
 
-            {/* séparateur */}
             <span className="pointer-events-none absolute left-3 right-3 bottom-0 h-px bg-[rgba(132,160,244,0.10)] last:hidden" />
           </li>
         ))}
