@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react"
 import { ImageMinus, ImagePlus } from "lucide-react"
+import { useTranslations } from "next-intl"
 
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
@@ -31,12 +32,18 @@ export function ImageCropDialog({
   onOpenChange,
   file,
   onConfirm,
-  title = "Recadrer l'image",
-  cancelLabel = "Annuler",
-  confirmLabel = "Valider",
-  zoomLabel = "Zoom",
-  resetLabel = "Reinitialiser",
+  title,
+  cancelLabel,
+  confirmLabel,
+  zoomLabel,
+  resetLabel,
 }: Props) {
+  const tCommon = useTranslations("common")
+  const tFilters = useTranslations("surveillance.filters.actions")
+  const resolvedTitle = title ?? tCommon("edit")
+  const resolvedCancelLabel = cancelLabel ?? tCommon("cancel")
+  const resolvedConfirmLabel = confirmLabel ?? tCommon("confirm")
+  const resolvedResetLabel = resetLabel ?? tFilters("clear")
   const imgRef = useRef<HTMLImageElement | null>(null)
   const [naturalSize, setNaturalSize] = useState({ width: 1, height: 1 })
   const [zoom, setZoom] = useState(1)
@@ -105,7 +112,7 @@ export function ImageCropDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-155 border-border bg-background text-foreground shadow-2xl">
         <DialogHeader>
-          <DialogTitle className="text-3xl font-bold tracking-tight">{title}</DialogTitle>
+          <DialogTitle className="text-3xl font-bold tracking-tight">{resolvedTitle}</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-5">
@@ -141,7 +148,7 @@ export function ImageCropDialog({
                 <img
                   ref={imgRef}
                   src={previewUrl}
-                  alt="crop"
+                  alt=""
                   draggable={false}
                   onLoad={(event) => {
                     const target = event.currentTarget
@@ -183,7 +190,7 @@ export function ImageCropDialog({
           <div className="flex items-center justify-center gap-4">
             <ImageMinus className="h-4 w-4 text-muted-foreground" />
             <div className="w-70">
-              <div className="mb-1 text-center text-xs text-muted-foreground">{zoomLabel}</div>
+              {zoomLabel ? <div className="mb-1 text-center text-xs text-muted-foreground">{zoomLabel}</div> : null}
               <input
                 type="range"
                 min={1}
@@ -191,6 +198,7 @@ export function ImageCropDialog({
                 step={0.01}
                 value={zoom}
                 onChange={(event) => setZoom(Number(event.target.value))}
+                aria-label={resolvedTitle}
                 className="w-full accent-primary"
               />
             </div>
@@ -208,7 +216,7 @@ export function ImageCropDialog({
               setOffset({ x: 0, y: 0 })
             }}
           >
-            {resetLabel}
+            {resolvedResetLabel}
           </Button>
 
           <div className="flex items-center gap-2">
@@ -217,14 +225,14 @@ export function ImageCropDialog({
               variant="secondary"
               onClick={() => onOpenChange(false)}
             >
-              {cancelLabel}
+              {resolvedCancelLabel}
             </Button>
             <Button
               type="button"
               onClick={applyCrop}
               disabled={!file}
             >
-              {confirmLabel}
+              {resolvedConfirmLabel}
             </Button>
           </div>
         </DialogFooter>
