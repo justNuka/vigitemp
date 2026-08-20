@@ -80,6 +80,11 @@ export const frSupplements: MessageCatalog = {
       typing: "{names} est en train d'écrire…",
     },
   },
+  metrologyWorkspace: {
+    title: "Métrologie",
+    description: "Espace de travail métrologie. Les opérations d'ajustage et d'étalonnage seront accessibles ici.",
+    notice: "Cette page est prête. Les opérations métrologiques visibles ici sont réservées aux profils disposant de l'autorisation métrologie.",
+  },
 }
 
 export const enSupplements: MessageCatalog = {
@@ -162,6 +167,11 @@ export const enSupplements: MessageCatalog = {
     thread: {
       typing: "{names} is typing…",
     },
+  },
+  metrologyWorkspace: {
+    title: "Metrology",
+    description: "Metrology workspace. Adjustment and calibration operations will be available here.",
+    notice: "This page is ready. The metrology operations shown here are restricted to profiles with metrology permission.",
   },
 }
 
