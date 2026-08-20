@@ -39,12 +39,11 @@ const statusConfig: Record<Status, {
 function useStatusLabel(status: Status) {
   const tMonitoring = useTranslations("monitoringCard");
   const tStatus = useTranslations("surveillanceStatus");
-  const tAlerts = useTranslations("alerts");
 
   if (status === "ok") return tMonitoring("status.ok");
   if (status === "warning") return tStatus("warning");
   if (status === "critical") return tStatus("critical");
-  return tAlerts("offline");
+  return tStatus("technical");
 }
 
 export function StatusBadge({
