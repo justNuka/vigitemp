@@ -6,7 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { parseAdjustmentXml } from "@/lib/adjustment-import";
 import { log } from "@/lib/logger";
 import { decodeXmlBytes } from "@/lib/xml-decoding";
-import { extractProbeAddressFromSerial, resolveImportedSensorIdentity } from "@/lib/sensor-naming";
+import { buildImportedSensorStorageIdentity, resolveImportedSensorIdentity } from "@/lib/sensor-naming";
 import { getPermissionAliases } from "@/lib/permissions";
 
 const isXmlFile = (file: File) => {
@@ -74,22 +74,24 @@ export const POST = withOneOrHigherAnyAuthorizationLogging(getPermissionAliases(
       if (!sensorType?.Sonde_Type) {
         return apiError(400, "invalid_sensor_type", `Type de sonde introuvable pour ${serial}`);
       }
-      const isGsoFamily = sensorType?.Famille_Sonde === "GSO";
-      const probeAddress = isGsoFamily
-        ? sensorIdentity.serial
-        : extractProbeAddressFromSerial(sensorIdentity.serial, knownTypeCodes);
+
+      const storageIdentity = buildImportedSensorStorageIdentity(sensorIdentity, knownTypeCodes);
+      const isGsoFamily = sensorType.Famille_Sonde === "GSO";
+
+      parsed.data.Sonde_Numero_Serie = storageIdentity.serial;
+      parsed.summary.sensor = storageIdentity.serial;
 
       const existingSensor = await prisma.t_sonde.findUnique({
-        where: { Sonde_Numero_Serie: sensorIdentity.serial },
+        where: { Sonde_Numero_Serie: storageIdentity.serial },
         select: { Sonde_Numero_Serie: true },
       });
 
       if (!existingSensor) {
         await prisma.t_sonde.create({
           data: {
-            Sonde_Numero_Serie: sensorIdentity.serial,
+            Sonde_Numero_Serie: storageIdentity.serial,
             Sonde_Type: sensorType.Sonde_Type,
-            Adresse_Sonde: probeAddress,
+            Adresse_Sonde: storageIdentity.address,
             Est_Sonde_GSO: isGsoFamily,
             Surveillance_Etat: "D",
             Sonde_Offset: 0,
@@ -98,10 +100,11 @@ export const POST = withOneOrHigherAnyAuthorizationLogging(getPermissionAliases(
       }
 
       await prisma.t_sonde.updateMany({
-        where: { Sonde_Numero_Serie: sensorIdentity.serial },
+        where: { Sonde_Numero_Serie: storageIdentity.serial },
         data: {
           Sonde_Type: sensorType.Sonde_Type,
           Est_Sonde_GSO: isGsoFamily,
+          ...(isGsoFamily ? { Adresse_Sonde: storageIdentity.address } : {}),
         },
       });
     }

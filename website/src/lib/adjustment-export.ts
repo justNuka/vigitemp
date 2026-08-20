@@ -135,5 +135,5 @@ export function buildAdjustmentExportFileName(serial: string | null | undefined,
   const safeSerial = (serial ?? "sonde").trim() || "sonde"
   const date = toDate(adjustedAt) ?? new Date()
   const stamp = `${date.getFullYear()}${pad(date.getMonth() + 1)}${pad(date.getDate())}${pad(date.getHours())}${pad(date.getMinutes())}${pad(date.getSeconds())}${pad(date.getMilliseconds(), 3)}`
-  return `Calibrage_${safeSerial}_${stamp}.xml`
+  return `Ajustage_${safeSerial}_${stamp}.xml`
 }

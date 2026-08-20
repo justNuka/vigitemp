@@ -7,6 +7,7 @@ import { withOneOrHigherAnyAuthorizationLogging } from "@/lib/license-guards";
 import { log } from "@/lib/logger";
 import { getPermissionAliases } from "@/lib/permissions";
 import {
+  buildImportedSensorStorageIdentity,
   extractProbeAddressFromSerial,
   resolveImportedSensorIdentity,
 } from "@/lib/sensor-naming";
@@ -64,19 +65,49 @@ export const POST = withOneOrHigherAnyAuthorizationLogging(getPermissionAliases(
       moduleId: selectedModuleId,
     });
 
+    const sensorTypes = await prisma.t_sonde_type.findMany({
+      select: { Sonde_Type: true, Famille_Sonde: true },
+    });
+    const knownTypeCodes = sensorTypes
+      .map((row) => row.Sonde_Type)
+      .filter((row): row is string => Boolean(row));
+    const familyByType = new Map(
+      sensorTypes
+        .filter((row): row is typeof row & { Sonde_Type: string } => Boolean(row.Sonde_Type))
+        .map((row) => [row.Sonde_Type, row.Famille_Sonde]),
+    );
+
     const normalizedRows = validated.rows.map((row) => {
       const sensorIdentity = row.insertData.Sonde_Numero_Serie
-        ? resolveImportedSensorIdentity(row.insertData.Sonde_Numero_Serie, row.file)
+        ? resolveImportedSensorIdentity(row.insertData.Sonde_Numero_Serie, row.file, knownTypeCodes)
+        : null;
+      const storageIdentity = sensorIdentity
+        ? buildImportedSensorStorageIdentity(sensorIdentity, knownTypeCodes)
         : null;
       return {
         ...row,
         sensorTypeCode: sensorIdentity?.typeCode ?? null,
+        sensorAddress: storageIdentity?.address ?? null,
         insertData: {
           ...row.insertData,
-          Sonde_Numero_Serie: sensorIdentity?.serial ?? null,
+          Sonde_Numero_Serie: storageIdentity?.serial ?? null,
         },
       };
     });
+
+    const serialTypeCodes = Array.from(
+      new Set(
+        normalizedRows
+          .map((row) => row.sensorTypeCode)
+          .filter((typeCode): typeCode is string => Boolean(typeCode)),
+      ),
+    );
+    const unknownTypeCodes = serialTypeCodes.filter((typeCode) => !knownTypeCodes.includes(typeCode));
+    if (unknownTypeCodes.length > 0) {
+      return apiError(400, "invalid_sensor_type", "Type de sonde introuvable pour certaines sondes", {
+        typeCodes: unknownTypeCodes,
+      });
+    }
 
     const duplicateFiles = normalizedRows
       .map((r) => r.file.trim().toLowerCase())
@@ -99,6 +130,25 @@ export const POST = withOneOrHigherAnyAuthorizationLogging(getPermissionAliases(
           .filter((serial): serial is string => !!serial),
       ),
     );
+    const typeBySerial = new Map(
+      normalizedRows
+        .map((row) => [
+          row.insertData.Sonde_Numero_Serie?.trim() ?? "",
+          row.sensorTypeCode ?? "",
+        ] as const)
+        .filter(([serial, typeCode]) => serial.length > 0 && typeCode.length > 0),
+    );
+    const addressBySerial = new Map(
+      normalizedRows
+        .map((row) => [
+          row.insertData.Sonde_Numero_Serie?.trim() ?? "",
+          row.sensorAddress ?? "",
+        ] as const)
+        .filter(([serial, address]) => serial.length > 0 && address.length > 0),
+    );
+    const getSerialTypeCode = (serial: string) =>
+      typeBySerial.get(serial) ?? resolveImportedSensorIdentity(serial, "", knownTypeCodes).typeCode;
+    const isGsoSerial = (serial: string) => familyByType.get(getSerialTypeCode(serial)) === "GSO";
 
     const [existingAdjustments, sensorsWithOffset, selectedModule] = await Promise.all([
       serials.length > 0
@@ -166,48 +216,16 @@ export const POST = withOneOrHigherAnyAuthorizationLogging(getPermissionAliases(
     let invalidatedEtalonnages = 0;
     let invalidatedEtalonnageMeasures = 0;
 
-    const sensorTypes = await prisma.t_sonde_type.findMany({
-      select: { Sonde_Type: true, Famille_Sonde: true },
-    });
-    const knownTypeCodes = sensorTypes
-      .map((row) => row.Sonde_Type)
-      .filter((row): row is string => Boolean(row));
-    const typeBySerial = new Map(
-      normalizedRows
-        .map((row) => [
-          row.insertData.Sonde_Numero_Serie?.trim() ?? "",
-          row.sensorTypeCode ?? "",
-        ] as const)
-        .filter(([serial, typeCode]) => serial.length > 0 && typeCode.length > 0),
-    );
-    const serialTypeCodes = Array.from(new Set(Array.from(typeBySerial.values())));
-    const unknownTypeCodes = serialTypeCodes.filter((typeCode) => !knownTypeCodes.includes(typeCode));
-    if (unknownTypeCodes.length > 0) {
-      return apiError(400, "invalid_sensor_type", "Type de sonde introuvable pour certaines sondes", {
-        typeCodes: unknownTypeCodes,
-      });
-    }
-    const sensorTypeFamilies = sensorTypes.filter(
-      (row) => typeof row.Sonde_Type === "string" && serialTypeCodes.includes(row.Sonde_Type),
-    );
-    const familyByType = new Map(
-      sensorTypeFamilies
-        .filter((row) => row.Sonde_Type)
-        .map((row) => [row.Sonde_Type as string, row.Famille_Sonde]),
-    );
-    const getSerialTypeCode = (serial: string) => typeBySerial.get(serial) ?? resolveImportedSensorIdentity(serial, "", knownTypeCodes).typeCode;
-    const isGsoSerial = (serial: string) => familyByType.get(getSerialTypeCode(serial)) === "GSO";
-
     await prisma.$transaction(async (tx) => {
-      const gsoSerials = serials.filter((serial) => isGsoSerial(serial));
-
       for (const serial of serials) {
         const typeCode = getSerialTypeCode(serial);
+        const gso = familyByType.get(typeCode) === "GSO";
         await tx.t_sonde.updateMany({
           where: { Sonde_Numero_Serie: serial },
           data: {
             Sonde_Type: typeCode,
-            Est_Sonde_GSO: familyByType.get(typeCode) === "GSO",
+            Est_Sonde_GSO: gso,
+            ...(gso && addressBySerial.has(serial) ? { Adresse_Sonde: addressBySerial.get(serial) } : {}),
           },
         });
       }
@@ -233,7 +251,9 @@ export const POST = withOneOrHigherAnyAuthorizationLogging(getPermissionAliases(
               return {
                 Sonde_Numero_Serie: serial,
                 Sonde_Type: getSerialTypeCode(serial),
-                Adresse_Sonde: gso ? serial : extractProbeAddressFromSerial(serial, knownTypeCodes),
+                Adresse_Sonde:
+                  addressBySerial.get(serial) ??
+                  (gso ? serial : extractProbeAddressFromSerial(serial, knownTypeCodes)),
                 Est_Sonde_GSO: gso,
                 Surveillance_Etat: "D",
                 Sonde_Offset: 0,
