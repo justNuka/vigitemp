@@ -3,6 +3,7 @@
 import * as React from "react"
 import * as DialogPrimitive from "@radix-ui/react-dialog"
 import { X } from "lucide-react"
+import { useTranslations } from "next-intl"
 
 import { cn } from "@/lib/utils"
 
@@ -37,6 +38,7 @@ const DialogContent = React.forwardRef<
   React.ComponentRef<typeof DialogPrimitive.Content>,
   DialogContentProps
 >(({ className, children, draggable = true, style, ...props }, ref) => {
+  const tCommon = useTranslations("common")
   const contentRef = React.useRef<React.ComponentRef<typeof DialogPrimitive.Content> | null>(null)
   // Fix 3: use a ref instead of state — direct DOM mutation, zero re-renders during drag
   const offsetRef = React.useRef({ x: 0, y: 0 })
@@ -138,7 +140,7 @@ const DialogContent = React.forwardRef<
         {children}
         <DialogPrimitive.Close className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
           <X className="h-4 w-4" />
-          <span className="sr-only">Close</span>
+          <span className="sr-only">{tCommon("close")}</span>
         </DialogPrimitive.Close>
       </DialogPrimitive.Content>
     </DialogPortal>

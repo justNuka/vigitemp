@@ -101,7 +101,6 @@ export default function MonitoringCard({
   surveillanceDisabled,
   surveillanceDisabledSince = null,
   surveillanceDisabledUntil = null,
-  surveillanceDisabledBy = null,
   surveillanceDisabledComment = null,
   isGso,
   gsoRssi,
@@ -124,17 +123,6 @@ export default function MonitoringCard({
   const queryClient = useQueryClient()
   const isAdjustmentInProgress = lieuEtat === 'A'
   const shouldLoadCardMeasurements = !isMobile && !backgroundPaused && !isAdjustmentInProgress
-  const translateOrFallback = (key: string, fallback: string) => {
-    try {
-      const translated = t(key)
-      if (!translated || translated === key || translated === `monitoringCard.${key}`) {
-        return fallback
-      }
-      return translated
-    } catch {
-      return fallback
-    }
-  }
 
   const { data, isLoading, reload, meta } = useLieuMeasurements(idLieu, {
     enabled: shouldLoadCardMeasurements,
@@ -308,32 +296,19 @@ export default function MonitoringCard({
     if (surveillanceDisabledUntil) {
       const untilDate = parseDbDateTime(surveillanceDisabledUntil)
       if (untilDate && !Number.isNaN(untilDate.getTime())) {
-        return translateOrFallback(
-          "surveillance.disabled_until",
-          `Surveillance desactivee jusqu'au ${formatDbDateTime(untilDate, { withSeconds: false })}`,
-        ).replace(
-          "{date}",
-          formatDbDateTime(untilDate, { withSeconds: false }),
-        )
+        return t('surveillance.disabled_until', {
+          date: formatDbDateTime(untilDate, { withSeconds: false }),
+        })
       }
     }
     if (!surveillanceDisabledSince) return t('surveillance.disabled')
     const date = parseDbDateTime(surveillanceDisabledSince)
-    if (!date) return t('surveillance.disabled')
-    if (Number.isNaN(date.getTime())) return t('surveillance.disabled')
-    const formattedDate = formatDbDateTime(date, { withSeconds: false })
-    if (surveillanceDisabledBy) {
-      const template = translateOrFallback(
-        'surveillance.disabled_since_by',
-        'Surveillance desactivee depuis le {date} par {user}',
-      )
-      return template.replace('{date}', formattedDate).replace('{user}', surveillanceDisabledBy)
-    }
-    return translateOrFallback('surveillance.disabled_since', 'Surveillance desactivee depuis le {date}').replace(
-      '{date}',
-      formattedDate,
-    )
-  }, [isSurveillanceActive, surveillanceDisabledBy, surveillanceDisabledSince, surveillanceDisabledUntil, t])
+    if (!date || Number.isNaN(date.getTime())) return t('surveillance.disabled')
+    return t('surveillance.disabled_since', {
+      date: formatDbDateTime(date, { withSeconds: false }),
+    })
+  }, [isSurveillanceActive, surveillanceDisabledSince, surveillanceDisabledUntil, t])
+
   const alarmDisabledLabel = useMemo(() => {
     if (isAlarmActive) return null
     if (!alarmDisabledUntil) return t('alarms.disabled')
@@ -473,32 +448,9 @@ export default function MonitoringCard({
     const voltage = Number.parseFloat(normalized)
     if (!Number.isFinite(voltage)) return null
     const formattedVoltage = voltage.toFixed(2)
-    const translateBatteryState = (
-      key: 'gso.battery_state.ok' | 'gso.battery_state.medium' | 'gso.battery_state.low',
-      fallbackPrefix: string,
-    ) => {
-      try {
-        const translated = t(key, { value: formattedVoltage })
-        if (
-          translated &&
-          translated !== key &&
-          translated !== `monitoringCard.${key}` &&
-          !translated.includes('battery_state.')
-        ) {
-          return translated
-        }
-      } catch {
-        // Fallback below keeps the card readable even if the translation key is missing at runtime.
-      }
-      return `${fallbackPrefix} (${formattedVoltage}V)`
-    }
-    if (voltage >= 2.9) {
-      return translateBatteryState('gso.battery_state.ok', 'Etat batterie : OK')
-    }
-    if (voltage >= 2.65) {
-      return translateBatteryState('gso.battery_state.medium', 'Etat batterie : Moyen')
-    }
-    return translateBatteryState('gso.battery_state.low', 'Etat batterie : Faible')
+    if (voltage >= 2.9) return t('gso.battery_state.ok', { value: formattedVoltage })
+    if (voltage >= 2.65) return t('gso.battery_state.medium', { value: formattedVoltage })
+    return t('gso.battery_state.low', { value: formattedVoltage })
   }, [gsoTension, isGso, t])
 
   const cardGlowClass = (() => {
@@ -574,7 +526,7 @@ export default function MonitoringCard({
           {isAdjustmentInProgress ? (
             <div className="flex min-h-52 flex-1 flex-col items-center justify-center gap-3 rounded-md border border-dashed border-sky-300 bg-sky-50/70 px-4 text-center dark:border-sky-700 dark:bg-sky-950/30">
               <div className="h-2.5 w-2.5 animate-pulse rounded-full bg-sky-500" aria-hidden="true" />
-              <div className="font-semibold text-sky-900 dark:text-sky-100">Sonde en ajustage</div>
+              <div className="font-semibold text-sky-900 dark:text-sky-100">{t('surveillance.adjustment')}</div>
             </div>
           ) : isSurveillanceActive ? (
             <>
@@ -791,7 +743,7 @@ export default function MonitoringCard({
 
           <div className="space-y-2">
             <label htmlFor={`monitoring-action-comment-${idLieu}`} className="text-sm font-medium">
-              {translateOrFallback('confirm.action_comment.label', 'Commentaire')}
+              {t('confirm.action_comment.label')}
               {requireActionComment ? ' *' : ''}
             </label>
             <Textarea
@@ -805,13 +757,10 @@ export default function MonitoringCard({
                   setActionCommentError(null)
                 }
               }}
-              placeholder={translateOrFallback(
+              placeholder={t(
                 requireActionComment
                   ? 'confirm.action_comment.placeholder_required'
                   : 'confirm.action_comment.placeholder_optional',
-                requireActionComment
-                  ? 'Ajouter un commentaire (obligatoire)'
-                  : 'Ajouter un commentaire (optionnel)',
               )}
             />
             {actionCommentError ? (

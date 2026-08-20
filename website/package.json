@@ -14,6 +14,7 @@
     "test:domain": "powershell -ExecutionPolicy Bypass -File scripts/run-test.ps1",
     "caddy": "powershell -ExecutionPolicy Bypass -File scripts/run-caddy.ps1",
     "lint": "eslint .",
+    "i18n:check": "tsx scripts/check-i18n.ts",
     "test:api": "tsx scripts/test-api.ts",
     "test:db": "tsx scripts/test-db-connection.ts",
     "hash:passwords": "tsx scripts/hash-passwords.ts",

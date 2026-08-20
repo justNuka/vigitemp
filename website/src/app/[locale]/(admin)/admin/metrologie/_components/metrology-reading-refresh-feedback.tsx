@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react"
 import { CheckCircle2, RefreshCw } from "lucide-react"
+import { useLocale, useTranslations } from "next-intl"
 
 import { cn } from "@/lib/utils"
 
@@ -11,7 +12,10 @@ type Props = {
 
 const FLASH_DURATION_MS = 1_400
 
-export function MetrologyReadingRefreshFeedback({ label = "Mesures mises à jour" }: Props) {
+export function MetrologyReadingRefreshFeedback({ label }: Props) {
+  const locale = useLocale()
+  const tRefresh = useTranslations("surveillance.refresh")
+  const resolvedLabel = label ?? tRefresh("refreshed")
   const [updatedAt, setUpdatedAt] = useState<Date | null>(null)
   const [isFlashing, setIsFlashing] = useState(false)
   const timeoutRef = useRef<number | null>(null)
@@ -71,6 +75,14 @@ export function MetrologyReadingRefreshFeedback({ label = "Mesures mises à jour
     }
   }, [])
 
+  const timeLabel = updatedAt
+    ? new Intl.DateTimeFormat(locale, {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+      }).format(updatedAt)
+    : null
+
   return (
     <div
       className={cn(
@@ -86,9 +98,9 @@ export function MetrologyReadingRefreshFeedback({ label = "Mesures mises à jour
       ) : (
         <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
       )}
-      <span>
-        {label}
-        {updatedAt ? ` à ${updatedAt.toLocaleTimeString("fr-FR")}` : ""}
+      <span className="inline-flex items-center gap-1.5">
+        <span>{resolvedLabel}</span>
+        {timeLabel ? <span className="text-muted-foreground">{timeLabel}</span> : null}
       </span>
     </div>
   )

@@ -1,17 +1,20 @@
+"use client";
+
 import { cn } from "@/lib/utils";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { StatusBadge } from "@/components/status-badge";
 import { formatMeasureValue } from "@/lib/measurements";
-import { 
-  Thermometer, 
-  Droplets, 
-  Wind, 
+import {
+  Thermometer,
+  Droplets,
+  Wind,
   Gauge,
   TrendingUp,
   TrendingDown,
   Minus
 } from "lucide-react";
 import type { SensorWithLocation } from "@/lib/api";
+import { useTranslations } from "next-intl";
 
 interface SensorCardProps {
   sensor: SensorWithLocation;
@@ -43,10 +46,11 @@ function getValueTrend(current: number | null, min: number | null, max: number |
 }
 
 export function SensorCard({ sensor, onClick, className }: SensorCardProps) {
+  const tMonitoring = useTranslations("monitoringCard");
+  const tTables = useTranslations("tables");
   const Icon = sensorIcons[sensor.type] || Thermometer;
   const iconColor = sensorColors[sensor.type] || "text-primary";
   const trend = getValueTrend(sensor.currentValue, sensor.minThreshold, sensor.maxThreshold);
-
   const TrendIcon = trend === "up" ? TrendingUp : trend === "down" ? TrendingDown : Minus;
 
   const hasThresholds = sensor.minThreshold !== null && sensor.maxThreshold !== null;
@@ -64,6 +68,12 @@ export function SensorCard({ sensor, onClick, className }: SensorCardProps) {
         ? "critical"
         : "ok";
 
+  const currentValueLabel = sensor.currentValue != null && typeof sensor.currentValue === "number"
+    ? `${formatMeasureValue(sensor.currentValue)}${sensor.unit}`
+    : "--";
+  const minValueLabel = sensor.minThreshold !== null ? `${formatMeasureValue(sensor.minThreshold)}${sensor.unit}` : "-";
+  const maxValueLabel = sensor.maxThreshold !== null ? `${formatMeasureValue(sensor.maxThreshold)}${sensor.unit}` : "-";
+
   return (
     <Card
       className={cn(
@@ -77,7 +87,7 @@ export function SensorCard({ sensor, onClick, className }: SensorCardProps) {
       tabIndex={0}
       onKeyDown={(e) => e.key === "Enter" && onClick?.()}
       data-testid={`card-sensor-${sensor.id}`}
-      aria-label={`Sonde ${sensor.name}, ${sensor.currentValue}${sensor.unit}, statut ${sensor.status}`}
+      aria-label={`${sensor.name} · ${tTables("value")}: ${currentValueLabel} · ${tTables("status")}: ${sensor.status}`}
     >
       <CardHeader className="pb-2 pt-4 px-4 flex flex-row items-start justify-between gap-2 space-y-0">
         <div className="flex items-center gap-2 min-w-0 flex-1">
@@ -98,8 +108,8 @@ export function SensorCard({ sensor, onClick, className }: SensorCardProps) {
         <div className="flex items-end justify-between gap-2">
           <div className="flex items-baseline gap-1">
             <span className="text-3xl md:text-4xl font-bold data-value">
-              {sensor.currentValue != null && typeof sensor.currentValue === 'number' 
-                ? formatMeasureValue(sensor.currentValue) 
+              {sensor.currentValue != null && typeof sensor.currentValue === "number"
+                ? formatMeasureValue(sensor.currentValue)
                 : "--"}
             </span>
             <span className="text-sm text-muted-foreground font-medium">
@@ -115,14 +125,14 @@ export function SensorCard({ sensor, onClick, className }: SensorCardProps) {
           <div className="flex items-center justify-between text-xs">
             <div className="flex items-center gap-3">
               <span className="text-muted-foreground">
-                Min: <span className="font-medium text-foreground">{sensor.minThreshold !== null ? `${formatMeasureValue(sensor.minThreshold)}${sensor.unit}` : "-"}</span>
+                {tMonitoring("guides.min", { value: minValueLabel })}
               </span>
               <span className="text-muted-foreground">
-                Max: <span className="font-medium text-foreground">{sensor.maxThreshold !== null ? `${formatMeasureValue(sensor.maxThreshold)}${sensor.unit}` : "-"}</span>
+                {tMonitoring("guides.max", { value: maxValueLabel })}
               </span>
             </div>
           </div>
-          
+
           <div className="mt-2 h-1.5 bg-muted rounded-full overflow-hidden">
             <ThresholdBar
               value={sensor.currentValue}
@@ -152,7 +162,6 @@ function ThresholdBar({ value, min, max, status }: ThresholdBarProps) {
   const displayMin = min - buffer;
   const displayMax = max + buffer;
   const displayRange = displayMax - displayMin;
-  
   const percentage = Math.max(0, Math.min(100, ((value - displayMin) / displayRange) * 100));
 
   const statusColors = {

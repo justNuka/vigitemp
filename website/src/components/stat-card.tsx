@@ -103,9 +103,6 @@ export function StatCard({
                       {trend.isPositive ? "+" : ""}
                       {trend.value}%
                     </span>
-                    <span className="text-xs text-muted-foreground">
-                      vs. hier
-                    </span>
                   </div>
                 )}
               </div>

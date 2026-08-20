@@ -299,7 +299,7 @@ export function AdminSidebar({ currentUser, onLogout, activeAlarms = 0 }: AdminS
         <div className="flex justify-center px-2 pt-1">
           <Image
             src="/logos/Icone-MC2.svg"
-            alt="MC2 logo"
+            alt=""
             width={78}
             height={32}
             className="h-8 w-auto object-contain opacity-90"
@@ -334,7 +334,7 @@ export function AdminSidebar({ currentUser, onLogout, activeAlarms = 0 }: AdminS
             </Avatar>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium truncate">{`${currentUser.Prenom || ""} ${currentUser.Nom || ""}`}</p>
-              <p className="text-xs text-muted-foreground capitalize">{currentUser.Profil_Utilisateur || "User"}</p>
+              <p className="text-xs text-muted-foreground capitalize">{currentUser.Profil_Utilisateur || tCommon("user")}</p>
             </div>
             <Button
               variant="ghost"

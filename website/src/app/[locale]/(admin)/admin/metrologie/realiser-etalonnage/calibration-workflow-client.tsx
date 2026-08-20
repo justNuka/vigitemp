@@ -39,13 +39,16 @@ type SessionPayload = { session: PublicCalibrationSession | null }
 function normalizeUnit(value: string | null | undefined) {
   const normalized = value?.trim().toLowerCase().replace(/\s+/g, "") || null
   if (!normalized) return null
-  if (["c", "°c", "degc", "celsius"].includes(normalized)) return "température: °C"
-  if (["%", "%rh", "rh", "%hr", "hr"].includes(normalized)) return "humidité: %"
+  if (["c", "°c", "degc", "celsius"].includes(normalized)) return "°C"
+  if (["%", "%rh", "rh", "%hr", "hr"].includes(normalized)) return "%"
   return normalized
 }
 
 export function CalibrationWorkflowClient() {
   const t = useTranslations("metrologyAdmin.calibrationPage")
+  const tCommon = useTranslations("common")
+  const tTables = useTranslations("tables")
+  const tSensorsDialog = useTranslations("sensorsDialog")
   const { user } = useAppAccess()
   const queryClient = useQueryClient()
   const { data: sensors = [], isLoading: sensorsLoading } = useAdjustmentSensors()
@@ -187,7 +190,7 @@ export function CalibrationWorkflowClient() {
       {
         id: "remove",
         enableSorting: false,
-        header: "Actions",
+        header: tTables("actions"),
         cell: ({ row }) => (
           <Button
             type="button"
@@ -196,12 +199,12 @@ export function CalibrationWorkflowClient() {
             onClick={() => setSelectedSensorIds((current) => current.filter((id) => id !== row.original.id))}
           >
             <X className="mr-1 h-4 w-4" />
-            Retirer
+            {t("workflow.selection.remove", { serial: row.original.serialNumber })}
           </Button>
         ),
       },
     ],
-    [t],
+    [t, tTables],
   )
 
   const sensorsColumns = useMemo<ColumnDef<AdjustmentSensorRow>[]>(
@@ -456,20 +459,17 @@ export function CalibrationWorkflowClient() {
                 {running ? (
                   <Card className="border-primary/20 bg-primary/[0.02]">
                     <CardHeader>
-                      <CardTitle className="flex items-center gap-2"><Plus className="h-5 w-5" />Ajouter une sonde</CardTitle>
-                      <CardDescription>
-                        Ajoutez une sonde compatible sans interrompre l'étalonnage. Elle commencera à être lue au prochain cycle.
-                      </CardDescription>
+                      <CardTitle className="flex items-center gap-2"><Plus className="h-5 w-5" />{tSensorsDialog("title_create")}</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-3">
                       <Input
                         value={addSensorSearch}
                         onChange={(event) => setAddSensorSearch(event.target.value)}
-                        placeholder="Rechercher par numéro de série ou lieu..."
+                        placeholder={t("workflow.selection.table.searchPlaceholder")}
                       />
                       <div className="max-h-56 space-y-2 overflow-y-auto">
                         {addSensorCandidates.length === 0 ? (
-                          <p className="text-sm text-muted-foreground">Aucune sonde compatible disponible.</p>
+                          <p className="text-sm text-muted-foreground">{t("workflow.selection.empty")}</p>
                         ) : addSensorCandidates.map((sensor) => (
                           <div key={sensor.id} className="flex items-center justify-between gap-3 rounded-md border p-3">
                             <div className="min-w-0">
@@ -484,7 +484,7 @@ export function CalibrationWorkflowClient() {
                               onClick={() => addSensorMutation.mutate(sensor.id)}
                               disabled={addSensorMutation.isPending}
                             >
-                              <Plus className="mr-1 h-4 w-4" />Ajouter
+                              <Plus className="mr-1 h-4 w-4" />{tCommon("add")}
                             </Button>
                           </div>
                         ))}
