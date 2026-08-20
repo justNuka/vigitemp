@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { stripLocalePrefix } from "@/i18n/pathnames";
 import { useRouter, usePathname } from "@/i18n/navigation";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import Image from "next/image";
 
 type Language = "fr" | "en";
@@ -19,16 +19,17 @@ const languageFlagSrc: Record<Language, string> = {
   en: "/flags/gb.svg",
 };
 
-const languageNames: Record<Language, string> = {
-  fr: "Fran\u00e7ais",
-  en: "English",
-};
-
 export function LanguageSwitcher() {
   const locale = useLocale();
+  const tSelect = useTranslations("dateRangePicker");
   const language = (locale === "en" ? "en" : "fr") as Language;
   const router = useRouter();
   const pathname = usePathname();
+  const displayNames = new Intl.DisplayNames([locale], { type: "language" });
+  const languageNames: Record<Language, string> = {
+    fr: displayNames.of("fr") ?? "fr",
+    en: displayNames.of("en") ?? "en",
+  };
 
   const handleLanguageChange = (newLanguage: Language) => {
     const search = typeof window !== "undefined" ? window.location.search : "";
@@ -42,7 +43,8 @@ export function LanguageSwitcher() {
         <Button
           variant="ghost"
           size="icon"
-          title={`Langue actuelle: ${languageNames[language]}`}
+          title={languageNames[language]}
+          aria-label={tSelect("select")}
           className="h-9 w-9"
         >
           <Image
@@ -52,7 +54,7 @@ export function LanguageSwitcher() {
             height={24}
             className="h-6 w-6 rounded-full"
           />
-          <span className="sr-only">S\u00e9lectionner la langue</span>
+          <span className="sr-only">{tSelect("select")}</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
