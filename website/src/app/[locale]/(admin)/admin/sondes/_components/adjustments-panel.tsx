@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useState } from 'react';
 import type { ColumnDef } from '@tanstack/react-table';
 import { TanStackTable } from '@/components/data-table/tanstack-table';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -47,19 +47,10 @@ export function AdjustmentsPanel({
   const [selectedExportIds, setSelectedExportIds] = useState<Set<number>>(new Set());
   const [isBulkExporting, setIsBulkExporting] = useState(false);
 
-  useEffect(() => {
-    const availableIds = new Set(adjustments.map((adjustment) => adjustment.Id_Ajustage));
-    setSelectedExportIds((current) => {
-      const next = new Set(Array.from(current).filter((id) => availableIds.has(id)));
-      if (next.size === current.size && Array.from(next).every((id) => current.has(id))) {
-        return current;
-      }
-      return next;
-    });
-  }, [adjustments]);
-
-  const allSelected = adjustments.length > 0 && selectedExportIds.size === adjustments.length;
-  const partiallySelected = selectedExportIds.size > 0 && !allSelected;
+  const availableIds = new Set(adjustments.map((adjustment) => adjustment.Id_Ajustage));
+  const effectiveSelectedIds = new Set(Array.from(selectedExportIds).filter((id) => availableIds.has(id)));
+  const allSelected = adjustments.length > 0 && effectiveSelectedIds.size === adjustments.length;
+  const partiallySelected = effectiveSelectedIds.size > 0 && !allSelected;
 
   const toggleAll = (checked: boolean) => {
     setSelectedExportIds(checked ? new Set(adjustments.map((adjustment) => adjustment.Id_Ajustage)) : new Set());
@@ -67,7 +58,7 @@ export function AdjustmentsPanel({
 
   const toggleOne = (id: number, checked: boolean) => {
     setSelectedExportIds((current) => {
-      const next = new Set(current);
+      const next = new Set(Array.from(current).filter((currentId) => availableIds.has(currentId)));
       if (checked) next.add(id);
       else next.delete(id);
       return next;
@@ -75,7 +66,7 @@ export function AdjustmentsPanel({
   };
 
   const handleBulkExport = async () => {
-    if (selectedExportIds.size === 0 || isBulkExporting) return;
+    if (effectiveSelectedIds.size === 0 || isBulkExporting) return;
 
     setIsBulkExporting(true);
     try {
@@ -83,7 +74,7 @@ export function AdjustmentsPanel({
         method: 'POST',
         credentials: 'same-origin',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ids: Array.from(selectedExportIds) }),
+        body: JSON.stringify({ ids: Array.from(effectiveSelectedIds) }),
       });
 
       if (!response.ok) {
@@ -107,7 +98,7 @@ export function AdjustmentsPanel({
     }
   };
 
-  const columns: ColumnDef<AdjustmentRow>[] = useMemo(() => [
+  const columns: ColumnDef<AdjustmentRow>[] = [
     {
       id: 'select',
       header: () => (
@@ -123,7 +114,7 @@ export function AdjustmentsPanel({
       cell: ({ row }) => (
         <div className="flex justify-center" onClick={(event) => event.stopPropagation()}>
           <Checkbox
-            checked={selectedExportIds.has(row.original.Id_Ajustage)}
+            checked={effectiveSelectedIds.has(row.original.Id_Ajustage)}
             onCheckedChange={(checked) => toggleOne(row.original.Id_Ajustage, checked === true)}
             aria-label={tCommon('export')}
           />
@@ -179,7 +170,7 @@ export function AdjustmentsPanel({
         </div>
       ),
     },
-  ], [allSelected, localeTag, partiallySelected, selectedExportIds, t, tCommon, timezone]);
+  ];
 
   return (
     <Card>
@@ -187,9 +178,9 @@ export function AdjustmentsPanel({
         <div className="flex flex-wrap items-center justify-between gap-3">
           <CardTitle className="text-base">{t('panels.adjustments.title')}</CardTitle>
           <div className="flex items-center gap-2">
-            {selectedExportIds.size > 0 ? (
+            {effectiveSelectedIds.size > 0 ? (
               <span className="min-w-6 rounded-full bg-muted px-2 py-0.5 text-center text-xs text-muted-foreground">
-                {selectedExportIds.size}
+                {effectiveSelectedIds.size}
               </span>
             ) : null}
             <Button
@@ -197,7 +188,7 @@ export function AdjustmentsPanel({
               variant="outline"
               size="sm"
               className="h-8 gap-2"
-              disabled={selectedExportIds.size === 0 || isBulkExporting}
+              disabled={effectiveSelectedIds.size === 0 || isBulkExporting}
               onClick={handleBulkExport}
               title={t('panels.adjustments.actions.generate_file')}
             >
