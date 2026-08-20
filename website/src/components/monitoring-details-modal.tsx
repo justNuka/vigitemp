@@ -20,7 +20,6 @@ import { TanStackTable } from "@/components/data-table/tanstack-table";
 import { MonitoringAuditTab } from "@/components/monitoring-details/monitoring-audit-tab";
 import { MonitoringGraphTab } from "@/components/monitoring-details/monitoring-graph-tab";
 import { MonitoringTableTab } from "@/components/monitoring-details/monitoring-table-tab";
-import { getRssiLevel, parseRssiValue } from "@/components/monitoring-card/rssi";
 import { RssiBars } from "@/components/monitoring-card/rssi-bars";
 import type { DateRangeValue, ZoomBounds } from "@/components/monitoring-details/types";
 import { useMonitoringAuditLogs } from "@/components/monitoring-details/use-monitoring-audit-logs";
@@ -475,13 +474,10 @@ export default function MonitoringDetailsModal({
     }
   }, [isOpen]);
 
-  const gsoRssiLabel = useMemo(() => {
-    if (!gsoRssi) return null;
-    const dbm = parseRssiValue(gsoRssi);
-    const level = getRssiLevel(dbm);
-    const quality = level >= 4 ? "OK" : level === 3 ? "Moyen" : "Faible";
-    return `${t("gso.rssi", { value: gsoRssi })} - ${quality}`;
-  }, [gsoRssi, t]);
+  const gsoRssiLabel = useMemo(
+    () => (gsoRssi ? t("gso.rssi", { value: gsoRssi }) : null),
+    [gsoRssi, t],
+  );
 
   const handleTableSortingChange = useCallback((updater: Updater<SortingState>) => {
     setTableSorting((prev) => {
