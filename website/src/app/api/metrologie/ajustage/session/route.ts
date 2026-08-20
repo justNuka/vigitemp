@@ -68,6 +68,23 @@ function adjustmentWatchdogDeadline(expiresAt: string) {
   return new Date(expiresAt).getTime() + ADJUSTMENT_WATCHDOG_GRACE_MS
 }
 
+function preserveStoredWallClock(value: string) {
+  return value.replace(/(?:\.\d{1,3})?Z$/i, "")
+}
+
+function normalizeAdjustmentSessionDates<T extends Awaited<ReturnType<typeof getAdjustmentSessionForUser>>>(session: T): T {
+  if (!session) return session
+  const gsoIds = new Set(session.sensors.filter((sensor) => sensor.isGso).map((sensor) => sensor.id))
+  const latestSensorReadings = Object.fromEntries(
+    Object.entries(session.latestSensorReadings).map(([sensorId, reading]) => {
+      if (!reading || !gsoIds.has(Number(sensorId))) return [sensorId, reading]
+      return [sensorId, { ...reading, measuredAt: preserveStoredWallClock(reading.measuredAt) }]
+    }),
+  ) as typeof session.latestSensorReadings
+
+  return { ...session, latestSensorReadings } as T
+}
+
 function shouldExposeAdjustmentSession(
   session: Awaited<ReturnType<typeof getAdjustmentSessionForUser>>,
 ) {
@@ -77,9 +94,6 @@ function shouldExposeAdjustmentSession(
   const lastUpdatedAt = new Date(session.lastUpdatedAt).getTime()
   if (!Number.isFinite(lastUpdatedAt)) return false
 
-  // A just-completed session remains visible long enough for the current screen
-  // to expose its message and XML exports. Older terminal sessions must not be
-  // restored as the current adjustment when the user later reopens the page.
   return Date.now() - lastUpdatedAt <= TERMINAL_RESULT_GRACE_MS
 }
 
@@ -113,7 +127,7 @@ export const GET = withStandardOrExpertAnyAuthorizationLogging(
   async (_req: NextRequest, ctx) => {
     const session = await getAdjustmentSessionForUser(ctx.user.userId)
     ensureAdjustmentWatchdog(ctx.user.userId, session)
-    const exposedSession = shouldExposeAdjustmentSession(session) ? session : null
+    const exposedSession = shouldExposeAdjustmentSession(session) ? normalizeAdjustmentSessionDates(session) : null
     return apiOk({
       session: exposedSession,
       shouldConfirmStop: exposedSession ? shouldConfirmAdjustmentStop(ctx.user.userId) : false,
@@ -128,9 +142,6 @@ export const POST = withStandardOrExpertAnyAuthorizationLogging(
       const body = await req.json()
       const data = startSchema.parse(body)
       const userId = ctx.user.userId
-
-      // The preview mode deliberately keeps probes in A/E between polls. Always
-      // release it before taking ownership for a real adjustment session.
       await stopMetrologyReadingPreviewSession(userId)
 
       const session = await startAdjustmentSession(
@@ -155,7 +166,7 @@ export const POST = withStandardOrExpertAnyAuthorizationLogging(
           }
         },
       )
-      return apiOk({ session }, { status: 201 })
+      return apiOk({ session: normalizeAdjustmentSessionDates(session) }, { status: 201 })
     } catch (error) {
       if (error instanceof z.ZodError) {
         return apiError(400, "validation_error", "Donnees invalides", { details: error.issues })
@@ -182,7 +193,7 @@ export const DELETE = withStandardOrExpertAnyAuthorizationLogging(
       clearMetrologySessionWatchdog(adjustmentWatchdogKey(ctx.user.userId))
       const session = await stopAdjustmentSession(ctx.user.userId, data.cancelResults, getClientIp(req))
       return apiOk({
-        session,
+        session: normalizeAdjustmentSessionDates(session),
         shouldConfirmStop: shouldConfirmAdjustmentStop(ctx.user.userId),
       })
     } catch (error) {
@@ -219,7 +230,7 @@ export const PATCH = withStandardOrExpertAnyAuthorizationLogging(
           }
         },
       )
-      return apiOk({ session })
+      return apiOk({ session: normalizeAdjustmentSessionDates(session) })
     } catch (error) {
       log.error("METROLOGY_ADJUSTMENT", "session_extension_failed", {
         userId: ctx.user.userId,

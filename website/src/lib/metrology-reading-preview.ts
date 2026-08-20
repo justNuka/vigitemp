@@ -1,3 +1,4 @@
+import { serializeStoredDbDateTime } from "@/lib/date-display"
 import { getHotlineServerConfig } from "@/lib/hotline-config"
 import { getTableReference, isMssqlProvider, quoteIdentifier } from "@/lib/metrology-db"
 import type { MetrologyPreviewOperation } from "@/lib/metrology-reading-preview-session"
@@ -167,7 +168,7 @@ async function readGso(
       )
 
   const row = rows[0]
-  const measuredAt = row ? new Date(row.Date_Heure_Mesure) : null
+  const measuredAt = row ? serializeStoredDbDateTime(row.Date_Heure_Mesure) : null
   const value = row ? asFiniteNumber(row.Valeur) ?? asFiniteNumber(row.Valeur_Brute) : null
 
   return {
@@ -176,7 +177,7 @@ async function readGso(
     value,
     rawValue: row?.Valeur_Brute == null ? null : String(row.Valeur_Brute),
     unit: row?.Unite?.trim() || sensor.unit,
-    measuredAt: measuredAt && !Number.isNaN(measuredAt.getTime()) ? measuredAt.toISOString() : new Date().toISOString(),
+    measuredAt: measuredAt ?? new Date().toISOString(),
     source: "GSO",
     error: row ? (value == null ? "Mesure GSO invalide" : null) : "En attente d'une nouvelle mesure metrologique",
   }

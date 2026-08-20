@@ -1,6 +1,7 @@
 import { randomUUID } from "crypto"
 
 import type { AdjustmentSensorRow } from "@/hooks/useAdjustmentSensors"
+import { serializeStoredDbDateTime } from "@/lib/date-display"
 import { hasMainDbColumn } from "@/lib/db-schema"
 import { getHotlineServerConfig } from "@/lib/hotline-config"
 import type { JWTPayload } from "@/lib/jwt"
@@ -111,6 +112,14 @@ function asFiniteNumber(value: unknown): number | null {
   return null
 }
 
+function normalizeUnitKey(value: string | null | undefined) {
+  const normalized = value?.trim().toLowerCase().replace(/\s+/g, "") || null
+  if (!normalized) return null
+  if (["c", "°c", "degc", "celsius"].includes(normalized)) return "temperature:c"
+  if (["%", "%rh", "rh", "%hr", "hr"].includes(normalized)) return "humidity:%"
+  return normalized
+}
+
 function buildServerBaseUrl(serverHost: string, serverPort: number) {
   const raw = serverHost.trim()
   if (/^https?:\/\//i.test(raw)) {
@@ -180,6 +189,74 @@ async function updateSensorMetrologyFlags(
 
   const sql = `UPDATE ${getTableReference("t_sonde")} SET ${assignments.join(", ")} WHERE ${quoteIdentifier("Id_Sonde")} IN (${sensorIds.join(",")})`
   await prisma.$executeRawUnsafe(sql, ...params)
+}
+
+async function loadManagedSensors(selectedIds: number[]) {
+  const rows = await prisma.t_sonde.findMany({
+    where: { Id_Sonde: { in: selectedIds } },
+    select: {
+      Id_Sonde: true,
+      Adresse_Sonde: true,
+      Sonde_Numero_Serie: true,
+      Surveillance_Etat: true,
+      Etat_Sonde_N1: true,
+      Id_Module: true,
+      Est_Sonde_GSO: true,
+      t_sonde_type: { select: { Unite: true } },
+      t_lieu: {
+        where: { Est_Archive: false },
+        select: { Id_Lieu: true, Nom_Lieu: true, Lieu_Etat: true, Lieu_Etat_N1: true },
+      },
+    },
+  })
+  if (rows.length !== selectedIds.length) throw new Error("Une ou plusieurs sondes sont introuvables.")
+
+  const moduleIds = rows.map((row) => row.Id_Module).filter((id): id is number => typeof id === "number")
+  const modules = moduleIds.length
+    ? await prisma.t_module.findMany({
+        where: { Id_Module: { in: moduleIds } },
+        select: { Id_Module: true, Module_Numero_Serie: true, Emplacement: true, Port_Serie: true },
+      })
+    : []
+  const modulesById = new Map(modules.map((module) => [module.Id_Module, module]))
+
+  return rows.map((row): ManagedCalibrationSensor => {
+    const serial = row.Sonde_Numero_Serie?.trim()
+    if (!serial) throw new Error("Une sonde selectionnee ne possede pas de numero de serie.")
+    if (!row.Est_Sonde_GSO && getSensorFamilyFromSerial(serial) !== "GSP") {
+      throw new Error(`L'etalonnage automatique est limite aux sondes GSP et GSO (${serial}).`)
+    }
+    if (["A", "E"].includes(row.Surveillance_Etat)) {
+      throw new Error(`La sonde ${serial} est deja utilisee par une operation de metrologie.`)
+    }
+    const moduleRow = row.Id_Module == null ? null : modulesById.get(row.Id_Module)
+    if (!row.Est_Sonde_GSO && !moduleRow?.Port_Serie) {
+      throw new Error(`Aucun port serie n'est configure pour la sonde ${serial}.`)
+    }
+    const firstLocation = row.t_lieu[0]
+    return {
+      id: row.Id_Sonde,
+      serialNumber: serial,
+      locationId: firstLocation?.Id_Lieu ?? null,
+      locationName: firstLocation?.Nom_Lieu ?? null,
+      unit: row.t_sonde_type?.Unite?.trim() || null,
+      moduleId: row.Id_Module,
+      moduleName: moduleRow?.Module_Numero_Serie ?? moduleRow?.Emplacement ?? null,
+      modulePort: moduleRow?.Port_Serie ?? null,
+      currentCalibrationValue: 0,
+      isGso: Boolean(row.Est_Sonde_GSO),
+      address: row.Adresse_Sonde,
+      previousSensorState: row.Surveillance_Etat,
+      previousSensorStateN1: row.Etat_Sonde_N1,
+      sensorStateChanged: row.Surveillance_Etat === "S",
+      locations: row.t_lieu.map((location) => ({
+        id: location.Id_Lieu,
+        previousState: location.Lieu_Etat,
+        previousStateN1: location.Lieu_Etat_N1,
+        stateChanged: location.Lieu_Etat === "S",
+      })),
+    }
+  })
 }
 
 async function readGspMeasurement(sensor: ManagedCalibrationSensor): Promise<CalibrationReading> {
@@ -287,13 +364,13 @@ async function readLatestGsoMeasurement(
   if (!row) return null
 
   const value = asFiniteNumber(row.Valeur) ?? asFiniteNumber(row.Valeur_Brute)
-  const measuredAt = new Date(row.Date_Heure_Mesure)
+  const measuredAt = serializeStoredDbDateTime(row.Date_Heure_Mesure)
 
   return {
     value,
     rawValue: row.Valeur_Brute == null ? null : String(row.Valeur_Brute),
     unit: row.Unite?.trim() || sensor.unit,
-    measuredAt: Number.isNaN(measuredAt.getTime()) ? nowIso() : measuredAt.toISOString(),
+    measuredAt: measuredAt ?? nowIso(),
     source: "GSO",
     error: value == null ? "Mesure GSO invalide" : null,
   }
@@ -376,21 +453,18 @@ async function runMeasurementLoop(session: CalibrationSession) {
   session.loopTimer = setTimeout(() => void runMeasurementLoop(session), delay)
 }
 
-async function restoreSessionStates(session: CalibrationSession) {
-  const sensorUpdates = session.sensors
-    .filter((sensor) => sensor.sensorStateChanged)
-    .map((sensor) => prisma.t_sonde.update({
-      where: { Id_Sonde: sensor.id },
-      data: {
-        Surveillance_Etat: sensor.previousSensorState,
-        Etat_Sonde_N1: sensor.previousSensorStateN1,
-      },
-    }))
-
+async function restoreManagedSensors(sensors: ManagedCalibrationSensor[]) {
+  const sensorUpdates = sensors.map((sensor) => prisma.t_sonde.update({
+    where: { Id_Sonde: sensor.id },
+    data: {
+      Surveillance_Etat: sensor.previousSensorState,
+      Etat_Sonde_N1: sensor.previousSensorStateN1,
+    },
+  }))
   const locations = new Map<number, ManagedCalibrationSensor["locations"][number]>()
-  for (const sensor of session.sensors) {
+  for (const sensor of sensors) {
     for (const location of sensor.locations) {
-      if (location.stateChanged && !locations.has(location.id)) locations.set(location.id, location)
+      if (!locations.has(location.id)) locations.set(location.id, location)
     }
   }
   const locationUpdates = [...locations.values()].map((location) => prisma.t_lieu.update({
@@ -401,22 +475,21 @@ async function restoreSessionStates(session: CalibrationSession) {
     },
   }))
 
+  if (sensorUpdates.length || locationUpdates.length) {
+    await prisma.$transaction([...sensorUpdates, ...locationUpdates])
+  }
+  await updateSensorMetrologyFlags(sensors.map((sensor) => sensor.id), {
+    metrologyInProgress: 0,
+    metrologyCommandSent: 0,
+  })
+}
+
+async function restoreSessionStates(session: CalibrationSession) {
   let stateError: unknown = null
   try {
-    if (sensorUpdates.length || locationUpdates.length) {
-      await prisma.$transaction([...sensorUpdates, ...locationUpdates])
-    }
+    await restoreManagedSensors(session.sensors)
   } catch (error) {
     stateError = error
-  }
-
-  try {
-    await updateSensorMetrologyFlags(session.sensors.map((sensor) => sensor.id), {
-      metrologyInProgress: 0,
-      metrologyCommandSent: 0,
-    })
-  } catch (error) {
-    if (!stateError) stateError = error
   }
   if (stateError) throw stateError
 }
@@ -445,71 +518,9 @@ export async function startCalibrationSession(
   const lockedId = selectedIds.find((id) => sensorLocks.has(id))
   if (lockedId) throw new Error("Une des sondes selectionnees est deja utilisee par un etalonnage.")
 
-  const rows = await prisma.t_sonde.findMany({
-    where: { Id_Sonde: { in: selectedIds } },
-    select: {
-      Id_Sonde: true,
-      Adresse_Sonde: true,
-      Sonde_Numero_Serie: true,
-      Surveillance_Etat: true,
-      Etat_Sonde_N1: true,
-      Id_Module: true,
-      Est_Sonde_GSO: true,
-      t_sonde_type: { select: { Unite: true } },
-      t_lieu: {
-        where: { Est_Archive: false },
-        select: { Id_Lieu: true, Nom_Lieu: true, Lieu_Etat: true, Lieu_Etat_N1: true },
-      },
-    },
-  })
-  if (rows.length !== selectedIds.length) throw new Error("Une ou plusieurs sondes sont introuvables.")
-
-  const moduleIds = rows.map((row) => row.Id_Module).filter((id): id is number => typeof id === "number")
-  const modules = moduleIds.length
-    ? await prisma.t_module.findMany({
-        where: { Id_Module: { in: moduleIds } },
-        select: { Id_Module: true, Module_Numero_Serie: true, Emplacement: true, Port_Serie: true },
-      })
-    : []
-  const modulesById = new Map(modules.map((module) => [module.Id_Module, module]))
-
-  const sensors: ManagedCalibrationSensor[] = rows.map((row) => {
-    const serial = row.Sonde_Numero_Serie?.trim()
-    if (!serial) throw new Error("Une sonde selectionnee ne possede pas de numero de serie.")
-    if (!row.Est_Sonde_GSO && getSensorFamilyFromSerial(serial) !== "GSP") {
-      throw new Error(`L'etalonnage automatique est limite aux sondes GSP et GSO (${serial}).`)
-    }
-    if (["A", "E"].includes(row.Surveillance_Etat)) {
-      throw new Error(`La sonde ${serial} est deja utilisee par une operation de metrologie.`)
-    }
-    const moduleRow = row.Id_Module == null ? null : modulesById.get(row.Id_Module)
-    if (!row.Est_Sonde_GSO && !moduleRow?.Port_Serie) {
-      throw new Error(`Aucun port serie n'est configure pour la sonde ${serial}.`)
-    }
-    const firstLocation = row.t_lieu[0]
-    return {
-      id: row.Id_Sonde,
-      serialNumber: serial,
-      locationId: firstLocation?.Id_Lieu ?? null,
-      locationName: firstLocation?.Nom_Lieu ?? null,
-      unit: row.t_sonde_type?.Unite?.trim() || null,
-      moduleId: row.Id_Module,
-      moduleName: moduleRow?.Module_Numero_Serie ?? moduleRow?.Emplacement ?? null,
-      modulePort: moduleRow?.Port_Serie ?? null,
-      currentCalibrationValue: 0,
-      isGso: Boolean(row.Est_Sonde_GSO),
-      address: row.Adresse_Sonde,
-      previousSensorState: row.Surveillance_Etat,
-      previousSensorStateN1: row.Etat_Sonde_N1,
-      sensorStateChanged: row.Surveillance_Etat === "S",
-      locations: row.t_lieu.map((location) => ({
-        id: location.Id_Lieu,
-        previousState: location.Lieu_Etat,
-        previousStateN1: location.Lieu_Etat_N1,
-        stateChanged: location.Lieu_Etat === "S",
-      })),
-    }
-  })
+  const sensors = await loadManagedSensors(selectedIds)
+  const unitKeys = new Set(sensors.map((sensor) => normalizeUnitKey(sensor.unit)).filter(Boolean))
+  if (unitKeys.size > 1) throw new Error("Toutes les sondes d'un etalonnage doivent utiliser la meme unite.")
 
   const session: CalibrationSession = {
     id: randomUUID(),
@@ -567,6 +578,53 @@ export async function startCalibrationSession(
     await restoreSessionStates(session).catch(() => undefined)
     sessionsByUserId.delete(user.userId)
     releaseSensorLocks(session)
+    throw error
+  }
+}
+
+export async function addCalibrationSensor(userId: number, sensorId: number) {
+  const session = sessionsByUserId.get(userId)
+  if (!session || session.status !== "running") {
+    throw new Error("Aucune session d'etalonnage active.")
+  }
+  if (session.sensors.some((sensor) => sensor.id === sensorId)) return toPublicSession(session)
+  if (sensorLocks.has(sensorId)) throw new Error("Cette sonde est deja utilisee par un autre etalonnage.")
+
+  const [sensor] = await loadManagedSensors([sensorId])
+  const currentUnit = normalizeUnitKey(session.sensors[0]?.unit)
+  const addedUnit = normalizeUnitKey(sensor.unit)
+  if (currentUnit && addedUnit !== currentUnit) {
+    throw new Error("La sonde ajoutee doit utiliser la meme unite que l'etalonnage en cours.")
+  }
+
+  try {
+    const locationUpdates = sensor.locations
+      .filter((location) => location.stateChanged)
+      .map((location) => prisma.t_lieu.update({
+        where: { Id_Lieu: location.id },
+        data: { Lieu_Etat: "D", Lieu_Etat_N1: location.previousState },
+      }))
+    await prisma.$transaction([
+      prisma.t_sonde.update({
+        where: { Id_Sonde: sensor.id },
+        data: { Surveillance_Etat: "E", Etat_Sonde_N1: sensor.previousSensorState },
+      }),
+      ...locationUpdates,
+    ])
+    await updateSensorMetrologyFlags([sensor.id], { metrologyInProgress: 1 })
+    sensorLocks.set(sensor.id, session.id)
+    session.sensors.push(sensor)
+    session.readingCounts[sensor.id] = 0
+    session.lastUpdatedAt = nowIso()
+    log.info("METROLOGY_CALIBRATION", "sensor_added", {
+      sessionId: session.id,
+      userId,
+      sensor: sensor.serialNumber,
+    })
+    return toPublicSession(session)
+  } catch (error) {
+    sensorLocks.delete(sensor.id)
+    await restoreManagedSensors([sensor]).catch(() => undefined)
     throw error
   }
 }

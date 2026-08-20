@@ -5,12 +5,15 @@ import { apiError, apiOk } from "@/lib/api-response"
 import { withStandardOrExpertAnyAuthorizationLogging } from "@/lib/license-guards"
 import { log } from "@/lib/logger"
 import {
+  addCalibrationSensor,
   getCalibrationSessionForUser,
   startCalibrationSession,
   stopCalibrationSession,
 } from "@/lib/metrology-calibration-session"
 import {
+  appendCalibrationSensorStates,
   captureCalibrationSensorStates,
+  removeCalibrationSensorStateSnapshots,
   restoreCalibrationSensorStates,
   setCalibrationSensorsToCalibrationState,
 } from "@/lib/metrology-calibration-sensor-state"
@@ -30,6 +33,10 @@ const startSchema = z.object({
   operator: z.string().trim().max(100).default(""),
 })
 
+const addSensorSchema = z.object({
+  sensorId: z.number().int().positive(),
+})
+
 function safeErrorMessage(error: unknown, fallback: string) {
   if (!(error instanceof Error)) return fallback
   const message = error.message?.trim() ?? ""
@@ -46,9 +53,6 @@ async function stopCalibrationAndRestoreSensorStates(userId: number) {
   let stopError: unknown = null
   let restoreError: unknown = null
 
-  // These two layers may both have touched the sensor state. Never let a failure
-  // in the calibration engine prevent the explicit E-state snapshot from being
-  // restored as well.
   try {
     session = await stopCalibrationSession(userId)
   } catch (error) {
@@ -138,19 +142,12 @@ export const POST = withStandardOrExpertAnyAuthorizationLogging(
       const input = startSchema.parse(await req.json())
       const userId = ctx.user.userId
 
-      // Reading-only mode keeps probes in E between polls, so release it before
-      // the full calibration engine takes ownership of those probes.
       await stopMetrologyReadingPreviewSession(userId)
-
       await captureCalibrationSensorStates(userId, input.selectedSensorIds)
       sensorStatesCaptured = true
 
       const session = await startCalibrationSession(ctx.user, input)
       calibrationStarted = true
-
-      // The calibration engine historically moved S probes to D. Force every
-      // selected probe to the explicit metrology state E after its startup and
-      // retain the original state snapshot for reliable restoration.
       await setCalibrationSensorsToCalibrationState(userId)
 
       const expiresAtMs = new Date(session.startedAt).getTime() + CALIBRATION_MAX_DURATION_MS
@@ -175,8 +172,6 @@ export const POST = withStandardOrExpertAnyAuthorizationLogging(
       return apiOk({ session }, { status: 201 })
     } catch (error) {
       if (calibrationStarted) {
-        // Use the same robust cleanup path as a normal stop: even when the
-        // engine cleanup fails, the explicit E-state restoration is attempted.
         await stopCalibrationAndRestoreSensorStates(ctx.user.userId).catch((stopError) => {
           log.error("METROLOGY_CALIBRATION", "session_start_rollback_failed", {
             userId: ctx.user.userId,
@@ -184,8 +179,6 @@ export const POST = withStandardOrExpertAnyAuthorizationLogging(
           })
         })
       } else if (sensorStatesCaptured) {
-        // restoreCalibrationSensorStates keeps the snapshot and schedules a
-        // retry on partial failure, so never clear it unconditionally here.
         await restoreCalibrationSensorStates(ctx.user.userId).catch((restoreError) => {
           log.error("METROLOGY_CALIBRATION", "sensor_state_restore_failed", {
             userId: ctx.user.userId,
@@ -201,6 +194,35 @@ export const POST = withStandardOrExpertAnyAuthorizationLogging(
         error: error instanceof Error ? error.message : String(error),
       })
       return apiError(400, "calibration_start_failed", safeErrorMessage(error, "Impossible de demarrer l'etalonnage."))
+    }
+  },
+)
+
+export const PATCH = withStandardOrExpertAnyAuthorizationLogging(
+  METROLOGY_OPERATION_CODES,
+  async (req: NextRequest, ctx) => {
+    let snapshotAdded = false
+    let sensorId: number | null = null
+    try {
+      const input = addSensorSchema.parse(await req.json())
+      sensorId = input.sensorId
+      await appendCalibrationSensorStates(ctx.user.userId, [sensorId])
+      snapshotAdded = true
+      const session = await addCalibrationSensor(ctx.user.userId, sensorId)
+      return apiOk({ session })
+    } catch (error) {
+      if (snapshotAdded && sensorId != null) {
+        removeCalibrationSensorStateSnapshots(ctx.user.userId, [sensorId])
+      }
+      if (error instanceof z.ZodError) {
+        return apiError(400, "validation_error", "Donnees invalides", { details: error.issues })
+      }
+      log.error("METROLOGY_CALIBRATION", "sensor_add_failed", {
+        userId: ctx.user.userId,
+        sensorId,
+        error: error instanceof Error ? error.message : String(error),
+      })
+      return apiError(400, "calibration_sensor_add_failed", safeErrorMessage(error, "Impossible d'ajouter la sonde."))
     }
   },
 )
