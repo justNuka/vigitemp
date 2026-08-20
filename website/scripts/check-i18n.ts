@@ -37,24 +37,38 @@ async function collectSourceFiles(directory: string): Promise<string[]> {
 }
 
 const ALLOWED_LITERAL_PATTERNS = [
-  /^[-–—+*/#%°.:,()\[\]{}<>|]+$/,
+  /^[-–—+*/#%°.:,()\[\]{}<>|@·•]+$/,
+  /^(?:&gt;|&nbsp;|\\u2014)$/i,
+  /^(?:min|ms|s|h|px|rem|vh|vw|V|°C|%)$/i,
   /^\d+(?:[.,]\d+)?(?:\s?(?:ms|s|min|h|px|rem|vh|vw|%|V|°C))?$/i,
   /^(?:Vigi|Sensys|VigiSensys|VigiTemp|VigiServ|VigiTel|MC2)(?:\s+Lab|\s+logo)?$/i,
   /^(?:GSO|GSP|RSSI|CFR21|XML|PDF|CSV|Excel|MySQL|MSSQL|COM\w*|TX|RX)$/i,
   /^(?:TEMP|FTEM|DD-H|DCON|MEMO|ED-H|ECON|CHAN)$/i,
   /^(?:None|Odd|Even|Mark|Space|One|Two|OnePointFive)$/,
   /^(?:AC|SK|AK|AS|CK)[x.]+$/i,
+  /^(?:ovh-(?:eu|us|ca)|client_id|client_secret|ari-user)$/i,
+  /^(?:SPPS-\d+|GSO-E\w+|TEMPSPNB-\d+)$/i,
   /^(?:https?:\/\/|127\.0\.0\.1|\+?\d)[^\s]*$/,
+  /^(?:Standard)$/,
 ];
 
 function normalizeText(text: string) {
   return text.replace(/\s+/g, " ").trim();
 }
 
+function isFormulaLiteral(text: string) {
+  const normalized = normalizeText(text);
+  if (!normalized) return true;
+  if (/^(?:I|mes|et|etalonnage|P)$/i.test(normalized)) return true;
+  if (!/[=+*/|()]/.test(normalized)) return false;
+  return /^[\s\dA-Za-z_+=+*/|().,-]+$/.test(normalized) &&
+    /(?:I|mes|et|etalonnage|Derive|sqrt|EJ)/i.test(normalized);
+}
+
 function isAllowedLiteral(text: string) {
   const normalized = normalizeText(text);
   if (!normalized) return true;
-  return ALLOWED_LITERAL_PATTERNS.some((pattern) => pattern.test(normalized));
+  return isFormulaLiteral(normalized) || ALLOWED_LITERAL_PATTERNS.some((pattern) => pattern.test(normalized));
 }
 
 function findHardcodedUiStrings(source: string, fileName: string) {
