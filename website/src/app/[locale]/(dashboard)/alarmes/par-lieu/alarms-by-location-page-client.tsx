@@ -347,10 +347,10 @@ export function AlarmsByLocationPageClient({
             <span>{t("trend_by_location.table_hint")}</span>
           </div>
           <div className="flex flex-wrap items-center gap-2 rounded-md border border-sky-200 bg-sky-50 px-3 py-2 text-xs text-sky-950 dark:border-sky-500/30 dark:bg-sky-500/10 dark:text-sky-100">
-            <span className="font-semibold">Legende :</span>
-            <span className="rounded border border-red-300 bg-red-50 px-2 py-0.5 text-red-700 dark:bg-red-500/10 dark:text-red-200">Nombre d'alarmes</span>
-            <span className="rounded border border-slate-300 bg-white px-2 py-0.5 text-slate-700 dark:bg-background dark:text-slate-200">Durees d'alarmes haute/basse</span>
-            <span className="rounded border border-amber-300 bg-amber-50 px-2 py-0.5 text-amber-800 dark:bg-amber-500/10 dark:text-amber-200">Depassements sans alarme</span>
+            <span className="font-semibold">{t("trend_by_location.legend.title")}</span>
+            <span className="rounded border border-red-300 bg-red-50 px-2 py-0.5 text-red-700 dark:bg-red-500/10 dark:text-red-200">{t("trend_by_location.legend.alarm_count")}</span>
+            <span className="rounded border border-slate-300 bg-white px-2 py-0.5 text-slate-700 dark:bg-background dark:text-slate-200">{t("trend_by_location.legend.alarm_durations")}</span>
+            <span className="rounded border border-amber-300 bg-amber-50 px-2 py-0.5 text-amber-800 dark:bg-amber-500/10 dark:text-amber-200">{t("trend_by_location.legend.exceedances")}</span>
           </div>
           <TanStackTable
             columns={columns}

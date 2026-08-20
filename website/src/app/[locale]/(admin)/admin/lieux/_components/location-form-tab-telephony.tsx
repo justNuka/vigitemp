@@ -140,14 +140,10 @@ export function LocationFormTabTelephony({ users }: Props) {
                       {t("labels.via_mail")}
                     </label>
                     <label className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Checkbox
-                        checked={!!current?.Est_Via_Telephone}
-                        disabled
-                        aria-disabled
-                      />
+                      <Checkbox checked={!!current?.Est_Via_Telephone} disabled aria-disabled />
                       {t("labels.via_phone")}
                     </label>
-                    <p className="col-span-2 text-xs text-muted-foreground">{t('helpers.phone_coming_soon')}</p>
+                    <p className="col-span-2 text-xs text-muted-foreground">{t("helpers.phone_coming_soon")}</p>
                     {user?.email ? (
                       <p className="text-xs text-muted-foreground col-span-2 truncate">{user.email}</p>
                     ) : null}
@@ -185,10 +181,10 @@ export function LocationFormTabTelephony({ users }: Props) {
             }
           />
           <span>
-            <span className="block font-medium text-sky-950">Appliquer ces contacts aux groupes selectionnes</span>
+            <span className="block font-medium text-sky-950">{t("apply_groups_title")}</span>
             <span className="mt-1 block text-xs text-sky-800">
-              La liste remplacera les contacts mail de tous les autres lieux appartenant aux groupes selectionnes.
-              {groupIds.length === 0 ? " Selectionnez au moins un groupe dans l'onglet General." : ""}
+              {t("apply_groups_description")}
+              {groupIds.length === 0 ? ` ${t("apply_groups_empty")}` : ""}
             </span>
           </span>
         </label>

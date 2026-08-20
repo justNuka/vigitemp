@@ -2,6 +2,7 @@
 
 import type { ReactNode } from "react"
 import { useMemo, useState } from "react"
+import { useTranslations } from "next-intl"
 import { Info } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -76,18 +77,19 @@ type ParsedSensorResponse = {
 
 const SENSOR_TYPES: SensorType[] = ["IN", "IE", "IP", "IC", "IH", "EN", "HN", "GSP"]
 
-const GSP_ACTIONS: Array<{ value: GspAction; label: string }> = [
-  { value: "read", label: "Lecture température" },
-  { value: "force-read", label: "Forcer température" },
-  { value: "sync-config", label: "Envoyer configuration" },
-  { value: "read-config", label: "Lire configuration" },
-  { value: "read-memory", label: "Lire mémoire" },
-  { value: "raw", label: "Commande brute" },
+const GSP_ACTIONS: Array<{ value: GspAction; labelKey: string }> = [
+  { value: "read", labelKey: "actions.read" },
+  { value: "force-read", labelKey: "actions.force_read" },
+  { value: "sync-config", labelKey: "actions.sync_config" },
+  { value: "read-config", labelKey: "actions.read_config" },
+  { value: "read-memory", labelKey: "actions.read_memory" },
+  { value: "raw", labelKey: "actions.raw" },
 ]
 
 const RAW_COMMAND_PREFIXES = ["DD-H", "ED-H", "TEMP", "FTEM", "DCON", "MEMO", "ECON", "CHAN"]
 
 export function HotlineSensorTestPanel() {
+  const t = useTranslations("hotlineSensorTest")
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [consecutiveErrors, setConsecutiveErrors] = useState(0)
@@ -156,99 +158,69 @@ export function HotlineSensorTestPanel() {
 
     const combined = rx.join("\n").trim()
     const parsed: Array<{ label: string; value: string }> = []
-    const indexedMemoMatches =
-      combined.match(/(?:^|\r?\n)\d+\|\d{2}\/\d{2}\/\d{4}\s+\d{2}:\d{2}:\d{2}=-?\d+(?:[.,]\d+)?(?=\r?\n|$)/g) ?? []
-    const legacyMemoMatches =
-      combined.match(/(?:^|\r?\n)\d{2}\/\d{2}\/\d{4}\s+\d{2}:\d{2}:\d{2}=-?\d+(?:[.,]\d+)?(?=\r?\n|$)/g) ?? []
+    const indexedMemoMatches = combined.match(/(?:^|\r?\n)\d+\|\d{2}\/\d{2}\/\d{4}\s+\d{2}:\d{2}:\d{2}=-?\d+(?:[.,]\d+)?(?=\r?\n|$)/g) ?? []
+    const legacyMemoMatches = combined.match(/(?:^|\r?\n)\d{2}\/\d{2}\/\d{4}\s+\d{2}:\d{2}:\d{2}=-?\d+(?:[.,]\d+)?(?=\r?\n|$)/g) ?? []
     const memoMeasureCount = indexedMemoMatches.length || legacyMemoMatches.length
 
     const dateMatch = combined.match(/\b\d{2}\/\d{2}\/\d{4}\s+\d{2}:\d{2}:\d{2}\b/)
-    if (dateMatch) {
-      parsed.push({ label: "Date / heure", value: dateMatch[0] })
-    }
+    if (dateMatch) parsed.push({ label: t("parsed.date_time"), value: dateMatch[0] })
 
     const tempMatch = combined.match(/RTEMP(N\d+)\s*:\s*(-?\d+(?:[.,]\d+)?)/i)
     if (tempMatch) {
-      parsed.push({ label: `Temperature ${tempMatch[1]}`, value: tempMatch[2].replace(".", ",") + " °C" })
+      parsed.push({ label: t("parsed.temperature", { serial: tempMatch[1] }), value: tempMatch[2].replace(".", ",") + " °C" })
     }
 
     const forceTempMatch = combined.match(/ACK\s*:\s*R?FTEM(N\d+)\s*:\s*(-?\d+(?:[.,]\d+)?)/i)
     if (forceTempMatch) {
-      parsed.push({ label: `Temperature forcée ${forceTempMatch[1]}`, value: forceTempMatch[2].replace(".", ",") + " C" })
+      parsed.push({ label: t("parsed.forced_temperature", { serial: forceTempMatch[1] }), value: forceTempMatch[2].replace(".", ",") + " °C" })
     }
 
     const ackTempMatch = combined.match(/(?:^|\r?\n)Temperature=(-?\d+(?:[.,]\d+)?)(?:\r?\n|$)/i)
     if (ackTempMatch) {
-      parsed.push({ label: "Temperature", value: ackTempMatch[1].replace(".", ",") + " C" })
+      parsed.push({ label: t("parsed.temperature_plain"), value: ackTempMatch[1].replace(".", ",") + " °C" })
     }
 
     const serialMatch = combined.match(/(?:^|\r?\n)Serial=([A-Z0-9\-]+)(?:\r?\n|$)/i)
-    if (serialMatch) {
-      parsed.push({ label: "Serial repondu", value: serialMatch[1] })
-    }
+    if (serialMatch) parsed.push({ label: t("parsed.serial"), value: serialMatch[1] })
 
     const memoOffsetMatch = combined.match(/(?:^|\r?\n)Offset=(\d+)(?:\r?\n|$)/i)
-    if (memoOffsetMatch) {
-      parsed.push({ label: "Offset MEMO", value: memoOffsetMatch[1] })
-    }
+    if (memoOffsetMatch) parsed.push({ label: t("parsed.memo_offset"), value: memoOffsetMatch[1] })
 
     const memoReturnedCountMatch = combined.match(/(?:^|\r?\n)NombreMesure=(\d+)(?:\r?\n|$)/i)
-    if (memoReturnedCountMatch) {
-      parsed.push({ label: "NombreMesure", value: memoReturnedCountMatch[1] })
-    }
+    if (memoReturnedCountMatch) parsed.push({ label: t("parsed.memo_count"), value: memoReturnedCountMatch[1] })
 
     const batteryMatch = combined.match(/(?:^|\r?\n)Batterie=(-?\d+(?:[.,]\d+)?)(?:\r?\n|$)/i)
-    if (batteryMatch) {
-      parsed.push({ label: "Batterie", value: batteryMatch[1].replace(".", ",") })
-    }
+    if (batteryMatch) parsed.push({ label: t("parsed.battery"), value: batteryMatch[1].replace(".", ",") })
 
     const rssiMatch = combined.match(/(?:^|\r?\n)RSSI=(-?\d+(?:[.,]\d+)?)(?:\r?\n|$)/i)
-    if (rssiMatch) {
-      parsed.push({ label: "RSSI", value: rssiMatch[1].replace(".", ",") })
-    }
+    if (rssiMatch) parsed.push({ label: "RSSI", value: rssiMatch[1].replace(".", ",") })
 
     const alarmStateMatch = combined.match(/\b(no ALARME|ALARME BAS|ALARME HAUT)\b/i)
-    if (alarmStateMatch) {
-      parsed.push({ label: "Etat alarme", value: alarmStateMatch[1] })
-    }
+    if (alarmStateMatch) parsed.push({ label: t("parsed.alarm_state"), value: alarmStateMatch[1] })
 
     for (const key of ["A", "B", "C"] as const) {
       const coefficientMatch = combined.match(
         new RegExp(`(?:^|\\r?\\n)(?:${key}|Coef${key}|${key === "C" ? "Etalonnage|Etal" : "__never__"})=(-?\\d+(?:[.,]\\d+)?)(?:\\r?\\n|$)`, "i"),
       )
-      if (coefficientMatch) {
-        parsed.push({ label: `Coef ${key}`, value: coefficientMatch[1].replace(".", ",") })
-      }
+      if (coefficientMatch) parsed.push({ label: t("parsed.coefficient", { key }), value: coefficientMatch[1].replace(".", ",") })
     }
 
     const highMatch = combined.match(/(?:^|\r?\n)(?:LimH|LimiteHaute)=(-?\d+(?:[.,]\d+)?)(?:\r?\n|$)/i)
-    if (highMatch) {
-      parsed.push({ label: "Limite haute", value: highMatch[1].replace(".", ",") })
-    }
+    if (highMatch) parsed.push({ label: t("parsed.high_limit"), value: highMatch[1].replace(".", ",") })
 
     const lowMatch = combined.match(/(?:^|\r?\n)(?:LimB|LimiteBasse)=(-?\d+(?:[.,]\d+)?)(?:\r?\n|$)/i)
-    if (lowMatch) {
-      parsed.push({ label: "Limite basse", value: lowMatch[1].replace(".", ",") })
-    }
+    if (lowMatch) parsed.push({ label: t("parsed.low_limit"), value: lowMatch[1].replace(".", ",") })
 
     const frequencyMatch = combined.match(/(?:^|\r?\n)(?:F|Frequence)=(-?\d+(?:[.,]\d+)?)(?:\r?\n|$)/i)
-    if (frequencyMatch) {
-      parsed.push({ label: "Frequence", value: frequencyMatch[1].replace(".", ",") })
-    }
+    if (frequencyMatch) parsed.push({ label: t("parsed.frequency"), value: frequencyMatch[1].replace(".", ",") })
 
     const delayLowMatch = combined.match(/(?:^|\r?\n)(?:RetB|RetardBas)=(-?\d+(?:[.,]\d+)?)(?:\r?\n|$)/i)
-    if (delayLowMatch) {
-      parsed.push({ label: "Retard bas", value: delayLowMatch[1].replace(".", ",") })
-    }
+    if (delayLowMatch) parsed.push({ label: t("parsed.delay_low"), value: delayLowMatch[1].replace(".", ",") })
 
     const delayHighMatch = combined.match(/(?:^|\r?\n)(?:RetH|RetardHaut)=(-?\d+(?:[.,]\d+)?)(?:\r?\n|$)/i)
-    if (delayHighMatch) {
-      parsed.push({ label: "Retard haut", value: delayHighMatch[1].replace(".", ",") })
-    }
+    if (delayHighMatch) parsed.push({ label: t("parsed.delay_high"), value: delayHighMatch[1].replace(".", ",") })
 
-    if (memoMeasureCount > 0) {
-      parsed.push({ label: "Nb mesures MEMO", value: String(memoMeasureCount) })
-    }
+    if (memoMeasureCount > 0) parsed.push({ label: t("parsed.memo_measures"), value: String(memoMeasureCount) })
 
     return {
       tx,
@@ -259,7 +231,7 @@ export function HotlineSensorTestPanel() {
       memoReturnedCount: memoReturnedCountMatch?.[1],
       rssiRaw: rssiMatch?.[1],
     }
-  }, [result])
+  }, [result, t])
 
   const rawPreview = useMemo(() => {
     const raw = result?.rawValue?.trim()
@@ -269,10 +241,7 @@ export function HotlineSensorTestPanel() {
   }, [result])
 
   const rawCommandValue = useMemo(() => {
-    if (gsp.rawExactMode) {
-      return gsp.rawExactCommand
-    }
-
+    if (gsp.rawExactMode) return gsp.rawExactCommand
     const prefix = gsp.rawPrefix.trim()
     const rawSerial = gsp.rawSerial.trim()
     const payload = gsp.rawPayload.trim()
@@ -281,42 +250,27 @@ export function HotlineSensorTestPanel() {
   }, [gsp.rawExactCommand, gsp.rawExactMode, gsp.rawPayload, gsp.rawPrefix, gsp.rawSerial])
 
   const normalizedRawCommandValue = useMemo(() => {
-    if (gsp.rawExactMode) {
-      return rawCommandValue
-    }
+    if (gsp.rawExactMode) return rawCommandValue
     return normalizeRawCommand(rawCommandValue)
   }, [gsp.rawExactMode, rawCommandValue])
 
-  const rawCommandForSubmit = useMemo(() => {
-    if (gsp.rawExactMode) {
-      return normalizedRawCommandValue
-    }
-    return normalizedRawCommandValue
-  }, [gsp.rawExactMode, normalizedRawCommandValue])
+  const rawCommandForSubmit = normalizedRawCommandValue
 
   const commandPreview = useMemo(() => {
-    if (!showGspFields) return "Commande generee selon le protocole de la sonde selectionnee."
-
+    if (!showGspFields) return t("command.generic")
     const target = serial.trim()
-    if (!target) return "Renseignez un numéro de série pour voir la commande."
+    if (!target) return t("command.serial_required")
 
     switch (action) {
-      case "read":
-        return `TEMP${target}`
-      case "force-read":
-        return `FTEM${target}`
-      case "read-config":
-        return `DD-H${target}, DCON${target}`
-      case "read-memory":
-        return `MEMO${target} ${(gsp.memoryCount || "1")}x${gsp.memoryOffset.trim() ? `${gsp.memoryOffset}o` : ""}`
-      case "raw":
-        return normalizedRawCommandValue || "Saisissez une commande GSP."
-      case "sync-config":
-        return `ED-H${target}..., ECON${target}...`
-      default:
-        return ""
+      case "read": return `TEMP${target}`
+      case "force-read": return `FTEM${target}`
+      case "read-config": return `DD-H${target}, DCON${target}`
+      case "read-memory": return `MEMO${target} ${(gsp.memoryCount || "1")}x${gsp.memoryOffset.trim() ? `${gsp.memoryOffset}o` : ""}`
+      case "raw": return normalizedRawCommandValue || t("command.raw_required")
+      case "sync-config": return `ED-H${target}..., ECON${target}...`
+      default: return ""
     }
-  }, [action, gsp.memoryCount, gsp.memoryOffset, normalizedRawCommandValue, serial, showGspFields])
+  }, [action, gsp.memoryCount, gsp.memoryOffset, normalizedRawCommandValue, serial, showGspFields, t])
 
   async function submit() {
     setSubmitting(true)
@@ -328,10 +282,7 @@ export function HotlineSensorTestPanel() {
 
     try {
       const parsedFrequencyMinutes = parseOptionalInteger(gsp.frequencyMinutes)
-      const frequencySeconds =
-        parsedFrequencyMinutes !== null && parsedFrequencyMinutes > 0
-          ? parsedFrequencyMinutes * 60
-          : null
+      const frequencySeconds = parsedFrequencyMinutes !== null && parsedFrequencyMinutes > 0 ? parsedFrequencyMinutes * 60 : null
 
       const response = await fetch("/api/hotline/sensor-test", {
         method: "POST",
@@ -351,30 +302,28 @@ export function HotlineSensorTestPanel() {
           readTimeoutMs: parseOptionalInteger(readTimeoutMs),
           writeTimeoutMs: parseOptionalInteger(writeTimeoutMs),
           action: showGspFields ? action : "read",
-          gsp: showGspFields
-            ? {
-                syncConfiguration: isGspSync,
-                coeffA: parseOptionalNumber(gsp.coeffA),
-                coeffB: parseOptionalNumber(gsp.coeffB),
-                accuracyError: parseOptionalNumber(gsp.accuracyError),
-                highLimit: parseOptionalNumber(gsp.highLimit),
-                lowLimit: parseOptionalNumber(gsp.lowLimit),
-                frequencySeconds,
-                alarmDelayLowMinutes: parseOptionalInteger(gsp.alarmDelayLowMinutes),
-                alarmDelayHighMinutes: parseOptionalInteger(gsp.alarmDelayHighMinutes),
-                channel: gsp.channel.trim() || undefined,
-                memoryCount: parseOptionalInteger(gsp.memoryCount),
-                memoryOffset: parseOptionalInteger(gsp.memoryOffset),
-                rawCommand: isGspRaw ? rawCommandForSubmit : undefined,
-                listenWindowMs: parseOptionalInteger(listenWindowMs),
-              }
-            : undefined,
+          gsp: showGspFields ? {
+            syncConfiguration: isGspSync,
+            coeffA: parseOptionalNumber(gsp.coeffA),
+            coeffB: parseOptionalNumber(gsp.coeffB),
+            accuracyError: parseOptionalNumber(gsp.accuracyError),
+            highLimit: parseOptionalNumber(gsp.highLimit),
+            lowLimit: parseOptionalNumber(gsp.lowLimit),
+            frequencySeconds,
+            alarmDelayLowMinutes: parseOptionalInteger(gsp.alarmDelayLowMinutes),
+            alarmDelayHighMinutes: parseOptionalInteger(gsp.alarmDelayHighMinutes),
+            channel: gsp.channel.trim() || undefined,
+            memoryCount: parseOptionalInteger(gsp.memoryCount),
+            memoryOffset: parseOptionalInteger(gsp.memoryOffset),
+            rawCommand: isGspRaw ? rawCommandForSubmit : undefined,
+            listenWindowMs: parseOptionalInteger(listenWindowMs),
+          } : undefined,
         }),
       })
 
       const json = await response.json()
       if (!response.ok || !json?.ok) {
-        setError(json?.message || "Le test a echoue")
+        setError(json?.message || t("errors.test_failed"))
         setConsecutiveErrors((prev) => prev + 1)
         setResult((json?.details as SensorTestResult | undefined) ?? null)
         return
@@ -385,7 +334,7 @@ export function HotlineSensorTestPanel() {
       setConsecutiveErrors(0)
       void loadRecentMeasures(nextResult.serial || serial)
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Le test a echoue")
+      setError(err instanceof Error ? err.message : t("errors.test_failed"))
       setConsecutiveErrors((prev) => prev + 1)
     } finally {
       setSubmitting(false)
@@ -394,9 +343,7 @@ export function HotlineSensorTestPanel() {
 
   async function loadRecentMeasures(targetSerial: string) {
     const normalizedSerial = targetSerial.trim().toUpperCase()
-    if (!normalizedSerial) {
-      return
-    }
+    if (!normalizedSerial) return
 
     setRecentMeasuresLoading(true)
     setRecentMeasuresError(null)
@@ -407,7 +354,7 @@ export function HotlineSensorTestPanel() {
       const sensorsJson = await sensorsResponse.json()
       if (!sensorsResponse.ok || !sensorsJson?.ok || !Array.isArray(sensorsJson.data)) {
         setRecentMeasures([])
-        setRecentMeasuresError("Impossible de recuperer les sondes pour construire le recap.")
+        setRecentMeasuresError(t("errors.sensors_load"))
         return
       }
 
@@ -417,16 +364,15 @@ export function HotlineSensorTestPanel() {
 
       if (!matchedSensor) {
         setRecentMeasures([])
-        setRecentMeasuresError("Sonde non enregistree en base: recap indisponible.")
+        setRecentMeasuresError(t("errors.sensor_unregistered"))
         return
       }
 
       const measuresResponse = await fetch(`/api/sondes/${matchedSensor.Id_Sonde}/mesures`, { cache: "no-store" })
       const measuresJson = await measuresResponse.json()
-
       if (!measuresResponse.ok || !measuresJson?.ok || !measuresJson.data) {
         setRecentMeasures([])
-        setRecentMeasuresError("Impossible de recuperer les mesures recentes pour cette sonde.")
+        setRecentMeasuresError(t("errors.measures_load"))
         return
       }
 
@@ -439,12 +385,10 @@ export function HotlineSensorTestPanel() {
       }))
 
       setRecentMeasures(lastTen)
-      if (lastTen.length === 0) {
-        setRecentMeasuresError("Aucune mesure recente disponible pour cette sonde.")
-      }
+      if (lastTen.length === 0) setRecentMeasuresError(t("errors.no_recent_measure"))
     } catch {
       setRecentMeasures([])
-      setRecentMeasuresError("Erreur lors de la recuperation du recap des mesures.")
+      setRecentMeasuresError(t("errors.recap_load"))
     } finally {
       setRecentMeasuresLoading(false)
     }
@@ -454,37 +398,29 @@ export function HotlineSensorTestPanel() {
     <div className="space-y-6">
       <Card className="bg-white dark:bg-popover/95">
         <CardHeader>
-          <CardTitle>Test manuel de sonde</CardTitle>
-          <p className="text-sm text-muted-foreground">
-            Interrogation directe via le serveur d'interrogation hotline. Si la sonde n'existe pas encore en base, utilisez un override manuel.
-          </p>
+          <CardTitle>{t("title")}</CardTitle>
+          <p className="text-sm text-muted-foreground">{t("description")}</p>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="IP / hote du serveur d'interrogation">
+            <Field label={t("fields.server_host")}>
               <Input value={serverHost} onChange={(e) => setServerHost(e.target.value)} placeholder="127.0.0.1" />
             </Field>
-            <Field label="Port API hotline">
+            <Field label={t("fields.api_port")}>
               <Input value={serverPort} onChange={(e) => setServerPort(e.target.value)} placeholder="5310" />
             </Field>
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="Type de sonde">
+            <Field label={t("fields.sensor_type")}>
               <Select value={sensorType} onValueChange={(value) => setSensorType(value as SensorType)}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
+                <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  {SENSOR_TYPES.map((type) => (
-                    <SelectItem key={type} value={type}>
-                      {type}
-                    </SelectItem>
-                  ))}
+                  {SENSOR_TYPES.map((type) => <SelectItem key={type} value={type}>{type}</SelectItem>)}
                 </SelectContent>
               </Select>
             </Field>
-            <Field label="Numero de serie">
+            <Field label={t("fields.serial")}>
               <Input
                 value={serial}
                 onChange={(e) => {
@@ -498,89 +434,71 @@ export function HotlineSensorTestPanel() {
           </div>
 
           <div className="rounded-md border border-border/60 bg-muted/20 p-4 dark:bg-muted/15">
-            <div className="mb-3 text-sm font-medium">Override manuel de connexion</div>
-            <div className="mb-3 text-xs text-muted-foreground">
-              Laissez vide pour utiliser la base du serveur d'interrogation. Renseignez au minimum le port COM pour tester une sonde non encore créée en base.
-            </div>
-            <div className="grid gap-4 sm:grid-cols-1">
-              <Field label="Port COM">
-                <Input value={manualPort} onChange={(e) => setManualPort(e.target.value)} placeholder="COMXXX" />
-              </Field>
-            </div>
+            <div className="mb-3 text-sm font-medium">{t("manual_override.title")}</div>
+            <div className="mb-3 text-xs text-muted-foreground">{t("manual_override.description")}</div>
+            <Field label={t("fields.manual_port")}>
+              <Input value={manualPort} onChange={(e) => setManualPort(e.target.value)} placeholder="COMXXX" />
+            </Field>
             <div className="mt-4">
               <Button type="button" variant="outline" size="sm" onClick={() => setShowAdvanced((prev) => !prev)}>
-                {showAdvanced ? "Masquer les options avancées" : "Afficher les options avancées"}
+                {showAdvanced ? t("manual_override.hide_advanced") : t("manual_override.show_advanced")}
               </Button>
             </div>
             {showAdvanced ? (
               <div className="mt-4 space-y-4 rounded-md border border-amber-200 bg-amber-50 p-4">
-                <div className="text-xs text-amber-800">
-                  Ne modifiez pas ces paramètres sans besoin réel. Le canal GSP et les paramètres série servent aux cas d'infrastructure ou de diagnostic avancés.
-                </div>
+                <div className="text-xs text-amber-800">{t("manual_override.warning")}</div>
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <Field label="Adresse">
+                  <Field label={t("fields.address")}>
                     <Input value={manualAddress} onChange={(e) => setManualAddress(e.target.value)} placeholder="00000001" />
                   </Field>
-                  <Field label="Module">
+                  <Field label={t("fields.module")}>
                     <Input value={manualModule} onChange={(e) => setManualModule(e.target.value)} placeholder="GSO-Exxxx" />
                   </Field>
                 </div>
                 <div className="grid gap-3 sm:grid-cols-2">
-                  <HelpLine title="Adresse">Identifiant additionnel du device si le protocole ne se limite pas au numéro de série.</HelpLine>
-                  <HelpLine title="Module">Information libre pour certains protocoles historiques. Inutile pour un test GSP simple.</HelpLine>
-                  <HelpLine title="Baudrate">Vitesse de communication du port série. 9600 est la valeur par defaut testée.</HelpLine>
-                  <HelpLine title="Parity">Contrôle d'erreur série. Laisser `None` sauf besoin explicite.</HelpLine>
-                  <HelpLine title="Data bits">Taille des paquets série. En general `8`.</HelpLine>
-                  <HelpLine title="Stop bits">Bits de fin de trame série. En general `One`.</HelpLine>
-                  <HelpLine title="Read timeout">Temps d'attente maximal d'une réponse avant timeout.</HelpLine>
-                  <HelpLine title="Write timeout">Temps maximal d'écriture avant echec d'envoi.</HelpLine>
+                  <HelpLine title={t("fields.address")}>{t("manual_override.help.address")}</HelpLine>
+                  <HelpLine title={t("fields.module")}>{t("manual_override.help.module")}</HelpLine>
+                  <HelpLine title={t("fields.baud_rate")}>{t("manual_override.help.baud_rate")}</HelpLine>
+                  <HelpLine title={t("fields.parity")}>{t("manual_override.help.parity")}</HelpLine>
+                  <HelpLine title={t("fields.data_bits")}>{t("manual_override.help.data_bits")}</HelpLine>
+                  <HelpLine title={t("fields.stop_bits")}>{t("manual_override.help.stop_bits")}</HelpLine>
+                  <HelpLine title={t("fields.read_timeout")}>{t("manual_override.help.read_timeout")}</HelpLine>
+                  <HelpLine title={t("fields.write_timeout")}>{t("manual_override.help.write_timeout")}</HelpLine>
                 </div>
                 <div className="grid gap-4 sm:grid-cols-3">
-                  <Field label="Baudrate">
+                  <Field label={t("fields.baud_rate")}>
                     <Input value={baudRate} onChange={(e) => setBaudRate(e.target.value)} placeholder="9600" />
                   </Field>
-                  <Field label="Parity">
+                  <Field label={t("fields.parity")}>
                     <Select value={parity} onValueChange={setParity}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="None">None</SelectItem>
-                        <SelectItem value="Odd">Odd</SelectItem>
-                        <SelectItem value="Even">Even</SelectItem>
-                        <SelectItem value="Mark">Mark</SelectItem>
-                        <SelectItem value="Space">Space</SelectItem>
+                        {['None', 'Odd', 'Even', 'Mark', 'Space'].map((value) => <SelectItem key={value} value={value}>{value}</SelectItem>)}
                       </SelectContent>
                     </Select>
                   </Field>
-                  <Field label="Data bits">
+                  <Field label={t("fields.data_bits")}>
                     <Input value={dataBits} onChange={(e) => setDataBits(e.target.value)} placeholder="8" />
                   </Field>
-                  <Field label="Stop bits">
+                  <Field label={t("fields.stop_bits")}>
                     <Select value={stopBits} onValueChange={setStopBits}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="One">One</SelectItem>
-                        <SelectItem value="Two">Two</SelectItem>
-                        <SelectItem value="OnePointFive">OnePointFive</SelectItem>
+                        {['One', 'Two', 'OnePointFive'].map((value) => <SelectItem key={value} value={value}>{value}</SelectItem>)}
                       </SelectContent>
                     </Select>
                   </Field>
-                  <Field label="Read timeout (ms)">
+                  <Field label={t("fields.read_timeout")}>
                     <Input value={readTimeoutMs} onChange={(e) => setReadTimeoutMs(e.target.value)} placeholder="5000" />
                   </Field>
-                  <Field label="Write timeout (ms)">
+                  <Field label={t("fields.write_timeout")}>
                     <Input value={writeTimeoutMs} onChange={(e) => setWriteTimeoutMs(e.target.value)} placeholder="5000" />
                   </Field>
                   {showGspFields ? (
-                    <Field label="Temps d'ecoute (ms)">
+                    <Field label={t("fields.listen_window")}>
                       <div className="space-y-2">
                         <Input value={listenWindowMs} onChange={(e) => setListenWindowMs(e.target.value)} placeholder="500" />
-                        <div className="text-xs text-muted-foreground">
-                          Temps de silence apres le dernier octet reçu avant de considérer la réponse terminée.
-                        </div>
+                        <div className="text-xs text-muted-foreground">{t("manual_override.listen_help")}</div>
                       </div>
                     </Field>
                   ) : null}
@@ -592,13 +510,13 @@ export function HotlineSensorTestPanel() {
           {showGspFields ? (
             <>
               <div className="rounded-md border border-border/60 bg-muted/20 px-3 py-2 text-xs text-muted-foreground dark:bg-muted/15">
-                <div className="mb-1 font-medium">Commande envoyée</div>
+                <div className="mb-1 font-medium">{t("command.title")}</div>
                 <code className="block whitespace-pre-wrap rounded bg-white px-2 py-1 font-mono text-[11px] text-foreground dark:bg-card">
                   {JSON.stringify(commandPreview)}
                 </code>
               </div>
 
-              <Field label="Action GSP">
+              <Field label={t("fields.gsp_action")}>
                 <Select
                   value={action}
                   onValueChange={(value) => {
@@ -607,101 +525,56 @@ export function HotlineSensorTestPanel() {
                     setResult(null)
                   }}
                 >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    {GSP_ACTIONS.map((item) => (
-                      <SelectItem key={item.value} value={item.value}>
-                        {item.label}
-                      </SelectItem>
-                    ))}
+                    {GSP_ACTIONS.map((item) => <SelectItem key={item.value} value={item.value}>{t(item.labelKey)}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </Field>
 
               {isGspSync ? (
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <Field label="Coeff a">
-                    <Input value={gsp.coeffA} onChange={(e) => setGsp((prev) => ({ ...prev, coeffA: e.target.value }))} />
-                  </Field>
-                  <Field label="Coeff b">
-                    <Input value={gsp.coeffB} onChange={(e) => setGsp((prev) => ({ ...prev, coeffB: e.target.value }))} />
-                  </Field>
-                  <Field label="Erreur de justesse">
-                    <Input value={gsp.accuracyError} onChange={(e) => setGsp((prev) => ({ ...prev, accuracyError: e.target.value }))} />
-                  </Field>
-                  <Field label="Limite haute">
-                    <Input value={gsp.highLimit} onChange={(e) => setGsp((prev) => ({ ...prev, highLimit: e.target.value }))} />
-                  </Field>
-                  <Field label="Limite basse">
-                    <Input value={gsp.lowLimit} onChange={(e) => setGsp((prev) => ({ ...prev, lowLimit: e.target.value }))} />
-                  </Field>
-                  <Field label="Frequence (min)">
-                    <Input value={gsp.frequencyMinutes} onChange={(e) => setGsp((prev) => ({ ...prev, frequencyMinutes: e.target.value }))} />
-                  </Field>
-                  <Field label="Retard bas (min)">
-                    <Input value={gsp.alarmDelayLowMinutes} onChange={(e) => setGsp((prev) => ({ ...prev, alarmDelayLowMinutes: e.target.value }))} />
-                  </Field>
-                  <Field label="Retard haut (min)">
-                    <Input value={gsp.alarmDelayHighMinutes} onChange={(e) => setGsp((prev) => ({ ...prev, alarmDelayHighMinutes: e.target.value }))} />
-                  </Field>
+                  <Field label={t("fields.coeff_a")}><Input value={gsp.coeffA} onChange={(e) => setGsp((prev) => ({ ...prev, coeffA: e.target.value }))} /></Field>
+                  <Field label={t("fields.coeff_b")}><Input value={gsp.coeffB} onChange={(e) => setGsp((prev) => ({ ...prev, coeffB: e.target.value }))} /></Field>
+                  <Field label={t("fields.accuracy_error")}><Input value={gsp.accuracyError} onChange={(e) => setGsp((prev) => ({ ...prev, accuracyError: e.target.value }))} /></Field>
+                  <Field label={t("fields.high_limit")}><Input value={gsp.highLimit} onChange={(e) => setGsp((prev) => ({ ...prev, highLimit: e.target.value }))} /></Field>
+                  <Field label={t("fields.low_limit")}><Input value={gsp.lowLimit} onChange={(e) => setGsp((prev) => ({ ...prev, lowLimit: e.target.value }))} /></Field>
+                  <Field label={t("fields.frequency")}><Input value={gsp.frequencyMinutes} onChange={(e) => setGsp((prev) => ({ ...prev, frequencyMinutes: e.target.value }))} /></Field>
+                  <Field label={t("fields.delay_low")}><Input value={gsp.alarmDelayLowMinutes} onChange={(e) => setGsp((prev) => ({ ...prev, alarmDelayLowMinutes: e.target.value }))} /></Field>
+                  <Field label={t("fields.delay_high")}><Input value={gsp.alarmDelayHighMinutes} onChange={(e) => setGsp((prev) => ({ ...prev, alarmDelayHighMinutes: e.target.value }))} /></Field>
                 </div>
               ) : null}
 
               {showAdvanced && isGspSync ? (
                 <div className="rounded-md border border-amber-200 bg-amber-50 p-4">
-                  <div className="mb-3 text-xs text-amber-800">
-                    Ne modifiez le canal que pour des cas d'infrastructure multi-clients ou sur instruction explicite. Une mauvaise valeur peut faire chevaucher des installations et empêcher leur bon fonctionnement.
-                  </div>
-                  <Field label="Canal GSP">
-                    <Input value={gsp.channel} onChange={(e) => setGsp((prev) => ({ ...prev, channel: e.target.value }))} />
-                  </Field>
+                  <div className="mb-3 text-xs text-amber-800">{t("sync_warning")}</div>
+                  <Field label={t("fields.channel")}><Input value={gsp.channel} onChange={(e) => setGsp((prev) => ({ ...prev, channel: e.target.value }))} /></Field>
                 </div>
               ) : null}
 
               {isGspMemory ? (
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <Field label="Nombre de lignes memoire">
-                    <Input value={gsp.memoryCount} onChange={(e) => setGsp((prev) => ({ ...prev, memoryCount: e.target.value }))} />
-                  </Field>
-                  <Field label="Offset memoire">
-                    <Input value={gsp.memoryOffset} onChange={(e) => setGsp((prev) => ({ ...prev, memoryOffset: e.target.value }))} placeholder="0" />
-                  </Field>
+                  <Field label={t("fields.memory_count")}><Input value={gsp.memoryCount} onChange={(e) => setGsp((prev) => ({ ...prev, memoryCount: e.target.value }))} /></Field>
+                  <Field label={t("fields.memory_offset")}><Input value={gsp.memoryOffset} onChange={(e) => setGsp((prev) => ({ ...prev, memoryOffset: e.target.value }))} placeholder="0" /></Field>
                 </div>
               ) : null}
 
               {isGspRaw ? (
                 <div className="space-y-4">
                   <div className="flex gap-2">
-                    <Button
-                      type="button"
-                      variant={gsp.rawExactMode ? "outline" : "default"}
-                      size="sm"
-                      onClick={() => setGsp((prev) => ({ ...prev, rawExactMode: false }))}
-                    >
-                      Prefixe + serie + payload
+                    <Button type="button" variant={gsp.rawExactMode ? "outline" : "default"} size="sm" onClick={() => setGsp((prev) => ({ ...prev, rawExactMode: false }))}>
+                      {t("actions.structured_raw")}
                     </Button>
-                    <Button
-                      type="button"
-                      variant={gsp.rawExactMode ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => setGsp((prev) => ({ ...prev, rawExactMode: true }))}
-                    >
-                      Commande exacte
+                    <Button type="button" variant={gsp.rawExactMode ? "default" : "outline"} size="sm" onClick={() => setGsp((prev) => ({ ...prev, rawExactMode: true }))}>
+                      {t("actions.exact_raw")}
                     </Button>
                   </div>
                   {!gsp.rawExactMode ? (
                     <div className="grid gap-4 sm:grid-cols-3">
-                      <Field label="Prefixe">
-                        <Input
-                          value={gsp.rawPrefix}
-                          onChange={(e) => setGsp((prev) => ({ ...prev, rawPrefix: e.target.value.toUpperCase() }))}
-                          placeholder="TEMP"
-                          className="font-mono"
-                        />
+                      <Field label={t("fields.prefix")}>
+                        <Input value={gsp.rawPrefix} onChange={(e) => setGsp((prev) => ({ ...prev, rawPrefix: e.target.value.toUpperCase() }))} placeholder="TEMP" className="font-mono" />
                       </Field>
-                      <Field label="Numero de serie">
+                      <Field label={t("fields.serial")}>
                         <Input
                           value={gsp.rawSerial}
                           onChange={(e) => {
@@ -713,30 +586,16 @@ export function HotlineSensorTestPanel() {
                           className="font-mono"
                         />
                       </Field>
-                      <Field label="Payload">
-                        <Input
-                          value={gsp.rawPayload}
-                          onChange={(e) => setGsp((prev) => ({ ...prev, rawPayload: e.target.value }))}
-                          placeholder="25x"
-                          className="font-mono"
-                        />
-                      </Field>
+                      <Field label={t("fields.payload")}><Input value={gsp.rawPayload} onChange={(e) => setGsp((prev) => ({ ...prev, rawPayload: e.target.value }))} placeholder="25x" className="font-mono" /></Field>
                     </div>
                   ) : (
-                    <Field label="Commande exacte">
-                      <Input
-                        value={gsp.rawExactCommand}
-                        onChange={(e) => setGsp((prev) => ({ ...prev, rawExactCommand: e.target.value }))}
-                        placeholder="TEMPSPNB-26000001 "
-                        className="font-mono"
-                      />
-                    </Field>
+                    <Field label={t("fields.exact_command")}><Input value={gsp.rawExactCommand} onChange={(e) => setGsp((prev) => ({ ...prev, rawExactCommand: e.target.value }))} placeholder="TEMPSPNB-26000001 " className="font-mono" /></Field>
                   )}
                   <div className="rounded-md border border-border/60 bg-muted/20 px-3 py-2 text-xs text-muted-foreground dark:bg-muted/15">
-                    <div className="mb-1 font-medium">Préfixes disponibles</div>
+                    <div className="mb-1 font-medium">{t("command.prefixes")}</div>
                     <div className="font-mono">TEMP, FTEM, DD-H, DCON, MEMO, ED-H, ECON, CHAN</div>
-                    <div className="mt-1 text-muted-foreground">Pour les commandes avec séparateur, utiliser `-` et non `/`.</div>
-                    <div className="mt-1 text-muted-foreground">Les payloads sont séparés de la commande par un espace.</div>
+                    <div className="mt-1 text-muted-foreground">{t("command.separator_help")}</div>
+                    <div className="mt-1 text-muted-foreground">{t("command.payload_help")}</div>
                   </div>
                 </div>
               ) : null}
@@ -744,21 +603,14 @@ export function HotlineSensorTestPanel() {
           ) : null}
 
           <Button onClick={submit} disabled={submitting || !serial.trim() || !serverHost.trim()} className="mt-6">
-            {submitting ? "Test en cours..." : "Lancer le test"}
+            {submitting ? t("actions.testing") : t("actions.test")}
           </Button>
 
           {consecutiveErrors >= 2 ? (
             <div className="rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-              <div className="font-medium">Vérification recommandée</div>
-              <div className="mt-1">
-                Plusieurs erreurs consécutives ont été détectées. Vérifiez le numéro de série, le port COM, le type de sonde et les
-                paramètres utilisés.
-              </div>
-              {isGspRaw ? (
-                <div className="mt-2">
-                  En commande brute, les espaces manquants sont corrigés automatiquement avant envoi.
-                </div>
-              ) : null}
+              <div className="font-medium">{t("warning.title")}</div>
+              <div className="mt-1">{t("warning.description")}</div>
+              {isGspRaw ? <div className="mt-2">{t("warning.raw")}</div> : null}
             </div>
           ) : null}
         </CardContent>
@@ -766,79 +618,51 @@ export function HotlineSensorTestPanel() {
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,24rem)_minmax(0,1fr)]">
         <Card className="bg-white dark:bg-popover/95">
-          <CardHeader>
-            <CardTitle>Résultats</CardTitle>
-          </CardHeader>
+          <CardHeader><CardTitle>{t("results.title")}</CardTitle></CardHeader>
           <CardContent className="space-y-4">
             {error ? <div className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div> : null}
-
             {result ? (
               <div className="grid gap-3 sm:grid-cols-2">
-                <ResultItem label="Type" value={result.sensorType} />
-                <ResultItem label="Serie" value={result.serial} />
-                <ResultItem label="Action" value={result.action} />
-                <ResultItem label="Port" value={result.port || "-"} />
-                <ResultItem label="Adresse" value={result.address || "-"} />
-                <ResultItem label="Module" value={result.module || "-"} />
-                <ResultItem label="Commande" value={result.requestedCommand || "-"} />
-                <ResultItem label="Sondes detectees" value={result.detectedSerials?.join(", ") || "-"} />
-                <ResultItem label="Valeur" value={result.value != null ? String(result.value) : "-"} />
-                <ResultItem label="Unite" value={result.unit || "-"} />
-                {parsedResponse?.memoMeasureCount ? (
-                  <ResultItem
-                    label="Mesures MEMO"
-                    value={parsedResponse.memoReturnedCount || String(parsedResponse.memoMeasureCount)}
-                  />
-                ) : null}
-                {parsedResponse?.rssiRaw ? <ResultRssiItem value={parsedResponse.rssiRaw} /> : null}
-                <ResultItem label="Brut" value={rawPreview} />
+                <ResultItem label={t("results.type")} value={result.sensorType} />
+                <ResultItem label={t("results.serial")} value={result.serial} />
+                <ResultItem label={t("results.action")} value={result.action} />
+                <ResultItem label={t("results.port")} value={result.port || "-"} />
+                <ResultItem label={t("results.address")} value={result.address || "-"} />
+                <ResultItem label={t("results.module")} value={result.module || "-"} />
+                <ResultItem label={t("results.command")} value={result.requestedCommand || "-"} />
+                <ResultItem label={t("results.detected_sensors")} value={result.detectedSerials?.join(", ") || "-"} />
+                <ResultItem label={t("results.value")} value={result.value != null ? String(result.value) : "-"} />
+                <ResultItem label={t("results.unit")} value={result.unit || "-"} />
+                {parsedResponse?.memoMeasureCount ? <ResultItem label={t("results.memo_measures")} value={parsedResponse.memoReturnedCount || String(parsedResponse.memoMeasureCount)} /> : null}
+                {parsedResponse?.rssiRaw ? <ResultRssiItem value={parsedResponse.rssiRaw} label={t("results.signal")} /> : null}
+                <ResultItem label={t("results.raw")} value={rawPreview} />
               </div>
-            ) : (
-              <div className="text-sm text-muted-foreground">Aucun résultat pour le moment.</div>
-            )}
+            ) : <div className="text-sm text-muted-foreground">{t("results.empty")}</div>}
           </CardContent>
         </Card>
 
         <Card className="bg-white dark:bg-popover/95">
-          <CardHeader>
-            <CardTitle>Trames TX/RX</CardTitle>
-          </CardHeader>
+          <CardHeader><CardTitle>{t("frames.title")}</CardTitle></CardHeader>
           <CardContent>
             <div className="space-y-4">
               <div>
-                <SectionTitleWithInfo
-                  title="TX"
-                  description="Trames envoyées au module ou à la sonde. Cela permet de vérifier la commande exacte transmise."
-                />
+                <SectionTitleWithInfo title="TX" description={t("frames.tx_help")} />
                 <Textarea value={parsedResponse?.tx.join("\n") || ""} readOnly rows={6} className="font-mono text-xs" />
               </div>
               <div>
-                <SectionTitleWithInfo
-                  title="RX"
-                  description="Trames reçues depuis le module ou la sonde. Cela permet de vérifier la réponse brute avant interprétation."
-                />
+                <SectionTitleWithInfo title="RX" description={t("frames.rx_help")} />
                 <Textarea value={parsedResponse?.rx.join("\n\n") || ""} readOnly rows={8} className="font-mono text-xs" />
               </div>
               <div>
-                <SectionTitleWithInfo
-                  title="Analyse"
-                  description="Extraction lisible des informations détectées dans la reponse brute, sans supprimer les trames TX/RX."
-                />
+                <SectionTitleWithInfo title={t("frames.analysis")} description={t("frames.analysis_help")} />
                 {parsedResponse?.parsed.length ? (
                   <div className="grid gap-3 sm:grid-cols-2">
-                    {parsedResponse.parsed.map((item, index) => (
-                      <ResultItem key={`${item.label}-${index}`} label={item.label} value={item.value} />
-                    ))}
+                    {parsedResponse.parsed.map((item, index) => <ResultItem key={`${item.label}-${index}`} label={item.label} value={item.value} />)}
                   </div>
-                ) : (
-                  <div className="text-sm text-muted-foreground">Aucune information parsée pour le moment.</div>
-                )}  
+                ) : <div className="text-sm text-muted-foreground">{t("frames.analysis_empty")}</div>}
               </div>
               <div className="pt-2">
-                <SectionTitleWithInfo
-                  title="Journal complet"
-                  description="Vue brute complète des échanges, utile pour le diagnostic fin ou la comparaison avec l’outil de test constructeur."
-                />
+                <SectionTitleWithInfo title={t("frames.journal")} description={t("frames.journal_help")} />
                 <Textarea value={exchangeText} readOnly rows={12} className="font-mono text-xs" />
               </div>
             </div>
@@ -848,42 +672,28 @@ export function HotlineSensorTestPanel() {
 
       <Card className="bg-white dark:bg-popover/95">
         <CardHeader>
-          <CardTitle>Récap des 10 dernières mesures</CardTitle>
+          <CardTitle>{t("recent.title")}</CardTitle>
           <p className="text-sm text-muted-foreground">
-            Propose à la fin du test pour la sonde connue en base.
-            {recentMeasuresSerial ? ` Sonde cible: ${recentMeasuresSerial}.` : ""}
+            {t("recent.description")}{recentMeasuresSerial ? ` ${t("recent.target", { serial: recentMeasuresSerial })}` : ""}
           </p>
         </CardHeader>
         <CardContent>
-          {recentMeasuresLoading ? (
-            <div className="text-sm text-muted-foreground">Chargement du recap...</div>
-          ) : null}
-
+          {recentMeasuresLoading ? <div className="text-sm text-muted-foreground">{t("recent.loading")}</div> : null}
           {!recentMeasuresLoading && recentMeasuresError ? (
-            <div className="rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-500/25 dark:bg-amber-500/10 dark:text-amber-200">
-              {recentMeasuresError}
-            </div>
+            <div className="rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-500/25 dark:bg-amber-500/10 dark:text-amber-200">{recentMeasuresError}</div>
           ) : null}
-
           {!recentMeasuresLoading && !recentMeasuresError && recentMeasures.length > 0 ? (
             <div className="space-y-2">
               {recentMeasures.map((measure, index) => (
                 <div key={`${measure.dateHeure}-${index}`} className="grid gap-2 rounded-md border border-border/60 bg-muted/20 px-3 py-2 text-sm md:grid-cols-[1.5fr_1fr_1fr] dark:bg-muted/15">
                   <div className="font-medium">{formatMeasureDate(measure.dateHeure)}</div>
-                  <div>
-                    {measure.valeur !== null && measure.valeur !== undefined
-                      ? `${formatMeasureValue(measure.valeur)}${measure.unite ? ` ${measure.unite}` : ""}`
-                      : "-"}
-                  </div>
+                  <div>{measure.valeur !== null && measure.valeur !== undefined ? `${formatMeasureValue(measure.valeur)}${measure.unite ? ` ${measure.unite}` : ""}` : "-"}</div>
                   <div className="text-muted-foreground">{measure.etatAlarme || "-"}</div>
                 </div>
               ))}
             </div>
           ) : null}
-
-          {!recentMeasuresLoading && !recentMeasuresError && recentMeasures.length === 0 ? (
-            <div className="text-sm text-muted-foreground">Lancez un test pour afficher le recap.</div>
-          ) : null}
+          {!recentMeasuresLoading && !recentMeasuresError && recentMeasures.length === 0 ? <div className="text-sm text-muted-foreground">{t("recent.start_hint")}</div> : null}
         </CardContent>
       </Card>
     </div>
@@ -891,22 +701,14 @@ export function HotlineSensorTestPanel() {
 }
 
 function Field({ label, children }: { label: string; children: ReactNode }) {
-  return (
-    <label className="space-y-2 text-sm">
-      <div className="font-medium text-foreground">{label}</div>
-      {children}
-    </label>
-  )
+  return <label className="space-y-2 text-sm"><div className="font-medium text-foreground">{label}</div>{children}</label>
 }
 
 function HelpLine({ title, children }: { title: string; children: ReactNode }) {
   return (
     <div className="flex gap-2 rounded-md border border-amber-200/70 bg-white/70 p-2 text-xs text-amber-900 dark:border-amber-500/25 dark:bg-amber-500/10 dark:text-amber-200">
       <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-      <div>
-        <div className="font-medium">{title}</div>
-        <div>{children}</div>
-      </div>
+      <div><div className="font-medium">{title}</div><div>{children}</div></div>
     </div>
   )
 }
@@ -917,11 +719,7 @@ function SectionTitleWithInfo({ title, description }: { title: string; descripti
       <div className="text-sm font-medium">{title}</div>
       <TooltipProvider>
         <Tooltip>
-          <TooltipTrigger asChild>
-            <button type="button" className="inline-flex text-muted-foreground">
-              <Info className="h-4 w-4" />
-            </button>
-          </TooltipTrigger>
+          <TooltipTrigger asChild><button type="button" className="inline-flex text-muted-foreground"><Info className="h-4 w-4" /></button></TooltipTrigger>
           <TooltipContent className="max-w-sm text-xs">{description}</TooltipContent>
         </Tooltip>
       </TooltipProvider>
@@ -930,12 +728,7 @@ function SectionTitleWithInfo({ title, description }: { title: string; descripti
 }
 
 function ResultItem({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-md border border-border/60 bg-muted/20 px-3 py-2 dark:bg-muted/15">
-      <div className="text-xs uppercase tracking-wide text-muted-foreground">{label}</div>
-      <div className="text-sm font-medium">{value}</div>
-    </div>
-  )
+  return <div className="rounded-md border border-border/60 bg-muted/20 px-3 py-2 dark:bg-muted/15"><div className="text-xs uppercase tracking-wide text-muted-foreground">{label}</div><div className="text-sm font-medium">{value}</div></div>
 }
 
 function parseOptionalNumber(value: string) {
@@ -973,27 +766,19 @@ function normalizeRawCommand(command: string) {
   if (!rest) return compact
 
   const splitByNSerial = rest.match(/^(N\d+)([A-Za-z].+)$/i)
-  if (splitByNSerial) {
-    return `${prefix}${splitByNSerial[1]} ${splitByNSerial[2].trim()}`
-  }
+  if (splitByNSerial) return `${prefix}${splitByNSerial[1]} ${splitByNSerial[2].trim()}`
 
   const splitByLongSerial = rest.match(/^([A-Za-z]\d{4,})([A-Za-z].+)$/)
-  if (splitByLongSerial) {
-    return `${prefix}${splitByLongSerial[1]} ${splitByLongSerial[2].trim()}`
-  }
+  if (splitByLongSerial) return `${prefix}${splitByLongSerial[1]} ${splitByLongSerial[2].trim()}`
 
   return compact
 }
 
-function ResultRssiItem({ value }: { value: string }) {
+function ResultRssiItem({ value, label }: { value: string; label: string }) {
   return (
     <div className="rounded-md border border-border/60 bg-muted/20 px-3 py-2 dark:bg-muted/15">
-      <div className="text-xs uppercase tracking-wide text-muted-foreground">Signal</div>
-      <div className="mt-1 flex min-h-6 items-center">
-        <TooltipProvider>
-          <RssiBars value={value} label={`RSSI : ${value}`} />
-        </TooltipProvider>
-      </div>
+      <div className="text-xs uppercase tracking-wide text-muted-foreground">{label}</div>
+      <div className="mt-1 flex min-h-6 items-center"><TooltipProvider><RssiBars value={value} label={`RSSI : ${value}`} /></TooltipProvider></div>
     </div>
   )
 }

@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useMemo, useState } from "react"
+import { useTranslations } from "next-intl"
 import { BellOff, Search } from "lucide-react"
 import { toast } from "sonner"
 
@@ -22,6 +23,7 @@ type LocationSetting = {
 const API_PATH = "/api/parametres/acquittement-auto-non-reponse"
 
 export function NonResponseAutoAckSettingsCard() {
+  const t = useTranslations("adminSettings.non_response_auto_ack")
   const [locations, setLocations] = useState<LocationSetting[]>([])
   const [search, setSearch] = useState("")
   const [loading, setLoading] = useState(true)
@@ -34,7 +36,7 @@ export function NonResponseAutoAckSettingsCard() {
         if (!cancelled) setLocations(data)
       })
       .catch(() => {
-        if (!cancelled) toast.error("Impossible de charger les lieux")
+        if (!cancelled) toast.error(t("load_error"))
       })
       .finally(() => {
         if (!cancelled) setLoading(false)
@@ -43,7 +45,7 @@ export function NonResponseAutoAckSettingsCard() {
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [t])
 
   const filteredLocations = useMemo(() => {
     const query = search.trim().toLocaleLowerCase()
@@ -67,14 +69,10 @@ export function NonResponseAutoAckSettingsCard() {
 
     try {
       const result = await patchJson<{ updated: number }>(API_PATH, { locationIds, enabled })
-      toast.success(
-        result.updated === 0
-          ? "Aucun changement nécessaire"
-          : `${result.updated} lieu(x) mis à jour`,
-      )
+      toast.success(result.updated === 0 ? t("no_change") : t("updated", { count: result.updated }))
     } catch {
       setLocations(previousLocations)
-      toast.error("Impossible de mettre à jour les lieux")
+      toast.error(t("update_error"))
     } finally {
       setSavingIds(new Set())
     }
@@ -88,10 +86,8 @@ export function NonResponseAutoAckSettingsCard() {
             <BellOff className="size-5" />
           </div>
           <div className="space-y-1">
-            <CardTitle>Acquittement automatique des non-réponses</CardTitle>
-            <CardDescription>
-              Une alarme de non-réponse terminée sera acquittée automatiquement pour les lieux activés.
-            </CardDescription>
+            <CardTitle>{t("title")}</CardTitle>
+            <CardDescription>{t("description")}</CardDescription>
           </div>
         </div>
       </CardHeader>
@@ -102,13 +98,13 @@ export function NonResponseAutoAckSettingsCard() {
             <Input
               value={search}
               onChange={(event) => setSearch(event.target.value)}
-              placeholder="Rechercher un lieu ou une sonde"
+              placeholder={t("search")}
               className="pl-9"
             />
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <span className="mr-1 text-sm text-muted-foreground">
-              {enabledCount} activé(s) sur {locations.length}
+              {t("enabled_count", { enabled: enabledCount, total: locations.length })}
             </span>
             <Button
               type="button"
@@ -117,7 +113,7 @@ export function NonResponseAutoAckSettingsCard() {
               disabled={loading || isSaving || locations.length === 0}
               onClick={() => updateLocations(locations.map((location) => location.id), true)}
             >
-              Tout cocher
+              {t("check_all")}
             </Button>
             <Button
               type="button"
@@ -126,16 +122,16 @@ export function NonResponseAutoAckSettingsCard() {
               disabled={loading || isSaving || locations.length === 0}
               onClick={() => updateLocations(locations.map((location) => location.id), false)}
             >
-              Tout décocher
+              {t("uncheck_all")}
             </Button>
           </div>
         </div>
 
         <div className="overflow-hidden rounded-lg border">
           <div className="grid grid-cols-[minmax(0,1fr)_minmax(10rem,0.6fr)_6rem] gap-3 border-b bg-muted/50 px-4 py-2 text-xs font-semibold uppercase text-muted-foreground">
-            <span>Lieu</span>
-            <span>Sonde</span>
-            <span className="text-center">Actif</span>
+            <span>{t("location")}</span>
+            <span>{t("sensor")}</span>
+            <span className="text-center">{t("active")}</span>
           </div>
           <ScrollArea className="h-[28rem]">
             {loading ? (
@@ -143,7 +139,7 @@ export function NonResponseAutoAckSettingsCard() {
                 {Array.from({ length: 6 }).map((_, index) => <Skeleton key={index} className="h-10 w-full" />)}
               </div>
             ) : filteredLocations.length === 0 ? (
-              <div className="p-10 text-center text-sm text-muted-foreground">Aucun lieu trouvé.</div>
+              <div className="p-10 text-center text-sm text-muted-foreground">{t("empty")}</div>
             ) : (
               <div className="divide-y">
                 {filteredLocations.map((location) => (
@@ -153,14 +149,14 @@ export function NonResponseAutoAckSettingsCard() {
                   >
                     <span className="min-w-0 truncate font-medium">{location.name}</span>
                     <span className="min-w-0 truncate text-sm text-muted-foreground">
-                      {location.sensorSerial ?? "Non assignée"}
+                      {location.sensorSerial ?? t("unassigned")}
                     </span>
                     <span className="flex justify-center">
                       <Checkbox
                         checked={location.enabled}
                         disabled={isSaving}
                         onCheckedChange={(checked) => updateLocations([location.id], checked === true)}
-                        aria-label={`Acquittement automatique pour ${location.name}`}
+                        aria-label={t("aria", { location: location.name })}
                       />
                     </span>
                   </label>
@@ -169,9 +165,7 @@ export function NonResponseAutoAckSettingsCard() {
             )}
           </ScrollArea>
         </div>
-        <p className="text-xs text-muted-foreground">
-          Ce réglage concerne uniquement les alarmes de non-réponse terminées. Les autres types d’alarme restent à acquitter manuellement.
-        </p>
+        <p className="text-xs text-muted-foreground">{t("helper")}</p>
       </CardContent>
     </Card>
   )

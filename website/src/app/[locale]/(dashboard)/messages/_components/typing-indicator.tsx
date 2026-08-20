@@ -1,5 +1,6 @@
 "use client"
 
+import { useTranslations } from "next-intl"
 import { useTypingUsers } from "@/hooks/useTypingUsers"
 
 type Props = {
@@ -8,6 +9,7 @@ type Props = {
 }
 
 export function TypingIndicator({ convId, currentUserId }: Props) {
+  const t = useTranslations("messaging.thread")
   const { typingNames } = useTypingUsers(convId, currentUserId)
 
   if (typingNames.length === 0) return null
@@ -23,7 +25,7 @@ export function TypingIndicator({ convId, currentUserId }: Props) {
           />
         ))}
       </div>
-      <span>{typingNames.join(", ")} est en train d&apos;écrire…</span>
+      <span>{t("typing", { names: typingNames.join(", ") })}</span>
     </div>
   )
 }

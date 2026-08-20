@@ -2,6 +2,8 @@ import { readFile, readdir } from "node:fs/promises";
 import path from "node:path";
 import ts from "typescript";
 
+import { enSupplements, frSupplements, mergeMessages, type MessageCatalog } from "../src/messages/supplements";
+
 const ROOT = process.cwd();
 const MESSAGES_DIR = path.join(ROOT, "src", "messages");
 const SOURCE_DIRS = [path.join(ROOT, "src", "app"), path.join(ROOT, "src", "components")];
@@ -40,6 +42,7 @@ const ALLOWED_LITERAL_PATTERNS = [
   /^[-–—+*/#%°.:,()\[\]{}<>|@·•]+$/,
   /^(?:&gt;|&nbsp;|\\u2014)$/i,
   /^(?:min|ms|s|h|px|rem|vh|vw|V|°C|%)$/i,
+  /^(?:vs\.)$/i,
   /^\d+(?:[.,]\d+)?(?:\s?(?:ms|s|min|h|px|rem|vh|vw|%|V|°C))?$/i,
   /^(?:Vigi|Sensys|VigiSensys|VigiTemp|VigiServ|VigiTel|MC2)(?:\s+Lab|\s+logo)?$/i,
   /^(?:GSO|GSP|RSSI|CFR21|XML|PDF|CSV|Excel|MySQL|MSSQL|COM\w*|TX|RX)$/i,
@@ -108,8 +111,8 @@ async function main() {
     readFile(path.join(MESSAGES_DIR, "en.json"), "utf8"),
   ]);
 
-  const fr = JSON.parse(frRaw);
-  const en = JSON.parse(enRaw);
+  const fr = mergeMessages(JSON.parse(frRaw) as MessageCatalog, frSupplements);
+  const en = mergeMessages(JSON.parse(enRaw) as MessageCatalog, enSupplements);
   const frKeys = new Set(flattenKeys(fr));
   const enKeys = new Set(flattenKeys(en));
 
@@ -130,12 +133,12 @@ async function main() {
   }
 
   if (missingInEn.length > 0) {
-    console.error("\nKeys present in fr.json but missing in en.json:");
+    console.error("\nKeys present in the effective FR catalog but missing in EN:");
     missingInEn.forEach((key) => console.error(`  - ${key}`));
   }
 
   if (missingInFr.length > 0) {
-    console.error("\nKeys present in en.json but missing in fr.json:");
+    console.error("\nKeys present in the effective EN catalog but missing in FR:");
     missingInFr.forEach((key) => console.error(`  - ${key}`));
   }
 
@@ -149,7 +152,7 @@ async function main() {
     return;
   }
 
-  console.log(`i18n check passed: ${frKeys.size} message keys are mirrored and no hard-coded UI strings were detected.`);
+  console.log(`i18n check passed: ${frKeys.size} effective message keys are mirrored and no hard-coded UI strings were detected.`);
 }
 
 main().catch((error) => {
