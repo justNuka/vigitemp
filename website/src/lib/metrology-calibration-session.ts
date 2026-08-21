@@ -6,7 +6,14 @@ import { hasMainDbColumn } from "@/lib/db-schema"
 import { getHotlineServerConfig } from "@/lib/hotline-config"
 import type { JWTPayload } from "@/lib/jwt"
 import { log } from "@/lib/logger"
+import {
+  calculateCalibrationResult,
+  CALIBRATION_SAMPLE_COUNT,
+  DEFAULT_SENSOR_RESOLUTION,
+} from "@/lib/metrology-calibration-calculations"
+import { restoreCalibrationSensorStates } from "@/lib/metrology-calibration-sensor-state"
 import { getSensorFamilyFromSerial } from "@/lib/sensor-naming"
+import { inferStandardTypeCode } from "@/lib/standard-types"
 import { prisma, prismaMesure } from "@/lib/prisma"
 import { getTableReference, isMssqlProvider, quoteIdentifier } from "@/lib/metrology-db"
 
@@ -15,6 +22,7 @@ const DEFAULT_SERVER_BDD_ID = 1
 const CALIBRATION_INTERVAL_MS = 60_000
 
 type CalibrationStatus = "running" | "completed" | "failed"
+export type CalibrationPhase = "reading" | "acquiring" | "completed"
 
 export type CalibrationReading = {
   value: number | null
@@ -23,6 +31,24 @@ export type CalibrationReading = {
   measuredAt: string
   source: "GSP" | "GSO"
   error: string | null
+}
+
+export type CalibrationSample = {
+  order: number
+  value: number
+  measuredAt: string
+  unit: string | null
+}
+
+export type CalibrationResult = {
+  calibrationId: number
+  sensorId: number
+  serialNumber: string
+  meanSensor: number
+  meanStandard: number
+  accuracyError: number
+  uncertainty: number
+  standardDeviation: number
 }
 
 type ManagedCalibrationSensor = AdjustmentSensorRow & {
@@ -38,7 +64,23 @@ type ManagedCalibrationSensor = AdjustmentSensorRow & {
   }>
 }
 
-type CalibrationSession = {
+type CalibrationReference = {
+  standardId: number
+  standardSerial: string
+  standardModuleName: string | null
+  standardPort: string
+  standardUnit: string | null
+  standardResolution: number
+  standardUncertainty: number
+  standardOrganization: string | null
+  standardCertificateDate: string | null
+  standardCertificateNumber: string | null
+  mediumId: number
+  mediumStability: number
+  mediumHomogeneity: number
+}
+
+type CalibrationSession = CalibrationReference & {
   id: string
   userId: number
   username: string
@@ -48,10 +90,15 @@ type CalibrationSession = {
   stoppedAt: string | null
   intervalSeconds: number
   status: CalibrationStatus
+  phase: CalibrationPhase
   stopRequested: boolean
   sensors: ManagedCalibrationSensor[]
+  latestStandardReading: CalibrationReading | null
   latestReadings: Record<number, CalibrationReading>
   readingCounts: Record<number, number>
+  standardSamples: CalibrationSample[]
+  sensorSamples: Record<number, CalibrationSample[]>
+  results: Record<number, CalibrationResult>
   message: string | null
   lastError: string | null
   lastUpdatedAt: string
@@ -65,6 +112,13 @@ export type PublicCalibrationSession = {
   stoppedAt: string | null
   intervalSeconds: number
   status: CalibrationStatus
+  phase: CalibrationPhase
+  standardId: number
+  standardSerial: string
+  standardUnit: string | null
+  standardResolution: number
+  standardUncertainty: number
+  mediumId: number
   sensors: Array<{
     id: number
     serialNumber: string
@@ -76,8 +130,15 @@ export type PublicCalibrationSession = {
     unit: string | null
     isGso: boolean
   }>
+  latestStandardReading: CalibrationReading | null
   latestReadings: Record<number, CalibrationReading>
   readingCounts: Record<number, number>
+  standardSamples: CalibrationSample[]
+  sensorSamples: Record<number, CalibrationSample[]>
+  results: Record<number, CalibrationResult>
+  sampleTarget: number
+  capturedSampleCount: number
+  canStartAcquisition: boolean
   message: string | null
   lastError: string | null
   lastUpdatedAt: string
@@ -95,6 +156,14 @@ type GsoCalibrationMeasurementRow = {
   Date_Heure_Mesure: Date | string
 }
 
+type CalibrationReadTarget = {
+  serialNumber: string
+  unit: string | null
+  modulePort: string | null
+  moduleName: string | null
+  address: string | null
+}
+
 const globalState = globalThis as typeof globalThis & GlobalCalibrationState
 const sessionsByUserId = (globalState.calibrationSessionsByUserId ??= new Map<number, CalibrationSession>())
 const sensorLocks = (globalState.calibrationSensorLocks ??= new Map<number, string>())
@@ -105,8 +174,8 @@ function nowIso() {
 
 function asFiniteNumber(value: unknown): number | null {
   if (typeof value === "number" && Number.isFinite(value)) return value
-  if (typeof value === "string") {
-    const parsed = Number(value.replace(",", "."))
+  if (value != null) {
+    const parsed = Number(String(value).replace(",", "."))
     return Number.isFinite(parsed) ? parsed : null
   }
   return null
@@ -138,6 +207,20 @@ function normalizeSerialPortName(value: string | null | undefined) {
   return match ? `COM${match[1]}` : trimmed
 }
 
+function hasUsableReading(reading: CalibrationReading | null | undefined) {
+  return typeof reading?.value === "number" && Number.isFinite(reading.value)
+}
+
+function canStartAcquisition(session: CalibrationSession) {
+  return (
+    session.status === "running" &&
+    session.phase === "reading" &&
+    hasUsableReading(session.latestStandardReading) &&
+    session.sensors.length > 0 &&
+    session.sensors.every((sensor) => hasUsableReading(session.latestReadings[sensor.id]))
+  )
+}
+
 function toPublicSession(session: CalibrationSession): PublicCalibrationSession {
   return {
     id: session.id,
@@ -146,6 +229,13 @@ function toPublicSession(session: CalibrationSession): PublicCalibrationSession 
     stoppedAt: session.stoppedAt,
     intervalSeconds: session.intervalSeconds,
     status: session.status,
+    phase: session.phase,
+    standardId: session.standardId,
+    standardSerial: session.standardSerial,
+    standardUnit: session.standardUnit,
+    standardResolution: session.standardResolution,
+    standardUncertainty: session.standardUncertainty,
+    mediumId: session.mediumId,
     sensors: session.sensors.map((sensor) => ({
       id: sensor.id,
       serialNumber: sensor.serialNumber,
@@ -157,8 +247,15 @@ function toPublicSession(session: CalibrationSession): PublicCalibrationSession 
       unit: sensor.unit,
       isGso: sensor.isGso,
     })),
+    latestStandardReading: session.latestStandardReading,
     latestReadings: session.latestReadings,
     readingCounts: session.readingCounts,
+    standardSamples: session.standardSamples,
+    sensorSamples: session.sensorSamples,
+    results: session.results,
+    sampleTarget: CALIBRATION_SAMPLE_COUNT,
+    capturedSampleCount: session.standardSamples.length,
+    canStartAcquisition: canStartAcquisition(session),
     message: session.message,
     lastError: session.lastError,
     lastUpdatedAt: session.lastUpdatedAt,
@@ -218,7 +315,7 @@ async function loadManagedSensors(selectedIds: number[]) {
         select: { Id_Module: true, Module_Numero_Serie: true, Emplacement: true, Port_Serie: true },
       })
     : []
-  const modulesById = new Map(modules.map((module) => [module.Id_Module, module]))
+  const modulesById = new Map(modules.map((moduleRow) => [moduleRow.Id_Module, moduleRow]))
 
   return rows.map((row): ManagedCalibrationSensor => {
     const serial = row.Sonde_Numero_Serie?.trim()
@@ -259,7 +356,97 @@ async function loadManagedSensors(selectedIds: number[]) {
   })
 }
 
-async function readGspMeasurement(sensor: ManagedCalibrationSensor): Promise<CalibrationReading> {
+async function loadCalibrationReference(
+  standardId: number,
+  mediumId: number,
+  expectedUnit: string | null,
+): Promise<CalibrationReference> {
+  const standard = await prisma.t_etalon.findUnique({
+    where: { Id_Etalon: standardId },
+    select: {
+      Id_Etalon: true,
+      Etalon_Numero_Serie: true,
+      Est_Archive: true,
+      Est_Sonde_Externe: true,
+      Port_Serie: true,
+      Id_Module: true,
+      Incertitude_Max: true,
+    },
+  })
+  if (!standard?.Etalon_Numero_Serie || standard.Est_Archive) {
+    throw new Error("Etalon introuvable ou archive.")
+  }
+  if (standard.Est_Sonde_Externe) {
+    throw new Error("L'etalonnage a 10 mesures necessite un etalon interroge automatiquement.")
+  }
+
+  const typeRows = await prisma.t_etalon_type.findMany({
+    select: { Type_Etalon: true, Resolution: true },
+  })
+  const standardType = inferStandardTypeCode(standard.Etalon_Numero_Serie, typeRows)
+  if (standardType !== "SPET") {
+    throw new Error("L'etalonnage automatique est actuellement limite aux etalons SPET.")
+  }
+  const typeInfo = typeRows.find((row) => String(row.Type_Etalon).trim().toUpperCase() === standardType)
+  const standardResolution = asFiniteNumber(typeInfo?.Resolution)
+  const standardUncertainty = asFiniteNumber(standard.Incertitude_Max)
+  if (standardResolution == null || standardResolution < 0) {
+    throw new Error("La resolution de l'etalon doit etre renseignee.")
+  }
+  if (standardUncertainty == null || standardUncertainty < 0) {
+    throw new Error("L'incertitude maximale de l'etalon doit etre renseignee.")
+  }
+
+  const standardModule = standard.Id_Module
+    ? await prisma.t_module.findUnique({
+        where: { Id_Module: standard.Id_Module },
+        select: { Module_Numero_Serie: true, Port_Serie: true },
+      })
+    : null
+  const standardPort = standardModule?.Port_Serie?.trim() || standard.Port_Serie?.trim() || ""
+  if (!standardPort) throw new Error("Aucun port serie n'est defini pour l'etalon selectionne.")
+
+  const certificate = await prisma.t_certif.findFirst({
+    where: { Etalon_Numero_Serie: standard.Etalon_Numero_Serie },
+    orderBy: [{ Date: "desc" }, { Id_Certif: "desc" }],
+    select: { Organisme: true, Date: true, Numero: true, Unite: true },
+  })
+  const standardUnit = certificate?.Unite?.trim() || null
+  const expectedUnitKey = normalizeUnitKey(expectedUnit)
+  const standardUnitKey = normalizeUnitKey(standardUnit)
+  if (expectedUnitKey && standardUnitKey && expectedUnitKey !== standardUnitKey) {
+    throw new Error("L'etalon doit utiliser la meme unite que les sondes selectionnees.")
+  }
+
+  const medium = await prisma.t_milieu.findUnique({
+    where: { Id_Milieu: mediumId },
+    select: { Id_Milieu: true, Est_Archive: true, Stabilite: true, Homogeneite: true },
+  })
+  if (!medium || medium.Est_Archive) throw new Error("Milieu d'intercomparaison introuvable ou archive.")
+  const mediumStability = asFiniteNumber(medium.Stabilite)
+  const mediumHomogeneity = asFiniteNumber(medium.Homogeneite)
+  if (mediumStability == null || mediumStability < 0 || mediumHomogeneity == null || mediumHomogeneity < 0) {
+    throw new Error("La stabilite et l'homogeneite du milieu doivent etre renseignees.")
+  }
+
+  return {
+    standardId: standard.Id_Etalon,
+    standardSerial: standard.Etalon_Numero_Serie,
+    standardModuleName: standardModule?.Module_Numero_Serie ?? null,
+    standardPort,
+    standardUnit,
+    standardResolution,
+    standardUncertainty,
+    standardOrganization: certificate?.Organisme ?? null,
+    standardCertificateDate: certificate?.Date ? certificate.Date.toISOString() : null,
+    standardCertificateNumber: certificate?.Numero ?? null,
+    mediumId: medium.Id_Milieu,
+    mediumStability,
+    mediumHomogeneity,
+  }
+}
+
+async function readGspMeasurement(target: CalibrationReadTarget): Promise<CalibrationReading> {
   const measuredAt = nowIso()
   const config = await getHotlineServerConfig()
   const serverHost = config.serverHost?.trim() || process.env.HOTLINE_SERVER_HOST?.trim() || "127.0.0.1"
@@ -272,12 +459,12 @@ async function readGspMeasurement(sensor: ManagedCalibrationSensor): Promise<Cal
       cache: "no-store",
       body: JSON.stringify({
         sensorType: "GSP",
-        serial: sensor.serialNumber,
+        serial: target.serialNumber,
         action: "read",
         operationContext: "ETALONNAGE",
-        manualPort: normalizeSerialPortName(sensor.modulePort),
-        manualAddress: sensor.address?.trim() || undefined,
-        manualModule: sensor.moduleName?.trim() || undefined,
+        manualPort: normalizeSerialPortName(target.modulePort),
+        manualAddress: target.address?.trim() || undefined,
+        manualModule: target.moduleName?.trim() || undefined,
         readTimeoutMs: 6000,
         writeTimeoutMs: 4000,
         gsp: { listenWindowMs: 500 },
@@ -290,7 +477,7 @@ async function readGspMeasurement(sensor: ManagedCalibrationSensor): Promise<Cal
       return {
         value: null,
         rawValue: raw?.RawValue == null ? null : String(raw.RawValue),
-        unit: raw?.Unit == null ? sensor.unit : String(raw.Unit),
+        unit: raw?.Unit == null ? target.unit : String(raw.Unit),
         measuredAt,
         source: "GSP",
         error: String(raw?.Error ?? raw?.error ?? payload?.message ?? "Lecture impossible"),
@@ -299,7 +486,7 @@ async function readGspMeasurement(sensor: ManagedCalibrationSensor): Promise<Cal
     return {
       value: asFiniteNumber(raw?.Value),
       rawValue: raw?.RawValue == null ? null : String(raw.RawValue),
-      unit: raw?.Unit == null ? sensor.unit : String(raw.Unit),
+      unit: raw?.Unit == null ? target.unit : String(raw.Unit),
       measuredAt,
       source: "GSP",
       error: null,
@@ -308,7 +495,7 @@ async function readGspMeasurement(sensor: ManagedCalibrationSensor): Promise<Cal
     return {
       value: null,
       rawValue: null,
-      unit: sensor.unit,
+      unit: target.unit,
       measuredAt,
       source: "GSP",
       error: error instanceof Error ? error.message : String(error),
@@ -324,36 +511,23 @@ async function readLatestGsoMeasurement(
   const rows = isMssqlProvider()
     ? await prismaMesure.$queryRawUnsafe<GsoCalibrationMeasurementRow[]>(
         `SELECT TOP (1)
-           ${quoteIdentifier("Valeur")},
-           ${quoteIdentifier("Valeur_Brute")},
-           ${quoteIdentifier("Unite")},
+           ${quoteIdentifier("Valeur")}, ${quoteIdentifier("Valeur_Brute")}, ${quoteIdentifier("Unite")},
            ${quoteIdentifier("Date_Heure_Mesure")}
          FROM ${quoteIdentifier("tm_mesures_etalonnage")}
-         WHERE (
-           ${quoteIdentifier("Sonde_Numero_serie")} = @P1
-           OR ${quoteIdentifier("Adresse_Sonde")} = @P2
-         )
+         WHERE (${quoteIdentifier("Sonde_Numero_serie")} = @P1 OR ${quoteIdentifier("Adresse_Sonde")} = @P2)
            AND ${quoteIdentifier("Date_Heure_Mesure")} > @P3
-         ORDER BY ${quoteIdentifier("Date_Heure_Mesure")} DESC,
-                  ${quoteIdentifier("Id_Mesure_Etalonnage")} DESC`,
+         ORDER BY ${quoteIdentifier("Date_Heure_Mesure")} DESC, ${quoteIdentifier("Id_Mesure_Etalonnage")} DESC`,
         sensor.serialNumber,
         address,
         after,
       )
     : await prismaMesure.$queryRawUnsafe<GsoCalibrationMeasurementRow[]>(
-        `SELECT
-           ${quoteIdentifier("Valeur")},
-           ${quoteIdentifier("Valeur_Brute")},
-           ${quoteIdentifier("Unite")},
-           ${quoteIdentifier("Date_Heure_Mesure")}
+        `SELECT ${quoteIdentifier("Valeur")}, ${quoteIdentifier("Valeur_Brute")}, ${quoteIdentifier("Unite")},
+                ${quoteIdentifier("Date_Heure_Mesure")}
          FROM ${quoteIdentifier("tm_mesures_etalonnage")}
-         WHERE (
-           ${quoteIdentifier("Sonde_Numero_serie")} = ?
-           OR ${quoteIdentifier("Adresse_Sonde")} = ?
-         )
+         WHERE (${quoteIdentifier("Sonde_Numero_serie")} = ? OR ${quoteIdentifier("Adresse_Sonde")} = ?)
            AND ${quoteIdentifier("Date_Heure_Mesure")} > ?
-         ORDER BY ${quoteIdentifier("Date_Heure_Mesure")} DESC,
-                  ${quoteIdentifier("Id_Mesure_Etalonnage")} DESC
+         ORDER BY ${quoteIdentifier("Date_Heure_Mesure")} DESC, ${quoteIdentifier("Id_Mesure_Etalonnage")} DESC
          LIMIT 1`,
         sensor.serialNumber,
         address,
@@ -362,10 +536,8 @@ async function readLatestGsoMeasurement(
 
   const row = rows[0]
   if (!row) return null
-
   const value = asFiniteNumber(row.Valeur) ?? asFiniteNumber(row.Valeur_Brute)
   const measuredAt = serializeStoredDbDateTime(row.Date_Heure_Mesure)
-
   return {
     value,
     rawValue: row.Valeur_Brute == null ? null : String(row.Valeur_Brute),
@@ -379,7 +551,8 @@ async function readLatestGsoMeasurement(
 async function persistCalibrationReading(
   sensor: ManagedCalibrationSensor,
   reading: CalibrationReading,
-  order: number,
+  order: number | null,
+  standardValue: number | null,
 ) {
   if (reading.value == null) return
   const measuredAt = new Date(reading.measuredAt)
@@ -389,68 +562,8 @@ async function persistCalibrationReading(
        Sonde_Numero_serie, Adresse_Sonde, Numero_Ordre, Mesure_Sonde, Mesure_Etalon)
     VALUES
       (${DEFAULT_SERVER_BDD_ID}, ${reading.value}, ${asFiniteNumber(reading.rawValue)}, ${reading.unit}, ${measuredAt},
-       ${sensor.serialNumber}, ${sensor.address}, ${order}, ${reading.value}, ${null})
+       ${sensor.serialNumber}, ${sensor.address}, ${order}, ${reading.value}, ${standardValue})
   `
-}
-
-async function readSensor(session: CalibrationSession, sensor: ManagedCalibrationSensor) {
-  const previous = session.latestReadings[sensor.id]
-  const reading = sensor.isGso
-    ? await readLatestGsoMeasurement(sensor, previous ? new Date(previous.measuredAt) : new Date(session.startedAt))
-    : await readGspMeasurement(sensor)
-
-  if (!reading) return
-  session.latestReadings[sensor.id] = reading
-  session.lastUpdatedAt = nowIso()
-
-  if (reading.value != null) {
-    const order = (session.readingCounts[sensor.id] ?? 0) + 1
-    session.readingCounts[sensor.id] = order
-    if (!sensor.isGso) {
-      try {
-        await persistCalibrationReading(sensor, reading, order)
-      } catch (error) {
-        log.warn("METROLOGY_CALIBRATION", "measurement_persist_failed", {
-          sessionId: session.id,
-          serial: sensor.serialNumber,
-          error: error instanceof Error ? error.message : String(error),
-        })
-      }
-    }
-  }
-}
-
-async function runMeasurementLoop(session: CalibrationSession) {
-  if (session.stopRequested || session.status !== "running") return
-  const loopStartedAt = Date.now()
-
-  for (const sensor of session.sensors) {
-    if (session.stopRequested || session.status !== "running") break
-    try {
-      await readSensor(session, sensor)
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error)
-      session.latestReadings[sensor.id] = {
-        value: null,
-        rawValue: null,
-        unit: sensor.unit,
-        measuredAt: nowIso(),
-        source: sensor.isGso ? "GSO" : "GSP",
-        error: message,
-      }
-      session.lastError = message
-      session.lastUpdatedAt = nowIso()
-      log.warn("METROLOGY_CALIBRATION", "measurement_read_failed", {
-        sessionId: session.id,
-        serial: sensor.serialNumber,
-        error: message,
-      })
-    }
-  }
-
-  if (session.stopRequested || session.status !== "running") return
-  const delay = Math.max(0, CALIBRATION_INTERVAL_MS - (Date.now() - loopStartedAt))
-  session.loopTimer = setTimeout(() => void runMeasurementLoop(session), delay)
 }
 
 async function restoreManagedSensors(sensors: ManagedCalibrationSensor[]) {
@@ -485,19 +598,259 @@ async function restoreManagedSensors(sensors: ManagedCalibrationSensor[]) {
 }
 
 async function restoreSessionStates(session: CalibrationSession) {
-  let stateError: unknown = null
+  let firstError: unknown = null
   try {
     await restoreManagedSensors(session.sensors)
   } catch (error) {
-    stateError = error
+    firstError = error
   }
-  if (stateError) throw stateError
+  try {
+    await restoreCalibrationSensorStates(session.userId)
+  } catch (error) {
+    firstError ??= error
+  }
+  if (firstError) throw firstError
 }
 
 function releaseSensorLocks(session: CalibrationSession) {
   for (const sensor of session.sensors) {
     if (sensorLocks.get(sensor.id) === session.id) sensorLocks.delete(sensor.id)
   }
+}
+
+async function persistCalibrationResults(session: CalibrationSession) {
+  if (session.standardSamples.length !== CALIBRATION_SAMPLE_COUNT) {
+    throw new Error("La campagne ne contient pas les 10 mesures etalon attendues.")
+  }
+
+  const standardValues = session.standardSamples.map((sample) => sample.value)
+  const completedAt = new Date()
+  const results: Record<number, CalibrationResult> = {}
+
+  await prisma.$transaction(async (tx) => {
+    for (const sensor of session.sensors) {
+      const samples = session.sensorSamples[sensor.id] ?? []
+      if (samples.length !== CALIBRATION_SAMPLE_COUNT) {
+        throw new Error(`La sonde ${sensor.serialNumber} ne contient pas 10 mesures exploitables.`)
+      }
+
+      const calculation = calculateCalibrationResult(
+        samples.map((sample) => sample.value),
+        standardValues,
+        {
+          standardResolution: session.standardResolution,
+          standardUncertainty: session.standardUncertainty,
+          mediumStability: session.mediumStability,
+          mediumHomogeneity: session.mediumHomogeneity,
+          sensorResolution: DEFAULT_SENSOR_RESOLUTION,
+        },
+      )
+
+      const calibration = await tx.t_etalonnage.create({
+        data: {
+          Date_Heure_Etalonnage: completedAt,
+          Sonde_Numero_Serie: sensor.serialNumber,
+          Operateur: session.operator,
+          Etalon_Numero_Serie: session.standardSerial,
+          Date_Certif: session.standardCertificateDate ? new Date(session.standardCertificateDate) : null,
+          Organisme: session.standardOrganization,
+          Num_Certif: session.standardCertificateNumber,
+          Unite: sensor.unit ?? session.standardUnit,
+          Incertitude: calculation.uncertainty,
+          Moyenne_Etalon: calculation.meanStandard,
+          Moyenne_Sonde: calculation.meanSensor,
+          Repetabilite: String(calculation.standardDeviation),
+          Id_Bain: session.mediumId,
+          Err_Justesse: calculation.accuracyError,
+        },
+      })
+
+      await tx.t_etalonnage_mesure.createMany({
+        data: samples.map((sample, index) => ({
+          Id_Etalonnage: calibration.Id_Etalonnage,
+          Numero_Ordre: sample.order,
+          Mesure_Sonde: sample.value,
+          Mesure_Etalon: session.standardSamples[index]?.value ?? null,
+        })),
+      })
+
+      results[sensor.id] = {
+        calibrationId: calibration.Id_Etalonnage,
+        sensorId: sensor.id,
+        serialNumber: sensor.serialNumber,
+        meanSensor: calculation.meanSensor,
+        meanStandard: calculation.meanStandard,
+        accuracyError: calculation.accuracyError,
+        uncertainty: calculation.uncertainty,
+        standardDeviation: calculation.standardDeviation,
+      }
+    }
+  })
+
+  return results
+}
+
+async function completeCalibrationAcquisition(session: CalibrationSession) {
+  if (session.loopTimer) clearTimeout(session.loopTimer)
+  session.loopTimer = null
+  session.stopRequested = true
+
+  try {
+    session.results = await persistCalibrationResults(session)
+    session.status = "completed"
+    session.phase = "completed"
+    session.stoppedAt = nowIso()
+    session.message = `Etalonnage termine : ${CALIBRATION_SAMPLE_COUNT} mesures valides ont ete enregistrees.`
+    session.lastError = null
+    session.lastUpdatedAt = nowIso()
+    log.info("METROLOGY_CALIBRATION", "acquisition_completed", {
+      sessionId: session.id,
+      userId: session.userId,
+      standard: session.standardSerial,
+      sampleCount: session.standardSamples.length,
+      sensors: session.sensors.map((sensor) => sensor.serialNumber),
+    })
+  } catch (error) {
+    session.status = "failed"
+    session.phase = "completed"
+    session.stoppedAt = nowIso()
+    session.lastError = error instanceof Error ? error.message : String(error)
+    session.message = "Le calcul ou l'enregistrement de l'etalonnage a echoue."
+    session.lastUpdatedAt = nowIso()
+    log.error("METROLOGY_CALIBRATION", "acquisition_completion_failed", {
+      sessionId: session.id,
+      userId: session.userId,
+      error: session.lastError,
+    })
+  }
+
+  try {
+    await restoreSessionStates(session)
+  } catch (error) {
+    session.status = "failed"
+    session.lastError = error instanceof Error ? error.message : String(error)
+    session.message = "L'etalonnage est termine mais la restauration des etats a rencontre une erreur."
+    session.lastUpdatedAt = nowIso()
+  } finally {
+    releaseSensorLocks(session)
+  }
+}
+
+async function runMeasurementLoop(session: CalibrationSession) {
+  session.loopTimer = null
+  if (session.stopRequested || session.status !== "running") return
+  const loopStartedAt = Date.now()
+
+  const standardReading = await readGspMeasurement({
+    serialNumber: session.standardSerial,
+    unit: session.standardUnit,
+    modulePort: session.standardPort,
+    moduleName: session.standardModuleName,
+    address: null,
+  })
+  session.latestStandardReading = standardReading
+  session.lastUpdatedAt = nowIso()
+
+  const cycleReadings = new Map<number, CalibrationReading>()
+  for (const sensor of session.sensors) {
+    if (session.stopRequested || session.status !== "running") break
+    try {
+      const previous = session.latestReadings[sensor.id]
+      const reading = sensor.isGso
+        ? await readLatestGsoMeasurement(sensor, previous ? new Date(previous.measuredAt) : new Date(session.startedAt))
+        : await readGspMeasurement(sensor)
+      if (!reading) continue
+
+      session.latestReadings[sensor.id] = reading
+      cycleReadings.set(sensor.id, reading)
+      session.lastUpdatedAt = nowIso()
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error)
+      const failedReading: CalibrationReading = {
+        value: null,
+        rawValue: null,
+        unit: sensor.unit,
+        measuredAt: nowIso(),
+        source: sensor.isGso ? "GSO" : "GSP",
+        error: message,
+      }
+      session.latestReadings[sensor.id] = failedReading
+      cycleReadings.set(sensor.id, failedReading)
+      session.lastError = message
+      session.lastUpdatedAt = nowIso()
+      log.warn("METROLOGY_CALIBRATION", "measurement_read_failed", {
+        sessionId: session.id,
+        serial: sensor.serialNumber,
+        error: message,
+      })
+    }
+  }
+
+  const acquisitionOrder = session.phase === "acquiring" ? session.standardSamples.length + 1 : null
+  const standardValue = hasUsableReading(standardReading) ? standardReading.value : null
+  for (const sensor of session.sensors) {
+    const reading = cycleReadings.get(sensor.id)
+    if (!sensor.isGso && reading?.value != null) {
+      await persistCalibrationReading(sensor, reading, acquisitionOrder, standardValue).catch((error) => {
+        log.warn("METROLOGY_CALIBRATION", "measurement_persist_failed", {
+          sessionId: session.id,
+          serial: sensor.serialNumber,
+          error: error instanceof Error ? error.message : String(error),
+        })
+      })
+    }
+  }
+
+  if (session.phase === "acquiring") {
+    const completeCycle =
+      standardValue != null &&
+      session.sensors.every((sensor) => {
+        const reading = cycleReadings.get(sensor.id)
+        return typeof reading?.value === "number" && Number.isFinite(reading.value)
+      })
+
+    if (completeCycle && acquisitionOrder != null) {
+      session.standardSamples.push({
+        order: acquisitionOrder,
+        value: standardValue,
+        measuredAt: standardReading.measuredAt,
+        unit: standardReading.unit ?? session.standardUnit,
+      })
+
+      for (const sensor of session.sensors) {
+        const reading = cycleReadings.get(sensor.id)!
+        const sensorSamples = (session.sensorSamples[sensor.id] ??= [])
+        sensorSamples.push({
+          order: acquisitionOrder,
+          value: reading.value!,
+          measuredAt: reading.measuredAt,
+          unit: reading.unit ?? sensor.unit,
+        })
+        session.readingCounts[sensor.id] = acquisitionOrder
+      }
+
+      session.message = `Acquisition etalonnage : ${acquisitionOrder}/${CALIBRATION_SAMPLE_COUNT} mesure(s) valide(s).`
+      session.lastError = null
+      session.lastUpdatedAt = nowIso()
+
+      if (session.standardSamples.length >= CALIBRATION_SAMPLE_COUNT) {
+        await completeCalibrationAcquisition(session)
+        return
+      }
+    } else {
+      session.message = `Acquisition etalonnage : ${session.standardSamples.length}/${CALIBRATION_SAMPLE_COUNT}. Attente d'un cycle complet et valide.`
+      session.lastUpdatedAt = nowIso()
+    }
+  } else {
+    session.message = canStartAcquisition(session)
+      ? "Lecture active. Toutes les valeurs necessaires sont disponibles pour demarrer l'etalonnage."
+      : "Lecture active. Attente d'une valeur valide pour l'etalon et chaque sonde."
+    session.lastUpdatedAt = nowIso()
+  }
+
+  if (session.stopRequested || session.status !== "running") return
+  const delay = Math.max(0, CALIBRATION_INTERVAL_MS - (Date.now() - loopStartedAt))
+  session.loopTimer = setTimeout(() => void runMeasurementLoop(session), delay)
 }
 
 export async function getCalibrationSessionForUser(userId: number) {
@@ -507,7 +860,7 @@ export async function getCalibrationSessionForUser(userId: number) {
 
 export async function startCalibrationSession(
   user: JWTPayload,
-  input: { selectedSensorIds: number[]; operator: string },
+  input: { selectedSensorIds: number[]; operator: string; standardId: number; mediumId: number },
 ) {
   const existing = sessionsByUserId.get(user.userId)
   if (existing?.status === "running") {
@@ -521,8 +874,10 @@ export async function startCalibrationSession(
   const sensors = await loadManagedSensors(selectedIds)
   const unitKeys = new Set(sensors.map((sensor) => normalizeUnitKey(sensor.unit)).filter(Boolean))
   if (unitKeys.size > 1) throw new Error("Toutes les sondes d'un etalonnage doivent utiliser la meme unite.")
+  const reference = await loadCalibrationReference(input.standardId, input.mediumId, sensors[0]?.unit ?? null)
 
   const session: CalibrationSession = {
+    ...reference,
     id: randomUUID(),
     userId: user.userId,
     username: user.username,
@@ -530,13 +885,18 @@ export async function startCalibrationSession(
     operator: input.operator.trim() || user.username,
     startedAt: nowIso(),
     stoppedAt: null,
-    intervalSeconds: 60,
+    intervalSeconds: CALIBRATION_INTERVAL_MS / 1000,
     status: "running",
+    phase: "reading",
     stopRequested: false,
     sensors,
+    latestStandardReading: null,
     latestReadings: {},
-    readingCounts: {},
-    message: null,
+    readingCounts: Object.fromEntries(sensors.map((sensor) => [sensor.id, 0])),
+    standardSamples: [],
+    sensorSamples: Object.fromEntries(sensors.map((sensor) => [sensor.id, []])),
+    results: {},
+    message: "Lecture d'etalonnage demarree. Attente des premieres valeurs valides.",
     lastError: null,
     lastUpdatedAt: nowIso(),
     loopTimer: null,
@@ -566,12 +926,14 @@ export async function startCalibrationSession(
     await updateSensorMetrologyFlags(sensors.map((sensor) => sensor.id), { metrologyInProgress: 1 })
     for (const sensor of sensors) sensorLocks.set(sensor.id, session.id)
     sessionsByUserId.set(user.userId, session)
-    log.info("METROLOGY_CALIBRATION", "session_started", {
+    log.info("METROLOGY_CALIBRATION", "reading_started", {
       sessionId: session.id,
       userId: user.userId,
+      standard: session.standardSerial,
+      mediumId: session.mediumId,
       sensors: sensors.map((sensor) => sensor.serialNumber),
     })
-    void runMeasurementLoop(session)
+    session.loopTimer = setTimeout(() => void runMeasurementLoop(session), 500)
     return toPublicSession(session)
   } catch (error) {
     sessionsByUserId.set(user.userId, session)
@@ -582,10 +944,39 @@ export async function startCalibrationSession(
   }
 }
 
+export async function startCalibrationAcquisition(userId: number) {
+  const session = sessionsByUserId.get(userId)
+  if (!session || session.status !== "running") throw new Error("Aucune session d'etalonnage active.")
+  if (session.phase !== "reading") throw new Error("L'acquisition est deja lancee ou terminee.")
+  if (!canStartAcquisition(session)) {
+    throw new Error("Une premiere lecture valide de l'etalon et de chaque sonde est requise.")
+  }
+
+  session.phase = "acquiring"
+  session.standardSamples = []
+  session.sensorSamples = Object.fromEntries(session.sensors.map((sensor) => [sensor.id, []]))
+  session.readingCounts = Object.fromEntries(session.sensors.map((sensor) => [sensor.id, 0]))
+  session.results = {}
+  session.message = `Acquisition etalonnage demarree : 0/${CALIBRATION_SAMPLE_COUNT}.`
+  session.lastError = null
+  session.lastUpdatedAt = nowIso()
+
+  log.info("METROLOGY_CALIBRATION", "acquisition_started", {
+    sessionId: session.id,
+    userId,
+    standard: session.standardSerial,
+    sensors: session.sensors.map((sensor) => sensor.serialNumber),
+    sampleTarget: CALIBRATION_SAMPLE_COUNT,
+  })
+
+  return toPublicSession(session)
+}
+
 export async function addCalibrationSensor(userId: number, sensorId: number) {
   const session = sessionsByUserId.get(userId)
-  if (!session || session.status !== "running") {
-    throw new Error("Aucune session d'etalonnage active.")
+  if (!session || session.status !== "running") throw new Error("Aucune session d'etalonnage active.")
+  if (session.phase !== "reading") {
+    throw new Error("Impossible d'ajouter une sonde apres le demarrage des 10 mesures.")
   }
   if (session.sensors.some((sensor) => sensor.id === sensorId)) return toPublicSession(session)
   if (sensorLocks.has(sensorId)) throw new Error("Cette sonde est deja utilisee par un autre etalonnage.")
@@ -615,6 +1006,8 @@ export async function addCalibrationSensor(userId: number, sensorId: number) {
     sensorLocks.set(sensor.id, session.id)
     session.sensors.push(sensor)
     session.readingCounts[sensor.id] = 0
+    session.sensorSamples[sensor.id] = []
+    delete session.latestReadings[sensor.id]
     session.lastUpdatedAt = nowIso()
     log.info("METROLOGY_CALIBRATION", "sensor_added", {
       sessionId: session.id,
@@ -641,16 +1034,19 @@ export async function stopCalibrationSession(userId: number) {
   try {
     await restoreSessionStates(session)
     session.status = "completed"
+    session.phase = "completed"
     session.stoppedAt = nowIso()
-    session.message = "Etalonnage arrete. Les etats de surveillance ont ete restaures."
+    session.message = "Lecture / etalonnage arrete. Les etats de surveillance ont ete restaures."
     session.lastUpdatedAt = nowIso()
     log.info("METROLOGY_CALIBRATION", "session_stopped", {
       sessionId: session.id,
       userId,
+      phase: session.phase,
       readingCounts: session.readingCounts,
     })
   } catch (error) {
     session.status = "failed"
+    session.phase = "completed"
     session.lastError = error instanceof Error ? error.message : String(error)
     session.lastUpdatedAt = nowIso()
     throw error
