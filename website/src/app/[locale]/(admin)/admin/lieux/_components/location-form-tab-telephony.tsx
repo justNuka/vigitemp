@@ -18,6 +18,7 @@ import {
 import { useTranslations } from "next-intl";
 import type { LocationFormData } from "./location-form-types";
 import type { MailingUser } from "@/hooks/useUsersForMailing";
+import { useGroups } from "@/hooks/useGroups";
 
 type Props = {
   users: MailingUser[];
@@ -25,11 +26,13 @@ type Props = {
 
 export function LocationFormTabTelephony({ users }: Props) {
   const t = useTranslations("locationsForm.telephony");
+  const tGeneral = useTranslations("locationsForm.general");
   const { control, getValues, setValue, watch } = useFormContext<LocationFormData>();
   const { fields, append, remove } = useFieldArray({
     control,
     name: "MailingContacts",
   });
+  const { data: groups = [] } = useGroups();
 
   const contacts = watch("MailingContacts") ?? [];
   const groupIds = watch("GroupIds") ?? [];
@@ -45,6 +48,16 @@ export function LocationFormTabTelephony({ users }: Props) {
     for (const user of users) map.set(user.id, user);
     return map;
   }, [users]);
+
+  const selectedGroups = useMemo(() => {
+    const groupsById = new Map(groups.map((group) => [group.Id_Groupe, group]));
+    return groupIds.map((groupId) => ({
+      id: groupId,
+      label:
+        groupsById.get(groupId)?.Nom_Groupe ||
+        tGeneral("group_fallback", { id: groupId }),
+    }));
+  }, [groupIds, groups, tGeneral]);
 
   return (
     <TabsContent value="telephonie" className="space-y-6">
@@ -169,7 +182,7 @@ export function LocationFormTabTelephony({ users }: Props) {
           </div>
         )}
 
-        <label className="flex items-start gap-3 rounded-md border border-sky-200 bg-sky-50 p-3 text-sm">
+        <label className="flex items-start gap-3 rounded-md border border-sky-200 bg-sky-50 p-3 text-sm dark:border-sky-500/40 dark:bg-sky-500/10">
           <Checkbox
             checked={applyMailingToGroups}
             disabled={groupIds.length === 0}
@@ -180,12 +193,29 @@ export function LocationFormTabTelephony({ users }: Props) {
               })
             }
           />
-          <span>
-            <span className="block font-medium text-sky-950">{t("apply_groups_title")}</span>
-            <span className="mt-1 block text-xs text-sky-800">
+          <span className="min-w-0 flex-1">
+            <span className="block font-medium text-sky-950 dark:text-sky-100">{t("apply_groups_title")}</span>
+            <span className="mt-1 block text-xs text-sky-800 dark:text-sky-200">
               {t("apply_groups_description")}
               {groupIds.length === 0 ? ` ${t("apply_groups_empty")}` : ""}
             </span>
+            {selectedGroups.length > 0 ? (
+              <span className="mt-2 block">
+                <span className="block text-xs font-medium text-sky-950 dark:text-sky-100">
+                  {tGeneral("labels.groups")}
+                </span>
+                <span className="mt-1 flex flex-wrap gap-1.5">
+                  {selectedGroups.map((group) => (
+                    <span
+                      key={group.id}
+                      className="rounded-full border border-sky-300 bg-white/80 px-2 py-0.5 text-xs text-sky-900 dark:border-sky-500/50 dark:bg-sky-950/40 dark:text-sky-100"
+                    >
+                      {group.label}
+                    </span>
+                  ))}
+                </span>
+              </span>
+            ) : null}
           </span>
         </label>
       </div>
