@@ -32,7 +32,7 @@ Objectif : permettre une reprise immédiate du travail dans une nouvelle convers
 - PR #32 : fin du nettoyage i18n FR/EN — **mergée dans `dev` le 20/08/2026**, merge `0b12e2c1e025283c6ed105f05b17dc8afc747478`.
 - PR #33 : B20-001 + B20-002, exports XML d’ajustage et création GSO simple à l’import — **mergée dans `dev` le 20/08/2026**, merge `5ad7637beee30c8a50b56458f78fd5ffe78251cf`.
 - PR #34 : B20-003, export XML multiple des ajustages — **mergée dans `dev` le 20/08/2026**, merge `c75b2d5e655705adb933fc2d1c291393c8cae2f5`.
-- PR #35 : B20-004, fondu progressif des cellules de mesure mises à jour — **ouverte en draft**, branche `agent/metrology-reading-fade`.
+- PR #35 : B20-004, fondu progressif des cellules de mesure mises à jour — **mergée dans `dev` le 21/08/2026**, merge `a5272678a9c5700e2ea14df53fbb651754194906`.
 
 ### Statuts
 
@@ -455,13 +455,13 @@ La validation fonctionnelle est volontairement confiée à un collègue n’ayan
 
 ## B20-004 — Ajustage / étalonnage : transition colorée progressive sur nouvelle mesure
 
-**Statut : `PR_OUVERTE` — PR #35 — branche `agent/metrology-reading-fade`**
+**Statut : `CORRIGE_DEV` — PR #35 — branche `agent/metrology-reading-fade`**
 
 ### Retour du 20/08/2026
 
 La PR #27 rend déjà une nouvelle mesure plus visible via un feedback et un flash temporaire. Le retour terrain demande maintenant un effet plus lisible et plus doux : la valeur ou la ligne doit prendre une couleur distincte lorsqu’une nouvelle mesure arrive, puis **revenir progressivement** vers sa couleur de base.
 
-### Correctif proposé dans la PR #35
+### Correctif livré via PR #35
 
 Le composant partagé `website/src/app/[locale]/(admin)/admin/metrologie/_components/metrology-reading-refresh-feedback.tsx`, déjà monté sur les pages Ajustage et Étalonnage, reste l’unique mécanisme de feedback.
 
@@ -488,6 +488,118 @@ Le composant partagé `website/src/app/[locale]/(admin)/admin/metrologie/_compon
 
 ---
 
+## B20-005 — Lieux : création rapide d’un site ou d’un groupe depuis la modale
+
+**Statut : `EN_COURS` — branche `agent/location-modal-sites-groups`**
+
+### Retour du 21/08/2026
+
+Lors de la création ou de la modification d’un lieu, l’utilisateur doit pouvoir créer rapidement le site ou le groupe manquant sans fermer la modale du lieu, aller dans une autre page d’administration puis revenir reprendre sa saisie.
+
+### État vérifié / implémentation du lot
+
+Le formulaire Général utilisait déjà les listes `sites-simple` et `groups` mais ne proposait aucune création depuis ces champs. Les APIs existantes `POST /api/sites` et `POST /api/groupes` gèrent déjà la création, les droits `PARAMETRES_GERER`, le logging et l’audit : aucune nouvelle route métier n’est nécessaire.
+
+Le lot ajoute des actions de création légère directement à côté des champs Site et Groupes :
+
+- création d’un site avec nom et commentaire optionnel;
+- création d’un groupe avec regroupement et nom;
+- réutilisation des traductions FR/EN déjà présentes dans les écrans Sites/Groupes;
+- conservation de toutes les valeurs déjà saisies dans le lieu;
+- mise à jour du cache React Query après création;
+- le site créé devient immédiatement le site du lieu;
+- le groupe créé est immédiatement ajouté aux groupes sélectionnés du lieu;
+- aucun enregistrement du lieu n’est déclenché automatiquement : la création du site/groupe et la sauvegarde du lieu restent deux actions distinctes.
+
+Fichiers principaux :
+
+- `website/src/app/[locale]/(admin)/admin/lieux/_components/general-tab/location-quick-create-buttons.tsx`;
+- `website/src/app/[locale]/(admin)/admin/lieux/_components/general-tab/location-general-settings-section.tsx`.
+
+### Validation terrain
+
+- ouvrir un nouveau lieu, saisir plusieurs champs, créer un site puis vérifier que la saisie du lieu est intacte;
+- vérifier que le site créé apparaît et est sélectionné immédiatement;
+- créer un groupe et vérifier qu’il est ajouté à la sélection sans retirer les groupes déjà choisis;
+- tester la même création pendant la modification d’un lieu existant;
+- tester depuis l’éditeur de lieu accessible depuis Surveillance, qui réutilise le même formulaire;
+- vérifier une erreur API/droits : la modale du lieu doit rester ouverte et la saisie ne doit pas être perdue;
+- vérifier les modales imbriquées, le focus et la fermeture sans blocage des interactions;
+- vérifier FR/EN et thèmes clair/sombre.
+
+---
+
+## B20-006 — Lieux : rappeler les groupes sélectionnés dans l’onglet Mailing
+
+**Statut : `EN_COURS` — branche `agent/location-modal-sites-groups`**
+
+### Retour du 21/08/2026
+
+L’option Mailing permet déjà d’appliquer la liste de contacts aux groupes sélectionnés dans l’onglet Général, mais l’utilisateur doit revenir dans Général pour se rappeler exactement quels groupes sont concernés.
+
+### État vérifié / implémentation du lot
+
+`LocationFormTabTelephony` surveille déjà `GroupIds` et désactive l’option d’application aux groupes quand aucun groupe n’est sélectionné. Le lot conserve cette logique et ajoute sous l’explication la liste explicite des groupes concernés sous forme de badges.
+
+Les noms proviennent de la même requête React Query `groups` que le formulaire Général. Un groupe créé rapidement via B20-005 apparaît donc immédiatement dans ce rappel. Les libellés existants `locationsForm.general` sont réutilisés afin de ne pas introduire de texte UI hardcodé.
+
+Fichier principal :
+
+- `website/src/app/[locale]/(admin)/admin/lieux/_components/location-form-tab-telephony.tsx`.
+
+### Validation terrain
+
+- sélectionner un seul groupe dans Général puis ouvrir Mailing : son nom doit être visible;
+- sélectionner plusieurs groupes : tous doivent apparaître sans ambiguïté;
+- retirer un groupe dans Général : le rappel Mailing doit suivre immédiatement;
+- créer rapidement un nouveau groupe : il doit apparaître dans le rappel sans rechargement de page;
+- aucun groupe : conserver le message invitant à sélectionner un groupe et l’option désactivée;
+- vérifier que cocher « appliquer aux groupes » conserve le comportement métier existant;
+- vérifier affichage avec noms longs, FR/EN et thèmes clair/sombre.
+
+---
+
+## B20-007 — Acquittement d’alarme : incohérence de deux heures entre les dates affichées
+
+**Statut : `A_INVESTIGUER`**
+
+### Retour du 21/08/2026
+
+Dans la fenêtre **Acquitter l’alarme**, une même alarme de non-réponse peut afficher deux heures différentes pour son début. Capture fournie sur l’alarme `#18155 - Non réponse` :
+
+- ligne de la liste : `20/08/2026 15:34:00`;
+- panneau de détail : `20/08/2026 13:34:00`.
+
+L’écart observé est exactement de deux heures. Il rappelle les anciens défauts UTC/local sur les `DATETIME` MySQL, mais la cause n’est **pas encore confirmée** : aucun correctif arbitraire `-2 h` ne doit être appliqué.
+
+### Investigation à réaliser dans un lot séparé
+
+Auditer l’ensemble des dates utilisées par cette fenêtre avant de modifier le comportement :
+
+- `Début alarme` dans la liste et dans le panneau de détail;
+- `Fin alarme`;
+- calcul de `Durée`;
+- date associée à la dernière valeur si présente dans le payload;
+- dates utilisées pour le récapitulatif des alarmes sur 30 jours;
+- alarmes actives et alarmes terminées;
+- valeur brute `DATETIME` en base et valeur renvoyée par l’API;
+- sérialisation serveur et formatters frontend;
+- usages de `new Date()`, `toISOString()`, `serializeStoredDbDateTime()`, `parseDbDateTime()` ou helpers équivalents autour du parcours d’acquittement.
+
+Comparer ce parcours aux corrections déjà livrées dans les PR #17 et #20 afin d’identifier précisément le chemin qui échappe encore à la normalisation des dates stockées.
+
+### Validation terrain attendue
+
+- une même alarme affiche exactement la même heure dans la liste et le détail;
+- début/fin correspondent aux valeurs murales stockées en base;
+- la durée reste cohérente avec les deux dates;
+- tester une alarme active puis une terminée;
+- tester une non-réponse et au moins un autre type d’alarme;
+- contrôler le récapitulatif 30 jours;
+- vérifier le comportement autour du changement heure été/hiver.
+
+---
+
 ## État du lot au 21/08/2026
 
 Les points historiques B17-001 à B17-011 sont corrigés dans `dev`.
@@ -496,9 +608,11 @@ Pour le lot B20 :
 
 1. **B20-001 + B20-002** — corrigés dans `dev` via PR #33;
 2. **B20-003** — corrigé dans `dev` via PR #34, validation terrain externe encore à effectuer;
-3. **B20-004** — PR #35 ouverte en draft sur `agent/metrology-reading-fade`.
+3. **B20-004** — corrigé dans `dev` via PR #35;
+4. **B20-005 + B20-006** — en cours sur `agent/location-modal-sites-groups`, créée depuis `dev` `a5272678a9c5700e2ea14df53fbb651754194906`;
+5. **B20-007** — à investiguer dans un lot Alarmes/Dates séparé après le lot Lieux.
 
-Le `dev` de référence au démarrage de B20-004 est `c75b2d5e655705adb933fc2d1c291393c8cae2f5` (merge PR #34).
+Le `dev` de référence au démarrage de B20-005/B20-006 est `a5272678a9c5700e2ea14df53fbb651754194906` (merge PR #35).
 
 ## Règle de reprise pour une nouvelle conversation
 
