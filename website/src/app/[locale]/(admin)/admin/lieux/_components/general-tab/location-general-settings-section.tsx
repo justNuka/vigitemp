@@ -11,6 +11,7 @@ import type { Group } from '@/hooks/useGroups'
 import type { SiteSimple } from '@/hooks/useSites'
 
 import type { LocationFormData } from '../location-form-types'
+import { QuickCreateGroupButton, QuickCreateSiteButton } from './location-quick-create-buttons'
 
 export function LocationGeneralSettingsSection({ sites, groups }: { sites: SiteSimple[]; groups: Group[] }) {
   const t = useTranslations('locationsForm.general')
@@ -21,7 +22,10 @@ export function LocationGeneralSettingsSection({ sites, groups }: { sites: SiteS
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label>{t('labels.site')}</Label>
+          <div className="flex items-center justify-between gap-2">
+            <Label>{t('labels.site')}</Label>
+            <QuickCreateSiteButton />
+          </div>
           <Controller
             control={control}
             name="Id_Site"
@@ -41,7 +45,10 @@ export function LocationGeneralSettingsSection({ sites, groups }: { sites: SiteS
         </div>
 
         <div className="space-y-2">
-          <Label>{t('labels.groups')}</Label>
+          <div className="flex items-center justify-between gap-2">
+            <Label>{t('labels.groups')}</Label>
+            <QuickCreateGroupButton />
+          </div>
           <Controller
             control={control}
             name="GroupIds"
