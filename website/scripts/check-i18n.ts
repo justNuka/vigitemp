@@ -3,6 +3,10 @@ import path from "node:path";
 import ts from "typescript";
 
 import { enSupplements, frSupplements, mergeMessages, type MessageCatalog } from "../src/messages/supplements";
+import {
+  enMetrologyCalibrationSupplements,
+  frMetrologyCalibrationSupplements,
+} from "../src/messages/metrology-calibration-supplements";
 
 const ROOT = process.cwd();
 const MESSAGES_DIR = path.join(ROOT, "src", "messages");
@@ -123,8 +127,14 @@ async function main() {
     readFile(path.join(MESSAGES_DIR, "en.json"), "utf8"),
   ]);
 
-  const fr = mergeMessages(JSON.parse(frRaw) as MessageCatalog, frSupplements);
-  const en = mergeMessages(JSON.parse(enRaw) as MessageCatalog, enSupplements);
+  const fr = mergeMessages(
+    mergeMessages(JSON.parse(frRaw) as MessageCatalog, frSupplements),
+    frMetrologyCalibrationSupplements,
+  );
+  const en = mergeMessages(
+    mergeMessages(JSON.parse(enRaw) as MessageCatalog, enSupplements),
+    enMetrologyCalibrationSupplements,
+  );
   const frKeys = new Set(flattenKeys(fr));
   const enKeys = new Set(flattenKeys(en));
 
