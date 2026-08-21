@@ -35,7 +35,8 @@ export function LocationFormTabTelephony({ users }: Props) {
   const { data: groups = [] } = useGroups();
 
   const contacts = watch("MailingContacts") ?? [];
-  const groupIds = watch("GroupIds") ?? [];
+  const watchedGroupIds = watch("GroupIds");
+  const groupIds = watchedGroupIds ?? [];
   const applyMailingToGroups = watch("Apply_Mailing_To_Groups") ?? false;
 
   const markMailingDirty = () => {
@@ -51,13 +52,13 @@ export function LocationFormTabTelephony({ users }: Props) {
 
   const selectedGroups = useMemo(() => {
     const groupsById = new Map(groups.map((group) => [group.Id_Groupe, group]));
-    return groupIds.map((groupId) => ({
+    return (watchedGroupIds ?? []).map((groupId) => ({
       id: groupId,
       label:
         groupsById.get(groupId)?.Nom_Groupe ||
         tGeneral("group_fallback", { id: groupId }),
     }));
-  }, [groupIds, groups, tGeneral]);
+  }, [groups, tGeneral, watchedGroupIds]);
 
   return (
     <TabsContent value="telephonie" className="space-y-6">
