@@ -30,6 +30,9 @@ Objectif : permettre une reprise immédiate du travail dans une nouvelle convers
 - PR #25 : B17-010, libellés de seuils du graphique Surveillance — **mergée dans `dev` le 19/08/2026**, merge `e6867c6c3a72a52d28bde9540160b374ec227646`.
 - PR #27 : retours métrologie étalonnage/ajustage, dont feedback visuel de nouvelles mesures — **mergée dans `dev` le 20/08/2026**, merge `a34fee90c63fc5639984c360b9a8b9f0c1ebecd5`.
 - PR #32 : fin du nettoyage i18n FR/EN — **mergée dans `dev` le 20/08/2026**, merge `0b12e2c1e025283c6ed105f05b17dc8afc747478`.
+- PR #33 : B20-001 + B20-002, exports XML d’ajustage et création GSO simple à l’import — **mergée dans `dev` le 20/08/2026**, merge `5ad7637beee30c8a50b56458f78fd5ffe78251cf`.
+- PR #34 : B20-003, export XML multiple des ajustages — **mergée dans `dev` le 20/08/2026**, merge `c75b2d5e655705adb933fc2d1c291393c8cae2f5`.
+- PR #35 : B20-004, fondu progressif des cellules de mesure mises à jour — **ouverte en draft**, branche `agent/metrology-reading-fade`.
 
 ### Statuts
 
@@ -358,23 +361,17 @@ Un helper local normalise les `Date` Prisma / chaînes ISO UTC en heure murale d
 
 ## B20-001 — Nom des exports XML d’ajustage encore préfixé `Calibrage`
 
-**Statut : `EN_COURS` — branche `agent/xml-ajustage-import-export`**
+**Statut : `CORRIGE_DEV` — PR #33 — branche `agent/xml-ajustage-import-export`**
 
 ### Retour du 20/08/2026
 
-Depuis **Administration > Sondes > détail d’une sonde > Ajustages**, le téléchargement XML utilise encore un nom de fichier commençant par `Calibrage_...xml`. Le vocabulaire produit doit être cohérent avec l’opération réellement effectuée : **Ajustage**.
+Depuis **Administration > Sondes > détail d’une sonde > Ajustages**, le téléchargement XML utilisait encore un nom de fichier commençant par `Calibrage_...xml`. Le vocabulaire produit doit être cohérent avec l’opération réellement effectuée : **Ajustage**.
 
-### État vérifié dans le code
+### Correctif livré
 
-- l’action XML de la modale de sonde pointe sur `/api/metrologie/ajustage/export/[id]`;
-- `buildAdjustmentExportFileName()` dans `website/src/lib/adjustment-export.ts` retourne actuellement `Calibrage_${serial}_${timestamp}.xml`;
-- le contenu XML conserve volontairement des balises historiques `CALIBRAGE` / `CALIBRAGE_SONDE` pour compatibilité d’import, sauf décision métier distincte.
-
-### Attendu
-
-- remplacer uniquement le **nom du fichier téléchargé** par `Ajustage_<sonde>_<timestamp>.xml`;
-- ne pas casser l’import des anciens fichiers XML;
-- ne pas modifier les balises historiques sans validation de compatibilité.
+- le nom téléchargé est maintenant `Ajustage_<sonde>_<timestamp>.xml`;
+- les balises historiques `CALIBRAGE` / `CALIBRAGE_SONDE` restent inchangées pour la compatibilité des fichiers existants;
+- l’import continue d’accepter les fichiers utilisant la structure historique.
 
 ### Validation terrain
 
@@ -387,34 +384,27 @@ Depuis **Administration > Sondes > détail d’une sonde > Ajustages**, le tél�
 
 ## B20-002 — Import ajustage : identité d’une GSO simple capteur incorrecte
 
-**Statut : `EN_COURS` — branche `agent/xml-ajustage-import-export`**
+**Statut : `CORRIGE_DEV` — PR #33 — branche `agent/xml-ajustage-import-export`**
 
 ### Retour du 20/08/2026
 
-Lorsqu’un XML d’ajustage crée automatiquement une **GSO simple capteur**, les valeurs stockées ne suivent pas la convention attendue.
+Lorsqu’un XML d’ajustage créait automatiquement une **GSO simple capteur**, les valeurs stockées ne suivaient pas la convention attendue.
 
 Exemple terrain fourni :
 
 - attendu : `Adresse = 10007909-T`, `Numéro de série = SOET-10007909`;
-- actuel après import : `Adresse = 10007909`, `Numéro de série = 10007909`.
+- ancien comportement après import : `Adresse = 10007909`, `Numéro de série = 10007909`.
 
-Les GSO doubles capteurs sont déjà considérées correctes et ne doivent pas régresser.
+### Correctif livré
 
-### Cause identifiée dans le code
+La règle d’identité des GSO simples `SOIT` / `SOET` est centralisée et utilisée par la prévisualisation, l’import unitaire et l’import multiple :
 
-`resolveImportedSensorIdentity()` normalise actuellement les types simples `SOIT` / `SOET` vers le seul numéro numérique (`stripGsoSuffix(address)`), puis la route d’import utilise `sensorIdentity.serial` directement comme `Sonde_Numero_Serie` et, pour une famille GSO, aussi comme `Adresse_Sonde`.
-
-Cette convention est cohérente avec l’ancienne normalisation interne mais ne correspond pas au format attendu en base pour les GSO simples lors de la création par import.
-
-### Attendu
-
-Pour une GSO simple température :
-
-- `Sonde_Numero_Serie` = `<TYPE>-<chiffres>` (ex. `SOET-10007909`);
-- `Adresse_Sonde` = `<chiffres>-T` (ex. `10007909-T`);
-- `Sonde_Type` reste le type détecté (`SOIT` / `SOET`);
+- `Sonde_Numero_Serie` = `<TYPE>-<chiffres>`;
+- `Adresse_Sonde` = `<chiffres>-T`;
+- `Sonde_Type` reste le type détecté;
 - `Est_Sonde_GSO = true`;
-- aucune modification du comportement des doubles `SOIH` / `SOEH`.
+- l’ajustage importé référence le même numéro typé que la sonde;
+- les doubles `SOIH` / `SOEH` conservent leur convention existante.
 
 ### Validation terrain
 
@@ -428,75 +418,87 @@ Pour une GSO simple température :
 
 ## B20-003 — Export multiple des XML d’ajustage depuis les sondes
 
-**Statut : `A_INVESTIGUER`**
+**Statut : `CORRIGE_DEV` — PR #34 — branche `agent/adjustment-bulk-xml-export`**
 
 ### Retour du 20/08/2026
 
 Pouvoir exporter plusieurs fichiers XML d’ajustage en une seule action, avec une interaction intuitive pour l’utilisateur.
 
-### Piste UX à étudier
+### Correctif livré
 
-Le tableau des ajustages d’une sonde possède déjà une action XML par ligne. Une solution naturelle est d’ajouter une sélection multiple des lignes puis une action **Exporter les XML sélectionnés**. Pour plusieurs fichiers, un téléchargement ZIP côté serveur évite une série de téléchargements navigateur potentiellement bloqués et garde une seule action utilisateur.
+Depuis le panneau des ajustages d’une sonde :
 
-### Points à vérifier avant implémentation
+- une case à cocher est disponible par ajustage;
+- une case d’en-tête permet de sélectionner/désélectionner tous les ajustages visibles;
+- un compteur indique le nombre de lignes sélectionnées;
+- l’action d’export reste désactivée tant qu’aucune ligne n’est sélectionnée;
+- la sélection d’export est indépendante de la sélection de ligne utilisée pour le détail;
+- un seul fichier `Ajustages_<timestamp>.zip` est téléchargé;
+- le ZIP contient les XML générés par le même helper que l’export unitaire;
+- le backend borne un lot à 200 ajustages et charge les dépendances en groupes pour éviter un N+1;
+- aucune dépendance ZIP supplémentaire n’a été ajoutée.
 
-- capacité du composant `TanStackTable` à exposer une sélection multiple sans perturber la sélection actuelle de détail;
-- possibilité de réutiliser `buildAdjustmentXml()` pour générer chaque entrée du ZIP;
-- taille maximale raisonnable d’un lot;
-- convention de nom du ZIP et des fichiers internes;
-- droits identiques à l’export unitaire.
+### Validation terrain restante
 
-### Validation attendue
+La validation fonctionnelle est volontairement confiée à un collègue n’ayant pas travaillé sur le développement afin de tester le parcours avec un regard extérieur.
 
 - sélectionner 1, plusieurs ou toutes les lignes visibles;
 - action désactivée si aucune ligne n’est sélectionnée;
 - un seul téléchargement pour un lot;
-- noms de fichiers internes corrects et uniques;
-- comportement FR/EN, clavier et thème clair/sombre.
+- ouvrir le ZIP avec l’explorateur Windows;
+- vérifier les noms `Ajustage_...xml`;
+- comparer au moins un XML avec l’export unitaire;
+- vérifier que cliquer une checkbox ne modifie pas le détail sélectionné;
+- vérifier FR/EN et thème clair/sombre.
 
 ---
 
 ## B20-004 — Ajustage / étalonnage : transition colorée progressive sur nouvelle mesure
 
-**Statut : `A_FAIRE`**
+**Statut : `PR_OUVERTE` — PR #35 — branche `agent/metrology-reading-fade`**
 
 ### Retour du 20/08/2026
 
 La PR #27 rend déjà une nouvelle mesure plus visible via un feedback et un flash temporaire. Le retour terrain demande maintenant un effet plus lisible et plus doux : la valeur ou la ligne doit prendre une couleur distincte lorsqu’une nouvelle mesure arrive, puis **revenir progressivement** vers sa couleur de base.
 
-### Attendu visuel
+### Correctif proposé dans la PR #35
 
-- nouvelle mesure : accent temporaire bleu ou vert suffisamment visible en clair/sombre;
-- retour progressif sur quelques secondes vers la couleur de base, sans coupure brutale;
-- effet déclenché uniquement lorsqu’une mesure réellement nouvelle est reçue;
-- même principe sur ajustage et étalonnage;
-- ne pas animer en boucle les anciennes mesures lors d’un simple rerender.
+Le composant partagé `website/src/app/[locale]/(admin)/admin/metrologie/_components/metrology-reading-refresh-feedback.tsx`, déjà monté sur les pages Ajustage et Étalonnage, reste l’unique mécanisme de feedback.
 
-### Base existante à réutiliser
+Évolution :
 
-La PR #27 a déjà introduit la détection/feedback de lignes mises à jour. Le nouveau lot doit réutiliser ce mécanisme plutôt que recréer une seconde logique de comparaison des mesures.
+- mémorisation du texte cellule par cellule dans les tableaux de métrologie;
+- seules les cellules dont le contenu change réellement sont accentuées;
+- accent vert léger immédiat compatible clair/sombre;
+- retrait de l’accent avec une transition `background-color` d’environ 3 secondes vers la couleur normale;
+- si une nouvelle valeur arrive avant la fin du fondu, l’animation repart proprement depuis l’accent;
+- le bandeau `Mesures mises à jour` reste présent et utilise une durée cohérente;
+- aucun changement des boucles de lecture, APIs, polling ou traitements métier.
 
 ### Validation terrain
 
 - observer plusieurs cycles successifs sur GSP et GSO;
-- confirmer que seule la/les lignes réellement mises à jour sont animées;
+- tester Ajustage puis Étalonnage;
+- confirmer que seules les cellules réellement mises à jour sont animées;
 - vérifier le retour progressif à la couleur normale;
+- provoquer deux mises à jour rapprochées et vérifier que l’accent redémarre proprement;
 - vérifier clair/sombre et FR/EN;
-- confirmer que l’animation ne provoque pas de saut de layout ni de coût notable avec beaucoup de sondes.
+- confirmer que l’animation ne provoque pas de saut de layout ni de coût notable avec beaucoup de sondes;
+- confirmer qu’un simple rerender sans nouvelle valeur ne relance pas l’animation.
 
 ---
 
-## État du lot au 20/08/2026
+## État du lot au 21/08/2026
 
-Les points historiques B17-001 à B17-011 sont corrigés dans `dev`. Les nouveaux retours B20-001 à B20-004 constituent le lot de suivi du 20/08/2026.
+Les points historiques B17-001 à B17-011 sont corrigés dans `dev`.
 
-Ordre de travail prévu :
+Pour le lot B20 :
 
-1. **B20-001 + B20-002** — correctifs XML ciblés sur `agent/xml-ajustage-import-export`;
-2. **B20-003** — étude puis implémentation de l’export multiple, à garder dans le même lot uniquement si le diff reste cohérent et limité;
-3. **B20-004** — lot séparé après merge du lot XML, basé sur le nouveau HEAD de `dev`.
+1. **B20-001 + B20-002** — corrigés dans `dev` via PR #33;
+2. **B20-003** — corrigé dans `dev` via PR #34, validation terrain externe encore à effectuer;
+3. **B20-004** — PR #35 ouverte en draft sur `agent/metrology-reading-fade`.
 
-Le `dev` de référence au démarrage de ce lot est `0b12e2c1e025283c6ed105f05b17dc8afc747478` (merge PR #32).
+Le `dev` de référence au démarrage de B20-004 est `c75b2d5e655705adb933fc2d1c291393c8cae2f5` (merge PR #34).
 
 ## Règle de reprise pour une nouvelle conversation
 
