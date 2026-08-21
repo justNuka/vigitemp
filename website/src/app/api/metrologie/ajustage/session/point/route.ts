@@ -5,6 +5,7 @@ import { apiError, apiOk } from "@/lib/api-response"
 import { withStandardOrExpertAnyAuthorizationLogging } from "@/lib/license-guards"
 import { log } from "@/lib/logger"
 import { validateAdjustmentPoint } from "@/lib/metrology-adjustment-session"
+import { restoreGspMetrologyConfigurationOnce } from "@/lib/metrology-gsp-configuration-restore"
 import { getPermissionAliases } from "@/lib/permissions"
 
 const METROLOGY_OPERATION_CODES = getPermissionAliases("METROLOGY_OPERATION_ACCESS")
@@ -21,6 +22,13 @@ export const POST = withStandardOrExpertAnyAuthorizationLogging(
       const body = await req.json()
       const data = pointSchema.parse(body)
       const session = await validateAdjustmentPoint(ctx.user.userId, data.pointIndex, data.targetValue)
+      if (session.status !== "running" && session.status !== "idle") {
+        await restoreGspMetrologyConfigurationOnce(
+          `adjustment:${session.id}`,
+          session.sensors.map((sensor) => sensor.id),
+          "AJUSTAGE",
+        )
+      }
       return apiOk({ session })
     } catch (error) {
       if (error instanceof z.ZodError) {
