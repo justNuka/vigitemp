@@ -4,7 +4,19 @@ import { useEffect, useMemo, useState } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import type { ColumnDef } from "@tanstack/react-table"
 import { AnimatePresence, LazyMotion, domAnimation, m } from "motion/react"
-import { ArrowRight, BadgeInfo, ChevronLeft, Clock3, Plus, Play, Square, Timer, UserRound, X } from "lucide-react"
+import {
+  ArrowRight,
+  BadgeInfo,
+  ChevronLeft,
+  Clock3,
+  FlaskConical,
+  Plus,
+  Play,
+  Square,
+  Timer,
+  UserRound,
+  X,
+} from "lucide-react"
 import { useTranslations } from "next-intl"
 
 import { useAppAccess } from "@/components/access/app-access-provider"
@@ -18,6 +30,13 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import {
   Table,
   TableBody,
   TableCell,
@@ -26,11 +45,12 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { useAdjustmentSensors, type AdjustmentSensorRow } from "@/hooks/useAdjustmentSensors"
+import { useIntercomparisonMedia } from "@/hooks/useIntercomparisonMedia"
+import { useStandards } from "@/hooks/useStandards"
 import { formatDbDateTime } from "@/lib/date-display"
 import { fetchJson, getJson } from "@/lib/http"
 import { formatMeasureValue } from "@/lib/measurements"
 import type { PublicCalibrationSession } from "@/lib/metrology-calibration-session"
-import type { MetrologyPreviewReading } from "@/lib/metrology-reading-preview"
 import { MetrologySubpagesCards } from "../_components/metrology-subpages-cards"
 
 type Step = "selection" | "calibration"
@@ -44,6 +64,11 @@ function normalizeUnit(value: string | null | undefined) {
   return normalized
 }
 
+function formatCampaignValue(value: number | null | undefined, unit?: string | null) {
+  if (value == null || !Number.isFinite(value)) return "-"
+  return `${formatMeasureValue(value, 6)}${unit ? ` ${unit}` : ""}`
+}
+
 export function CalibrationWorkflowClient() {
   const t = useTranslations("metrologyAdmin.calibrationPage")
   const tCommon = useTranslations("common")
@@ -52,10 +77,14 @@ export function CalibrationWorkflowClient() {
   const { user } = useAppAccess()
   const queryClient = useQueryClient()
   const { data: sensors = [], isLoading: sensorsLoading } = useAdjustmentSensors()
+  const { data: standards = [], isLoading: standardsLoading } = useStandards()
+  const { data: media = [], isLoading: mediaLoading } = useIntercomparisonMedia(true)
+
   const [step, setStep] = useState<Step>("selection")
   const [selectedSensorIds, setSelectedSensorIds] = useState<number[]>([])
   const [operator, setOperator] = useState("")
-  const [previewReadingEnabled, setPreviewReadingEnabled] = useState(false)
+  const [selectedStandardId, setSelectedStandardId] = useState("")
+  const [selectedMediumId, setSelectedMediumId] = useState("")
   const [addSensorSearch, setAddSensorSearch] = useState("")
   const defaultOperator = [user?.Prenom, user?.Nom].filter(Boolean).join(" ").trim() || user?.Login || ""
   const operatorValue = operator || defaultOperator
@@ -67,56 +96,45 @@ export function CalibrationWorkflowClient() {
   })
   const session = sessionQuery.data?.session ?? null
   const running = session?.status === "running"
-  const visibleStep = running ? "calibration" : step
-  const previewReadingQuery = useQuery({
-    queryKey: ["metrology-reading-preview", "ETALONNAGE", selectedSensorIds],
-    queryFn: ({ signal }) =>
-      fetchJson<{
-        readings: Record<number, MetrologyPreviewReading>
-        readAt: string
-      }>("/api/metrologie/lecture-sondes", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        signal,
-        body: JSON.stringify({ selectedSensorIds, operation: "ETALONNAGE" }),
-      }),
-    enabled:
-      previewReadingEnabled &&
-      selectedSensorIds.length > 0 &&
-      !running &&
-      step === "calibration",
-    refetchInterval: previewReadingEnabled ? 60_000 : false,
-    refetchIntervalInBackground: false,
-  })
-  const displayedReadings = running
-    ? session?.latestReadings ?? {}
-    : previewReadingQuery.data?.readings ?? {}
+  const hasResults = Object.keys(session?.results ?? {}).length > 0
+  const visibleStep = running || hasResults ? "calibration" : step
+  const displayedReadings = session?.latestReadings ?? {}
 
   useEffect(() => {
-    if (!running || !session) return
+    if (!session || (session.status !== "running" && Object.keys(session.results).length === 0)) return
     setSelectedSensorIds(session.sensors.map((sensor) => sensor.id))
-  }, [running, session])
+    setSelectedStandardId(String(session.standardId))
+    setSelectedMediumId(String(session.mediumId))
+    setOperator(session.operator)
+    setStep("calibration")
+  }, [session])
 
-  const stopPreviewReading = () => {
-    setPreviewReadingEnabled(false)
-    return fetchJson<{ stopped: boolean }>("/api/metrologie/lecture-sondes", {
-      method: "DELETE",
-      credentials: "include",
-    }).catch(() => null)
-  }
-
-  const startMutation = useMutation({
+  const startReadingMutation = useMutation({
     mutationFn: () => fetchJson<SessionPayload>("/api/metrologie/etalonnage/session", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       credentials: "include",
-      body: JSON.stringify({ selectedSensorIds, operator: operatorValue }),
+      body: JSON.stringify({
+        selectedSensorIds,
+        operator: operatorValue,
+        standardId: Number(selectedStandardId),
+        mediumId: Number(selectedMediumId),
+      }),
     }),
     onSuccess: (data) => {
       queryClient.setQueryData(["metrology-calibration-session"], data)
       setStep("calibration")
     },
+  })
+
+  const startAcquisitionMutation = useMutation({
+    mutationFn: () => fetchJson<SessionPayload>("/api/metrologie/etalonnage/session", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ action: "start-acquisition" }),
+    }),
+    onSuccess: (data) => queryClient.setQueryData(["metrology-calibration-session"], data),
   })
 
   const addSensorMutation = useMutation({
@@ -155,13 +173,22 @@ export function CalibrationWorkflowClient() {
     const knownSelectedUnits = selectedSensors
       .map((sensor) => normalizeUnit(sensor.unit))
       .filter((value): value is string => Boolean(value))
-
     return knownSelectedUnits[0] ?? null
   }, [selectedSensors])
 
+  const eligibleStandards = useMemo(
+    () => standards.filter((standard) => {
+      if (standard.Est_Sonde_Externe) return false
+      if ((standard.Type_Etalon ?? "").trim().toUpperCase() !== "SPET") return false
+      const standardUnit = normalizeUnit(standard.Unite)
+      return lockedUnit === null || standardUnit === null || standardUnit === lockedUnit
+    }),
+    [lockedUnit, standards],
+  )
+
   const runningUnit = normalizeUnit(session?.sensors[0]?.unit)
   const addSensorCandidates = useMemo(() => {
-    if (!running || !session) return []
+    if (!running || !session || session.phase !== "reading") return []
     const ids = new Set(session.sensors.map((sensor) => sensor.id))
     const query = addSensorSearch.trim().toLowerCase()
     return sensors
@@ -196,6 +223,7 @@ export function CalibrationWorkflowClient() {
             type="button"
             variant="ghost"
             size="sm"
+            disabled={running}
             onClick={() => setSelectedSensorIds((current) => current.filter((id) => id !== row.original.id))}
           >
             <X className="mr-1 h-4 w-4" />
@@ -204,7 +232,7 @@ export function CalibrationWorkflowClient() {
         ),
       },
     ],
-    [t, tTables],
+    [running, t, tTables],
   )
 
   const sensorsColumns = useMemo<ColumnDef<AdjustmentSensorRow>[]>(
@@ -213,8 +241,7 @@ export function CalibrationWorkflowClient() {
         id: "select",
         enableSorting: false,
         header: ({ table }) => {
-          const filteredRows = table.getFilteredRowModel().rows
-          const filteredSensors = filteredRows.map((row) => row.original)
+          const filteredSensors = table.getFilteredRowModel().rows.map((row) => row.original)
           const filteredUnits = new Set(
             filteredSensors.map((sensor) => normalizeUnit(sensor.unit)).filter((unit): unit is string => Boolean(unit)),
           )
@@ -274,7 +301,27 @@ export function CalibrationWorkflowClient() {
     [lockedUnit, running, selectedSensorIds, t],
   )
 
-  const error = startMutation.error ?? addSensorMutation.error ?? stopMutation.error
+  const error =
+    startReadingMutation.error ??
+    startAcquisitionMutation.error ??
+    addSensorMutation.error ??
+    stopMutation.error
+
+  const canStartReading =
+    !running &&
+    selectedSensorIds.length > 0 &&
+    operatorValue.trim().length > 0 &&
+    selectedStandardId.length > 0 &&
+    selectedMediumId.length > 0 &&
+    !startReadingMutation.isPending
+
+  const phaseLabel = !session
+    ? t("workflow.enhanced.phase_ready")
+    : session.status === "completed"
+      ? t("workflow.enhanced.phase_completed")
+      : session.phase === "acquiring"
+        ? t("workflow.enhanced.phase_acquiring")
+        : t("workflow.enhanced.phase_reading")
 
   return (
     <>
@@ -291,14 +338,7 @@ export function CalibrationWorkflowClient() {
                   {t("workflow.selection.continue")}
                 </Button>
               ) : !running ? (
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => {
-                    void stopPreviewReading()
-                    setStep("selection")
-                  }}
-                >
+                <Button type="button" variant="outline" onClick={() => setStep("selection")}>
                   <ChevronLeft className="mr-2 h-4 w-4" />
                   {t("workflow.calibration.back")}
                 </Button>
@@ -308,8 +348,8 @@ export function CalibrationWorkflowClient() {
         ) : null}
 
         {lockedUnit ? (
-          <Alert className="border-sky-200 bg-sky-50 text-sky-900">
-            <BadgeInfo className="h-4 w-4 text-sky-700" />
+          <Alert className="border-sky-200 bg-sky-50 text-sky-900 dark:border-sky-500/40 dark:bg-sky-500/10 dark:text-sky-100">
+            <BadgeInfo className="h-4 w-4 text-sky-700 dark:text-sky-300" />
             <AlertTitle>{t("workflow.selection.unitLock.title", { unit: lockedUnit })}</AlertTitle>
             <AlertDescription>{t("workflow.selection.unitLock.description")}</AlertDescription>
           </Alert>
@@ -376,90 +416,179 @@ export function CalibrationWorkflowClient() {
                 exit={{ opacity: 0, x: 24 }}
                 className="space-y-6"
               >
-                {error && (
+                {error ? (
                   <Alert variant="destructive">
                     <AlertTitle>{t("workflow.common.error")}</AlertTitle>
                     <AlertDescription>{error instanceof Error ? error.message : String(error)}</AlertDescription>
                   </Alert>
-                )}
+                ) : null}
 
-                <div className="grid gap-4 lg:grid-cols-3">
+                {session?.message ? (
+                  <Alert className={session.lastError ? "border-amber-300 bg-amber-50 text-amber-900 dark:bg-amber-950/30 dark:text-amber-100" : undefined}>
+                    <AlertDescription>{session.message}</AlertDescription>
+                  </Alert>
+                ) : null}
+
+                <div className="grid gap-4 xl:grid-cols-4">
                   <Card>
-                    <CardHeader><CardTitle className="flex items-center gap-2"><UserRound className="h-5 w-5" />{t("workflow.calibration.general")}</CardTitle></CardHeader>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <UserRound className="h-5 w-5" />
+                        {t("workflow.calibration.general")}
+                      </CardTitle>
+                    </CardHeader>
                     <CardContent className="space-y-4">
                       <div className="space-y-2">
                         <Label htmlFor="calibration-operator">{t("workflow.calibration.operator")}</Label>
-                        <Input id="calibration-operator" value={operatorValue} onChange={(event) => setOperator(event.target.value)} disabled={running} />
+                        <Input
+                          id="calibration-operator"
+                          value={operatorValue}
+                          onChange={(event) => setOperator(event.target.value)}
+                          disabled={running}
+                        />
                       </div>
-                      <div className="flex items-center gap-2 text-sm"><Clock3 className="h-4 w-4" />{formatDbDateTime(session?.startedAt || new Date())}</div>
+                      <div className="flex items-center gap-2 text-sm">
+                        <Clock3 className="h-4 w-4" />
+                        {formatDbDateTime(session?.startedAt || new Date())}
+                      </div>
                     </CardContent>
                   </Card>
+
                   <Card>
-                    <CardHeader><CardTitle className="flex items-center gap-2"><Timer className="h-5 w-5" />{t("workflow.calibration.cadence")}</CardTitle></CardHeader>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <FlaskConical className="h-5 w-5" />
+                        {t("workflow.enhanced.reference_title")}
+                      </CardTitle>
+                      <CardDescription>{t("workflow.enhanced.reference_description")}</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="space-y-2">
+                        <Label>{t("workflow.enhanced.standard")}</Label>
+                        <Select value={selectedStandardId} onValueChange={setSelectedStandardId} disabled={running || standardsLoading}>
+                          <SelectTrigger>
+                            <SelectValue placeholder={t("workflow.enhanced.standard_placeholder")} />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {eligibleStandards.map((standard) => (
+                              <SelectItem key={standard.Id_Etalon} value={String(standard.Id_Etalon)}>
+                                {standard.Etalon_Numero_Serie ?? `#${standard.Id_Etalon}`}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <p className="text-xs text-muted-foreground">{t("workflow.enhanced.standard_help")}</p>
+                      </div>
+                      <div className="space-y-2">
+                        <Label>{t("workflow.enhanced.medium")}</Label>
+                        <Select value={selectedMediumId} onValueChange={setSelectedMediumId} disabled={running || mediaLoading}>
+                          <SelectTrigger>
+                            <SelectValue placeholder={t("workflow.enhanced.medium_placeholder")} />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {media.map((item) => (
+                              <SelectItem key={item.Id_Milieu} value={String(item.Id_Milieu)}>
+                                {[item.Model, item.Reference].filter(Boolean).join(" / ") || `#${item.Id_Milieu}`}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <p className="text-xs text-muted-foreground">{t("workflow.enhanced.medium_help")}</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Timer className="h-5 w-5" />
+                        {t("workflow.calibration.cadence")}
+                      </CardTitle>
+                    </CardHeader>
                     <CardContent>
                       <div className="text-3xl font-semibold">1 min</div>
                       <p className="mt-2 text-sm text-muted-foreground">{t("workflow.calibration.cadenceDescription")}</p>
+                      {session?.phase === "acquiring" ? (
+                        <Badge className="mt-4" variant="secondary">
+                          {t("workflow.enhanced.progress", {
+                            count: session.capturedSampleCount,
+                            target: session.sampleTarget,
+                          })}
+                        </Badge>
+                      ) : null}
                     </CardContent>
                   </Card>
+
                   <Card>
                     <CardHeader><CardTitle>{t("workflow.calibration.session")}</CardTitle></CardHeader>
                     <CardContent className="space-y-3">
-                      <Badge variant={running ? "default" : "secondary"}>
-                        {running ? t("workflow.status.running") : session?.status === "completed" ? t("workflow.status.completed") : t("workflow.status.ready")}
-                      </Badge>
+                      <Badge variant={running ? "default" : "secondary"}>{phaseLabel}</Badge>
+
                       <Button
                         type="button"
                         variant="outline"
                         className="w-full"
-                        disabled={running || selectedSensorIds.length === 0}
-                        onClick={() => {
-                          if (previewReadingEnabled) {
-                            void stopPreviewReading()
-                            return
-                          }
-                          setPreviewReadingEnabled(true)
-                        }}
+                        disabled={running || !canStartReading}
+                        onClick={() => startReadingMutation.mutate()}
                       >
-                        {previewReadingEnabled ? (
-                          <><Square className="mr-2 h-4 w-4" />{t("workflow.calibration.stopReading")}</>
-                        ) : (
-                          <><Play className="mr-2 h-4 w-4" />{t("workflow.calibration.startReading")}</>
-                        )}
+                        <Play className="mr-2 h-4 w-4" />
+                        {t("workflow.calibration.startReading")}
                       </Button>
-                      {previewReadingEnabled ? (
+
+                      <Button
+                        type="button"
+                        className="w-full"
+                        disabled={
+                          !running ||
+                          session?.phase !== "reading" ||
+                          !session.canStartAcquisition ||
+                          startAcquisitionMutation.isPending
+                        }
+                        onClick={() => startAcquisitionMutation.mutate()}
+                      >
+                        <Play className="mr-2 h-4 w-4" />
+                        {t("workflow.calibration.start")}
+                      </Button>
+
+                      {!running ? (
+                        <p className="text-xs text-muted-foreground">{t("workflow.enhanced.start_reading_hint")}</p>
+                      ) : session.phase === "reading" ? (
                         <p className="text-xs text-muted-foreground">
-                          {previewReadingQuery.isFetching ? t("workflow.calibration.reading") : t("workflow.calibration.readingActive")}
+                          {session.canStartAcquisition
+                            ? t("workflow.enhanced.reading_active")
+                            : t("workflow.enhanced.reading_required")}
+                        </p>
+                      ) : session.phase === "acquiring" ? (
+                        <p className="text-xs text-muted-foreground">
+                          {t("workflow.enhanced.progress", {
+                            count: session.capturedSampleCount,
+                            target: session.sampleTarget,
+                          })}
                         </p>
                       ) : null}
-                      {previewReadingQuery.error ? (
-                        <p className="text-xs text-destructive">
-                          {previewReadingQuery.error instanceof Error ? previewReadingQuery.error.message : t("workflow.calibration.readingError")}
-                        </p>
-                      ) : null}
+
                       {running ? (
-                        <Button variant="destructive" className="w-full" onClick={() => stopMutation.mutate()} disabled={stopMutation.isPending}>
-                          <Square className="mr-2 h-4 w-4" />{t("workflow.calibration.stop")}
-                        </Button>
-                      ) : (
                         <Button
+                          variant="destructive"
                           className="w-full"
-                          onClick={() => {
-                            setPreviewReadingEnabled(false)
-                            startMutation.mutate()
-                          }}
-                          disabled={!operatorValue.trim() || selectedSensorIds.length === 0 || startMutation.isPending || previewReadingQuery.isFetching}
+                          onClick={() => stopMutation.mutate()}
+                          disabled={stopMutation.isPending}
                         >
-                          <Play className="mr-2 h-4 w-4" />{t("workflow.calibration.start")}
+                          <Square className="mr-2 h-4 w-4" />
+                          {t("workflow.calibration.stop")}
                         </Button>
-                      )}
+                      ) : null}
                     </CardContent>
                   </Card>
                 </div>
 
-                {running ? (
+                {running && session?.phase === "reading" ? (
                   <Card className="border-primary/20 bg-primary/[0.02]">
                     <CardHeader>
-                      <CardTitle className="flex items-center gap-2"><Plus className="h-5 w-5" />{tSensorsDialog("title_create")}</CardTitle>
+                      <CardTitle className="flex items-center gap-2">
+                        <Plus className="h-5 w-5" />
+                        {tSensorsDialog("title_create")}
+                      </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-3">
                       <Input
@@ -484,7 +613,8 @@ export function CalibrationWorkflowClient() {
                               onClick={() => addSensorMutation.mutate(sensor.id)}
                               disabled={addSensorMutation.isPending}
                             >
-                              <Plus className="mr-1 h-4 w-4" />{tCommon("add")}
+                              <Plus className="mr-1 h-4 w-4" />
+                              {tCommon("add")}
                             </Button>
                           </div>
                         ))}
@@ -495,10 +625,24 @@ export function CalibrationWorkflowClient() {
 
                 <Card>
                   <CardHeader>
-                    <CardTitle>{t("workflow.readings.title")}</CardTitle>
-                    <CardDescription>{t("workflow.readings.description")}</CardDescription>
+                    <CardTitle>{t("workflow.enhanced.last_reading_title")}</CardTitle>
+                    <CardDescription>{t("workflow.enhanced.last_reading_description")}</CardDescription>
                   </CardHeader>
-                  <CardContent>
+                  <CardContent className="space-y-4">
+                    <div className="rounded-md border border-sky-200 bg-sky-50 p-3 dark:border-sky-500/40 dark:bg-sky-500/10">
+                      <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
+                        <span className="font-medium text-sky-950 dark:text-sky-100">
+                          {t("workflow.enhanced.standard_latest")}: {session?.standardSerial ?? "-"}
+                        </span>
+                        <span className="font-mono text-sky-900 dark:text-sky-100">
+                          {formatCampaignValue(session?.latestStandardReading?.value, session?.latestStandardReading?.unit ?? session?.standardUnit)}
+                        </span>
+                        <span className="text-xs text-sky-800 dark:text-sky-200">
+                          {session?.latestStandardReading ? formatDbDateTime(session.latestStandardReading.measuredAt) : "-"}
+                        </span>
+                      </div>
+                    </div>
+
                     <div className="overflow-hidden rounded-lg border">
                       <Table>
                         <TableHeader className="bg-slate-950">
@@ -513,23 +657,21 @@ export function CalibrationWorkflowClient() {
                           </TableRow>
                         </TableHeader>
                         <TableBody>
-                          {(running ? session?.sensors ?? [] : selectedSensors).map((sensor) => {
+                          {(session?.sensors ?? selectedSensors).map((sensor) => {
                             const reading = displayedReadings[sensor.id]
                             return (
                               <TableRow key={sensor.id}>
                                 <TableCell className="font-medium">{sensor.serialNumber}</TableCell>
                                 <TableCell>{sensor.locationName || t("workflow.selection.unassigned")}</TableCell>
                                 <TableCell>{sensor.moduleName || "-"}</TableCell>
-                                <TableCell>
-                                  {reading?.value == null ? "-" : `${formatMeasureValue(reading.value, 2)}${reading.unit ? ` ${reading.unit}` : ""}`}
-                                </TableCell>
+                                <TableCell>{formatCampaignValue(reading?.value, reading?.unit)}</TableCell>
                                 <TableCell>{reading ? formatDbDateTime(reading.measuredAt) : "-"}</TableCell>
-                                <TableCell>{running ? session?.readingCounts[sensor.id] ?? 0 : reading ? 1 : 0}</TableCell>
+                                <TableCell>{session?.readingCounts[sensor.id] ?? 0}</TableCell>
                                 <TableCell>
                                   {reading?.error
                                     ? <span className="text-destructive">{reading.error}</span>
                                     : reading?.value != null
-                                      ? <span className="text-emerald-700">{t("workflow.status.read")}</span>
+                                      ? <span className="text-emerald-700 dark:text-emerald-300">{t("workflow.status.read")}</span>
                                       : <span className="text-muted-foreground">{t("workflow.status.waiting")}</span>}
                                 </TableCell>
                               </TableRow>
@@ -540,6 +682,123 @@ export function CalibrationWorkflowClient() {
                     </div>
                   </CardContent>
                 </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle>{t("workflow.enhanced.standard_samples_title")}</CardTitle>
+                    <CardDescription>{t("workflow.enhanced.standard_samples_description")}</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    {session?.standardSamples.length ? (
+                      <div className="overflow-hidden rounded-lg border">
+                        <Table>
+                          <TableHeader className="bg-sky-950">
+                            <TableRow className="hover:bg-sky-950">
+                              <TableHead className="text-white">{t("workflow.enhanced.sample_number")}</TableHead>
+                              <TableHead className="text-white">{t("workflow.enhanced.measured_at")}</TableHead>
+                              <TableHead className="text-white">{t("workflow.table.value")}</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {session.standardSamples.map((sample) => (
+                              <TableRow key={sample.order} className="bg-sky-50/70 dark:bg-sky-500/5">
+                                <TableCell>{sample.order}</TableCell>
+                                <TableCell>{formatDbDateTime(sample.measuredAt)}</TableCell>
+                                <TableCell className="font-medium">{formatCampaignValue(sample.value, sample.unit)}</TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </div>
+                    ) : (
+                      <p className="text-sm text-muted-foreground">{t("workflow.enhanced.no_samples")}</p>
+                    )}
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle>{t("workflow.enhanced.all_samples_title")}</CardTitle>
+                    <CardDescription>{t("workflow.enhanced.all_samples_description")}</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    {session?.standardSamples.length ? (
+                      <div className="overflow-x-auto rounded-lg border">
+                        <Table>
+                          <TableHeader className="bg-slate-950">
+                            <TableRow className="hover:bg-slate-950">
+                              <TableHead className="whitespace-nowrap text-white">{t("workflow.enhanced.sample_number")}</TableHead>
+                              <TableHead className="whitespace-nowrap bg-sky-900 text-white">
+                                {t("workflow.enhanced.standard_column", { serial: session.standardSerial })}
+                              </TableHead>
+                              {session.sensors.map((sensor) => (
+                                <TableHead key={sensor.id} className="whitespace-nowrap text-white">{sensor.serialNumber}</TableHead>
+                              ))}
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {session.standardSamples.map((standardSample, index) => (
+                              <TableRow key={standardSample.order}>
+                                <TableCell>{standardSample.order}</TableCell>
+                                <TableCell className="bg-sky-50 font-medium text-sky-950 dark:bg-sky-500/10 dark:text-sky-100">
+                                  {formatCampaignValue(standardSample.value, standardSample.unit)}
+                                </TableCell>
+                                {session.sensors.map((sensor) => {
+                                  const sample = session.sensorSamples[sensor.id]?.[index]
+                                  return (
+                                    <TableCell key={sensor.id} className="whitespace-nowrap">
+                                      {formatCampaignValue(sample?.value, sample?.unit ?? sensor.unit)}
+                                    </TableCell>
+                                  )
+                                })}
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </div>
+                    ) : (
+                      <p className="text-sm text-muted-foreground">{t("workflow.enhanced.no_samples")}</p>
+                    )}
+                  </CardContent>
+                </Card>
+
+                {hasResults && session ? (
+                  <Card className="border-emerald-300/60 dark:border-emerald-500/30">
+                    <CardHeader>
+                      <CardTitle>{t("workflow.enhanced.results_title")}</CardTitle>
+                      <CardDescription>{t("workflow.enhanced.results_description")}</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="overflow-x-auto rounded-lg border">
+                        <Table>
+                          <TableHeader className="bg-emerald-950">
+                            <TableRow className="hover:bg-emerald-950">
+                              <TableHead className="text-white">{t("workflow.table.serial")}</TableHead>
+                              <TableHead className="text-white">{t("workflow.enhanced.mean_sensor")}</TableHead>
+                              <TableHead className="text-white">{t("workflow.enhanced.mean_standard")}</TableHead>
+                              <TableHead className="text-white">{t("workflow.enhanced.accuracy_error")}</TableHead>
+                              <TableHead className="text-white">{t("workflow.enhanced.uncertainty")}</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {Object.values(session.results).map((result) => {
+                              const unit = session.sensors.find((sensor) => sensor.id === result.sensorId)?.unit ?? session.standardUnit
+                              return (
+                                <TableRow key={result.sensorId}>
+                                  <TableCell className="font-medium">{result.serialNumber}</TableCell>
+                                  <TableCell>{formatCampaignValue(result.meanSensor, unit)}</TableCell>
+                                  <TableCell>{formatCampaignValue(result.meanStandard, unit)}</TableCell>
+                                  <TableCell>{formatCampaignValue(result.accuracyError, unit)}</TableCell>
+                                  <TableCell>{formatCampaignValue(result.uncertainty, unit)}</TableCell>
+                                </TableRow>
+                              )
+                            })}
+                          </TableBody>
+                        </Table>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ) : null}
               </m.div>
             )}
           </AnimatePresence>
