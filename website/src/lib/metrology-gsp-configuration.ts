@@ -144,7 +144,7 @@ function buildEconPayload(config: GspRuntimeConfiguration, mode: GspMetrologyCon
   ].join("")
 }
 
-async function loadConfigurations(sensorIds: number[]) {
+async function loadConfigurations(sensorIds: number[], mode: GspMetrologyConfigurationMode) {
   const ids = [...new Set(sensorIds.filter((id) => Number.isInteger(id) && id > 0))]
   if (ids.length === 0) return []
 
@@ -157,6 +157,7 @@ async function loadConfigurations(sensorIds: number[]) {
       Sonde_Offset: true,
       Id_Module: true,
       Est_Sonde_GSO: true,
+      Surveillance_Etat: true,
       t_lieu: {
         where: { Est_Archive: false },
         select: {
@@ -184,6 +185,14 @@ async function loadConfigurations(sensorIds: number[]) {
     return !sensor.Est_Sonde_GSO && getSensorFamilyFromSerial(serial) === "GSP"
   })
   if (gspSensors.length === 0) return []
+
+  if (mode !== "normal") {
+    const alreadyInMetrology = gspSensors.find((sensor) => ["A", "E"].includes(sensor.Surveillance_Etat))
+    if (alreadyInMetrology) {
+      const serial = alreadyInMetrology.Sonde_Numero_Serie?.trim() || `#${alreadyInMetrology.Id_Sonde}`
+      throw new Error(`La GSP ${serial} est deja utilisee par une operation de metrologie.`)
+    }
+  }
 
   const moduleIds = [...new Set(gspSensors.map((sensor) => sensor.Id_Module).filter((id): id is number => id != null))]
   const modules = moduleIds.length
@@ -318,7 +327,7 @@ export async function applyGspMetrologyConfiguration(
   mode: GspMetrologyConfigurationMode,
   operationContext: "AJUSTAGE" | "ETALONNAGE",
 ) {
-  const configurations = await loadConfigurations(sensorIds)
+  const configurations = await loadConfigurations(sensorIds, mode)
   for (const config of configurations) {
     await sendConfiguration(config, mode, operationContext)
   }
