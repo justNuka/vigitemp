@@ -7,6 +7,7 @@ import { log } from "@/lib/logger"
 import {
   addCalibrationSensor,
   getCalibrationSessionForUser,
+  startCalibrationAcquisition,
   startCalibrationSession,
   stopCalibrationSession,
 } from "@/lib/metrology-calibration-session"
@@ -31,11 +32,14 @@ const CALIBRATION_MAX_DURATION_MS = 90 * 60 * 1000
 const startSchema = z.object({
   selectedSensorIds: z.array(z.number().int().positive()).min(1),
   operator: z.string().trim().max(100).default(""),
+  standardId: z.number().int().positive(),
+  mediumId: z.number().int().positive(),
 })
 
-const addSensorSchema = z.object({
-  sensorId: z.number().int().positive(),
-})
+const patchSchema = z.union([
+  z.object({ action: z.literal("start-acquisition") }),
+  z.object({ sensorId: z.number().int().positive() }),
+])
 
 function safeErrorMessage(error: unknown, fallback: string) {
   if (!(error instanceof Error)) return fallback
@@ -193,7 +197,7 @@ export const POST = withStandardOrExpertAnyAuthorizationLogging(
         userId: ctx.user.userId,
         error: error instanceof Error ? error.message : String(error),
       })
-      return apiError(400, "calibration_start_failed", safeErrorMessage(error, "Impossible de demarrer l'etalonnage."))
+      return apiError(400, "calibration_start_failed", safeErrorMessage(error, "Impossible de demarrer la lecture d'etalonnage."))
     }
   },
 )
@@ -204,7 +208,13 @@ export const PATCH = withStandardOrExpertAnyAuthorizationLogging(
     let snapshotAdded = false
     let sensorId: number | null = null
     try {
-      const input = addSensorSchema.parse(await req.json())
+      const input = patchSchema.parse(await req.json())
+
+      if ("action" in input) {
+        const session = await startCalibrationAcquisition(ctx.user.userId)
+        return apiOk({ session })
+      }
+
       sensorId = input.sensorId
       await appendCalibrationSensorStates(ctx.user.userId, [sensorId])
       snapshotAdded = true
@@ -217,12 +227,12 @@ export const PATCH = withStandardOrExpertAnyAuthorizationLogging(
       if (error instanceof z.ZodError) {
         return apiError(400, "validation_error", "Donnees invalides", { details: error.issues })
       }
-      log.error("METROLOGY_CALIBRATION", "sensor_add_failed", {
+      log.error("METROLOGY_CALIBRATION", "session_patch_failed", {
         userId: ctx.user.userId,
         sensorId,
         error: error instanceof Error ? error.message : String(error),
       })
-      return apiError(400, "calibration_sensor_add_failed", safeErrorMessage(error, "Impossible d'ajouter la sonde."))
+      return apiError(400, "calibration_patch_failed", safeErrorMessage(error, "Impossible de modifier la session d'etalonnage."))
     }
   },
 )
