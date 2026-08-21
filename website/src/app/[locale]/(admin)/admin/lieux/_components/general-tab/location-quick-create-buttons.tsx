@@ -57,7 +57,8 @@ function sortGroups(groups: Group[]) {
 }
 
 export function QuickCreateSiteButton() {
-  const t = useTranslations('locationsForm.general.quick_create')
+  const tSite = useTranslations('sitesDialog')
+  const tSitesPage = useTranslations('sitesPage')
   const tCommon = useTranslations('common')
   const queryClient = useQueryClient()
   const { setValue } = useFormContext<LocationFormData>()
@@ -94,19 +95,19 @@ export function QuickCreateSiteButton() {
         shouldTouch: true,
         shouldValidate: true,
       })
-      toast.success(t('site_success', { name: createdSite.name }))
+      toast.success(tSitesPage('toast.create_success'))
       setOpen(false)
       reset()
     },
     onError: (error) => {
-      toast.error(error instanceof Error ? error.message : t('site_error'))
+      toast.error(error instanceof Error ? error.message : tSitesPage('toast.create_error'))
     },
   })
 
   const handleCreate = () => {
     const trimmedName = name.trim()
     if (!trimmedName) {
-      toast.error(t('site_name_required'))
+      toast.error(tSite('validation.label_required'))
       return
     }
 
@@ -127,34 +128,34 @@ export function QuickCreateSiteButton() {
       <DialogTrigger asChild>
         <Button type="button" variant="ghost" size="sm" className="h-7 gap-1 px-2 text-xs">
           <Plus className="h-3.5 w-3.5" />
-          {t('site_button')}
+          {tSite('create_title')}
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md bg-white dark:bg-popover dark:text-popover-foreground">
         <DialogHeader>
-          <DialogTitle>{t('site_title')}</DialogTitle>
-          <DialogDescription>{t('site_description')}</DialogDescription>
+          <DialogTitle>{tSite('create_title')}</DialogTitle>
+          <DialogDescription>{tSite('create_description')}</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="quick-site-name">{t('site_name')}</Label>
+            <Label htmlFor="quick-site-name">{tSite('fields.label_label')}</Label>
             <Input
               id="quick-site-name"
               value={name}
               onChange={(event) => setName(event.target.value)}
-              placeholder={t('site_name_placeholder')}
+              placeholder={tSite('fields.label_placeholder')}
               maxLength={50}
               autoFocus
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="quick-site-comment">{t('site_comment')}</Label>
+            <Label htmlFor="quick-site-comment">{tSite('fields.comment_label')}</Label>
             <Textarea
               id="quick-site-comment"
               value={comment}
               onChange={(event) => setComment(event.target.value)}
-              placeholder={t('site_comment_placeholder')}
+              placeholder={tSite('fields.comment_placeholder')}
               maxLength={200}
               rows={3}
             />
@@ -166,7 +167,7 @@ export function QuickCreateSiteButton() {
             {tCommon('cancel')}
           </Button>
           <Button type="button" onClick={handleCreate} disabled={createMutation.isPending}>
-            {createMutation.isPending ? t('creating') : t('create')}
+            {createMutation.isPending ? tSite('submit_creating') : tSite('submit_create')}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -175,7 +176,7 @@ export function QuickCreateSiteButton() {
 }
 
 export function QuickCreateGroupButton() {
-  const t = useTranslations('locationsForm.general.quick_create')
+  const tGroup = useTranslations('groupsDialog')
   const tCommon = useTranslations('common')
   const queryClient = useQueryClient()
   const { getValues, setValue } = useFormContext<LocationFormData>()
@@ -219,23 +220,23 @@ export function QuickCreateGroupButton() {
         })
       }
 
-      toast.success(t('group_success', { name: normalizedGroup.Nom_Groupe || variables.name }))
+      toast.success(tGroup('toast.create_success'))
       setOpen(false)
       reset()
     },
     onError: (error) => {
-      toast.error(error instanceof Error ? error.message : t('group_error'))
+      toast.error(error instanceof Error ? error.message : tGroup('toast.save_error'))
     },
   })
 
   const handleCreate = () => {
     const trimmedName = name.trim()
     if (!regroupement) {
-      toast.error(t('group_regroupement_required'))
+      toast.error(tGroup('validation.regroupement_required'))
       return
     }
     if (!trimmedName) {
-      toast.error(t('group_name_required'))
+      toast.error(tGroup('validation.name_required'))
       return
     }
 
@@ -256,36 +257,34 @@ export function QuickCreateGroupButton() {
       <DialogTrigger asChild>
         <Button type="button" variant="ghost" size="sm" className="h-7 gap-1 px-2 text-xs">
           <Plus className="h-3.5 w-3.5" />
-          {t('group_button')}
+          {tGroup('title_create')}
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md bg-white dark:bg-popover dark:text-popover-foreground">
         <DialogHeader>
-          <DialogTitle>{t('group_title')}</DialogTitle>
-          <DialogDescription>{t('group_description')}</DialogDescription>
+          <DialogTitle>{tGroup('title_create')}</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label>{t('group_regroupement')}</Label>
+            <Label>{tGroup('fields.regroupement_label')}</Label>
             <Select value={regroupement} onValueChange={setRegroupement}>
               <SelectTrigger>
-                <SelectValue placeholder={t('group_regroupement_placeholder')} />
+                <SelectValue placeholder={tGroup('fields.regroupement_placeholder')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="1">{t('group_regroupement_1')}</SelectItem>
-                <SelectItem value="2">{t('group_regroupement_2')}</SelectItem>
+                <SelectItem value="1">{tGroup('fields.regroupement_1')}</SelectItem>
+                <SelectItem value="2">{tGroup('fields.regroupement_2')}</SelectItem>
               </SelectContent>
             </Select>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="quick-group-name">{t('group_name')}</Label>
+            <Label htmlFor="quick-group-name">{tGroup('fields.name_label')}</Label>
             <Input
               id="quick-group-name"
               value={name}
               onChange={(event) => setName(event.target.value)}
-              placeholder={t('group_name_placeholder')}
-              autoFocus
+              placeholder={tGroup('fields.name_placeholder')}
             />
           </div>
         </div>
@@ -295,7 +294,7 @@ export function QuickCreateGroupButton() {
             {tCommon('cancel')}
           </Button>
           <Button type="button" onClick={handleCreate} disabled={createMutation.isPending}>
-            {createMutation.isPending ? t('creating') : t('create')}
+            {createMutation.isPending ? tGroup('submit_saving') : tGroup('submit_save')}
           </Button>
         </DialogFooter>
       </DialogContent>
