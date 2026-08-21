@@ -15,8 +15,6 @@ const config = [
       "react-hooks/preserve-manual-memoization": "warn",
       "react-hooks/refs": "warn",
       "react-hooks/incompatible-library": "warn",
-      // Les règles Hooks classiques restent inchangées et continuent
-      // d'être remontées par le preset Next.js.
     },
   },
 ];
