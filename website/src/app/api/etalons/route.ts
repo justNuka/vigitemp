@@ -198,7 +198,7 @@ export const POST = withStandardOrExpertAnyAuthorizationLogging(ETALON_WRITE_COD
       return apiError(409, "conflict", "Un etalon avec ce numero de serie existe deja")
     }
 
-    const module = data.Id_Module
+    const selectedModule = data.Id_Module
       ? await prisma.t_module.findUnique({
           where: { Id_Module: data.Id_Module },
           select: { Id_Module: true, Port_Serie: true, Id_Worker: true },
@@ -208,9 +208,9 @@ export const POST = withStandardOrExpertAnyAuthorizationLogging(ETALON_WRITE_COD
     const newEtalonId = await insertEtalonBase({
       serial: data.Etalon_Numero_Serie,
       state: data.Etat_Etalon || "1",
-      portSerie: module?.Port_Serie ? String(module.Port_Serie) : null,
-      idWorker: module?.Id_Worker ?? null,
-      idModule: module?.Id_Module ?? null,
+      portSerie: selectedModule?.Port_Serie ? String(selectedModule.Port_Serie) : null,
+      idWorker: selectedModule?.Id_Worker ?? null,
+      idModule: selectedModule?.Id_Module ?? null,
       estSondeExterne: data.Est_Sonde_Externe ?? false,
     })
 
@@ -219,9 +219,9 @@ export const POST = withStandardOrExpertAnyAuthorizationLogging(ETALON_WRITE_COD
       Id_Etalon: newEtalonId,
       Etalon_Numero_Serie: data.Etalon_Numero_Serie,
       Etat_Etalon: newEtalonRow?.Etat_Etalon == null ? data.Etat_Etalon || "1" : String(newEtalonRow.Etat_Etalon),
-      Port_Serie: newEtalonRow?.Port_Serie == null ? (module?.Port_Serie ? String(module.Port_Serie) : null) : String(newEtalonRow.Port_Serie),
-      Id_Worker: newEtalonRow?.Id_Worker == null ? module?.Id_Worker ?? null : Number(newEtalonRow.Id_Worker),
-      Id_Module: newEtalonRow?.Id_Module == null ? module?.Id_Module ?? null : Number(newEtalonRow.Id_Module),
+      Port_Serie: newEtalonRow?.Port_Serie == null ? (selectedModule?.Port_Serie ? String(selectedModule.Port_Serie) : null) : String(newEtalonRow.Port_Serie),
+      Id_Worker: newEtalonRow?.Id_Worker == null ? selectedModule?.Id_Worker ?? null : Number(newEtalonRow.Id_Worker),
+      Id_Module: newEtalonRow?.Id_Module == null ? selectedModule?.Id_Module ?? null : Number(newEtalonRow.Id_Module),
       Est_Sonde_Externe: newEtalonRow?.Est_Sonde_Externe == null ? data.Est_Sonde_Externe ?? false : Boolean(Number(newEtalonRow.Est_Sonde_Externe)),
     }
 

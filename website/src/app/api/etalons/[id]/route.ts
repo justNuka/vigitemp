@@ -48,7 +48,7 @@ export const PATCH = withStandardOrExpertAnyAuthorizationLogging(
         return apiError(404, "not_found", "Etalon introuvable")
       }
 
-      const module = data.Id_Module
+      const selectedModule = data.Id_Module
         ? await prisma.t_module.findUnique({
             where: { Id_Module: data.Id_Module },
             select: { Id_Module: true, Port_Serie: true, Id_Worker: true },
@@ -58,9 +58,9 @@ export const PATCH = withStandardOrExpertAnyAuthorizationLogging(
       await updateEtalonBase(etalonId, {
         serial: data.Etalon_Numero_Serie,
         state: data.Etat_Etalon || String(existingEtalon.Etat_Etalon ?? "1"),
-        portSerie: module?.Port_Serie ? String(module.Port_Serie) : null,
-        idWorker: module?.Id_Worker ?? null,
-        idModule: module?.Id_Module ?? null,
+        portSerie: selectedModule?.Port_Serie ? String(selectedModule.Port_Serie) : null,
+        idWorker: selectedModule?.Id_Worker ?? null,
+        idModule: selectedModule?.Id_Module ?? null,
         estSondeExterne: data.Est_Sonde_Externe ?? Boolean(Number(existingEtalon.Est_Sonde_Externe ?? 0)),
       })
 
@@ -108,9 +108,9 @@ export const PATCH = withStandardOrExpertAnyAuthorizationLogging(
         after: {
           Etalon_Numero_Serie: data.Etalon_Numero_Serie,
           Etat_Etalon: updatedEtalon?.Etat_Etalon ?? data.Etat_Etalon ?? existingEtalon.Etat_Etalon,
-          Id_Module: updatedEtalon?.Id_Module ?? module?.Id_Module ?? null,
-          Port_Serie: updatedEtalon?.Port_Serie ?? (module?.Port_Serie ? String(module.Port_Serie) : null),
-          Id_Worker: updatedEtalon?.Id_Worker ?? module?.Id_Worker ?? null,
+          Id_Module: updatedEtalon?.Id_Module ?? selectedModule?.Id_Module ?? null,
+          Port_Serie: updatedEtalon?.Port_Serie ?? (selectedModule?.Port_Serie ? String(selectedModule.Port_Serie) : null),
+          Id_Worker: updatedEtalon?.Id_Worker ?? selectedModule?.Id_Worker ?? null,
           Coeff_A: data.Coeff_A,
           Coeff_B: data.Coeff_B,
           Coeff_C: data.Coeff_C,
