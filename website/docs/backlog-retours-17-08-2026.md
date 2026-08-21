@@ -36,7 +36,8 @@ Objectif : permettre une reprise immédiate du travail dans une nouvelle convers
 - PR #36 : B20-005 + B20-006, création rapide Site/Groupe et rappel des groupes dans Mailing — **mergée dans `dev` le 21/08/2026**.
 - PR #37 : nettoyage lint Next 16 / diagnostics React Compiler non bloquants — **mergée dans `dev` le 21/08/2026**.
 - PR #38 : B21-001, campagne d’étalonnage sur 10 mesures + calculs métrologiques — **mergée dans `dev` le 21/08/2026**, merge `b5ccccb20b6bc28cf1c05db3acaa075a32dc6ec1`.
-- PR #39 : B20-007, cohérence des dates dans la liste et la fenêtre d’acquittement — **ouverte en draft** sur `agent/alarm-ack-datetime-consistency`.
+- PR #39 : B20-007, cohérence des dates dans la liste et la fenêtre d’acquittement — **mergée dans `dev` le 21/08/2026**, merge `dc8ecfd2e08976ddcd192dc8836fe0838a6476a2`.
+- PR #40 : B21-002, coefficients métrologiques embarqués dans les GSP / protocole `ECON` étendu — **ouverte en draft** sur `agent/gsp-onboard-metrology-coefficients`.
 
 ### Statuts
 
@@ -563,7 +564,7 @@ Fichier principal :
 
 ## B20-007 — Acquittement d’alarme : incohérence de deux heures entre les dates affichées
 
-**Statut : `PR_OUVERTE` — PR #39 — branche `agent/alarm-ack-datetime-consistency`**
+**Statut : `CORRIGE_DEV` — PR #39 — branche `agent/alarm-ack-datetime-consistency`**
 
 ### Retour du 21/08/2026
 
@@ -598,6 +599,8 @@ Comportement :
 - `resolvedAt` utilise `serializeStoredDbDateTime(alarm.Date_Heure_Fin)`;
 - le fallback basé sur `new Date()` garde `serializeDbDateTime()` car il s’agit d’un instant produit par l’application et non d’un `DATETIME` relu depuis la base;
 - aucun décalage artificiel n’est ajouté côté frontend.
+
+PR #39 mergée dans `dev` le 21/08/2026, merge `dc8ecfd2e08976ddcd192dc8836fe0838a6476a2`.
 
 ### Validation terrain restante
 
@@ -699,6 +702,114 @@ Fichiers principaux :
 
 ---
 
+## B21-002 — GSP : coefficients métrologiques embarqués dans `ECON`
+
+**Statut : `PR_OUVERTE` — PR #40 — branche `agent/gsp-onboard-metrology-coefficients`**
+
+### Retour du 21/08/2026
+
+Le firmware GSP embarque désormais tous les coefficients métrologiques et applique lui-même la formule avant de retourner la mesure. Le protocole `ECON` expose :
+
+- `a=CoefA` sur 10 décimales;
+- `b=CoefB` sur 10 décimales;
+- `c=CoefC` sur 10 décimales;
+- `d=Offset` sur 2 décimales;
+- `e=Erreur de Justesse` sur 2 décimales;
+- `m=Multipoint` (`0` ou `1`).
+
+Formules firmware :
+
+- `m=0` : `a*x + b + offset - justesse`;
+- `m=1` : `a*x² + b*x + c + offset - justesse`.
+
+Une limite haute/basse désactivée doit maintenant être transmise sous forme `NAN` au lieu de `999`.
+
+Deux comportements spécifiques aux opérations de métrologie sont également demandés :
+
+- **Ajustage** : neutraliser temporairement tous les coefficients pour travailler sur la valeur non corrigée;
+- **Étalonnage** : conserver l’ajustage et l’offset mais neutraliser l’ancienne erreur de justesse, puisque l’étalonnage sert précisément à calculer la nouvelle.
+
+### État du code vérifié avant modification
+
+`SensorGSP` avait déjà `ShouldApplyMetrology => false` : le serveur ne réapplique donc pas sa couche métrologique générique sur les mesures GSP. Le changement est cohérent avec cette architecture : la valeur `TEMP` produite par le nouveau firmware devient directement la valeur finale utilisée par VigiSensys.
+
+Le schéma contient déjà :
+
+- `t_ajustage.Coeff_X2`, `Coeff_X`, `Coeff_Constant`;
+- `t_sonde.Sonde_Offset`;
+- `t_etalonnage.Err_Justesse`;
+- `t_lieu.Est_Correction_Ej`.
+
+Aucune migration DB n’est nécessaire. Aucun flag multipoint séparé n’existant actuellement, le mode `m=1` est déduit d’un `Coeff_X2` non nul.
+
+### Correctif PR #40
+
+#### Configuration normale
+
+Mapping envoyé à la GSP :
+
+- linéaire `m=0` : `a=Coeff_X`, `b=Coeff_Constant`, `c=0`;
+- multipoint `m=1` : `a=Coeff_X2`, `b=Coeff_X`, `c=Coeff_Constant`;
+- `d=Sonde_Offset`;
+- `e=dernier Err_Justesse` uniquement lorsque `Est_Correction_Ej=1`, sinon `0`.
+
+Les coefficients A/B/C sont formatés avec 10 décimales et Offset/Justesse avec 2 décimales. Les limites inactives ou encore stockées avec l’ancienne sentinelle `999` sont envoyées en `NAN`.
+
+Le parseur `DCON` comprend les nouveaux champs `A/B/C/Off/Justesse/Multi/LimH/LimB/F/RetB/RetH` tout en conservant la lecture des anciens firmwares. L’ancien sens compact de `d` comme retard partagé n’est accepté que si les nouveaux champs métrologiques ne sont pas détectés.
+
+#### Ajustage
+
+Avant de créer réellement la session et donc avant la première acquisition, chaque GSP sélectionnée reçoit :
+
+`a=1, b=0, c=0, d=0, e=0, m=0`.
+
+`h/l/f/r/t` sont conservés. La configuration normale est restaurée après validation finale, arrêt, annulation, expiration ou rollback de démarrage.
+
+Lors d’un ajustage réussi, le second point persiste d’abord le nouveau `t_ajustage`, puis la restauration relit ces nouveaux coefficients avant de renvoyer l’`ECON` normal.
+
+#### Étalonnage
+
+Avant la première lecture, la GSP conserve ses coefficients A/B/C, son offset et son mode multipoint mais reçoit temporairement `e=0`.
+
+Cette option a été retenue plutôt que de réajouter l’ancienne erreur côté serveur : elle évite toute double correction et fait travailler les dix mesures directement sur la valeur ajustée mais sans l’ancienne justesse.
+
+Une GSP ajoutée pendant la phase `reading` reçoit elle aussi `e=0` avant son intégration. La configuration normale est restaurée après 10/10, arrêt, expiration ou rollback. Après une campagne réussie, le nouvel `Err_Justesse` déjà persisté est relu et envoyé si `Est_Correction_Ej=1`.
+
+Les GSO ne sont jamais ciblées par ce helper `ECON`.
+
+### Fichiers principaux
+
+- `Vigitemp Serveur/Vigitemp Serveur/sensors/GspProtocol.cs`;
+- `website/src/lib/metrology-gsp-configuration.ts`;
+- `website/src/lib/metrology-gsp-configuration-restore.ts`;
+- `website/src/app/api/metrologie/ajustage/session/route.ts`;
+- `website/src/app/api/metrologie/ajustage/session/point/route.ts`;
+- `website/src/app/api/metrologie/etalonnage/session/route.ts`;
+- `website/docs/gsp-econ-metrology-2026-08.md`.
+
+### Validation terrain restante
+
+- [ ] build C# du service Windows;
+- [ ] `pnpm i18n:check`;
+- [ ] `pnpm lint`;
+- [ ] `pnpm build`;
+- [ ] configuration normale linéaire : contrôler `A/B/C/Off/Justesse/Multi` via `DCON`;
+- [ ] multipoint : utiliser un `Coeff_X2` non nul et vérifier `Multi=1` + mapping des trois coefficients;
+- [ ] désactiver le seuil haut et vérifier `LimH=NAN`;
+- [ ] désactiver le seuil bas et vérifier `LimB=NAN`;
+- [ ] Ajustage : vérifier l’`ECON` neutre avant la première lecture;
+- [ ] Ajustage terminé : vérifier que les nouveaux coefficients persistés sont immédiatement renvoyés;
+- [ ] Ajustage annulé/arrêté/expiré : vérifier la restauration de la configuration normale;
+- [ ] Étalonnage : vérifier que `A/B/C/Off/Multi` restent identiques mais `Justesse=0` pendant la campagne;
+- [ ] Étalonnage 10/10 avec `Est_Correction_Ej=1` : vérifier que la nouvelle erreur de justesse est renvoyée;
+- [ ] Étalonnage avec `Est_Correction_Ej=0` : vérifier que `Justesse=0` reste appliqué en configuration normale;
+- [ ] ajouter une GSP pendant la phase de lecture et vérifier qu’elle reçoit `e=0` avant sa première mesure de session;
+- [ ] GSO : confirmer qu’aucune commande de ce lot ne lui est envoyée;
+- [ ] ancien firmware si disponible : vérifier que l’ancien `DCON` reste lisible;
+- [ ] Surveillance : comparer une valeur connue à la formule embarquée et confirmer qu’aucune deuxième correction serveur n’est appliquée.
+
+---
+
 ## État du lot au 21/08/2026
 
 Les points historiques B17-001 à B17-011 sont corrigés dans `dev`.
@@ -709,12 +820,13 @@ Pour les retours B20/B21 :
 2. **B20-003** — corrigé dans `dev` via PR #34, validation terrain externe encore à effectuer;
 3. **B20-004** — corrigé dans `dev` via PR #35;
 4. **B20-005 + B20-006** — corrigés dans `dev` via PR #36;
-5. **B20-007** — correctif ouvert en draft via PR #39 sur `agent/alarm-ack-datetime-consistency`, basé sur `dev` `b5ccccb20b6bc28cf1c05db3acaa075a32dc6ec1`;
-6. **B21-001** — campagne d’étalonnage 10 mesures corrigée dans `dev` via PR #38; validation terrain en cours.
+5. **B20-007** — corrigé dans `dev` via PR #39, merge `dc8ecfd2e08976ddcd192dc8836fe0838a6476a2`; validation terrain encore possible;
+6. **B21-001** — campagne d’étalonnage 10 mesures corrigée dans `dev` via PR #38; validation terrain en cours;
+7. **B21-002** — support du nouveau firmware `ECON` GSP ouvert en draft via PR #40 sur `agent/gsp-onboard-metrology-coefficients`; builds et validation avec le nouveau firmware à effectuer.
 
 La PR #37 a également ramené le lint à **0 erreur bloquante**, les diagnostics React Compiler non applicables restant visibles comme warnings tant que le compilateur n’est pas activé.
 
-Le `dev` de référence au démarrage de B20-007 est `b5ccccb20b6bc28cf1c05db3acaa075a32dc6ec1` (merge PR #38).
+Le `dev` de référence au démarrage de B21-002 est `dc8ecfd2e08976ddcd192dc8836fe0838a6476a2` (merge PR #39).
 
 ## Règle de reprise pour une nouvelle conversation
 
