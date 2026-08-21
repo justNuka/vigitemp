@@ -33,6 +33,10 @@ Objectif : permettre une reprise immédiate du travail dans une nouvelle convers
 - PR #33 : B20-001 + B20-002, exports XML d’ajustage et création GSO simple à l’import — **mergée dans `dev` le 20/08/2026**, merge `5ad7637beee30c8a50b56458f78fd5ffe78251cf`.
 - PR #34 : B20-003, export XML multiple des ajustages — **mergée dans `dev` le 20/08/2026**, merge `c75b2d5e655705adb933fc2d1c291393c8cae2f5`.
 - PR #35 : B20-004, fondu progressif des cellules de mesure mises à jour — **mergée dans `dev` le 21/08/2026**, merge `a5272678a9c5700e2ea14df53fbb651754194906`.
+- PR #36 : B20-005 + B20-006, création rapide Site/Groupe et rappel des groupes dans Mailing — **mergée dans `dev` le 21/08/2026**.
+- PR #37 : nettoyage lint Next 16 / diagnostics React Compiler non bloquants — **mergée dans `dev` le 21/08/2026**.
+- PR #38 : B21-001, campagne d’étalonnage sur 10 mesures + calculs métrologiques — **mergée dans `dev` le 21/08/2026**, merge `b5ccccb20b6bc28cf1c05db3acaa075a32dc6ec1`.
+- PR #39 : B20-007, cohérence des dates dans la liste et la fenêtre d’acquittement — **ouverte en draft** sur `agent/alarm-ack-datetime-consistency`.
 
 ### Statuts
 
@@ -490,17 +494,15 @@ Le composant partagé `website/src/app/[locale]/(admin)/admin/metrologie/_compon
 
 ## B20-005 — Lieux : création rapide d’un site ou d’un groupe depuis la modale
 
-**Statut : `EN_COURS` — branche `agent/location-modal-sites-groups`**
+**Statut : `CORRIGE_DEV` — PR #36 — branche `agent/location-modal-sites-groups`**
 
 ### Retour du 21/08/2026
 
 Lors de la création ou de la modification d’un lieu, l’utilisateur doit pouvoir créer rapidement le site ou le groupe manquant sans fermer la modale du lieu, aller dans une autre page d’administration puis revenir reprendre sa saisie.
 
-### État vérifié / implémentation du lot
+### Correctif livré
 
-Le formulaire Général utilisait déjà les listes `sites-simple` et `groups` mais ne proposait aucune création depuis ces champs. Les APIs existantes `POST /api/sites` et `POST /api/groupes` gèrent déjà la création, les droits `PARAMETRES_GERER`, le logging et l’audit : aucune nouvelle route métier n’est nécessaire.
-
-Le lot ajoute des actions de création légère directement à côté des champs Site et Groupes :
+Le formulaire Général réutilise les APIs existantes `POST /api/sites` et `POST /api/groupes` et ajoute des actions de création légère directement à côté des champs Site et Groupes :
 
 - création d’un site avec nom et commentaire optionnel;
 - création d’un groupe avec regroupement et nom;
@@ -531,15 +533,15 @@ Fichiers principaux :
 
 ## B20-006 — Lieux : rappeler les groupes sélectionnés dans l’onglet Mailing
 
-**Statut : `EN_COURS` — branche `agent/location-modal-sites-groups`**
+**Statut : `CORRIGE_DEV` — PR #36 — branche `agent/location-modal-sites-groups`**
 
 ### Retour du 21/08/2026
 
 L’option Mailing permet déjà d’appliquer la liste de contacts aux groupes sélectionnés dans l’onglet Général, mais l’utilisateur doit revenir dans Général pour se rappeler exactement quels groupes sont concernés.
 
-### État vérifié / implémentation du lot
+### Correctif livré
 
-`LocationFormTabTelephony` surveille déjà `GroupIds` et désactive l’option d’application aux groupes quand aucun groupe n’est sélectionné. Le lot conserve cette logique et ajoute sous l’explication la liste explicite des groupes concernés sous forme de badges.
+`LocationFormTabTelephony` surveille `GroupIds` et affiche sous l’explication la liste explicite des groupes concernés sous forme de badges.
 
 Les noms proviennent de la même requête React Query `groups` que le formulaire Général. Un groupe créé rapidement via B20-005 apparaît donc immédiatement dans ce rappel. Les libellés existants `locationsForm.general` sont réutilisés afin de ne pas introduire de texte UI hardcodé.
 
@@ -561,42 +563,139 @@ Fichier principal :
 
 ## B20-007 — Acquittement d’alarme : incohérence de deux heures entre les dates affichées
 
-**Statut : `A_INVESTIGUER`**
+**Statut : `PR_OUVERTE` — PR #39 — branche `agent/alarm-ack-datetime-consistency`**
 
 ### Retour du 21/08/2026
 
-Dans la fenêtre **Acquitter l’alarme**, une même alarme de non-réponse peut afficher deux heures différentes pour son début. Capture fournie sur l’alarme `#18155 - Non réponse` :
+Dans la fenêtre **Acquitter l’alarme**, une même alarme de non-réponse pouvait afficher deux heures différentes pour son début. Capture fournie sur l’alarme `#18155 - Non réponse` :
 
 - ligne de la liste : `20/08/2026 15:34:00`;
 - panneau de détail : `20/08/2026 13:34:00`.
 
-L’écart observé est exactement de deux heures. Il rappelle les anciens défauts UTC/local sur les `DATETIME` MySQL, mais la cause n’est **pas encore confirmée** : aucun correctif arbitraire `-2 h` ne doit être appliqué.
+### Cause confirmée le 21/08/2026
 
-### Investigation à réaliser dans un lot séparé
+Le défaut est côté API, pas dans le formatter React :
 
-Auditer l’ensemble des dates utilisées par cette fenêtre avant de modifier le comportement :
+- `GET /api/alarmes` sérialisait `Date_Heure_Debut` et `Date_Heure_Fin` avec `serializeDbDateTime()`;
+- `GET /api/alarmes/[id]` utilisait déjà `serializeStoredDbDateTime()`;
+- le dialogue applique ensuite le même `formatDbDateTime()` aux deux payloads;
+- `Date_Heure_Debut` / `Date_Heure_Fin` sont des `DATETIME` sans fuseau. Prisma les expose comme objets `Date` adossés à UTC alors que les composantes stockées représentent déjà l’heure murale locale;
+- `serializeDbDateTime()` relisait donc les getters locaux et pouvait ajouter le décalage horaire du serveur, soit +2 h en heure d’été française;
+- `serializeStoredDbDateTime()` relit au contraire les composantes UTC afin de préserver exactement l’heure stockée.
 
-- `Début alarme` dans la liste et dans le panneau de détail;
-- `Fin alarme`;
-- calcul de `Durée`;
-- date associée à la dernière valeur si présente dans le payload;
-- dates utilisées pour le récapitulatif des alarmes sur 30 jours;
-- alarmes actives et alarmes terminées;
-- valeur brute `DATETIME` en base et valeur renvoyée par l’API;
-- sérialisation serveur et formatters frontend;
-- usages de `new Date()`, `toISOString()`, `serializeStoredDbDateTime()`, `parseDbDateTime()` ou helpers équivalents autour du parcours d’acquittement.
+L’API `/api/alarmes/range` était déjà correcte et utilise `serializeStoredDbDateTime()`. Le calcul de durée de la modale utilise `parseDbDateTime()` sur les valeurs normalisées et ne nécessite aucun `-2 h`. Le compteur des alarmes sur 30 jours ne sérialise aucune date vers l’UI et reste inchangé.
 
-Comparer ce parcours aux corrections déjà livrées dans les PR #17 et #20 afin d’identifier précisément le chemin qui échappe encore à la normalisation des dates stockées.
+### Correctif PR #39
 
-### Validation terrain attendue
+Fichier principal :
 
-- une même alarme affiche exactement la même heure dans la liste et le détail;
-- début/fin correspondent aux valeurs murales stockées en base;
-- la durée reste cohérente avec les deux dates;
+- `website/src/app/api/alarmes/route.ts`.
+
+Comportement :
+
+- `timestamp` utilise `serializeStoredDbDateTime(alarm.Date_Heure_Debut)`;
+- `acknowledgedAt` utilise la même sérialisation pour sa valeur DB actuelle;
+- `resolvedAt` utilise `serializeStoredDbDateTime(alarm.Date_Heure_Fin)`;
+- le fallback basé sur `new Date()` garde `serializeDbDateTime()` car il s’agit d’un instant produit par l’application et non d’un `DATETIME` relu depuis la base;
+- aucun décalage artificiel n’est ajouté côté frontend.
+
+### Validation terrain restante
+
+- reprendre l’alarme de non-réponse du retour si elle est encore disponible et vérifier que ligne + détail affichent la même heure;
+- comparer `Date_Heure_Debut` brute en base à la valeur affichée;
 - tester une alarme active puis une terminée;
-- tester une non-réponse et au moins un autre type d’alarme;
-- contrôler le récapitulatif 30 jours;
-- vérifier le comportement autour du changement heure été/hiver.
+- pour une alarme terminée, comparer également `Date_Heure_Fin` brute avec l’affichage;
+- vérifier que la durée est cohérente avec début/fin;
+- tester au moins une alarme haute ou basse en plus d’une non-réponse;
+- contrôler la page Alarmes hors modale, qui réutilise le même endpoint liste;
+- contrôler le compteur sur 30 jours;
+- garder un contrôle lors du changement heure été/hiver.
+
+---
+
+## B21-001 — Étalonnage : campagne de 10 mesures, étalon et calculs métrologiques
+
+**Statut : `CORRIGE_DEV` — PR #38 — branche `agent/calibration-10-measures-results`**
+
+### Retour du 21/08/2026
+
+Le parcours d’étalonnage devait être complété pour reproduire la campagne métier attendue :
+
+- **Démarrer la lecture** doit être la première action;
+- **Démarrer l’étalonnage** doit rester désactivé tant qu’aucune première lecture valide n’est disponible;
+- l’étalon doit lui aussi fournir 10 mesures;
+- les 10 valeurs successives de chaque sonde et de l’étalon doivent être conservées et affichées;
+- le tableau historique devient **Dernière mesure d’étalonnage**;
+- un tableau séparé expose les mesures de l’étalon;
+- un tableau global aligne toutes les mesures en distinguant l’étalon;
+- l’erreur de justesse et l’incertitude doivent être calculées côté backend et les résultats seulement affichés côté frontend.
+
+### Correctif livré via PR #38
+
+La session d’étalonnage possède désormais deux phases :
+
+1. `reading` : lecture de l’étalon et des sondes, sans consommer les 10 mesures de campagne;
+2. `acquiring` : acquisition de 10 cycles complets et appariés.
+
+Un cycle n’est compté que si l’étalon et toutes les sondes possèdent une valeur valide. L’ajout d’une sonde reste possible pendant `reading` mais est bloqué dès le démarrage de la campagne afin de préserver l’alignement des séries.
+
+La préparation demande un étalon SPET interrogé automatiquement et un milieu d’intercomparaison. Le backend utilise :
+
+- résolution étalon;
+- `Incertitude_Max` de l’étalon;
+- résolution sonde fixée à `0.01` conformément au retour métier, aucun champ de résolution sonde n’existant actuellement dans `t_sonde_type`;
+- stabilité et homogénéité du milieu.
+
+### Calculs
+
+Pour chaque sonde :
+
+- erreur de justesse = moyenne sonde - moyenne étalon;
+- U1 = résolution étalon / (2 × √3);
+- U2 = 0.04 / √3;
+- U3 = incertitude étalon / 2;
+- U4 = 0.01 / (2 × √3);
+- U5 = 0;
+- U6 = 0.000032;
+- U7 = écart-type expérimental des 10 valeurs sonde (`n - 1`);
+- U8 = 0;
+- U9 = √((stabilité / √3)² + (homogénéité / √3)²);
+- U10 = 0;
+- U11 = 0;
+- incertitude = √(U1² + ... + U11²).
+
+Les composantes U1 à U11 restent backend. Le frontend affiche les moyennes, l’erreur de justesse et l’incertitude.
+
+### Persistance
+
+Après le dixième cycle valide :
+
+- une ligne `t_etalonnage` est créée pour chaque sonde;
+- dix lignes `t_etalonnage_mesure` sont créées par étalonnage avec `Numero_Ordre`, `Mesure_Sonde` et `Mesure_Etalon`;
+- `Repetabilite` reçoit l’écart-type utilisé comme U7;
+- les états des sondes sont restaurés après fin ou arrêt.
+
+Fichiers principaux :
+
+- `website/src/lib/metrology-calibration-session.ts`;
+- `website/src/lib/metrology-calibration-calculations.ts`;
+- `website/src/app/api/metrologie/etalonnage/session/route.ts`;
+- `website/src/app/[locale]/(admin)/admin/metrologie/realiser-etalonnage/calibration-workflow-client.tsx`;
+- `website/src/messages/metrology-calibration-supplements.ts`.
+
+### Validation terrain restante
+
+- vérifier le verrouillage initial des boutons;
+- démarrer la lecture et confirmer la dernière valeur étalon + toutes les sondes;
+- démarrer la campagne et suivre `0/10` à `10/10`;
+- provoquer si possible un cycle incomplet : il ne doit pas incrémenter le compteur;
+- vérifier les 10 valeurs étalon et les 10 lignes appariées;
+- vérifier une sonde à la main : moyenne sonde, moyenne étalon et erreur de justesse;
+- comparer l’incertitude avec un calcul manuel connu;
+- vérifier une ligne `t_etalonnage` par sonde et 10 `t_etalonnage_mesure` par opération;
+- arrêter pendant `reading`, puis pendant `acquiring`, et vérifier la restauration des états;
+- tester GSP puis GSO;
+- vérifier FR/EN et thèmes clair/sombre.
 
 ---
 
@@ -604,15 +703,18 @@ Comparer ce parcours aux corrections déjà livrées dans les PR #17 et #20 afin
 
 Les points historiques B17-001 à B17-011 sont corrigés dans `dev`.
 
-Pour le lot B20 :
+Pour les retours B20/B21 :
 
 1. **B20-001 + B20-002** — corrigés dans `dev` via PR #33;
 2. **B20-003** — corrigé dans `dev` via PR #34, validation terrain externe encore à effectuer;
 3. **B20-004** — corrigé dans `dev` via PR #35;
-4. **B20-005 + B20-006** — en cours sur `agent/location-modal-sites-groups`, créée depuis `dev` `a5272678a9c5700e2ea14df53fbb651754194906`;
-5. **B20-007** — à investiguer dans un lot Alarmes/Dates séparé après le lot Lieux.
+4. **B20-005 + B20-006** — corrigés dans `dev` via PR #36;
+5. **B20-007** — correctif ouvert en draft via PR #39 sur `agent/alarm-ack-datetime-consistency`, basé sur `dev` `b5ccccb20b6bc28cf1c05db3acaa075a32dc6ec1`;
+6. **B21-001** — campagne d’étalonnage 10 mesures corrigée dans `dev` via PR #38; validation terrain en cours.
 
-Le `dev` de référence au démarrage de B20-005/B20-006 est `a5272678a9c5700e2ea14df53fbb651754194906` (merge PR #35).
+La PR #37 a également ramené le lint à **0 erreur bloquante**, les diagnostics React Compiler non applicables restant visibles comme warnings tant que le compilateur n’est pas activé.
+
+Le `dev` de référence au démarrage de B20-007 est `b5ccccb20b6bc28cf1c05db3acaa075a32dc6ec1` (merge PR #38).
 
 ## Règle de reprise pour une nouvelle conversation
 

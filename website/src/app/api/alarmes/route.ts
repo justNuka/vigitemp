@@ -9,7 +9,7 @@ import { withAuthLogging } from "@/lib/api-wrappers"
 
 import { apiError, apiOk } from "@/lib/api-response"
 import { log } from "@/lib/logger"
-import { serializeDbDateTime } from "@/lib/date-display"
+import { serializeDbDateTime, serializeStoredDbDateTime } from "@/lib/date-display"
 
 const alarmsQuerySchema = z.object({
   status: z.enum(["active", "acknowledged", "resolved"]).optional(),
@@ -403,13 +403,13 @@ export const GET = withAuthLogging(async (req: NextRequest, ctx) => {
 
         message,
 
-        timestamp: serializeDbDateTime(alarm.Date_Heure_Debut) || serializeDbDateTime(new Date()) || null,
+        timestamp: serializeStoredDbDateTime(alarm.Date_Heure_Debut) || serializeDbDateTime(new Date()) || null,
 
-        acknowledgedAt: alarm.Est_Acquittee ? serializeDbDateTime(alarm.Date_Heure_Debut) : null,
+        acknowledgedAt: alarm.Est_Acquittee ? serializeStoredDbDateTime(alarm.Date_Heure_Debut) : null,
 
         acknowledgedBy: null,
 
-        resolvedAt: serializeDbDateTime(alarm.Date_Heure_Fin) || null,
+        resolvedAt: serializeStoredDbDateTime(alarm.Date_Heure_Fin) || null,
 
         minThreshold: consigneInf,
 
@@ -502,4 +502,3 @@ export const GET = withAuthLogging(async (req: NextRequest, ctx) => {
   }
 
 })
-
