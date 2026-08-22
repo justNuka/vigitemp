@@ -12,6 +12,8 @@ import {
   startAdjustmentSession,
   stopAdjustmentSession,
 } from "@/lib/metrology-adjustment-session"
+import { applyGspMetrologyConfiguration } from "@/lib/metrology-gsp-configuration"
+import { restoreGspMetrologyConfigurationOnce } from "@/lib/metrology-gsp-configuration-restore"
 import { stopMetrologyReadingPreviewSession } from "@/lib/metrology-reading-preview-session"
 import {
   clearMetrologySessionWatchdog,
@@ -97,6 +99,18 @@ function shouldExposeAdjustmentSession(
   return Date.now() - lastUpdatedAt <= TERMINAL_RESULT_GRACE_MS
 }
 
+async function getAdjustmentSessionAndRestoreTerminalGsp(userId: number) {
+  const session = await getAdjustmentSessionForUser(userId)
+  if (session && session.status !== "running" && session.status !== "idle") {
+    await restoreGspMetrologyConfigurationOnce(
+      `adjustment:${session.id}`,
+      session.sensors.map((sensor) => sensor.id),
+      "AJUSTAGE",
+    ).catch(() => undefined)
+  }
+  return session
+}
+
 function ensureAdjustmentWatchdog(userId: number, session: Awaited<ReturnType<typeof getAdjustmentSessionForUser>>) {
   const key = adjustmentWatchdogKey(userId)
 
@@ -111,7 +125,7 @@ function ensureAdjustmentWatchdog(userId: number, session: Awaited<ReturnType<ty
   if (!hasMetrologySessionWatchdog(key)) {
     scheduleMetrologySessionWatchdog(key, deadline, async () => {
       try {
-        await getAdjustmentSessionForUser(userId)
+        await getAdjustmentSessionAndRestoreTerminalGsp(userId)
       } catch (error) {
         log.error("METROLOGY_ADJUSTMENT", "session_watchdog_failed", {
           userId,
@@ -125,7 +139,7 @@ function ensureAdjustmentWatchdog(userId: number, session: Awaited<ReturnType<ty
 export const GET = withStandardOrExpertAnyAuthorizationLogging(
   METROLOGY_OPERATION_CODES,
   async (_req: NextRequest, ctx) => {
-    const session = await getAdjustmentSessionForUser(ctx.user.userId)
+    const session = await getAdjustmentSessionAndRestoreTerminalGsp(ctx.user.userId)
     ensureAdjustmentWatchdog(ctx.user.userId, session)
     const exposedSession = shouldExposeAdjustmentSession(session) ? normalizeAdjustmentSessionDates(session) : null
     return apiOk({
@@ -138,11 +152,18 @@ export const GET = withStandardOrExpertAnyAuthorizationLogging(
 export const POST = withStandardOrExpertAnyAuthorizationLogging(
   METROLOGY_OPERATION_CODES,
   async (req: NextRequest, ctx) => {
+    let neutralizedSensorIds: number[] = []
     try {
       const body = await req.json()
       const data = startSchema.parse(body)
       const userId = ctx.user.userId
       await stopMetrologyReadingPreviewSession(userId)
+
+      neutralizedSensorIds = await applyGspMetrologyConfiguration(
+        data.selectedSensorIds,
+        "adjustment-neutral",
+        "AJUSTAGE",
+      )
 
       const session = await startAdjustmentSession(
         ctx.user,
@@ -157,7 +178,7 @@ export const POST = withStandardOrExpertAnyAuthorizationLogging(
         adjustmentWatchdogDeadline(session.expiresAt),
         async () => {
           try {
-            await getAdjustmentSessionForUser(userId)
+            await getAdjustmentSessionAndRestoreTerminalGsp(userId)
           } catch (error) {
             log.error("METROLOGY_ADJUSTMENT", "session_watchdog_failed", {
               userId,
@@ -168,6 +189,15 @@ export const POST = withStandardOrExpertAnyAuthorizationLogging(
       )
       return apiOk({ session: normalizeAdjustmentSessionDates(session) }, { status: 201 })
     } catch (error) {
+      if (neutralizedSensorIds.length > 0) {
+        await applyGspMetrologyConfiguration(neutralizedSensorIds, "normal", "AJUSTAGE").catch((restoreError) => {
+          log.error("METROLOGY_GSP", "adjustment_start_econ_rollback_failed", {
+            userId: ctx.user.userId,
+            sensorIds: neutralizedSensorIds,
+            error: restoreError instanceof Error ? restoreError.message : String(restoreError),
+          })
+        })
+      }
       if (error instanceof z.ZodError) {
         return apiError(400, "validation_error", "Donnees invalides", { details: error.issues })
       }
@@ -192,6 +222,13 @@ export const DELETE = withStandardOrExpertAnyAuthorizationLogging(
       const data = stopSchema.parse(body)
       clearMetrologySessionWatchdog(adjustmentWatchdogKey(ctx.user.userId))
       const session = await stopAdjustmentSession(ctx.user.userId, data.cancelResults, getClientIp(req))
+      if (session) {
+        await restoreGspMetrologyConfigurationOnce(
+          `adjustment:${session.id}`,
+          session.sensors.map((sensor) => sensor.id),
+          "AJUSTAGE",
+        )
+      }
       return apiOk({
         session: normalizeAdjustmentSessionDates(session),
         shouldConfirmStop: shouldConfirmAdjustmentStop(ctx.user.userId),
@@ -221,7 +258,7 @@ export const PATCH = withStandardOrExpertAnyAuthorizationLogging(
         adjustmentWatchdogDeadline(session.expiresAt),
         async () => {
           try {
-            await getAdjustmentSessionForUser(userId)
+            await getAdjustmentSessionAndRestoreTerminalGsp(userId)
           } catch (error) {
             log.error("METROLOGY_ADJUSTMENT", "session_watchdog_failed", {
               userId,
