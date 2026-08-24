@@ -579,8 +579,13 @@ namespace Vigitemp_Serveur
                             || rawCommand.StartsWith("FTEM", StringComparison.OrdinalIgnoreCase)
                             || rawCommand.StartsWith("RTEMP", StringComparison.OrdinalIgnoreCase);
                         var rawIsEcon = rawCommand.StartsWith("ECON", StringComparison.OrdinalIgnoreCase);
+                        var econAcknowledged = rawIsEcon &&
+                            System.Text.RegularExpressions.Regex.IsMatch(
+                                response ?? string.Empty,
+                                @"(?:^|\r?\n)\s*ACK\s*=\s*ECON\b",
+                                System.Text.RegularExpressions.RegexOptions.IgnoreCase);
 
-                        if (rawIsEcon && GspProtocol.IsAcknowledgementForTarget(response, "ECON", target))
+                        if (econAcknowledged)
                         {
                             result.Unit = "config";
                         }
