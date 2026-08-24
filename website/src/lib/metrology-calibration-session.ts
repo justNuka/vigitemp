@@ -376,10 +376,10 @@ async function loadCalibrationReference(
     : String(standard.Etalon_Numero_Serie).trim()
   const standardArchived = Boolean(Number(standard?.Est_Archive ?? 0))
   if (!standard || !standardSerial || standardArchived) {
-    throw new Error("Etalon introuvable ou archive.")
+    throw new Error("L'étalon introuvable ou archivé.")
   }
   if (Boolean(Number(standard.Est_Sonde_Externe ?? 0))) {
-    throw new Error("L'etalonnage a 10 mesures necessite un etalon interroge automatiquement.")
+    throw new Error("L'étalonnage à 10 mesures nécessite un étalon interrogé automatiquement.")
   }
 
   const typeRows = await prisma.t_etalon_type.findMany({
@@ -407,10 +407,10 @@ async function loadCalibrationReference(
   }
 
   if (standardResolution == null || standardResolution < 0) {
-    throw new Error("La resolution de l'etalon doit etre renseignee.")
+    throw new Error("La résolution de l'étalon doit être renseignée.")
   }
   if (standardUncertainty == null || standardUncertainty < 0) {
-    throw new Error("L'incertitude maximale de l'etalon doit etre renseignee.")
+    throw new Error("L'incertitude maximale de l'étalon doit être renseignée.")
   }
 
   const moduleIdValue = asFiniteNumber(standard.Id_Module)
@@ -425,7 +425,7 @@ async function loadCalibrationReference(
     : null
   const directPort = standard.Port_Serie == null ? "" : String(standard.Port_Serie).trim()
   const standardPort = standardModule?.Port_Serie?.trim() || directPort
-  if (!standardPort) throw new Error("Aucun port serie n'est defini pour l'etalon selectionne.")
+  if (!standardPort) throw new Error("Aucun port série n'est défini pour l'étalon sélectionné.")
 
   const certificate = await prisma.t_certif.findFirst({
     where: { Etalon_Numero_Serie: standardSerial },
@@ -436,7 +436,7 @@ async function loadCalibrationReference(
   const expectedUnitKey = normalizeUnitKey(expectedUnit)
   const standardUnitKey = normalizeUnitKey(standardUnit)
   if (expectedUnitKey && standardUnitKey && expectedUnitKey !== standardUnitKey) {
-    throw new Error("L'etalon doit utiliser la meme unite que les sondes selectionnees.")
+    throw new Error("L'étalon doit utiliser la même unité que les sondes sélectionnées.")
   }
 
   const mediumRows = await fetchIntercomparisonMediaRows("all")
@@ -448,7 +448,7 @@ async function loadCalibrationReference(
   const mediumStability = asFiniteNumber(medium.Stabilite)
   const mediumHomogeneity = asFiniteNumber(medium.Homogeneite)
   if (mediumStability == null || mediumStability < 0 || mediumHomogeneity == null || mediumHomogeneity < 0) {
-    throw new Error("La stabilite et l'homogeneite du milieu doivent etre renseignees.")
+    throw new Error("La stabilité et l'homogenéite du milieu doivent être renseignées.")
   }
 
   return {
