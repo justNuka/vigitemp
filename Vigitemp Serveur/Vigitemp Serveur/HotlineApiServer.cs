@@ -23,6 +23,8 @@ namespace Vigitemp_Serveur
         private const int GspPostCommandQuietMs = 250;
         private const int GspEndOfResponseSilenceMs = 500;
         private const int MaxExchangeLogLength = 2000;
+        private const int MetrologyPortPollMs = 250;
+        private const int DefaultMetrologyPortQueueTimeoutMs = 30 * 60 * 1000;
 
         private HttpListener _listener;
         private CancellationTokenSource _cts;
@@ -223,11 +225,8 @@ namespace Vigitemp_Serveur
             var payload = ReadJson(request);
             var testRequest = ParseSensorTestRequest(payload);
             var result = ExecuteSensorTest(testRequest);
-            // A sensor test can fail normally (busy COM port, no response, echo only).
-            // Keep these as payload-level failures so the web hotline can always clear its pending state.
             WriteJson(response, 200, new { ok = result.Success, data = result, message = result.Error });
         }
-
 
         private void HandleVersion(HttpListenerRequest request, HttpListenerResponse response)
         {
@@ -350,7 +349,7 @@ namespace Vigitemp_Serveur
                 }
                 else if (!string.Equals(request.SensorType, "GSP", StringComparison.OrdinalIgnoreCase))
                 {
-                    result.Error = "Type de sonde non supporte par l'outil hotline actuel.";
+                    result.Error = "Type de sonde non supporté par l'outil hotline actuel.";
                 }
                 else
                 {
@@ -389,6 +388,7 @@ namespace Vigitemp_Serveur
             var logPrefix = GetOperationLogPrefix(request.OperationContext);
             var targetSource = string.IsNullOrWhiteSpace(address) ? request.Serial : address;
             var target = GspProtocol.NormalizeCommandTarget(targetSource);
+            var metrologyOperation = IsMetrologyOperation(request.OperationContext);
 
             Mutex namedMutex = null;
             var mutexAcquired = false;
@@ -397,22 +397,75 @@ namespace Vigitemp_Serveur
                 var mutexName = BuildPortMutexName(portName);
                 namedMutex = new Mutex(false, mutexName);
                 LogHotlineDetailed($"{logPrefix}[LOCK] status=waiting port={portName}; mutex={mutexName}; serial={request.Serial}; action={request.Action}");
-                try
-                {
-                    var lockTimeoutMs = GetIntSetting("VigiSensys.Hotline.PortLockTimeoutMs", GetIntSetting("Vigitemp.Hotline.PortLockTimeoutMs", 5000));
-                    mutexAcquired = namedMutex.WaitOne(TimeSpan.FromMilliseconds(Math.Max(1000, lockTimeoutMs)));
-                }
-                catch (AbandonedMutexException)
-                {
-                    mutexAcquired = true;
-                    VigitempServeur.Log($"{logPrefix}[LOCK] status=abandoned-acquired port={portName}; serial={request.Serial}; action={request.Action}");
-                }
 
-                if (!mutexAcquired)
+                if (metrologyOperation)
                 {
-                    VigitempServeur.Log($"{logPrefix}[LOCK] status=timeout port={portName}; serial={request.Serial}; action={request.Action}");
-                    result.Error = "Port série occupé, impossible d'obtenir le verrou dans le délai imparti.";
-                    return;
+                    var queueTimeoutMs = Math.Max(
+                        1000,
+                        GetIntSetting("VigiSensys.Hotline.MetrologyPortQueueTimeoutMs", DefaultMetrologyPortQueueTimeoutMs));
+                    var queueStartedAt = DateTime.UtcNow;
+                    var queuedLogged = false;
+
+                    while (!mutexAcquired &&
+                           (DateTime.UtcNow - queueStartedAt).TotalMilliseconds < queueTimeoutMs)
+                    {
+                        try
+                        {
+                            mutexAcquired = namedMutex.WaitOne(0);
+                        }
+                        catch (AbandonedMutexException)
+                        {
+                            mutexAcquired = true;
+                            VigitempServeur.Log($"{logPrefix}[LOCK] status=abandoned-acquired port={portName}; serial={request.Serial}; action={request.Action}");
+                        }
+
+                        if (mutexAcquired)
+                        {
+                            break;
+                        }
+
+                        if (!queuedLogged)
+                        {
+                            VigitempServeur.Log(
+                                $"{logPrefix}[LOCK] status=queued port={portName}; serial={request.Serial}; action={request.Action}; priority=surveillance-first");
+                            queuedLogged = true;
+                        }
+
+                        Thread.Sleep(MetrologyPortPollMs);
+                    }
+
+                    if (!mutexAcquired)
+                    {
+                        VigitempServeur.Log($"{logPrefix}[LOCK] status=queue-timeout port={portName}; serial={request.Serial}; action={request.Action}");
+                        result.Error = "Le serveur est resté occupé trop longtemps. La lecture de métrologie n'a pas pu démarrer.";
+                        return;
+                    }
+
+                    if (queuedLogged)
+                    {
+                        VigitempServeur.Log(
+                            $"{logPrefix}[LOCK] status=dequeued port={portName}; serial={request.Serial}; action={request.Action}; priority=surveillance-first");
+                    }
+                }
+                else
+                {
+                    try
+                    {
+                        var lockTimeoutMs = GetIntSetting("VigiSensys.Hotline.PortLockTimeoutMs", GetIntSetting("Vigitemp.Hotline.PortLockTimeoutMs", 5000));
+                        mutexAcquired = namedMutex.WaitOne(TimeSpan.FromMilliseconds(Math.Max(1000, lockTimeoutMs)));
+                    }
+                    catch (AbandonedMutexException)
+                    {
+                        mutexAcquired = true;
+                        VigitempServeur.Log($"{logPrefix}[LOCK] status=abandoned-acquired port={portName}; serial={request.Serial}; action={request.Action}");
+                    }
+
+                    if (!mutexAcquired)
+                    {
+                        VigitempServeur.Log($"{logPrefix}[LOCK] status=timeout port={portName}; serial={request.Serial}; action={request.Action}");
+                        result.Error = "Port série occupé, impossible d'obtenir le verrou dans le délai imparti.";
+                        return;
+                    }
                 }
 
                 LogHotlineDetailed($"{logPrefix}[LOCK] status=acquired port={portName}; serial={request.Serial}; action={request.Action}");
@@ -525,7 +578,13 @@ namespace Vigitemp_Serveur
                         var rawReadsTemperature = rawCommand.StartsWith("TEMP", StringComparison.OrdinalIgnoreCase)
                             || rawCommand.StartsWith("FTEM", StringComparison.OrdinalIgnoreCase)
                             || rawCommand.StartsWith("RTEMP", StringComparison.OrdinalIgnoreCase);
-                        if (rawReadsTemperature && GspProtocol.TryExtractTemperature(response, target, out var targetedRawValue, out var targetedUnit))
+                        var rawIsEcon = rawCommand.StartsWith("ECON", StringComparison.OrdinalIgnoreCase);
+
+                        if (rawIsEcon && GspProtocol.IsAcknowledgementForTarget(response, "ECON", target))
+                        {
+                            result.Unit = "config";
+                        }
+                        else if (rawReadsTemperature && GspProtocol.TryExtractTemperature(response, target, out var targetedRawValue, out var targetedUnit))
                         {
                             result.Value = targetedRawValue;
                             result.Unit = FormatGspUnitForHotline(targetedUnit);
@@ -603,6 +662,13 @@ namespace Vigitemp_Serveur
             return "Global\\VigitempSerialPort_" + safe;
         }
 
+        private static bool IsMetrologyOperation(string operationContext)
+        {
+            var normalized = NormalizeOperationContext(operationContext);
+            return string.Equals(normalized, "AJUSTAGE", StringComparison.Ordinal)
+                || string.Equals(normalized, "ETALONNAGE", StringComparison.Ordinal);
+        }
+
         private static string NormalizeOperationContext(string value)
         {
             var normalized = (value ?? string.Empty).Trim();
@@ -636,8 +702,6 @@ namespace Vigitemp_Serveur
 
         private static IEnumerable<KeyValuePair<string, string>> BuildGspSyncCommands(GspSensorTestRequest gsp)
         {
-            // CHAN is never inferred from the probe address. It is only sent when
-            // the hotline caller explicitly provides a channel.
             var channel = (gsp.Channel ?? string.Empty).Trim();
             SondeMetrologySettings metrology = null;
             if (gsp.CoeffA.HasValue || gsp.CoeffB.HasValue || gsp.AccuracyError.HasValue)
