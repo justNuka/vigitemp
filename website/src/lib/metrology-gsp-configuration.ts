@@ -306,10 +306,11 @@ async function sendConfiguration(
 
   const body = (await response.json().catch(() => null)) as HotlinePayload | null
   const data = body?.data
-  const success = response.ok && Boolean(data?.Success ?? data?.success ?? body?.ok)
   const rawResponse = String(data?.RawValue ?? data?.rawValue ?? "")
   const acknowledged = /(?:^|\r?\n)\s*ACK\s*=\s*ECON\b/i.test(rawResponse)
-  if (!success || !acknowledged) {
+  // ECON est une commande de configuration : un ACK explicite du firmware est
+  // la source de verite, même si l'ancienne API raw n'extrait aucune valeur numérique.
+  if (!response.ok || !acknowledged) {
     const reason = String(data?.Error ?? data?.error ?? body?.message ?? "ACK ECON absent")
     throw new Error(`ECON refuse pour ${config.serial}: ${reason}`)
   }
