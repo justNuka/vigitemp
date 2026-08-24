@@ -244,13 +244,13 @@ export const POST = withStandardOrExpertAnyAuthorizationLogging(
         }
       }
       if (error instanceof z.ZodError) {
-        return apiError(400, "validation_error", "Donnees invalides", { details: error.issues })
+        return apiError(400, "validation_error", "Données invalides", { details: error.issues })
       }
       log.error("METROLOGY_CALIBRATION", "session_start_failed", {
         userId: ctx.user.userId,
         error: error instanceof Error ? error.message : String(error),
       })
-      return apiError(400, "calibration_start_failed", safeErrorMessage(error, "Impossible de demarrer la lecture d'etalonnage."))
+      return apiError(400, "calibration_start_failed", safeErrorMessage(error, "Impossible de démarrer la lecture d'étalonnage."))
     }
   },
 )
@@ -294,14 +294,14 @@ export const PATCH = withStandardOrExpertAnyAuthorizationLogging(
         removeCalibrationSensorStateSnapshots(ctx.user.userId, [sensorId])
       }
       if (error instanceof z.ZodError) {
-        return apiError(400, "validation_error", "Donnees invalides", { details: error.issues })
+        return apiError(400, "validation_error", "Données invalides", { details: error.issues })
       }
       log.error("METROLOGY_CALIBRATION", "session_patch_failed", {
         userId: ctx.user.userId,
         sensorId,
         error: error instanceof Error ? error.message : String(error),
       })
-      return apiError(400, "calibration_patch_failed", safeErrorMessage(error, "Impossible de modifier la session d'etalonnage."))
+      return apiError(400, "calibration_patch_failed", safeErrorMessage(error, "Impossible de modifier la session d'étalonnage."))
     }
   },
 )
@@ -318,7 +318,7 @@ export const DELETE = withStandardOrExpertAnyAuthorizationLogging(
         userId: ctx.user.userId,
         error: error instanceof Error ? error.message : String(error),
       })
-      return apiError(400, "calibration_stop_failed", safeErrorMessage(error, "Impossible d'arreter l'etalonnage."))
+      return apiError(400, "calibration_stop_failed", safeErrorMessage(error, "Impossible d'arrêter l'étalonnage."))
     }
   },
 )
