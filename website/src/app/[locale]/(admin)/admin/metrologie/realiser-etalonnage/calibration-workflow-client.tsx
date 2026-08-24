@@ -416,6 +416,14 @@ export function CalibrationWorkflowClient() {
                 exit={{ opacity: 0, x: 24 }}
                 className="space-y-6"
               >
+                {startReadingMutation.isPending ? (
+                  <Alert className="border-sky-300 bg-sky-50 text-sky-950 dark:border-sky-500/40 dark:bg-sky-500/10 dark:text-sky-100">
+                    <Clock3 className="h-4 w-4 text-sky-700 dark:text-sky-300" />
+                    <AlertTitle>{t("workflow.enhanced.reading_queue_title")}</AlertTitle>
+                    <AlertDescription>{t("workflow.enhanced.reading_queue_description")}</AlertDescription>
+                  </Alert>
+                ) : null}
+
                 {error ? (
                   <Alert variant="destructive">
                     <AlertTitle>{t("workflow.common.error")}</AlertTitle>
