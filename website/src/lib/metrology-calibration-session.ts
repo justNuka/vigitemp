@@ -12,10 +12,16 @@ import {
   DEFAULT_SENSOR_RESOLUTION,
 } from "@/lib/metrology-calibration-calculations"
 import { restoreCalibrationSensorStates } from "@/lib/metrology-calibration-sensor-state"
+import {
+  fetchEtalonById,
+  fetchIntercomparisonMediaRows,
+  getTableReference,
+  isMssqlProvider,
+  quoteIdentifier,
+} from "@/lib/metrology-db"
 import { getSensorFamilyFromSerial } from "@/lib/sensor-naming"
 import { inferStandardTypeCode } from "@/lib/standard-types"
 import { prisma, prismaMesure } from "@/lib/prisma"
-import { getTableReference, isMssqlProvider, quoteIdentifier } from "@/lib/metrology-db"
 
 const DEFAULT_SERVER_PORT = 5310
 const DEFAULT_SERVER_BDD_ID = 1
@@ -361,35 +367,45 @@ async function loadCalibrationReference(
   mediumId: number,
   expectedUnit: string | null,
 ): Promise<CalibrationReference> {
-  const standard = await prisma.t_etalon.findUnique({
-    where: { Id_Etalon: standardId },
-    select: {
-      Id_Etalon: true,
-      Etalon_Numero_Serie: true,
-      Est_Archive: true,
-      Est_Sonde_Externe: true,
-      Port_Serie: true,
-      Id_Module: true,
-      Incertitude_Max: true,
-    },
-  })
-  if (!standard?.Etalon_Numero_Serie || standard.Est_Archive) {
+  // Les écrans Étalons/Milieux supportent plusieurs générations de schéma.
+  // Le démarrage d'une campagne doit utiliser exactement la même couche de
+  // compatibilité au lieu de laisser Prisma sélectionner des colonnes optionnelles.
+  const standard = await fetchEtalonById(standardId)
+  const standardSerial = standard?.Etalon_Numero_Serie == null
+    ? ""
+    : String(standard.Etalon_Numero_Serie).trim()
+  const standardArchived = Boolean(Number(standard?.Est_Archive ?? 0))
+  if (!standard || !standardSerial || standardArchived) {
     throw new Error("Etalon introuvable ou archive.")
   }
-  if (standard.Est_Sonde_Externe) {
+  if (Boolean(Number(standard.Est_Sonde_Externe ?? 0))) {
     throw new Error("L'etalonnage a 10 mesures necessite un etalon interroge automatiquement.")
   }
 
   const typeRows = await prisma.t_etalon_type.findMany({
     select: { Type_Etalon: true, Resolution: true },
   })
-  const standardType = inferStandardTypeCode(standard.Etalon_Numero_Serie, typeRows)
+  const standardType = inferStandardTypeCode(standardSerial, typeRows)
   if (standardType !== "SPET") {
     throw new Error("L'etalonnage automatique est actuellement limite aux etalons SPET.")
   }
   const typeInfo = typeRows.find((row) => String(row.Type_Etalon).trim().toUpperCase() === standardType)
   const standardResolution = asFiniteNumber(typeInfo?.Resolution)
-  const standardUncertainty = asFiniteNumber(standard.Incertitude_Max)
+
+  const hasUncertaintyMax = await hasMainDbColumn("t_etalon", "Incertitude_Max")
+  let standardUncertainty: number | null = null
+  if (hasUncertaintyMax) {
+    const sql = isMssqlProvider()
+      ? `SELECT TOP 1 ${quoteIdentifier("Incertitude_Max")} AS Incertitude_Max FROM ${getTableReference("t_etalon")} WHERE ${quoteIdentifier("Id_Etalon")} = @P1`
+      : `SELECT ${quoteIdentifier("Incertitude_Max")} AS Incertitude_Max FROM ${getTableReference("t_etalon")} WHERE ${quoteIdentifier("Id_Etalon")} = ? LIMIT 1`
+    const rows = await prisma.$queryRawUnsafe<Array<{ Incertitude_Max: unknown }>>(sql, standardId)
+    standardUncertainty = asFiniteNumber(rows[0]?.Incertitude_Max)
+  } else {
+    // Anciennes bases : l'incertitude de l'étalon était portée par la colonne
+    // Incertitude. Ne pas imposer une migration pour démarrer une campagne.
+    standardUncertainty = asFiniteNumber(standard.Incertitude)
+  }
+
   if (standardResolution == null || standardResolution < 0) {
     throw new Error("La resolution de l'etalon doit etre renseignee.")
   }
@@ -397,17 +413,22 @@ async function loadCalibrationReference(
     throw new Error("L'incertitude maximale de l'etalon doit etre renseignee.")
   }
 
-  const standardModule = standard.Id_Module
+  const moduleIdValue = asFiniteNumber(standard.Id_Module)
+  const standardModuleId = moduleIdValue != null && Number.isInteger(moduleIdValue) && moduleIdValue > 0
+    ? moduleIdValue
+    : null
+  const standardModule = standardModuleId
     ? await prisma.t_module.findUnique({
-        where: { Id_Module: standard.Id_Module },
+        where: { Id_Module: standardModuleId },
         select: { Module_Numero_Serie: true, Port_Serie: true },
       })
     : null
-  const standardPort = standardModule?.Port_Serie?.trim() || standard.Port_Serie?.trim() || ""
+  const directPort = standard.Port_Serie == null ? "" : String(standard.Port_Serie).trim()
+  const standardPort = standardModule?.Port_Serie?.trim() || directPort
   if (!standardPort) throw new Error("Aucun port serie n'est defini pour l'etalon selectionne.")
 
   const certificate = await prisma.t_certif.findFirst({
-    where: { Etalon_Numero_Serie: standard.Etalon_Numero_Serie },
+    where: { Etalon_Numero_Serie: standardSerial },
     orderBy: [{ Date: "desc" }, { Id_Certif: "desc" }],
     select: { Organisme: true, Date: true, Numero: true, Unite: true },
   })
@@ -418,11 +439,12 @@ async function loadCalibrationReference(
     throw new Error("L'etalon doit utiliser la meme unite que les sondes selectionnees.")
   }
 
-  const medium = await prisma.t_milieu.findUnique({
-    where: { Id_Milieu: mediumId },
-    select: { Id_Milieu: true, Est_Archive: true, Stabilite: true, Homogeneite: true },
-  })
-  if (!medium || medium.Est_Archive) throw new Error("Milieu d'intercomparaison introuvable ou archive.")
+  const mediumRows = await fetchIntercomparisonMediaRows("all")
+  const medium = mediumRows.find((row) => asFiniteNumber(row.Id_Milieu) === mediumId)
+  const mediumArchived = Boolean(Number(medium?.Est_Archive ?? 0))
+  if (!medium || mediumArchived) {
+    throw new Error("Milieu d'intercomparaison introuvable ou archive.")
+  }
   const mediumStability = asFiniteNumber(medium.Stabilite)
   const mediumHomogeneity = asFiniteNumber(medium.Homogeneite)
   if (mediumStability == null || mediumStability < 0 || mediumHomogeneity == null || mediumHomogeneity < 0) {
@@ -430,8 +452,8 @@ async function loadCalibrationReference(
   }
 
   return {
-    standardId: standard.Id_Etalon,
-    standardSerial: standard.Etalon_Numero_Serie,
+    standardId,
+    standardSerial,
     standardModuleName: standardModule?.Module_Numero_Serie ?? null,
     standardPort,
     standardUnit,
@@ -440,7 +462,7 @@ async function loadCalibrationReference(
     standardOrganization: certificate?.Organisme ?? null,
     standardCertificateDate: certificate?.Date ? certificate.Date.toISOString() : null,
     standardCertificateNumber: certificate?.Numero ?? null,
-    mediumId: medium.Id_Milieu,
+    mediumId,
     mediumStability,
     mediumHomogeneity,
   }
