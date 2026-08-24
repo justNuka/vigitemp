@@ -225,8 +225,11 @@ namespace Vigitemp_Serveur
             var payload = ReadJson(request);
             var testRequest = ParseSensorTestRequest(payload);
             var result = ExecuteSensorTest(testRequest);
+            // A sensor test can fail normally (busy COM port, no response, echo only).
+            // Keep these as payload-level failures so the web hotline can always clear its pending state.
             WriteJson(response, 200, new { ok = result.Success, data = result, message = result.Error });
         }
+
 
         private void HandleVersion(HttpListenerRequest request, HttpListenerResponse response)
         {
@@ -349,7 +352,7 @@ namespace Vigitemp_Serveur
                 }
                 else if (!string.Equals(request.SensorType, "GSP", StringComparison.OrdinalIgnoreCase))
                 {
-                    result.Error = "Type de sonde non supporté par l'outil hotline actuel.";
+                    result.Error = "Type de sonde non supporte par l'outil hotline actuel.";
                 }
                 else
                 {
@@ -707,6 +710,8 @@ namespace Vigitemp_Serveur
 
         private static IEnumerable<KeyValuePair<string, string>> BuildGspSyncCommands(GspSensorTestRequest gsp)
         {
+            // CHAN is never inferred from the probe address. It is only sent when
+            // the hotline caller explicitly provides a channel.
             var channel = (gsp.Channel ?? string.Empty).Trim();
             SondeMetrologySettings metrology = null;
             if (gsp.CoeffA.HasValue || gsp.CoeffB.HasValue || gsp.AccuracyError.HasValue)
