@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Clock3, FlaskConical, GripVertical, Square, TimerReset } from "lucide-react"
-import { useLocale, useTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 
 import { useAppAccess } from "@/components/access/app-access-provider"
 import {
@@ -104,9 +104,8 @@ function clampPanelPosition(element: HTMLElement | null, left: number, top: numb
 }
 
 export function AdjustmentOperationTimer() {
-  const t = useTranslations("metrologyAdmin.adjustmentPage.operationTimer")
-  const tCalibration = useTranslations("metrologyAdmin.calibrationPage")
-  const locale = useLocale()
+  const tAdjustment = useTranslations("metrologyAdmin.adjustmentPage.operationTimer")
+  const tCalibration = useTranslations("metrologyAdmin.calibrationPage.operationTimer")
   const queryClient = useQueryClient()
   const { user, isStandard, isExpert, hasPermission } = useAppAccess()
   const panelRef = useRef<HTMLElement | null>(null)
@@ -193,13 +192,10 @@ export function AdjustmentOperationTimer() {
     activeOperation?.type === "adjustment" &&
     (activeOperation.canExtend ||
       (remainingSeconds > 0 && remainingSeconds <= 30 * 60 && activeOperation.extensionCount === 0))
-  const isFr = locale.toLowerCase().startsWith("fr")
   const operationTitle =
     activeOperation?.type === "calibration"
-      ? isFr
-        ? "Étalonnage en cours"
-        : "Calibration in progress"
-      : t("title")
+      ? tCalibration("title")
+      : tAdjustment("title")
 
   useEffect(() => {
     if (!activeOperation) {
@@ -235,7 +231,7 @@ export function AdjustmentOperationTimer() {
       await queryClient.invalidateQueries({ queryKey: ADJUSTMENT_SESSION_QUERY_KEY })
     },
     onError: (error) => {
-      setExtensionError(error instanceof Error ? error.message : t("extensionError"))
+      setExtensionError(error instanceof Error ? error.message : tAdjustment("extensionError"))
     },
   })
 
@@ -267,10 +263,8 @@ export function AdjustmentOperationTimer() {
     onError: (error, operationType) => {
       const fallback =
         operationType === "calibration"
-          ? isFr
-            ? "Impossible d'arrêter l'étalonnage."
-            : "Unable to stop calibration."
-          : t("stopError")
+          ? tCalibration("stopError")
+          : tAdjustment("stopError")
       setStopError(error instanceof Error ? error.message : fallback)
     },
   })
@@ -316,20 +310,31 @@ export function AdjustmentOperationTimer() {
 
   const stoppingCalibration = stopOperationType === "calibration"
   const stopTitle = stoppingCalibration
-    ? isFr
-      ? "Arrêter l'étalonnage ?"
-      : "Stop calibration?"
-    : t("stopTitle")
+    ? tCalibration("stopTitle")
+    : tAdjustment("stopTitle")
   const stopDescription = stoppingCalibration
-    ? isFr
-      ? "L'étalonnage en cours sera arrêté et les sondes retrouveront leur état précédent."
-      : "The current calibration will be stopped and the sensors will return to their previous state."
-    : t("stopDescription")
+    ? tCalibration("stopDescription")
+    : tAdjustment("stopDescription")
   const stopButtonLabel =
-    activeOperation.type === "calibration" ? tCalibration("workflow.calibration.stop") : t("stop")
+    activeOperation.type === "calibration" ? tCalibration("stop") : tAdjustment("stop")
   const confirmStopLabel = stoppingCalibration
-    ? tCalibration("workflow.calibration.stop")
-    : t("confirmStop")
+    ? tCalibration("confirmStop")
+    : tAdjustment("confirmStop")
+  const cancelStopLabel = stoppingCalibration
+    ? tCalibration("cancel")
+    : tAdjustment("cancel")
+  const stoppingLabel = stoppingCalibration
+    ? tCalibration("stopping")
+    : tAdjustment("stopping")
+  const sensorCountLabel = activeOperation.type === "calibration"
+    ? tCalibration("sensorCount", { count: activeOperation.sensorCount })
+    : tAdjustment("sensorCount", { count: activeOperation.sensorCount })
+  const remainingLabel = activeOperation.type === "calibration"
+    ? tCalibration("remaining")
+    : tAdjustment("remaining")
+  const movePanelLabel = activeOperation.type === "calibration"
+    ? tCalibration("movePanel")
+    : tAdjustment("movePanel")
 
   return (
     <>
@@ -356,7 +361,7 @@ export function AdjustmentOperationTimer() {
           onPointerMove={handlePointerMove}
           onPointerUp={handlePointerEnd}
           onPointerCancel={handlePointerEnd}
-          title={isFr ? "Déplacer le panneau" : "Move panel"}
+          title={movePanelLabel}
         >
           <GripVertical className="size-4 shrink-0 text-muted-foreground" />
           <p className="min-w-0 flex-1 truncate text-sm font-semibold">{operationTitle}</p>
@@ -373,16 +378,14 @@ export function AdjustmentOperationTimer() {
             <FlaskConical className="size-5" />
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-xs text-muted-foreground">
-              {t("sensorCount", { count: activeOperation.sensorCount })}
-            </p>
+            <p className="text-xs text-muted-foreground">{sensorCountLabel}</p>
             <div className="mt-3 flex items-center gap-2">
               <Clock3 className="size-4 text-muted-foreground" />
               <span className="font-mono text-2xl font-semibold tabular-nums">
                 {now === null ? "--:--:--" : formatRemainingTime(remainingSeconds)}
               </span>
             </div>
-            <p className="mt-1 text-xs text-muted-foreground">{t("remaining")}</p>
+            <p className="mt-1 text-xs text-muted-foreground">{remainingLabel}</p>
 
             {canExtend ? (
               <Button
@@ -393,7 +396,7 @@ export function AdjustmentOperationTimer() {
                 onClick={() => extensionMutation.mutate()}
               >
                 <TimerReset className="size-4" />
-                {extensionMutation.isPending ? t("extending") : t("extend")}
+                {extensionMutation.isPending ? tAdjustment("extending") : tAdjustment("extend")}
               </Button>
             ) : null}
             <Button
@@ -433,7 +436,7 @@ export function AdjustmentOperationTimer() {
           </AlertDialogHeader>
           {stopError ? <p className="text-sm text-destructive">{stopError}</p> : null}
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={stopMutation.isPending}>{t("cancelStop")}</AlertDialogCancel>
+            <AlertDialogCancel disabled={stopMutation.isPending}>{cancelStopLabel}</AlertDialogCancel>
             <AlertDialogAction
               disabled={stopMutation.isPending || !stopOperationType}
               onClick={(event) => {
@@ -441,7 +444,7 @@ export function AdjustmentOperationTimer() {
                 if (stopOperationType) stopMutation.mutate(stopOperationType)
               }}
             >
-              {stopMutation.isPending ? t("stopping") : confirmStopLabel}
+              {stopMutation.isPending ? stoppingLabel : confirmStopLabel}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

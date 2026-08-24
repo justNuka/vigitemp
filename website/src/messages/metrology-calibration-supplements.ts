@@ -2,11 +2,29 @@ import type { MessageCatalog } from "./supplements"
 
 export const frMetrologyCalibrationSupplements: MessageCatalog = {
   metrologyAdmin: {
+    adjustmentPage: {
+      operationTimer: {
+        movePanel: "Déplacer le panneau",
+      },
+    },
     calibrationPage: {
+      operationTimer: {
+        title: "Étalonnage en cours",
+        sensorCount: "{count, plural, one {# sonde concernée} other {# sondes concernées}}",
+        remaining: "Temps restant avant annulation automatique",
+        movePanel: "Déplacer le panneau",
+        stop: "Arrêter l'étalonnage",
+        stopTitle: "Arrêter l'étalonnage ?",
+        stopDescription: "L'étalonnage en cours sera arrêté et les sondes retrouveront leur état précédent.",
+        cancel: "Continuer l'étalonnage",
+        confirmStop: "Arrêter l'étalonnage",
+        stopping: "Arrêt...",
+        stopError: "Impossible d'arrêter l'étalonnage.",
+      },
       workflow: {
         enhanced: {
           reference_title: "Référence et milieu",
-          reference_description: "Sélectionnez l'étalon automatique et le milieu utilisés pour les calculs de la campagne.",
+          reference_description: "Sélectionnez l'étalon automatique et le milieu utilisés pour les calculs.",
           standard: "Étalon",
           standard_placeholder: "Sélectionner un étalon",
           standard_help: "Seuls les étalons SPET interrogés automatiquement et compatibles avec l'unité sélectionnée sont proposés.",
@@ -24,10 +42,10 @@ export const frMetrologyCalibrationSupplements: MessageCatalog = {
           acquiring: "Acquisition des 10 mesures en cours",
           progress: "{count} / {target} mesures valides",
           last_reading_title: "Dernière mesure d'étalonnage",
-          last_reading_description: "Dernière valeur reçue pour chaque sonde de la campagne.",
+          last_reading_description: "Dernière valeur reçue pour chaque sonde.",
           standard_latest: "Dernière mesure étalon",
           standard_samples_title: "Mesures de l'étalon",
-          standard_samples_description: "Les 10 valeurs de référence retenues pour la campagne d'étalonnage.",
+          standard_samples_description: "Les 10 valeurs de référence retenues pour l'étalonnage.",
           all_samples_title: "Toutes les mesures d'étalonnage",
           all_samples_description: "Mesures appariées retenues pour les calculs. La colonne étalon est distinguée visuellement.",
           results_title: "Résultats de l'étalonnage",
@@ -35,7 +53,7 @@ export const frMetrologyCalibrationSupplements: MessageCatalog = {
           sample_number: "N°",
           standard_column: "Étalon {serial}",
           measured_at: "Date / heure",
-          no_samples: "Aucune mesure de campagne enregistrée pour le moment.",
+          no_samples: "Aucune mesure d'étalonnage enregistrée pour le moment.",
           mean_sensor: "Moyenne sonde",
           mean_standard: "Moyenne étalon",
           accuracy_error: "Erreur de justesse",
@@ -49,11 +67,29 @@ export const frMetrologyCalibrationSupplements: MessageCatalog = {
 
 export const enMetrologyCalibrationSupplements: MessageCatalog = {
   metrologyAdmin: {
+    adjustmentPage: {
+      operationTimer: {
+        movePanel: "Move panel",
+      },
+    },
     calibrationPage: {
+      operationTimer: {
+        title: "Calibration in progress",
+        sensorCount: "{count, plural, one {# sensor} other {# sensors}}",
+        remaining: "Time remaining before automatic cancellation",
+        movePanel: "Move panel",
+        stop: "Stop calibration",
+        stopTitle: "Stop calibration?",
+        stopDescription: "The current calibration will be stopped and the sensors will return to their previous state.",
+        cancel: "Continue calibration",
+        confirmStop: "Stop calibration",
+        stopping: "Stopping...",
+        stopError: "Unable to stop calibration.",
+      },
       workflow: {
         enhanced: {
           reference_title: "Reference and medium",
-          reference_description: "Select the automatic standard and medium used for campaign calculations.",
+          reference_description: "Select the automatic standard and medium used for calculations.",
           standard: "Standard",
           standard_placeholder: "Select a standard",
           standard_help: "Only automatically read SPET standards compatible with the selected unit are available.",
@@ -71,10 +107,10 @@ export const enMetrologyCalibrationSupplements: MessageCatalog = {
           acquiring: "Acquiring the 10 measurements",
           progress: "{count} / {target} valid measurements",
           last_reading_title: "Latest calibration measurement",
-          last_reading_description: "Latest value received for each sensor in the campaign.",
+          last_reading_description: "Latest value received for each sensor.",
           standard_latest: "Latest standard measurement",
           standard_samples_title: "Standard measurements",
-          standard_samples_description: "The 10 reference values retained for the calibration campaign.",
+          standard_samples_description: "The 10 reference values retained for calibration.",
           all_samples_title: "All calibration measurements",
           all_samples_description: "Paired measurements retained for calculations. The standard column is visually highlighted.",
           results_title: "Calibration results",
@@ -82,7 +118,7 @@ export const enMetrologyCalibrationSupplements: MessageCatalog = {
           sample_number: "No.",
           standard_column: "Standard {serial}",
           measured_at: "Date / time",
-          no_samples: "No campaign measurement has been recorded yet.",
+          no_samples: "No calibration measurement has been recorded yet.",
           mean_sensor: "Sensor average",
           mean_standard: "Standard average",
           accuracy_error: "Accuracy error",
