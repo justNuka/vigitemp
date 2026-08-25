@@ -876,7 +876,7 @@ Checklist de validation :
 
 ## Temporisation des consignes d’étalonnage — 25/08/2026
 
-Statut : **mergé dans `dev` via la PR #45 ; correctif de build CS0136 ouvert sur `agent/fix-metrology-command-spacing-build`, PR #46 en draft**.
+Statut : **mergé dans `dev` via la PR #45 ; correctif de build CS0136 également mergé via la PR #46, merge `47593e05fc0bc296d30b0f4b5b6cea04fd6cbb88`**.
 
 Lors d’un étalonnage, les écritures de configuration GSP pouvaient partir avec seulement 150 ms d’intervalle. Malgré le verrouillage du port série, le module n’avait pas toujours le temps de traiter la rafale de consignes et les envois suivants pouvaient échouer.
 
@@ -897,3 +897,31 @@ Checklist :
 
 Correctif de build : renommage de la variable englobante en `normalizedOperationContext` pour supprimer la collision C# `CS0136`, sans changement de comportement.
 
+
+## Nettoyage des paramètres et profils des seeds — 25/08/2026
+
+Statut : **PR #47 ouverte sur `agent/cleanup-seed-parameters`, à valider avant merge**.
+
+Le dump de la base de test contient 91 clés `t_parametre`. Les trois clés `LICENCE/CLIENT`, `LICENCE/VIGITEL` et `LICENCE/VIGITEMP` restent volontairement hors des seeds : leurs valeurs sont propres à chaque installation. Avec `VERSION/SCHEMA_VERSION = 0.90.001`, les seeds MySQL et MSSQL créent donc exactement **89 paramètres initiaux**.
+
+Les **138 anciennes clés** absentes de la base de référence ont été retirées des deux moteurs. La simulation de l’ordre réel des insertions et mises à jour donne le même état final MySQL/MSSQL : 89 clés, mêmes valeurs par défaut, mêmes commentaires et mêmes dates.
+
+Les profils inutiles supprimés avant cette PR ne sont pas référencés par le code applicatif. Le profil initial `Administrateurs` reste lié au compte administrateur et reçoit toutes les autorisations. Les virgules finales laissées dans les blocs MySQL et MSSQL ont été corrigées.
+
+Fichiers :
+
+- `db/vigisensys_seed.sql` ;
+- `db/vigisensys_seed_mssql.sql` ;
+- `db/vigisensys_verify_mssql_objects.sql`.
+
+Checklist :
+
+- [x] comparer les clés du dump de test aux deux seeds sans reprendre les valeurs sensibles ;
+- [x] exclure les trois clés de licence propres à l’installation ;
+- [x] conserver la version de schéma `0.90.001` ;
+- [x] confirmer les 89 clés finales et la parité des valeurs/commentaires MySQL-MSSQL ;
+- [x] confirmer l’absence de référence applicative aux profils supprimés ;
+- [x] corriger la syntaxe des blocs de profils ;
+- [ ] exécuter le seed MySQL sur une base vide ;
+- [ ] exécuter le seed MSSQL sur une base vide ;
+- [ ] exécuter `db/vigisensys_verify_mssql_objects.sql`.
