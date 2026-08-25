@@ -126,12 +126,12 @@
     "admin": "Administration",
     "users": "Utilisateurs",
     "profile": "Profil",
-      "admin_dashboard": "Dashboard Admin",
-      "admin_dashboard_tooltip": "Tableau de bord administrateur",
-      "impact_analysis": "Analyse d'impact",
-      "services": "Services",
-      "messaging": "Messagerie",
-      "vigilog": "VigiLog",
+    "admin_dashboard": "Dashboard Admin",
+    "admin_dashboard_tooltip": "Tableau de bord administrateur",
+    "impact_analysis": "Analyse d'impact",
+    "services": "Services",
+    "messaging": "Messagerie",
+    "vigilog": "VigiLog",
     "statistics": "Statistiques"
   },
   "sidebarGroups": {
@@ -3051,9 +3051,9 @@
       "details": "Détails",
       "statistics_title": "Statistiques par lieu",
       "statistics_description": "Consultez les statistiques détaillées par lieu avec sélection de période.",
-      "open_statistics": "Ouvrir les statistiques"
-      ,"type_distribution": "Répartition par type"
-      ,"type_distribution_aria": "Répartition de {count} alarmes actives par type"
+      "open_statistics": "Ouvrir les statistiques",
+      "type_distribution": "Répartition par type",
+      "type_distribution_aria": "Répartition de {count} alarmes actives par type"
     },
     "ack_dialog": {
       "title": "Acquitter l'alarme",
@@ -3423,18 +3423,18 @@
           "12": "Le detail d'un lieu conserve des libelles de consigne et de tolerance plus lisibles, y compris sur petits ecrans."
         }
       },
-        "admin": {
-          "title": "Administration",
-          "items": {
-            "0": "Ajout du bloc sauvegarde systeme pour toutes les licences.",
-            "1": "Le lien du journal des acquittements depuis le dashboard admin ouvre maintenant une vraie page.",
-            "2": "L'export de l'historique des acquittements reapplique maintenant correctement les filtres actifs.",
-            "3": "La liste des commentaires libres d'acquittement est maintenant chargee depuis le journal dedie.",
-            "4": "L'aperçu de l'erreur de justesse affiche maintenant clairement le signe inverse applique lors de la correction.",
-            "5": "Les exports Excel comportent maintenant un onglet de presentation VigiSensys et un onglet de donnees distinct et lisible."
-          }
+      "admin": {
+        "title": "Administration",
+        "items": {
+          "0": "Ajout du bloc sauvegarde systeme pour toutes les licences.",
+          "1": "Le lien du journal des acquittements depuis le dashboard admin ouvre maintenant une vraie page.",
+          "2": "L'export de l'historique des acquittements reapplique maintenant correctement les filtres actifs.",
+          "3": "La liste des commentaires libres d'acquittement est maintenant chargee depuis le journal dedie.",
+          "4": "L'aperçu de l'erreur de justesse affiche maintenant clairement le signe inverse applique lors de la correction.",
+          "5": "Les exports Excel comportent maintenant un onglet de presentation VigiSensys et un onglet de donnees distinct et lisible."
         }
       }
+    }
   },
   "servicesNav": {
     "upgrade": "Upgrade licence",
@@ -5816,7 +5816,8 @@
             "readingError": "Impossible de lire les sondes sélectionnées.",
             "start": "Démarrer l'ajustage",
             "stop": "Arrêter l'ajustage",
-            "hint": "La logique d'exécution sera branchée sur le workflow d'acquisition."
+            "hint": "La logique d'exécution sera branchée sur le workflow d'acquisition.",
+            "queued": "En attente de la mesure en cours…"
           },
           "points": {
             "title": "Points",
@@ -5853,6 +5854,19 @@
             "longIntervalDescription": "Une durée élevée entre les mesures peut impacter la surveillance de la sonde.",
             "mismatchTitle": "Configuration du plateau à vérifier",
             "mismatchDescription": "Cette configuration représente environ {count} cycles de mesure pendant le plateau. Adaptez la durée du plateau ou la durée entre les mesures."
+          },
+          "coefficients": {
+            "title": "Coefficients envoyés aux sondes",
+            "description": "Modifiez les coefficients a, b et c de chaque sonde pendant l'ajustage.",
+            "sensor": "Sonde",
+            "coeffA": "Coefficient a",
+            "coeffB": "Coefficient b",
+            "coeffC": "Coefficient c",
+            "noLocation": "Lieu non affecté",
+            "nextReadNotice": "Après validation, les coefficients seront envoyés à la prochaine interrogation de chaque sonde.",
+            "invalid": "Renseignez des coefficients valides. Le coefficient a ne peut pas être nul lorsque c est utilisé.",
+            "saving": "Validation…",
+            "validate": "Valider les coefficients"
           }
         },
         "selectedSensors": {
