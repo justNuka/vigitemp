@@ -844,7 +844,7 @@ Avant tout changement :
 10. après annonce du merge, vérifier réellement la PR et le nouveau HEAD de `dev` avant le lot suivant.
 ## Build MSSQL et parité du seed SQL Server — 25/08/2026
 
-Statut : **corrigé sur `agent/mssql-build-admin-prerender`, PR #44 ouverte en draft**.
+Statut : **mergé dans `dev` via la PR #44, merge `4e9e87371f1a25eedd750aa784f3a44363477583`**.
 
 Le build avec le provider MSSQL échouait pendant le prérendu des routes admin (`/en/admin/utilisateurs`, puis `/fr/admin/audit`) parce que ces pages tentaient d'interroger Prisma pendant `next build`. Le layout du groupe admin est désormais un composant serveur qui appelle `connection()` pour forcer le rendu à la requête ; toute la logique interactive existante reste isolée dans `admin-layout-client.tsx`.
 
@@ -873,3 +873,25 @@ Checklist de validation :
 - [ ] insérer des trames GSO `0`, `1` et `10000000`, puis contrôler `tm_mesures_gso_build`, `tm_mesures` et `tm_graphique` ;
 - [ ] insérer des trames métrologie `10` et `110`, puis contrôler les mesures d'ajustage/étalonnage et l'offset ;
 - [ ] exécuter `db/vigisensys_verify_mssql_objects.sql`.
+
+## Temporisation des consignes d’étalonnage — 25/08/2026
+
+Statut : **corrigé sur `agent/metrology-command-spacing`, PR #45 ouverte en draft**.
+
+Lors d’un étalonnage, les écritures de configuration GSP pouvaient partir avec seulement 150 ms d’intervalle. Malgré le verrouillage du port série, le module n’avait pas toujours le temps de traiter la rafale de consignes et les envois suivants pouvaient échouer.
+
+Le serveur impose désormais une temporisation de **500 ms après chaque écriture de configuration en contexte `ETALONNAGE`**. Le mutex du port reste détenu pendant l’attente : la protection couvre les commandes d’une même requête ainsi que les requêtes concurrentes visant d’autres sondes raccordées au même module/port. Les lectures normales et les opérations hotline hors étalonnage conservent leur délai historique de 150 ms.
+
+Fichier :
+
+- `Vigitemp Serveur/Vigitemp Serveur/HotlineApiServer.cs`.
+
+Checklist :
+
+- [x] délai appliqué au point réel d’écriture série ;
+- [x] changement limité au contexte `ETALONNAGE` ;
+- [x] sérialisation conservée pendant les 500 ms ;
+- [ ] compiler le serveur Windows en Release ;
+- [ ] lancer un étalonnage multi-sondes sur un même module ;
+- [ ] contrôler les horodatages TX et confirmer l’absence d’échec d’envoi.
+
