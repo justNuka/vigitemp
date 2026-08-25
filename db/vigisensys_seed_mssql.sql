@@ -1,9 +1,107 @@
 -- =====================================================================
 -- BOOTSTRAP SQL SERVER VigiSensys
 -- Version produit / seed : 0.90.001
--- Cree les 3 bases et les tables absentes avant le seed/alignement.
--- Genere depuis les schemas Prisma, sans FK bloquantes pour rester idempotent.
+-- DDL traduit depuis le dump schema courant MySQL du 2026-08-25.
+-- Les FK MySQL ne sont pas reproduites: SQL Server ne prend pas en
+-- charge ON UPDATE CASCADE et refuse certains chemins de cascade multiples.
+-- Colonnes, cles primaires, unicites et index sont conserves.
 -- =====================================================================
+
+IF DB_ID(N'vigi_chat') IS NULL
+BEGIN
+  CREATE DATABASE [vigi_chat];
+END;
+GO
+USE [vigi_chat];
+GO
+
+IF OBJECT_ID(N'dbo.t_conversation', N'U') IS NULL
+BEGIN
+  CREATE TABLE dbo.[t_conversation] (
+    [Id_Conversation] INT IDENTITY(1,1) NOT NULL,
+    [Type] VARCHAR(10) NOT NULL,
+    [Titre] VARCHAR(128) NULL,
+    [DM_Key] VARCHAR(64) NULL,
+    [Date_Creation] DATETIME NOT NULL DEFAULT(GETDATE()),
+    CONSTRAINT [PK_t_conversation] PRIMARY KEY ([Id_Conversation])
+  );
+END;
+GO
+IF OBJECT_ID(N'dbo.t_conversation', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_conversation') AND name=N't_conversation_DM_Key_key')
+  CREATE UNIQUE INDEX [t_conversation_DM_Key_key] ON dbo.[t_conversation] ([DM_Key]) WHERE [DM_Key] IS NOT NULL;
+GO
+IF OBJECT_ID(N'dbo.t_conversation', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_conversation') AND name=N't_conversation_Type_idx')
+  CREATE INDEX [t_conversation_Type_idx] ON dbo.[t_conversation] ([Type]);
+GO
+IF OBJECT_ID(N'dbo.t_conversation', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_conversation') AND name=N't_conversation_Date_Creation_idx')
+  CREATE INDEX [t_conversation_Date_Creation_idx] ON dbo.[t_conversation] ([Date_Creation]);
+GO
+
+IF OBJECT_ID(N'dbo.t_conversation_participant', N'U') IS NULL
+BEGIN
+  CREATE TABLE dbo.[t_conversation_participant] (
+    [Id_Participant] INT IDENTITY(1,1) NOT NULL,
+    [Id_Conversation] INT NOT NULL,
+    [Id_Utilisateur] INT NOT NULL,
+    [Last_Read_Msg_Id] INT NULL,
+    [Date_Ajout] DATETIME NOT NULL DEFAULT(GETDATE()),
+    CONSTRAINT [PK_t_conversation_participant] PRIMARY KEY ([Id_Participant])
+  );
+END;
+GO
+IF OBJECT_ID(N'dbo.t_conversation_participant', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_conversation_participant') AND name=N't_conversation_participant_Id_Conversation_Id_Utilisateur_key')
+  CREATE UNIQUE INDEX [t_conversation_participant_Id_Conversation_Id_Utilisateur_key] ON dbo.[t_conversation_participant] ([Id_Conversation], [Id_Utilisateur]);
+GO
+IF OBJECT_ID(N'dbo.t_conversation_participant', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_conversation_participant') AND name=N't_conversation_participant_Id_Utilisateur_idx')
+  CREATE INDEX [t_conversation_participant_Id_Utilisateur_idx] ON dbo.[t_conversation_participant] ([Id_Utilisateur]);
+GO
+
+IF OBJECT_ID(N'dbo.t_message', N'U') IS NULL
+BEGIN
+  CREATE TABLE dbo.[t_message] (
+    [Id_Message] INT IDENTITY(1,1) NOT NULL,
+    [Id_Conversation] INT NOT NULL,
+    [Sender_Id] INT NOT NULL,
+    [Contenu] NVARCHAR(MAX) NOT NULL,
+    [Date_Creation] DATETIME NOT NULL DEFAULT(GETDATE()),
+    [Date_Modification] DATETIME NULL,
+    [Date_Suppression] DATETIME NULL,
+    CONSTRAINT [PK_t_message] PRIMARY KEY ([Id_Message])
+  );
+END;
+GO
+IF OBJECT_ID(N'dbo.t_message', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_message') AND name=N't_message_Id_Conversation_Id_Message_idx')
+  CREATE INDEX [t_message_Id_Conversation_Id_Message_idx] ON dbo.[t_message] ([Id_Conversation], [Id_Message]);
+GO
+IF OBJECT_ID(N'dbo.t_message', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_message') AND name=N't_message_Date_Creation_idx')
+  CREATE INDEX [t_message_Date_Creation_idx] ON dbo.[t_message] ([Date_Creation]);
+GO
+
+IF OBJECT_ID(N'dbo.t_message_attachment', N'U') IS NULL
+BEGIN
+  CREATE TABLE dbo.[t_message_attachment] (
+    [Id_Attachment] INT IDENTITY(1,1) NOT NULL,
+    [Id_Message] INT NOT NULL,
+    [File_Name] VARCHAR(255) NOT NULL,
+    [File_Path] VARCHAR(512) NOT NULL,
+    [File_Size] INT NOT NULL,
+    [Mime_Type] VARCHAR(128) NOT NULL,
+    [Date_Upload] DATETIME NOT NULL DEFAULT(GETDATE()),
+    CONSTRAINT [PK_t_message_attachment] PRIMARY KEY ([Id_Attachment])
+  );
+END;
+GO
+IF OBJECT_ID(N'dbo.t_message_attachment', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_message_attachment') AND name=N'IDX_t_message_attachment_Id_Message')
+  CREATE INDEX [IDX_t_message_attachment_Id_Message] ON dbo.[t_message_attachment] ([Id_Message]);
+GO
 
 IF DB_ID(N'vigi_main') IS NULL
 BEGIN
@@ -13,6 +111,21 @@ GO
 USE [vigi_main];
 GO
 
+IF OBJECT_ID(N'dbo.liste_clients', N'U') IS NULL
+BEGIN
+  CREATE TABLE dbo.[liste_clients] (
+    [Id_Client] INT IDENTITY(1,1) NOT NULL,
+    [Nom] VARCHAR(100) NOT NULL,
+    [Num_Compte] VARCHAR(50) NULL,
+    [VigiServ_Derniere_Date_Heure] DATETIME NULL,
+    [Vigitel_Derniere_Date_Heure] DATETIME NULL,
+    CONSTRAINT [PK_liste_clients] PRIMARY KEY ([Id_Client])
+  );
+END;
+GO
+IF OBJECT_ID(N'dbo.liste_clients', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.liste_clients') AND name=N'UK_Num_Compte')
+  CREATE UNIQUE INDEX [UK_Num_Compte] ON dbo.[liste_clients] ([Num_Compte]) WHERE [Num_Compte] IS NOT NULL;
 GO
 
 IF OBJECT_ID(N'dbo.t_actionneur', N'U') IS NULL
@@ -21,8 +134,8 @@ BEGIN
     [Id_Actionneur] INT IDENTITY(1,1) NOT NULL,
     [Num_Serie] VARCHAR(50) NULL,
     [Type] INT NULL,
-    [Est_Etat] BIT NULL DEFAULT(0),
-    [Est_Demande] BIT NULL DEFAULT(0),
+    [Est_Etat] BIT NULL DEFAULT('0'),
+    [Est_Demande] BIT NULL DEFAULT('0'),
     [Commentaire] VARCHAR(255) NULL,
     [Port_Serie] INT NULL,
     [Id_Module] INT NULL,
@@ -30,115 +143,52 @@ BEGIN
     [Relai_2] VARCHAR(50) NULL,
     [Relai_3] VARCHAR(50) NULL,
     [Relai_4] VARCHAR(50) NULL,
-    [Est_Test] BIT NULL DEFAULT(0),
+    [Est_Test] BIT NULL DEFAULT('0'),
     [Libelle_Erreur] VARCHAR(50) NULL,
     [Id_Plan] INT NULL,
     [Position_Plan_X] BIGINT NULL,
     [Position_Plan_Y] BIGINT NULL,
-    [Est_Archive] BIT NULL DEFAULT(0),
-    [Id_Worker] INT NULL DEFAULT(1),
+    [Est_Archive] BIT NULL DEFAULT('0'),
+    [Id_Worker] INT NULL DEFAULT('1'),
     CONSTRAINT [PK_t_actionneur] PRIMARY KEY ([Id_Actionneur])
   );
 END;
 GO
+IF OBJECT_ID(N'dbo.t_actionneur', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_actionneur') AND name=N'IDX_Num_Serie')
+  CREATE INDEX [IDX_Num_Serie] ON dbo.[t_actionneur] ([Num_Serie]);
+GO
+IF OBJECT_ID(N'dbo.t_actionneur', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_actionneur') AND name=N'IDX_Type')
+  CREATE INDEX [IDX_Type] ON dbo.[t_actionneur] ([Type]);
+GO
+IF OBJECT_ID(N'dbo.t_actionneur', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_actionneur') AND name=N'IDX_Est_Etat')
+  CREATE INDEX [IDX_Est_Etat] ON dbo.[t_actionneur] ([Est_Etat]);
+GO
+IF OBJECT_ID(N'dbo.t_actionneur', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_actionneur') AND name=N'IDX_Id_Module')
+  CREATE INDEX [IDX_Id_Module] ON dbo.[t_actionneur] ([Id_Module]);
+GO
+IF OBJECT_ID(N'dbo.t_actionneur', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_actionneur') AND name=N'IDX_Id_Plan')
+  CREATE INDEX [IDX_Id_Plan] ON dbo.[t_actionneur] ([Id_Plan]);
 GO
 
-IF OBJECT_ID(N'dbo.t_alarme', N'U') IS NULL
+IF OBJECT_ID(N'dbo.t_actionneur_type', N'U') IS NULL
 BEGIN
-  CREATE TABLE dbo.[t_alarme] (
-    [Id_Alarme] INT IDENTITY(1,1) NOT NULL,
-    [Date_Heure_Debut] DATETIME NULL,
-    [Valeur] FLOAT NULL,
-    [Type] VARCHAR(1) NULL,
-    [Date_Heure_Fin] DATETIME NULL,
-    [Est_Alarme_Vrai] BIT NULL DEFAULT(0),
-    [Id_Lieu] INT NULL,
-    [Sonde_Numero_Serie] VARCHAR(50) NULL,
-    [Unite] VARCHAR(10) NULL,
-    [Est_Acquittee] BIT NULL DEFAULT(0),
-    [Date_Heure_Derniere_Mesure] DATETIME NULL,
-    [Date_Heure_Debut_Alarme_Vrai] DATETIME NULL,
-    [Est_Alarme_Pour_VigiTel] BIT NULL DEFAULT(0),
-    [Est_Mail_Envoye] BIT NULL,
-    [Est_Mail_Fin_Envoye] BIT NOT NULL DEFAULT(0),
-    [Est_Tel_Acquittee] BIT NULL,
-    CONSTRAINT [PK_t_alarme] PRIMARY KEY ([Id_Alarme])
+  CREATE TABLE dbo.[t_actionneur_type] (
+    [Id_Actionneur_Type] INT IDENTITY(1,1) NOT NULL,
+    [Type] INT NULL,
+    [Description] VARCHAR(50) NULL,
+    [Gere_Relais] BIT NULL DEFAULT('0'),
+    CONSTRAINT [PK_t_actionneur_type] PRIMARY KEY ([Id_Actionneur_Type])
   );
 END;
 GO
-GO
-
-IF OBJECT_ID(N'dbo.t_alarme_histo', N'U') IS NULL
-BEGIN
-  CREATE TABLE dbo.[t_alarme_histo] (
-    [Id_Alarme_Histo] INT IDENTITY(1,1) NOT NULL,
-    [Id_Alarme] INT NOT NULL,
-    [Date_Heure_Debut] DATETIME NULL,
-    [Valeur] FLOAT NULL,
-    [Type] VARCHAR(1) NULL,
-    [Date_Heure_Fin] DATETIME NULL,
-    [Est_Alarme_Vrai] BIT NULL DEFAULT(0),
-    [Id_Lieu] INT NULL,
-    [Sonde_Numero_Serie] VARCHAR(50) NULL,
-    [Unite] VARCHAR(10) NULL,
-    [Est_Acquittee] BIT NULL DEFAULT(0),
-    [Date_Heure_Derniere_Mesure] DATETIME NULL,
-    [Date_Heure_Debut_Alarme_Vrai] DATETIME NULL,
-    [Est_Alarme_Pour_VigiTel] BIT NULL DEFAULT(0),
-    [Est_Mail_Envoye] BIT NULL,
-    [Est_Tel_Acquittee] BIT NULL,
-    [Date_Heure_Acquittement] DATETIME NULL,
-    CONSTRAINT [PK_t_alarme_histo] PRIMARY KEY ([Id_Alarme_Histo])
-  );
-END;
-GO
-GO
-
-IF OBJECT_ID(N'dbo.t_alarme_message', N'U') IS NULL
-BEGIN
-  CREATE TABLE dbo.[t_alarme_message] (
-    [Id_Alarme_Message] INT IDENTITY(1,1) NOT NULL,
-    [Code_Alarme_Message] VARCHAR(20) NULL,
-    [Type] VARCHAR(1) NULL,
-    [Texte_Message] NVARCHAR(MAX) NULL,
-    CONSTRAINT [PK_t_alarme_message] PRIMARY KEY ([Id_Alarme_Message])
-  );
-END;
-GO
-GO
-IF OBJECT_ID(N'dbo.t_alarme_message', N'U') IS NOT NULL AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'UX_t_alarme_message_Code_Alarme_Message' AND object_id = OBJECT_ID(N'dbo.t_alarme_message')) CREATE UNIQUE INDEX [UX_t_alarme_message_Code_Alarme_Message] ON dbo.[t_alarme_message]([Code_Alarme_Message]) WHERE [Code_Alarme_Message] IS NOT NULL;
-GO
-
-IF OBJECT_ID(N'dbo.t_autorisation', N'U') IS NULL
-BEGIN
-  CREATE TABLE dbo.[t_autorisation] (
-    [Id_Autorisation] INT IDENTITY(1,1) NOT NULL,
-    [Code_Autorisation] VARCHAR(50) NULL,
-    [Libelle_Autorisation] VARCHAR(50) NULL,
-    [Commentaire] VARCHAR(200) NULL,
-    [A_Acces_Admin] BIT NULL DEFAULT(0),
-    [A_Acces_Metrologie] BIT NULL DEFAULT(0),
-    [A_Acces_Surveillance] BIT NULL DEFAULT(0),
-    [A_Acces_VigiLog] BIT NULL DEFAULT(0),
-    CONSTRAINT [PK_t_autorisation] PRIMARY KEY ([Id_Autorisation])
-  );
-END;
-GO
-IF OBJECT_ID(N'dbo.t_milieu_inter', N'U') IS NULL
-BEGIN
-  CREATE TABLE dbo.[t_milieu_inter] (
-    [Id_Milieu] INT IDENTITY(1,1) NOT NULL,
-    [Model] VARCHAR(50) NULL,
-    [Reference] VARCHAR(50) NULL,
-    [Stabilite] FLOAT NULL,
-    [Homogeneite] FLOAT NULL,
-    [Contenu] VARCHAR(50) NULL,
-    [Est_Reserve_MC2] BIT NULL DEFAULT(0),
-    [Est_Archive] BIT NULL DEFAULT(0),
-    CONSTRAINT [PK_t_milieu_inter] PRIMARY KEY ([Id_Milieu])
-  );
-END;
-GO
+IF OBJECT_ID(N'dbo.t_actionneur_type', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_actionneur_type') AND name=N'Type')
+  CREATE UNIQUE INDEX [Type] ON dbo.[t_actionneur_type] ([Type]) WHERE [Type] IS NOT NULL;
 GO
 
 IF OBJECT_ID(N'dbo.t_ajustage', N'U') IS NULL
@@ -147,7 +197,7 @@ BEGIN
     [Id_Ajustage] INT IDENTITY(1,1) NOT NULL,
     [Date_Heure_Ajustage] DATETIME NULL,
     [Sonde_Numero_Serie] VARCHAR(50) NULL,
-    [Coeff_X2] FLOAT NULL DEFAULT(0),
+    [Coeff_X2] FLOAT NULL DEFAULT('0'),
     [Coeff_X] FLOAT NULL,
     [Coeff_Constant] FLOAT NULL,
     [Unite] VARCHAR(10) NULL,
@@ -170,6 +220,208 @@ BEGIN
   );
 END;
 GO
+IF OBJECT_ID(N'dbo.t_ajustage', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_ajustage') AND name=N'IDX_Sonde_Numero_Serie')
+  CREATE INDEX [IDX_Sonde_Numero_Serie] ON dbo.[t_ajustage] ([Sonde_Numero_Serie]);
+GO
+IF OBJECT_ID(N'dbo.t_ajustage', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_ajustage') AND name=N'IDX_SE_Numero')
+  CREATE INDEX [IDX_SE_Numero] ON dbo.[t_ajustage] ([SE_Numero]);
+GO
+IF OBJECT_ID(N'dbo.t_ajustage', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_ajustage') AND name=N'IDX_Date_Heure_Calibrage')
+  CREATE INDEX [IDX_Date_Heure_Calibrage] ON dbo.[t_ajustage] ([Date_Heure_Ajustage]);
+GO
+IF OBJECT_ID(N'dbo.t_ajustage', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_ajustage') AND name=N'IDX_Id_Bain')
+  CREATE INDEX [IDX_Id_Bain] ON dbo.[t_ajustage] ([Id_Milieu]);
+GO
+IF OBJECT_ID(N'dbo.t_ajustage', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_ajustage') AND name=N'idx_ajustage_sonde_date')
+  CREATE INDEX [idx_ajustage_sonde_date] ON dbo.[t_ajustage] ([Sonde_Numero_Serie], [Date_Heure_Ajustage]);
+GO
+
+IF OBJECT_ID(N'dbo.t_alarme', N'U') IS NULL
+BEGIN
+  CREATE TABLE dbo.[t_alarme] (
+    [Id_Alarme] INT IDENTITY(1,1) NOT NULL,
+    [Date_Heure_Debut] DATETIME NULL,
+    [Valeur] FLOAT NULL,
+    [Type] VARCHAR(1) NULL,
+    [Date_Heure_Fin] DATETIME NULL,
+    [Id_Lieu] INT NULL,
+    [Sonde_Numero_Serie] VARCHAR(50) NULL,
+    [Unite] VARCHAR(10) NULL,
+    [Est_Acquittee] BIT NULL DEFAULT('0'),
+    [Date_Heure_Derniere_Mesure] DATETIME NULL,
+    [Est_Alarme_Pour_VigiTel] BIT NULL DEFAULT('0'),
+    [Est_Mail_Envoye] BIT NULL,
+    [Est_Mail_Fin_Envoye] BIT NOT NULL DEFAULT('0'),
+    [Est_Tel_Acquittee] BIT NULL,
+    CONSTRAINT [PK_t_alarme] PRIMARY KEY ([Id_Alarme])
+  );
+END;
+GO
+IF OBJECT_ID(N'dbo.t_alarme', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_alarme') AND name=N'IDX_Date_Heure_Debut')
+  CREATE INDEX [IDX_Date_Heure_Debut] ON dbo.[t_alarme] ([Date_Heure_Debut]);
+GO
+IF OBJECT_ID(N'dbo.t_alarme', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_alarme') AND name=N'IDX_Valeur')
+  CREATE INDEX [IDX_Valeur] ON dbo.[t_alarme] ([Valeur]);
+GO
+IF OBJECT_ID(N'dbo.t_alarme', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_alarme') AND name=N'IDX_Type')
+  CREATE INDEX [IDX_Type] ON dbo.[t_alarme] ([Type]);
+GO
+IF OBJECT_ID(N'dbo.t_alarme', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_alarme') AND name=N'IDX_Date_Heure_Fin')
+  CREATE INDEX [IDX_Date_Heure_Fin] ON dbo.[t_alarme] ([Date_Heure_Fin]);
+GO
+IF OBJECT_ID(N'dbo.t_alarme', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_alarme') AND name=N'IDX_Id_Lieu')
+  CREATE INDEX [IDX_Id_Lieu] ON dbo.[t_alarme] ([Id_Lieu]);
+GO
+IF OBJECT_ID(N'dbo.t_alarme', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_alarme') AND name=N'IDX_Sonde_Numero_Serie')
+  CREATE INDEX [IDX_Sonde_Numero_Serie] ON dbo.[t_alarme] ([Sonde_Numero_Serie]);
+GO
+IF OBJECT_ID(N'dbo.t_alarme', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_alarme') AND name=N'IDX_Unite')
+  CREATE INDEX [IDX_Unite] ON dbo.[t_alarme] ([Unite]);
+GO
+IF OBJECT_ID(N'dbo.t_alarme', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_alarme') AND name=N'IDX_Est_Acquittee')
+  CREATE INDEX [IDX_Est_Acquittee] ON dbo.[t_alarme] ([Est_Acquittee]);
+GO
+IF OBJECT_ID(N'dbo.t_alarme', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_alarme') AND name=N'IDX_Date_Heure_Derniere_Mesure')
+  CREATE INDEX [IDX_Date_Heure_Derniere_Mesure] ON dbo.[t_alarme] ([Date_Heure_Derniere_Mesure]);
+GO
+
+IF OBJECT_ID(N'dbo.t_alarme_histo', N'U') IS NULL
+BEGIN
+  CREATE TABLE dbo.[t_alarme_histo] (
+    [Id_Alarme_Histo] INT IDENTITY(1,1) NOT NULL,
+    [Id_Alarme] INT NOT NULL,
+    [Date_Heure_Debut] DATETIME NULL,
+    [Valeur] FLOAT NULL,
+    [Type] VARCHAR(1) NULL,
+    [Date_Heure_Fin] DATETIME NULL,
+    [Est_Alarme_Vrai] BIT NULL DEFAULT('0'),
+    [Id_Lieu] INT NULL,
+    [Sonde_Numero_Serie] VARCHAR(50) NULL,
+    [Unite] VARCHAR(10) NULL,
+    [Est_Acquittee] BIT NULL DEFAULT('0'),
+    [Date_Heure_Derniere_Mesure] DATETIME NULL,
+    [Date_Heure_Debut_Alarme_Vrai] DATETIME NULL,
+    [Est_Alarme_Pour_VigiTel] BIT NULL,
+    [Est_Mail_Envoye] BIT NULL,
+    [Est_Tel_Acquittee] BIT NULL,
+    [Date_Heure_Acquittement] DATETIME NULL,
+    CONSTRAINT [PK_t_alarme_histo] PRIMARY KEY ([Id_Alarme_Histo])
+  );
+END;
+GO
+IF OBJECT_ID(N'dbo.t_alarme_histo', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_alarme_histo') AND name=N'Id_Alarme_Histo')
+  CREATE INDEX [Id_Alarme_Histo] ON dbo.[t_alarme_histo] ([Id_Alarme_Histo]);
+GO
+IF OBJECT_ID(N'dbo.t_alarme_histo', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_alarme_histo') AND name=N'IDX_HISTO_Est_Acquittee')
+  CREATE INDEX [IDX_HISTO_Est_Acquittee] ON dbo.[t_alarme_histo] ([Est_Acquittee]);
+GO
+IF OBJECT_ID(N'dbo.t_alarme_histo', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_alarme_histo') AND name=N'IDX_HISTO_Est_Alarme_Vrai')
+  CREATE INDEX [IDX_HISTO_Est_Alarme_Vrai] ON dbo.[t_alarme_histo] ([Est_Alarme_Vrai]);
+GO
+IF OBJECT_ID(N'dbo.t_alarme_histo', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_alarme_histo') AND name=N'IDX_HISTO_Date_Heure_Debut')
+  CREATE INDEX [IDX_HISTO_Date_Heure_Debut] ON dbo.[t_alarme_histo] ([Date_Heure_Debut]);
+GO
+IF OBJECT_ID(N'dbo.t_alarme_histo', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_alarme_histo') AND name=N'IDX_HISTO_Date_Heure_Fin')
+  CREATE INDEX [IDX_HISTO_Date_Heure_Fin] ON dbo.[t_alarme_histo] ([Date_Heure_Fin]);
+GO
+IF OBJECT_ID(N'dbo.t_alarme_histo', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_alarme_histo') AND name=N'IDX_HISTO_Date_Heure_Debut_Alarme_Vrai')
+  CREATE INDEX [IDX_HISTO_Date_Heure_Debut_Alarme_Vrai] ON dbo.[t_alarme_histo] ([Date_Heure_Debut_Alarme_Vrai]);
+GO
+IF OBJECT_ID(N'dbo.t_alarme_histo', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_alarme_histo') AND name=N'IDX_HISTO_Date_Heure_Derniere_Mesure')
+  CREATE INDEX [IDX_HISTO_Date_Heure_Derniere_Mesure] ON dbo.[t_alarme_histo] ([Date_Heure_Derniere_Mesure]);
+GO
+IF OBJECT_ID(N'dbo.t_alarme_histo', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_alarme_histo') AND name=N'IDX_HISTO_Sonde_Numero_Serie')
+  CREATE INDEX [IDX_HISTO_Sonde_Numero_Serie] ON dbo.[t_alarme_histo] ([Sonde_Numero_Serie]);
+GO
+IF OBJECT_ID(N'dbo.t_alarme_histo', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_alarme_histo') AND name=N'IDX_HISTO_Id_Lieu')
+  CREATE INDEX [IDX_HISTO_Id_Lieu] ON dbo.[t_alarme_histo] ([Id_Lieu]);
+GO
+IF OBJECT_ID(N'dbo.t_alarme_histo', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_alarme_histo') AND name=N'IDX_HISTO_Type')
+  CREATE INDEX [IDX_HISTO_Type] ON dbo.[t_alarme_histo] ([Type]);
+GO
+IF OBJECT_ID(N'dbo.t_alarme_histo', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_alarme_histo') AND name=N'IDX_HISTO_Unite')
+  CREATE INDEX [IDX_HISTO_Unite] ON dbo.[t_alarme_histo] ([Unite]);
+GO
+IF OBJECT_ID(N'dbo.t_alarme_histo', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_alarme_histo') AND name=N'IDX_HISTO_Valeur')
+  CREATE INDEX [IDX_HISTO_Valeur] ON dbo.[t_alarme_histo] ([Valeur]);
+GO
+IF OBJECT_ID(N'dbo.t_alarme_histo', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_alarme_histo') AND name=N'IDX_HISTO_Id_Alarme')
+  CREATE INDEX [IDX_HISTO_Id_Alarme] ON dbo.[t_alarme_histo] ([Id_Alarme]);
+GO
+
+IF OBJECT_ID(N'dbo.t_alarme_message', N'U') IS NULL
+BEGIN
+  CREATE TABLE dbo.[t_alarme_message] (
+    [Id_Alarme_Message] INT IDENTITY(1,1) NOT NULL,
+    [Code_Alarme_Message] VARCHAR(20) NULL,
+    [Type] VARCHAR(1) NULL,
+    [Texte_Message] NVARCHAR(MAX) NULL,
+    CONSTRAINT [PK_t_alarme_message] PRIMARY KEY ([Id_Alarme_Message])
+  );
+END;
+GO
+IF OBJECT_ID(N'dbo.t_alarme_message', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_alarme_message') AND name=N'CodeAlarmeMessage')
+  CREATE UNIQUE INDEX [CodeAlarmeMessage] ON dbo.[t_alarme_message] ([Code_Alarme_Message]) WHERE [Code_Alarme_Message] IS NOT NULL;
+GO
+
+IF OBJECT_ID(N'dbo.t_ancien_mot_de_passe', N'U') IS NULL
+BEGIN
+  CREATE TABLE dbo.[t_ancien_mot_de_passe] (
+    [Id_Ancien_Mot_De_Passe] INT IDENTITY(1,1) NOT NULL,
+    [Id_Utilisateur] INT NULL,
+    [Mot_De_Passe] VARCHAR(100) NULL,
+    [Est_Premiere_Connexion] BIT NULL DEFAULT('0'),
+    CONSTRAINT [PK_t_ancien_mot_de_passe] PRIMARY KEY ([Id_Ancien_Mot_De_Passe])
+  );
+END;
+GO
+IF OBJECT_ID(N'dbo.t_ancien_mot_de_passe', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_ancien_mot_de_passe') AND name=N'IDX_Id_Utilisateur')
+  CREATE INDEX [IDX_Id_Utilisateur] ON dbo.[t_ancien_mot_de_passe] ([Id_Utilisateur]);
+GO
+
+IF OBJECT_ID(N'dbo.t_autorisation', N'U') IS NULL
+BEGIN
+  CREATE TABLE dbo.[t_autorisation] (
+    [Id_Autorisation] INT IDENTITY(1,1) NOT NULL,
+    [Code_Autorisation] VARCHAR(50) NULL,
+    [Libelle_Autorisation] VARCHAR(50) NULL,
+    [Commentaire] VARCHAR(200) NULL,
+    CONSTRAINT [PK_t_autorisation] PRIMARY KEY ([Id_Autorisation])
+  );
+END;
+GO
+IF OBJECT_ID(N'dbo.t_autorisation', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_autorisation') AND name=N'IDX_Code_Autorisation')
+  CREATE INDEX [IDX_Code_Autorisation] ON dbo.[t_autorisation] ([Code_Autorisation]);
 GO
 
 IF OBJECT_ID(N'dbo.t_certif', N'U') IS NULL
@@ -186,6 +438,29 @@ BEGIN
   );
 END;
 GO
+IF OBJECT_ID(N'dbo.t_certif', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_certif') AND name=N'IDX_Numero')
+  CREATE INDEX [IDX_Numero] ON dbo.[t_certif] ([Numero]);
+GO
+IF OBJECT_ID(N'dbo.t_certif', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_certif') AND name=N'IDX_Organisme')
+  CREATE INDEX [IDX_Organisme] ON dbo.[t_certif] ([Organisme]);
+GO
+IF OBJECT_ID(N'dbo.t_certif', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_certif') AND name=N'IDX_Date')
+  CREATE INDEX [IDX_Date] ON dbo.[t_certif] ([Date]);
+GO
+IF OBJECT_ID(N'dbo.t_certif', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_certif') AND name=N'IDX_Etalon_Numero_Serie')
+  CREATE INDEX [IDX_Etalon_Numero_Serie] ON dbo.[t_certif] ([Etalon_Numero_Serie]);
+GO
+IF OBJECT_ID(N'dbo.t_certif', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_certif') AND name=N'IDX_Unite')
+  CREATE INDEX [IDX_Unite] ON dbo.[t_certif] ([Unite]);
+GO
+IF OBJECT_ID(N'dbo.t_certif', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_certif') AND name=N'IDX_Id_PDF')
+  CREATE INDEX [IDX_Id_PDF] ON dbo.[t_certif] ([Id_PDF]);
 GO
 
 IF OBJECT_ID(N'dbo.t_certif_mesure', N'U') IS NULL
@@ -201,743 +476,9 @@ BEGIN
   );
 END;
 GO
-GO
-
-IF OBJECT_ID(N'dbo.t_etalon', N'U') IS NULL
-BEGIN
-  CREATE TABLE dbo.[t_etalon] (
-    [Id_Etalon] INT IDENTITY(1,1) NOT NULL,
-    [Etalon_Numero_Serie] VARCHAR(50) NULL,
-    [Est_Archive] BIT NULL DEFAULT(0),
-    [Etat_Etalon] VARCHAR(1) NULL,
-    [Port_Serie] VARCHAR(10) NULL,
-    [Est_Sonde_Externe] BIT NULL,
-    [Resolution] VARCHAR(50) NULL,
-    [Incertitude] VARCHAR(50) NULL,
-    [Nb_Decimale] INT NULL,
-    [Coeff_A] FLOAT NULL,
-    [Coeff_B] FLOAT NULL,
-    [Coeff_C] FLOAT NULL,
-    [Incertitude_Max] FLOAT NULL,
-    [Reserve_MC2] VARCHAR(50) NULL,
-    [Id_Worker] INT NULL DEFAULT(1),
-    [Id_Module] INT NULL,
-    CONSTRAINT [PK_t_etalon] PRIMARY KEY ([Id_Etalon])
-  );
-END;
-GO
-GO
-IF OBJECT_ID(N'dbo.t_etalon', N'U') IS NOT NULL AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'UX_t_etalon_Etalon_Numero_Serie' AND object_id = OBJECT_ID(N'dbo.t_etalon')) CREATE UNIQUE INDEX [UX_t_etalon_Etalon_Numero_Serie] ON dbo.[t_etalon]([Etalon_Numero_Serie]) WHERE [Etalon_Numero_Serie] IS NOT NULL;
-GO
-
-IF OBJECT_ID(N'dbo.t_etalonnage', N'U') IS NULL
-BEGIN
-  CREATE TABLE dbo.[t_etalonnage] (
-    [Id_Etalonnage] INT IDENTITY(1,1) NOT NULL,
-    [Date_Heure_Etalonnage] DATETIME NULL,
-    [Sonde_Numero_Serie] VARCHAR(50) NULL,
-    [Nom_Etalonnage] VARCHAR(255) NULL,
-    [Date_Validite] DATE NULL,
-    [Duree_Validite_Jours] INT NULL,
-    [Valide] DATETIME NULL,
-    [Operateur] VARCHAR(255) NULL,
-    [Etalon_Numero_Serie] VARCHAR(50) NULL,
-    [Date_Certif] DATE NULL,
-    [Organisme] VARCHAR(50) NULL,
-    [Num_Certif] VARCHAR(50) NULL,
-    [Unite] VARCHAR(10) NULL,
-    [Incertitude] FLOAT NULL,
-    [Moyenne_Etalon] FLOAT NULL,
-    [Moyenne_Sonde] FLOAT NULL,
-    [Repetabilite] VARCHAR(50) NULL,
-    [Id_Bain] INT NULL,
-    [Id_Milieu] INT NULL,
-    [Err_Justesse] FLOAT NULL,
-    CONSTRAINT [PK_t_etalonnage] PRIMARY KEY ([Id_Etalonnage])
-  );
-END;
-GO
-GO
-
-IF OBJECT_ID(N'dbo.t_etalonnage_mesure', N'U') IS NULL
-BEGIN
-  CREATE TABLE dbo.[t_etalonnage_mesure] (
-    [Id_Etalonnage_Mesure_Sonde] INT IDENTITY(1,1) NOT NULL,
-    [Id_Etalonnage] INT NULL,
-    [Numero_Ordre] INT NULL,
-    [Mesure_Sonde] FLOAT NULL,
-    [Mesure_Etalon] FLOAT NULL,
-    CONSTRAINT [PK_t_etalonnage_mesure] PRIMARY KEY ([Id_Etalonnage_Mesure_Sonde])
-  );
-END;
-GO
-GO
-
-IF OBJECT_ID(N'dbo.t_groupe', N'U') IS NULL
-BEGIN
-  CREATE TABLE dbo.[t_groupe] (
-    [Id_Groupe] INT IDENTITY(1,1) NOT NULL,
-    [Nom_Groupe] VARCHAR(64) NULL,
-    [Numero_Regroupement] VARCHAR(1) NULL,
-    [Est_Archive] BIT NULL DEFAULT(0),
-    CONSTRAINT [PK_t_groupe] PRIMARY KEY ([Id_Groupe])
-  );
-END;
-GO
-GO
-IF OBJECT_ID(N'dbo.t_groupe', N'U') IS NOT NULL AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'UX_t_groupe_Nom_Groupe' AND object_id = OBJECT_ID(N'dbo.t_groupe')) CREATE UNIQUE INDEX [UX_t_groupe_Nom_Groupe] ON dbo.[t_groupe]([Nom_Groupe]) WHERE [Nom_Groupe] IS NOT NULL;
-GO
-
-IF OBJECT_ID(N'dbo.t_liaison_profil_autorisation', N'U') IS NULL
-BEGIN
-  CREATE TABLE dbo.[t_liaison_profil_autorisation] (
-    [Id_Profil] INT NOT NULL,
-    [Id_Autorisation] INT NOT NULL,
-    CONSTRAINT [PK_t_liaison_profil_autorisation] PRIMARY KEY ([Id_Profil], [Id_Autorisation])
-  );
-END;
-GO
-GO
-
-IF OBJECT_ID(N'dbo.t_liaison_utilisateur_groupe', N'U') IS NULL
-BEGIN
-  CREATE TABLE dbo.[t_liaison_utilisateur_groupe] (
-    [Id_Liaison_u_g] INT IDENTITY(1,1) NOT NULL,
-    [Id_Utilisateur] INT NOT NULL,
-    [Id_Groupe] INT NULL,
-    CONSTRAINT [PK_t_liaison_utilisateur_groupe] PRIMARY KEY ([Id_Liaison_u_g])
-  );
-END;
-GO
-GO
-
-IF OBJECT_ID(N'dbo.t_liaison_utilisateur_site', N'U') IS NULL
-BEGIN
-  CREATE TABLE dbo.[t_liaison_utilisateur_site] (
-    [Id_Liaison] INT IDENTITY(1,1) NOT NULL,
-    [Id_Utilisateur] INT NULL,
-    [Id_Site] INT NULL,
-    [Date_Affectation] DATETIME NULL,
-    CONSTRAINT [PK_t_liaison_utilisateur_site] PRIMARY KEY ([Id_Liaison])
-  );
-END;
-GO
-GO
-IF OBJECT_ID(N'dbo.t_liaison_utilisateur_site', N'U') IS NOT NULL AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'UK_USER_SITE' AND object_id = OBJECT_ID(N'dbo.t_liaison_utilisateur_site')) CREATE UNIQUE INDEX [UK_USER_SITE] ON dbo.[t_liaison_utilisateur_site]([Id_Utilisateur], [Id_Site]);
-GO
-
-IF OBJECT_ID(N'dbo.t_lieu_groupe', N'U') IS NULL
-BEGIN
-  CREATE TABLE dbo.[t_lieu_groupe] (
-    [Id_Lieu] INT NOT NULL,
-    [Id_Groupe] INT NOT NULL,
-    CONSTRAINT [PK_t_lieu_groupe] PRIMARY KEY ([Id_Lieu], [Id_Groupe])
-  );
-END;
-GO
-GO
-
-IF OBJECT_ID(N'dbo.t_lieu', N'U') IS NULL
-BEGIN
-  CREATE TABLE dbo.[t_lieu] (
-    [Id_Lieu] INT IDENTITY(1,1) NOT NULL,
-    [Id_Site] INT NULL,
-    [Nom_Lieu] VARCHAR(30) NULL,
-    [Sonde_Numero_Serie] VARCHAR(50) NULL,
-    [Adresse_Sonde] VARCHAR(50) NULL,
-    [Consigne] FLOAT NULL,
-    [Consigne_Base] FLOAT NULL,
-    [Observations_Info] NVARCHAR(MAX) NULL,
-    [Consigne_Sup] FLOAT NULL,
-    [Consigne_Sup_Base] FLOAT NULL,
-    [Tolerance_Surveillance_Sup] FLOAT NULL,
-    [Tolerance_Surveillance_Sup_Base] FLOAT NULL,
-    [Est_Consigne_Sup_Active] BIT NULL DEFAULT(1),
-    [Consigne_Sup_Pre_Alarme] FLOAT NULL,
-    [Est_Consigne_Sup_Pre_Alarme_Active] BIT NULL,
-    [Consigne_Inf] FLOAT NULL,
-    [Consigne_Inf_Base] FLOAT NULL,
-    [Tolerance_Surveillance_Inf] FLOAT NULL,
-    [Tolerance_Surveillance_Inf_Base] FLOAT NULL,
-    [Est_Consigne_Inf_Active] BIT NULL DEFAULT(1),
-    [Consigne_Inf_Pre_Alarme] FLOAT NULL,
-    [Est_Consigne_Inf_Pre_Alarme_Active] BIT NULL,
-    [Frequence] INT NULL,
-    [Lieu_Etat] VARCHAR(1) NULL,
-    [Surveillance_Etat] VARCHAR(1) NULL,
-    [Retard_Alarme_Haut] INT NULL,
-    [Retard_Alarme_Bas] INT NULL,
-    [Id_Plan] INT NULL,
-    [Position_Plan_X] BIGINT NULL,
-    [Position_Plan_Y] BIGINT NULL,
-    [Date_Creation] DATE NULL,
-    [Est_Archive] BIT NULL DEFAULT(0),
-    [Est_Tel_Actif] BIT NULL DEFAULT(0),
-    [Tel_Code] VARCHAR(4) NULL,
-    [Tel_Son_Lieu] VARCHAR(260) NULL,
-    [Id_Actionneur] INT NULL,
-    [Est_Mode_Serotheque] BIT NULL DEFAULT(0),
-    [Coef_Sensibilite] INT NULL,
-    [Id_PDF] INT NULL,
-    [Est_DataLogger] BIT NULL DEFAULT(0),
-    [EMT] FLOAT NULL,
-    [EMT_Choix_Mode] INT NULL DEFAULT(1),
-    [EMT_Sonde] FLOAT NULL,
-    [Retard_Alarme_Changement_Consigne] INT NULL,
-    [Derniere_Date_Heure] DATETIME NULL,
-    [Derniere_Valeur] FLOAT NULL,
-    [Derniere_Unite] VARCHAR(10) NULL,
-    [Derniere_Nb_Decimal] INT NULL,
-    [Est_Lieu_En_Alarme] TINYINT NULL,
-    [Est_Lieu_Alarme_Terminee_Non_Acquittee] TINYINT NULL,
-    [Est_Acq_Auto_Alarme_NR] BIT NOT NULL DEFAULT(0),
-    [Est_Lieu_Alarme_Terminee_Non_Acquittee_T1] TINYINT NULL,
-    [Est_Lieu_En_Pre_Alarme] TINYINT NULL,
-    [Id_Alarme] INT NULL,
-    [Lieu_Etat_N1] VARCHAR(50) NULL,
-    [Derniere_Date_Etalonnage] DATE NULL,
-    [Derniere_Erreur_Justesse] FLOAT NULL,
-    [Derniere_Incertitude] FLOAT NULL,
-    [Retard_Non_Reponse] INT NULL,
-    [Date_Heure_Derniere_Reponse] DATETIME NULL,
-    [Date_Heure_Derniere_Reponse_Recue_OK] DATETIME NULL,
-    [Est_Correction_Ej] TINYINT NULL DEFAULT(0),
-    [Derive] FLOAT NULL DEFAULT(0),
-    [Est_Correction_derive] BIT NULL DEFAULT(0),
-    [Derniere_Valeur_Null] INT NULL DEFAULT(0),
-    [Type_Lieu] VARCHAR(20) NULL,
-    [Date_Heure_Dernier_Acquittement_En_Cours] DATETIME NULL,
-    [Date_Heure_Last_Update_EVT_GSO] DATETIME NULL,
-    [Date_Heure_Reactivation_Alarme] DATETIME NULL,
-    [Notification_Active] BIT NULL DEFAULT(1),
-    [Commentaire] VARCHAR(200) NULL,
-    [Infos_Modifiees_Depuis_Derniere_Mesure] BIT NOT NULL DEFAULT(1),
-    [Est_Remontee_Memoire_A_Faire] BIT NOT NULL DEFAULT(0),
-    [Date_Heure_Reactivation_Surveillance] DATETIME NULL,
-    [Date_Heure_Surveillance_On] DATETIME NULL,
-    [Date_Heure_Surveillance_Off] DATETIME NULL,
-    [Derniere_Val_Rssi] VARCHAR(10) NULL,
-    [Derniere_Val_Batterie] VARCHAR(10) NULL,
-    [Derniere_Val_Tension] VARCHAR(10) NULL,
-    [Est_Lieu_GSO] BIT NULL DEFAULT(0),
-    [Est_Son_Alarme_Active] BIT NOT NULL DEFAULT(1),
-    [Planning_Actif] BIT NOT NULL DEFAULT(0),
-    [Planning_Regle_Existe] BIT NOT NULL DEFAULT(0),
-    [Planning_Source_Regle_Id] INT NULL,
-    [Planning_Derniere_Maj] DATETIME NULL,
-    [Est_Redeclenchement_Immediat] BIT NOT NULL DEFAULT(0),
-    [Nb_Mesures_Temporisation_Redeclenchement] INT NULL DEFAULT(0),
-    CONSTRAINT [PK_t_lieu] PRIMARY KEY ([Id_Lieu])
-  );
-END;
-GO
-GO
-
-IF OBJECT_ID(N'dbo.t_lieu_template', N'U') IS NULL
-BEGIN
-  CREATE TABLE dbo.[t_lieu_template] (
-    [Id_Lieu_Template] INT IDENTITY(1,1) NOT NULL,
-    [Nom_Template] VARCHAR(80) NOT NULL,
-    [Description] VARCHAR(255) NULL,
-    [Lieu_Etat] VARCHAR(1) NOT NULL DEFAULT(N'D'),
-    [Frequence] INT NULL,
-    [Retard_Alarme_Haut] INT NULL,
-    [Retard_Alarme_Bas] INT NULL,
-    [Retard_Non_Reponse] INT NULL DEFAULT(60),
-    [Retard_Alarme_Changement_Consigne] INT NULL,
-    [Consigne] DECIMAL(10,2) NULL,
-    [Consigne_Sup] DECIMAL(10,2) NULL,
-    [Consigne_Inf] DECIMAL(10,2) NULL,
-    [Tolerance_Surveillance_Sup] DECIMAL(10,2) NULL,
-    [Tolerance_Surveillance_Inf] DECIMAL(10,2) NULL,
-    [Consigne_Sup_Pre_Alarme] DECIMAL(10,2) NULL,
-    [Consigne_Inf_Pre_Alarme] DECIMAL(10,2) NULL,
-    [Est_Consigne_Sup_Active] BIT NOT NULL DEFAULT(0),
-    [Est_Consigne_Inf_Active] BIT NOT NULL DEFAULT(0),
-    [Est_Consigne_Sup_Pre_Alarme_Active] BIT NOT NULL DEFAULT(0),
-    [Est_Consigne_Inf_Pre_Alarme_Active] BIT NOT NULL DEFAULT(0),
-    [Est_Son_Alarme_Active] BIT NOT NULL DEFAULT(1),
-    [Est_Redeclenchement_Immediat] BIT NOT NULL DEFAULT(0),
-    [Nb_Mesures_Temporisation_Redeclenchement] INT NULL DEFAULT(0),
-    [Observations_Info] NVARCHAR(MAX) NULL,
-    [Est_Archive] BIT NOT NULL DEFAULT(0),
-    [Date_Creation] DATETIME NOT NULL DEFAULT(GETDATE()),
-    [Date_Maj] DATETIME NOT NULL DEFAULT(GETDATE()),
-    [Id_Utilisateur_Creation] INT NULL,
-    [Id_Utilisateur_Maj] INT NULL,
-    CONSTRAINT [PK_t_lieu_template] PRIMARY KEY ([Id_Lieu_Template])
-  );
-END;
-GO
-GO
-IF OBJECT_ID(N'dbo.t_lieu_template', N'U') IS NOT NULL AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'UX_t_lieu_template_Nom_Template' AND object_id = OBJECT_ID(N'dbo.t_lieu_template')) CREATE UNIQUE INDEX [UX_t_lieu_template_Nom_Template] ON dbo.[t_lieu_template]([Nom_Template]) WHERE [Nom_Template] IS NOT NULL;
-GO
-
-IF OBJECT_ID(N'dbo.t_module', N'U') IS NULL
-BEGIN
-  CREATE TABLE dbo.[t_module] (
-    [Id_Module] INT IDENTITY(1,1) NOT NULL,
-    [Module_Numero_Serie] VARCHAR(50) NULL,
-    [Type_Module] INT NULL,
-    [Port_Serie] VARCHAR(10) NULL,
-    [Position_Plan_X] BIGINT NULL,
-    [Position_Plan_Y] BIGINT NULL,
-    [Id_Plan] INT NULL,
-    [Adresse_IP] VARCHAR(50) NULL,
-    [Delai_Reseau] INT NULL,
-    [Emplacement] VARCHAR(50) NULL,
-    [Archive] TINYINT NULL DEFAULT(0),
-    [Id_Worker] INT NULL DEFAULT(1),
-    [Est_Module_GSO] BIT NOT NULL DEFAULT(0),
-    [Port_Serie_Send_GSO] VARCHAR(10) NULL,
-    CONSTRAINT [PK_t_module] PRIMARY KEY ([Id_Module])
-  );
-END;
-GO
-GO
-IF OBJECT_ID(N'dbo.t_module', N'U') IS NOT NULL AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'Identifiant_Module' AND object_id = OBJECT_ID(N'dbo.t_module')) CREATE UNIQUE INDEX [Identifiant_Module] ON dbo.[t_module]([Type_Module], [Module_Numero_Serie]);
-GO
-
-IF OBJECT_ID(N'dbo.t_module_type', N'U') IS NULL
-BEGIN
-  CREATE TABLE dbo.[t_module_type] (
-    [Id_Module_Type] INT IDENTITY(1,1) NOT NULL,
-    [Libelle_Type_Module] VARCHAR(50) NULL,
-    [Libelle_Module] VARCHAR(100) NULL,
-    [Est_Flag_Affiche_Plan] BIT NULL DEFAULT(0),
-    CONSTRAINT [PK_t_module_type] PRIMARY KEY ([Id_Module_Type])
-  );
-END;
-GO
-GO
-
-IF OBJECT_ID(N'dbo.t_parametre', N'U') IS NULL
-BEGIN
-  CREATE TABLE dbo.[t_parametre] (
-    [Section] VARCHAR(100) NOT NULL,
-    [Mot_Cle] VARCHAR(100) NOT NULL,
-    [Valeur] NVARCHAR(MAX) NULL,
-    [Commentaire] NVARCHAR(MAX) NULL,
-    [Champ_DATETIME] DATETIME NULL,
-    CONSTRAINT [PK_t_parametre] PRIMARY KEY ([Section], [Mot_Cle])
-  );
-END;
-GO
-GO
-
-IF OBJECT_ID(N'dbo.t_pdf', N'U') IS NULL
-BEGIN
-  CREATE TABLE dbo.[t_pdf] (
-    [Id_PDF] INT IDENTITY(1,1) NOT NULL,
-    [Nom_PDF] VARCHAR(50) NULL,
-    [Contenu_PDF] VARBINARY(MAX) NULL,
-    CONSTRAINT [PK_t_pdf] PRIMARY KEY ([Id_PDF])
-  );
-END;
-GO
-GO
-
-IF OBJECT_ID(N'dbo.t_plan', N'U') IS NULL
-BEGIN
-  CREATE TABLE dbo.[t_plan] (
-    [Id_Plan] INT IDENTITY(1,1) NOT NULL,
-    [Image] VARBINARY(MAX) NULL,
-    [Titre] VARCHAR(50) NULL,
-    [Est_Archive] BIT NULL DEFAULT(0),
-    CONSTRAINT [PK_t_plan] PRIMARY KEY ([Id_Plan])
-  );
-END;
-GO
-GO
-IF OBJECT_ID(N'dbo.t_plan', N'U') IS NOT NULL AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'UX_t_plan_Titre' AND object_id = OBJECT_ID(N'dbo.t_plan')) CREATE UNIQUE INDEX [UX_t_plan_Titre] ON dbo.[t_plan]([Titre]) WHERE [Titre] IS NOT NULL;
-GO
-
-IF OBJECT_ID(N'dbo.t_postes_clients', N'U') IS NULL
-BEGIN
-  CREATE TABLE dbo.[t_postes_clients] (
-    [Id_Poste] INT IDENTITY(1,1) NOT NULL,
-    [Nom_Machine_Connexion] VARCHAR(255) NULL,
-    [Adresse_IP_Connexion] VARCHAR(50) NULL,
-    [Login] VARCHAR(64) NULL,
-    [Nom] VARCHAR(50) NULL,
-    [Prenom] VARCHAR(50) NULL,
-    [Date_Heure_Derniere_Connexion] DATETIME NULL,
-    CONSTRAINT [PK_t_postes_clients] PRIMARY KEY ([Id_Poste])
-  );
-END;
-GO
-GO
-IF OBJECT_ID(N'dbo.t_postes_clients', N'U') IS NOT NULL AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'UX_t_postes_clients_Nom_Machine_Connexion' AND object_id = OBJECT_ID(N'dbo.t_postes_clients')) CREATE UNIQUE INDEX [UX_t_postes_clients_Nom_Machine_Connexion] ON dbo.[t_postes_clients]([Nom_Machine_Connexion]) WHERE [Nom_Machine_Connexion] IS NOT NULL;
-GO
-
-IF OBJECT_ID(N'dbo.t_profil', N'U') IS NULL
-BEGIN
-  CREATE TABLE dbo.[t_profil] (
-    [Id_Profil] INT IDENTITY(1,1) NOT NULL,
-    [Profil_Utilisateur] VARCHAR(50) NULL,
-    [Commentaire] VARCHAR(100) NULL,
-    [Est_MC2] BIT NULL DEFAULT(0),
-    [Est_Archive] BIT NULL DEFAULT(0),
-    CONSTRAINT [PK_t_profil] PRIMARY KEY ([Id_Profil])
-  );
-END;
-GO
-GO
-IF OBJECT_ID(N'dbo.t_profil', N'U') IS NOT NULL AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'UX_t_profil_Profil_Utilisateur' AND object_id = OBJECT_ID(N'dbo.t_profil')) CREATE UNIQUE INDEX [UX_t_profil_Profil_Utilisateur] ON dbo.[t_profil]([Profil_Utilisateur]) WHERE [Profil_Utilisateur] IS NOT NULL;
-GO
-
-IF OBJECT_ID(N'dbo.t_site', N'U') IS NULL
-BEGIN
-  CREATE TABLE dbo.[t_site] (
-    [Id_Site] INT IDENTITY(1,1) NOT NULL,
-    [Code_Site] VARCHAR(20) NULL,
-    [Libelle_Site] VARCHAR(50) NULL,
-    [Commentaire] VARCHAR(200) NULL,
-    [Est_Archive] BIT NULL DEFAULT(0),
-    CONSTRAINT [PK_t_site] PRIMARY KEY ([Id_Site])
-  );
-END;
-GO
-GO
-
-IF OBJECT_ID(N'dbo.t_sonde', N'U') IS NULL
-BEGIN
-  CREATE TABLE dbo.[t_sonde] (
-    [Id_Sonde] INT IDENTITY(1,1) NOT NULL,
-    [Adresse_Sonde] VARCHAR(50) NULL,
-    [Sonde_Numero_Serie] VARCHAR(50) NULL,
-    [Sonde_Type] VARCHAR(50) NULL,
-    [Est_Sonde_GSO] BIT NOT NULL DEFAULT(0),
-    [Port_Serie] VARCHAR(10) NULL,
-    [Surveillance_Etat] VARCHAR(1) NULL,
-    [Etat_Sonde] VARCHAR(1) NULL DEFAULT(N'D'),
-    [Id_Module] INT NULL,
-    [Relai_1] VARCHAR(50) NULL,
-    [Relai_2] VARCHAR(50) NULL,
-    [Relai_3] VARCHAR(50) NULL,
-    [Relai_4] VARCHAR(50) NULL,
-    [Frequence_Mesure] INT NULL,
-    [Frequence_Recup] INT NULL,
-    [Est_Sonde_Reformee] BIT NULL,
-    [Etat_Sonde_N1] VARCHAR(1) NULL,
-    [Id_Worker] INT NULL,
-    [Id_Sonde_Etat] INT NULL,
-    [Sonde_Offset] FLOAT NOT NULL DEFAULT(0),
-    [Metrologie_en_cours] BIT NOT NULL DEFAULT(0),
-    [Metrologie_cmd_envoyee] BIT NOT NULL DEFAULT(0),
-    CONSTRAINT [PK_t_sonde] PRIMARY KEY ([Id_Sonde])
-  );
-END;
-GO
-GO
-IF OBJECT_ID(N'dbo.t_sonde', N'U') IS NOT NULL AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'UX_t_sonde_Sonde_Numero_Serie' AND object_id = OBJECT_ID(N'dbo.t_sonde')) CREATE UNIQUE INDEX [UX_t_sonde_Sonde_Numero_Serie] ON dbo.[t_sonde]([Sonde_Numero_Serie]) WHERE [Sonde_Numero_Serie] IS NOT NULL;
-GO
-
-IF OBJECT_ID(N'dbo.t_etat_surveillance', N'U') IS NULL
-BEGIN
-  CREATE TABLE dbo.[t_etat_surveillance] (
-    [Id_Surveillance_Etat] INT IDENTITY(1,1) NOT NULL,
-    [Surveillance_Etat] VARCHAR(1) NULL,
-    [Surveillance_Etat_Libelle] VARCHAR(50) NULL,
-    CONSTRAINT [PK_t_etat_surveillance] PRIMARY KEY ([Id_Surveillance_Etat])
-  );
-END;
-GO
-GO
-IF OBJECT_ID(N'dbo.t_etat_surveillance', N'U') IS NOT NULL AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'UX_t_etat_surveillance_Surveillance_Etat' AND object_id = OBJECT_ID(N'dbo.t_etat_surveillance')) CREATE UNIQUE INDEX [UX_t_etat_surveillance_Surveillance_Etat] ON dbo.[t_etat_surveillance]([Surveillance_Etat]) WHERE [Surveillance_Etat] IS NOT NULL;
-GO
-
-IF OBJECT_ID(N'dbo.t_sonde_type', N'U') IS NULL
-BEGIN
-  CREATE TABLE dbo.[t_sonde_type] (
-    [Id_Sonde_Type] INT IDENTITY(1,1) NOT NULL,
-    [Sonde_Type] VARCHAR(50) NULL,
-    [Libelle_Sonde_Type] VARCHAR(50) NULL,
-    [Est_Gestion_Relais] BIT NULL,
-    [Est_Double_Capteur] BIT NOT NULL DEFAULT(0),
-    [Famille_Sonde] VARCHAR(16) NOT NULL DEFAULT(N'CLASSIC'),
-    [Unite] VARCHAR(10) NULL,
-    CONSTRAINT [PK_t_sonde_type] PRIMARY KEY ([Id_Sonde_Type])
-  );
-END;
-GO
-GO
-IF OBJECT_ID(N'dbo.t_sonde_type', N'U') IS NOT NULL AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'UX_t_sonde_type_Sonde_Type' AND object_id = OBJECT_ID(N'dbo.t_sonde_type')) CREATE UNIQUE INDEX [UX_t_sonde_type_Sonde_Type] ON dbo.[t_sonde_type]([Sonde_Type]) WHERE [Sonde_Type] IS NOT NULL;
-GO
-
-IF OBJECT_ID(N'dbo.t_utilisateur', N'U') IS NULL
-BEGIN
-  CREATE TABLE dbo.[t_utilisateur] (
-    [Id_Utilisateur] INT IDENTITY(1,1) NOT NULL,
-    [Login] VARCHAR(64) NULL,
-    [Mot_De_Passe] VARCHAR(60) NULL,
-    [Date_Validite] DATE NULL,
-    [Date_Creation] DATE NULL,
-    [Est_Archive] BIT NULL DEFAULT(0),
-    [Profil_Utilisateur] VARCHAR(50) NULL,
-    [Date_Heure_Derniere_Connexion] DATETIME NULL,
-    [Adresse_IP_Connexion] VARCHAR(15) NULL,
-    [Nom_Machine_Connexion] VARCHAR(50) NULL,
-    [Id_Site] INT NULL,
-    [Nom] VARCHAR(50) NULL,
-    [Prenom] VARCHAR(50) NULL,
-    [Tel_Num_Fixe] VARCHAR(50) NULL,
-    [Tel_Num_Mobile] VARCHAR(50) NULL,
-    [Adresse_Email] VARCHAR(100) NULL,
-    [Date_Derniere_Modification_MDP] DATETIME NULL,
-    [Reset_Password_Token] VARCHAR(255) NULL,
-    [Reset_Password_Expires] DATETIME NULL,
-    [Est_Mot_De_Passe_Temporaire] BIT NULL DEFAULT(0),
-    [Avatar_Utilisateur] VARCHAR(512) NULL,
-    CONSTRAINT [PK_t_utilisateur] PRIMARY KEY ([Id_Utilisateur])
-  );
-END;
-GO
-GO
-IF OBJECT_ID(N'dbo.t_utilisateur', N'U') IS NOT NULL AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'UX_t_utilisateur_Login' AND object_id = OBJECT_ID(N'dbo.t_utilisateur')) CREATE UNIQUE INDEX [UX_t_utilisateur_Login] ON dbo.[t_utilisateur]([Login]) WHERE [Login] IS NOT NULL;
-GO
-
-IF OBJECT_ID(N'dbo.t_notification', N'U') IS NULL
-BEGIN
-  CREATE TABLE dbo.[t_notification] (
-    [Id_Notification] INT IDENTITY(1,1) NOT NULL,
-    [Type] VARCHAR(32) NOT NULL,
-    [Id_Alarme] INT NULL,
-    [Titre] VARCHAR(128) NULL,
-    [Message] VARCHAR(512) NOT NULL,
-    [Payload_Json] NVARCHAR(MAX) NULL,
-    [Priorite] INT NULL DEFAULT(0),
-    [Date_Creation] DATETIME NOT NULL DEFAULT(GETDATE()),
-    [Est_Archive] BIT NOT NULL DEFAULT(0),
-    CONSTRAINT [PK_t_notification] PRIMARY KEY ([Id_Notification])
-  );
-END;
-GO
-GO
-
-IF OBJECT_ID(N'dbo.t_notification_delivery', N'U') IS NULL
-BEGIN
-  CREATE TABLE dbo.[t_notification_delivery] (
-    [Id_Delivery] INT IDENTITY(1,1) NOT NULL,
-    [Id_Notification] INT NOT NULL,
-    [Id_Poste] INT NOT NULL,
-    [Id_Utilisateur] INT NULL,
-    [Statut] VARCHAR(32) NOT NULL,
-    [Nb_Tentatives] INT NOT NULL DEFAULT(0),
-    [Derniere_Erreur] VARCHAR(255) NULL,
-    [Date_Queue] DATETIME NOT NULL DEFAULT(GETDATE()),
-    [Date_Envoi] DATETIME NULL,
-    [Date_Ack_Agent] DATETIME NULL,
-    [Date_Dernier_Event] DATETIME NULL,
-    [Correlation_Id] VARCHAR(64) NULL,
-    CONSTRAINT [PK_t_notification_delivery] PRIMARY KEY ([Id_Delivery])
-  );
-END;
-GO
-GO
-IF OBJECT_ID(N'dbo.t_notification_delivery', N'U') IS NOT NULL AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'UK_NOTIFICATION_POSTE' AND object_id = OBJECT_ID(N'dbo.t_notification_delivery')) CREATE UNIQUE INDEX [UK_NOTIFICATION_POSTE] ON dbo.[t_notification_delivery]([Id_Notification], [Id_Poste]);
-GO
-
-IF OBJECT_ID(N'dbo.t_notification_event', N'U') IS NULL
-BEGIN
-  CREATE TABLE dbo.[t_notification_event] (
-    [Id_Event] INT IDENTITY(1,1) NOT NULL,
-    [Id_Delivery] INT NOT NULL,
-    [Event_Type] VARCHAR(32) NOT NULL,
-    [Event_Data] NVARCHAR(MAX) NULL,
-    [Date_Event] DATETIME NOT NULL DEFAULT(GETDATE()),
-    CONSTRAINT [PK_t_notification_event] PRIMARY KEY ([Id_Event])
-  );
-END;
-GO
-GO
-
-IF OBJECT_ID(N'dbo.liste_clients', N'U') IS NULL
-BEGIN
-  CREATE TABLE dbo.[liste_clients] (
-    [Id_Client] INT IDENTITY(1,1) NOT NULL,
-    [Nom] VARCHAR(100) NOT NULL,
-    [Num_Compte] VARCHAR(50) NULL,
-    [VigiServ_Derniere_Date_Heure] DATETIME NULL,
-    [Vigitel_Derniere_Date_Heure] DATETIME NULL,
-    CONSTRAINT [PK_liste_clients] PRIMARY KEY ([Id_Client])
-  );
-END;
-GO
-GO
-IF OBJECT_ID(N'dbo.liste_clients', N'U') IS NOT NULL AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'UX_liste_clients_Num_Compte' AND object_id = OBJECT_ID(N'dbo.liste_clients')) CREATE UNIQUE INDEX [UX_liste_clients_Num_Compte] ON dbo.[liste_clients]([Num_Compte]) WHERE [Num_Compte] IS NOT NULL;
-GO
-
-IF OBJECT_ID(N'dbo.t_actionneur_type', N'U') IS NULL
-BEGIN
-  CREATE TABLE dbo.[t_actionneur_type] (
-    [Id_Actionneur_Type] INT IDENTITY(1,1) NOT NULL,
-    [Type] INT NULL,
-    [Description] VARCHAR(50) NULL,
-    [Gere_Relais] BIT NULL DEFAULT(0),
-    CONSTRAINT [PK_t_actionneur_type] PRIMARY KEY ([Id_Actionneur_Type])
-  );
-END;
-GO
-GO
-IF OBJECT_ID(N'dbo.t_actionneur_type', N'U') IS NOT NULL AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'UX_t_actionneur_type_Type' AND object_id = OBJECT_ID(N'dbo.t_actionneur_type')) CREATE UNIQUE INDEX [UX_t_actionneur_type_Type] ON dbo.[t_actionneur_type]([Type]) WHERE [Type] IS NOT NULL;
-GO
-
-IF OBJECT_ID(N'dbo.t_ancien_mot_de_passe', N'U') IS NULL
-BEGIN
-  CREATE TABLE dbo.[t_ancien_mot_de_passe] (
-    [Id_Ancien_Mot_De_Passe] INT IDENTITY(1,1) NOT NULL,
-    [Id_Utilisateur] INT NULL,
-    [Mot_De_Passe] VARCHAR(100) NULL,
-    [Est_Premiere_Connexion] BIT NULL DEFAULT(0),
-    CONSTRAINT [PK_t_ancien_mot_de_passe] PRIMARY KEY ([Id_Ancien_Mot_De_Passe])
-  );
-END;
-GO
-GO
-
-IF OBJECT_ID(N'dbo.t_commentaire_acquittement_alarme', N'U') IS NULL
-BEGIN
-  CREATE TABLE dbo.[t_commentaire_acquittement_alarme] (
-    [Id_Commentaire] INT IDENTITY(1,1) NOT NULL,
-    [Type_Commentaire] VARCHAR(50) NULL,
-    [Texte] VARCHAR(255) NULL,
-    CONSTRAINT [PK_t_commentaire_acquittement_alarme] PRIMARY KEY ([Id_Commentaire])
-  );
-END;
-GO
-GO
-
-IF OBJECT_ID(N'dbo.t_etalon_type', N'U') IS NULL
-BEGIN
-  CREATE TABLE dbo.[t_etalon_type] (
-    [Type_Etalon] VARCHAR(4) NOT NULL,
-    [Nom] VARCHAR(30) NULL,
-    [Descriptif] VARCHAR(100) NULL,
-    [Est_Saisie_Module] BIT NULL DEFAULT(0),
-    [Est_Sonde_Externe] BIT NULL DEFAULT(0),
-    [Resolution] FLOAT NULL,
-    CONSTRAINT [PK_t_etalon_type] PRIMARY KEY ([Type_Etalon])
-  );
-END;
-GO
-GO
-IF NOT EXISTS (SELECT 1 FROM dbo.[t_etalon_type] WHERE [Type_Etalon] = N'ES') INSERT INTO dbo.[t_etalon_type] ([Type_Etalon], [Nom], [Descriptif], [Est_Saisie_Module], [Est_Sonde_Externe], [Resolution]) VALUES (N'ES', N'VigiTemp Type ES', N'Sonde talon radio type E', 1, 0, 0.05);
-IF NOT EXISTS (SELECT 1 FROM dbo.[t_etalon_type] WHERE [Type_Etalon] = N'EX') INSERT INTO dbo.[t_etalon_type] ([Type_Etalon], [Nom], [Descriptif], [Est_Saisie_Module], [Est_Sonde_Externe], [Resolution]) VALUES (N'EX', N'Externe', N'Sonde externe', 1, 1, 0);
-IF NOT EXISTS (SELECT 1 FROM dbo.[t_etalon_type] WHERE [Type_Etalon] = N'SEF') INSERT INTO dbo.[t_etalon_type] ([Type_Etalon], [Nom], [Descriptif], [Est_Saisie_Module], [Est_Sonde_Externe], [Resolution]) VALUES (N'SEF', N'VigiTemp Type SEF', N'Sonde talon filaire ou filaire/radio avec prise RJ45', 1, 0, 0.02);
-IF NOT EXISTS (SELECT 1 FROM dbo.[t_etalon_type] WHERE [Type_Etalon] = N'SPET') INSERT INTO dbo.[t_etalon_type] ([Type_Etalon], [Nom], [Descriptif], [Est_Saisie_Module], [Est_Sonde_Externe], [Resolution]) VALUES (N'SPET', N'Sonde etalon platine', N'Sonde etalon GSP platine', 1, 0, 0.02);
-GO
-
-IF OBJECT_ID(N'dbo.t_sonde_etat', N'U') IS NULL
-BEGIN
-  CREATE TABLE dbo.[t_sonde_etat] (
-    [Id_Sonde_Etat] INT IDENTITY(1,1) NOT NULL,
-    [Etat_Sonde] VARCHAR(1) NULL,
-    [Etat_Libelle] VARCHAR(50) NULL,
-    CONSTRAINT [PK_t_sonde_etat] PRIMARY KEY ([Id_Sonde_Etat])
-  );
-END;
-GO
-GO
-IF OBJECT_ID(N'dbo.t_sonde_etat', N'U') IS NOT NULL AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'UX_t_sonde_etat_Etat_Sonde' AND object_id = OBJECT_ID(N'dbo.t_sonde_etat')) CREATE UNIQUE INDEX [UX_t_sonde_etat_Etat_Sonde] ON dbo.[t_sonde_etat]([Etat_Sonde]) WHERE [Etat_Sonde] IS NOT NULL;
-GO
-
-IF OBJECT_ID(N'dbo.t_lieu_mail_tel', N'U') IS NULL
-BEGIN
-  CREATE TABLE dbo.[t_lieu_mail_tel] (
-    [Id_Mail_Tel] INT IDENTITY(1,1) NOT NULL,
-    [Id_Lieu] INT NULL,
-    [Ordre_Contact] INT NULL,
-    [Id_Utilisateur] INT NULL,
-    [Est_Via_Telephone] BIT NULL,
-    [Est_Via_Email] BIT NULL,
-    CONSTRAINT [PK_t_lieu_mail_tel] PRIMARY KEY ([Id_Mail_Tel])
-  );
-END;
-GO
-GO
-
-IF OBJECT_ID(N'dbo.t_lieu_planning', N'U') IS NULL
-BEGIN
-  CREATE TABLE dbo.[t_lieu_planning] (
-    [Id_Lieu_Planning] INT IDENTITY(1,1) NOT NULL,
-    [Id_Lieu] INT NULL,
-    [Est_Id_Jour] BIT NULL,
-    [Est_Actif] BIT NULL CONSTRAINT [DF_t_lieu_planning_Est_Actif] DEFAULT(1),
-    [Heure_Debut_Periode1] VARCHAR(4) NULL CONSTRAINT [DF_t_lieu_planning_Heure_Debut_Periode1] DEFAULT('0000'),
-    [Heure_Fin_Periode1] VARCHAR(4) NULL CONSTRAINT [DF_t_lieu_planning_Heure_Fin_Periode1] DEFAULT('0000'),
-    [Heure_Debut_Periode2] VARCHAR(4) NULL CONSTRAINT [DF_t_lieu_planning_Heure_Debut_Periode2] DEFAULT('0000'),
-    [Heure_Fin_Periode2] VARCHAR(4) NULL CONSTRAINT [DF_t_lieu_planning_Heure_Fin_Periode2] DEFAULT('0000'),
-    CONSTRAINT [PK_t_lieu_planning] PRIMARY KEY ([Id_Lieu_Planning])
-  );
-  CREATE UNIQUE INDEX [UX_t_lieu_planning_IdLieuJour] ON dbo.[t_lieu_planning]([Id_Lieu], [Est_Id_Jour]);
-  CREATE INDEX [IDX_t_lieu_planning_Id_Lieu] ON dbo.[t_lieu_planning]([Id_Lieu]);
-END;
-GO
-GO
-
-IF OBJECT_ID(N'dbo.t_lieu_planning_audit', N'U') IS NULL
-BEGIN
-  CREATE TABLE dbo.[t_lieu_planning_audit] (
-    [Id_Audit] INT IDENTITY(1,1) NOT NULL,
-    [Id_Lieu] INT NOT NULL,
-    [Timestamp] DATETIME NOT NULL DEFAULT(GETDATE()),
-    [Date_Heure_Debut_Changement] DATETIME NULL,
-    [Date_Heure_Fin_Changement] DATETIME NULL,
-    [Type] VARCHAR(64) NOT NULL,
-    [Planning_Regle_Id] INT NULL,
-    [Consigne_Avant] FLOAT NULL,
-    [Tolerance_Surveillance_Sup_Avant] FLOAT NULL,
-    [Tolerance_Surveillance_Inf_Avant] FLOAT NULL,
-    [Consigne_Apres] FLOAT NULL,
-    [Tolerance_Surveillance_Sup_Apres] FLOAT NULL,
-    [Tolerance_Surveillance_Inf_Apres] FLOAT NULL,
-    CONSTRAINT [PK_t_lieu_planning_audit] PRIMARY KEY ([Id_Audit]),
-    CONSTRAINT [CK_t_lieu_planning_audit_Type] CHECK ([Type] IN ('PLAN_APPLY'))
-  );
-END;
-GO
-GO
-
-IF OBJECT_ID(N'dbo.t_lieu_planning_regle', N'U') IS NULL
-BEGIN
-  CREATE TABLE dbo.[t_lieu_planning_regle] (
-    [Id_Regle] INT IDENTITY(1,1) NOT NULL,
-    [Id_Lieu] INT NOT NULL,
-    [Actif] BIT NOT NULL DEFAULT(1),
-    [Jour_Debut] TINYINT NOT NULL,
-    [Heure_Debut] TIME NOT NULL,
-    [Jour_Fin] TINYINT NOT NULL,
-    [Heure_Fin] TIME NOT NULL,
-    [Consigne] FLOAT NULL,
-    [Consigne_Sup] FLOAT NULL,
-    [Consigne_Inf] FLOAT NULL,
-    [Priorite] INT NOT NULL DEFAULT(0),
-    [Tolerance_Sup_Calc] FLOAT NULL,
-    [Tolerance_Inf_Calc] FLOAT NULL,
-    [Date_Creation] DATETIME NOT NULL DEFAULT(GETDATE()),
-    [Date_Maj] DATETIME NULL,
-    [Retard_Alarme_Changement_Consigne] INT NULL,
-    CONSTRAINT [PK_t_lieu_planning_regle] PRIMARY KEY ([Id_Regle])
-  );
-END;
-GO
-GO
-
-IF OBJECT_ID(N'dbo.t_materiel', N'U') IS NULL
-BEGIN
-  CREATE TABLE dbo.[t_materiel] (
-    [Id_Materiel] INT IDENTITY(1,1) NOT NULL,
-    [Ref_Commercial] VARCHAR(50) NOT NULL DEFAULT(''),
-    [Designation] VARCHAR(100) NOT NULL DEFAULT(''),
-    [Descriptif] VARCHAR(1000) NOT NULL DEFAULT(''),
-    [Gamme] VARCHAR(10) NOT NULL DEFAULT(''),
-    [Type] VARCHAR(10) NOT NULL DEFAULT(''),
-    [Chemin_Image] VARCHAR(500) NULL,
-    CONSTRAINT [PK_t_materiel] PRIMARY KEY ([Id_Materiel])
-  );
-END;
-GO
+IF OBJECT_ID(N'dbo.t_certif_mesure', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_certif_mesure') AND name=N'IDX_Id_Certif')
+  CREATE INDEX [IDX_Id_Certif] ON dbo.[t_certif_mesure] ([Id_Certif]);
 GO
 
 IF OBJECT_ID(N'dbo.t_commande_materiel', N'U') IS NULL
@@ -950,19 +491,28 @@ BEGIN
     [Email_Demandeur] VARCHAR(255) NULL,
     [Email_Commercial] VARCHAR(255) NOT NULL,
     [Commentaire] NVARCHAR(MAX) NULL,
-    [Mode_Transmission] VARCHAR(64) NOT NULL,
-    [Statut_Commande] VARCHAR(64) NOT NULL DEFAULT(N'BROUILLON'),
+    [Mode_Transmission] VARCHAR(6) NOT NULL,
+    [Statut_Commande] VARCHAR(9) NOT NULL DEFAULT('BROUILLON'),
     [Date_Creation] DATETIME NOT NULL DEFAULT(GETDATE()),
     [Date_Envoi] DATETIME NULL,
     [Id_Pdf] INT NULL,
-    CONSTRAINT [PK_t_commande_materiel] PRIMARY KEY ([Id_Commande_Materiel]),
-    CONSTRAINT [CK_t_commande_materiel_Mode_Transmission] CHECK ([Mode_Transmission] IN ('SMTP', 'MAILTO')),
-    CONSTRAINT [CK_t_commande_materiel_Statut_Commande] CHECK ([Statut_Commande] IN ('BROUILLON', 'ENVOYEE', 'PREPAREE'))
+    CONSTRAINT [CK_t_commande_materiel_Mode_Transmission] CHECK ([Mode_Transmission] IN ('SMTP','MAILTO')),
+    CONSTRAINT [CK_t_commande_materiel_Statut_Commande] CHECK ([Statut_Commande] IN ('BROUILLON','ENVOYEE','PREPAREE')),
+    CONSTRAINT [PK_t_commande_materiel] PRIMARY KEY ([Id_Commande_Materiel])
   );
 END;
 GO
+IF OBJECT_ID(N'dbo.t_commande_materiel', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_commande_materiel') AND name=N'UK_t_commande_materiel_reference')
+  CREATE UNIQUE INDEX [UK_t_commande_materiel_reference] ON dbo.[t_commande_materiel] ([Reference_Commande]);
 GO
-IF OBJECT_ID(N'dbo.t_commande_materiel', N'U') IS NOT NULL AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'UX_t_commande_materiel_Reference_Commande' AND object_id = OBJECT_ID(N'dbo.t_commande_materiel')) CREATE UNIQUE INDEX [UX_t_commande_materiel_Reference_Commande] ON dbo.[t_commande_materiel]([Reference_Commande]) WHERE [Reference_Commande] IS NOT NULL;
+IF OBJECT_ID(N'dbo.t_commande_materiel', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_commande_materiel') AND name=N'IX_t_commande_materiel_utilisateur')
+  CREATE INDEX [IX_t_commande_materiel_utilisateur] ON dbo.[t_commande_materiel] ([Id_Utilisateur]);
+GO
+IF OBJECT_ID(N'dbo.t_commande_materiel', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_commande_materiel') AND name=N'IX_t_commande_materiel_pdf')
+  CREATE INDEX [IX_t_commande_materiel_pdf] ON dbo.[t_commande_materiel] ([Id_Pdf]);
 GO
 
 IF OBJECT_ID(N'dbo.t_commande_materiel_ligne', N'U') IS NULL
@@ -981,35 +531,1012 @@ BEGIN
   );
 END;
 GO
+IF OBJECT_ID(N'dbo.t_commande_materiel_ligne', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_commande_materiel_ligne') AND name=N'IX_t_commande_materiel_ligne_commande')
+  CREATE INDEX [IX_t_commande_materiel_ligne_commande] ON dbo.[t_commande_materiel_ligne] ([Id_Commande_Materiel]);
+GO
+IF OBJECT_ID(N'dbo.t_commande_materiel_ligne', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_commande_materiel_ligne') AND name=N'IX_t_commande_materiel_ligne_materiel')
+  CREATE INDEX [IX_t_commande_materiel_ligne_materiel] ON dbo.[t_commande_materiel_ligne] ([Id_Materiel]);
 GO
 
-IF OBJECT_ID(N'dbo.t_vigilog_configuration', N'U') IS NULL
+IF OBJECT_ID(N'dbo.t_commentaire_acquittement_alarme', N'U') IS NULL
 BEGIN
-  CREATE TABLE dbo.[t_vigilog_configuration] (
-    [Id_VigiLog_Configuration] INT IDENTITY(1,1) NOT NULL,
-    [Nom_Configuration] VARCHAR(100) NOT NULL,
-    [Description_Configuration] VARCHAR(255) NULL,
-    [Consigne] DECIMAL(10,2) NULL,
-    [Limite_Basse_Active] BIT NOT NULL DEFAULT(0),
-    [Limite_Basse] DECIMAL(10,2) NULL,
-    [Limite_Haute_Active] BIT NOT NULL DEFAULT(0),
-    [Limite_Haute] DECIMAL(10,2) NULL,
-    [Frequence_Min] INT NOT NULL,
-    [Retard_Alarme_Min] INT NOT NULL,
-    [Delai_Demarrage_Min] INT NOT NULL DEFAULT(0),
-    [Autorise_Arret_Bouton_Stop] BIT NOT NULL DEFAULT(1),
-    [Reinitialise_Avec_Bouton_Start] BIT NOT NULL DEFAULT(1),
-    [Actif] BIT NOT NULL DEFAULT(1),
-    [Id_Utilisateur_Creation] INT NULL,
-    [Date_Heure_Creation] DATETIME NOT NULL DEFAULT(GETDATE()),
-    [Id_Utilisateur_Maj] INT NULL,
-    [Date_Heure_Maj] DATETIME NULL,
-    CONSTRAINT [PK_t_vigilog_configuration] PRIMARY KEY ([Id_VigiLog_Configuration])
+  CREATE TABLE dbo.[t_commentaire_acquittement_alarme] (
+    [Id_Commentaire] INT IDENTITY(1,1) NOT NULL,
+    [Type_Commentaire] VARCHAR(50) NULL,
+    [Texte] VARCHAR(255) NULL,
+    CONSTRAINT [PK_t_commentaire_acquittement_alarme] PRIMARY KEY ([Id_Commentaire])
   );
 END;
 GO
+IF OBJECT_ID(N'dbo.t_commentaire_acquittement_alarme', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_commentaire_acquittement_alarme') AND name=N'IDX_Type_Commentaire')
+  CREATE INDEX [IDX_Type_Commentaire] ON dbo.[t_commentaire_acquittement_alarme] ([Type_Commentaire]);
 GO
-IF OBJECT_ID(N'dbo.t_vigilog_configuration', N'U') IS NOT NULL AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'UX_t_vigilog_configuration_Nom_Configuration' AND object_id = OBJECT_ID(N'dbo.t_vigilog_configuration')) CREATE UNIQUE INDEX [UX_t_vigilog_configuration_Nom_Configuration] ON dbo.[t_vigilog_configuration]([Nom_Configuration]) WHERE [Nom_Configuration] IS NOT NULL;
+IF OBJECT_ID(N'dbo.t_commentaire_acquittement_alarme', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_commentaire_acquittement_alarme') AND name=N'IDX_Texte')
+  CREATE INDEX [IDX_Texte] ON dbo.[t_commentaire_acquittement_alarme] ([Texte]);
+GO
+
+IF OBJECT_ID(N'dbo.t_etalon', N'U') IS NULL
+BEGIN
+  CREATE TABLE dbo.[t_etalon] (
+    [Id_Etalon] INT IDENTITY(1,1) NOT NULL,
+    [Etalon_Numero_Serie] VARCHAR(50) NULL,
+    [Est_Archive] BIT NULL DEFAULT('0'),
+    [Etat_Etalon] VARCHAR(1) NULL,
+    [Port_Serie] VARCHAR(10) NULL,
+    [Est_Sonde_Externe] BIT NULL,
+    [Coeff_A] FLOAT NULL,
+    [Coeff_B] FLOAT NULL,
+    [Coeff_C] FLOAT NULL,
+    [Incertitude_Max] FLOAT NULL,
+    [Nb_Decimale] INT NULL,
+    [Reserve_MC2] VARCHAR(50) NULL,
+    [Id_Worker] INT NULL,
+    [Id_Module] INT NULL,
+    CONSTRAINT [PK_t_etalon] PRIMARY KEY ([Id_Etalon])
+  );
+END;
+GO
+IF OBJECT_ID(N'dbo.t_etalon', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_etalon') AND name=N'EtalonNumeroSerie_IDX')
+  CREATE UNIQUE INDEX [EtalonNumeroSerie_IDX] ON dbo.[t_etalon] ([Etalon_Numero_Serie]) WHERE [Etalon_Numero_Serie] IS NOT NULL;
+GO
+
+IF OBJECT_ID(N'dbo.t_etalon_type', N'U') IS NULL
+BEGIN
+  CREATE TABLE dbo.[t_etalon_type] (
+    [Type_Etalon] VARCHAR(4) NOT NULL,
+    [Nom] VARCHAR(30) NULL,
+    [Descriptif] VARCHAR(100) NULL,
+    [Est_Saisie_Module] BIT NULL DEFAULT('0'),
+    [Est_Sonde_Externe] BIT NULL DEFAULT('0'),
+    [Resolution] FLOAT NULL,
+    CONSTRAINT [PK_t_etalon_type] PRIMARY KEY ([Type_Etalon])
+  );
+END;
+GO
+
+IF OBJECT_ID(N'dbo.t_etalonnage', N'U') IS NULL
+BEGIN
+  CREATE TABLE dbo.[t_etalonnage] (
+    [Id_Etalonnage] INT IDENTITY(1,1) NOT NULL,
+    [Date_Heure_Etalonnage] DATETIME NULL,
+    [Sonde_Numero_Serie] VARCHAR(50) NULL,
+    [Date_Validite] DATE NULL,
+    [Duree_Validite_Jours] INT NULL,
+    [Valide] DATETIME NULL,
+    [Operateur] VARCHAR(255) NULL,
+    [Etalon_Numero_Serie] VARCHAR(50) NULL,
+    [Date_Certif] DATE NULL,
+    [Organisme] VARCHAR(50) NULL,
+    [Num_Certif] VARCHAR(50) NULL,
+    [Unite] VARCHAR(10) NULL,
+    [Incertitude] FLOAT NULL,
+    [Moyenne_Etalon] FLOAT NULL,
+    [Moyenne_Sonde] FLOAT NULL,
+    [Repetabilite] VARCHAR(50) NULL,
+    [Id_Bain] INT NULL,
+    [Err_Justesse] FLOAT NULL,
+    CONSTRAINT [PK_t_etalonnage] PRIMARY KEY ([Id_Etalonnage])
+  );
+END;
+GO
+IF OBJECT_ID(N'dbo.t_etalonnage', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_etalonnage') AND name=N'IDX_Date_Heure_Etalonnage')
+  CREATE INDEX [IDX_Date_Heure_Etalonnage] ON dbo.[t_etalonnage] ([Date_Heure_Etalonnage]);
+GO
+IF OBJECT_ID(N'dbo.t_etalonnage', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_etalonnage') AND name=N'IDX_Sonde_Numero_Serie')
+  CREATE INDEX [IDX_Sonde_Numero_Serie] ON dbo.[t_etalonnage] ([Sonde_Numero_Serie]);
+GO
+IF OBJECT_ID(N'dbo.t_etalonnage', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_etalonnage') AND name=N'IDX_Etalon_Numero_Serie')
+  CREATE INDEX [IDX_Etalon_Numero_Serie] ON dbo.[t_etalonnage] ([Etalon_Numero_Serie]);
+GO
+IF OBJECT_ID(N'dbo.t_etalonnage', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_etalonnage') AND name=N'IDX_Date_Certif')
+  CREATE INDEX [IDX_Date_Certif] ON dbo.[t_etalonnage] ([Date_Certif]);
+GO
+IF OBJECT_ID(N'dbo.t_etalonnage', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_etalonnage') AND name=N'IDX_Organisme')
+  CREATE INDEX [IDX_Organisme] ON dbo.[t_etalonnage] ([Organisme]);
+GO
+IF OBJECT_ID(N'dbo.t_etalonnage', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_etalonnage') AND name=N'IDX_Num_Certif')
+  CREATE INDEX [IDX_Num_Certif] ON dbo.[t_etalonnage] ([Num_Certif]);
+GO
+IF OBJECT_ID(N'dbo.t_etalonnage', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_etalonnage') AND name=N'IDX_Unite')
+  CREATE INDEX [IDX_Unite] ON dbo.[t_etalonnage] ([Unite]);
+GO
+IF OBJECT_ID(N'dbo.t_etalonnage', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_etalonnage') AND name=N'IDX_Moyenne_Etalon')
+  CREATE INDEX [IDX_Moyenne_Etalon] ON dbo.[t_etalonnage] ([Moyenne_Etalon]);
+GO
+IF OBJECT_ID(N'dbo.t_etalonnage', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_etalonnage') AND name=N'IDX_Moyenne_Sonde')
+  CREATE INDEX [IDX_Moyenne_Sonde] ON dbo.[t_etalonnage] ([Moyenne_Sonde]);
+GO
+IF OBJECT_ID(N'dbo.t_etalonnage', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_etalonnage') AND name=N'IDX_Repetabilite')
+  CREATE INDEX [IDX_Repetabilite] ON dbo.[t_etalonnage] ([Repetabilite]);
+GO
+IF OBJECT_ID(N'dbo.t_etalonnage', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_etalonnage') AND name=N'IDX_Id_Bain')
+  CREATE INDEX [IDX_Id_Bain] ON dbo.[t_etalonnage] ([Id_Bain]);
+GO
+IF OBJECT_ID(N'dbo.t_etalonnage', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_etalonnage') AND name=N'IDX_Incertitude')
+  CREATE INDEX [IDX_Incertitude] ON dbo.[t_etalonnage] ([Incertitude]);
+GO
+
+IF OBJECT_ID(N'dbo.t_etalonnage_mesure', N'U') IS NULL
+BEGIN
+  CREATE TABLE dbo.[t_etalonnage_mesure] (
+    [Id_Etalonnage_Mesure_Sonde] INT IDENTITY(1,1) NOT NULL,
+    [Id_Etalonnage] INT NULL,
+    [Numero_Ordre] INT NULL,
+    [Mesure_Sonde] FLOAT NULL,
+    [Mesure_Etalon] FLOAT NULL,
+    CONSTRAINT [PK_t_etalonnage_mesure] PRIMARY KEY ([Id_Etalonnage_Mesure_Sonde])
+  );
+END;
+GO
+IF OBJECT_ID(N'dbo.t_etalonnage_mesure', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_etalonnage_mesure') AND name=N'IDX_Id_Etalonnage')
+  CREATE INDEX [IDX_Id_Etalonnage] ON dbo.[t_etalonnage_mesure] ([Id_Etalonnage]);
+GO
+
+IF OBJECT_ID(N'dbo.t_etat_surveillance', N'U') IS NULL
+BEGIN
+  CREATE TABLE dbo.[t_etat_surveillance] (
+    [Id_Surveillance_Etat] INT IDENTITY(1,1) NOT NULL,
+    [Surveillance_Etat] VARCHAR(1) NULL,
+    [Surveillance_Etat_Libelle] VARCHAR(50) NULL,
+    CONSTRAINT [PK_t_etat_surveillance] PRIMARY KEY ([Id_Surveillance_Etat])
+  );
+END;
+GO
+IF OBJECT_ID(N'dbo.t_etat_surveillance', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_etat_surveillance') AND name=N't_etat_surveillance_Surveillance_Etat_key')
+  CREATE UNIQUE INDEX [t_etat_surveillance_Surveillance_Etat_key] ON dbo.[t_etat_surveillance] ([Surveillance_Etat]) WHERE [Surveillance_Etat] IS NOT NULL;
+GO
+
+IF OBJECT_ID(N'dbo.t_groupe', N'U') IS NULL
+BEGIN
+  CREATE TABLE dbo.[t_groupe] (
+    [Id_Groupe] INT IDENTITY(1,1) NOT NULL,
+    [Nom_Groupe] VARCHAR(64) NULL,
+    [Numero_Regroupement] VARCHAR(1) NULL,
+    [Est_Archive] BIT NULL DEFAULT('0'),
+    CONSTRAINT [PK_t_groupe] PRIMARY KEY ([Id_Groupe])
+  );
+END;
+GO
+IF OBJECT_ID(N'dbo.t_groupe', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_groupe') AND name=N'Groupe_NomGroupe_IDX')
+  CREATE UNIQUE INDEX [Groupe_NomGroupe_IDX] ON dbo.[t_groupe] ([Nom_Groupe]) WHERE [Nom_Groupe] IS NOT NULL;
+GO
+IF OBJECT_ID(N'dbo.t_groupe', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_groupe') AND name=N'IDX_Numero_Regroupement')
+  CREATE INDEX [IDX_Numero_Regroupement] ON dbo.[t_groupe] ([Numero_Regroupement]);
+GO
+
+IF OBJECT_ID(N'dbo.t_liaison_profil_autorisation', N'U') IS NULL
+BEGIN
+  CREATE TABLE dbo.[t_liaison_profil_autorisation] (
+    [Id_Profil] INT NOT NULL,
+    [Id_Autorisation] INT NOT NULL,
+    CONSTRAINT [PK_t_liaison_profil_autorisation] PRIMARY KEY ([Id_Profil], [Id_Autorisation])
+  );
+END;
+GO
+IF OBJECT_ID(N'dbo.t_liaison_profil_autorisation', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_liaison_profil_autorisation') AND name=N'IDX_IdProfil')
+  CREATE INDEX [IDX_IdProfil] ON dbo.[t_liaison_profil_autorisation] ([Id_Profil]);
+GO
+IF OBJECT_ID(N'dbo.t_liaison_profil_autorisation', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_liaison_profil_autorisation') AND name=N'IDX_IdAutorisation')
+  CREATE INDEX [IDX_IdAutorisation] ON dbo.[t_liaison_profil_autorisation] ([Id_Autorisation]);
+GO
+
+IF OBJECT_ID(N'dbo.t_liaison_utilisateur_groupe', N'U') IS NULL
+BEGIN
+  CREATE TABLE dbo.[t_liaison_utilisateur_groupe] (
+    [Id_Liaison_u_g] INT IDENTITY(1,1) NOT NULL,
+    [Id_Utilisateur] INT NOT NULL,
+    [Id_Groupe] INT NULL,
+    CONSTRAINT [PK_t_liaison_utilisateur_groupe] PRIMARY KEY ([Id_Liaison_u_g])
+  );
+END;
+GO
+IF OBJECT_ID(N'dbo.t_liaison_utilisateur_groupe', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_liaison_utilisateur_groupe') AND name=N'IDX_IdUtilisateur')
+  CREATE INDEX [IDX_IdUtilisateur] ON dbo.[t_liaison_utilisateur_groupe] ([Id_Utilisateur]);
+GO
+IF OBJECT_ID(N'dbo.t_liaison_utilisateur_groupe', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_liaison_utilisateur_groupe') AND name=N'IDX_IdGroupe')
+  CREATE INDEX [IDX_IdGroupe] ON dbo.[t_liaison_utilisateur_groupe] ([Id_Groupe]);
+GO
+
+IF OBJECT_ID(N'dbo.t_liaison_utilisateur_site', N'U') IS NULL
+BEGIN
+  CREATE TABLE dbo.[t_liaison_utilisateur_site] (
+    [Id_Liaison] INT IDENTITY(1,1) NOT NULL,
+    [Id_Utilisateur] INT NULL,
+    [Id_Site] INT NULL,
+    [Date_Affectation] DATETIME NULL,
+    CONSTRAINT [PK_t_liaison_utilisateur_site] PRIMARY KEY ([Id_Liaison])
+  );
+END;
+GO
+IF OBJECT_ID(N'dbo.t_liaison_utilisateur_site', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_liaison_utilisateur_site') AND name=N'UK_USER_SITE')
+  CREATE UNIQUE INDEX [UK_USER_SITE] ON dbo.[t_liaison_utilisateur_site] ([Id_Utilisateur], [Id_Site]) WHERE [Id_Utilisateur] IS NOT NULL AND [Id_Site] IS NOT NULL;
+GO
+IF OBJECT_ID(N'dbo.t_liaison_utilisateur_site', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_liaison_utilisateur_site') AND name=N'IDX_IdUtilisateur')
+  CREATE INDEX [IDX_IdUtilisateur] ON dbo.[t_liaison_utilisateur_site] ([Id_Utilisateur]);
+GO
+IF OBJECT_ID(N'dbo.t_liaison_utilisateur_site', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_liaison_utilisateur_site') AND name=N'IDX_IdSite')
+  CREATE INDEX [IDX_IdSite] ON dbo.[t_liaison_utilisateur_site] ([Id_Site]);
+GO
+IF OBJECT_ID(N'dbo.t_liaison_utilisateur_site', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_liaison_utilisateur_site') AND name=N'IDX_DateAffectation')
+  CREATE INDEX [IDX_DateAffectation] ON dbo.[t_liaison_utilisateur_site] ([Date_Affectation]);
+GO
+
+IF OBJECT_ID(N'dbo.t_lieu', N'U') IS NULL
+BEGIN
+  CREATE TABLE dbo.[t_lieu] (
+    [Id_Lieu] INT IDENTITY(1,1) NOT NULL,
+    [Id_Site] INT NULL,
+    [Nom_Lieu] VARCHAR(30) NULL,
+    [Sonde_Numero_Serie] VARCHAR(50) NULL,
+    [Adresse_Sonde] VARCHAR(50) NULL,
+    [Consigne] FLOAT NULL,
+    [Observations_Info] NVARCHAR(MAX) NULL,
+    [Consigne_Sup] FLOAT NULL,
+    [Tolerance_Surveillance_Sup] FLOAT NULL,
+    [Est_Consigne_Sup_Active] BIT NULL DEFAULT('0'),
+    [Consigne_Sup_Pre_Alarme] FLOAT NULL,
+    [Est_Consigne_Sup_Pre_Alarme_Active] BIT NULL DEFAULT('0'),
+    [Consigne_Inf] FLOAT NULL,
+    [Tolerance_Surveillance_Inf] FLOAT NULL,
+    [Est_Consigne_Inf_Active] BIT NULL DEFAULT('0'),
+    [Consigne_Inf_Pre_Alarme] FLOAT NULL,
+    [Est_Consigne_Inf_Pre_Alarme_Active] BIT NULL DEFAULT('0'),
+    [Frequence] INT NULL,
+    [Lieu_Etat] VARCHAR(1) NULL DEFAULT('D'),
+    [Retard_Alarme_Haut] INT NULL,
+    [Retard_Alarme_Bas] INT NULL,
+    [Id_Plan] INT NULL,
+    [Position_Plan_X] BIGINT NULL,
+    [Position_Plan_Y] BIGINT NULL,
+    [Date_Creation] DATETIME NULL DEFAULT(GETDATE()),
+    [Est_Archive] BIT NULL DEFAULT('0'),
+    [Est_Tel_Actif] BIT NULL DEFAULT('0'),
+    [Tel_Code] VARCHAR(4) NULL,
+    [Tel_Son_Lieu] VARCHAR(260) NULL,
+    [Id_Actionneur] INT NULL,
+    [Est_Mode_Serotheque] BIT NULL DEFAULT('0'),
+    [Coef_Sensibilite] INT NULL,
+    [Id_PDF] INT NULL,
+    [Est_DataLogger] BIT NULL DEFAULT('0'),
+    [EMT] FLOAT NULL,
+    [EMT_Choix_Mode] INT NULL DEFAULT('4'),
+    [EMT_Sonde] FLOAT NULL,
+    [Retard_Alarme_Changement_Consigne] INT NULL,
+    [Derniere_Date_Heure] DATETIME NULL,
+    [Derniere_Valeur] FLOAT NULL,
+    [Derniere_Unite] VARCHAR(10) NULL,
+    [Derniere_Nb_Decimal] INT NULL DEFAULT('2'),
+    [Est_Lieu_En_Alarme] TINYINT NULL DEFAULT('0'),
+    [Est_Lieu_Alarme_Terminee_Non_Acquittee] TINYINT NULL DEFAULT('0'),
+    [Est_Auto_Acquittement_Non_Reponse] BIT NOT NULL DEFAULT('0'),
+    [Est_Lieu_Alarme_Terminee_Non_Acquittee_T1] TINYINT NULL DEFAULT('0'),
+    [Est_Lieu_En_Pre_Alarme] TINYINT NULL DEFAULT('0'),
+    [Id_Alarme] INT NULL DEFAULT('0'),
+    [Lieu_Etat_N1] VARCHAR(50) NULL,
+    [Derniere_Date_Etalonnage] DATE NULL,
+    [Derniere_Erreur_Justesse] FLOAT NULL,
+    [Derniere_Incertitude] FLOAT NULL,
+    [Retard_Non_Reponse] INT NULL DEFAULT('60'),
+    [Date_Heure_Derniere_Reponse] DATETIME NULL,
+    [Date_Heure_Derniere_Reponse_Recue_OK] DATETIME NULL,
+    [Est_Correction_Ej] TINYINT NULL DEFAULT('0'),
+    [Derive] FLOAT NULL DEFAULT('0'),
+    [Est_Correction_derive] BIT NULL DEFAULT('0'),
+    [Derniere_Valeur_Null] INT NULL DEFAULT('0'),
+    [Type_Lieu] VARCHAR(20) NULL,
+    [Date_Heure_Dernier_Acquittement_En_Cours] DATETIME NULL,
+    [Date_Heure_Last_Update_EVT_GSO] DATETIME NULL,
+    [Date_Heure_Reactivation_Alarme] DATETIME NULL,
+    [Notification_Active] BIT NOT NULL DEFAULT('1'),
+    [Commentaire] VARCHAR(200) NULL,
+    [Infos_Modifiees_Depuis_Derniere_Mesure] BIT NOT NULL DEFAULT('1'),
+    [Date_Heure_Reactivation_Surveillance] DATETIME NULL,
+    [Date_Heure_Surveillance_On] DATETIME NULL,
+    [Date_Heure_Surveillance_Off] DATETIME NULL,
+    [Derniere_Val_Rssi] VARCHAR(10) NULL,
+    [Derniere_Val_Batterie] INT NULL,
+    [Derniere_Val_Tension] VARCHAR(10) NULL,
+    [Est_Lieu_GSO] BIT NULL DEFAULT('0'),
+    [Est_Son_Alarme_Active] BIT NOT NULL DEFAULT('1'),
+    [Est_Redeclenchement_Immediat] BIT NOT NULL DEFAULT('0'),
+    [Nb_Mesures_Temporisation_Redeclenchement] INT NULL DEFAULT('0'),
+    [Planning_Actif] BIT NOT NULL DEFAULT('0'),
+    [Planning_Source_Regle_Id] INT NULL,
+    [Planning_Derniere_Maj] DATETIME NULL,
+    [Planning_Regle_Existe] BIT NOT NULL DEFAULT('0'),
+    [Consigne_Base] FLOAT NULL,
+    [Consigne_Sup_Base] FLOAT NULL,
+    [Consigne_Inf_Base] FLOAT NULL,
+    [Tolerance_Surveillance_Sup_Base] FLOAT NULL,
+    [Tolerance_Surveillance_Inf_Base] FLOAT NULL,
+    [Est_Remontee_Memoire_A_Faire] BIT NOT NULL DEFAULT('0'),
+    [Est_Acq_Auto_Alarme_NR] BIT NOT NULL DEFAULT('0'),
+    CONSTRAINT [PK_t_lieu] PRIMARY KEY ([Id_Lieu])
+  );
+END;
+GO
+IF OBJECT_ID(N'dbo.t_lieu', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_lieu') AND name=N'IDX_Lieu_Etat')
+  CREATE INDEX [IDX_Lieu_Etat] ON dbo.[t_lieu] ([Lieu_Etat]);
+GO
+IF OBJECT_ID(N'dbo.t_lieu', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_lieu') AND name=N'IDX_Id_Plan')
+  CREATE INDEX [IDX_Id_Plan] ON dbo.[t_lieu] ([Id_Plan]);
+GO
+IF OBJECT_ID(N'dbo.t_lieu', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_lieu') AND name=N'IDX_Est_Archive')
+  CREATE INDEX [IDX_Est_Archive] ON dbo.[t_lieu] ([Est_Archive]);
+GO
+IF OBJECT_ID(N'dbo.t_lieu', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_lieu') AND name=N'IDX_Sonde_Numero_Serie')
+  CREATE INDEX [IDX_Sonde_Numero_Serie] ON dbo.[t_lieu] ([Sonde_Numero_Serie]);
+GO
+IF OBJECT_ID(N'dbo.t_lieu', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_lieu') AND name=N'IDX_Est_Tel_Actif')
+  CREATE INDEX [IDX_Est_Tel_Actif] ON dbo.[t_lieu] ([Est_Tel_Actif]);
+GO
+IF OBJECT_ID(N'dbo.t_lieu', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_lieu') AND name=N'IDX_Tel_Code')
+  CREATE INDEX [IDX_Tel_Code] ON dbo.[t_lieu] ([Tel_Code]);
+GO
+IF OBJECT_ID(N'dbo.t_lieu', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_lieu') AND name=N'IDX_Tel_Son_Lieu')
+  CREATE INDEX [IDX_Tel_Son_Lieu] ON dbo.[t_lieu] ([Tel_Son_Lieu]);
+GO
+IF OBJECT_ID(N'dbo.t_lieu', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_lieu') AND name=N'IDX_Id_Actionneur')
+  CREATE INDEX [IDX_Id_Actionneur] ON dbo.[t_lieu] ([Id_Actionneur]);
+GO
+IF OBJECT_ID(N'dbo.t_lieu', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_lieu') AND name=N'IDX_Id_Site')
+  CREATE INDEX [IDX_Id_Site] ON dbo.[t_lieu] ([Id_Site]);
+GO
+IF OBJECT_ID(N'dbo.t_lieu', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_lieu') AND name=N'IDX_Id_PDF')
+  CREATE INDEX [IDX_Id_PDF] ON dbo.[t_lieu] ([Id_PDF]);
+GO
+IF OBJECT_ID(N'dbo.t_lieu', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_lieu') AND name=N'IDX_Nom_Lieu')
+  CREATE INDEX [IDX_Nom_Lieu] ON dbo.[t_lieu] ([Nom_Lieu]);
+GO
+IF OBJECT_ID(N'dbo.t_lieu', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_lieu') AND name=N'idx_lieu_gso_etat')
+  CREATE INDEX [idx_lieu_gso_etat] ON dbo.[t_lieu] ([Est_Lieu_GSO], [Lieu_Etat]);
+GO
+IF OBJECT_ID(N'dbo.t_lieu', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_lieu') AND name=N'IDX_Date_Creation')
+  CREATE INDEX [IDX_Date_Creation] ON dbo.[t_lieu] ([Date_Creation]);
+GO
+
+IF OBJECT_ID(N'dbo.t_lieu_groupe', N'U') IS NULL
+BEGIN
+  CREATE TABLE dbo.[t_lieu_groupe] (
+    [Id_Lieu] INT NOT NULL,
+    [Id_Groupe] INT NOT NULL,
+    CONSTRAINT [PK_t_lieu_groupe] PRIMARY KEY ([Id_Lieu], [Id_Groupe])
+  );
+END;
+GO
+IF OBJECT_ID(N'dbo.t_lieu_groupe', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_lieu_groupe') AND name=N'IDX_LIEU_GROUPE_Id_Groupe')
+  CREATE INDEX [IDX_LIEU_GROUPE_Id_Groupe] ON dbo.[t_lieu_groupe] ([Id_Groupe]);
+GO
+IF OBJECT_ID(N'dbo.t_lieu_groupe', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_lieu_groupe') AND name=N'IDX_LIEU_GROUPE_Id_Lieu')
+  CREATE INDEX [IDX_LIEU_GROUPE_Id_Lieu] ON dbo.[t_lieu_groupe] ([Id_Lieu]);
+GO
+
+IF OBJECT_ID(N'dbo.t_lieu_mail_tel', N'U') IS NULL
+BEGIN
+  CREATE TABLE dbo.[t_lieu_mail_tel] (
+    [Id_Mail_Tel] INT IDENTITY(1,1) NOT NULL,
+    [Id_Lieu] INT NULL,
+    [Ordre_Contact] INT NULL,
+    [Id_Utilisateur] INT NULL,
+    [Est_Via_Telephone] BIT NULL,
+    [Est_Via_Email] BIT NULL,
+    CONSTRAINT [PK_t_lieu_mail_tel] PRIMARY KEY ([Id_Mail_Tel])
+  );
+END;
+GO
+IF OBJECT_ID(N'dbo.t_lieu_mail_tel', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_lieu_mail_tel') AND name=N'IDX_Id_Lieu')
+  CREATE INDEX [IDX_Id_Lieu] ON dbo.[t_lieu_mail_tel] ([Id_Lieu]);
+GO
+IF OBJECT_ID(N'dbo.t_lieu_mail_tel', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_lieu_mail_tel') AND name=N'IDX_Id_Utilisateur')
+  CREATE INDEX [IDX_Id_Utilisateur] ON dbo.[t_lieu_mail_tel] ([Id_Utilisateur]);
+GO
+
+IF OBJECT_ID(N'dbo.t_lieu_planning', N'U') IS NULL
+BEGIN
+  CREATE TABLE dbo.[t_lieu_planning] (
+    [Id_Lieu_Planning] INT IDENTITY(1,1) NOT NULL,
+    [Id_Lieu] INT NULL,
+    [Est_Id_Jour] BIT NULL,
+    [Est_Actif] BIT NULL DEFAULT('1'),
+    [Heure_Debut_Periode1] VARCHAR(4) NULL DEFAULT('0000'),
+    [Heure_Fin_Periode1] VARCHAR(4) NULL DEFAULT('0000'),
+    [Heure_Debut_Periode2] VARCHAR(4) NULL DEFAULT('0000'),
+    [Heure_Fin_Periode2] VARCHAR(4) NULL DEFAULT('0000'),
+    CONSTRAINT [PK_t_lieu_planning] PRIMARY KEY ([Id_Lieu_Planning])
+  );
+END;
+GO
+IF OBJECT_ID(N'dbo.t_lieu_planning', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_lieu_planning') AND name=N'IdLieuJour')
+  CREATE UNIQUE INDEX [IdLieuJour] ON dbo.[t_lieu_planning] ([Id_Lieu], [Est_Id_Jour]) WHERE [Id_Lieu] IS NOT NULL AND [Est_Id_Jour] IS NOT NULL;
+GO
+IF OBJECT_ID(N'dbo.t_lieu_planning', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_lieu_planning') AND name=N'IDX_Id_Lieu')
+  CREATE INDEX [IDX_Id_Lieu] ON dbo.[t_lieu_planning] ([Id_Lieu]);
+GO
+
+IF OBJECT_ID(N'dbo.t_lieu_planning_audit', N'U') IS NULL
+BEGIN
+  CREATE TABLE dbo.[t_lieu_planning_audit] (
+    [Id_Audit] INT IDENTITY(1,1) NOT NULL,
+    [Id_Lieu] INT NOT NULL,
+    [Timestamp] DATETIME NOT NULL DEFAULT(GETDATE()),
+    [Date_Heure_Debut_Changement] DATETIME NULL,
+    [Date_Heure_Fin_Changement] DATETIME NULL,
+    [Type] VARCHAR(10) NOT NULL,
+    [Planning_Regle_Id] INT NULL,
+    [Consigne_Avant] FLOAT NULL,
+    [Tolerance_Surveillance_Sup_Avant] FLOAT NULL,
+    [Tolerance_Surveillance_Inf_Avant] FLOAT NULL,
+    [Consigne_Apres] FLOAT NULL,
+    [Tolerance_Surveillance_Sup_Apres] FLOAT NULL,
+    [Tolerance_Surveillance_Inf_Apres] FLOAT NULL,
+    CONSTRAINT [CK_t_lieu_planning_audit_Type] CHECK ([Type] IN ('PLAN_APPLY')),
+    CONSTRAINT [PK_t_lieu_planning_audit] PRIMARY KEY ([Id_Audit])
+  );
+END;
+GO
+IF OBJECT_ID(N'dbo.t_lieu_planning_audit', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_lieu_planning_audit') AND name=N'IDX_Id_Lieu_Timestamp')
+  CREATE INDEX [IDX_Id_Lieu_Timestamp] ON dbo.[t_lieu_planning_audit] ([Id_Lieu], [Timestamp]);
+GO
+
+IF OBJECT_ID(N'dbo.t_lieu_planning_regle', N'U') IS NULL
+BEGIN
+  CREATE TABLE dbo.[t_lieu_planning_regle] (
+    [Id_Regle] INT IDENTITY(1,1) NOT NULL,
+    [Id_Lieu] INT NOT NULL,
+    [Actif] BIT NOT NULL DEFAULT('1'),
+    [Jour_Debut] TINYINT NOT NULL,
+    [Heure_Debut] TIME NOT NULL,
+    [Jour_Fin] TINYINT NOT NULL,
+    [Heure_Fin] TIME NOT NULL,
+    [Consigne] FLOAT NULL,
+    [Consigne_Sup] FLOAT NULL,
+    [Consigne_Inf] FLOAT NULL,
+    [Priorite] INT NOT NULL DEFAULT('0'),
+    [Tolerance_Sup_Calc] FLOAT NULL,
+    [Tolerance_Inf_Calc] FLOAT NULL,
+    [Date_Creation] DATETIME NOT NULL DEFAULT(GETDATE()),
+    [Date_Maj] DATETIME NULL,
+    [Retard_Alarme_Changement_Consigne] INT NULL,
+    CONSTRAINT [PK_t_lieu_planning_regle] PRIMARY KEY ([Id_Regle])
+  );
+END;
+GO
+IF OBJECT_ID(N'dbo.t_lieu_planning_regle', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_lieu_planning_regle') AND name=N'IDX_Id_Lieu')
+  CREATE INDEX [IDX_Id_Lieu] ON dbo.[t_lieu_planning_regle] ([Id_Lieu]);
+GO
+IF OBJECT_ID(N'dbo.t_lieu_planning_regle', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_lieu_planning_regle') AND name=N'IDX_Actif_Lieu')
+  CREATE INDEX [IDX_Actif_Lieu] ON dbo.[t_lieu_planning_regle] ([Actif], [Id_Lieu]);
+GO
+
+IF OBJECT_ID(N'dbo.t_lieu_template', N'U') IS NULL
+BEGIN
+  CREATE TABLE dbo.[t_lieu_template] (
+    [Id_Lieu_Template] INT IDENTITY(1,1) NOT NULL,
+    [Nom_Template] VARCHAR(80) NOT NULL,
+    [Description] VARCHAR(255) NULL,
+    [Lieu_Etat] VARCHAR(1) NOT NULL DEFAULT('D'),
+    [Frequence] INT NULL,
+    [Retard_Alarme_Haut] INT NULL,
+    [Retard_Alarme_Bas] INT NULL,
+    [Retard_Non_Reponse] INT NULL DEFAULT('60'),
+    [Retard_Alarme_Changement_Consigne] INT NULL,
+    [Consigne] DECIMAL(10,2) NULL,
+    [Consigne_Sup] DECIMAL(10,2) NULL,
+    [Consigne_Inf] DECIMAL(10,2) NULL,
+    [Tolerance_Surveillance_Sup] DECIMAL(10,2) NULL,
+    [Tolerance_Surveillance_Inf] DECIMAL(10,2) NULL,
+    [Consigne_Sup_Pre_Alarme] DECIMAL(10,2) NULL,
+    [Consigne_Inf_Pre_Alarme] DECIMAL(10,2) NULL,
+    [Est_Consigne_Sup_Active] BIT NOT NULL DEFAULT('0'),
+    [Est_Consigne_Inf_Active] BIT NOT NULL DEFAULT('0'),
+    [Est_Consigne_Sup_Pre_Alarme_Active] BIT NOT NULL DEFAULT('0'),
+    [Est_Consigne_Inf_Pre_Alarme_Active] BIT NOT NULL DEFAULT('0'),
+    [Est_Son_Alarme_Active] BIT NOT NULL DEFAULT('1'),
+    [Est_Redeclenchement_Immediat] BIT NOT NULL DEFAULT('0'),
+    [Nb_Mesures_Temporisation_Redeclenchement] INT NULL DEFAULT('0'),
+    [Observations_Info] NVARCHAR(MAX) NULL,
+    [Est_Archive] BIT NOT NULL DEFAULT('0'),
+    [Date_Creation] DATETIME NOT NULL DEFAULT(GETDATE()),
+    [Date_Maj] DATETIME NOT NULL DEFAULT(GETDATE()),
+    [Id_Utilisateur_Creation] INT NULL,
+    [Id_Utilisateur_Maj] INT NULL,
+    CONSTRAINT [PK_t_lieu_template] PRIMARY KEY ([Id_Lieu_Template])
+  );
+END;
+GO
+IF OBJECT_ID(N'dbo.t_lieu_template', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_lieu_template') AND name=N'UK_t_lieu_template_nom')
+  CREATE UNIQUE INDEX [UK_t_lieu_template_nom] ON dbo.[t_lieu_template] ([Nom_Template]);
+GO
+IF OBJECT_ID(N'dbo.t_lieu_template', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_lieu_template') AND name=N'IDX_t_lieu_template_archive')
+  CREATE INDEX [IDX_t_lieu_template_archive] ON dbo.[t_lieu_template] ([Est_Archive]);
+GO
+IF OBJECT_ID(N'dbo.t_lieu_template', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_lieu_template') AND name=N'IDX_t_lieu_template_user_create')
+  CREATE INDEX [IDX_t_lieu_template_user_create] ON dbo.[t_lieu_template] ([Id_Utilisateur_Creation]);
+GO
+IF OBJECT_ID(N'dbo.t_lieu_template', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_lieu_template') AND name=N'IDX_t_lieu_template_user_update')
+  CREATE INDEX [IDX_t_lieu_template_user_update] ON dbo.[t_lieu_template] ([Id_Utilisateur_Maj]);
+GO
+
+IF OBJECT_ID(N'dbo.t_materiel', N'U') IS NULL
+BEGIN
+  CREATE TABLE dbo.[t_materiel] (
+    [Id_Materiel] INT IDENTITY(1,1) NOT NULL,
+    [Ref_Commercial] VARCHAR(50) NOT NULL DEFAULT(''),
+    [Designation] VARCHAR(100) NOT NULL DEFAULT(''),
+    [Descriptif] VARCHAR(1000) NOT NULL DEFAULT(''),
+    [Gamme] VARCHAR(10) NOT NULL DEFAULT(''),
+    [Type] VARCHAR(10) NOT NULL DEFAULT(''),
+    [Chemin_Image] VARCHAR(500) NULL,
+    CONSTRAINT [PK_t_materiel] PRIMARY KEY ([Id_Materiel])
+  );
+END;
+GO
+IF OBJECT_ID(N'dbo.t_materiel', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_materiel') AND name=N'Id_Materiel')
+  CREATE INDEX [Id_Materiel] ON dbo.[t_materiel] ([Id_Materiel]);
+GO
+
+IF OBJECT_ID(N'dbo.t_milieu_inter', N'U') IS NULL
+BEGIN
+  CREATE TABLE dbo.[t_milieu_inter] (
+    [Id_Milieu] INT IDENTITY(1,1) NOT NULL,
+    [Model] VARCHAR(50) NULL,
+    [Reference] VARCHAR(50) NULL,
+    [Stabilite] FLOAT NULL,
+    [Homogeneite] FLOAT NULL,
+    [Contenu] VARCHAR(50) NULL,
+    [Est_Reserve_MC2] BIT NULL DEFAULT('0'),
+    [Est_Archive] BIT NULL DEFAULT('0'),
+    CONSTRAINT [PK_t_milieu_inter] PRIMARY KEY ([Id_Milieu])
+  );
+END;
+GO
+IF OBJECT_ID(N'dbo.t_milieu_inter', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_milieu_inter') AND name=N'IDX_Model')
+  CREATE INDEX [IDX_Model] ON dbo.[t_milieu_inter] ([Model]);
+GO
+IF OBJECT_ID(N'dbo.t_milieu_inter', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_milieu_inter') AND name=N'IDX_Reference')
+  CREATE INDEX [IDX_Reference] ON dbo.[t_milieu_inter] ([Reference]);
+GO
+
+IF OBJECT_ID(N'dbo.t_module', N'U') IS NULL
+BEGIN
+  CREATE TABLE dbo.[t_module] (
+    [Id_Module] INT IDENTITY(1,1) NOT NULL,
+    [Module_Numero_Serie] VARCHAR(50) NULL,
+    [Type_Module] INT NULL,
+    [Port_Serie] VARCHAR(10) NULL,
+    [Position_Plan_X] BIGINT NULL,
+    [Position_Plan_Y] BIGINT NULL,
+    [Id_Plan] INT NULL,
+    [Adresse_IP] VARCHAR(50) NULL,
+    [Delai_Reseau] INT NULL,
+    [Emplacement] VARCHAR(100) NULL,
+    [Archive] TINYINT NULL DEFAULT('0'),
+    [Id_Worker] INT NULL,
+    [Est_Module_GSO] BIT NOT NULL DEFAULT('0'),
+    [Port_Serie_Send_GSO] VARCHAR(10) NULL,
+    [Port_Serie_Boucle2_GSO] VARCHAR(10) NULL,
+    CONSTRAINT [PK_t_module] PRIMARY KEY ([Id_Module])
+  );
+END;
+GO
+IF OBJECT_ID(N'dbo.t_module', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_module') AND name=N'Identifiant_Module')
+  CREATE UNIQUE INDEX [Identifiant_Module] ON dbo.[t_module] ([Type_Module], [Module_Numero_Serie]) WHERE [Type_Module] IS NOT NULL AND [Module_Numero_Serie] IS NOT NULL;
+GO
+IF OBJECT_ID(N'dbo.t_module', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_module') AND name=N'IDX_Module_Numero_Serie')
+  CREATE INDEX [IDX_Module_Numero_Serie] ON dbo.[t_module] ([Module_Numero_Serie]);
+GO
+IF OBJECT_ID(N'dbo.t_module', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_module') AND name=N'IDX_Type_Module')
+  CREATE INDEX [IDX_Type_Module] ON dbo.[t_module] ([Type_Module]);
+GO
+IF OBJECT_ID(N'dbo.t_module', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_module') AND name=N'IDX_Port_Serie')
+  CREATE INDEX [IDX_Port_Serie] ON dbo.[t_module] ([Port_Serie]);
+GO
+IF OBJECT_ID(N'dbo.t_module', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_module') AND name=N'IDX_Id_Plan')
+  CREATE INDEX [IDX_Id_Plan] ON dbo.[t_module] ([Id_Plan]);
+GO
+
+IF OBJECT_ID(N'dbo.t_module_type', N'U') IS NULL
+BEGIN
+  CREATE TABLE dbo.[t_module_type] (
+    [Id_Module_Type] INT IDENTITY(1,1) NOT NULL,
+    [Libelle_Type_Module] VARCHAR(50) NULL,
+    [Libelle_Module] VARCHAR(100) NULL,
+    [Est_Flag_Affiche_Plan] BIT NULL DEFAULT('0'),
+    CONSTRAINT [PK_t_module_type] PRIMARY KEY ([Id_Module_Type])
+  );
+END;
+GO
+
+IF OBJECT_ID(N'dbo.t_notification', N'U') IS NULL
+BEGIN
+  CREATE TABLE dbo.[t_notification] (
+    [Id_Notification] INT IDENTITY(1,1) NOT NULL,
+    [Type] VARCHAR(32) NOT NULL,
+    [Id_Alarme] INT NULL,
+    [Titre] VARCHAR(128) NULL,
+    [Message] VARCHAR(512) NOT NULL,
+    [Payload_Json] NVARCHAR(MAX) NULL,
+    [Priorite] INT NULL DEFAULT('0'),
+    [Date_Creation] DATETIME NOT NULL DEFAULT(GETDATE()),
+    [Est_Archive] BIT NOT NULL DEFAULT('0'),
+    CONSTRAINT [PK_t_notification] PRIMARY KEY ([Id_Notification])
+  );
+END;
+GO
+IF OBJECT_ID(N'dbo.t_notification', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_notification') AND name=N'IDX_Id_Alarme_Notification')
+  CREATE INDEX [IDX_Id_Alarme_Notification] ON dbo.[t_notification] ([Id_Alarme]);
+GO
+IF OBJECT_ID(N'dbo.t_notification', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_notification') AND name=N'IDX_Date_Creation_Notification')
+  CREATE INDEX [IDX_Date_Creation_Notification] ON dbo.[t_notification] ([Date_Creation]);
+GO
+
+IF OBJECT_ID(N'dbo.t_notification_delivery', N'U') IS NULL
+BEGIN
+  CREATE TABLE dbo.[t_notification_delivery] (
+    [Id_Delivery] INT IDENTITY(1,1) NOT NULL,
+    [Id_Notification] INT NOT NULL,
+    [Id_Poste] INT NOT NULL,
+    [Id_Utilisateur] INT NULL,
+    [Statut] VARCHAR(32) NOT NULL,
+    [Nb_Tentatives] INT NOT NULL DEFAULT('0'),
+    [Derniere_Erreur] VARCHAR(255) NULL,
+    [Date_Queue] DATETIME NOT NULL DEFAULT(GETDATE()),
+    [Date_Envoi] DATETIME NULL,
+    [Date_Ack_Agent] DATETIME NULL,
+    [Date_Dernier_Event] DATETIME NULL,
+    [Correlation_Id] VARCHAR(64) NULL,
+    CONSTRAINT [PK_t_notification_delivery] PRIMARY KEY ([Id_Delivery])
+  );
+END;
+GO
+IF OBJECT_ID(N'dbo.t_notification_delivery', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_notification_delivery') AND name=N'UK_NOTIFICATION_POSTE')
+  CREATE UNIQUE INDEX [UK_NOTIFICATION_POSTE] ON dbo.[t_notification_delivery] ([Id_Notification], [Id_Poste]);
+GO
+IF OBJECT_ID(N'dbo.t_notification_delivery', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_notification_delivery') AND name=N'IDX_STATUT_DELIVERY')
+  CREATE INDEX [IDX_STATUT_DELIVERY] ON dbo.[t_notification_delivery] ([Statut]);
+GO
+IF OBJECT_ID(N'dbo.t_notification_delivery', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_notification_delivery') AND name=N'IDX_Date_Envoi_Delivery')
+  CREATE INDEX [IDX_Date_Envoi_Delivery] ON dbo.[t_notification_delivery] ([Date_Envoi]);
+GO
+IF OBJECT_ID(N'dbo.t_notification_delivery', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_notification_delivery') AND name=N'FK_POSTE_DELIVERY')
+  CREATE INDEX [FK_POSTE_DELIVERY] ON dbo.[t_notification_delivery] ([Id_Poste]);
+GO
+IF OBJECT_ID(N'dbo.t_notification_delivery', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_notification_delivery') AND name=N'FK_UTILISATEUR_DELIVERY')
+  CREATE INDEX [FK_UTILISATEUR_DELIVERY] ON dbo.[t_notification_delivery] ([Id_Utilisateur]);
+GO
+
+IF OBJECT_ID(N'dbo.t_notification_event', N'U') IS NULL
+BEGIN
+  CREATE TABLE dbo.[t_notification_event] (
+    [Id_Event] INT IDENTITY(1,1) NOT NULL,
+    [Id_Delivery] INT NOT NULL,
+    [Event_Type] VARCHAR(32) NOT NULL,
+    [Event_Data] NVARCHAR(MAX) NULL,
+    [Date_Event] DATETIME NOT NULL DEFAULT(GETDATE()),
+    CONSTRAINT [PK_t_notification_event] PRIMARY KEY ([Id_Event])
+  );
+END;
+GO
+IF OBJECT_ID(N'dbo.t_notification_event', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_notification_event') AND name=N'IDX_Id_Delivery_Event')
+  CREATE INDEX [IDX_Id_Delivery_Event] ON dbo.[t_notification_event] ([Id_Delivery]);
+GO
+IF OBJECT_ID(N'dbo.t_notification_event', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_notification_event') AND name=N'IDX_Date_Event')
+  CREATE INDEX [IDX_Date_Event] ON dbo.[t_notification_event] ([Date_Event]);
+GO
+
+IF OBJECT_ID(N'dbo.t_parametre', N'U') IS NULL
+BEGIN
+  CREATE TABLE dbo.[t_parametre] (
+    [Section] VARCHAR(100) NOT NULL,
+    [Mot_Cle] VARCHAR(100) NOT NULL,
+    [Valeur] NVARCHAR(MAX) NULL,
+    [Commentaire] NVARCHAR(MAX) NULL,
+    [Champ_DATETIME] DATETIME NULL,
+    CONSTRAINT [PK_t_parametre] PRIMARY KEY ([Section], [Mot_Cle])
+  );
+END;
+GO
+IF OBJECT_ID(N'dbo.t_parametre', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_parametre') AND name=N'IDX_Section')
+  CREATE INDEX [IDX_Section] ON dbo.[t_parametre] ([Section]);
+GO
+IF OBJECT_ID(N'dbo.t_parametre', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_parametre') AND name=N'IDX_Mot_Cle')
+  CREATE INDEX [IDX_Mot_Cle] ON dbo.[t_parametre] ([Mot_Cle]);
+GO
+
+IF OBJECT_ID(N'dbo.t_pdf', N'U') IS NULL
+BEGIN
+  CREATE TABLE dbo.[t_pdf] (
+    [Id_PDF] INT IDENTITY(1,1) NOT NULL,
+    [Nom_PDF] VARCHAR(50) NULL,
+    [Contenu_PDF] VARBINARY(MAX) NULL,
+    CONSTRAINT [PK_t_pdf] PRIMARY KEY ([Id_PDF])
+  );
+END;
+GO
+
+IF OBJECT_ID(N'dbo.t_plan', N'U') IS NULL
+BEGIN
+  CREATE TABLE dbo.[t_plan] (
+    [Id_Plan] INT IDENTITY(1,1) NOT NULL,
+    [Image] VARBINARY(MAX) NULL,
+    [Titre] VARCHAR(50) NULL,
+    [Est_Archive] BIT NULL DEFAULT('0'),
+    CONSTRAINT [PK_t_plan] PRIMARY KEY ([Id_Plan])
+  );
+END;
+GO
+IF OBJECT_ID(N'dbo.t_plan', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_plan') AND name=N'Plan_Titre_IDX')
+  CREATE UNIQUE INDEX [Plan_Titre_IDX] ON dbo.[t_plan] ([Titre]) WHERE [Titre] IS NOT NULL;
+GO
+
+IF OBJECT_ID(N'dbo.t_postes_clients', N'U') IS NULL
+BEGIN
+  CREATE TABLE dbo.[t_postes_clients] (
+    [Id_Poste] INT IDENTITY(1,1) NOT NULL,
+    [Nom_Machine_Connexion] VARCHAR(255) NULL,
+    [Adresse_IP_Connexion] VARCHAR(50) NULL,
+    [Login] VARCHAR(64) NULL,
+    [Nom] VARCHAR(50) NULL,
+    [Prenom] VARCHAR(50) NULL,
+    [Date_Heure_Derniere_Connexion] DATETIME NULL,
+    CONSTRAINT [PK_t_postes_clients] PRIMARY KEY ([Id_Poste])
+  );
+END;
+GO
+IF OBJECT_ID(N'dbo.t_postes_clients', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_postes_clients') AND name=N'nomMachineId')
+  CREATE UNIQUE INDEX [nomMachineId] ON dbo.[t_postes_clients] ([Nom_Machine_Connexion]) WHERE [Nom_Machine_Connexion] IS NOT NULL;
+GO
+
+IF OBJECT_ID(N'dbo.t_profil', N'U') IS NULL
+BEGIN
+  CREATE TABLE dbo.[t_profil] (
+    [Id_Profil] INT IDENTITY(1,1) NOT NULL,
+    [Profil_Utilisateur] VARCHAR(50) NULL,
+    [Commentaire] VARCHAR(100) NULL,
+    [Est_MC2] BIT NULL DEFAULT('0'),
+    [Est_Archive] BIT NULL DEFAULT('0'),
+    CONSTRAINT [PK_t_profil] PRIMARY KEY ([Id_Profil])
+  );
+END;
+GO
+IF OBJECT_ID(N'dbo.t_profil', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_profil') AND name=N'Profil_ProfilUtilisateur_IDX')
+  CREATE UNIQUE INDEX [Profil_ProfilUtilisateur_IDX] ON dbo.[t_profil] ([Profil_Utilisateur]) WHERE [Profil_Utilisateur] IS NOT NULL;
+GO
+IF OBJECT_ID(N'dbo.t_profil', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_profil') AND name=N'IDX_Est_Archive')
+  CREATE INDEX [IDX_Est_Archive] ON dbo.[t_profil] ([Est_Archive]);
+GO
+
+IF OBJECT_ID(N'dbo.t_site', N'U') IS NULL
+BEGIN
+  CREATE TABLE dbo.[t_site] (
+    [Id_Site] INT IDENTITY(1,1) NOT NULL,
+    [Code_Site] VARCHAR(20) NULL,
+    [Libelle_Site] VARCHAR(50) NULL,
+    [Commentaire] VARCHAR(200) NULL,
+    [Est_Archive] BIT NULL DEFAULT('0'),
+    CONSTRAINT [PK_t_site] PRIMARY KEY ([Id_Site])
+  );
+END;
+GO
+IF OBJECT_ID(N'dbo.t_site', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_site') AND name=N'CodeSite_IDX')
+  CREATE UNIQUE INDEX [CodeSite_IDX] ON dbo.[t_site] ([Code_Site]) WHERE [Code_Site] IS NOT NULL;
+GO
+
+IF OBJECT_ID(N'dbo.t_sonde', N'U') IS NULL
+BEGIN
+  CREATE TABLE dbo.[t_sonde] (
+    [Id_Sonde] INT IDENTITY(1,1) NOT NULL,
+    [Adresse_Sonde] VARCHAR(50) NULL,
+    [Sonde_Numero_Serie] VARCHAR(50) NULL,
+    [Sonde_Type] VARCHAR(50) NULL,
+    [Est_Sonde_GSO] BIT NOT NULL DEFAULT('0'),
+    [Port_Serie] VARCHAR(10) NULL,
+    [Etat_Sonde] VARCHAR(1) NOT NULL DEFAULT('D'),
+    [Metrologie_en_cours] BIT NOT NULL DEFAULT('0'),
+    [Metrologie_cmd_envoyee] BIT NOT NULL DEFAULT('0'),
+    [Id_Module] INT NULL,
+    [Relai_1] VARCHAR(50) NULL,
+    [Relai_2] VARCHAR(50) NULL,
+    [Relai_3] VARCHAR(50) NULL,
+    [Relai_4] VARCHAR(50) NULL,
+    [Frequence_Mesure] INT NULL,
+    [Frequence_Recup] INT NULL,
+    [Est_Sonde_Reformee] BIT NULL,
+    [Etat_Sonde_N1] VARCHAR(1) NULL,
+    [Id_Worker] INT NULL,
+    [Id_Sonde_Etat] INT NULL,
+    [Sonde_Offset] FLOAT NOT NULL DEFAULT('0'),
+    CONSTRAINT [PK_t_sonde] PRIMARY KEY ([Id_Sonde])
+  );
+END;
+GO
+IF OBJECT_ID(N'dbo.t_sonde', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_sonde') AND name=N'Numero_serie')
+  CREATE UNIQUE INDEX [Numero_serie] ON dbo.[t_sonde] ([Sonde_Numero_Serie]) WHERE [Sonde_Numero_Serie] IS NOT NULL;
+GO
+IF OBJECT_ID(N'dbo.t_sonde', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_sonde') AND name=N'IDX_Id_Module')
+  CREATE INDEX [IDX_Id_Module] ON dbo.[t_sonde] ([Id_Module]);
+GO
+IF OBJECT_ID(N'dbo.t_sonde', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_sonde') AND name=N'IDX_Adresse_Sonde')
+  CREATE INDEX [IDX_Adresse_Sonde] ON dbo.[t_sonde] ([Adresse_Sonde]);
+GO
+IF OBJECT_ID(N'dbo.t_sonde', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_sonde') AND name=N'IDX_Port_Serie')
+  CREATE INDEX [IDX_Port_Serie] ON dbo.[t_sonde] ([Port_Serie]);
+GO
+IF OBJECT_ID(N'dbo.t_sonde', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_sonde') AND name=N'IDX_Etat_Sonde')
+  CREATE INDEX [IDX_Etat_Sonde] ON dbo.[t_sonde] ([Etat_Sonde]);
+GO
+IF OBJECT_ID(N'dbo.t_sonde', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_sonde') AND name=N'IDX_Id_Sonde_Etat')
+  CREATE INDEX [IDX_Id_Sonde_Etat] ON dbo.[t_sonde] ([Id_Sonde_Etat]);
+GO
+IF OBJECT_ID(N'dbo.t_sonde', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_sonde') AND name=N'IDX_Sonde_Type')
+  CREATE INDEX [IDX_Sonde_Type] ON dbo.[t_sonde] ([Sonde_Type]);
+GO
+
+IF OBJECT_ID(N'dbo.t_sonde_etat', N'U') IS NULL
+BEGIN
+  CREATE TABLE dbo.[t_sonde_etat] (
+    [Id_Sonde_Etat] INT IDENTITY(1,1) NOT NULL,
+    [Etat_Sonde] VARCHAR(1) NULL,
+    [Etat_Libelle] VARCHAR(50) NULL,
+    CONSTRAINT [PK_t_sonde_etat] PRIMARY KEY ([Id_Sonde_Etat])
+  );
+END;
+GO
+IF OBJECT_ID(N'dbo.t_sonde_etat', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_sonde_etat') AND name=N'Etat_Sonde')
+  CREATE UNIQUE INDEX [Etat_Sonde] ON dbo.[t_sonde_etat] ([Etat_Sonde]) WHERE [Etat_Sonde] IS NOT NULL;
+GO
+
+IF OBJECT_ID(N'dbo.t_sonde_type', N'U') IS NULL
+BEGIN
+  CREATE TABLE dbo.[t_sonde_type] (
+    [Id_Sonde_Type] INT IDENTITY(1,1) NOT NULL,
+    [Sonde_Type] VARCHAR(50) NULL,
+    [Libelle_Sonde_Type] VARCHAR(50) NULL,
+    [Est_Gestion_Relais] BIT NULL,
+    [Est_Double_Capteur] BIT NOT NULL DEFAULT('0'),
+    [Famille_Sonde] VARCHAR(16) NOT NULL DEFAULT('CLASSIC'),
+    [Unite] VARCHAR(10) NULL,
+    [Valeur_Max] FLOAT NULL,
+    [Valeur_Min] FLOAT NULL,
+    CONSTRAINT [PK_t_sonde_type] PRIMARY KEY ([Id_Sonde_Type])
+  );
+END;
+GO
+IF OBJECT_ID(N'dbo.t_sonde_type', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_sonde_type') AND name=N'Sonde_Type')
+  CREATE UNIQUE INDEX [Sonde_Type] ON dbo.[t_sonde_type] ([Sonde_Type]) WHERE [Sonde_Type] IS NOT NULL;
+GO
+
+IF OBJECT_ID(N'dbo.t_utilisateur', N'U') IS NULL
+BEGIN
+  CREATE TABLE dbo.[t_utilisateur] (
+    [Id_Utilisateur] INT IDENTITY(1,1) NOT NULL,
+    [Login] VARCHAR(64) NULL,
+    [Mot_De_Passe] VARCHAR(60) NULL,
+    [Date_Validite] DATE NULL,
+    [Date_Creation] DATE NULL,
+    [Est_Archive] BIT NULL DEFAULT('0'),
+    [Profil_Utilisateur] VARCHAR(50) NULL,
+    [Date_Heure_Derniere_Connexion] DATETIME NULL,
+    [Adresse_IP_Connexion] VARCHAR(50) NULL,
+    [Nom_Machine_Connexion] VARCHAR(50) NULL,
+    [Id_Site] INT NULL,
+    [Nom] VARCHAR(50) NULL,
+    [Prenom] VARCHAR(50) NULL,
+    [Tel_Num_Fixe] VARCHAR(50) NULL,
+    [Tel_Num_Mobile] VARCHAR(50) NULL,
+    [Adresse_Email] VARCHAR(100) NULL,
+    [Date_Derniere_Modification_MDP] DATETIME NULL,
+    [Reset_Password_Token] VARCHAR(255) NULL,
+    [Reset_Password_Expires] DATETIME NULL,
+    [Est_Mot_De_Passe_Temporaire] BIT NULL DEFAULT('0'),
+    [Avatar_Utilisateur] VARCHAR(512) NULL,
+    CONSTRAINT [PK_t_utilisateur] PRIMARY KEY ([Id_Utilisateur])
+  );
+END;
+GO
+IF OBJECT_ID(N'dbo.t_utilisateur', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_utilisateur') AND name=N'Utilisateur_Nom_IDX')
+  CREATE UNIQUE INDEX [Utilisateur_Nom_IDX] ON dbo.[t_utilisateur] ([Login]) WHERE [Login] IS NOT NULL;
+GO
+IF OBJECT_ID(N'dbo.t_utilisateur', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_utilisateur') AND name=N'Login')
+  CREATE UNIQUE INDEX [Login] ON dbo.[t_utilisateur] ([Login]) WHERE [Login] IS NOT NULL;
+GO
+IF OBJECT_ID(N'dbo.t_utilisateur', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_utilisateur') AND name=N'IDX_Est_Archive')
+  CREATE INDEX [IDX_Est_Archive] ON dbo.[t_utilisateur] ([Est_Archive]);
+GO
+IF OBJECT_ID(N'dbo.t_utilisateur', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_utilisateur') AND name=N'IDX_Profil_Utilisateur')
+  CREATE INDEX [IDX_Profil_Utilisateur] ON dbo.[t_utilisateur] ([Profil_Utilisateur]);
 GO
 
 IF OBJECT_ID(N'dbo.t_vigilog', N'U') IS NULL
@@ -1019,7 +1546,7 @@ BEGIN
     [Numero_Serie] VARCHAR(30) NOT NULL,
     [Modele] VARCHAR(50) NULL,
     [Libelle] VARCHAR(100) NULL,
-    [Actif] BIT NOT NULL DEFAULT(1),
+    [Actif] BIT NOT NULL DEFAULT('1'),
     [Date_Etalonnage] DATETIME NULL,
     [Date_Validite] DATE NULL,
     [Duree_Validite_Jours] INT NULL,
@@ -1033,8 +1560,142 @@ BEGIN
   );
 END;
 GO
+IF OBJECT_ID(N'dbo.t_vigilog', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_vigilog') AND name=N'UK_t_vigilog_numero_serie')
+  CREATE UNIQUE INDEX [UK_t_vigilog_numero_serie] ON dbo.[t_vigilog] ([Numero_Serie]);
 GO
-IF OBJECT_ID(N'dbo.t_vigilog', N'U') IS NOT NULL AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'UX_t_vigilog_Numero_Serie' AND object_id = OBJECT_ID(N'dbo.t_vigilog')) CREATE UNIQUE INDEX [UX_t_vigilog_Numero_Serie] ON dbo.[t_vigilog]([Numero_Serie]) WHERE [Numero_Serie] IS NOT NULL;
+IF OBJECT_ID(N'dbo.t_vigilog', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_vigilog') AND name=N'IDX_t_vigilog_actif')
+  CREATE INDEX [IDX_t_vigilog_actif] ON dbo.[t_vigilog] ([Actif]);
+GO
+IF OBJECT_ID(N'dbo.t_vigilog', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_vigilog') AND name=N'IDX_t_vigilog_modele')
+  CREATE INDEX [IDX_t_vigilog_modele] ON dbo.[t_vigilog] ([Modele]);
+GO
+
+IF OBJECT_ID(N'dbo.t_vigilog_configuration', N'U') IS NULL
+BEGIN
+  CREATE TABLE dbo.[t_vigilog_configuration] (
+    [Id_VigiLog_Configuration] INT IDENTITY(1,1) NOT NULL,
+    [Nom_Configuration] VARCHAR(100) NOT NULL,
+    [Description_Configuration] VARCHAR(255) NULL,
+    [Consigne] DECIMAL(10,2) NULL,
+    [Limite_Basse_Active] BIT NOT NULL DEFAULT('0'),
+    [Limite_Basse] DECIMAL(10,2) NULL,
+    [Limite_Haute_Active] BIT NOT NULL DEFAULT('0'),
+    [Limite_Haute] DECIMAL(10,2) NULL,
+    [Frequence_Min] INT NOT NULL,
+    [Retard_Alarme_Min] INT NOT NULL,
+    [Delai_Demarrage_Min] INT NOT NULL DEFAULT('0'),
+    [Autorise_Arret_Bouton_Stop] BIT NOT NULL DEFAULT('1'),
+    [Reinitialise_Avec_Bouton_Start] BIT NOT NULL DEFAULT('1'),
+    [Actif] BIT NOT NULL DEFAULT('1'),
+    [Id_Utilisateur_Creation] INT NULL,
+    [Date_Heure_Creation] DATETIME NOT NULL DEFAULT(GETDATE()),
+    [Id_Utilisateur_Maj] INT NULL,
+    [Date_Heure_Maj] DATETIME NULL,
+    CONSTRAINT [PK_t_vigilog_configuration] PRIMARY KEY ([Id_VigiLog_Configuration])
+  );
+END;
+GO
+IF OBJECT_ID(N'dbo.t_vigilog_configuration', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_vigilog_configuration') AND name=N'UK_t_vigilog_configuration_nom')
+  CREATE UNIQUE INDEX [UK_t_vigilog_configuration_nom] ON dbo.[t_vigilog_configuration] ([Nom_Configuration]);
+GO
+IF OBJECT_ID(N'dbo.t_vigilog_configuration', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_vigilog_configuration') AND name=N'IDX_t_vigilog_configuration_user_create')
+  CREATE INDEX [IDX_t_vigilog_configuration_user_create] ON dbo.[t_vigilog_configuration] ([Id_Utilisateur_Creation]);
+GO
+IF OBJECT_ID(N'dbo.t_vigilog_configuration', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_vigilog_configuration') AND name=N'IDX_t_vigilog_configuration_user_update')
+  CREATE INDEX [IDX_t_vigilog_configuration_user_update] ON dbo.[t_vigilog_configuration] ([Id_Utilisateur_Maj]);
+GO
+
+IF OBJECT_ID(N'dbo.t_vigilog_tournee', N'U') IS NULL
+BEGIN
+  CREATE TABLE dbo.[t_vigilog_tournee] (
+    [Id_VigiLog_Tournee] INT IDENTITY(1,1) NOT NULL,
+    [Reference_Tournee] VARCHAR(50) NOT NULL,
+    [Id_VigiLog_Configuration] INT NULL,
+    [Id_VigiLog] INT NULL,
+    [Nom_Configuration] VARCHAR(100) NOT NULL,
+    [Id_Site_Depart] INT NOT NULL,
+    [Id_Site_Arrivee] INT NOT NULL,
+    [Numero_Serie_VigiLog] VARCHAR(30) NOT NULL,
+    [Statut] VARCHAR(30) NOT NULL,
+    [Resultat_Feu] VARCHAR(10) NULL,
+    [Id_Utilisateur_Depart] INT NOT NULL,
+    [Date_Heure_Depart] DATETIME NOT NULL,
+    [Id_Utilisateur_Arrivee] INT NULL,
+    [Date_Heure_Arrivee] DATETIME NULL,
+    [Consigne] DECIMAL(10,2) NULL,
+    [Limite_Basse_Active] BIT NOT NULL DEFAULT('0'),
+    [Limite_Basse] DECIMAL(10,2) NULL,
+    [Limite_Haute_Active] BIT NOT NULL DEFAULT('0'),
+    [Limite_Haute] DECIMAL(10,2) NULL,
+    [Frequence_Min] INT NOT NULL,
+    [Retard_Alarme_Min] INT NOT NULL,
+    [Delai_Demarrage_Min] INT NOT NULL DEFAULT('0'),
+    [Autorise_Arret_Bouton_Stop] BIT NOT NULL DEFAULT('1'),
+    [Reinitialise_Avec_Bouton_Start] BIT NOT NULL DEFAULT('1'),
+    [Nb_Mesures] INT NOT NULL DEFAULT('0'),
+    [Temperature_Min] DECIMAL(10,2) NULL,
+    [Temperature_Moyenne] DECIMAL(10,2) NULL,
+    [Temperature_Max] DECIMAL(10,2) NULL,
+    [Duree_Hors_Limites_Secondes] INT NOT NULL DEFAULT('0'),
+    [Duree_Alarme_Secondes] INT NOT NULL DEFAULT('0'),
+    [Est_Depassement_Limites] BIT NOT NULL DEFAULT('0'),
+    [Est_Alarme] BIT NOT NULL DEFAULT('0'),
+    [Est_Acquittee] BIT NOT NULL DEFAULT('0'),
+    [Commentaire] NVARCHAR(MAX) NULL,
+    [Commentaire_Acquittement] NVARCHAR(MAX) NULL,
+    [Id_Utilisateur_Acquittement] INT NULL,
+    [Date_Heure_Acquittement] DATETIME NULL,
+    [Date_Heure_Creation] DATETIME NOT NULL DEFAULT(GETDATE()),
+    [Date_Heure_Maj] DATETIME NULL,
+    CONSTRAINT [PK_t_vigilog_tournee] PRIMARY KEY ([Id_VigiLog_Tournee])
+  );
+END;
+GO
+IF OBJECT_ID(N'dbo.t_vigilog_tournee', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_vigilog_tournee') AND name=N'UK_t_vigilog_tournee_reference')
+  CREATE UNIQUE INDEX [UK_t_vigilog_tournee_reference] ON dbo.[t_vigilog_tournee] ([Reference_Tournee]);
+GO
+IF OBJECT_ID(N'dbo.t_vigilog_tournee', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_vigilog_tournee') AND name=N'IDX_t_vigilog_tournee_config')
+  CREATE INDEX [IDX_t_vigilog_tournee_config] ON dbo.[t_vigilog_tournee] ([Id_VigiLog_Configuration]);
+GO
+IF OBJECT_ID(N'dbo.t_vigilog_tournee', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_vigilog_tournee') AND name=N'IDX_t_vigilog_tournee_site_depart')
+  CREATE INDEX [IDX_t_vigilog_tournee_site_depart] ON dbo.[t_vigilog_tournee] ([Id_Site_Depart]);
+GO
+IF OBJECT_ID(N'dbo.t_vigilog_tournee', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_vigilog_tournee') AND name=N'IDX_t_vigilog_tournee_site_arrivee')
+  CREATE INDEX [IDX_t_vigilog_tournee_site_arrivee] ON dbo.[t_vigilog_tournee] ([Id_Site_Arrivee]);
+GO
+IF OBJECT_ID(N'dbo.t_vigilog_tournee', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_vigilog_tournee') AND name=N'IDX_t_vigilog_tournee_logger')
+  CREATE INDEX [IDX_t_vigilog_tournee_logger] ON dbo.[t_vigilog_tournee] ([Numero_Serie_VigiLog]);
+GO
+IF OBJECT_ID(N'dbo.t_vigilog_tournee', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_vigilog_tournee') AND name=N'IDX_t_vigilog_tournee_statut')
+  CREATE INDEX [IDX_t_vigilog_tournee_statut] ON dbo.[t_vigilog_tournee] ([Statut]);
+GO
+IF OBJECT_ID(N'dbo.t_vigilog_tournee', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_vigilog_tournee') AND name=N'IDX_t_vigilog_tournee_depart_user')
+  CREATE INDEX [IDX_t_vigilog_tournee_depart_user] ON dbo.[t_vigilog_tournee] ([Id_Utilisateur_Depart]);
+GO
+IF OBJECT_ID(N'dbo.t_vigilog_tournee', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_vigilog_tournee') AND name=N'IDX_t_vigilog_tournee_arrivee_user')
+  CREATE INDEX [IDX_t_vigilog_tournee_arrivee_user] ON dbo.[t_vigilog_tournee] ([Id_Utilisateur_Arrivee]);
+GO
+IF OBJECT_ID(N'dbo.t_vigilog_tournee', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_vigilog_tournee') AND name=N'IDX_t_vigilog_tournee_acquit_user')
+  CREATE INDEX [IDX_t_vigilog_tournee_acquit_user] ON dbo.[t_vigilog_tournee] ([Id_Utilisateur_Acquittement]);
+GO
+IF OBJECT_ID(N'dbo.t_vigilog_tournee', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_vigilog_tournee') AND name=N'IDX_t_vigilog_tournee_vigilog')
+  CREATE INDEX [IDX_t_vigilog_tournee_vigilog] ON dbo.[t_vigilog_tournee] ([Id_VigiLog]);
 GO
 
 IF OBJECT_ID(N'dbo.t_vigilog_usage_ponctuel', N'U') IS NULL
@@ -1060,58 +1721,33 @@ BEGIN
   );
 END;
 GO
+IF OBJECT_ID(N'dbo.t_vigilog_usage_ponctuel', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_vigilog_usage_ponctuel') AND name=N'UK_t_vigilog_usage_ponctuel_reference')
+  CREATE UNIQUE INDEX [UK_t_vigilog_usage_ponctuel_reference] ON dbo.[t_vigilog_usage_ponctuel] ([Reference_Usage]);
 GO
-IF OBJECT_ID(N'dbo.t_vigilog_usage_ponctuel', N'U') IS NOT NULL AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'UX_t_vigilog_usage_ponctuel_Reference_Usage' AND object_id = OBJECT_ID(N'dbo.t_vigilog_usage_ponctuel')) CREATE UNIQUE INDEX [UX_t_vigilog_usage_ponctuel_Reference_Usage] ON dbo.[t_vigilog_usage_ponctuel]([Reference_Usage]) WHERE [Reference_Usage] IS NOT NULL;
+IF OBJECT_ID(N'dbo.t_vigilog_usage_ponctuel', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_vigilog_usage_ponctuel') AND name=N'IDX_t_vigilog_usage_ponctuel_statut')
+  CREATE INDEX [IDX_t_vigilog_usage_ponctuel_statut] ON dbo.[t_vigilog_usage_ponctuel] ([Statut]);
 GO
-
-IF OBJECT_ID(N'dbo.t_vigilog_tournee', N'U') IS NULL
-BEGIN
-  CREATE TABLE dbo.[t_vigilog_tournee] (
-    [Id_VigiLog_Tournee] INT IDENTITY(1,1) NOT NULL,
-    [Reference_Tournee] VARCHAR(50) NOT NULL,
-    [Id_VigiLog_Configuration] INT NULL,
-    [Id_VigiLog] INT NULL,
-    [Nom_Configuration] VARCHAR(100) NOT NULL,
-    [Id_Site_Depart] INT NOT NULL,
-    [Id_Site_Arrivee] INT NOT NULL,
-    [Numero_Serie_VigiLog] VARCHAR(30) NOT NULL,
-    [Statut] VARCHAR(30) NOT NULL,
-    [Resultat_Feu] VARCHAR(10) NULL,
-    [Id_Utilisateur_Depart] INT NOT NULL,
-    [Date_Heure_Depart] DATETIME NOT NULL,
-    [Id_Utilisateur_Arrivee] INT NULL,
-    [Date_Heure_Arrivee] DATETIME NULL,
-    [Consigne] DECIMAL(10,2) NULL,
-    [Limite_Basse_Active] BIT NOT NULL DEFAULT(0),
-    [Limite_Basse] DECIMAL(10,2) NULL,
-    [Limite_Haute_Active] BIT NOT NULL DEFAULT(0),
-    [Limite_Haute] DECIMAL(10,2) NULL,
-    [Frequence_Min] INT NOT NULL,
-    [Retard_Alarme_Min] INT NOT NULL,
-    [Delai_Demarrage_Min] INT NOT NULL DEFAULT(0),
-    [Autorise_Arret_Bouton_Stop] BIT NOT NULL DEFAULT(1),
-    [Reinitialise_Avec_Bouton_Start] BIT NOT NULL DEFAULT(1),
-    [Nb_Mesures] INT NOT NULL DEFAULT(0),
-    [Temperature_Min] DECIMAL(10,2) NULL,
-    [Temperature_Moyenne] DECIMAL(10,2) NULL,
-    [Temperature_Max] DECIMAL(10,2) NULL,
-    [Duree_Hors_Limites_Secondes] INT NOT NULL DEFAULT(0),
-    [Duree_Alarme_Secondes] INT NOT NULL DEFAULT(0),
-    [Est_Depassement_Limites] BIT NOT NULL DEFAULT(0),
-    [Est_Alarme] BIT NOT NULL DEFAULT(0),
-    [Est_Acquittee] BIT NOT NULL DEFAULT(0),
-    [Commentaire] NVARCHAR(MAX) NULL,
-    [Commentaire_Acquittement] NVARCHAR(MAX) NULL,
-    [Id_Utilisateur_Acquittement] INT NULL,
-    [Date_Heure_Acquittement] DATETIME NULL,
-    [Date_Heure_Creation] DATETIME NOT NULL DEFAULT(GETDATE()),
-    [Date_Heure_Maj] DATETIME NULL,
-    CONSTRAINT [PK_t_vigilog_tournee] PRIMARY KEY ([Id_VigiLog_Tournee])
-  );
-END;
+IF OBJECT_ID(N'dbo.t_vigilog_usage_ponctuel', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_vigilog_usage_ponctuel') AND name=N'IDX_t_vigilog_usage_ponctuel_logger')
+  CREATE INDEX [IDX_t_vigilog_usage_ponctuel_logger] ON dbo.[t_vigilog_usage_ponctuel] ([Numero_Serie_VigiLog]);
 GO
+IF OBJECT_ID(N'dbo.t_vigilog_usage_ponctuel', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_vigilog_usage_ponctuel') AND name=N'IDX_t_vigilog_usage_ponctuel_started_by')
+  CREATE INDEX [IDX_t_vigilog_usage_ponctuel_started_by] ON dbo.[t_vigilog_usage_ponctuel] ([Id_Utilisateur_Demarrage]);
 GO
-IF OBJECT_ID(N'dbo.t_vigilog_tournee', N'U') IS NOT NULL AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'UX_t_vigilog_tournee_Reference_Tournee' AND object_id = OBJECT_ID(N'dbo.t_vigilog_tournee')) CREATE UNIQUE INDEX [UX_t_vigilog_tournee_Reference_Tournee] ON dbo.[t_vigilog_tournee]([Reference_Tournee]) WHERE [Reference_Tournee] IS NOT NULL;
+IF OBJECT_ID(N'dbo.t_vigilog_usage_ponctuel', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_vigilog_usage_ponctuel') AND name=N'IDX_t_vigilog_usage_ponctuel_stopped_by')
+  CREATE INDEX [IDX_t_vigilog_usage_ponctuel_stopped_by] ON dbo.[t_vigilog_usage_ponctuel] ([Id_Utilisateur_Arret]);
+GO
+IF OBJECT_ID(N'dbo.t_vigilog_usage_ponctuel', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_vigilog_usage_ponctuel') AND name=N'FK_t_vigilog_usage_ponctuel_configuration')
+  CREATE INDEX [FK_t_vigilog_usage_ponctuel_configuration] ON dbo.[t_vigilog_usage_ponctuel] ([Id_VigiLog_Configuration]);
+GO
+IF OBJECT_ID(N'dbo.t_vigilog_usage_ponctuel', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_vigilog_usage_ponctuel') AND name=N'FK_t_vigilog_usage_ponctuel_logger')
+  CREATE INDEX [FK_t_vigilog_usage_ponctuel_logger] ON dbo.[t_vigilog_usage_ponctuel] ([Id_VigiLog]);
 GO
 
 IF DB_ID(N'vigi_mesures') IS NULL
@@ -1122,6 +1758,17 @@ GO
 USE [vigi_mesures];
 GO
 
+IF OBJECT_ID(N'dbo.tm_compteur_id_table', N'U') IS NULL
+BEGIN
+  CREATE TABLE dbo.[tm_compteur_id_table] (
+    [Id_Serveur_BDD] INT NOT NULL,
+    [Nom_Table] VARCHAR(100) NOT NULL,
+    [Compteur_Id] INT NULL,
+    CONSTRAINT [PK_tm_compteur_id_table] PRIMARY KEY ([Id_Serveur_BDD], [Nom_Table])
+  );
+END;
+GO
+
 IF OBJECT_ID(N'dbo.tm_graphique', N'U') IS NULL
 BEGIN
   CREATE TABLE dbo.[tm_graphique] (
@@ -1129,6 +1776,7 @@ BEGIN
     [Date_Heure_Mesure] DATETIME NOT NULL DEFAULT(GETDATE()),
     [Valeur] FLOAT NULL,
     [Valeur_Brute] FLOAT NULL,
+    [Planning_Actif] BIT NULL DEFAULT('0'),
     [Nb_Decimal] INT NULL,
     [Consigne] FLOAT NULL,
     [Consigne_Sup] FLOAT NULL,
@@ -1137,16 +1785,35 @@ BEGIN
     [Sonde_Numero_Serie] VARCHAR(50) NULL,
     [Adresse_Sonde] VARCHAR(50) NULL,
     [Id_Sonde] INT NULL,
-    [Id_Lieu] INT NOT NULL DEFAULT(0),
-    [Est_Valeur_Null] BIT NOT NULL DEFAULT(0),
+    [Id_Lieu] INT NOT NULL DEFAULT('0'),
+    [Est_Valeur_Null] BIT NOT NULL DEFAULT('0'),
     [Frequence] INT NULL,
-    [Est_Etat_Alarme] TINYINT NOT NULL DEFAULT(0),
+    [Est_Etat_Alarme] TINYINT NOT NULL DEFAULT('0'),
     [Consigne_Inf_Pre_Alarme] FLOAT NULL,
     [Consigne_Sup_Pre_Alarme] FLOAT NULL,
     CONSTRAINT [PK_tm_graphique] PRIMARY KEY ([Id_Graphique], [Date_Heure_Mesure], [Id_Lieu], [Est_Valeur_Null], [Est_Etat_Alarme])
   );
 END;
 GO
+IF OBJECT_ID(N'dbo.tm_graphique', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.tm_graphique') AND name=N'IDX_Date_Heure_Mesure')
+  CREATE INDEX [IDX_Date_Heure_Mesure] ON dbo.[tm_graphique] ([Date_Heure_Mesure]);
+GO
+IF OBJECT_ID(N'dbo.tm_graphique', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.tm_graphique') AND name=N'IDX_Id_Lieu')
+  CREATE INDEX [IDX_Id_Lieu] ON dbo.[tm_graphique] ([Id_Lieu]);
+GO
+IF OBJECT_ID(N'dbo.tm_graphique', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.tm_graphique') AND name=N'IDX_Etat_Alarme')
+  CREATE INDEX [IDX_Etat_Alarme] ON dbo.[tm_graphique] ([Est_Etat_Alarme]);
+GO
+IF OBJECT_ID(N'dbo.tm_graphique', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.tm_graphique') AND name=N'IDX_Valeur_Null')
+  CREATE INDEX [IDX_Valeur_Null] ON dbo.[tm_graphique] ([Est_Valeur_Null]);
+GO
+IF OBJECT_ID(N'dbo.tm_graphique', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.tm_graphique') AND name=N'IDX_Id_Sonde_Date_Heure_Mesure')
+  CREATE INDEX [IDX_Id_Sonde_Date_Heure_Mesure] ON dbo.[tm_graphique] ([Id_Sonde], [Date_Heure_Mesure]);
 GO
 
 IF OBJECT_ID(N'dbo.tm_journal', N'U') IS NULL
@@ -1165,6 +1832,29 @@ BEGIN
   );
 END;
 GO
+IF OBJECT_ID(N'dbo.tm_journal', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.tm_journal') AND name=N'IDX_Code_Journal')
+  CREATE INDEX [IDX_Code_Journal] ON dbo.[tm_journal] ([Code_Journal]);
+GO
+IF OBJECT_ID(N'dbo.tm_journal', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.tm_journal') AND name=N'IDX_Nom_Utilisateur')
+  CREATE INDEX [IDX_Nom_Utilisateur] ON dbo.[tm_journal] ([Nom_Utilisateur]);
+GO
+IF OBJECT_ID(N'dbo.tm_journal', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.tm_journal') AND name=N'IDX_Profil_Utilisateur')
+  CREATE INDEX [IDX_Profil_Utilisateur] ON dbo.[tm_journal] ([Profil_Utilisateur]);
+GO
+IF OBJECT_ID(N'dbo.tm_journal', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.tm_journal') AND name=N'IDX_Date_Heure_Journal')
+  CREATE INDEX [IDX_Date_Heure_Journal] ON dbo.[tm_journal] ([Date_Heure_Journal]);
+GO
+IF OBJECT_ID(N'dbo.tm_journal', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.tm_journal') AND name=N'Id_Journal')
+  CREATE INDEX [Id_Journal] ON dbo.[tm_journal] ([Id_Journal]);
+GO
+IF OBJECT_ID(N'dbo.tm_journal', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.tm_journal') AND name=N'IDX_tm_journal_Id_Lieu')
+  CREATE INDEX [IDX_tm_journal_Id_Lieu] ON dbo.[tm_journal] ([Id_Lieu]);
 GO
 
 IF OBJECT_ID(N'dbo.tm_journal_code', N'U') IS NULL
@@ -1175,280 +1865,6 @@ BEGIN
     CONSTRAINT [PK_tm_journal_code] PRIMARY KEY ([Code_Journal])
   );
 END;
-GO
-GO
-
-IF OBJECT_ID(N'dbo.tm_compteur_id_table', N'U') IS NULL
-BEGIN
-  CREATE TABLE dbo.[tm_compteur_id_table] (
-    [Id_Serveur_BDD] INT NOT NULL,
-    [Nom_Table] VARCHAR(100) NOT NULL,
-    [Compteur_Id] INT NULL,
-    CONSTRAINT [PK_tm_compteur_id_table] PRIMARY KEY ([Id_Serveur_BDD], [Nom_Table])
-  );
-END;
-GO
-GO
-
-IF OBJECT_ID(N'dbo.tm_mesures', N'U') IS NULL
-BEGIN
-  CREATE TABLE dbo.[tm_mesures] (
-    [Id_Serveur_BDD] INT NOT NULL DEFAULT(0),
-    [Id_Mesure] INT IDENTITY(1,1) NOT NULL,
-    [Date_Heure_Mesure] DATETIME NOT NULL,
-    [Valeur] FLOAT NULL,
-    [Valeur_Brute] FLOAT NULL,
-    [Est_Valeur_Memoire] BIT NOT NULL DEFAULT(0),
-    [Nb_Decimal] INT NULL,
-    [Consigne] FLOAT NULL,
-    [Consigne_Sup] FLOAT NULL,
-    [Consigne_Inf] FLOAT NULL,
-    [Unite] VARCHAR(10) NULL,
-    [Sonde_Numero_Serie] VARCHAR(50) NULL,
-    [Adresse_Sonde] VARCHAR(50) NULL,
-    [COM_sonde] FLOAT NULL,
-    [Est_Mesure_Repeteur_GSO] FLOAT NULL CONSTRAINT [DF_tm_mesures_Est_Mesure_Repeteur_GSO] DEFAULT(0),
-    [Id_Lieu] INT NOT NULL DEFAULT(0),
-    [Est_Valeur_Null] TINYINT NOT NULL DEFAULT(0),
-    [Frequence] INT NULL,
-    [Est_Etat_Alarme] BIT NOT NULL DEFAULT(0),
-    [Consigne_Inf_Pre_Alarme] FLOAT NULL,
-    [Consigne_Sup_Pre_Alarme] FLOAT NULL,
-    [Moyenne] FLOAT NULL,
-    [Rssi] VARCHAR(10) NULL,
-    [Tension] VARCHAR(10) NULL,
-    [Planning_Regle_Existe] BIT NOT NULL DEFAULT(0),
-    [Planning_Actif] BIT NOT NULL DEFAULT(0),
-    CONSTRAINT [PK_tm_mesures] PRIMARY KEY ([Id_Serveur_BDD], [Id_Mesure], [Date_Heure_Mesure], [Id_Lieu], [Est_Valeur_Null])
-  );
-END;
-GO
-GO
-
-IF OBJECT_ID(N'dbo.tm_mesures_gso', N'U') IS NULL
-BEGIN
-  CREATE TABLE dbo.[tm_mesures_gso] (
-    [Id_mesures_gso] INT IDENTITY(1,1) NOT NULL,
-    [id_capteur] VARCHAR(50) NOT NULL,
-    [tep] FLOAT NULL,
-    [unite] VARCHAR(10) NULL,
-    [date_mesure] DATETIME NOT NULL,
-    [trame] BINARY(8) NULL,
-    [rssi] VARCHAR(10) NULL,
-    [tension] VARCHAR(10) NULL,
-    [COM_sonde] FLOAT NULL,
-    CONSTRAINT [PK_tm_mesures_gso] PRIMARY KEY ([id_capteur], [date_mesure])
-  );
-END;
-GO
-GO
-
-IF OBJECT_ID(N'dbo.tm_journal_histo', N'U') IS NULL
-BEGIN
-  CREATE TABLE dbo.[tm_journal_histo] (
-    [Id_Journal_Histo] INT IDENTITY(1,1) NOT NULL,
-    [Id_Serveur_BDD] INT NOT NULL DEFAULT(0),
-    [Id_Journal] INT NOT NULL DEFAULT(0),
-    [Code_Journal] VARCHAR(50) NULL,
-    [Commentaire] NVARCHAR(MAX) NULL,
-    [Nom_Utilisateur] VARCHAR(50) NULL,
-    [Profil_Utilisateur] VARCHAR(50) NULL,
-    [Date_Heure_Journal] DATETIME NULL,
-    [Id_Lieu] INT NULL,
-    [Commentaire_Utilisateur] NVARCHAR(MAX) NULL,
-    CONSTRAINT [PK_tm_journal_histo] PRIMARY KEY ([Id_Journal_Histo], [Id_Serveur_BDD], [Id_Journal])
-  );
-END;
-GO
-IF OBJECT_ID(N'dbo.tm_mesures_ajustage', N'U') IS NULL
-BEGIN
-  CREATE TABLE dbo.[tm_mesures_ajustage] (
-    [Id_Mesure_Ajustage] INT IDENTITY(1,1) NOT NULL,
-    [Id_Serveur_BDD] INT NOT NULL DEFAULT(0),
-    [Valeur] FLOAT NULL,
-    [Valeur_Brute] FLOAT NULL,
-    [Unite] VARCHAR(10) NULL,
-    [Date_Heure_Mesure] DATETIME NOT NULL,
-    [Sonde_Numero_Serie] VARCHAR(50) NOT NULL DEFAULT(''),
-    [Adresse_Sonde] VARCHAR(50) NOT NULL CONSTRAINT [DF_tm_mesures_ajustage_Adresse_Sonde] DEFAULT(''),
-    [Est_Valeur_Null] TINYINT NOT NULL CONSTRAINT [DF_tm_mesures_ajustage_Est_Valeur_Null] DEFAULT(0),
-    CONSTRAINT [PK_tm_mesures_ajustage] PRIMARY KEY ([Id_Mesure_Ajustage], [Id_Serveur_BDD])
-  );
-END;
-GO
-GO
-
-IF OBJECT_ID(N'dbo.tm_mesures_ajustage_etalon', N'U') IS NULL
-BEGIN
-  CREATE TABLE dbo.[tm_mesures_ajustage_etalon] (
-    [Id_Mesure_Ajustage_Etalon] INT IDENTITY(1,1) NOT NULL,
-    [Id_Serveur_BDD] INT NOT NULL DEFAULT(0),
-    [Valeur] FLOAT NULL,
-    [Valeur_Brute] FLOAT NULL,
-    [Unite] VARCHAR(10) NULL,
-    [Date_Heure_Mesure] DATETIME NOT NULL,
-    [Etalon_Numero_Serie] VARCHAR(50) NOT NULL DEFAULT(''),
-    [Adresse_Sonde] VARCHAR(50) NULL,
-    [Est_Valeur_Null] TINYINT NOT NULL CONSTRAINT [DF_tm_mesures_ajustage_etalon_Est_Valeur_Null] DEFAULT(0),
-    CONSTRAINT [PK_tm_mesures_ajustage_etalon] PRIMARY KEY ([Id_Mesure_Ajustage_Etalon], [Id_Serveur_BDD])
-  );
-END;
-GO
-GO
-
-IF OBJECT_ID(N'dbo.tm_mesures_etalon', N'U') IS NULL
-BEGIN
-  CREATE TABLE dbo.[tm_mesures_etalon] (
-    [Id_Mesure_Etalon] INT IDENTITY(1,1) NOT NULL,
-    [Id_Serveur_BDD] INT NOT NULL DEFAULT(0),
-    [Valeur_Brute] FLOAT NOT NULL,
-    [Etalon_Numero_Serie] VARCHAR(50) NOT NULL DEFAULT(''),
-    [Est_Valeur_Null] TINYINT NOT NULL,
-    [Date_Heure] DATETIME NOT NULL,
-    [Message_Erreur] VARCHAR(50) NOT NULL DEFAULT(''),
-    CONSTRAINT [PK_tm_mesures_etalon] PRIMARY KEY ([Id_Mesure_Etalon], [Id_Serveur_BDD])
-  );
-  CREATE INDEX [IDX_tm_mesures_etalon_Valeur_Brute] ON dbo.[tm_mesures_etalon]([Valeur_Brute]);
-  CREATE INDEX [IDX_tm_mesures_etalon_Etalon_Numero_Serie] ON dbo.[tm_mesures_etalon]([Etalon_Numero_Serie]);
-  CREATE INDEX [IDX_tm_mesures_etalon_Est_Valeur_Null] ON dbo.[tm_mesures_etalon]([Est_Valeur_Null]);
-  CREATE INDEX [IDX_tm_mesures_etalon_Date_Heure] ON dbo.[tm_mesures_etalon]([Date_Heure]);
-END;
-GO
-GO
-
-IF OBJECT_ID(N'dbo.tm_mesures_etalonnage', N'U') IS NULL
-BEGIN
-  CREATE TABLE dbo.[tm_mesures_etalonnage] (
-    [Id_Mesure_Etalonnage] INT IDENTITY(1,1) NOT NULL,
-    [Id_Serveur_BDD] INT NOT NULL DEFAULT(0),
-    [Valeur] FLOAT NULL,
-    [Valeur_Brute] FLOAT NULL,
-    [Unite] VARCHAR(10) NULL,
-    [Date_Heure_Mesure] DATETIME NOT NULL,
-    [Sonde_Numero_serie] VARCHAR(50) NULL,
-    [Adresse_Sonde] VARCHAR(50) NULL,
-    [Numero_Ordre] INT NULL,
-    [Mesure_Sonde] FLOAT NULL,
-    [Mesure_Etalon] FLOAT NULL,
-    CONSTRAINT [PK_tm_mesures_etalonnage] PRIMARY KEY ([Id_Mesure_Etalonnage], [Id_Serveur_BDD])
-  );
-END;
-GO
-GO
-
-IF OBJECT_ID(N'dbo.tm_mesures_histo', N'U') IS NULL
-BEGIN
-  CREATE TABLE dbo.[tm_mesures_histo] (
-    [Id_Mesure] INT IDENTITY(1,1) NOT NULL,
-    [Id_Serveur_BDD] INT NOT NULL DEFAULT(0),
-    [Date_Heure_Mesure] DATETIME NOT NULL DEFAULT(GETDATE()),
-    [Valeur] FLOAT NULL,
-    [Valeur_Brute] FLOAT NULL,
-    [Nb_decimal] TINYINT NULL,
-    [Consigne] FLOAT NULL,
-    [Consigne_Sup] FLOAT NULL,
-    [Consigne_Inf] FLOAT NULL,
-    [Unite] VARCHAR(10) NULL,
-    [Sonde_Numero_Serie] VARCHAR(50) NULL,
-    [Id_Lieu] INT NOT NULL DEFAULT(0),
-    [Est_Valeur_Null] TINYINT NOT NULL DEFAULT(0),
-    [Frequence] INT NULL,
-    [Est_En_Alarme] BIT NULL DEFAULT(0),
-    [Consigne_Inf_Pre_Alarme] FLOAT NULL,
-    [Consigne_Sup_Pre_Alarme] FLOAT NULL,
-    [Moyenne] FLOAT NULL,
-    CONSTRAINT [PK_tm_mesures_histo] PRIMARY KEY ([Id_Mesure], [Id_Serveur_BDD], [Date_Heure_Mesure], [Id_Lieu], [Est_Valeur_Null])
-  );
-END;
-GO
-GO
-
-IF OBJECT_ID(N'dbo.tm_mesures_test', N'U') IS NULL
-BEGIN
-  CREATE TABLE dbo.[tm_mesures_test] (
-    [Id_Mesure_Test] INT IDENTITY(1,1) NOT NULL,
-    [Id_Serveur_BDD] INT NOT NULL DEFAULT(0),
-    [Valeur_Brute] FLOAT NOT NULL,
-    [Sonde_Numero_Serie] VARCHAR(50) NOT NULL DEFAULT(''),
-    [Est_Valeur_Null] TINYINT NOT NULL,
-    [Date_Heure] DATETIME NOT NULL DEFAULT(GETDATE()),
-    [Nombre_Total] INT NOT NULL DEFAULT(0),
-    [Nombre_Recu] INT NOT NULL DEFAULT(0),
-    CONSTRAINT [PK_tm_mesures_test] PRIMARY KEY ([Id_Mesure_Test], [Id_Serveur_BDD])
-  );
-END;
-GO
-GO
-IF OBJECT_ID(N'dbo.tm_mesures_test', N'U') IS NOT NULL AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'UX_tm_mesures_test_Sonde_Numero_Serie' AND object_id = OBJECT_ID(N'dbo.tm_mesures_test')) CREATE UNIQUE INDEX [UX_tm_mesures_test_Sonde_Numero_Serie] ON dbo.[tm_mesures_test]([Sonde_Numero_Serie]) WHERE [Sonde_Numero_Serie] IS NOT NULL;
-GO
-
-IF OBJECT_ID(N'dbo.tm_mesures_test_etalon', N'U') IS NULL
-BEGIN
-  CREATE TABLE dbo.[tm_mesures_test_etalon] (
-    [Id_Mesure_Test_Etalon] INT IDENTITY(1,1) NOT NULL,
-    [Id_Serveur_BDD] INT NOT NULL DEFAULT(0),
-    [Valeur_Brute] FLOAT NOT NULL,
-    [Etalon_Numero_Serie] VARCHAR(50) NOT NULL DEFAULT(''),
-    [Est_Valeur_Null] TINYINT NOT NULL,
-    [Date_Heure] DATETIME NOT NULL DEFAULT(GETDATE()),
-    [Nombre_Total] INT NOT NULL DEFAULT(0),
-    [Nombre_Recu] INT NOT NULL DEFAULT(0),
-    CONSTRAINT [PK_tm_mesures_test_etalon] PRIMARY KEY ([Id_Mesure_Test_Etalon], [Id_Serveur_BDD])
-  );
-END;
-GO
-GO
-IF OBJECT_ID(N'dbo.tm_mesures_test_etalon', N'U') IS NOT NULL AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'UX_tm_mesures_test_etalon_Etalon_Numero_Serie' AND object_id = OBJECT_ID(N'dbo.tm_mesures_test_etalon')) CREATE UNIQUE INDEX [UX_tm_mesures_test_etalon_Etalon_Numero_Serie] ON dbo.[tm_mesures_test_etalon]([Etalon_Numero_Serie]) WHERE [Etalon_Numero_Serie] IS NOT NULL;
-GO
-
-IF OBJECT_ID(N'dbo.tm_mode_degrade', N'U') IS NULL
-BEGIN
-  CREATE TABLE dbo.[tm_mode_degrade] (
-    [Id_Mode_Degrade] INT IDENTITY(1,1) NOT NULL,
-    [Id_Utilisateur] INT NULL,
-    [Date_Heure_Creation] DATETIME NULL,
-    [Requete_SQL] VARCHAR(500) NULL,
-    [Est_Archivee] BIT NOT NULL DEFAULT(0),
-    [Date_Heure_Archive] DATETIME NULL,
-    CONSTRAINT [PK_tm_mode_degrade] PRIMARY KEY ([Id_Mode_Degrade])
-  );
-END;
-GO
-GO
-
-IF OBJECT_ID(N'dbo.tm_parametre', N'U') IS NULL
-BEGIN
-  CREATE TABLE dbo.[tm_parametre] (
-    [Id_Parametre] INT IDENTITY(1,1) NOT NULL,
-    [Cle_Parametre] VARCHAR(20) NOT NULL,
-    [Valeur_Parametre] VARCHAR(50) NULL,
-    [Groupe_Parametre] VARCHAR(50) NULL,
-    [Commentaire_Parametre] VARCHAR(100) NULL,
-    CONSTRAINT [PK_tm_parametre] PRIMARY KEY ([Id_Parametre], [Cle_Parametre])
-  );
-END;
-GO
-GO
-
-IF OBJECT_ID(N'dbo.tm_vigilog_mesure', N'U') IS NULL
-BEGIN
-  CREATE TABLE dbo.[tm_vigilog_mesure] (
-    [Id_VigiLog_Mesure] INT IDENTITY(1,1) NOT NULL,
-    [Id_VigiLog_Tournee] INT NOT NULL,
-    [Numero_Ordre] INT NULL,
-    [Date_Heure_Mesure] DATETIME NOT NULL,
-    [Valeur] DECIMAL(10,2) NULL,
-    [Est_Hors_Limites] BIT NOT NULL DEFAULT(0),
-    [Est_En_Alarme] BIT NOT NULL DEFAULT(0),
-    [Est_Marqueur] BIT NOT NULL DEFAULT(0),
-    [Details] VARCHAR(200) NULL,
-    [Date_Heure_Import] DATETIME NOT NULL DEFAULT(GETDATE()),
-    CONSTRAINT [PK_tm_vigilog_mesure] PRIMARY KEY ([Id_VigiLog_Mesure])
-  );
-END;
-GO
-GO
-IF OBJECT_ID(N'dbo.tm_vigilog_mesure', N'U') IS NOT NULL AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'UK_tm_vigilog_mesure_unique' AND object_id = OBJECT_ID(N'dbo.tm_vigilog_mesure')) CREATE UNIQUE INDEX [UK_tm_vigilog_mesure_unique] ON dbo.[tm_vigilog_mesure]([Id_VigiLog_Tournee], [Date_Heure_Mesure], [Numero_Ordre]);
 GO
 
 IF OBJECT_ID(N'dbo.tm_journal_commentaire_libre', N'U') IS NULL
@@ -1463,90 +1879,606 @@ BEGIN
   );
 END;
 GO
+IF OBJECT_ID(N'dbo.tm_journal_commentaire_libre', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.tm_journal_commentaire_libre') AND name=N'IDX_tm_journal_commentaire_libre_code')
+  CREATE INDEX [IDX_tm_journal_commentaire_libre_code] ON dbo.[tm_journal_commentaire_libre] ([Code_Journal]);
+GO
+IF OBJECT_ID(N'dbo.tm_journal_commentaire_libre', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.tm_journal_commentaire_libre') AND name=N'IDX_tm_journal_commentaire_libre_date_creation')
+  CREATE INDEX [IDX_tm_journal_commentaire_libre_date_creation] ON dbo.[tm_journal_commentaire_libre] ([Date_Creation]);
 GO
 
-IF DB_ID(N'vigi_chat') IS NULL
+IF OBJECT_ID(N'dbo.tm_journal_histo', N'U') IS NULL
 BEGIN
-  CREATE DATABASE [vigi_chat];
+  CREATE TABLE dbo.[tm_journal_histo] (
+    [Id_Journal_Histo] INT IDENTITY(1,1) NOT NULL,
+    [Id_Serveur_BDD] INT NOT NULL DEFAULT('0'),
+    [Id_Journal] INT NOT NULL DEFAULT('0'),
+    [Code_Journal] VARCHAR(50) NULL DEFAULT(''),
+    [Commentaire] NVARCHAR(MAX) NULL,
+    [Nom_Utilisateur] VARCHAR(50) NULL DEFAULT(''),
+    [Profil_Utilisateur] VARCHAR(50) NULL DEFAULT(''),
+    [Date_Heure_Journal] DATETIME NULL,
+    [Id_Lieu] INT NULL,
+    [Commentaire_Utilisateur] NVARCHAR(MAX) NULL,
+    CONSTRAINT [PK_tm_journal_histo] PRIMARY KEY ([Id_Journal_Histo], [Id_Serveur_BDD], [Id_Journal])
+  );
 END;
 GO
-USE [vigi_chat];
+IF OBJECT_ID(N'dbo.tm_journal_histo', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.tm_journal_histo') AND name=N'IDX_Code_Journal')
+  CREATE INDEX [IDX_Code_Journal] ON dbo.[tm_journal_histo] ([Code_Journal]);
+GO
+IF OBJECT_ID(N'dbo.tm_journal_histo', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.tm_journal_histo') AND name=N'IDX_Nom_Utilisateur')
+  CREATE INDEX [IDX_Nom_Utilisateur] ON dbo.[tm_journal_histo] ([Nom_Utilisateur]);
+GO
+IF OBJECT_ID(N'dbo.tm_journal_histo', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.tm_journal_histo') AND name=N'IDX_Profil_Utilisateur')
+  CREATE INDEX [IDX_Profil_Utilisateur] ON dbo.[tm_journal_histo] ([Profil_Utilisateur]);
+GO
+IF OBJECT_ID(N'dbo.tm_journal_histo', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.tm_journal_histo') AND name=N'IDX_Date_Heure_Journal')
+  CREATE INDEX [IDX_Date_Heure_Journal] ON dbo.[tm_journal_histo] ([Date_Heure_Journal]);
 GO
 
-IF OBJECT_ID(N'dbo.t_conversation', N'U') IS NULL
+IF OBJECT_ID(N'dbo.tm_mesures', N'U') IS NULL
 BEGIN
-  CREATE TABLE dbo.[t_conversation] (
-    [Id_Conversation] INT IDENTITY(1,1) NOT NULL,
-    [Type] VARCHAR(10) NOT NULL,
-    [Titre] VARCHAR(128) NULL,
-    [DM_Key] VARCHAR(64) NULL,
+  CREATE TABLE dbo.[tm_mesures] (
+    [Id_Serveur_BDD] INT NOT NULL DEFAULT('0'),
+    [Id_Mesure] INT IDENTITY(1,1) NOT NULL,
+    [Date_Heure_Mesure] DATETIME NOT NULL,
+    [Valeur] FLOAT NULL,
+    [Valeur_Brute] FLOAT NULL,
+    [Est_Valeur_Memoire] BIT NOT NULL DEFAULT('0'),
+    [Planning_Regle_Existe] BIT NULL DEFAULT('0'),
+    [Planning_Actif] BIT NULL DEFAULT('0'),
+    [Nb_Decimal] INT NULL,
+    [Consigne] FLOAT NULL,
+    [Consigne_Sup] FLOAT NULL,
+    [Consigne_Inf] FLOAT NULL,
+    [Unite] VARCHAR(10) NULL DEFAULT(''),
+    [Sonde_Numero_Serie] VARCHAR(50) NULL DEFAULT(''),
+    [Adresse_Sonde] VARCHAR(50) NULL,
+    [COM_sonde] FLOAT NULL,
+    [Est_Mesure_Repeteur_GSO] FLOAT NULL DEFAULT('0'),
+    [Id_Lieu] INT NOT NULL DEFAULT('0'),
+    [Est_Valeur_Null] TINYINT NOT NULL DEFAULT('0'),
+    [Frequence] INT NULL,
+    [Est_Etat_Alarme] BIT NOT NULL DEFAULT('0'),
+    [Consigne_Inf_Pre_Alarme] FLOAT NULL,
+    [Consigne_Sup_Pre_Alarme] FLOAT NULL,
+    [Moyenne] FLOAT NULL,
+    [Rssi] VARCHAR(10) NULL,
+    [Tension] VARCHAR(10) NULL,
+    CONSTRAINT [PK_tm_mesures] PRIMARY KEY ([Id_Serveur_BDD], [Id_Mesure], [Date_Heure_Mesure], [Id_Lieu], [Est_Valeur_Null])
+  );
+END;
+GO
+IF OBJECT_ID(N'dbo.tm_mesures', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.tm_mesures') AND name=N'IDX_Date_Heure_Mesure')
+  CREATE INDEX [IDX_Date_Heure_Mesure] ON dbo.[tm_mesures] ([Date_Heure_Mesure]);
+GO
+IF OBJECT_ID(N'dbo.tm_mesures', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.tm_mesures') AND name=N'IDX_Est_Etat_Alarme')
+  CREATE INDEX [IDX_Est_Etat_Alarme] ON dbo.[tm_mesures] ([Est_Etat_Alarme]);
+GO
+IF OBJECT_ID(N'dbo.tm_mesures', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.tm_mesures') AND name=N'Mesure_Numero_lieu_IDX')
+  CREATE INDEX [Mesure_Numero_lieu_IDX] ON dbo.[tm_mesures] ([Id_Lieu]);
+GO
+IF OBJECT_ID(N'dbo.tm_mesures', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.tm_mesures') AND name=N'IDX_Est_Valeur_Null')
+  CREATE INDEX [IDX_Est_Valeur_Null] ON dbo.[tm_mesures] ([Est_Valeur_Null]);
+GO
+IF OBJECT_ID(N'dbo.tm_mesures', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.tm_mesures') AND name=N'Mesure_lieu')
+  CREATE INDEX [Mesure_lieu] ON dbo.[tm_mesures] ([Id_Lieu]);
+GO
+IF OBJECT_ID(N'dbo.tm_mesures', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.tm_mesures') AND name=N'IDX_Date_Heure_Mesure_Id_Lieu')
+  CREATE INDEX [IDX_Date_Heure_Mesure_Id_Lieu] ON dbo.[tm_mesures] ([Date_Heure_Mesure], [Id_Lieu]);
+GO
+IF OBJECT_ID(N'dbo.tm_mesures', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.tm_mesures') AND name=N'Id_Mesure')
+  CREATE INDEX [Id_Mesure] ON dbo.[tm_mesures] ([Id_Mesure]);
+GO
+
+IF OBJECT_ID(N'dbo.tm_mesures_ajustage', N'U') IS NULL
+BEGIN
+  CREATE TABLE dbo.[tm_mesures_ajustage] (
+    [Id_Mesure_Ajustage] INT IDENTITY(1,1) NOT NULL,
+    [Id_Serveur_BDD] INT NOT NULL DEFAULT('0'),
+    [Valeur] FLOAT NULL,
+    [Valeur_Brute] FLOAT NULL,
+    [Unite] VARCHAR(10) NULL,
+    [Date_Heure_Mesure] DATETIME NOT NULL,
+    [Sonde_Numero_Serie] VARCHAR(50) NOT NULL DEFAULT(''),
+    [Adresse_Sonde] VARCHAR(50) NOT NULL DEFAULT(''),
+    [Est_Valeur_Null] TINYINT NOT NULL DEFAULT('0'),
+    CONSTRAINT [PK_tm_mesures_ajustage] PRIMARY KEY ([Id_Mesure_Ajustage], [Id_Serveur_BDD])
+  );
+END;
+GO
+IF OBJECT_ID(N'dbo.tm_mesures_ajustage', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.tm_mesures_ajustage') AND name=N'IDX_Valeur')
+  CREATE INDEX [IDX_Valeur] ON dbo.[tm_mesures_ajustage] ([Valeur]);
+GO
+IF OBJECT_ID(N'dbo.tm_mesures_ajustage', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.tm_mesures_ajustage') AND name=N'IDX_Valeur_Brute')
+  CREATE INDEX [IDX_Valeur_Brute] ON dbo.[tm_mesures_ajustage] ([Valeur_Brute]);
+GO
+IF OBJECT_ID(N'dbo.tm_mesures_ajustage', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.tm_mesures_ajustage') AND name=N'IDX_Est_Valeur_Null')
+  CREATE INDEX [IDX_Est_Valeur_Null] ON dbo.[tm_mesures_ajustage] ([Est_Valeur_Null]);
+GO
+IF OBJECT_ID(N'dbo.tm_mesures_ajustage', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.tm_mesures_ajustage') AND name=N'IDX_Sonde_Numero_Serie')
+  CREATE INDEX [IDX_Sonde_Numero_Serie] ON dbo.[tm_mesures_ajustage] ([Sonde_Numero_Serie]);
+GO
+IF OBJECT_ID(N'dbo.tm_mesures_ajustage', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.tm_mesures_ajustage') AND name=N'IDX_Date_Heure')
+  CREATE INDEX [IDX_Date_Heure] ON dbo.[tm_mesures_ajustage] ([Date_Heure_Mesure]);
+GO
+
+IF OBJECT_ID(N'dbo.tm_mesures_ajustage_etalon', N'U') IS NULL
+BEGIN
+  CREATE TABLE dbo.[tm_mesures_ajustage_etalon] (
+    [Id_Mesure_Ajustage_Etalon] INT IDENTITY(1,1) NOT NULL,
+    [Id_Serveur_BDD] INT NOT NULL DEFAULT('0'),
+    [Valeur] FLOAT NULL,
+    [Valeur_Brute] FLOAT NULL,
+    [Etalon_Numero_Serie] VARCHAR(50) NOT NULL DEFAULT(''),
+    [Est_Valeur_Null] TINYINT NOT NULL DEFAULT('0'),
+    [Date_Heure_Mesure] DATETIME NOT NULL,
+    CONSTRAINT [PK_tm_mesures_ajustage_etalon] PRIMARY KEY ([Id_Mesure_Ajustage_Etalon], [Id_Serveur_BDD])
+  );
+END;
+GO
+IF OBJECT_ID(N'dbo.tm_mesures_ajustage_etalon', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.tm_mesures_ajustage_etalon') AND name=N'IDX_Valeur')
+  CREATE INDEX [IDX_Valeur] ON dbo.[tm_mesures_ajustage_etalon] ([Valeur]);
+GO
+IF OBJECT_ID(N'dbo.tm_mesures_ajustage_etalon', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.tm_mesures_ajustage_etalon') AND name=N'IDX_Valeur_Brute')
+  CREATE INDEX [IDX_Valeur_Brute] ON dbo.[tm_mesures_ajustage_etalon] ([Valeur_Brute]);
+GO
+IF OBJECT_ID(N'dbo.tm_mesures_ajustage_etalon', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.tm_mesures_ajustage_etalon') AND name=N'IDX_Est_Valeur_Null')
+  CREATE INDEX [IDX_Est_Valeur_Null] ON dbo.[tm_mesures_ajustage_etalon] ([Est_Valeur_Null]);
+GO
+IF OBJECT_ID(N'dbo.tm_mesures_ajustage_etalon', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.tm_mesures_ajustage_etalon') AND name=N'IDX_Etalon_Numero_Serie')
+  CREATE INDEX [IDX_Etalon_Numero_Serie] ON dbo.[tm_mesures_ajustage_etalon] ([Etalon_Numero_Serie]);
+GO
+IF OBJECT_ID(N'dbo.tm_mesures_ajustage_etalon', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.tm_mesures_ajustage_etalon') AND name=N'IDX_Date_Heure')
+  CREATE INDEX [IDX_Date_Heure] ON dbo.[tm_mesures_ajustage_etalon] ([Date_Heure_Mesure]);
+GO
+
+IF OBJECT_ID(N'dbo.tm_mesures_etalon', N'U') IS NULL
+BEGIN
+  CREATE TABLE dbo.[tm_mesures_etalon] (
+    [Id_Mesure_Etalon] INT IDENTITY(1,1) NOT NULL,
+    [Id_Serveur_BDD] INT NOT NULL DEFAULT('0'),
+    [Valeur_Brute] FLOAT NOT NULL,
+    [Etalon_Numero_Serie] VARCHAR(50) NOT NULL DEFAULT(''),
+    [Est_Valeur_Null] TINYINT NOT NULL,
+    [Date_Heure] DATETIME NOT NULL,
+    [Message_Erreur] VARCHAR(50) NOT NULL DEFAULT(''),
+    CONSTRAINT [PK_tm_mesures_etalon] PRIMARY KEY ([Id_Mesure_Etalon], [Id_Serveur_BDD])
+  );
+END;
+GO
+IF OBJECT_ID(N'dbo.tm_mesures_etalon', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.tm_mesures_etalon') AND name=N'IDX_Valeur_Brute')
+  CREATE INDEX [IDX_Valeur_Brute] ON dbo.[tm_mesures_etalon] ([Valeur_Brute]);
+GO
+IF OBJECT_ID(N'dbo.tm_mesures_etalon', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.tm_mesures_etalon') AND name=N'IDX_Etalon_Numero_Serie')
+  CREATE INDEX [IDX_Etalon_Numero_Serie] ON dbo.[tm_mesures_etalon] ([Etalon_Numero_Serie]);
+GO
+IF OBJECT_ID(N'dbo.tm_mesures_etalon', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.tm_mesures_etalon') AND name=N'IDX_Est_Valeur_Null')
+  CREATE INDEX [IDX_Est_Valeur_Null] ON dbo.[tm_mesures_etalon] ([Est_Valeur_Null]);
+GO
+IF OBJECT_ID(N'dbo.tm_mesures_etalon', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.tm_mesures_etalon') AND name=N'IDX_Date_Heure')
+  CREATE INDEX [IDX_Date_Heure] ON dbo.[tm_mesures_etalon] ([Date_Heure]);
+GO
+IF OBJECT_ID(N'dbo.tm_mesures_etalon', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.tm_mesures_etalon') AND name=N'IDX_Message_Erreur')
+  CREATE INDEX [IDX_Message_Erreur] ON dbo.[tm_mesures_etalon] ([Message_Erreur]);
+GO
+
+IF OBJECT_ID(N'dbo.tm_mesures_etalonnage', N'U') IS NULL
+BEGIN
+  CREATE TABLE dbo.[tm_mesures_etalonnage] (
+    [Id_Mesure_Etalonnage] INT IDENTITY(1,1) NOT NULL,
+    [Id_Serveur_BDD] INT NOT NULL DEFAULT('0'),
+    [Valeur] FLOAT NULL,
+    [Valeur_Brute] FLOAT NULL,
+    [Unite] VARCHAR(10) NULL,
+    [Date_Heure_Mesure] DATETIME NOT NULL,
+    [Sonde_Numero_serie] VARCHAR(50) NULL,
+    [Adresse_Sonde] VARCHAR(50) NULL,
+    [Numero_Ordre] INT NULL,
+    [Mesure_Sonde] FLOAT NULL,
+    [Mesure_Etalon] FLOAT NULL,
+    CONSTRAINT [PK_tm_mesures_etalonnage] PRIMARY KEY ([Id_Mesure_Etalonnage], [Id_Serveur_BDD])
+  );
+END;
+GO
+IF OBJECT_ID(N'dbo.tm_mesures_etalonnage', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.tm_mesures_etalonnage') AND name=N'IDX_Sonde_Numero_serie')
+  CREATE INDEX [IDX_Sonde_Numero_serie] ON dbo.[tm_mesures_etalonnage] ([Sonde_Numero_serie]);
+GO
+
+IF OBJECT_ID(N'dbo.tm_mesures_gso', N'U') IS NULL
+BEGIN
+  CREATE TABLE dbo.[tm_mesures_gso] (
+    [Id_mesures_gso] INT IDENTITY(1,1) NOT NULL,
+    [id_capteur] VARCHAR(50) NOT NULL DEFAULT(''),
+    [tep] FLOAT NULL,
+    [unite] VARCHAR(10) NULL DEFAULT(''),
+    [date_mesure] DATETIME NOT NULL,
+    [trame] BINARY(8) NULL,
+    [rssi] VARCHAR(10) NULL,
+    [tension] VARCHAR(10) NULL,
+    [COM_sonde] FLOAT NULL,
+    CONSTRAINT [PK_tm_mesures_gso] PRIMARY KEY ([id_capteur], [date_mesure])
+  );
+END;
+GO
+IF OBJECT_ID(N'dbo.tm_mesures_gso', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.tm_mesures_gso') AND name=N'Id_mesures_gso')
+  CREATE INDEX [Id_mesures_gso] ON dbo.[tm_mesures_gso] ([Id_mesures_gso]);
+GO
+
+IF OBJECT_ID(N'dbo.tm_mesures_gso_build', N'U') IS NULL
+BEGIN
+  CREATE TABLE dbo.[tm_mesures_gso_build] (
+    [Date_Heure_Mesure] DATETIME NULL,
+    [Valeur] FLOAT NULL,
+    [Valeur_Brute] FLOAT NULL,
+    [Est_Valeur_Memoire] BIT NOT NULL DEFAULT('0'),
+    [Planning_Regle_Existe] BIT NULL DEFAULT('0'),
+    [Planning_Actif] BIT NULL DEFAULT('0'),
+    [Consigne] FLOAT NULL,
+    [Consigne_Sup] FLOAT NULL,
+    [Consigne_Inf] FLOAT NULL,
+    [Unite] VARCHAR(10) NULL DEFAULT(''),
+    [Sonde_Numero_Serie] VARCHAR(50) NULL DEFAULT(''),
+    [Adresse_Sonde] VARCHAR(50) NULL,
+    [COM_sonde] FLOAT NULL,
+    [Est_Mesure_Repeteur_GSO] FLOAT NULL DEFAULT('0'),
+    [Id_Lieu] INT NOT NULL DEFAULT('0'),
+    [Consigne_Inf_Pre_Alarme] FLOAT NULL,
+    [Consigne_Sup_Pre_Alarme] FLOAT NULL,
+    [Rssi] VARCHAR(10) NULL,
+    [Tension] VARCHAR(10) NULL
+  );
+END;
+GO
+
+IF OBJECT_ID(N'dbo.tm_mesures_gso_commandes_mem', N'U') IS NULL
+BEGIN
+  CREATE TABLE dbo.[tm_mesures_gso_commandes_mem] (
+    [Id] BIGINT IDENTITY(1,1) NOT NULL,
+    [GSO_SN] VARCHAR(32) NOT NULL,
+    [Port_Serie_Send_GSO] VARCHAR(10) NULL,
+    [Commande_Globale_Begin] FLOAT NOT NULL DEFAULT('0'),
+    [Commande_Globale_End] FLOAT NOT NULL DEFAULT('0'),
+    [Missing_Data_Total] FLOAT NOT NULL DEFAULT('0'),
+    [Commande_Mem_Globale] VARCHAR(50) NULL,
+    [Date_Calcul] DATETIME NOT NULL,
+    [Statut] VARCHAR(20) NOT NULL DEFAULT('0'),
+    [Date_Heure_Demande_Mem] DATETIME NULL,
+    CONSTRAINT [PK_tm_mesures_gso_commandes_mem] PRIMARY KEY ([GSO_SN], [Commande_Globale_Begin], [Commande_Globale_End], [Missing_Data_Total])
+  );
+END;
+GO
+IF OBJECT_ID(N'dbo.tm_mesures_gso_commandes_mem', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.tm_mesures_gso_commandes_mem') AND name=N'Id')
+  CREATE INDEX [Id] ON dbo.[tm_mesures_gso_commandes_mem] ([Id]);
+GO
+
+IF OBJECT_ID(N'dbo.tm_mesures_gso_count_mem', N'U') IS NULL
+BEGIN
+  CREATE TABLE dbo.[tm_mesures_gso_count_mem] (
+    [Id] BIGINT IDENTITY(1,1) NOT NULL,
+    [GSO_SN] VARCHAR(32) NOT NULL,
+    [Port_Serie_Send_GSO] VARCHAR(10) NULL,
+    [Missing_Data_Begin] FLOAT NOT NULL DEFAULT('0'),
+    [Missing_Data_End] FLOAT NOT NULL DEFAULT('0'),
+    [Missing_Data_Total] FLOAT NOT NULL DEFAULT('0'),
+    [Commande_Mem] VARCHAR(50) NULL,
+    [Statut] VARCHAR(20) NOT NULL DEFAULT('0'),
+    [date_calcul] DATETIME NOT NULL,
+    [Date_Heure_Demande_Mem] DATETIME NULL,
+    CONSTRAINT [PK_tm_mesures_gso_count_mem] PRIMARY KEY ([GSO_SN], [Missing_Data_Begin], [Missing_Data_End], [date_calcul])
+  );
+END;
+GO
+IF OBJECT_ID(N'dbo.tm_mesures_gso_count_mem', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.tm_mesures_gso_count_mem') AND name=N'Id')
+  CREATE INDEX [Id] ON dbo.[tm_mesures_gso_count_mem] ([Id]);
+GO
+
+IF OBJECT_ID(N'dbo.tm_mesures_gso_read_mem', N'U') IS NULL
+BEGIN
+  CREATE TABLE dbo.[tm_mesures_gso_read_mem] (
+    [Id] BIGINT IDENTITY(1,1) NOT NULL,
+    [GSO_SN] VARCHAR(32) NOT NULL,
+    [Ecart] VARCHAR(32) NULL,
+    [Date_Heure_Read_Mem] DATETIME NULL
+  );
+END;
+GO
+IF OBJECT_ID(N'dbo.tm_mesures_gso_read_mem', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.tm_mesures_gso_read_mem') AND name=N'Id')
+  CREATE INDEX [Id] ON dbo.[tm_mesures_gso_read_mem] ([Id]);
+GO
+
+IF OBJECT_ID(N'dbo.tm_mesures_gso_read_metro', N'U') IS NULL
+BEGIN
+  CREATE TABLE dbo.[tm_mesures_gso_read_metro] (
+    [Id] BIGINT IDENTITY(1,1) NOT NULL,
+    [GSO_SN] VARCHAR(32) NOT NULL,
+    [Commande_metro] VARCHAR(32) NOT NULL,
+    [Commande_metro_envoyee] BIT NOT NULL DEFAULT('0'),
+    [Metro_en_cours] BIT NOT NULL DEFAULT('0'),
+    [Dernier_Date_MAJ] DATETIME NULL,
+    CONSTRAINT [PK_tm_mesures_gso_read_metro] PRIMARY KEY ([GSO_SN], [Commande_metro])
+  );
+END;
+GO
+IF OBJECT_ID(N'dbo.tm_mesures_gso_read_metro', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.tm_mesures_gso_read_metro') AND name=N'Id')
+  CREATE INDEX [Id] ON dbo.[tm_mesures_gso_read_metro] ([Id]);
+GO
+
+IF OBJECT_ID(N'dbo.tm_mesures_histo', N'U') IS NULL
+BEGIN
+  CREATE TABLE dbo.[tm_mesures_histo] (
+    [Id_Mesure] INT IDENTITY(1,1) NOT NULL,
+    [Id_Serveur_BDD] INT NOT NULL DEFAULT('0'),
+    [Date_Heure_Mesure] DATETIME NOT NULL DEFAULT(GETDATE()),
+    [Valeur] FLOAT NULL,
+    [Valeur_Brute] FLOAT NULL,
+    [Nb_decimal] TINYINT NULL,
+    [Consigne] FLOAT NULL,
+    [Consigne_Sup] FLOAT NULL,
+    [Consigne_Inf] FLOAT NULL,
+    [Unite] VARCHAR(10) NULL DEFAULT(''),
+    [Sonde_Numero_Serie] VARCHAR(50) NULL DEFAULT(''),
+    [Id_Lieu] INT NOT NULL DEFAULT('0'),
+    [Est_Valeur_Null] TINYINT NOT NULL DEFAULT('0'),
+    [Frequence] INT NULL,
+    [Est_En_Alarme] BIT NULL DEFAULT('0'),
+    [Consigne_Inf_Pre_Alarme] FLOAT NULL,
+    [Consigne_Sup_Pre_Alarme] FLOAT NULL,
+    [Moyenne] FLOAT NULL,
+    CONSTRAINT [PK_tm_mesures_histo] PRIMARY KEY ([Id_Mesure], [Id_Serveur_BDD], [Date_Heure_Mesure], [Id_Lieu], [Est_Valeur_Null])
+  );
+END;
+GO
+IF OBJECT_ID(N'dbo.tm_mesures_histo', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.tm_mesures_histo') AND name=N'IDX_Date_Heure_Mesure')
+  CREATE INDEX [IDX_Date_Heure_Mesure] ON dbo.[tm_mesures_histo] ([Date_Heure_Mesure]);
+GO
+IF OBJECT_ID(N'dbo.tm_mesures_histo', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.tm_mesures_histo') AND name=N'IDX_Est_En_Alarme')
+  CREATE INDEX [IDX_Est_En_Alarme] ON dbo.[tm_mesures_histo] ([Est_En_Alarme]);
+GO
+IF OBJECT_ID(N'dbo.tm_mesures_histo', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.tm_mesures_histo') AND name=N'Mesure_Numero_lieu_IDX')
+  CREATE INDEX [Mesure_Numero_lieu_IDX] ON dbo.[tm_mesures_histo] ([Id_Lieu]);
+GO
+IF OBJECT_ID(N'dbo.tm_mesures_histo', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.tm_mesures_histo') AND name=N'IDX_Date_Heure_Mesure_Id_Lieu')
+  CREATE INDEX [IDX_Date_Heure_Mesure_Id_Lieu] ON dbo.[tm_mesures_histo] ([Date_Heure_Mesure], [Id_Lieu]);
+GO
+IF OBJECT_ID(N'dbo.tm_mesures_histo', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.tm_mesures_histo') AND name=N'Mesure_lieu')
+  CREATE INDEX [Mesure_lieu] ON dbo.[tm_mesures_histo] ([Id_Lieu]);
+GO
+IF OBJECT_ID(N'dbo.tm_mesures_histo', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.tm_mesures_histo') AND name=N'IDX_Est_Valeur_Null')
+  CREATE INDEX [IDX_Est_Valeur_Null] ON dbo.[tm_mesures_histo] ([Est_Valeur_Null]);
+GO
+
+IF OBJECT_ID(N'dbo.tm_mesures_test', N'U') IS NULL
+BEGIN
+  CREATE TABLE dbo.[tm_mesures_test] (
+    [Id_Mesure_Test] INT IDENTITY(1,1) NOT NULL,
+    [Id_Serveur_BDD] INT NOT NULL DEFAULT('0'),
+    [Valeur_Brute] FLOAT NOT NULL,
+    [Sonde_Numero_Serie] VARCHAR(50) NOT NULL DEFAULT(''),
+    [Est_Valeur_Null] TINYINT NOT NULL,
+    [Date_Heure] DATETIME NOT NULL DEFAULT(GETDATE()),
+    [Nombre_Total] INT NOT NULL DEFAULT('0'),
+    [Nombre_Recu] INT NOT NULL DEFAULT('0'),
+    CONSTRAINT [PK_tm_mesures_test] PRIMARY KEY ([Id_Mesure_Test], [Id_Serveur_BDD])
+  );
+END;
+GO
+IF OBJECT_ID(N'dbo.tm_mesures_test', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.tm_mesures_test') AND name=N'Sonde')
+  CREATE UNIQUE INDEX [Sonde] ON dbo.[tm_mesures_test] ([Sonde_Numero_Serie]);
+GO
+IF OBJECT_ID(N'dbo.tm_mesures_test', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.tm_mesures_test') AND name=N'IDX_Est_Valeur_Null')
+  CREATE INDEX [IDX_Est_Valeur_Null] ON dbo.[tm_mesures_test] ([Est_Valeur_Null]);
+GO
+IF OBJECT_ID(N'dbo.tm_mesures_test', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.tm_mesures_test') AND name=N'IDX_Date_Heure')
+  CREATE INDEX [IDX_Date_Heure] ON dbo.[tm_mesures_test] ([Date_Heure]);
+GO
+IF OBJECT_ID(N'dbo.tm_mesures_test', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.tm_mesures_test') AND name=N'IDX_Nombre_Total')
+  CREATE INDEX [IDX_Nombre_Total] ON dbo.[tm_mesures_test] ([Nombre_Total]);
+GO
+IF OBJECT_ID(N'dbo.tm_mesures_test', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.tm_mesures_test') AND name=N'IDX_Nombre_Recu')
+  CREATE INDEX [IDX_Nombre_Recu] ON dbo.[tm_mesures_test] ([Nombre_Recu]);
+GO
+
+IF OBJECT_ID(N'dbo.tm_mesures_test_etalon', N'U') IS NULL
+BEGIN
+  CREATE TABLE dbo.[tm_mesures_test_etalon] (
+    [Id_Mesure_Test_Etalon] INT IDENTITY(1,1) NOT NULL,
+    [Id_Serveur_BDD] INT NOT NULL DEFAULT('0'),
+    [Valeur_Brute] FLOAT NOT NULL,
+    [Etalon_Numero_Serie] VARCHAR(50) NOT NULL DEFAULT(''),
+    [Est_Valeur_Null] TINYINT NOT NULL,
+    [Date_Heure] DATETIME NOT NULL DEFAULT(GETDATE()),
+    [Nombre_Total] INT NOT NULL DEFAULT('0'),
+    [Nombre_Recu] INT NOT NULL DEFAULT('0'),
+    CONSTRAINT [PK_tm_mesures_test_etalon] PRIMARY KEY ([Id_Mesure_Test_Etalon], [Id_Serveur_BDD])
+  );
+END;
+GO
+IF OBJECT_ID(N'dbo.tm_mesures_test_etalon', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.tm_mesures_test_etalon') AND name=N'Etalon')
+  CREATE UNIQUE INDEX [Etalon] ON dbo.[tm_mesures_test_etalon] ([Etalon_Numero_Serie]);
+GO
+IF OBJECT_ID(N'dbo.tm_mesures_test_etalon', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.tm_mesures_test_etalon') AND name=N'IDX_Est_Valeur_Null')
+  CREATE INDEX [IDX_Est_Valeur_Null] ON dbo.[tm_mesures_test_etalon] ([Est_Valeur_Null]);
+GO
+IF OBJECT_ID(N'dbo.tm_mesures_test_etalon', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.tm_mesures_test_etalon') AND name=N'IDX_Date_Heure')
+  CREATE INDEX [IDX_Date_Heure] ON dbo.[tm_mesures_test_etalon] ([Date_Heure]);
+GO
+IF OBJECT_ID(N'dbo.tm_mesures_test_etalon', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.tm_mesures_test_etalon') AND name=N'IDX_Nombre_Total')
+  CREATE INDEX [IDX_Nombre_Total] ON dbo.[tm_mesures_test_etalon] ([Nombre_Total]);
+GO
+IF OBJECT_ID(N'dbo.tm_mesures_test_etalon', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.tm_mesures_test_etalon') AND name=N'IDX_Nombre_Recu')
+  CREATE INDEX [IDX_Nombre_Recu] ON dbo.[tm_mesures_test_etalon] ([Nombre_Recu]);
+GO
+
+IF OBJECT_ID(N'dbo.tm_mode_degrade', N'U') IS NULL
+BEGIN
+  CREATE TABLE dbo.[tm_mode_degrade] (
+    [Id_Mode_Degrade] INT IDENTITY(1,1) NOT NULL,
+    [Id_Utilisateur] INT NULL,
+    [Date_Heure_Creation] DATETIME NULL,
+    [Requete_SQL] VARCHAR(500) NULL,
+    [Est_Archivee] BIT NOT NULL DEFAULT('0'),
+    [Date_Heure_Archive] DATETIME NULL,
+    CONSTRAINT [PK_tm_mode_degrade] PRIMARY KEY ([Id_Mode_Degrade])
+  );
+END;
+GO
+
+IF OBJECT_ID(N'dbo.tm_parametre', N'U') IS NULL
+BEGIN
+  CREATE TABLE dbo.[tm_parametre] (
+    [Id_Parametre] INT IDENTITY(1,1) NOT NULL,
+    [Cle_Parametre] VARCHAR(20) NOT NULL DEFAULT(''),
+    [Valeur_Parametre] VARCHAR(50) NULL,
+    [Groupe_Parametre] VARCHAR(50) NULL,
+    [Commentaire_Parametre] VARCHAR(100) NULL,
+    CONSTRAINT [PK_tm_parametre] PRIMARY KEY ([Id_Parametre], [Cle_Parametre])
+  );
+END;
+GO
+
+IF OBJECT_ID(N'dbo.tm_remontee_plage_gsp', N'U') IS NULL
+BEGIN
+  CREATE TABLE dbo.[tm_remontee_plage_gsp] (
+    [Id] INT IDENTITY(1,1) NOT NULL,
+    [Id_Lieu] INT NOT NULL,
+    [GSP_SN] VARCHAR(50) NOT NULL,
+    [Date_Heure_Debut] DATETIME NOT NULL,
+    [Date_Heure_Fin] DATETIME NOT NULL,
+    [Statut] VARCHAR(20) NOT NULL DEFAULT('A_FAIRE'),
     [Date_Creation] DATETIME NOT NULL DEFAULT(GETDATE()),
-    CONSTRAINT [PK_t_conversation] PRIMARY KEY ([Id_Conversation])
+    [Date_Derniere_Maj] DATETIME NOT NULL DEFAULT(GETDATE()),
+    [Nb_Tentatives] INT NOT NULL DEFAULT('0'),
+    [Derniere_Erreur] NVARCHAR(MAX) NULL,
+    CONSTRAINT [PK_tm_remontee_plage_gsp] PRIMARY KEY ([Id])
   );
 END;
 GO
+IF OBJECT_ID(N'dbo.tm_remontee_plage_gsp', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.tm_remontee_plage_gsp') AND name=N'IDX_tm_remontee_plage_gsp_lieu_sonde_statut')
+  CREATE INDEX [IDX_tm_remontee_plage_gsp_lieu_sonde_statut] ON dbo.[tm_remontee_plage_gsp] ([Id_Lieu], [GSP_SN], [Statut]);
 GO
-IF OBJECT_ID(N'dbo.t_conversation', N'U') IS NOT NULL AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'UX_t_conversation_DM_Key' AND object_id = OBJECT_ID(N'dbo.t_conversation')) CREATE UNIQUE INDEX [UX_t_conversation_DM_Key] ON dbo.[t_conversation]([DM_Key]) WHERE [DM_Key] IS NOT NULL;
+IF OBJECT_ID(N'dbo.tm_remontee_plage_gsp', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.tm_remontee_plage_gsp') AND name=N'IDX_tm_remontee_plage_gsp_debut')
+  CREATE INDEX [IDX_tm_remontee_plage_gsp_debut] ON dbo.[tm_remontee_plage_gsp] ([Date_Heure_Debut]);
+GO
+IF OBJECT_ID(N'dbo.tm_remontee_plage_gsp', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.tm_remontee_plage_gsp') AND name=N'IDX_tm_remontee_plage_gsp_fin')
+  CREATE INDEX [IDX_tm_remontee_plage_gsp_fin] ON dbo.[tm_remontee_plage_gsp] ([Date_Heure_Fin]);
 GO
 
-IF OBJECT_ID(N'dbo.t_conversation_participant', N'U') IS NULL
+IF OBJECT_ID(N'dbo.tm_vigilog_mesure', N'U') IS NULL
 BEGIN
-  CREATE TABLE dbo.[t_conversation_participant] (
-    [Id_Participant] INT IDENTITY(1,1) NOT NULL,
-    [Id_Conversation] INT NOT NULL,
-    [Id_Utilisateur] INT NOT NULL,
-    [Last_Read_Msg_Id] INT NULL,
-    [Date_Ajout] DATETIME NOT NULL DEFAULT(GETDATE()),
-    CONSTRAINT [PK_t_conversation_participant] PRIMARY KEY ([Id_Participant])
+  CREATE TABLE dbo.[tm_vigilog_mesure] (
+    [Id_VigiLog_Mesure] INT IDENTITY(1,1) NOT NULL,
+    [Id_VigiLog_Tournee] INT NOT NULL,
+    [Numero_Ordre] INT NULL,
+    [Date_Heure_Mesure] DATETIME NOT NULL,
+    [Valeur] DECIMAL(10,2) NULL,
+    [Est_Hors_Limites] BIT NOT NULL DEFAULT('0'),
+    [Est_En_Alarme] BIT NOT NULL DEFAULT('0'),
+    [Est_Marqueur] BIT NOT NULL DEFAULT('0'),
+    [Details] VARCHAR(200) NULL,
+    [Date_Heure_Import] DATETIME NOT NULL DEFAULT(GETDATE()),
+    CONSTRAINT [PK_tm_vigilog_mesure] PRIMARY KEY ([Id_VigiLog_Mesure])
   );
 END;
 GO
+IF OBJECT_ID(N'dbo.tm_vigilog_mesure', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.tm_vigilog_mesure') AND name=N'UK_tm_vigilog_mesure_unique')
+  CREATE UNIQUE INDEX [UK_tm_vigilog_mesure_unique] ON dbo.[tm_vigilog_mesure] ([Id_VigiLog_Tournee], [Date_Heure_Mesure], [Numero_Ordre]) WHERE [Numero_Ordre] IS NOT NULL;
 GO
-IF OBJECT_ID(N'dbo.t_conversation_participant', N'U') IS NOT NULL AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'UK_t_conversation_participant_1' AND object_id = OBJECT_ID(N'dbo.t_conversation_participant')) CREATE UNIQUE INDEX [UK_t_conversation_participant_1] ON dbo.[t_conversation_participant]([Id_Conversation], [Id_Utilisateur]);
+IF OBJECT_ID(N'dbo.tm_vigilog_mesure', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.tm_vigilog_mesure') AND name=N'IDX_tm_vigilog_mesure_tournee')
+  CREATE INDEX [IDX_tm_vigilog_mesure_tournee] ON dbo.[tm_vigilog_mesure] ([Id_VigiLog_Tournee]);
 GO
-
-IF OBJECT_ID(N'dbo.t_message', N'U') IS NULL
-BEGIN
-  CREATE TABLE dbo.[t_message] (
-    [Id_Message] INT IDENTITY(1,1) NOT NULL,
-    [Id_Conversation] INT NOT NULL,
-    [Sender_Id] INT NOT NULL,
-    [Contenu] NVARCHAR(MAX) NOT NULL,
-    [Date_Creation] DATETIME NOT NULL DEFAULT(GETDATE()),
-    [Date_Modification] DATETIME NULL,
-    [Date_Suppression] DATETIME NULL,
-    CONSTRAINT [PK_t_message] PRIMARY KEY ([Id_Message])
-  );
-END;
+IF OBJECT_ID(N'dbo.tm_vigilog_mesure', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.tm_vigilog_mesure') AND name=N'IDX_tm_vigilog_mesure_date')
+  CREATE INDEX [IDX_tm_vigilog_mesure_date] ON dbo.[tm_vigilog_mesure] ([Date_Heure_Mesure]);
 GO
+IF OBJECT_ID(N'dbo.tm_vigilog_mesure', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.tm_vigilog_mesure') AND name=N'IDX_tm_vigilog_mesure_alarm')
+  CREATE INDEX [IDX_tm_vigilog_mesure_alarm] ON dbo.[tm_vigilog_mesure] ([Est_En_Alarme]);
 GO
-
-IF OBJECT_ID(N'dbo.t_message_attachment', N'U') IS NULL
-BEGIN
-  CREATE TABLE dbo.[t_message_attachment] (
-    [Id_Attachment] INT IDENTITY(1,1) NOT NULL,
-    [Id_Message] INT NOT NULL,
-    [File_Name] VARCHAR(255) NOT NULL,
-    [File_Path] VARCHAR(512) NOT NULL,
-    [File_Size] INT NOT NULL,
-    [Mime_Type] VARCHAR(128) NOT NULL,
-    [Date_Upload] DATETIME NOT NULL DEFAULT(GETDATE()),
-    CONSTRAINT [PK_t_message_attachment] PRIMARY KEY ([Id_Attachment])
-  );
-END;
-GO
+IF OBJECT_ID(N'dbo.tm_vigilog_mesure', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.tm_vigilog_mesure') AND name=N'IDX_tm_vigilog_mesure_marker')
+  CREATE INDEX [IDX_tm_vigilog_mesure_marker] ON dbo.[tm_vigilog_mesure] ([Est_Marqueur]);
 GO
 
 USE [vigi_main];
 GO
 
 -- Donnees minimales obligatoires main
-IF NOT EXISTS (SELECT 1 FROM dbo.t_profil WHERE Profil_Utilisateur = N'Administrateurs') INSERT INTO dbo.t_profil (Profil_Utilisateur, Commentaire, Est_MC2, Est_Archive) VALUES (N'Administrateurs', NULL, 0, 0);
-IF NOT EXISTS (SELECT 1 FROM dbo.t_profil WHERE Profil_Utilisateur = N'Consultation + Acquittement') INSERT INTO dbo.t_profil (Profil_Utilisateur, Commentaire, Est_MC2, Est_Archive) VALUES (N'Consultation + Acquittement', NULL, 0, 0);
-IF NOT EXISTS (SELECT 1 FROM dbo.t_profil WHERE Profil_Utilisateur = N'VIGITEL') INSERT INTO dbo.t_profil (Profil_Utilisateur, Commentaire, Est_MC2, Est_Archive) VALUES (N'VIGITEL', N'', 0, 0);
-IF NOT EXISTS (SELECT 1 FROM dbo.t_profil WHERE Profil_Utilisateur = N'ADMINistrateurs +') INSERT INTO dbo.t_profil (Profil_Utilisateur, Commentaire, Est_MC2, Est_Archive) VALUES (N'ADMINistrateurs +', N'', 0, 0);
-IF NOT EXISTS (SELECT 1 FROM dbo.t_profil WHERE Profil_Utilisateur = N'Consultation + Acquittement + Desactivation') INSERT INTO dbo.t_profil (Profil_Utilisateur, Commentaire, Est_MC2, Est_Archive) VALUES (N'Consultation + Acquittement + Desactivation', N'', 0, 0);
-IF NOT EXISTS (SELECT 1 FROM dbo.t_profil WHERE Profil_Utilisateur = N'Test ajout') INSERT INTO dbo.t_profil (Profil_Utilisateur, Commentaire, Est_MC2, Est_Archive) VALUES (N'Test ajout', NULL, 0, 0);
+SET IDENTITY_INSERT dbo.t_profil ON;
+MERGE dbo.t_profil AS target
+USING (VALUES
+  (1, N'Administrateurs', NULL, 0, 0),
+  (3, N'Consultation + Acquittement', NULL, 0, 0),
+  (7, N'VIGITEL', N'', 0, 0),
+  (8, N'ADMINistrateurs +', N'', 0, 0),
+  (9, N'Consultation + Acquittement + Desactivation', N'', 0, 0),
+  (12, N'Test ajout', NULL, 0, 0)
+) AS source (Id_Profil, Profil_Utilisateur, Commentaire, Est_MC2, Est_Archive)
+ON target.Id_Profil = source.Id_Profil
+WHEN MATCHED THEN UPDATE SET
+  Profil_Utilisateur=source.Profil_Utilisateur,
+  Commentaire=source.Commentaire,
+  Est_MC2=source.Est_MC2,
+  Est_Archive=source.Est_Archive
+WHEN NOT MATCHED THEN INSERT
+  (Id_Profil, Profil_Utilisateur, Commentaire, Est_MC2, Est_Archive)
+  VALUES (source.Id_Profil, source.Profil_Utilisateur, source.Commentaire, source.Est_MC2, source.Est_Archive);
+SET IDENTITY_INSERT dbo.t_profil OFF;
 GO
 
 SET IDENTITY_INSERT dbo.t_actionneur_type ON;
@@ -1627,91 +2559,11 @@ GO
 DECLARE @AdminProfilId INT = (SELECT TOP 1 Id_Profil FROM dbo.t_profil WHERE Profil_Utilisateur = N'Administrateurs');
 INSERT INTO dbo.t_liaison_profil_autorisation (Id_Profil, Id_Autorisation) SELECT @AdminProfilId, a.Id_Autorisation FROM dbo.t_autorisation a WHERE @AdminProfilId IS NOT NULL AND NOT EXISTS (SELECT 1 FROM dbo.t_liaison_profil_autorisation l WHERE l.Id_Profil = @AdminProfilId AND l.Id_Autorisation = a.Id_Autorisation);
 GO
-IF NOT EXISTS (SELECT 1 FROM dbo.t_utilisateur WHERE Login = N'admin') INSERT INTO dbo.t_utilisateur (Login, Mot_De_Passe, Est_Archive, Profil_Utilisateur, Est_Mot_De_Passe_Temporaire, Date_Creation, Date_Derniere_Modification_MDP) VALUES (N'admin', N'$2b$10$EPQPVuaZ6RX4JhMpgR8BD.44ZEuC9OsH7hRMdt2j/GO64eWJcA7.W', 0, N'Administrateurs', 1, CAST(GETDATE() AS DATE), GETDATE());
+IF NOT EXISTS (SELECT 1 FROM dbo.t_utilisateur WHERE Login = N'admin') INSERT INTO dbo.t_utilisateur (Login, Mot_De_Passe, Est_Archive, Profil_Utilisateur, Est_Mot_De_Passe_Temporaire, Date_Creation, Date_Derniere_Modification_MDP) VALUES (N'admin', N'$2b$10$p794ptDulNuN5Md2j3Y6Ge2wEYRjaG3Er8CexJ8RkrD4er1A2AhXS', 0, N'Administrateurs', 1, CAST(GETDATE() AS DATE), GETDATE());
 ELSE UPDATE dbo.t_utilisateur SET Mot_De_Passe = N'$2b$10$p794ptDulNuN5Md2j3Y6Ge2wEYRjaG3Er8CexJ8RkrD4er1A2AhXS', Est_Mot_De_Passe_Temporaire = 1, Profil_Utilisateur = COALESCE(Profil_Utilisateur, N'Administrateurs'), Est_Archive = 0 WHERE Login = N'admin' AND (Mot_De_Passe IS NULL OR Est_Mot_De_Passe_Temporaire = 1);
 GO
 
 USE [vigi_main];
-GO
-
--- =====================================================================
--- ALIGNEMENT SQL SERVER <-> SCHEMA PRISMA (Mise a jour 2026-02)
--- Script idempotent (complement de seed)
--- =====================================================================
-
--- t_autorisation: suppression anciens flags
-GO
-
--- t_lieu
-IF OBJECT_ID('dbo.t_lieu_planning_regle', 'U') IS NOT NULL
-BEGIN
-  UPDATE l
-  SET Planning_Regle_Existe = CASE
-    WHEN EXISTS (SELECT 1 FROM dbo.t_lieu_planning_regle r WHERE r.Id_Lieu = l.Id_Lieu) THEN 1
-    ELSE 0
-  END
-  FROM dbo.t_lieu l;
-END;
-GO
-
--- t_module / t_parametre / t_utilisateur
-GO
-
--- t_sonde / t_sonde_type
-IF OBJECT_ID('dbo.t_sonde', 'U') IS NOT NULL
-BEGIN
-END;
-GO
-IF OBJECT_ID('dbo.t_sonde_type', 'U') IS NOT NULL
-BEGIN
-
-  MERGE dbo.t_sonde_type AS target
-  USING (VALUES
-    (1,'E','Sonde radio relais type E',1,0,'CLASSIC'),
-    (2,'G','Sonde radio relais type G',1,0,'CLASSIC'),
-    (3,'H','Sonde radio relais type H',1,0,'CLASSIC'),
-    (4,'I','Sonde radio de type I',0,0,'CLASSIC'),
-    (5,'R','Sonde radio',0,0,'CLASSIC'),
-    (6,'V','Sonde filaire',0,0,'CLASSIC'),
-    (9,'SOIT','Gemsense One Temperature interne',0,0,'GSO'),
-    (10,'SOIH','Gemsense One Temperature & humidite interne',0,1,'GSO'),
-    (11,'SOET','Gemsense One Temperature externe',0,0,'GSO'),
-    (12,'SOEH','Gemsense One Temperature & humidite externe',0,1,'GSO'),
-    (13,'SPNB','Gemsense Pro Numerique blanc',0,0,'GSP'),
-    (14,'SPNG','Gemsense Pro Numerique gris',0,0,'GSP'),
-    (15,'SPPS','Gemsense Pro platine',0,0,'GSP'),
-    (16,'SPAL','Gemsense Pro platine alimentaire',0,0,'GSP'),
-    (17,'SPPC','Gemsense Pro platine contact',0,0,'GSP'),
-    (18,'SPAU','Gemsense Pro platine autoclave',0,0,'GSP'),
-    (19,'SPCF','Gemsense Pro platine chambre froide',0,0,'GSP'),
-    (20,'SPMI','Gemsense Pro platine micro-capteur',0,0,'GSP'),
-    (21,'SPCO','Gemsense Pro CO2',0,0,'GSP'),
-    (22,'SPHY','Gemsense Pro hygrometrie',0,0,'GSP'),
-    (23,'SPTH','Gemsense Pro thermocouple',0,0,'GSP'),
-    (24,'SPDI','Gemsense Pro pression differentielle',0,0,'GSP'),
-    (25,'SPAT','Gemsense Pro pression atmospherique',0,0,'GSP'),
-    (26,'SPLU','Gemsense Pro lumiere',0,0,'GSP'),
-    (27,'SP01','Gemsense Pro 0-1 Volt',0,0,'GSP'),
-    (28,'SP42','Gemsense Pro 4-20 mA',0,0,'GSP'),
-    (29,'SPOF','Gemsense Pro NO NF',0,0,'GSP'),
-    (30,'SPXB','Gemsense Pro Ethernet numerique blanc',0,0,'GSP'),
-    (31,'SPXG','Gemsense Pro Ethernet numerique gris',0,0,'GSP'),
-    (32,'SPXP','Gemsense Pro Ethernet platine',0,0,'GSP'),
-    (33,'SPFB','Gemsense Pro filaire numerique blanc',0,0,'GSP'),
-    (34,'SPFG','Gemsense Pro filaire numerique gris',0,0,'GSP'),
-    (35,'SPFP','Gemsense Pro filaire platine',0,0,'GSP')
-  ) AS source (Id_Sonde_Type, Sonde_Type, Libelle_Sonde_Type, Est_Gestion_Relais, Est_Double_Capteur, Famille_Sonde)
-  ON target.Sonde_Type = source.Sonde_Type
-  WHEN MATCHED THEN
-    UPDATE SET
-      target.Libelle_Sonde_Type = source.Libelle_Sonde_Type,
-      target.Est_Gestion_Relais = source.Est_Gestion_Relais,
-      target.Est_Double_Capteur = source.Est_Double_Capteur,
-      target.Famille_Sonde = source.Famille_Sonde
-  WHEN NOT MATCHED BY TARGET THEN
-    INSERT (Sonde_Type, Libelle_Sonde_Type, Est_Gestion_Relais, Est_Double_Capteur, Famille_Sonde)
-    VALUES (source.Sonde_Type, source.Libelle_Sonde_Type, source.Est_Gestion_Relais, source.Est_Double_Capteur, source.Famille_Sonde);
-END;
 GO
 
 -- templates de lieu
@@ -2001,43 +2853,43 @@ GO
 SET IDENTITY_INSERT dbo.t_materiel ON;
 MERGE dbo.t_materiel AS target
 USING (VALUES
-  (1, N'M-GSO-U', N'Module de réception pour sondes GemSense One USB', N'USB' + CHAR(13) + '' + CHAR(10) + 'Led d’activité' + CHAR(13) + '' + CHAR(10) + 'Alimentation sur secteur', N'GSO', N'RADIO', NULL),
-  (2, N'M-GSO-E', N'Module de réception pour sondes GemSense One Ethernet', N'Ethernet RJ 45' + CHAR(13) + '' + CHAR(10) + 'Led activité' + CHAR(13) + '' + CHAR(10) + 'Alimentation sur secteur', N'GSO', N'RADIO', NULL),
-  (3, N'GSO-IT', N'Gemsense One Température interne', N'Fréquence de mesure 15 min fixe ' + CHAR(13) + '' + CHAR(10) + 'Fonction mémoire (700 valeurs)' + CHAR(13) + '' + CHAR(10) + 'Piles AAA*2 (2 ans selon utilisation)' + CHAR(13) + '' + CHAR(10) + 'Température d''utilisation : -20°C à 40°C', N'GSO', N'RADIO', NULL),
-  (4, N'GSO-ITH', N'Gemsense One Température & humidité interne', N'Fréquence de mesure 15 min fixe ' + CHAR(13) + '' + CHAR(10) + 'Fonction mémoire (700 valeurs)' + CHAR(13) + '' + CHAR(10) + 'Piles AAA*2 (2 ans selon utilisation)' + CHAR(13) + '' + CHAR(10) + 'Température d''utilisation : 10°C à 40°C' + CHAR(13) + '' + CHAR(10) + 'Domaine d''utilisation : 10%Hr à 90%Hr', N'GSO', N'RADIO', NULL),
-  (5, N'GSO-ET', N'Gemsense One Température externe', N'Fréquence de mesure 15 min fixe ' + CHAR(13) + '' + CHAR(10) + 'Fonction mémoire (700 valeurs)' + CHAR(13) + '' + CHAR(10) + 'Piles AAA*2 (2 ans selon utilisation)' + CHAR(13) + '' + CHAR(10) + 'Protection : inox 316 L Ø 6 x 40 mm' + CHAR(13) + '' + CHAR(10) + 'Température d''utilisation : -40°C à 125°C', N'GSO', N'RADIO', NULL),
-  (6, N'GSO-ETH', N'Gemsense One Température & humidité externe', N'Fréquence de mesure 15 min fixe ' + CHAR(13) + '' + CHAR(10) + 'Fonction mémoire (700 valeurs)' + CHAR(13) + '' + CHAR(10) + 'Piles AAA*2 (2 ans selon utilisation)' + CHAR(13) + '' + CHAR(10) + 'Température d''utilisation : 10°C à 80°C' + CHAR(13) + '' + CHAR(10) + 'Domaine d''utilisation : 10%Hr à 90%Hr', N'GSO', N'RADIO', NULL),
-  (7, N'M-GSP', N'Module de réception pour sondes GemSense Pro Ethernet', N'Interface 10Base-T ou 100Base-TX' + CHAR(13) + '' + CHAR(10) + 'Connecteur RJ45' + CHAR(13) + '' + CHAR(10) + 'Led Link & activité' + CHAR(13) + '' + CHAR(10) + 'Sécurisé par mot de passe' + CHAR(13) + '' + CHAR(10) + 'CPU : DSTni-EX' + CHAR(13) + '' + CHAR(10) + 'Mémoire : 256k SRAM 512Kb flash' + CHAR(13) + '' + CHAR(10) + 'Alimentation sur secteur', N'GSP', N'RADIO', NULL),
-  (8, N'GSP-RN-BL', N'Gemsense Pro Numérique blanc', N'Sonde GemSense Pro avec écran 2,9" ' + CHAR(13) + '' + CHAR(10) + 'Fonction mémoire (5300 valeurs)' + CHAR(13) + '' + CHAR(10) + 'Batterie de secours (15 jours)' + CHAR(13) + '' + CHAR(10) + 'Gamme pro avec portée étendue' + CHAR(13) + '' + CHAR(10) + 'Capteur numérique' + CHAR(13) + '' + CHAR(10) + 'Température d''utilisation : -30°C à 125°C' + CHAR(13) + '' + CHAR(10) + 'Capteur numérique Ø 6mm l, 50mm  / -30°C à 125 °C Câble long 3 m BLANC', N'GSP', N'RADIO', NULL),
-  (9, N'GSP-RN-GR', N'Gemsense Pro Numérique gris', N'Sonde GemSense Pro avec écran 2,9" ' + CHAR(13) + '' + CHAR(10) + 'Fonction mémoire (5300 valeurs)' + CHAR(13) + '' + CHAR(10) + 'Batterie de secours (15 jours)' + CHAR(13) + '' + CHAR(10) + 'Gamme pro avec portée étendue' + CHAR(13) + '' + CHAR(10) + 'Capteur numérique' + CHAR(13) + '' + CHAR(10) + 'Température d''utilisation : -30°C à 70°C' + CHAR(13) + '' + CHAR(10) + 'Capteur numérique Ø 6mm l, 50mm  / -30°C à 70 °C  Câble long 3 m GRIS PLAT', N'GSP', N'RADIO', NULL),
-  (10, N'GSP-RP', N'Gemsense Pro platine', N'Sonde GemSense Pro avec écran 2,9" ' + CHAR(13) + '' + CHAR(10) + 'Fonction mémoire (5300 valeurs)' + CHAR(13) + '' + CHAR(10) + 'Batterie de secours (15 jours)' + CHAR(13) + '' + CHAR(10) + 'Gamme pro avec portée étendue' + CHAR(13) + '' + CHAR(10) + 'Gaine de protection : acier inox 316 L, Ø 6 ' + CHAR(13) + '' + CHAR(10) + 'Température d''utilisation : -200 à 200°C' + CHAR(13) + '' + CHAR(10) + 'Sonde : Pt 100 céramique CEI 60751 classe A, en montage 4 fils' + CHAR(13) + '' + CHAR(10) + 'Câble de raccordement : PFA/PFA', N'GSP', N'RADIO', NULL),
-  (11, N'GSP-RP-ALIM', N'Gemsense Pro platine alimentaire', N'Sonde GemSense Pro avec écran 2,9" ' + CHAR(13) + '' + CHAR(10) + 'Fonction mémoire (5300 valeurs)' + CHAR(13) + '' + CHAR(10) + 'Batterie de secours (15 jours)' + CHAR(13) + '' + CHAR(10) + 'Gamme pro avec portée étendue' + CHAR(13) + '' + CHAR(10) + 'Gaine de protection : acier inox 316 L - Ø 5 mm, ' + CHAR(13) + '' + CHAR(10) + 'longueur utile : 150 mm' + CHAR(13) + '' + CHAR(10) + 'Poignée : surmoulée silicone THT 250 °C - couleur rouge brique, longueur 130 mm' + CHAR(13) + '' + CHAR(10) + 'Sonde : Pt1000 céramique DIN IEC 60751 classe B, simple en montage A' + CHAR(13) + '' + CHAR(10) + 'Câble de raccordement : silicone atoxique THT 250 °C continu - Alimentaire couleur rouge brique' + CHAR(13) + '' + CHAR(10) + 'Température d''utilisation : -50 à + 250 °C', N'GSP', N'RADIO', NULL),
-  (12, N'GSP-RP-CONT', N'Gemsense Pro platine contact', N'Sonde GemSense Pro avec écran 2,9" ' + CHAR(13) + '' + CHAR(10) + 'Fonction mémoire (5300 valeurs)' + CHAR(13) + '' + CHAR(10) + 'Batterie de secours (15 jours)' + CHAR(13) + '' + CHAR(10) + 'Gamme pro avec portée étendue' + CHAR(13) + '' + CHAR(10) + 'Capteur de température' + CHAR(13) + '' + CHAR(10) + 'Sonde : Pt 100 CEI 60751 classe A, ' + CHAR(13) + '' + CHAR(10) + 'simple enroulement, élément de mesure couche mince sous rétractable PFA' + CHAR(13) + '' + CHAR(10) + 'Sous film polyester ' + CHAR(13) + '' + CHAR(10) + 'Température d''utilisation : -80+160 °C' + CHAR(13) + '' + CHAR(10) + 'Fixation par colle silicone sur surface dégraissée' + CHAR(13) + '' + CHAR(10) + 'Câble de raccordement : PFA/PFA, section 0,09 mm², longueur 2 mètres, 3 conducteurs', N'GSP', N'RADIO', NULL),
-  (13, N'GSP-RP-AU', N'Gemsense Pro platine autoclave', N'Sonde GemSense Pro avec écran 2,9" ' + CHAR(13) + '' + CHAR(10) + 'Fonction mémoire (5300 valeurs)' + CHAR(13) + '' + CHAR(10) + 'Batterie de secours (15 jours)' + CHAR(13) + '' + CHAR(10) + 'Gamme pro avec portée étendue' + CHAR(13) + '' + CHAR(10) + 'Capteur de température' + CHAR(13) + '' + CHAR(10) + 'Gaine de protection : acier inox 316 L - Ø 6 x 200 mm, ' + CHAR(13) + '' + CHAR(10) + 'prolongée par câble PFA/silicone protégé par flexible inox Ø 7 mm, longueur 1,5 mètres puis gaine étanche Ø 6 x 100 mm pour passage de cloison' + CHAR(13) + '' + CHAR(10) + 'Sonde : Pt 100 céramique CEI 60751 classe A, simple ou double enroulement en montage 3 fils' + CHAR(13) + '' + CHAR(10) + 'Câble de raccordement : PFA/silicone, longueur 2 mètres' + CHAR(13) + '' + CHAR(10) + 'Température maximale d''utilisation : +180 °C' + CHAR(13) + '' + CHAR(10) + 'Exécution étanche', N'GSP', N'RADIO', NULL),
-  (14, N'GSP-RP-CF', N'Gemsense Pro platine chambre froide', N'Sonde GemSense Pro avec écran 2,9" ' + CHAR(13) + '' + CHAR(10) + 'Fonction mémoire (5300 valeurs)' + CHAR(13) + '' + CHAR(10) + 'Batterie de secours (15 jours)' + CHAR(13) + '' + CHAR(10) + 'Gamme pro avec portée étendue' + CHAR(13) + '' + CHAR(10) + 'Capteur de température' + CHAR(13) + '' + CHAR(10) + 'Capteur muni à l''extrémité d''une ogive inox diamètre 6 mm ' + CHAR(13) + '' + CHAR(10) + 'sertie sur 15 mètres de câble silicone.' + CHAR(13) + '' + CHAR(10) + 'Configuration 3 fils' + CHAR(13) + '' + CHAR(10) + 'Elément sensible Pt100 suivant NF EN 60751 classe B' + CHAR(13) + '' + CHAR(10) + 'Ogive inox diamètre 6 mm, longueur 50 mm' + CHAR(13) + '' + CHAR(10) + 'Température d''utilisation : -50°C à + 100°C' + CHAR(13) + '' + CHAR(10) + 'Sortie sur 15 mètres de câble : Conducteurs souples 7 brins ' + CHAR(13) + '' + CHAR(10) + 'de ø 0.2 mm isolés PFA sous gaine caoutchouc de silicone. ' + CHAR(13) + '' + CHAR(10) + '2 conducteurs rouges, 1 conducteur blanc', N'GSP', N'RADIO', NULL),
-  (15, N'GSP-RP-MICRO', N'Gemsense Pro platine micro-capteur', N'Sonde GemSense Pro avec écran 2,9" ' + CHAR(13) + '' + CHAR(10) + 'Fonction mémoire (5300 valeurs)' + CHAR(13) + '' + CHAR(10) + 'Batterie de secours (15 jours)' + CHAR(13) + '' + CHAR(10) + 'Gamme pro avec portée étendue' + CHAR(13) + '' + CHAR(10) + 'Capteur de temperature platine' + CHAR(13) + '' + CHAR(10) + 'Capteur micro ø 2,18mm L 4,75m : -70°C à + 250°C', N'GSP', N'RADIO', NULL),
-  (16, N'GSP-RQ-CO2', N'Gemsense Pro CO2', N'Sonde GemSense Pro avec écran 2,9" ' + CHAR(13) + '' + CHAR(10) + 'Fonction mémoire (5300 valeurs)' + CHAR(13) + '' + CHAR(10) + 'Gamme pro avec portée étendue' + CHAR(13) + '' + CHAR(10) + 'Le capteur de dioxyde de carbone Vaisala CARBOCAP® GMP251 est une sonde intelligente et autonome.' + CHAR(13) + '' + CHAR(10) + 'La plage de température de fonctionnement va de -40 à +60 °C, ' + CHAR(13) + '' + CHAR(10) + 'et la plage de mesure est comprise entre 0 et 20 % de CO2' + CHAR(13) + '' + CHAR(10) + 'Le capteur GMP251 fait appel à la technologie unique de deuxième génération Vaisala CARBOCAP® qui offre une stabilité exceptionnelle. ' + CHAR(13) + '' + CHAR(10) + 'La durée de vie de la GMP251 est prolongée grâce à un nouveau type de source de lumière infrarouge (IR) qui remplace l''ampoule à incandescence traditionnelle. Elle bénéficie de compensations complètes de température et de pression de la mesure du COCO2 - mesure de température intégrée pour la compensation.', N'GSP', N'RADIO', NULL),
-  (17, N'GSP-RQ-HYG', N'Gemsense Pro hygrométrie', N'Sonde GemSense Pro avec écran 2,9" ' + CHAR(13) + '' + CHAR(10) + 'Fonction mémoire (5300 valeurs)' + CHAR(13) + '' + CHAR(10) + 'Gamme pro avec portée étendue' + CHAR(13) + '' + CHAR(10) + 'Plage de mesure de 0% à 100 %hr' + CHAR(13) + '' + CHAR(10) + 'Température d''utilisation de 10°C à +60°C' + CHAR(13) + '' + CHAR(10) + 'Capteur de diamètre 12 mm longueur 71 mm', N'GSP', N'RADIO', NULL),
-  (18, N'GSP-RQ-THE', N'Gemsense Pro thermocouple', N'Sonde GemSense Pro avec écran 2,9" ' + CHAR(13) + '' + CHAR(10) + 'Fonction mémoire (5300 valeurs)' + CHAR(13) + '' + CHAR(10) + 'Batterie de secours (15 jours)' + CHAR(13) + '' + CHAR(10) + 'Gamme pro avec portée étendue' + CHAR(13) + '' + CHAR(10) + 'Capteur de température' + CHAR(13) + '' + CHAR(10) + 'Capteur thermocouple J chemise (déformable) :' + CHAR(13) + '' + CHAR(10) + 'ø 3 mm longueur 50 cm' + CHAR(13) + '' + CHAR(10) + 'Température d''utilisation  : 100°C à + 1500°C' + CHAR(13) + '' + CHAR(10) + 'Sortie sur câble tresse inox 1m', N'GSP', N'RADIO', NULL),
-  (19, N'GSP-RQ-PRES', N'Gemsense Pro pression différentielle', N'Sonde GemSense Pro avec écran 2,9" ' + CHAR(13) + '' + CHAR(10) + 'Fonction mémoire (5300 valeurs)' + CHAR(13) + '' + CHAR(10) + 'Batterie de secours (10 jours)' + CHAR(13) + '' + CHAR(10) + 'Gamme pro avec portée étendue' + CHAR(13) + '' + CHAR(10) + 'Capteur de pression ' + CHAR(13) + '' + CHAR(10) + 'Capteur piézoélectique' + CHAR(13) + '' + CHAR(10) + 'Domaine d''utilisation  : 0 à 250 Pa' + CHAR(13) + '' + CHAR(10) + 'Sortie sur câble tresse inox 1m', N'GSP', N'RADIO', NULL),
-  (20, N'GSP-RQ-ATMO', N'Gemsense Pro pression atmosphérique', N'Sonde GemSense Pro avec écran 2,9" ' + CHAR(13) + '' + CHAR(10) + 'Fonction mémoire (5300 valeurs)' + CHAR(13) + '' + CHAR(10) + 'Batterie de secours (10 jours)' + CHAR(13) + '' + CHAR(10) + 'Gamme pro avec portée étendue' + CHAR(13) + '' + CHAR(10) + 'Capteur de pression  ' + CHAR(13) + '' + CHAR(10) + 'Capteur ratiométrique' + CHAR(13) + '' + CHAR(10) + 'Domaine d''utilisation : atmosphère ambiante', N'GSP', N'RADIO', NULL),
-  (21, N'GSP-RQ-LUM', N'Gemsense Pro lumière', N'Sonde GemSense Pro avec écran 2,9" ' + CHAR(13) + '' + CHAR(10) + 'Fonction mémoire (5300 valeurs)' + CHAR(13) + '' + CHAR(10) + 'Batterie de secours (10 jours)' + CHAR(13) + '' + CHAR(10) + 'Gamme pro avec portée étendue' + CHAR(13) + '' + CHAR(10) + 'Capteur de lumière ' + CHAR(13) + '' + CHAR(10) + 'Capteur photorésistif' + CHAR(13) + '' + CHAR(10) + 'Domaine d''utilisation : lumière ambiante', N'GSP', N'RADIO', NULL),
-  (22, N'GSP-RQ-01V', N'Gemsense Pro 0-1 Volt', N'Sonde GemSense Pro avec écran 2,9" ' + CHAR(13) + '' + CHAR(10) + 'Fonction mémoire (5300 valeurs)' + CHAR(13) + '' + CHAR(10) + 'Batterie de secours (10 jours)' + CHAR(13) + '' + CHAR(10) + 'Gamme pro avec portée étendue' + CHAR(13) + '' + CHAR(10) + 'Capteur de tension ' + CHAR(13) + '' + CHAR(10) + 'Entrée 0-1Volt', N'GSP', N'RADIO', NULL),
-  (23, N'GSP-RQ-420MA', N'Gemsense Pro 4-20 mA', N'Sonde GemSense Pro avec écran 2,9" ' + CHAR(13) + '' + CHAR(10) + 'Fonction mémoire (5300 valeurs)' + CHAR(13) + '' + CHAR(10) + 'Batterie de secours (10 jours)' + CHAR(13) + '' + CHAR(10) + 'Gamme pro avec portée étendue' + CHAR(13) + '' + CHAR(10) + 'Capteur de courant ' + CHAR(13) + '' + CHAR(10) + 'Entrée 4-20mA', N'GSP', N'RADIO', NULL),
-  (24, N'GSP-RQ-NONF', N'Gemsense Pro NO NF', N'Sonde GemSense Pro avec écran 2,9" ' + CHAR(13) + '' + CHAR(10) + 'Fonction mémoire (5300 valeurs)' + CHAR(13) + '' + CHAR(10) + 'Batterie de secours (10 jours)' + CHAR(13) + '' + CHAR(10) + 'Gamme pro avec portée étendue' + CHAR(13) + '' + CHAR(10) + 'Capteur TOR ' + CHAR(13) + '' + CHAR(10) + 'Entrée récuperation de contact NO ou NF' + CHAR(13) + '' + CHAR(10) + 'Domaine d''utilisation : reprise de contact', N'GSP', N'RADIO', NULL),
-  (25, N'GSP-RP-ETAL', N'Gemsense Pro Etalon', N'Sonde GemSense Pro avec écran 2,9" ' + CHAR(13) + '' + CHAR(10) + 'Lecture écran sous forme de liste pour des étalonnages ' + CHAR(13) + '' + CHAR(10) + 'plus faciles' + CHAR(13) + '' + CHAR(10) + 'Batterie de secours (15 jours)' + CHAR(13) + '' + CHAR(10) + 'Gamme pro avec portée étendue' + CHAR(13) + '' + CHAR(10) + 'Gaine de protection : acier inox 316 L, Ø 3,5 longueur utile 150 mm ' + CHAR(13) + '' + CHAR(10) + 'Température d''utilisation : -200 à 200°C' + CHAR(13) + '' + CHAR(10) + 'Sonde : Pt 100 céramique CEI 60751 classe 1/3DIN, ' + CHAR(13) + '' + CHAR(10) + 'en montage 4 fils' + CHAR(13) + '' + CHAR(10) + 'Câble de raccordement : PFA/PFA ' + CHAR(13) + '' + CHAR(10) + 'Résolution d’affichage : 0,01°C ' + CHAR(13) + '' + CHAR(10) + 'Résolution de mesure : 0,003°C', N'GSP', N'ETALON', NULL),
-  (26, N'GSP-XN-BL', N'Gemsense Pro Ethernet numérique blanc', N'Liaison Ethernet RJ45 ' + CHAR(13) + '' + CHAR(10) + 'Capteur numérique' + CHAR(13) + '' + CHAR(10) + 'Température d''utilisation : -30°C à 125°C' + CHAR(13) + '' + CHAR(10) + 'Capteur numérique Ø 6mm l, 50mm  / -30°C à 125 °C | Câble long 3 m BLANC', N'GSP', N'ETHERNET', NULL),
-  (27, N'GSP-XN-GR', N'Gemsense Pro Ethernet numérique gris', N'Liaison Ethernet RJ45 ' + CHAR(13) + '' + CHAR(10) + 'Capteur numérique' + CHAR(13) + '' + CHAR(10) + 'Température d''utilisation : -30°C à 70°C' + CHAR(13) + '' + CHAR(10) + 'Capteur numérique Ø 6mm l, 50mm  / -30°C à 70 °C | Câble long 3 m GRIS PLAT', N'GSP', N'ETHERNET', NULL),
-  (28, N'GSP-XP', N'Gemsense Pro Ethernet platine', N'Liaison Ethernet RJ45 ' + CHAR(13) + '' + CHAR(10) + 'Gaine de protection : acier inox 316 L, Ø 6 ' + CHAR(13) + '' + CHAR(10) + 'Température d''utilisation : -200 à 200°C' + CHAR(13) + '' + CHAR(10) + 'Sonde : Pt 100 céramique CEI 60751 classe A, en montage 4 fils' + CHAR(13) + '' + CHAR(10) + 'Câble de raccordement : PFA/PFA', N'GSP', N'ETHERNET', NULL),
-  (29, N'M-GSP-F', N'Module de réception pour sondes GemSense Pro Filaire', N'Ethernet RJ 45' + CHAR(13) + '' + CHAR(10) + 'Led activité' + CHAR(13) + '' + CHAR(10) + 'Alimentation sur secteur', N'GSP', N'FILAIRE', NULL),
-  (30, N'M-GSP-F-ALS', N'Alimentation supplémentaire pour sondes GemSense Pro Filaire', N'', N'GSP', N'FILAIRE', NULL),
-  (31, N'GSP-FN-BL', N'Gemsense Pro filaire numérique blanc', N'Bus d’alimentation de data RS485' + CHAR(13) + '' + CHAR(10) + 'Capteur numérique' + CHAR(13) + '' + CHAR(10) + 'Température d''utilisation : -30°C à 125°C' + CHAR(13) + '' + CHAR(10) + 'Capteur numérique Ø 6mm l, 50mm  / -30°C à 125 °C | Câble long 3 m BLANC', N'GSP', N'FILAIRE', NULL),
-  (32, N'GSP-FN-GR', N'Gemsense Pro filaire numérique gris', N'Bus d’alimentation de data RS485' + CHAR(13) + '' + CHAR(10) + 'Capteur numérique' + CHAR(13) + '' + CHAR(10) + 'Température d''utilisation : -30°C à 70°C' + CHAR(13) + '' + CHAR(10) + 'Capteur numérique Ø 6mm l, 50mm  / -30°C à 70 °C | Câble long 3 m GRIS PLAT', N'GSP', N'FILAIRE', NULL),
-  (33, N'GSP-FP', N'Gemsense Pro Filaire platine', N'Bus d’alimentation de data RS485' + CHAR(13) + '' + CHAR(10) + 'Gaine de protection : acier inox 316 L, Ø 6 ' + CHAR(13) + '' + CHAR(10) + 'Température d''utilisation : -200 à 200°C' + CHAR(13) + '' + CHAR(10) + 'Sonde : Pt 100 céramique CEI 60751 classe A, en montage 4 fils' + CHAR(13) + '' + CHAR(10) + 'Câble de raccordement : PFA/PFA', N'GSP', N'FILAIRE', NULL)
-) AS source (Id_Materiel, Ref_Commercial, Nom_Materiel, Descriptif, Type_Materiel, Famille_Materiel, Archive)
+  (1, N'M-GSO-U', N'Module de réception pour sondes GemSense One USB', N'USB' + CHAR(13) + '' + CHAR(10) + 'Led d’activité' + CHAR(13) + '' + CHAR(10) + 'Alimentation sur secteur', N'GSO', N'RADIO'),
+  (2, N'M-GSO-E', N'Module de réception pour sondes GemSense One Ethernet', N'Ethernet RJ 45' + CHAR(13) + '' + CHAR(10) + 'Led activité' + CHAR(13) + '' + CHAR(10) + 'Alimentation sur secteur', N'GSO', N'RADIO'),
+  (3, N'GSO-IT', N'Gemsense One Température interne', N'Fréquence de mesure 15 min fixe ' + CHAR(13) + '' + CHAR(10) + 'Fonction mémoire (700 valeurs)' + CHAR(13) + '' + CHAR(10) + 'Piles AAA*2 (2 ans selon utilisation)' + CHAR(13) + '' + CHAR(10) + 'Température d''utilisation : -20°C à 40°C', N'GSO', N'RADIO'),
+  (4, N'GSO-ITH', N'Gemsense One Température & humidité interne', N'Fréquence de mesure 15 min fixe ' + CHAR(13) + '' + CHAR(10) + 'Fonction mémoire (700 valeurs)' + CHAR(13) + '' + CHAR(10) + 'Piles AAA*2 (2 ans selon utilisation)' + CHAR(13) + '' + CHAR(10) + 'Température d''utilisation : 10°C à 40°C' + CHAR(13) + '' + CHAR(10) + 'Domaine d''utilisation : 10%Hr à 90%Hr', N'GSO', N'RADIO'),
+  (5, N'GSO-ET', N'Gemsense One Température externe', N'Fréquence de mesure 15 min fixe ' + CHAR(13) + '' + CHAR(10) + 'Fonction mémoire (700 valeurs)' + CHAR(13) + '' + CHAR(10) + 'Piles AAA*2 (2 ans selon utilisation)' + CHAR(13) + '' + CHAR(10) + 'Protection : inox 316 L Ø 6 x 40 mm' + CHAR(13) + '' + CHAR(10) + 'Température d''utilisation : -40°C à 125°C', N'GSO', N'RADIO'),
+  (6, N'GSO-ETH', N'Gemsense One Température & humidité externe', N'Fréquence de mesure 15 min fixe ' + CHAR(13) + '' + CHAR(10) + 'Fonction mémoire (700 valeurs)' + CHAR(13) + '' + CHAR(10) + 'Piles AAA*2 (2 ans selon utilisation)' + CHAR(13) + '' + CHAR(10) + 'Température d''utilisation : 10°C à 80°C' + CHAR(13) + '' + CHAR(10) + 'Domaine d''utilisation : 10%Hr à 90%Hr', N'GSO', N'RADIO'),
+  (7, N'M-GSP', N'Module de réception pour sondes GemSense Pro Ethernet', N'Interface 10Base-T ou 100Base-TX' + CHAR(13) + '' + CHAR(10) + 'Connecteur RJ45' + CHAR(13) + '' + CHAR(10) + 'Led Link & activité' + CHAR(13) + '' + CHAR(10) + 'Sécurisé par mot de passe' + CHAR(13) + '' + CHAR(10) + 'CPU : DSTni-EX' + CHAR(13) + '' + CHAR(10) + 'Mémoire : 256k SRAM 512Kb flash' + CHAR(13) + '' + CHAR(10) + 'Alimentation sur secteur', N'GSP', N'RADIO'),
+  (8, N'GSP-RN-BL', N'Gemsense Pro Numérique blanc', N'Sonde GemSense Pro avec écran 2,9" ' + CHAR(13) + '' + CHAR(10) + 'Fonction mémoire (5300 valeurs)' + CHAR(13) + '' + CHAR(10) + 'Batterie de secours (15 jours)' + CHAR(13) + '' + CHAR(10) + 'Gamme pro avec portée étendue' + CHAR(13) + '' + CHAR(10) + 'Capteur numérique' + CHAR(13) + '' + CHAR(10) + 'Température d''utilisation : -30°C à 125°C' + CHAR(13) + '' + CHAR(10) + 'Capteur numérique Ø 6mm l, 50mm  / -30°C à 125 °C Câble long 3 m BLANC', N'GSP', N'RADIO'),
+  (9, N'GSP-RN-GR', N'Gemsense Pro Numérique gris', N'Sonde GemSense Pro avec écran 2,9" ' + CHAR(13) + '' + CHAR(10) + 'Fonction mémoire (5300 valeurs)' + CHAR(13) + '' + CHAR(10) + 'Batterie de secours (15 jours)' + CHAR(13) + '' + CHAR(10) + 'Gamme pro avec portée étendue' + CHAR(13) + '' + CHAR(10) + 'Capteur numérique' + CHAR(13) + '' + CHAR(10) + 'Température d''utilisation : -30°C à 70°C' + CHAR(13) + '' + CHAR(10) + 'Capteur numérique Ø 6mm l, 50mm  / -30°C à 70 °C  Câble long 3 m GRIS PLAT', N'GSP', N'RADIO'),
+  (10, N'GSP-RP', N'Gemsense Pro platine', N'Sonde GemSense Pro avec écran 2,9" ' + CHAR(13) + '' + CHAR(10) + 'Fonction mémoire (5300 valeurs)' + CHAR(13) + '' + CHAR(10) + 'Batterie de secours (15 jours)' + CHAR(13) + '' + CHAR(10) + 'Gamme pro avec portée étendue' + CHAR(13) + '' + CHAR(10) + 'Gaine de protection : acier inox 316 L, Ø 6 ' + CHAR(13) + '' + CHAR(10) + 'Température d''utilisation : -200 à 200°C' + CHAR(13) + '' + CHAR(10) + 'Sonde : Pt 100 céramique CEI 60751 classe A, en montage 4 fils' + CHAR(13) + '' + CHAR(10) + 'Câble de raccordement : PFA/PFA', N'GSP', N'RADIO'),
+  (11, N'GSP-RP-ALIM', N'Gemsense Pro platine alimentaire', N'Sonde GemSense Pro avec écran 2,9" ' + CHAR(13) + '' + CHAR(10) + 'Fonction mémoire (5300 valeurs)' + CHAR(13) + '' + CHAR(10) + 'Batterie de secours (15 jours)' + CHAR(13) + '' + CHAR(10) + 'Gamme pro avec portée étendue' + CHAR(13) + '' + CHAR(10) + 'Gaine de protection : acier inox 316 L - Ø 5 mm, ' + CHAR(13) + '' + CHAR(10) + 'longueur utile : 150 mm' + CHAR(13) + '' + CHAR(10) + 'Poignée : surmoulée silicone THT 250 °C - couleur rouge brique, longueur 130 mm' + CHAR(13) + '' + CHAR(10) + 'Sonde : Pt1000 céramique DIN IEC 60751 classe B, simple en montage A' + CHAR(13) + '' + CHAR(10) + 'Câble de raccordement : silicone atoxique THT 250 °C continu - Alimentaire couleur rouge brique' + CHAR(13) + '' + CHAR(10) + 'Température d''utilisation : -50 à + 250 °C', N'GSP', N'RADIO'),
+  (12, N'GSP-RP-CONT', N'Gemsense Pro platine contact', N'Sonde GemSense Pro avec écran 2,9" ' + CHAR(13) + '' + CHAR(10) + 'Fonction mémoire (5300 valeurs)' + CHAR(13) + '' + CHAR(10) + 'Batterie de secours (15 jours)' + CHAR(13) + '' + CHAR(10) + 'Gamme pro avec portée étendue' + CHAR(13) + '' + CHAR(10) + 'Capteur de température' + CHAR(13) + '' + CHAR(10) + 'Sonde : Pt 100 CEI 60751 classe A, ' + CHAR(13) + '' + CHAR(10) + 'simple enroulement, élément de mesure couche mince sous rétractable PFA' + CHAR(13) + '' + CHAR(10) + 'Sous film polyester ' + CHAR(13) + '' + CHAR(10) + 'Température d''utilisation : -80+160 °C' + CHAR(13) + '' + CHAR(10) + 'Fixation par colle silicone sur surface dégraissée' + CHAR(13) + '' + CHAR(10) + 'Câble de raccordement : PFA/PFA, section 0,09 mm², longueur 2 mètres, 3 conducteurs', N'GSP', N'RADIO'),
+  (13, N'GSP-RP-AU', N'Gemsense Pro platine autoclave', N'Sonde GemSense Pro avec écran 2,9" ' + CHAR(13) + '' + CHAR(10) + 'Fonction mémoire (5300 valeurs)' + CHAR(13) + '' + CHAR(10) + 'Batterie de secours (15 jours)' + CHAR(13) + '' + CHAR(10) + 'Gamme pro avec portée étendue' + CHAR(13) + '' + CHAR(10) + 'Capteur de température' + CHAR(13) + '' + CHAR(10) + 'Gaine de protection : acier inox 316 L - Ø 6 x 200 mm, ' + CHAR(13) + '' + CHAR(10) + 'prolongée par câble PFA/silicone protégé par flexible inox Ø 7 mm, longueur 1,5 mètres puis gaine étanche Ø 6 x 100 mm pour passage de cloison' + CHAR(13) + '' + CHAR(10) + 'Sonde : Pt 100 céramique CEI 60751 classe A, simple ou double enroulement en montage 3 fils' + CHAR(13) + '' + CHAR(10) + 'Câble de raccordement : PFA/silicone, longueur 2 mètres' + CHAR(13) + '' + CHAR(10) + 'Température maximale d''utilisation : +180 °C' + CHAR(13) + '' + CHAR(10) + 'Exécution étanche', N'GSP', N'RADIO'),
+  (14, N'GSP-RP-CF', N'Gemsense Pro platine chambre froide', N'Sonde GemSense Pro avec écran 2,9" ' + CHAR(13) + '' + CHAR(10) + 'Fonction mémoire (5300 valeurs)' + CHAR(13) + '' + CHAR(10) + 'Batterie de secours (15 jours)' + CHAR(13) + '' + CHAR(10) + 'Gamme pro avec portée étendue' + CHAR(13) + '' + CHAR(10) + 'Capteur de température' + CHAR(13) + '' + CHAR(10) + 'Capteur muni à l''extrémité d''une ogive inox diamètre 6 mm ' + CHAR(13) + '' + CHAR(10) + 'sertie sur 15 mètres de câble silicone.' + CHAR(13) + '' + CHAR(10) + 'Configuration 3 fils' + CHAR(13) + '' + CHAR(10) + 'Elément sensible Pt100 suivant NF EN 60751 classe B' + CHAR(13) + '' + CHAR(10) + 'Ogive inox diamètre 6 mm, longueur 50 mm' + CHAR(13) + '' + CHAR(10) + 'Température d''utilisation : -50°C à + 100°C' + CHAR(13) + '' + CHAR(10) + 'Sortie sur 15 mètres de câble : Conducteurs souples 7 brins ' + CHAR(13) + '' + CHAR(10) + 'de ø 0.2 mm isolés PFA sous gaine caoutchouc de silicone. ' + CHAR(13) + '' + CHAR(10) + '2 conducteurs rouges, 1 conducteur blanc', N'GSP', N'RADIO'),
+  (15, N'GSP-RP-MICRO', N'Gemsense Pro platine micro-capteur', N'Sonde GemSense Pro avec écran 2,9" ' + CHAR(13) + '' + CHAR(10) + 'Fonction mémoire (5300 valeurs)' + CHAR(13) + '' + CHAR(10) + 'Batterie de secours (15 jours)' + CHAR(13) + '' + CHAR(10) + 'Gamme pro avec portée étendue' + CHAR(13) + '' + CHAR(10) + 'Capteur de temperature platine' + CHAR(13) + '' + CHAR(10) + 'Capteur micro ø 2,18mm L 4,75m : -70°C à + 250°C', N'GSP', N'RADIO'),
+  (16, N'GSP-RQ-CO2', N'Gemsense Pro CO2', N'Sonde GemSense Pro avec écran 2,9" ' + CHAR(13) + '' + CHAR(10) + 'Fonction mémoire (5300 valeurs)' + CHAR(13) + '' + CHAR(10) + 'Gamme pro avec portée étendue' + CHAR(13) + '' + CHAR(10) + 'Le capteur de dioxyde de carbone Vaisala CARBOCAP® GMP251 est une sonde intelligente et autonome.' + CHAR(13) + '' + CHAR(10) + 'La plage de température de fonctionnement va de -40 à +60 °C, ' + CHAR(13) + '' + CHAR(10) + 'et la plage de mesure est comprise entre 0 et 20 % de CO2' + CHAR(13) + '' + CHAR(10) + 'Le capteur GMP251 fait appel à la technologie unique de deuxième génération Vaisala CARBOCAP® qui offre une stabilité exceptionnelle. ' + CHAR(13) + '' + CHAR(10) + 'La durée de vie de la GMP251 est prolongée grâce à un nouveau type de source de lumière infrarouge (IR) qui remplace l''ampoule à incandescence traditionnelle. Elle bénéficie de compensations complètes de température et de pression de la mesure du COCO2 - mesure de température intégrée pour la compensation.', N'GSP', N'RADIO'),
+  (17, N'GSP-RQ-HYG', N'Gemsense Pro hygrométrie', N'Sonde GemSense Pro avec écran 2,9" ' + CHAR(13) + '' + CHAR(10) + 'Fonction mémoire (5300 valeurs)' + CHAR(13) + '' + CHAR(10) + 'Gamme pro avec portée étendue' + CHAR(13) + '' + CHAR(10) + 'Plage de mesure de 0% à 100 %hr' + CHAR(13) + '' + CHAR(10) + 'Température d''utilisation de 10°C à +60°C' + CHAR(13) + '' + CHAR(10) + 'Capteur de diamètre 12 mm longueur 71 mm', N'GSP', N'RADIO'),
+  (18, N'GSP-RQ-THE', N'Gemsense Pro thermocouple', N'Sonde GemSense Pro avec écran 2,9" ' + CHAR(13) + '' + CHAR(10) + 'Fonction mémoire (5300 valeurs)' + CHAR(13) + '' + CHAR(10) + 'Batterie de secours (15 jours)' + CHAR(13) + '' + CHAR(10) + 'Gamme pro avec portée étendue' + CHAR(13) + '' + CHAR(10) + 'Capteur de température' + CHAR(13) + '' + CHAR(10) + 'Capteur thermocouple J chemise (déformable) :' + CHAR(13) + '' + CHAR(10) + 'ø 3 mm longueur 50 cm' + CHAR(13) + '' + CHAR(10) + 'Température d''utilisation  : 100°C à + 1500°C' + CHAR(13) + '' + CHAR(10) + 'Sortie sur câble tresse inox 1m', N'GSP', N'RADIO'),
+  (19, N'GSP-RQ-PRES', N'Gemsense Pro pression différentielle', N'Sonde GemSense Pro avec écran 2,9" ' + CHAR(13) + '' + CHAR(10) + 'Fonction mémoire (5300 valeurs)' + CHAR(13) + '' + CHAR(10) + 'Batterie de secours (10 jours)' + CHAR(13) + '' + CHAR(10) + 'Gamme pro avec portée étendue' + CHAR(13) + '' + CHAR(10) + 'Capteur de pression ' + CHAR(13) + '' + CHAR(10) + 'Capteur piézoélectique' + CHAR(13) + '' + CHAR(10) + 'Domaine d''utilisation  : 0 à 250 Pa' + CHAR(13) + '' + CHAR(10) + 'Sortie sur câble tresse inox 1m', N'GSP', N'RADIO'),
+  (20, N'GSP-RQ-ATMO', N'Gemsense Pro pression atmosphérique', N'Sonde GemSense Pro avec écran 2,9" ' + CHAR(13) + '' + CHAR(10) + 'Fonction mémoire (5300 valeurs)' + CHAR(13) + '' + CHAR(10) + 'Batterie de secours (10 jours)' + CHAR(13) + '' + CHAR(10) + 'Gamme pro avec portée étendue' + CHAR(13) + '' + CHAR(10) + 'Capteur de pression  ' + CHAR(13) + '' + CHAR(10) + 'Capteur ratiométrique' + CHAR(13) + '' + CHAR(10) + 'Domaine d''utilisation : atmosphère ambiante', N'GSP', N'RADIO'),
+  (21, N'GSP-RQ-LUM', N'Gemsense Pro lumière', N'Sonde GemSense Pro avec écran 2,9" ' + CHAR(13) + '' + CHAR(10) + 'Fonction mémoire (5300 valeurs)' + CHAR(13) + '' + CHAR(10) + 'Batterie de secours (10 jours)' + CHAR(13) + '' + CHAR(10) + 'Gamme pro avec portée étendue' + CHAR(13) + '' + CHAR(10) + 'Capteur de lumière ' + CHAR(13) + '' + CHAR(10) + 'Capteur photorésistif' + CHAR(13) + '' + CHAR(10) + 'Domaine d''utilisation : lumière ambiante', N'GSP', N'RADIO'),
+  (22, N'GSP-RQ-01V', N'Gemsense Pro 0-1 Volt', N'Sonde GemSense Pro avec écran 2,9" ' + CHAR(13) + '' + CHAR(10) + 'Fonction mémoire (5300 valeurs)' + CHAR(13) + '' + CHAR(10) + 'Batterie de secours (10 jours)' + CHAR(13) + '' + CHAR(10) + 'Gamme pro avec portée étendue' + CHAR(13) + '' + CHAR(10) + 'Capteur de tension ' + CHAR(13) + '' + CHAR(10) + 'Entrée 0-1Volt', N'GSP', N'RADIO'),
+  (23, N'GSP-RQ-420MA', N'Gemsense Pro 4-20 mA', N'Sonde GemSense Pro avec écran 2,9" ' + CHAR(13) + '' + CHAR(10) + 'Fonction mémoire (5300 valeurs)' + CHAR(13) + '' + CHAR(10) + 'Batterie de secours (10 jours)' + CHAR(13) + '' + CHAR(10) + 'Gamme pro avec portée étendue' + CHAR(13) + '' + CHAR(10) + 'Capteur de courant ' + CHAR(13) + '' + CHAR(10) + 'Entrée 4-20mA', N'GSP', N'RADIO'),
+  (24, N'GSP-RQ-NONF', N'Gemsense Pro NO NF', N'Sonde GemSense Pro avec écran 2,9" ' + CHAR(13) + '' + CHAR(10) + 'Fonction mémoire (5300 valeurs)' + CHAR(13) + '' + CHAR(10) + 'Batterie de secours (10 jours)' + CHAR(13) + '' + CHAR(10) + 'Gamme pro avec portée étendue' + CHAR(13) + '' + CHAR(10) + 'Capteur TOR ' + CHAR(13) + '' + CHAR(10) + 'Entrée récuperation de contact NO ou NF' + CHAR(13) + '' + CHAR(10) + 'Domaine d''utilisation : reprise de contact', N'GSP', N'RADIO'),
+  (25, N'GSP-RP-ETAL', N'Gemsense Pro Etalon', N'Sonde GemSense Pro avec écran 2,9" ' + CHAR(13) + '' + CHAR(10) + 'Lecture écran sous forme de liste pour des étalonnages ' + CHAR(13) + '' + CHAR(10) + 'plus faciles' + CHAR(13) + '' + CHAR(10) + 'Batterie de secours (15 jours)' + CHAR(13) + '' + CHAR(10) + 'Gamme pro avec portée étendue' + CHAR(13) + '' + CHAR(10) + 'Gaine de protection : acier inox 316 L, Ø 3,5 longueur utile 150 mm ' + CHAR(13) + '' + CHAR(10) + 'Température d''utilisation : -200 à 200°C' + CHAR(13) + '' + CHAR(10) + 'Sonde : Pt 100 céramique CEI 60751 classe 1/3DIN, ' + CHAR(13) + '' + CHAR(10) + 'en montage 4 fils' + CHAR(13) + '' + CHAR(10) + 'Câble de raccordement : PFA/PFA ' + CHAR(13) + '' + CHAR(10) + 'Résolution d’affichage : 0,01°C ' + CHAR(13) + '' + CHAR(10) + 'Résolution de mesure : 0,003°C', N'GSP', N'ETALON'),
+  (26, N'GSP-XN-BL', N'Gemsense Pro Ethernet numérique blanc', N'Liaison Ethernet RJ45 ' + CHAR(13) + '' + CHAR(10) + 'Capteur numérique' + CHAR(13) + '' + CHAR(10) + 'Température d''utilisation : -30°C à 125°C' + CHAR(13) + '' + CHAR(10) + 'Capteur numérique Ø 6mm l, 50mm  / -30°C à 125 °C | Câble long 3 m BLANC', N'GSP', N'ETHERNET'),
+  (27, N'GSP-XN-GR', N'Gemsense Pro Ethernet numérique gris', N'Liaison Ethernet RJ45 ' + CHAR(13) + '' + CHAR(10) + 'Capteur numérique' + CHAR(13) + '' + CHAR(10) + 'Température d''utilisation : -30°C à 70°C' + CHAR(13) + '' + CHAR(10) + 'Capteur numérique Ø 6mm l, 50mm  / -30°C à 70 °C | Câble long 3 m GRIS PLAT', N'GSP', N'ETHERNET'),
+  (28, N'GSP-XP', N'Gemsense Pro Ethernet platine', N'Liaison Ethernet RJ45 ' + CHAR(13) + '' + CHAR(10) + 'Gaine de protection : acier inox 316 L, Ø 6 ' + CHAR(13) + '' + CHAR(10) + 'Température d''utilisation : -200 à 200°C' + CHAR(13) + '' + CHAR(10) + 'Sonde : Pt 100 céramique CEI 60751 classe A, en montage 4 fils' + CHAR(13) + '' + CHAR(10) + 'Câble de raccordement : PFA/PFA', N'GSP', N'ETHERNET'),
+  (29, N'M-GSP-F', N'Module de réception pour sondes GemSense Pro Filaire', N'Ethernet RJ 45' + CHAR(13) + '' + CHAR(10) + 'Led activité' + CHAR(13) + '' + CHAR(10) + 'Alimentation sur secteur', N'GSP', N'FILAIRE'),
+  (30, N'M-GSP-F-ALS', N'Alimentation supplémentaire pour sondes GemSense Pro Filaire', N'', N'GSP', N'FILAIRE'),
+  (31, N'GSP-FN-BL', N'Gemsense Pro filaire numérique blanc', N'Bus d’alimentation de data RS485' + CHAR(13) + '' + CHAR(10) + 'Capteur numérique' + CHAR(13) + '' + CHAR(10) + 'Température d''utilisation : -30°C à 125°C' + CHAR(13) + '' + CHAR(10) + 'Capteur numérique Ø 6mm l, 50mm  / -30°C à 125 °C | Câble long 3 m BLANC', N'GSP', N'FILAIRE'),
+  (32, N'GSP-FN-GR', N'Gemsense Pro filaire numérique gris', N'Bus d’alimentation de data RS485' + CHAR(13) + '' + CHAR(10) + 'Capteur numérique' + CHAR(13) + '' + CHAR(10) + 'Température d''utilisation : -30°C à 70°C' + CHAR(13) + '' + CHAR(10) + 'Capteur numérique Ø 6mm l, 50mm  / -30°C à 70 °C | Câble long 3 m GRIS PLAT', N'GSP', N'FILAIRE'),
+  (33, N'GSP-FP', N'Gemsense Pro Filaire platine', N'Bus d’alimentation de data RS485' + CHAR(13) + '' + CHAR(10) + 'Gaine de protection : acier inox 316 L, Ø 6 ' + CHAR(13) + '' + CHAR(10) + 'Température d''utilisation : -200 à 200°C' + CHAR(13) + '' + CHAR(10) + 'Sonde : Pt 100 céramique CEI 60751 classe A, en montage 4 fils' + CHAR(13) + '' + CHAR(10) + 'Câble de raccordement : PFA/PFA', N'GSP', N'FILAIRE')
+) AS source (Id_Materiel, Ref_Commercial, Designation, Descriptif, Gamme, Type)
 ON target.Id_Materiel = source.Id_Materiel
-WHEN MATCHED THEN UPDATE SET Ref_Commercial = source.Ref_Commercial, Nom_Materiel = source.Nom_Materiel, Descriptif = source.Descriptif, Type_Materiel = source.Type_Materiel, Famille_Materiel = source.Famille_Materiel, Archive = source.Archive
-WHEN NOT MATCHED THEN INSERT (Id_Materiel, Ref_Commercial, Nom_Materiel, Descriptif, Type_Materiel, Famille_Materiel, Archive) VALUES (source.Id_Materiel, source.Ref_Commercial, source.Nom_Materiel, source.Descriptif, source.Type_Materiel, source.Famille_Materiel, source.Archive);
+WHEN MATCHED THEN UPDATE SET Ref_Commercial = source.Ref_Commercial, Designation = source.Designation, Descriptif = source.Descriptif, Gamme = source.Gamme, Type = source.Type
+WHEN NOT MATCHED THEN INSERT (Id_Materiel, Ref_Commercial, Designation, Descriptif, Gamme, Type) VALUES (source.Id_Materiel, source.Ref_Commercial, source.Designation, source.Descriptif, source.Gamme, source.Type);
 SET IDENTITY_INSERT dbo.t_materiel OFF;
 GO
 
@@ -2163,132 +3015,9 @@ END;
 GO
 
 -- =====================================================================
--- GSO / GSP memory recovery helpers, views and procedures
--- SQL Server Standard: execution via SQL Server Agent jobs
+-- Vues, equivalents SQL Server des events et triggers courants
 -- =====================================================================
 USE [vigi_mesures];
-GO
-
-IF OBJECT_ID(N'dbo.tm_mesures_gso_count_mem', N'U') IS NULL
-BEGIN
-  CREATE TABLE dbo.[tm_mesures_gso_count_mem] (
-    [Id] BIGINT IDENTITY(1,1) NOT NULL PRIMARY KEY,
-    [GSO_SN] VARCHAR(32) NOT NULL,
-    [Port_Serie_Send_GSO] VARCHAR(10) NULL,
-    [Missing_Data_Begin] FLOAT NOT NULL CONSTRAINT [DF_tm_mesures_gso_count_mem_begin] DEFAULT(0),
-    [Missing_Data_End] FLOAT NOT NULL CONSTRAINT [DF_tm_mesures_gso_count_mem_end] DEFAULT(0),
-    [Missing_Data_Total] FLOAT NOT NULL CONSTRAINT [DF_tm_mesures_gso_count_mem_total] DEFAULT(0),
-    [Commande_Mem] VARCHAR(50) NULL,
-    [Statut] VARCHAR(20) NOT NULL CONSTRAINT [DF_tm_mesures_gso_count_mem_statut] DEFAULT('0'),
-    [date_calcul] DATETIME NOT NULL CONSTRAINT [DF_tm_mesures_gso_count_mem_date_calcul] DEFAULT(GETDATE()),
-    [Date_Heure_Demande_Mem] DATETIME NULL
-  );
-  CREATE UNIQUE INDEX [UX_tm_mesures_gso_count_mem]
-    ON dbo.[tm_mesures_gso_count_mem]([GSO_SN], [Missing_Data_Begin], [Missing_Data_End], [Missing_Data_Total], [date_calcul]);
-  CREATE INDEX [IDX_tm_mesures_gso_count_mem_statut] ON dbo.[tm_mesures_gso_count_mem]([Statut]);
-END;
-GO
-GO
-
-IF OBJECT_ID(N'dbo.tm_mesures_gso_commandes_mem', N'U') IS NULL
-BEGIN
-  CREATE TABLE dbo.[tm_mesures_gso_commandes_mem] (
-    [Id] BIGINT IDENTITY(1,1) NOT NULL PRIMARY KEY,
-    [GSO_SN] VARCHAR(32) NOT NULL,
-    [Port_Serie_Send_GSO] VARCHAR(10) NULL,
-    [Commande_Globale_Begin] FLOAT NOT NULL CONSTRAINT [DF_tm_mesures_gso_commandes_mem_begin] DEFAULT(0),
-    [Commande_Globale_End] FLOAT NOT NULL CONSTRAINT [DF_tm_mesures_gso_commandes_mem_end] DEFAULT(0),
-    [Missing_Data_Total] FLOAT NOT NULL CONSTRAINT [DF_tm_mesures_gso_commandes_mem_total] DEFAULT(0),
-    [Commande_Mem_Globale] VARCHAR(50) NULL,
-    [Date_Calcul] DATETIME NOT NULL CONSTRAINT [DF_tm_mesures_gso_commandes_mem_Date_Calcul] DEFAULT(GETDATE()),
-    [Statut] VARCHAR(20) NOT NULL CONSTRAINT [DF_tm_mesures_gso_commandes_mem_statut] DEFAULT('0'),
-    [Date_Heure_Demande_Mem] DATETIME NULL
-  );
-  CREATE UNIQUE INDEX [UX_tm_mesures_gso_commandes_mem]
-    ON dbo.[tm_mesures_gso_commandes_mem]([GSO_SN], [Commande_Globale_Begin], [Commande_Globale_End], [Missing_Data_Total]);
-  CREATE INDEX [IDX_tm_mesures_gso_commandes_mem_statut] ON dbo.[tm_mesures_gso_commandes_mem]([Statut]);
-END;
-GO
-GO
-
-IF OBJECT_ID(N'dbo.tm_mesures_gso_build', N'U') IS NULL
-BEGIN
-  CREATE TABLE dbo.[tm_mesures_gso_build] (
-    [Id_GSO_Build] INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
-    [Date_Heure_Mesure] DATETIME NOT NULL CONSTRAINT [DF_tm_mesures_gso_build_Date_Heure_Mesure] DEFAULT(GETDATE()),
-    [Valeur] FLOAT NULL,
-    [Valeur_Brute] FLOAT NULL,
-    [Est_Valeur_Memoire] BIT NOT NULL CONSTRAINT [DF_tm_mesures_gso_build_Est_Valeur_Memoire] DEFAULT(0),
-    [Planning_Regle_Existe] BIT NOT NULL CONSTRAINT [DF_tm_mesures_gso_build_Planning_Regle_Existe] DEFAULT(0),
-    [Planning_Actif] BIT NOT NULL CONSTRAINT [DF_tm_mesures_gso_build_Planning_Actif] DEFAULT(0),
-    [Consigne] FLOAT NULL,
-    [Consigne_Sup] FLOAT NULL,
-    [Consigne_Inf] FLOAT NULL,
-    [Unite] VARCHAR(10) NULL,
-    [Sonde_Numero_Serie] VARCHAR(50) NULL,
-    [Adresse_Sonde] VARCHAR(50) NULL,
-    [COM_sonde] FLOAT NULL,
-    [Est_Mesure_Repeteur_GSO] FLOAT NULL CONSTRAINT [DF_tm_mesures_gso_build_Est_Mesure_Repeteur_GSO] DEFAULT(0),
-    [Id_Lieu] INT NOT NULL CONSTRAINT [DF_tm_mesures_gso_build_Id_Lieu] DEFAULT(0),
-    [Consigne_Inf_Pre_Alarme] FLOAT NULL,
-    [Consigne_Sup_Pre_Alarme] FLOAT NULL,
-    [Rssi] VARCHAR(10) NULL,
-    [Tension] VARCHAR(10) NULL,
-    [GSO_SN] VARCHAR(50) NULL
-  );
-  CREATE INDEX [IDX_tm_mesures_gso_build_Date_Heure_Mesure] ON dbo.[tm_mesures_gso_build]([Date_Heure_Mesure]);
-  CREATE INDEX [IDX_tm_mesures_gso_build_Id_Lieu] ON dbo.[tm_mesures_gso_build]([Id_Lieu]);
-END;
-GO
-GO
-
-IF OBJECT_ID(N'dbo.tm_mesures_gso_read_mem', N'U') IS NULL
-BEGIN
-  CREATE TABLE dbo.[tm_mesures_gso_read_mem] (
-    [Id] BIGINT IDENTITY(1,1) NOT NULL PRIMARY KEY,
-    [GSO_SN] VARCHAR(32) NOT NULL,
-    [Ecart] VARCHAR(32) NOT NULL,
-    [Date_Heure_Read_Mem] DATETIME NULL
-  );
-  CREATE UNIQUE INDEX [UX_tm_mesures_gso_read_mem] ON dbo.[tm_mesures_gso_read_mem]([GSO_SN], [Ecart]);
-  CREATE INDEX [IDX_tm_mesures_gso_read_mem_date] ON dbo.[tm_mesures_gso_read_mem]([Date_Heure_Read_Mem]);
-END;
-GO
-
-IF OBJECT_ID(N'dbo.tm_mesures_gso_read_metro', N'U') IS NULL
-BEGIN
-  CREATE TABLE dbo.[tm_mesures_gso_read_metro] (
-    [Id] BIGINT IDENTITY(1,1) NOT NULL PRIMARY KEY,
-    [GSO_SN] VARCHAR(32) NOT NULL,
-    [Commande_metro] VARCHAR(32) NOT NULL,
-    [Commande_metro_envoyee] BIT NOT NULL CONSTRAINT [DF_tm_mesures_gso_read_metro_CommandeEnvoyee] DEFAULT(0),
-    [Metro_en_cours] BIT NOT NULL CONSTRAINT [DF_tm_mesures_gso_read_metro_MetroEnCours] DEFAULT(0),
-    [Dernier_Date_MAJ] DATETIME NULL
-  );
-  CREATE UNIQUE INDEX [UX_tm_mesures_gso_read_metro] ON dbo.[tm_mesures_gso_read_metro]([GSO_SN], [Commande_metro]);
-  CREATE INDEX [IDX_tm_mesures_gso_read_metro_Dernier_Date_MAJ] ON dbo.[tm_mesures_gso_read_metro]([Dernier_Date_MAJ]);
-END;
-GO
-
-IF OBJECT_ID(N'dbo.tm_remontee_plage_gsp', N'U') IS NULL
-BEGIN
-  CREATE TABLE dbo.[tm_remontee_plage_gsp] (
-    [Id] INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
-    [Id_Lieu] INT NOT NULL,
-    [GSP_SN] VARCHAR(50) NOT NULL,
-    [Date_Heure_Debut] DATETIME NOT NULL,
-    [Date_Heure_Fin] DATETIME NOT NULL,
-    [Statut] VARCHAR(20) NOT NULL CONSTRAINT [DF_tm_remontee_plage_gsp_Statut] DEFAULT('A_FAIRE'),
-    [Date_Creation] DATETIME NOT NULL CONSTRAINT [DF_tm_remontee_plage_gsp_Date_Creation] DEFAULT(GETDATE()),
-    [Date_Derniere_Maj] DATETIME NOT NULL CONSTRAINT [DF_tm_remontee_plage_gsp_Date_Derniere_Maj] DEFAULT(GETDATE()),
-    [Nb_Tentatives] INT NOT NULL CONSTRAINT [DF_tm_remontee_plage_gsp_Nb_Tentatives] DEFAULT(0),
-    [Derniere_Erreur] NVARCHAR(MAX) NULL
-  );
-  CREATE INDEX [IDX_tm_remontee_plage_gsp_lieu_sonde_statut] ON dbo.[tm_remontee_plage_gsp]([Id_Lieu], [GSP_SN], [Statut]);
-  CREATE INDEX [IDX_tm_remontee_plage_gsp_debut] ON dbo.[tm_remontee_plage_gsp]([Date_Heure_Debut]);
-  CREATE INDEX [IDX_tm_remontee_plage_gsp_fin] ON dbo.[tm_remontee_plage_gsp]([Date_Heure_Fin]);
-END;
-GO
 GO
 
 CREATE OR ALTER VIEW dbo.[v_compteur_valeurs_gso]
@@ -2706,8 +3435,6 @@ AS
 BEGIN
   SET NOCOUNT ON;
 
-  DELETE FROM dbo.[tm_mesures_gso_count_mem];
-
   ;WITH [slots] AS (
     SELECT 1 AS [slot_index]
     UNION ALL
@@ -2782,7 +3509,15 @@ BEGIN
     MIN([numero_releve]) AS [Missing_Data_Begin],
     MAX([numero_releve]) AS [Missing_Data_End],
     COUNT(*) AS [Missing_Data_Total],
-    CONCAT('$<EDDT:', CASE WHEN LEN([Adresse_Sonde]) > 2 THEN LEFT([Adresse_Sonde], LEN([Adresse_Sonde]) - 2) END, '(', MIN([numero_releve]), '-', MAX([numero_releve]), ')>') AS [Commande_Mem],
+    CONCAT(
+      '$<EDDT:',
+      CASE WHEN LEN([Adresse_Sonde]) > 2 THEN LEFT([Adresse_Sonde], LEN([Adresse_Sonde]) - 2) END,
+      '(',
+      CASE WHEN MIN([numero_releve]) - 3 < 1 THEN 1 ELSE MIN([numero_releve]) - 3 END,
+      '-',
+      CASE WHEN MAX([numero_releve]) + 3 > 700 THEN 700 ELSE MAX([numero_releve]) + 3 END,
+      ')>'
+    ) AS [Commande_Mem],
     GETDATE() AS [date_calcul]
   FROM [groupes]
   GROUP BY [Adresse_Sonde], [grp]
@@ -2826,7 +3561,6 @@ BEGIN
   DELETE FROM dbo.[tm_mesures] WHERE [Id_Lieu] = 0;
   DELETE FROM dbo.[tm_graphique] WHERE [Id_Lieu] = 0;
   DELETE FROM dbo.[tm_mesures_ajustage] WHERE [Date_Heure_Mesure] < DATEADD(HOUR, -24, GETDATE());
-  DELETE FROM dbo.[tm_mesures_ajustage_etalon] WHERE [Date_Heure_Mesure] < DATEADD(HOUR, -24, GETDATE());
   DELETE FROM dbo.[tm_mesures_etalonnage] WHERE [Date_Heure_Mesure] < DATEADD(HOUR, -24, GETDATE());
   DELETE FROM dbo.[tm_mesures_gso_read_metro] WHERE [Dernier_Date_MAJ] < DATEADD(HOUR, -2, GETDATE());
 END;
@@ -2887,6 +3621,7 @@ BEGIN
     @Derniere_Date_Heure DATETIME,
     @Date_Heure_Derniere_Reponse DATETIME,
     @Retard_Non_Reponse INT,
+    @Est_Acq_Auto_Alarme_NR BIT,
     @Derniere_Valeur FLOAT,
     @Tolerance_Surveillance_Inf FLOAT,
     @Tolerance_Surveillance_Sup FLOAT,
@@ -2925,6 +3660,7 @@ BEGIN
       i.[Derniere_Date_Heure],
       i.[Date_Heure_Derniere_Reponse],
       ISNULL(i.[Retard_Non_Reponse], 0),
+      ISNULL(i.[Est_Acq_Auto_Alarme_NR], 0),
       i.[Derniere_Valeur],
       i.[Tolerance_Surveillance_Inf],
       i.[Tolerance_Surveillance_Sup],
@@ -2948,6 +3684,7 @@ BEGIN
   OPEN cur;
   FETCH NEXT FROM cur INTO
     @Id_Lieu,@Est_Lieu_GSO,@Lieu_Etat,@Date_Heure_Dernier_Acquittement_En_Cours,@Derniere_Date_Heure,@Date_Heure_Derniere_Reponse,@Retard_Non_Reponse,
+    @Est_Acq_Auto_Alarme_NR,
     @Derniere_Valeur,@Tolerance_Surveillance_Inf,@Tolerance_Surveillance_Sup,@Retard_Alarme_Bas,@Retard_Alarme_Haut,@Sonde_Numero_Serie,
     @Date_Heure_Last_Update_EVT_GSO,@Derniere_Unite,@Date_Heure_Derniere_Reponse_Recue_OK,@Id_Alarme,@Est_Lieu_En_Alarme,@Est_Lieu_En_Pre_Alarme,
     @Est_Lieu_Alarme_Terminee_Non_Acquittee,@Est_Lieu_Alarme_Terminee_Non_Acquittee_T1,@Est_Consigne_Inf_Pre_Alarme_Active,@Consigne_Inf_Pre_Alarme,
@@ -3102,9 +3839,25 @@ BEGIN
           END
           ELSE IF @v_TypeAlarme = 'N'
              AND DATEDIFF(SECOND, @Date_Heure_Derniere_Reponse, GETDATE()) < @Retard_Non_Reponse * 60
+             AND @Est_Acq_Auto_Alarme_NR = 0
           BEGIN
             UPDATE dbo.[t_alarme] SET [Date_Heure_Fin] = @Derniere_Date_Heure, [Date_Heure_Derniere_Mesure] = @Derniere_Date_Heure WHERE [Id_Alarme] = @v_Id_Alarme;
             SET @New_Id_Alarme = 0; SET @New_Est_Lieu_En_Alarme = 0; SET @New_Est_Lieu_Alarme_Terminee_Non_Acquittee = 1; SET @New_Est_Lieu_Alarme_Terminee_Non_Acquittee_T1 = 0; SET @ApplyUpdate = 1;
+          END
+          ELSE IF @v_TypeAlarme = 'N'
+             AND DATEDIFF(SECOND, @Date_Heure_Derniere_Reponse, GETDATE()) < @Retard_Non_Reponse * 60
+             AND @Est_Acq_Auto_Alarme_NR = 1
+          BEGIN
+            UPDATE dbo.[t_alarme]
+            SET [Date_Heure_Fin] = @Derniere_Date_Heure,
+                [Date_Heure_Derniere_Mesure] = @Derniere_Date_Heure
+            WHERE [Id_Alarme] = @v_Id_Alarme;
+            DELETE FROM dbo.[t_alarme] WHERE [Id_Alarme] = @v_Id_Alarme;
+            SET @New_Id_Alarme = 0;
+            SET @New_Est_Lieu_En_Alarme = 0;
+            SET @New_Est_Lieu_Alarme_Terminee_Non_Acquittee = 0;
+            SET @New_Est_Lieu_Alarme_Terminee_Non_Acquittee_T1 = 0;
+            SET @ApplyUpdate = 1;
           END
           ELSE IF @v_TypeAlarme IN ('B','H')
           BEGIN
@@ -3191,6 +3944,7 @@ BEGIN
 
     FETCH NEXT FROM cur INTO
       @Id_Lieu,@Est_Lieu_GSO,@Lieu_Etat,@Date_Heure_Dernier_Acquittement_En_Cours,@Derniere_Date_Heure,@Date_Heure_Derniere_Reponse,@Retard_Non_Reponse,
+      @Est_Acq_Auto_Alarme_NR,
       @Derniere_Valeur,@Tolerance_Surveillance_Inf,@Tolerance_Surveillance_Sup,@Retard_Alarme_Bas,@Retard_Alarme_Haut,@Sonde_Numero_Serie,
       @Date_Heure_Last_Update_EVT_GSO,@Derniere_Unite,@Date_Heure_Derniere_Reponse_Recue_OK,@Id_Alarme,@Est_Lieu_En_Alarme,@Est_Lieu_En_Pre_Alarme,
       @Est_Lieu_Alarme_Terminee_Non_Acquittee,@Est_Lieu_Alarme_Terminee_Non_Acquittee_T1,@Est_Consigne_Inf_Pre_Alarme_Active,@Consigne_Inf_Pre_Alarme,
