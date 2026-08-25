@@ -582,6 +582,78 @@ namespace Vigitemp_Serveur.sensors
                 : normalizedPrefix + normalizedTarget + " " + normalizedPayload;
         }
 
+        internal static bool TrySplitEconCalibrationCommand(
+            string command,
+            string target,
+            out string coefficientsCommand,
+            out string remainingParametersCommand)
+        {
+            coefficientsCommand = string.Empty;
+            remainingParametersCommand = string.Empty;
+
+            var normalizedCommand = (command ?? string.Empty).Trim();
+            var normalizedTarget = NormalizeCommandTarget(target);
+            if (string.IsNullOrWhiteSpace(normalizedCommand) || string.IsNullOrWhiteSpace(normalizedTarget))
+            {
+                return false;
+            }
+
+            var expectedPrefix = "ECON" + normalizedTarget;
+            if (!normalizedCommand.StartsWith(expectedPrefix, StringComparison.OrdinalIgnoreCase) ||
+                normalizedCommand.Length <= expectedPrefix.Length ||
+                !char.IsWhiteSpace(normalizedCommand[expectedPrefix.Length]))
+            {
+                return false;
+            }
+
+            var payload = normalizedCommand.Substring(expectedPrefix.Length).Trim();
+            var coefficientAEnd = payload.IndexOf('a');
+            var coefficientBEnd = coefficientAEnd < 0 ? -1 : payload.IndexOf('b', coefficientAEnd + 1);
+            if (coefficientAEnd <= 0 ||
+                coefficientBEnd <= coefficientAEnd + 1 ||
+                coefficientBEnd >= payload.Length - 1)
+            {
+                return false;
+            }
+
+            if (!double.TryParse(
+                    payload.Substring(0, coefficientAEnd),
+                    NumberStyles.Float,
+                    CultureInfo.InvariantCulture,
+                    out _) ||
+                !double.TryParse(
+                    payload.Substring(coefficientAEnd + 1, coefficientBEnd - coefficientAEnd - 1),
+                    NumberStyles.Float,
+                    CultureInfo.InvariantCulture,
+                    out _))
+            {
+                return false;
+            }
+
+            var coefficientsPayload = payload.Substring(0, coefficientBEnd + 1);
+            var remainingPayload = payload.Substring(coefficientBEnd + 1);
+            var expectedRemainingMarkers = new[] { 'c', 'd', 'e', 'm', 'h', 'l', 'f', 'r', 't' };
+            var markerSearchStart = 0;
+            foreach (var marker in expectedRemainingMarkers)
+            {
+                var markerIndex = remainingPayload.IndexOf(marker, markerSearchStart);
+                if (markerIndex <= markerSearchStart)
+                {
+                    return false;
+                }
+                markerSearchStart = markerIndex + 1;
+            }
+
+            if (markerSearchStart != remainingPayload.Length)
+            {
+                return false;
+            }
+
+            coefficientsCommand = BuildCommand("ECON", normalizedTarget, coefficientsPayload);
+            remainingParametersCommand = BuildCommand("ECON", normalizedTarget, remainingPayload);
+            return true;
+        }
+
         internal static byte[] EncodeCommand(string command)
         {
             return Encoding.ASCII.GetBytes(command ?? string.Empty);
