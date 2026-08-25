@@ -820,7 +820,7 @@ export function CalibrationWorkflowClient() {
                                   {t("workflow.enhanced.sample_number")}
                                 </TableHead>
                                 <TableHead className="text-white">
-                                  {t("workflow.table.date")}
+                                  {t("workflow.table.measuredAt")}
                                 </TableHead>
                                 <TableHead className="text-white">
                                   {t("workflow.enhanced.sensor_value")}
