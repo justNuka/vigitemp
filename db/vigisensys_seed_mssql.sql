@@ -1,5 +1,6 @@
 -- =====================================================================
 -- BOOTSTRAP SQL SERVER VigiSensys
+-- Version produit / seed : 0.01.001
 -- Cree les 3 bases et les tables absentes avant le seed/alignement.
 -- Genere depuis les schemas Prisma, sans FK bloquantes pour rester idempotent.
 -- =====================================================================
@@ -83,7 +84,7 @@ BEGIN
     [Est_Acquittee] BIT NULL DEFAULT(0),
     [Date_Heure_Derniere_Mesure] DATETIME NULL,
     [Date_Heure_Debut_Alarme_Vrai] DATETIME NULL,
-    [Est_Alarme_Pour_VigiTel] BIT NULL,
+    [Est_Alarme_Pour_VigiTel] BIT NULL DEFAULT(0),
     [Est_Mail_Envoye] BIT NULL,
     [Est_Tel_Acquittee] BIT NULL,
     [Date_Heure_Acquittement] DATETIME NULL,
@@ -219,7 +220,7 @@ BEGIN
     [Coeff_C] FLOAT NULL,
     [Incertitude_Max] FLOAT NULL,
     [Reserve_MC2] VARCHAR(50) NULL,
-    [Id_Worker] INT NULL,
+    [Id_Worker] INT NULL DEFAULT(1),
     [Id_Module] INT NULL,
     CONSTRAINT [PK_t_etalon] PRIMARY KEY ([Id_Etalon])
   );
@@ -351,16 +352,16 @@ BEGIN
     [Consigne_Sup_Base] FLOAT NULL,
     [Tolerance_Surveillance_Sup] FLOAT NULL,
     [Tolerance_Surveillance_Sup_Base] FLOAT NULL,
-    [Est_Consigne_Sup_Active] BIT NULL DEFAULT(0),
+    [Est_Consigne_Sup_Active] BIT NULL DEFAULT(1),
     [Consigne_Sup_Pre_Alarme] FLOAT NULL,
-    [Est_Consigne_Sup_Pre_Alarme_Active] BIT NULL DEFAULT(0),
+    [Est_Consigne_Sup_Pre_Alarme_Active] BIT NULL,
     [Consigne_Inf] FLOAT NULL,
     [Consigne_Inf_Base] FLOAT NULL,
     [Tolerance_Surveillance_Inf] FLOAT NULL,
     [Tolerance_Surveillance_Inf_Base] FLOAT NULL,
-    [Est_Consigne_Inf_Active] BIT NULL DEFAULT(0),
+    [Est_Consigne_Inf_Active] BIT NULL DEFAULT(1),
     [Consigne_Inf_Pre_Alarme] FLOAT NULL,
-    [Est_Consigne_Inf_Pre_Alarme_Active] BIT NULL DEFAULT(0),
+    [Est_Consigne_Inf_Pre_Alarme_Active] BIT NULL,
     [Frequence] INT NULL,
     [Lieu_Etat] VARCHAR(1) NULL,
     [Surveillance_Etat] VARCHAR(1) NULL,
@@ -369,7 +370,7 @@ BEGIN
     [Id_Plan] INT NULL,
     [Position_Plan_X] BIGINT NULL,
     [Position_Plan_Y] BIGINT NULL,
-    [Date_Creation] DATE NULL DEFAULT(GETDATE()),
+    [Date_Creation] DATE NULL,
     [Est_Archive] BIT NULL DEFAULT(0),
     [Est_Tel_Actif] BIT NULL DEFAULT(0),
     [Tel_Code] VARCHAR(4) NULL,
@@ -380,24 +381,24 @@ BEGIN
     [Id_PDF] INT NULL,
     [Est_DataLogger] BIT NULL DEFAULT(0),
     [EMT] FLOAT NULL,
-    [EMT_Choix_Mode] INT NULL DEFAULT(4),
+    [EMT_Choix_Mode] INT NULL DEFAULT(1),
     [EMT_Sonde] FLOAT NULL,
     [Retard_Alarme_Changement_Consigne] INT NULL,
     [Derniere_Date_Heure] DATETIME NULL,
     [Derniere_Valeur] FLOAT NULL,
     [Derniere_Unite] VARCHAR(10) NULL,
-    [Derniere_Nb_Decimal] INT NULL DEFAULT(2),
-    [Est_Lieu_En_Alarme] TINYINT NULL DEFAULT(0),
-    [Est_Lieu_Alarme_Terminee_Non_Acquittee] TINYINT NULL DEFAULT(0),
+    [Derniere_Nb_Decimal] INT NULL,
+    [Est_Lieu_En_Alarme] TINYINT NULL,
+    [Est_Lieu_Alarme_Terminee_Non_Acquittee] TINYINT NULL,
     [Est_Acq_Auto_Alarme_NR] BIT NOT NULL DEFAULT(0),
-    [Est_Lieu_Alarme_Terminee_Non_Acquittee_T1] TINYINT NULL DEFAULT(0),
-    [Est_Lieu_En_Pre_Alarme] TINYINT NULL DEFAULT(0),
-    [Id_Alarme] INT NULL DEFAULT(0),
+    [Est_Lieu_Alarme_Terminee_Non_Acquittee_T1] TINYINT NULL,
+    [Est_Lieu_En_Pre_Alarme] TINYINT NULL,
+    [Id_Alarme] INT NULL,
     [Lieu_Etat_N1] VARCHAR(50) NULL,
     [Derniere_Date_Etalonnage] DATE NULL,
     [Derniere_Erreur_Justesse] FLOAT NULL,
     [Derniere_Incertitude] FLOAT NULL,
-    [Retard_Non_Reponse] INT NULL DEFAULT(60),
+    [Retard_Non_Reponse] INT NULL,
     [Date_Heure_Derniere_Reponse] DATETIME NULL,
     [Date_Heure_Derniere_Reponse_Recue_OK] DATETIME NULL,
     [Est_Correction_Ej] TINYINT NULL DEFAULT(0),
@@ -408,7 +409,7 @@ BEGIN
     [Date_Heure_Dernier_Acquittement_En_Cours] DATETIME NULL,
     [Date_Heure_Last_Update_EVT_GSO] DATETIME NULL,
     [Date_Heure_Reactivation_Alarme] DATETIME NULL,
-    [Notification_Active] BIT NOT NULL DEFAULT(1),
+    [Notification_Active] BIT NULL DEFAULT(1),
     [Commentaire] VARCHAR(200) NULL,
     [Infos_Modifiees_Depuis_Derniere_Mesure] BIT NOT NULL DEFAULT(1),
     [Est_Remontee_Memoire_A_Faire] BIT NOT NULL DEFAULT(0),
@@ -416,12 +417,12 @@ BEGIN
     [Date_Heure_Surveillance_On] DATETIME NULL,
     [Date_Heure_Surveillance_Off] DATETIME NULL,
     [Derniere_Val_Rssi] VARCHAR(10) NULL,
-    [Derniere_Val_Batterie] INT NULL,
+    [Derniere_Val_Batterie] VARCHAR(10) NULL,
     [Derniere_Val_Tension] VARCHAR(10) NULL,
     [Est_Lieu_GSO] BIT NULL DEFAULT(0),
     [Est_Son_Alarme_Active] BIT NOT NULL DEFAULT(1),
     [Planning_Actif] BIT NOT NULL DEFAULT(0),
-    [Planning_Regle_Existe] BIT NULL DEFAULT(0),
+    [Planning_Regle_Existe] BIT NOT NULL DEFAULT(0),
     [Planning_Source_Regle_Id] INT NULL,
     [Planning_Derniere_Maj] DATETIME NULL,
     [Est_Redeclenchement_Immediat] BIT NOT NULL DEFAULT(0),
@@ -438,7 +439,7 @@ BEGIN
     [Id_Lieu_Template] INT IDENTITY(1,1) NOT NULL,
     [Nom_Template] VARCHAR(80) NOT NULL,
     [Description] VARCHAR(255) NULL,
-    [Lieu_Etat] VARCHAR(1) NOT NULL,
+    [Lieu_Etat] VARCHAR(1) NOT NULL DEFAULT(N'D'),
     [Frequence] INT NULL,
     [Retard_Alarme_Haut] INT NULL,
     [Retard_Alarme_Bas] INT NULL,
@@ -486,7 +487,7 @@ BEGIN
     [Delai_Reseau] INT NULL,
     [Emplacement] VARCHAR(50) NULL,
     [Archive] TINYINT NULL DEFAULT(0),
-    [Id_Worker] INT NULL,
+    [Id_Worker] INT NULL DEFAULT(1),
     [Est_Module_GSO] BIT NOT NULL DEFAULT(0),
     [Port_Serie_Send_GSO] VARCHAR(10) NULL,
     CONSTRAINT [PK_t_module] PRIMARY KEY ([Id_Module])
@@ -608,7 +609,7 @@ BEGIN
     [Sonde_Type] VARCHAR(50) NULL,
     [Est_Sonde_GSO] BIT NOT NULL DEFAULT(0),
     [Port_Serie] VARCHAR(10) NULL,
-    [Surveillance_Etat] VARCHAR(1) NOT NULL DEFAULT(N'D'),
+    [Surveillance_Etat] VARCHAR(1) NULL,
     [Etat_Sonde] VARCHAR(1) NULL DEFAULT(N'D'),
     [Id_Module] INT NULL,
     [Relai_1] VARCHAR(50) NULL,
@@ -654,7 +655,7 @@ BEGIN
     [Libelle_Sonde_Type] VARCHAR(50) NULL,
     [Est_Gestion_Relais] BIT NULL,
     [Est_Double_Capteur] BIT NOT NULL DEFAULT(0),
-    [Famille_Sonde] VARCHAR(16) NOT NULL,
+    [Famille_Sonde] VARCHAR(16) NOT NULL DEFAULT(N'CLASSIC'),
     [Unite] VARCHAR(10) NULL,
     CONSTRAINT [PK_t_sonde_type] PRIMARY KEY ([Id_Sonde_Type])
   );
@@ -675,7 +676,7 @@ BEGIN
     [Est_Archive] BIT NULL DEFAULT(0),
     [Profil_Utilisateur] VARCHAR(50) NULL,
     [Date_Heure_Derniere_Connexion] DATETIME NULL,
-    [Adresse_IP_Connexion] VARCHAR(50) NULL,
+    [Adresse_IP_Connexion] VARCHAR(15) NULL,
     [Nom_Machine_Connexion] VARCHAR(50) NULL,
     [Id_Site] INT NULL,
     [Nom] VARCHAR(50) NULL,
@@ -861,7 +862,7 @@ BEGIN
   CREATE TABLE dbo.[t_lieu_planning] (
     [Id_Lieu_Planning] INT IDENTITY(1,1) NOT NULL,
     [Id_Lieu] INT NULL,
-    [Est_Id_Jour] TINYINT NULL,
+    [Est_Id_Jour] BIT NULL,
     [Est_Actif] BIT NULL CONSTRAINT [DF_t_lieu_planning_Est_Actif] DEFAULT(1),
     [Heure_Debut_Periode1] VARCHAR(4) NULL CONSTRAINT [DF_t_lieu_planning_Heure_Debut_Periode1] DEFAULT('0000'),
     [Heure_Fin_Periode1] VARCHAR(4) NULL CONSTRAINT [DF_t_lieu_planning_Heure_Fin_Periode1] DEFAULT('0000'),
@@ -891,7 +892,8 @@ BEGIN
     [Consigne_Apres] FLOAT NULL,
     [Tolerance_Surveillance_Sup_Apres] FLOAT NULL,
     [Tolerance_Surveillance_Inf_Apres] FLOAT NULL,
-    CONSTRAINT [PK_t_lieu_planning_audit] PRIMARY KEY ([Id_Audit])
+    CONSTRAINT [PK_t_lieu_planning_audit] PRIMARY KEY ([Id_Audit]),
+    CONSTRAINT [CK_t_lieu_planning_audit_Type] CHECK ([Type] IN ('PLAN_APPLY'))
   );
 END;
 GO
@@ -926,11 +928,11 @@ IF OBJECT_ID(N'dbo.t_materiel', N'U') IS NULL
 BEGIN
   CREATE TABLE dbo.[t_materiel] (
     [Id_Materiel] INT IDENTITY(1,1) NOT NULL,
-    [Ref_Commercial] VARCHAR(50) NOT NULL,
-    [Designation] VARCHAR(100) NOT NULL,
-    [Descriptif] VARCHAR(1000) NOT NULL,
-    [Gamme] VARCHAR(10) NOT NULL,
-    [Type] VARCHAR(10) NOT NULL,
+    [Ref_Commercial] VARCHAR(50) NOT NULL DEFAULT(''),
+    [Designation] VARCHAR(100) NOT NULL DEFAULT(''),
+    [Descriptif] VARCHAR(1000) NOT NULL DEFAULT(''),
+    [Gamme] VARCHAR(10) NOT NULL DEFAULT(''),
+    [Type] VARCHAR(10) NOT NULL DEFAULT(''),
     [Chemin_Image] VARCHAR(500) NULL,
     CONSTRAINT [PK_t_materiel] PRIMARY KEY ([Id_Materiel])
   );
@@ -953,7 +955,9 @@ BEGIN
     [Date_Creation] DATETIME NOT NULL DEFAULT(GETDATE()),
     [Date_Envoi] DATETIME NULL,
     [Id_Pdf] INT NULL,
-    CONSTRAINT [PK_t_commande_materiel] PRIMARY KEY ([Id_Commande_Materiel])
+    CONSTRAINT [PK_t_commande_materiel] PRIMARY KEY ([Id_Commande_Materiel]),
+    CONSTRAINT [CK_t_commande_materiel_Mode_Transmission] CHECK ([Mode_Transmission] IN ('SMTP', 'MAILTO')),
+    CONSTRAINT [CK_t_commande_materiel_Statut_Commande] CHECK ([Statut_Commande] IN ('BROUILLON', 'ENVOYEE', 'PREPAREE'))
   );
 END;
 GO
@@ -1133,7 +1137,7 @@ BEGIN
     [Sonde_Numero_Serie] VARCHAR(50) NULL,
     [Adresse_Sonde] VARCHAR(50) NULL,
     [Id_Sonde] INT NULL,
-    [Id_Lieu] INT NOT NULL,
+    [Id_Lieu] INT NOT NULL DEFAULT(0),
     [Est_Valeur_Null] BIT NOT NULL DEFAULT(0),
     [Frequence] INT NULL,
     [Est_Etat_Alarme] TINYINT NOT NULL DEFAULT(0),
@@ -1265,7 +1269,7 @@ BEGIN
     [Valeur_Brute] FLOAT NULL,
     [Unite] VARCHAR(10) NULL,
     [Date_Heure_Mesure] DATETIME NOT NULL,
-    [Sonde_Numero_Serie] VARCHAR(50) NOT NULL,
+    [Sonde_Numero_Serie] VARCHAR(50) NOT NULL DEFAULT(''),
     [Adresse_Sonde] VARCHAR(50) NOT NULL CONSTRAINT [DF_tm_mesures_ajustage_Adresse_Sonde] DEFAULT(''),
     [Est_Valeur_Null] TINYINT NOT NULL CONSTRAINT [DF_tm_mesures_ajustage_Est_Valeur_Null] DEFAULT(0),
     CONSTRAINT [PK_tm_mesures_ajustage] PRIMARY KEY ([Id_Mesure_Ajustage], [Id_Serveur_BDD])
@@ -1283,7 +1287,7 @@ BEGIN
     [Valeur_Brute] FLOAT NULL,
     [Unite] VARCHAR(10) NULL,
     [Date_Heure_Mesure] DATETIME NOT NULL,
-    [Etalon_Numero_Serie] VARCHAR(50) NOT NULL,
+    [Etalon_Numero_Serie] VARCHAR(50) NOT NULL DEFAULT(''),
     [Adresse_Sonde] VARCHAR(50) NULL,
     [Est_Valeur_Null] TINYINT NOT NULL CONSTRAINT [DF_tm_mesures_ajustage_etalon_Est_Valeur_Null] DEFAULT(0),
     CONSTRAINT [PK_tm_mesures_ajustage_etalon] PRIMARY KEY ([Id_Mesure_Ajustage_Etalon], [Id_Serveur_BDD])
@@ -1298,10 +1302,10 @@ BEGIN
     [Id_Mesure_Etalon] INT IDENTITY(1,1) NOT NULL,
     [Id_Serveur_BDD] INT NOT NULL DEFAULT(0),
     [Valeur_Brute] FLOAT NOT NULL,
-    [Etalon_Numero_Serie] VARCHAR(50) NOT NULL,
+    [Etalon_Numero_Serie] VARCHAR(50) NOT NULL DEFAULT(''),
     [Est_Valeur_Null] TINYINT NOT NULL,
     [Date_Heure] DATETIME NOT NULL,
-    [Message_Erreur] VARCHAR(50) NOT NULL,
+    [Message_Erreur] VARCHAR(50) NOT NULL DEFAULT(''),
     CONSTRAINT [PK_tm_mesures_etalon] PRIMARY KEY ([Id_Mesure_Etalon], [Id_Serveur_BDD])
   );
   CREATE INDEX [IDX_tm_mesures_etalon_Valeur_Brute] ON dbo.[tm_mesures_etalon]([Valeur_Brute]);
@@ -1365,7 +1369,7 @@ BEGIN
     [Id_Mesure_Test] INT IDENTITY(1,1) NOT NULL,
     [Id_Serveur_BDD] INT NOT NULL DEFAULT(0),
     [Valeur_Brute] FLOAT NOT NULL,
-    [Sonde_Numero_Serie] VARCHAR(50) NOT NULL,
+    [Sonde_Numero_Serie] VARCHAR(50) NOT NULL DEFAULT(''),
     [Est_Valeur_Null] TINYINT NOT NULL,
     [Date_Heure] DATETIME NOT NULL DEFAULT(GETDATE()),
     [Nombre_Total] INT NOT NULL DEFAULT(0),
@@ -1384,7 +1388,7 @@ BEGIN
     [Id_Mesure_Test_Etalon] INT IDENTITY(1,1) NOT NULL,
     [Id_Serveur_BDD] INT NOT NULL DEFAULT(0),
     [Valeur_Brute] FLOAT NOT NULL,
-    [Etalon_Numero_Serie] VARCHAR(50) NOT NULL,
+    [Etalon_Numero_Serie] VARCHAR(50) NOT NULL DEFAULT(''),
     [Est_Valeur_Null] TINYINT NOT NULL,
     [Date_Heure] DATETIME NOT NULL DEFAULT(GETDATE()),
     [Nombre_Total] INT NOT NULL DEFAULT(0),
@@ -1538,6 +1542,55 @@ GO
 
 -- Donnees minimales obligatoires main
 IF NOT EXISTS (SELECT 1 FROM dbo.t_profil WHERE Profil_Utilisateur = N'Administrateurs') INSERT INTO dbo.t_profil (Profil_Utilisateur, Commentaire, Est_MC2, Est_Archive) VALUES (N'Administrateurs', NULL, 0, 0);
+IF NOT EXISTS (SELECT 1 FROM dbo.t_profil WHERE Profil_Utilisateur = N'Consultation + Acquittement') INSERT INTO dbo.t_profil (Profil_Utilisateur, Commentaire, Est_MC2, Est_Archive) VALUES (N'Consultation + Acquittement', NULL, 0, 0);
+IF NOT EXISTS (SELECT 1 FROM dbo.t_profil WHERE Profil_Utilisateur = N'VIGITEL') INSERT INTO dbo.t_profil (Profil_Utilisateur, Commentaire, Est_MC2, Est_Archive) VALUES (N'VIGITEL', N'', 0, 0);
+IF NOT EXISTS (SELECT 1 FROM dbo.t_profil WHERE Profil_Utilisateur = N'ADMINistrateurs +') INSERT INTO dbo.t_profil (Profil_Utilisateur, Commentaire, Est_MC2, Est_Archive) VALUES (N'ADMINistrateurs +', N'', 0, 0);
+IF NOT EXISTS (SELECT 1 FROM dbo.t_profil WHERE Profil_Utilisateur = N'Consultation + Acquittement + Desactivation') INSERT INTO dbo.t_profil (Profil_Utilisateur, Commentaire, Est_MC2, Est_Archive) VALUES (N'Consultation + Acquittement + Desactivation', N'', 0, 0);
+IF NOT EXISTS (SELECT 1 FROM dbo.t_profil WHERE Profil_Utilisateur = N'Test ajout') INSERT INTO dbo.t_profil (Profil_Utilisateur, Commentaire, Est_MC2, Est_Archive) VALUES (N'Test ajout', NULL, 0, 0);
+GO
+
+SET IDENTITY_INSERT dbo.t_actionneur_type ON;
+MERGE dbo.t_actionneur_type AS target
+USING (VALUES
+  (1, 4, N'IACTX Lumineux', 1),
+  (2, 5, N'IACTX Lumineux contact', 1),
+  (3, 6, N'IACTX Contact', 1),
+  (4, 7, N'IACTX Sonore', 1)
+) AS source (Id_Actionneur_Type, Type, Description, Gere_Relais)
+ON target.Id_Actionneur_Type = source.Id_Actionneur_Type
+WHEN MATCHED THEN UPDATE SET Type = source.Type, Description = source.Description, Gere_Relais = source.Gere_Relais
+WHEN NOT MATCHED THEN INSERT (Id_Actionneur_Type, Type, Description, Gere_Relais) VALUES (source.Id_Actionneur_Type, source.Type, source.Description, source.Gere_Relais);
+SET IDENTITY_INSERT dbo.t_actionneur_type OFF;
+GO
+
+SET IDENTITY_INSERT dbo.t_module_type ON;
+MERGE dbo.t_module_type AS target
+USING (VALUES
+  (1, N'BIN', N'Boitier filaire avec prise DB9 (port serie)', 0),
+  (2, N'BIR (filaire)', N'Boitier reseau filaire avec pris RJ45 (prise reseau)', 1),
+  (3, N'BTR', N'Boitier radio avec prise DB9 (port serie)', 0),
+  (4, N'BIR (radio)', N'Boitier reseau radio avec prise RJ45 (port serie)', 1),
+  (5, N'CORONIS', N'Boitier radio CORONIS avec prise DB9 (port serie)', 0),
+  (6, N'MRH', N'Boitier MRH', 0),
+  (7, N'ITR', N'Module port serie', 0),
+  (8, N'IETH', N'Module ethernet', 0)
+) AS source (Id_Module_Type, Libelle_Type_Module, Libelle_Module, Est_Flag_Affiche_Plan)
+ON target.Id_Module_Type = source.Id_Module_Type
+WHEN MATCHED THEN UPDATE SET Libelle_Type_Module = source.Libelle_Type_Module, Libelle_Module = source.Libelle_Module, Est_Flag_Affiche_Plan = source.Est_Flag_Affiche_Plan
+WHEN NOT MATCHED THEN INSERT (Id_Module_Type, Libelle_Type_Module, Libelle_Module, Est_Flag_Affiche_Plan) VALUES (source.Id_Module_Type, source.Libelle_Type_Module, source.Libelle_Module, source.Est_Flag_Affiche_Plan);
+SET IDENTITY_INSERT dbo.t_module_type OFF;
+GO
+
+MERGE dbo.t_etalon_type AS target
+USING (VALUES
+  (N'ES', N'VigiTemp Type ES', N'Sonde talon radio type E', 1, 0, 0.05),
+  (N'EX', N'Externe', N'Sonde externe', 1, 1, 0),
+  (N'SEF', N'VigiTemp Type SEF', N'Sonde talon filaire ou filaire/radio avec prise RJ45', 1, 0, 0.02),
+  (N'SPET', N'Sonde etalon platine', N'Sonde etalon GSP platine', 1, 0, 0.02)
+) AS source (Type_Etalon, Nom, Descriptif, Est_Saisie_Module, Est_Sonde_Externe, Resolution)
+ON target.Type_Etalon = source.Type_Etalon
+WHEN MATCHED THEN UPDATE SET Nom = source.Nom, Descriptif = source.Descriptif, Est_Saisie_Module = source.Est_Saisie_Module, Est_Sonde_Externe = source.Est_Sonde_Externe, Resolution = source.Resolution
+WHEN NOT MATCHED THEN INSERT (Type_Etalon, Nom, Descriptif, Est_Saisie_Module, Est_Sonde_Externe, Resolution) VALUES (source.Type_Etalon, source.Nom, source.Descriptif, source.Est_Saisie_Module, source.Est_Sonde_Externe, source.Resolution);
 GO
 DECLARE @BootstrapAuth TABLE (Code NVARCHAR(50), Libelle NVARCHAR(100));
 INSERT INTO @BootstrapAuth (Code, Libelle) VALUES
@@ -1711,6 +1764,169 @@ IF NOT EXISTS (SELECT 1 FROM dbo.t_parametre WHERE Section='STATISTICS_MONTHLY_R
   INSERT INTO dbo.t_parametre(Section, Mot_Cle, Valeur, Commentaire) VALUES ('STATISTICS_MONTHLY_REPORT','LAST_SENT_MONTH','','Dernier mois envoye au format YYYY-MM');
 GO
 
+-- Parametres historiques du seed MySQL requis par les services legacy
+MERGE dbo.t_parametre AS target
+USING (VALUES
+  (N'CFR21', N'ACTIVATION_EXPIRATION_MOT_DE_PASSE', N'true', N'Activer l''expiration des mots de passe (CFR21)'),
+  (N'CFR21', N'ACTIVATION_NORME_CFR21', N'1', N'Activer la conformite CFR21 (saisie des configurations)'),
+  (N'CFR21', N'EVENEMENTS', N'1', N'Activation des evenements'),
+  (N'CFR21', N'JOURS_VALIDITE_MOT_DE_PASSE', N'90', NULL),
+  (N'CFR21', N'MOT_DE_PASSE_PERMANENT', N'1', N'Le mot de passe ne peut pas être changé par l''utilisateur'),
+  (N'CFR21', N'MOT_DE_PASSE_REUTILISABLE', N'0', N'L''utilisateur ne peut pas réutiliser un ancien mot de passe'),
+  (N'CFR21', N'NOMBRE_TENTATIVES_MOT_DE_PASSE', N'3', N'Nombre de tentatives autorisées avant verrouillage du compte'),
+  (N'CFR21', N'REACTIVATION_ALARME_SONORE', N'500', N'Délai de réactivation de l''alarme sonore en millisecondes'),
+  (N'CFR21', N'SECURITE', N'0', N'Mode sécurité renforcé'),
+  (N'CFR21', N'TEMPS_DECONNEXION_MINUTES', N'20', N'Temps d''inactivité avant deconnexion automatique en minutes'),
+  (N'CFR21', N'VALIDITE_MOT_DE_PASSE_JOURS', N'90', N'Durée de validité du mot de passe en jours'),
+  (N'MYSQL', N'MOT_DE_PASSE_CRYPTE', N'1', N'Le mot de passe MySQL est crypté'),
+  (N'MYSQL', N'VERSION_BASE_DONNEES', N'20200201', N'Version de la base de données (utile pour les mises à jour)'),
+  (N'SAUVEGARDES', N'ADRESSE_IP_MACHINE', N'', N'Adresse IP de la machine serveur'),
+  (N'SAUVEGARDES', N'CONSTRUCTION_BATCH', N'', N'Script de construction batch pour les sauvegardes'),
+  (N'SAUVEGARDES', N'DOSSIER_MYSQL', N'', N'Chemin du dossier d''installation MySQL'),
+  (N'SAUVEGARDES', N'DOSSIER_SAUVEGARDE', N'', N'Chemin du dossier de sauvegarde'),
+  (N'SAUVEGARDES', N'LISTE_FICHIERS', N'', N'Liste des fichiers de sauvegarde avec détails'),
+  (N'SAUVEGARDES', N'NOM_TACHE', N'', N'Nom de la tâche planifiée de sauvegarde'),
+  (N'SECURITE', N'LONGUEUR_MINIMALE_MOT_DE_PASSE', N'8', N'Nombre minimum de caractères pour un mot de passe'),
+  (N'SECURITE', N'NOMBRE_MIN_CARACTERES_SPECIAUX', N'1', N'Nombre minimum de caractères spéciaux requis (!@#$%^&* etc.)'),
+  (N'SECURITE', N'NOMBRE_MIN_CHIFFRES', N'1', N'Nombre minimum de chiffres requis'),
+  (N'SECURITE', N'NOMBRE_MIN_LETTRES_MAJUSCULES', N'1', N'Nombre minimum de lettres majuscules requises'),
+  (N'SECURITE', N'NOMBRE_MIN_LETTRES_MINUSCULES', N'1', N'Nombre minimum de lettres minuscules requises'),
+  (N'SECURITE_EMAIL', N'SMTP_ACTIVATION', N'true', N'Activer l''envoi d''emails'),
+  (N'SECURITE_EMAIL', N'SMTP_EXPEDITEUR', N'', N'Adresse email expediteur (doit correspondre au domaine SMTP)'),
+  (N'SECURITE_EMAIL', N'SMTP_MOT_DE_PASSE', N'', N'Mot de passe SMTP'),
+  (N'SECURITE_EMAIL', N'SMTP_PORT', N'587', N'Port SMTP (587 pour TLS, 465 pour SSL)'),
+  (N'SECURITE_EMAIL', N'SMTP_SERVEUR', N'', N'Serveur SMTP pour l''envoi d''emails'),
+  (N'SECURITE_EMAIL', N'SMTP_UTILISATEUR', N'', N'Utilisateur SMTP'),
+  (N'SECURITE_MOT_DE_PASSE', N'LONGUEUR_MINIMALE', N'8', N'Longueur minimale du mot de passe'),
+  (N'SECURITE_MOT_DE_PASSE', N'MIN_CARACTERES_SPECIAUX', N'1', N'Nombre minimum de caracteres speciaux'),
+  (N'SECURITE_MOT_DE_PASSE', N'MIN_CHIFFRES', N'1', N'Nombre minimum de chiffres'),
+  (N'SECURITE_MOT_DE_PASSE', N'MIN_LETTRES_MAJUSCULES', N'1', N'Nombre minimum de majuscules'),
+  (N'SECURITE_MOT_DE_PASSE', N'MIN_LETTRES_MINUSCULES', N'1', N'Nombre minimum de minuscules'),
+  (N'STATISTIQUE', N'ENTETE_RAPPORT_UTILISATEUR_221', N'', N'En-tête du rapport utilisateur 221'),
+  (N'STATISTIQUE', N'ENTETE_RAPPORT_UTILISATEUR_81', N'', N'En-tête du rapport utilisateur 81'),
+  (N'STATISTIQUE', N'HEURE_RAPPORT_UTILISATEUR_221', N'', N'Heure du rapport utilisateur 221'),
+  (N'STATISTIQUE', N'HEURE_RAPPORT_UTILISATEUR_81', N'', N'Heure du rapport utilisateur 81'),
+  (N'STATISTIQUE', N'ORIENTATION_RAPPORT_221', N'', N'Orientation du rapport 221'),
+  (N'STATISTIQUE', N'ORIENTATION_RAPPORT_81', N'', N'Orientation du rapport 81'),
+  (N'VIGISERV', N'ACTIONS_PRIORITAIRES', N'0', N'Activation des actions prioritaires'),
+  (N'VIGISERV', N'ACTIONS_PRIORITAIRES_DESACTIVATION', N'0', N'Desactivation des actions prioritaires (si egal à 1, les actions prioritaires n''ont pas d''effet)'),
+  (N'VIGISERV', N'DATE_DERNIER_FICHIER_SAUVEGARDE', N'', N'Date du dernier fichier de sauvegarde remonte par VigiServ'),
+  (N'VIGISERV', N'DELAI_ALERTE_MESURE_MINUTES', N'60', N'Delai de verification maximum avant de lancer une alerte sur la derniere mesure (en minutes)'),
+  (N'VIGISERV', N'DELAI_REPONSE_SONDE_AVR_CENTIEMES_SECONDES', N'100', N'Delai maximum pour l''attente de lecture des sondes AVR en centiemes de seconde'),
+  (N'VIGISERV', N'DELAI_REPONSE_SONDE_EI_CENTIEMES_SECONDES', N'150', N'Delai maximum pour l''attente de lecture des sondes EI en centiemes de seconde'),
+  (N'VIGISERV', N'DELAI_SONNERIE_ALARME_MINUTES', N'2', N'Delai pour la verification si des alarmes sont presentes avant activation d''une alarme sonore (en minutes)'),
+  (N'VIGISERV', N'DERNIER_MESURE_APPEL', N'SondesSurveillance', N'Derniere fonction appelee par le service VigiServ'),
+  (N'VIGISERV', N'DERNIER_MESURE_APPEL_1', N'SondesSurveillance', N'Derniere fonction appelee par le service VigiServ (serveur 1)'),
+  (N'VIGISERV', N'DERNIER_MESURE_APPEL_2', N'SondesSurveillance', N'Derniere fonction appelee par le service VigiServ (serveur 2)'),
+  (N'VIGISERV', N'DERNIER_MESURE_APPEL_3', N'SondesSurveillance', N'Derniere fonction appelee par le service VigiServ (serveur 3)'),
+  (N'VIGISERV', N'DERNIER_MESURE_DATE_HEURE', N'', N'Date heure de la derniere mesure inscrite par le service VigiServ'),
+  (N'VIGISERV', N'DERNIER_MESURE_DATE_HEURE_1', N'', N'Date heure de la derniere mesure inscrite par le service VigiServ (serveur 1)'),
+  (N'VIGISERV', N'DERNIER_MESURE_DATE_HEURE_2', N'', N'Date heure de la derniere mesure inscrite par le service VigiServ (serveur 2)'),
+  (N'VIGISERV', N'DERNIER_MESURE_DATE_HEURE_3', N'', N'Date heure de la derniere mesure inscrite par le service VigiServ (serveur 3)'),
+  (N'VIGISERV', N'DERNIER_MESURE_SONDE', N'', N'Numero de sonde de la derniere mesure inscrite par le service VigiServ'),
+  (N'VIGISERV', N'DERNIER_MESURE_SONDE_1', N'', N'Numero de sonde de la derniere mesure inscrite par le service VigiServ (serveur 1)'),
+  (N'VIGISERV', N'DERNIER_MESURE_SONDE_2', N'', N'Numero de sonde de la derniere mesure inscrite par le service VigiServ (serveur 2)'),
+  (N'VIGISERV', N'DERNIER_MESURE_SONDE_3', N'', N'Numero de sonde de la derniere mesure inscrite par le service VigiServ (serveur 3)'),
+  (N'VIGISERV', N'DIALOGUE_EN_MINUTES', N'1', N'Intervalle de dialogue avec le service VigiServ en minutes'),
+  (N'VIGISERV', N'DUREE_LOGIN_SECONDES', N'60', N'Duree de validite du login (le login ne sera pas redemande dans ce delai) (en secondes)'),
+  (N'VIGISERV', N'ECRAN_OFF', N'1', N'ecran eteint'),
+  (N'VIGISERV', N'ENREGISTREMENT_ON', N'1', N'Activation de l''enregistrement'),
+  (N'VIGISERV', N'FICHIER_EXTERNE', N'0', N'Utiliser un fichier externe'),
+  (N'VIGISERV', N'FREQUENCE_NON_REPONSE_MINUTES', N'15', N'Frequence à appliquer si la derniere mesure est en erreur (en minutes)'),
+  (N'VIGISERV', N'FREQUENCE_VERIFICATION_MINUTES', N'15', N'Frequence de verification en minutes'),
+  (N'VIGISERV', N'MEMOIRE_OFF', N'1', N'Memoire eteinte'),
+  (N'VIGISERV', N'NOM_UTILISATEUR_SERVEUR', N'', N'Nom de l''utilisateur du serveur'),
+  (N'VIGISERV', N'PING_MODULE', N'1', N'Autorise ou pas le ping en cas de test d''un module reseau (0 = OFF, 1 = ON)'),
+  (N'VIGISERV', N'SATURATION_SONDE_LINEAIRE', N'-40', N'Seuil de saturation d''une sonde lineaire'),
+  (N'VIGISERV', N'SECONDES_ENTRE_MESURES_ETALONNAGE', N'30', N'Nombre de secondes entre chaque mesure d''etalonnage'),
+  (N'VIGISERV', N'SERVEUR_ADRESSE_IP', N'', N'Adresse IP du serveur VigiServ'),
+  (N'VIGISERV', N'SERVEUR_ADRESSE_IP_1', N'', N'Adresse IP du serveur VigiServ (serveur 1)'),
+  (N'VIGISERV', N'SERVEUR_ADRESSE_IP_2', N'', N'Adresse IP du serveur VigiServ (serveur 2)'),
+  (N'VIGISERV', N'SERVEUR_ADRESSE_IP_3', N'', N'Adresse IP du serveur VigiServ (serveur 3)'),
+  (N'VIGISERV', N'SERVEUR_NOM', N'', N'Nom du serveur VigiServ'),
+  (N'VIGISERV', N'SERVEUR_NOM_1', N'', N'Nom du serveur VigiServ (serveur 1)'),
+  (N'VIGISERV', N'SERVEUR_NOM_2', N'', N'Nom du serveur VigiServ (serveur 2)'),
+  (N'VIGISERV', N'SERVEUR_NOM_3', N'', N'Nom du serveur VigiServ (serveur 3)'),
+  (N'VIGISERV', N'SERVICE_DATE_HEURE', N'', N'Date heure inscrite par le service VigiServ'),
+  (N'VIGISERV', N'SERVICE_DATE_HEURE_1', N'', N'Date heure inscrite par le service VigiServ (serveur 1)'),
+  (N'VIGISERV', N'SERVICE_DATE_HEURE_2', N'', N'Date heure inscrite par le service VigiServ (serveur 2)'),
+  (N'VIGISERV', N'SERVICE_DATE_HEURE_3', N'', N'Date heure inscrite par le service VigiServ (serveur 3)'),
+  (N'VIGISERV', N'SONDE_EN_SEUIL_BAS', N'-60', N'Seuil bas pour les sondes de type EN'),
+  (N'VIGISERV', N'SONDE_EN_SEUIL_HAUT', N'100', N'Seuil haut pour les sondes de type EN'),
+  (N'VIGISERV', N'SONDE_EP_SEUIL_BAS', N'-400', N'Seuil bas pour les sondes de type EP'),
+  (N'VIGISERV', N'SONDE_EP_SEUIL_HAUT', N'400', N'Seuil haut pour les sondes de type EP'),
+  (N'VIGISERV', N'SONDE_GN_SEUIL_BAS', N'-60', N'Seuil bas pour les sondes de type GN'),
+  (N'VIGISERV', N'SONDE_GN_SEUIL_HAUT', N'70', N'Seuil haut pour les sondes de type GN'),
+  (N'VIGISERV', N'SONDE_GP_SEUIL_BAS', N'-400', N'Seuil bas pour les sondes de type GP'),
+  (N'VIGISERV', N'SONDE_GP_SEUIL_HAUT', N'400', N'Seuil haut pour les sondes de type GP'),
+  (N'VIGISERV', N'SONDE_HN_SEUIL_BAS', N'-60', N'Seuil bas pour les sondes de type HN'),
+  (N'VIGISERV', N'SONDE_HN_SEUIL_HAUT', N'100', N'Seuil haut pour les sondes de type HN'),
+  (N'VIGISERV', N'SONDE_HP_SEUIL_BAS', N'-400', N'Seuil bas pour les sondes de type HP'),
+  (N'VIGISERV', N'SONDE_HP_SEUIL_HAUT', N'400', N'Seuil haut pour les sondes de type HP'),
+  (N'VIGISERV', N'SONDE_IC_SEUIL_BAS', N'-400', N'Seuil bas pour les sondes de type IC'),
+  (N'VIGISERV', N'SONDE_IC_SEUIL_HAUT', N'400', N'Seuil haut pour les sondes de type IC'),
+  (N'VIGISERV', N'SONDE_IHCQP_SEUIL_BAS', N'-400', N'Seuil bas pour les sondes de type IHCQP'),
+  (N'VIGISERV', N'SONDE_IHCQP_SEUIL_HAUT', N'1200', N'Seuil haut pour les sondes de type IHCQP'),
+  (N'VIGISERV', N'SONDE_IH_SEUIL_BAS', N'-400', N'Seuil bas pour les sondes de type IH'),
+  (N'VIGISERV', N'SONDE_IH_SEUIL_HAUT', N'400', N'Seuil haut pour les sondes de type IH'),
+  (N'VIGISERV', N'SONDE_IN_SEUIL_BAS', N'-60', N'Seuil bas pour les sondes de type IN'),
+  (N'VIGISERV', N'SONDE_IN_SEUIL_HAUT', N'80', N'Seuil haut pour les sondes de type IN'),
+  (N'VIGISERV', N'SONDE_IP_SEUIL_BAS', N'-400', N'Seuil bas pour les sondes de type IP'),
+  (N'VIGISERV', N'SONDE_IP_SEUIL_HAUT', N'400', N'Seuil haut pour les sondes de type IP'),
+  (N'VIGISERV', N'SONDE_IQ_SEUIL_BAS', N'-400', N'Seuil bas pour les sondes de type IQ'),
+  (N'VIGISERV', N'SONDE_IQ_SEUIL_HAUT', N'1100', N'Seuil haut pour les sondes de type IQ'),
+  (N'VIGISERV', N'TIMEOUT_PING_MILLISECONDES', N'200', N'TimeOut de la duree d''attente de la fonction Ping() en millisecondes'),
+  (N'VIGISERV', N'TIMEOUT_PORT_SERIE_MILLISECONDES', N'5000', N'TimeOut de la duree d''attente de la fonction sOuvre() en millisecondes'),
+  (N'VIGISURV', N'ALARME_SONORE_LIEU_NON_ACQUITE', N'0', N'Alarme sonore pour les lieux non acquittes'),
+  (N'VIGISURV', N'ALERTE_SURVEILLANCE', N'0', N'Alerte de surveillance'),
+  (N'VIGISURV', N'DELAI_ARRET_THREAD_CHANGEMENT_GROUPE_MILLISECONDES', N'500', N'Delai laisse à l''application pour arrêter le thread de mise à jour avant rafraîchissement pour le changement de groupe (en millisecondes)'),
+  (N'VIGISURV', N'DELAI_ARRET_THREAD_DESSIN_MILLISECONDES', N'100', N'Delai laisse à l''application avant de redemarrer le thread dessin apres un changement de groupe (en millisecondes)'),
+  (N'VIGISURV', N'DELAI_AVANT_ARCHIVE_JOURS', N'365', N'Nombre de jours avant archivage automatique'),
+  (N'VIGISURV', N'DELAI_PAUSE_THREAD_MAJ_DESSIN_SECONDES', N'25', N'Delai en secondes de pause entre 2 mises à jour completes des dessins. Augmenter ce nombre pour dessiner moins souvent les graphes'),
+  (N'VIGISURV', N'DELAI_PAUSE_THREAD_MAJ_SECONDES', N'30', N'Delai en secondes de pause entre 2 mises à jour completes des lieux. Augmenter ce nombre pour rafraîchir moins souvent'),
+  (N'VIGISURV', N'DELAI_RAFRAICHISSEMENT_ADMIN_SECONDES', N'300', N'Delai de mise à jour de l''ecran d''administration en secondes'),
+  (N'VIGISURV', N'DELAI_RAFRAICHISSEMENT_METROLOGIE_SECONDES', N'300', N'Delai de mise à jour de l''ecran de metrologie en secondes'),
+  (N'VIGISURV', N'DELAI_VERIFICATION_ALERTES_SECONDES', N'30', N'Delai de verification des alertes en secondes'),
+  (N'VIGISURV', N'DELAI_VERIFICATION_VIGISERV_MINUTES', N'60', N'Delai du message d''alarme VigiServ en minutes'),
+  (N'VIGISURV', N'DELAI_VERIFICATION_VIGITEL_MINUTES', N'60', N'Delai du message d''alarme VigiTel en minutes'),
+  (N'VIGISURV', N'EXPLICATIONS_TESTS', N'- Ping base VigiTemp' + NCHAR(13) + NCHAR(10) + N'  Permet de savoir si le serveur hebergeant la base de donnees VigiTemp est accessible. Un ping permet de connaître son etat de connexion au reseau.' + NCHAR(13) + NCHAR(10) + N'' + NCHAR(13) + NCHAR(10) + N'- Requête base VigiTemp' + NCHAR(13) + NCHAR(10) + N'  Une requête est executee sur la base de donnees VigiTemp afin de savoir si MySQL est bien operationnel.' + NCHAR(13) + NCHAR(10) + N'' + NCHAR(13) + NCHAR(10) + N'- Ping serveur VigiServ' + NCHAR(13) + NCHAR(10) + N'  Permet de savoir si le serveur hebergeant la base de donnees des mesures est accessible. Un ping permet de connaître son etat de connexion au reseau.' + NCHAR(13) + NCHAR(10) + N'' + NCHAR(13) + NCHAR(10) + N'- Requête serveur VigiServ' + NCHAR(13) + NCHAR(10) + N'  Une requête est executee sur la base de donnees VigiTemp afin de savoir si la base de donnees à bien ete initialisee.' + NCHAR(13) + NCHAR(10) + N'' + NCHAR(13) + NCHAR(10) + N'- Interrogation VigiServ' + NCHAR(13) + NCHAR(10) + N'  Verifie si VigiServ est actif. Le service VigiServ informe de son etat de façon reguliere en ecrivant dans la base de donnees. Si cette ecriture n''a pas ete effectuee recemment alors VigiServ est inactif.' + NCHAR(13) + NCHAR(10) + N'' + NCHAR(13) + NCHAR(10) + N'- Interrogation VigiTel' + NCHAR(13) + NCHAR(10) + N'  Verifie si VigiTel est actif. Le service VigiTel informe de son etat de façon reguliere en ecrivant dans la base de donnees. Si cette ecriture n''a pas ete effectuee recemment alors VigiTel est inactif.', N'Texte d''explication pour les tests de la fenêtre outils'),
+  (N'VIGISURV', N'IDENT_VIGILOG', N'0', N'Identifiant VigiLog'),
+  (N'VIGISURV', N'LANCEMENT_ROBOT_SURVEILLANCE_MINUTES', N'10', N'Lance la verification (Ping, Requêtes, Services) toutes les 10 minutes'),
+  (N'VIGISURV', N'LIAISON_ARMURE', N'0', N'Liaison avec l''armoire'),
+  (N'VIGISURV', N'LIAISON_ARMURE_MODE', N'1', N'Mode de liaison avec l''armoire'),
+  (N'VIGISURV', N'LIAISON_ARMURE_REPERTOIRE', N'', N'Repertoire de liaison avec l''armoire'),
+  (N'VIGISURV', N'MAX_VALIDITE_ETALONNAGE_JOURS', N'365', N'Nombre de jours durant lequel les etalonnages sont valides'),
+  (N'VIGISURV', N'MAX_VALIDITE_SAUVEGARDE_JOURS', N'7', N'Nombre de jours durant lequel la sauvegarde est valide'),
+  (N'VIGISURV', N'MOT_DE_PASSE_ETALONNAGE', N'METRO', N'Mot de passe pour les operations d''etalonnage'),
+  (N'VIGISURV', N'REMONTER_HEURE_SERVEUR_LOGIN', N'0', N'Activer la remontee de l''heure du serveur au login'),
+  (N'VIGISURV', N'TAUX_RAFRAICHISSEMENT_INITIALISATION_ECRAN', N'10', N'Nombre de lieux à afficher lors du chargement de l''ecran. Augmenter ce nombre pour accelerer le premier chargement'),
+  (N'VIGISURV', N'TEXTE_SAUVEGARDE', N'La mise en place des sauvegardes s''effectue sur le poste serveur VigiTemp.', N'Texte d''information sur les sauvegardes'),
+  (N'VIGISURV', N'VISION_SIMPLE', N'0', N'Mode vision simple'),
+  (N'VIGITEL', N'ALARME_NON_REPONSE', N'0', N'Alarme de non-reponse'),
+  (N'VIGITEL', N'DUREE_LOGIN_SECONDES', N'60', N'Duree de validite du login VigiTel (en secondes)'),
+  (N'VIGITEL', N'EMAIL_ALARME_EXPEDITEUR', N'', N'Adresse e-mail expediteur pour les alarmes'),
+  (N'VIGITEL', N'EMAIL_ALARME_MESSAGE', N'Le lieu en alarme est : %Lieu (sonde n° %NumSonde)' + NCHAR(13) + NCHAR(10) + N'Type d''alarme : %AlarmeTexteMessage' + NCHAR(13) + NCHAR(10) + N'Dernier releve : %Valeur %Unite', N'Template du message d''alarme par e-mail'),
+  (N'VIGITEL', N'EMAIL_ALARME_OBJET', N'Alarme VigiTemp', N'Objet de l''e-mail d''alarme'),
+  (N'VIGITEL', N'FORMAT_FICHIER_SON', N'41', N'Format du fichier son (41 = SAFTCCITT_ALaw_8kHzMono)'),
+  (N'VIGITEL', N'FREQUENCE_VERIFICATION_MINUTES', N'15', N'Frequence de verification VigiTel en minutes'),
+  (N'VIGITEL', N'MODE_DEBUG', N'0', N'Activer le mode debogage de VigiTel'),
+  (N'VIGITEL', N'NOM_MODEM', N'', N'Nom du modem utilise'),
+  (N'VIGITEL', N'SEPARATEUR_DECIMAL', N',', N'Separateur decimal (. ou ,) pour la mise en forme d''une valeur relevee'),
+  (N'VIGITEL', N'SERVICE_DATE_HEURE', N'', N'Date heure inscrite par le service VigiTel'),
+  (N'VIGITEL', N'SMTP_COMPTE', N'', N'Compte SMTP VigiTel'),
+  (N'VIGITEL', N'SMTP_MODE_ASYNCHRONE', N'0', N'Mode asynchrone SMTP'),
+  (N'VIGITEL', N'SMTP_MOT_DE_PASSE', N'', N'Mot de passe SMTP VigiTel'),
+  (N'VIGITEL', N'SMTP_PORT', N'25', N'Port SMTP VigiTel'),
+  (N'VIGITEL', N'SMTP_SECURISE_TSL', N'0', N'Activer la securisation TSL du SMTP'),
+  (N'VIGITEL', N'SMTP_SERVEUR', N'smtp', N'Serveur SMTP VigiTel'),
+  (N'VIGITEL', N'VITESSE_VOIX', N'1', N'Vitesse de la voix (de -10 à 10)'),
+  (N'VIGITEL', N'VOLUME_VOIX', N'100', N'Volume de la voix (de 1 à 100)')
+) AS source (Section, Mot_Cle, Valeur, Commentaire)
+ON target.Section = source.Section AND target.Mot_Cle = source.Mot_Cle
+WHEN NOT MATCHED THEN INSERT (Section, Mot_Cle, Valeur, Commentaire) VALUES (source.Section, source.Mot_Cle, source.Valeur, source.Commentaire);
+GO
+-- 154 parametres MySQL de reference
+
 DECLARE @RecentParams TABLE (
   Section NVARCHAR(100) NOT NULL,
   Mot_Cle NVARCHAR(100) NOT NULL,
@@ -1719,6 +1935,7 @@ DECLARE @RecentParams TABLE (
 );
 
 INSERT INTO @RecentParams (Section, Mot_Cle, Valeur, Commentaire) VALUES
+(N'VERSION',N'SCHEMA_VERSION',N'0.01.001',N'Version produit commune des seeds MySQL et SQL Server'),
 (N'GENERAL',N'TIMEZONE',N'Europe/Paris',N'Fuseau horaire par defaut'),
 (N'DASHBOARD',N'AUDIT_GRAPH_OPENINGS',N'false',N'Activer l audit trail a l ouverture des graphiques'),
 (N'DASHBOARD',N'ETALONNAGE_WARNING_DAYS',N'90',N'Delai alerte validite etalonnage en jours'),

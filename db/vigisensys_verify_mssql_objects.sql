@@ -36,6 +36,35 @@ FROM (VALUES
 ORDER BY e.database_name, e.table_name, e.column_name;
 GO
 
+PRINT '=== VERSION ET DONNEES DE REFERENCE ===';
+USE [vigi_main];
+GO
+
+SELECT
+  N'0.01.001' AS expected_version,
+  MAX(CASE WHEN [Section] = 'VERSION' AND [Mot_Cle] = 'SCHEMA_VERSION' THEN [Valeur] END) AS installed_version,
+  CASE
+    WHEN MAX(CASE WHEN [Section] = 'VERSION' AND [Mot_Cle] = 'SCHEMA_VERSION' THEN [Valeur] END) = N'0.01.001' THEN 'OK'
+    ELSE 'KO'
+  END AS status
+FROM dbo.t_parametre;
+
+SELECT
+  (SELECT COUNT(*) FROM dbo.t_actionneur_type) AS actionneur_types,
+  (SELECT COUNT(*) FROM dbo.t_module_type) AS module_types,
+  (SELECT COUNT(*) FROM dbo.t_etalon_type) AS etalon_types,
+  CASE
+    WHEN (SELECT COUNT(*) FROM dbo.t_actionneur_type) >= 4
+     AND (SELECT COUNT(*) FROM dbo.t_module_type) >= 8
+     AND (SELECT COUNT(*) FROM dbo.t_etalon_type) >= 4
+     AND EXISTS (SELECT 1 FROM dbo.t_parametre WHERE [Section] = 'VIGISERV' AND [Mot_Cle] = 'FREQUENCE_VERIFICATION_MINUTES')
+     AND EXISTS (SELECT 1 FROM dbo.t_parametre WHERE [Section] = 'VIGISURV' AND [Mot_Cle] = 'MAX_VALIDITE_ETALONNAGE_JOURS')
+     AND EXISTS (SELECT 1 FROM dbo.t_parametre WHERE [Section] = 'VIGITEL' AND [Mot_Cle] = 'FREQUENCE_VERIFICATION_MINUTES')
+      THEN 'OK'
+    ELSE 'KO'
+  END AS status;
+GO
+
 PRINT '=== VIGI_MAIN / VIEWS ===';
 USE [vigi_main];
 GO

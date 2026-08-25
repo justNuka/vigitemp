@@ -1,3 +1,4 @@
+-- Version produit / seed : 0.01.001
 CREATE DATABASE IF NOT EXISTS `vigi_main` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci */ /*!80016 DEFAULT ENCRYPTION='N' */;
 USE `vigi_main`;
 
@@ -1216,6 +1217,12 @@ INSERT INTO `t_sonde_type` (`Id_Sonde_Type`,`Sonde_Type`,`Libelle_Sonde_Type`,`E
 (35,'SPFP','Gemsense Pro filaire platine',0,0,'GSP',NULL);
 INSERT INTO `t_utilisateur` (Login, Mot_De_Passe, Est_Archive, Profil_Utilisateur, Est_Mot_De_Passe_Temporaire, Date_Creation, Date_Derniere_Modification_MDP) VALUES ('admin', '$2b$10$p794ptDulNuN5Md2j3Y6Ge2wEYRjaG3Er8CexJ8RkrD4er1A2AhXS', 0, 'Administrateurs', 1, NOW(), NOW());
 SET FOREIGN_KEY_CHECKS=1;
+
+INSERT INTO `t_parametre` (`Section`, `Mot_Cle`, `Valeur`, `Commentaire`)
+VALUES ('VERSION', 'SCHEMA_VERSION', '0.01.001', 'Version produit commune des seeds MySQL et SQL Server')
+ON DUPLICATE KEY UPDATE
+  `Valeur` = VALUES(`Valeur`),
+  `Commentaire` = VALUES(`Commentaire`);
 
 INSERT INTO `t_parametre` (`Section`, `Mot_Cle`, `Valeur`, `Commentaire`)
 VALUES ('dashboard', 'surveillance_refresh', '15', 'Delai auto de rafraichissement de la surveillance (secondes)')
