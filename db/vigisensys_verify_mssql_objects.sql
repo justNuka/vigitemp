@@ -9,6 +9,106 @@
 
 SET NOCOUNT ON;
 
+PRINT '=== SEED / COLONNES REQUISES DU SCHEMA COURANT ===';
+
+SELECT
+  e.database_name,
+  e.table_name,
+  e.column_name,
+  CASE
+    WHEN COL_LENGTH(QUOTENAME(e.database_name) + N'.dbo.' + QUOTENAME(e.table_name), e.column_name) IS NULL
+      THEN 'MISSING'
+    ELSE 'OK'
+  END AS verification
+FROM (VALUES
+  (N'vigi_main', N'liste_clients', N'Id_Client'),
+  (N'vigi_main', N't_alarme', N'Est_Mail_Fin_Envoye'),
+  (N'vigi_main', N't_alarme_histo', N'Est_Alarme_Vrai'),
+  (N'vigi_main', N't_autorisation', N'Code_Autorisation'),
+  (N'vigi_main', N't_etalonnage', N'Id_Bain'),
+  (N'vigi_main', N't_etalonnage', N'Valide'),
+  (N'vigi_main', N't_lieu', N'Est_Acq_Auto_Alarme_NR'),
+  (N'vigi_main', N't_lieu', N'Est_Auto_Acquittement_Non_Reponse'),
+  (N'vigi_main', N't_lieu', N'Est_Son_Alarme_Active'),
+  (N'vigi_main', N't_lieu', N'Lieu_Etat'),
+  (N'vigi_main', N't_materiel', N'Designation'),
+  (N'vigi_main', N't_materiel', N'Gamme'),
+  (N'vigi_main', N't_materiel', N'Type'),
+  (N'vigi_main', N't_module', N'Port_Serie_Boucle2_GSO'),
+  (N'vigi_main', N't_site', N'Code_Site'),
+  (N'vigi_main', N't_sonde', N'Metrologie_en_cours'),
+  (N'vigi_main', N't_sonde', N'Metrologie_cmd_envoyee'),
+  (N'vigi_main', N't_sonde_type', N'Valeur_Min'),
+  (N'vigi_main', N't_sonde_type', N'Valeur_Max'),
+  (N'vigi_main', N't_utilisateur', N'Avatar_Utilisateur'),
+  (N'vigi_mesures', N'tm_graphique', N'Planning_Actif'),
+  (N'vigi_mesures', N'tm_mesures', N'Est_Mesure_Repeteur_GSO'),
+  (N'vigi_mesures', N'tm_mesures_gso_build', N'Est_Mesure_Repeteur_GSO')
+) e(database_name, table_name, column_name)
+ORDER BY e.database_name, e.table_name, e.column_name;
+GO
+
+PRINT '=== SEED / COLONNES OBSOLETES ATTENDUES ABSENTES ===';
+
+SELECT
+  e.database_name,
+  e.table_name,
+  e.column_name,
+  CASE
+    WHEN COL_LENGTH(QUOTENAME(e.database_name) + N'.dbo.' + QUOTENAME(e.table_name), e.column_name) IS NULL
+      THEN 'OK'
+    ELSE 'OBSOLETE_PRESENT'
+  END AS verification
+FROM (VALUES
+  (N'vigi_main', N't_alarme', N'Est_Alarme_Vrai'),
+  (N'vigi_main', N't_alarme', N'Date_Heure_Debut_Alarme_Vrai'),
+  (N'vigi_main', N't_autorisation', N'A_Acces_Admin'),
+  (N'vigi_main', N't_autorisation', N'A_Acces_Metrologie'),
+  (N'vigi_main', N't_autorisation', N'A_Acces_Surveillance'),
+  (N'vigi_main', N't_autorisation', N'A_Acces_VigiLog'),
+  (N'vigi_main', N't_etalon', N'Incertitude'),
+  (N'vigi_main', N't_etalon', N'Resolution'),
+  (N'vigi_main', N't_etalonnage', N'Id_Milieu'),
+  (N'vigi_main', N't_etalonnage', N'Nom_Etalonnage'),
+  (N'vigi_main', N't_lieu', N'Surveillance_Etat'),
+  (N'vigi_main', N't_sonde', N'Surveillance_Etat'),
+  (N'vigi_mesures', N'tm_mesures_ajustage_etalon', N'Adresse_Sonde'),
+  (N'vigi_mesures', N'tm_mesures_ajustage_etalon', N'Unite'),
+  (N'vigi_mesures', N'tm_mesures_gso_build', N'Id_GSO_Build'),
+  (N'vigi_mesures', N'tm_mesures_gso_build', N'GSO_SN')
+) e(database_name, table_name, column_name)
+ORDER BY e.database_name, e.table_name, e.column_name;
+GO
+
+PRINT '=== VERSION ET DONNEES DE REFERENCE ===';
+USE [vigi_main];
+GO
+
+SELECT
+  N'0.90.001' AS expected_version,
+  MAX(CASE WHEN [Section] = 'VERSION' AND [Mot_Cle] = 'SCHEMA_VERSION' THEN [Valeur] END) AS installed_version,
+  CASE
+    WHEN MAX(CASE WHEN [Section] = 'VERSION' AND [Mot_Cle] = 'SCHEMA_VERSION' THEN [Valeur] END) = N'0.90.001' THEN 'OK'
+    ELSE 'KO'
+  END AS status
+FROM dbo.t_parametre;
+
+SELECT
+  (SELECT COUNT(*) FROM dbo.t_actionneur_type) AS actionneur_types,
+  (SELECT COUNT(*) FROM dbo.t_module_type) AS module_types,
+  (SELECT COUNT(*) FROM dbo.t_etalon_type) AS etalon_types,
+  CASE
+    WHEN (SELECT COUNT(*) FROM dbo.t_actionneur_type) >= 4
+     AND (SELECT COUNT(*) FROM dbo.t_module_type) >= 8
+     AND (SELECT COUNT(*) FROM dbo.t_etalon_type) >= 4
+     AND EXISTS (SELECT 1 FROM dbo.t_parametre WHERE [Section] = 'VIGISERV' AND [Mot_Cle] = 'FREQUENCE_VERIFICATION_MINUTES')
+     AND EXISTS (SELECT 1 FROM dbo.t_parametre WHERE [Section] = 'VIGISURV' AND [Mot_Cle] = 'MAX_VALIDITE_ETALONNAGE_JOURS')
+     AND EXISTS (SELECT 1 FROM dbo.t_parametre WHERE [Section] = 'VIGITEL' AND [Mot_Cle] = 'FREQUENCE_VERIFICATION_MINUTES')
+      THEN 'OK'
+    ELSE 'KO'
+  END AS status;
+GO
+
 PRINT '=== VIGI_MAIN / VIEWS ===';
 USE [vigi_main];
 GO

@@ -1,5 +1,6 @@
 /*
   VigiSensys - Conversion des MySQL EVENTS vers SQL Server
+  Version produit : 0.90.001
 */
 
 SET ANSI_NULLS ON;
@@ -19,8 +20,6 @@ BEGIN
   SET NOCOUNT ON;
   SET XACT_ABORT ON;
 
-  -- Monday = 1, ..., Sunday = 7, comme la logique MySQL :
-  -- IF(DAYOFWEEK(NOW()) = 1, 7, DAYOFWEEK(NOW()) - 1)
   SET DATEFIRST 1;
 
   DECLARE @now DATETIME = GETDATE();
@@ -207,7 +206,7 @@ GO
 
 /* =====================================================================
    vigi_main - EVT_GSO_DERNIERVALEUR_LIEU
-   MySQL: EVERY 5 MINUTE
+   MySQL: EVERY 2 MINUTE
    ===================================================================== */
 USE [vigi_main];
 GO
@@ -259,7 +258,7 @@ GO
 
 /* =====================================================================
    vigi_mesures - EVT_CALCUL_MESURE_MEM_GSO
-   MySQL: EVERY 15 MINUTE
+   MySQL: EVERY 45 MINUTE
    ===================================================================== */
 USE [vigi_mesures];
 GO
@@ -268,8 +267,6 @@ CREATE OR ALTER PROCEDURE dbo.[usp_EVT_CALCUL_MESURE_MEM_GSO]
 AS
 BEGIN
   SET NOCOUNT ON;
-
-  DELETE FROM dbo.[tm_mesures_gso_count_mem];
 
   ;WITH [slots] AS (
     SELECT 1 AS [slot_index]
@@ -314,7 +311,7 @@ BEGIN
       [sl].[slot_index],
       700 - [sl].[slot_index] AS [numero_releve]
     FROM [sondes_param] [sp]
-    INNER JOIN [slots] [sl]
+    JOIN [slots] [sl]
       ON [sl].[slot_index] <= [sp].[max_slot]
   ),
   [manquants] AS (
@@ -334,23 +331,11 @@ BEGIN
       [Adresse_Sonde],
       [Port_Serie_Send_GSO],
       [numero_releve],
-      [numero_releve]
-        - ROW_NUMBER() OVER (
-            PARTITION BY [Adresse_Sonde]
-            ORDER BY [numero_releve]
-          ) AS [grp]
+      [numero_releve] - ROW_NUMBER() OVER (PARTITION BY [Adresse_Sonde] ORDER BY [numero_releve]) AS [grp]
     FROM [manquants]
   )
   INSERT INTO dbo.[tm_mesures_gso_count_mem]
-  (
-    [GSO_SN],
-    [Port_Serie_Send_GSO],
-    [Missing_Data_Begin],
-    [Missing_Data_End],
-    [Missing_Data_Total],
-    [Commande_Mem],
-    [date_calcul]
-  )
+  ([GSO_SN], [Port_Serie_Send_GSO], [Missing_Data_Begin], [Missing_Data_End], [Missing_Data_Total], [Commande_Mem], [date_calcul])
   SELECT
     CASE WHEN LEN([Adresse_Sonde]) > 2 THEN LEFT([Adresse_Sonde], LEN([Adresse_Sonde]) - 2) END AS [GSO_SN],
     MAX([Port_Serie_Send_GSO]) AS [Port_Serie_Send_GSO],
@@ -361,42 +346,34 @@ BEGIN
       '$<EDDT:',
       CASE WHEN LEN([Adresse_Sonde]) > 2 THEN LEFT([Adresse_Sonde], LEN([Adresse_Sonde]) - 2) END,
       '(',
-      MIN([numero_releve]),
+      CASE WHEN MIN([numero_releve]) - 3 < 1 THEN 1 ELSE MIN([numero_releve]) - 3 END,
       '-',
-      MAX([numero_releve]),
+      CASE WHEN MAX([numero_releve]) + 3 > 700 THEN 700 ELSE MAX([numero_releve]) + 3 END,
       ')>'
     ) AS [Commande_Mem],
     GETDATE() AS [date_calcul]
   FROM [groupes]
   GROUP BY [Adresse_Sonde], [grp]
   HAVING COUNT(*) >= 3
-  OPTION (MAXRECURSION 699);
+  OPTION (MAXRECURSION 700);
 
   INSERT INTO dbo.[tm_mesures_gso_commandes_mem]
-  (
-    [GSO_SN],
-    [Port_Serie_Send_GSO],
-    [Commande_Globale_Begin],
-    [Commande_Globale_End],
-    [Missing_Data_Total],
-    [Commande_Mem_Globale],
-    [Date_Calcul]
-  )
+  ([GSO_SN], [Port_Serie_Send_GSO], [Commande_Globale_Begin], [Commande_Globale_End], [Missing_Data_Total], [Commande_Mem_Globale], [Date_Calcul])
   SELECT
-    c.[GSO_SN],
-    c.[Port_Serie_Send_GSO],
-    c.[Missing_Data_Begin],
-    c.[Missing_Data_End],
-    c.[Missing_Data_Total],
-    c.[Commande_Mem],
-    c.[date_calcul]
-  FROM dbo.[tm_mesures_gso_count_mem] c
+    [c].[GSO_SN],
+    [c].[Port_Serie_Send_GSO],
+    [c].[Missing_Data_Begin],
+    [c].[Missing_Data_End],
+    [c].[Missing_Data_Total],
+    [c].[Commande_Mem],
+    [c].[date_calcul]
+  FROM dbo.[tm_mesures_gso_count_mem] [c]
   WHERE NOT EXISTS (
     SELECT 1
-    FROM dbo.[tm_mesures_gso_commandes_mem] x
-    WHERE x.[GSO_SN] = c.[GSO_SN]
-      AND x.[Commande_Globale_Begin] = c.[Missing_Data_Begin]
-      AND x.[Commande_Globale_End] = c.[Missing_Data_End]
+    FROM dbo.[tm_mesures_gso_commandes_mem] [x]
+    WHERE [x].[GSO_SN] = [c].[GSO_SN]
+      AND [x].[Commande_Globale_Begin] = [c].[Missing_Data_Begin]
+      AND [x].[Commande_Globale_End] = [c].[Missing_Data_End]
   );
 
   DELETE FROM dbo.[tm_mesures_gso_count_mem];
@@ -416,47 +393,17 @@ AS
 BEGIN
   SET NOCOUNT ON;
 
-  DELETE FROM dbo.[tm_graphique]
-  WHERE [Date_Heure_Mesure] < DATEADD(HOUR, -72, GETDATE());
-
-  DELETE FROM dbo.[tm_graphique]
-  WHERE [Date_Heure_Mesure] > DATEADD(HOUR, 48, GETDATE());
-
-  DELETE FROM dbo.[tm_mesures]
-  WHERE [Date_Heure_Mesure] > DATEADD(HOUR, 48, GETDATE());
-
-  IF OBJECT_ID(N'dbo.tm_mesures_gso', N'U') IS NOT NULL
-    DELETE FROM dbo.[tm_mesures_gso]
-    WHERE [date_mesure] < DATEADD(HOUR, -720, GETDATE());
-
-  IF OBJECT_ID(N'dbo.tm_mesures_gso_build', N'U') IS NOT NULL
-    DELETE FROM dbo.[tm_mesures_gso_build]
-    WHERE [Date_Heure_Mesure] < DATEADD(HOUR, -720, GETDATE());
-
-  DELETE FROM dbo.[tm_mesures_gso_commandes_mem]
-  WHERE [Date_Calcul] < DATEADD(HOUR, -24, GETDATE());
-
-  DELETE FROM dbo.[tm_mesures]
-  WHERE [Id_Lieu] = 0;
-
-  DELETE FROM dbo.[tm_graphique]
-  WHERE [Id_Lieu] = 0;
-
-  IF OBJECT_ID(N'dbo.tm_mesures_ajustage', N'U') IS NOT NULL
-    DELETE FROM dbo.[tm_mesures_ajustage]
-    WHERE [Date_Heure_Mesure] < DATEADD(HOUR, -24, GETDATE());
-
-  IF OBJECT_ID(N'dbo.tm_mesures_ajustage_etalon', N'U') IS NOT NULL
-    DELETE FROM dbo.[tm_mesures_ajustage_etalon]
-    WHERE [Date_Heure_Mesure] < DATEADD(HOUR, -24, GETDATE());
-
-  IF OBJECT_ID(N'dbo.tm_mesures_etalonnage', N'U') IS NOT NULL
-    DELETE FROM dbo.[tm_mesures_etalonnage]
-    WHERE [Date_Heure_Mesure] < DATEADD(HOUR, -24, GETDATE());
-
-  IF OBJECT_ID(N'dbo.tm_mesures_gso_read_metro', N'U') IS NOT NULL
-    DELETE FROM dbo.[tm_mesures_gso_read_metro]
-    WHERE [Dernier_Date_MAJ] < DATEADD(HOUR, -2, GETDATE());
+  DELETE FROM dbo.[tm_graphique] WHERE [Date_Heure_Mesure] < DATEADD(HOUR, -72, GETDATE());
+  DELETE FROM dbo.[tm_graphique] WHERE [Date_Heure_Mesure] > DATEADD(HOUR, 48, GETDATE());
+  DELETE FROM dbo.[tm_mesures] WHERE [Date_Heure_Mesure] > DATEADD(HOUR, 48, GETDATE());
+  DELETE FROM dbo.[tm_mesures_gso] WHERE [date_mesure] < DATEADD(HOUR, -720, GETDATE());
+  DELETE FROM dbo.[tm_mesures_gso_build] WHERE [Date_Heure_Mesure] < DATEADD(HOUR, -720, GETDATE());
+  DELETE FROM dbo.[tm_mesures_gso_commandes_mem] WHERE [Date_Calcul] < DATEADD(HOUR, -24, GETDATE());
+  DELETE FROM dbo.[tm_mesures] WHERE [Id_Lieu] = 0;
+  DELETE FROM dbo.[tm_graphique] WHERE [Id_Lieu] = 0;
+  DELETE FROM dbo.[tm_mesures_ajustage] WHERE [Date_Heure_Mesure] < DATEADD(HOUR, -24, GETDATE());
+  DELETE FROM dbo.[tm_mesures_etalonnage] WHERE [Date_Heure_Mesure] < DATEADD(HOUR, -24, GETDATE());
+  DELETE FROM dbo.[tm_mesures_gso_read_metro] WHERE [Dernier_Date_MAJ] < DATEADD(HOUR, -2, GETDATE());
 END;
 GO
 
@@ -492,9 +439,9 @@ EXEC msdb.dbo.sp_attach_schedule @job_name = @job_name, @schedule_name = @schedu
 EXEC msdb.dbo.sp_add_jobserver @job_name = @job_name;
 GO
 
-/* 5 minutes - Refresh lieux GSO */
+/* 2 minutes - Refresh lieux GSO */
 DECLARE @job_name SYSNAME = N'VigiSensys - EVT_GSO_DERNIERVALEUR_LIEU';
-DECLARE @schedule_name SYSNAME = N'VigiSensys - schedule - EVT_GSO_DERNIERVALEUR_LIEU - 5min';
+DECLARE @schedule_name SYSNAME = N'VigiSensys - schedule - EVT_GSO_DERNIERVALEUR_LIEU - 2min';
 
 IF EXISTS (SELECT 1 FROM msdb.dbo.sysjobs WHERE [name] = @job_name)
   EXEC msdb.dbo.sp_delete_job @job_name = @job_name, @delete_unused_schedule = 1;
@@ -504,14 +451,14 @@ IF EXISTS (SELECT 1 FROM msdb.dbo.sysschedules WHERE [name] = @schedule_name)
 
 EXEC msdb.dbo.sp_add_job @job_name = @job_name, @enabled = 1, @description = N'Equivalent SQL Server de l''event MySQL EVT_GSO_DERNIERVALEUR_LIEU.';
 EXEC msdb.dbo.sp_add_jobstep @job_name = @job_name, @step_name = N'EXEC usp_EVT_GSO_DERNIERVALEUR_LIEU', @subsystem = N'TSQL', @database_name = N'vigi_main', @command = N'EXEC dbo.[usp_EVT_GSO_DERNIERVALEUR_LIEU];';
-EXEC msdb.dbo.sp_add_schedule @schedule_name = @schedule_name, @enabled = 1, @freq_type = 4, @freq_interval = 1, @freq_subday_type = 4, @freq_subday_interval = 5, @active_start_time = 0;
+EXEC msdb.dbo.sp_add_schedule @schedule_name = @schedule_name, @enabled = 1, @freq_type = 4, @freq_interval = 1, @freq_subday_type = 4, @freq_subday_interval = 2, @active_start_time = 0;
 EXEC msdb.dbo.sp_attach_schedule @job_name = @job_name, @schedule_name = @schedule_name;
 EXEC msdb.dbo.sp_add_jobserver @job_name = @job_name;
 GO
 
-/* 15 minutes - Build commandes memoire GSO */
+/* 45 minutes - Build commandes memoire GSO */
 DECLARE @job_name SYSNAME = N'VigiSensys - EVT_CALCUL_MESURE_MEM_GSO';
-DECLARE @schedule_name SYSNAME = N'VigiSensys - schedule - EVT_CALCUL_MESURE_MEM_GSO - 15min';
+DECLARE @schedule_name SYSNAME = N'VigiSensys - schedule - EVT_CALCUL_MESURE_MEM_GSO - 45min';
 
 IF EXISTS (SELECT 1 FROM msdb.dbo.sysjobs WHERE [name] = @job_name)
   EXEC msdb.dbo.sp_delete_job @job_name = @job_name, @delete_unused_schedule = 1;
@@ -521,7 +468,7 @@ IF EXISTS (SELECT 1 FROM msdb.dbo.sysschedules WHERE [name] = @schedule_name)
 
 EXEC msdb.dbo.sp_add_job @job_name = @job_name, @enabled = 1, @description = N'Equivalent SQL Server de l''event MySQL EVT_CALCUL_MESURE_MEM_GSO.';
 EXEC msdb.dbo.sp_add_jobstep @job_name = @job_name, @step_name = N'EXEC usp_EVT_CALCUL_MESURE_MEM_GSO', @subsystem = N'TSQL', @database_name = N'vigi_mesures', @command = N'EXEC dbo.[usp_EVT_CALCUL_MESURE_MEM_GSO];';
-EXEC msdb.dbo.sp_add_schedule @schedule_name = @schedule_name, @enabled = 1, @freq_type = 4, @freq_interval = 1, @freq_subday_type = 4, @freq_subday_interval = 15, @active_start_time = 0;
+EXEC msdb.dbo.sp_add_schedule @schedule_name = @schedule_name, @enabled = 1, @freq_type = 4, @freq_interval = 1, @freq_subday_type = 4, @freq_subday_interval = 45, @active_start_time = 0;
 EXEC msdb.dbo.sp_attach_schedule @job_name = @job_name, @schedule_name = @schedule_name;
 EXEC msdb.dbo.sp_add_jobserver @job_name = @job_name;
 GO

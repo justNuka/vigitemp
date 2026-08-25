@@ -842,3 +842,34 @@ Avant tout changement :
 8. mettre à jour ce backlog avec branche, PR, cause, fichiers et checklist;
 9. ne jamais merger la PR à la place de l’utilisateur;
 10. après annonce du merge, vérifier réellement la PR et le nouveau HEAD de `dev` avant le lot suivant.
+## Build MSSQL et parité du seed SQL Server — 25/08/2026
+
+Statut : **corrigé sur `agent/mssql-build-admin-prerender`, PR #44 ouverte en draft**.
+
+Le build avec le provider MSSQL échouait pendant le prérendu des routes admin (`/en/admin/utilisateurs`, puis `/fr/admin/audit`) parce que ces pages tentaient d'interroger Prisma pendant `next build`. Le layout du groupe admin est désormais un composant serveur qui appelle `connection()` pour forcer le rendu à la requête ; toute la logique interactive existante reste isolée dans `admin-layout-client.tsx`.
+
+Le seed `db/vigisensys_seed_mssql.sql` a également été rapproché du seed MySQL courant. La priorité a porté sur `TRG_AFT_INS_MES_GSO` et `TRG_AFT_INS_MES_GSO_BUILD` : fenêtre de remontée mémoire de 192 h, prise en charge de la trame répéteur `10000000`, propagation de `Est_Mesure_Repeteur_GSO`, codes de trame métrologie `10`/`110` et prise en compte de `Sonde_Offset` pour l'étalonnage. Les colonnes manquantes détectées sur les tables partagées ont été ajoutées sans supprimer les extensions MSSQL utilisées par le produit actuel, et `tm_mesures_etalon` reprend le nom MySQL pluriel.
+
+L'audit exhaustif a ensuite couvert les tables, colonnes, types, nullabilités, valeurs par défaut, vues, triggers, équivalents des events MySQL, référentiels et paramètres initiaux. Il a conduit à aligner les types/valeurs par défaut encore divergents, à matérialiser les trois `ENUM` MySQL avec des contraintes `CHECK`, et à injecter les référentiels actionneurs/modules/étalons ainsi que les 154 paramètres historiques du dump MySQL requis par les anciens services. Les paramètres et autorisations propres au web actuel sont conservés en extension ; leur suppression ne constituerait pas une parité fonctionnelle et casserait des fonctions livrées après le dump historique.
+
+Cette première installation de test porte la version produit **`0.90.001`**, jalon de stabilisation avant la première version finie. La version technique SemVer du web est `0.90.1`, affichée sous la forme produit `0.90.001`. Le serveur .NET utilise `0.90.1.0` avec `AssemblyInformationalVersion("0.90.001")`, et les deux seeds enregistrent `VERSION/SCHEMA_VERSION = 0.90.001`.
+
+Principaux fichiers :
+
+- `website/src/app/[locale]/(admin)/layout.tsx` ;
+- `website/src/app/[locale]/(admin)/admin-layout-client.tsx` ;
+- `website/src/lib/app-version.ts` ;
+- `website/package.json` ;
+- `Vigitemp Serveur/Vigitemp Serveur/Properties/AssemblyInfo.cs` ;
+- `db/vigisensys_seed.sql` ;
+- `db/vigisensys_seed_mssql.sql`.
+
+Checklist de validation :
+
+- [ ] exécuter `pnpm build` avec `DATABASE_PROVIDER=sqlserver` sans base accessible et confirmer l'absence d'accès Prisma au prérendu admin ;
+- [ ] créer une base SQL Server vide avec le seed complet ;
+- [ ] vérifier l'affichage web `0.90.001`, la version informative du service et `VERSION/SCHEMA_VERSION` dans les deux bases ;
+- [ ] contrôler la présence des colonnes communes ajoutées et de `dbo.tm_mesures_etalon` ;
+- [ ] insérer des trames GSO `0`, `1` et `10000000`, puis contrôler `tm_mesures_gso_build`, `tm_mesures` et `tm_graphique` ;
+- [ ] insérer des trames métrologie `10` et `110`, puis contrôler les mesures d'ajustage/étalonnage et l'offset ;
+- [ ] exécuter `db/vigisensys_verify_mssql_objects.sql`.
