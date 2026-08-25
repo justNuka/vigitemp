@@ -961,7 +961,7 @@ Checklist :
 
 ## Prérendu audit et build MSSQL — 25/08/2026
 
-Statut : **PR #49 ouverte sur `agent/fix-mssql-audit-prerender`, à valider avant merge**.
+Statut : **PR #49 mergée dans `dev`, merge `31f8c489e1654be54950a0a169870815730d40a8`**.
 
 Le build avec `DATABASE_PROVIDER=sqlserver` exécutait encore Prisma pendant l’export de `/[locale]/admin/audit`, sur le comptage `prismaMesure.tm_journal.count()`. Le `connection()` ajouté au layout du groupe admin ne suffisait pas : avec `cacheComponents: true`, les chargeurs marqués `"use cache"` pouvaient être préremplis pendant le prérendu.
 
@@ -988,3 +988,77 @@ Checklist :
 - [ ] exécuter `pnpm build` avec `DATABASE_PROVIDER=sqlserver` ;
 - [ ] ouvrir les pages audit, utilisateurs et paramètres sur une installation MSSQL ;
 - [ ] confirmer le rafraîchissement des données après navigation et `router.refresh()`.
+
+
+## ECON métrologique compact + infos modifiées — 25/08/2026
+
+Statut : **`PR_OUVERTE` — PR #50 — branche `agent/gsp-metrology-compact-abc`**.
+
+### Retour
+
+Pour les GSP interrogées pendant un Ajustage ou un Étalonnage :
+
+- à chaque interrogation de mesure, `t_lieu.Infos_Modifiees_Depuis_Derniere_Mesure` doit être remis à `1` ;
+- les trames `ECON` de métrologie doivent envoyer **uniquement `a`, `b` et `c`**, sans les consignes ni les autres paramètres ;
+- une trame de référence `ECONSPNB-26000065 1.0000000000a0.0000000000b0.0000000000c` fait **57 caractères**, taille compatible avec le module de réception.
+
+Ce besoin remplace la stratégie de la PR #48 qui découpait uniquement l'Étalonnage en deux trames.
+
+### État vérifié avant correction
+
+Le lot a été démarré depuis le HEAD réel de `dev` `31f8c489e1654be54950a0a169870815730d40a8`, merge de la PR #49. Aucune PR n'était ouverte et aucune branche Ajustage/Étalonnage concurrente n'a été trouvée.
+
+Les lectures répétées des deux parcours passent déjà par `/api/hotline/sensor-test` avec `action=read` et respectivement `operationContext=AJUSTAGE` / `ETALONNAGE`. Le serveur possède déjà `IDatabaseProvider.setLieuInfosModifiees()` qui écrit directement `Infos_Modifiees_Depuis_Derniere_Mesure` dans `t_lieu` ; aucun changement de schéma n'est nécessaire.
+
+Avant ce lot, la hotline :
+
+- ne remettait pas ce flag à `1` lors des lectures de métrologie réalisées via port manuel ;
+- envoyait une trame complète en Ajustage ;
+- envoyait deux trames en Étalonnage depuis la PR #48 (`a/b`, puis `c/d/e/m/h/l/f/r/t`).
+
+### Correctif PR #50
+
+Fichier serveur principal :
+
+- `Vigitemp Serveur/Vigitemp Serveur/HotlineApiServer.cs`.
+
+Comportement :
+
+- avant chaque lecture GSP en contexte Ajustage/Étalonnage, le serveur résout le lieu par numéro de série et appelle `setLieuInfosModifiees(idLieu, true)` ;
+- cela couvre `read`, `force-read` et les lectures raw `TEMP` / `FTEM` / `RTEMP` ;
+- la mise à jour est tentée même lorsque le port série est fourni explicitement par le web ;
+- un échec SQL est journalisé mais n'empêche pas l'interrogation série ;
+- toute commande raw `ECON` ayant un contexte `AJUSTAGE` ou `ETALONNAGE` est validée puis tronquée juste après le marqueur `c` ;
+- le module reçoit donc une seule trame `ECON<sonde> <A>a<B>b<C>c` ;
+- `d/e/m/h/l/f/r/t` ne sont pas transmis pendant cette opération ;
+- l'attente de 500 ms et l'exigence `ACK=ECON` sont conservées ;
+- les synchronisations `ECON` hors métrologie ne sont pas modifiées ;
+- le flag `Infos_Modifiees_Depuis_Derniere_Mesure=1` permet au scheduler de refaire ensuite une synchronisation normale complète lorsque la sonde revient dans le cycle de Surveillance ; une synchronisation normale réussie remet déjà ce flag à `0`.
+
+Documentation mise à jour :
+
+- `website/docs/gsp-econ-metrology-2026-08.md`.
+
+### Vérifications effectuées
+
+- [x] branche créée depuis le HEAD actuel de `dev` ;
+- [x] diff contrôlé contre `dev` ;
+- [x] compactage d'une commande complète vers `a/b/c` uniquement ;
+- [x] commande déjà compacte laissée identique ;
+- [x] commande sans `c` rejetée ;
+- [x] exemple SPNB vérifié à 57 caractères ;
+- [x] aucune CI GitHub disponible sur le commit de la branche ;
+- [ ] compiler le service Windows en Release sur un environnement .NET compatible.
+
+### Checklist terrain
+
+- [ ] lancer un Ajustage sur une GSP et vérifier une seule trame `ECON` contenant `a/b/c` ;
+- [ ] lancer un Étalonnage sur une GSP et vérifier le même format ;
+- [ ] confirmer l'absence de `d/e/m/h/l/f/r/t` dans les TX de métrologie ;
+- [ ] contrôler `ACK=ECON` après la trame compacte ;
+- [ ] contrôler dans les logs la longueur envoyée (`sentChars=57` avec l'exemple de référence) ;
+- [ ] pendant plusieurs interrogations successives d'Ajustage, vérifier que `Infos_Modifiees_Depuis_Derniere_Mesure` vaut/revient à `1` ;
+- [ ] refaire le même contrôle en Étalonnage ;
+- [ ] sortir de la métrologie, remettre la sonde en Surveillance et vérifier une synchronisation complète puis le retour du flag à `0` ;
+- [ ] vérifier qu'une synchronisation normale hors métrologie conserve le `ECON` étendu ;
+- [ ] vérifier qu'une GSO n'est jamais ciblée par ce chemin série GSP.
