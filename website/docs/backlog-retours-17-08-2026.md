@@ -900,7 +900,7 @@ Correctif de build : renommage de la variable englobante en `normalizedOperation
 
 ## Nettoyage des paramètres et profils des seeds — 25/08/2026
 
-Statut : **PR #47 ouverte sur `agent/cleanup-seed-parameters`, à valider avant merge**.
+Statut : **mergé dans `dev` via la PR #47, merge `afa59e2e7f19294f52d29830cc36122c23d274f7`**.
 
 Le dump de la base de test contient 91 clés `t_parametre`. Les trois clés `LICENCE/CLIENT`, `LICENCE/VIGITEL` et `LICENCE/VIGITEMP` restent volontairement hors des seeds : leurs valeurs sont propres à chaque installation. Avec `VERSION/SCHEMA_VERSION = 0.90.001`, les seeds MySQL et MSSQL créent donc exactement **89 paramètres initiaux**.
 
@@ -925,3 +925,35 @@ Checklist :
 - [ ] exécuter le seed MySQL sur une base vide ;
 - [ ] exécuter le seed MSSQL sur une base vide ;
 - [ ] exécuter `db/vigisensys_verify_mssql_objects.sql`.
+
+
+## Découpage ECON pendant l’étalonnage — 25/08/2026
+
+Statut : **PR #48 ouverte sur `agent/split-calibration-econ-commands`, à valider avant merge**.
+
+Le module GSP ne doit plus recevoir tous les paramètres d’étalonnage dans une seule trame. Pour chaque sonde et pour toute configuration envoyée avec le contexte `ETALONNAGE`, le serveur découpe désormais la commande complète en deux écritures successives :
+
+1. `ECON<sonde> <A>a<B>b` ;
+2. `ECON<sonde> <C>c<Offset>d<Justesse>e<Multi>m<LimH>h<LimB>l<F>f<RetB>r<RetH>t`.
+
+Les deux envois restent dans la même prise du mutex du port série. Une attente de 500 ms est appliquée après chaque écriture et chaque étape doit retourner `ACK=ECON`. En cas d’échec de la première étape, la seconde n’est pas envoyée. L’ajustage et les synchronisations hors contexte d’étalonnage conservent leur trame unique.
+
+Fichiers :
+
+- `Vigitemp Serveur/Vigitemp Serveur/sensors/GspProtocol.cs` ;
+- `Vigitemp Serveur/Vigitemp Serveur/HotlineApiServer.cs` ;
+- `website/docs/gsp-econ-metrology-2026-08.md`.
+
+Checklist :
+
+- [x] découper la trame après le paramètre `b` ;
+- [x] conserver l’ordre `a/b`, puis `c/d/e/m/h/l/f/r/t` ;
+- [x] conserver le mutex du port pendant les deux commandes ;
+- [x] appliquer 500 ms après chacune des deux écritures ;
+- [x] exiger un ACK avant d’envoyer la deuxième commande ;
+- [x] laisser les autres contextes inchangés ;
+- [ ] compiler le serveur Windows en Release ;
+- [ ] lancer un étalonnage avec plusieurs GSP sur un même module ;
+- [ ] vérifier dans les logs deux TX et deux ACK par sonde, dans le bon ordre ;
+- [ ] confirmer un intervalle d’au moins 500 ms entre les écritures ;
+- [ ] simuler l’absence d’ACK de la première commande et confirmer que la seconde n’est pas envoyée.

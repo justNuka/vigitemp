@@ -589,20 +589,82 @@ namespace Vigitemp_Serveur
 
                     if (request.Action == "raw")
                     {
-                        result.RequestedCommand = gsp.RawCommand;
-                        var response = SendRawCommand(port, result, gsp.RawCommand, false, gsp.ListenWindowMs);
-                        result.RawValue = response;
-                        result.DetectedSerials = GspProtocol.ExtractDetectedSerials(response);
                         var rawCommand = (gsp.RawCommand ?? string.Empty).Trim();
                         var rawReadsTemperature = rawCommand.StartsWith("TEMP", StringComparison.OrdinalIgnoreCase)
                             || rawCommand.StartsWith("FTEM", StringComparison.OrdinalIgnoreCase)
                             || rawCommand.StartsWith("RTEMP", StringComparison.OrdinalIgnoreCase);
                         var rawIsEcon = rawCommand.StartsWith("ECON", StringComparison.OrdinalIgnoreCase);
-                        var econAcknowledged = rawIsEcon &&
-                            System.Text.RegularExpressions.Regex.IsMatch(
-                                response ?? string.Empty,
-                                @"(?:^|\r?\n)\s*ACK\s*=\s*ECON\b",
-                                System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+
+                        if (etalonnageOperation && rawIsEcon)
+                        {
+                            if (!GspProtocol.TrySplitEconCalibrationCommand(
+                                    rawCommand,
+                                    target,
+                                    out var coefficientsCommand,
+                                    out var remainingParametersCommand))
+                            {
+                                result.Error = "La commande ECON d'étalonnage ne peut pas être découpée entre les coefficients A/B et les autres paramètres.";
+                                return;
+                            }
+
+                            var splitCommands = new[]
+                            {
+                                new { Command = coefficientsCommand, Step = "coefficients-a-b" },
+                                new { Command = remainingParametersCommand, Step = "remaining-parameters" },
+                            };
+                            var splitResponses = new List<string>();
+                            var detectedSerials = new List<string>();
+
+                            for (var splitIndex = 0; splitIndex < splitCommands.Length; splitIndex++)
+                            {
+                                var splitCommand = splitCommands[splitIndex];
+                                result.RequestedCommand = splitCommand.Command;
+                                AddExchange(
+                                    result,
+                                    "info",
+                                    "ascii",
+                                    string.Format(
+                                        CultureInfo.InvariantCulture,
+                                        "<etalonnage-econ step={0}/2 part={1}>",
+                                        splitIndex + 1,
+                                        splitCommand.Step));
+
+                                var splitResponse = SendRawCommand(
+                                    port,
+                                    result,
+                                    splitCommand.Command,
+                                    false,
+                                    gsp.ListenWindowMs,
+                                    EtalonnageConfigurationCommandDelayMs);
+                                splitResponses.Add(splitResponse ?? string.Empty);
+                                detectedSerials.AddRange(GspProtocol.ExtractDetectedSerials(splitResponse));
+
+                                if (!IsEconAcknowledged(splitResponse))
+                                {
+                                    result.RawValue = string.Join(Environment.NewLine, splitResponses);
+                                    result.DetectedSerials = detectedSerials
+                                        .Distinct(StringComparer.OrdinalIgnoreCase)
+                                        .ToList();
+                                    result.Error = splitIndex == 0
+                                        ? "La commande ECON des coefficients A et B n'a pas été acquittée."
+                                        : "La commande ECON des paramètres restants n'a pas été acquittée.";
+                                    return;
+                                }
+                            }
+
+                            result.RawValue = string.Join(Environment.NewLine, splitResponses);
+                            result.DetectedSerials = detectedSerials
+                                .Distinct(StringComparer.OrdinalIgnoreCase)
+                                .ToList();
+                            result.Unit = "config";
+                            return;
+                        }
+
+                        result.RequestedCommand = gsp.RawCommand;
+                        var response = SendRawCommand(port, result, gsp.RawCommand, false, gsp.ListenWindowMs);
+                        result.RawValue = response;
+                        result.DetectedSerials = GspProtocol.ExtractDetectedSerials(response);
+                        var econAcknowledged = rawIsEcon && IsEconAcknowledged(response);
 
                         if (econAcknowledged)
                         {
@@ -792,7 +854,21 @@ namespace Vigitemp_Serveur
             return string.Empty;
         }
 
-        private static string SendRawCommand(SerialPort port, SensorTestResult result, string rawCommand, bool allowEmptyResponse, int? listenWindowMs)
+        private static bool IsEconAcknowledged(string response)
+        {
+            return System.Text.RegularExpressions.Regex.IsMatch(
+                response ?? string.Empty,
+                @"(?:^|\r?\n)\s*ACK\s*=\s*ECON\b",
+                System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+        }
+
+        private static string SendRawCommand(
+            SerialPort port,
+            SensorTestResult result,
+            string rawCommand,
+            bool allowEmptyResponse,
+            int? listenWindowMs,
+            int postWriteDelayMs = 200)
         {
             if (string.IsNullOrWhiteSpace(rawCommand))
             {
@@ -810,7 +886,7 @@ namespace Vigitemp_Serveur
                 AddExchange(result, "tx", "ascii", EscapeForLog(command));
                 var commandBytes = GspProtocol.EncodeCommand(command);
                 port.Write(commandBytes, 0, commandBytes.Length);
-                Thread.Sleep(200);
+                Thread.Sleep(Math.Max(0, postWriteDelayMs));
 
                 string response;
                 try

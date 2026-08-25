@@ -70,6 +70,15 @@ la configuration normale est renvoyée. Après une campagne réussie, la restaur
 
 Une GSP ajoutée pendant la phase de lecture de l'étalonnage reçoit également `e=0` avant d'intégrer la session.
 
+### Envoi en deux commandes
+
+Toute configuration envoyée avec le contexte `ETALONNAGE`, y compris la restauration de la configuration normale, est découpée côté serveur pour chaque sonde :
+
+1. un premier `ECON` contenant uniquement les coefficients `a` et `b` ;
+2. un second `ECON` contenant `c/d/e/m/h/l/f/r/t`.
+
+Les deux commandes sont envoyées pendant la même prise du verrou du port série. Le serveur attend 500 ms après chaque écriture et exige un `ACK=ECON` avant de poursuivre. Si le premier envoi n'est pas acquitté, le second n'est pas envoyé. Les synchronisations hors contexte d'étalonnage conservent leur comportement actuel.
+
 ## Compatibilité
 
 Le parseur `DCON` accepte :
@@ -82,6 +91,7 @@ Le sens historique de `d` comme retard compact n'est interprété que lorsque le
 ## Fichiers principaux
 
 - `Vigitemp Serveur/Vigitemp Serveur/sensors/GspProtocol.cs` ;
+- `Vigitemp Serveur/Vigitemp Serveur/HotlineApiServer.cs` ;
 - `website/src/lib/metrology-gsp-configuration.ts` ;
 - `website/src/lib/metrology-gsp-configuration-restore.ts` ;
 - `website/src/app/api/metrologie/ajustage/session/route.ts` ;
@@ -95,6 +105,7 @@ Le sens historique de `d` comme retard compact n'est interprété que lorsque le
 - limites haute/basse actives puis désactivées (`NAN`) ;
 - Ajustage : contrôler l'`ECON` neutre avant la première mesure puis les nouveaux coefficients après le second point ;
 - Ajustage : contrôler la restauration après annulation, arrêt et expiration ;
+- Étalonnage : contrôler deux trames `ECON` successives par sonde (`a/b`, puis `c/d/e/m/h/l/f/r/t`), espacées d'au moins 500 ms et chacune acquittée ;
 - Étalonnage : contrôler que seul `e` passe à `0` et que `A/B/C/Off/Multi` restent identiques ;
 - Étalonnage : après 10/10, vérifier que le nouvel `Err_Justesse` est renvoyé si la correction EJ est active ;
 - ajouter une GSP pendant la phase de lecture d'étalonnage et vérifier `e=0` ;
