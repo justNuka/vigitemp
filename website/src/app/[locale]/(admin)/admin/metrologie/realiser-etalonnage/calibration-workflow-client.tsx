@@ -86,6 +86,7 @@ export function CalibrationWorkflowClient() {
   const [selectedStandardId, setSelectedStandardId] = useState("")
   const [selectedMediumId, setSelectedMediumId] = useState("")
   const [addSensorSearch, setAddSensorSearch] = useState("")
+  const [selectedHistorySensorId, setSelectedHistorySensorId] = useState("")
   const defaultOperator = [user?.Prenom, user?.Nom].filter(Boolean).join(" ").trim() || user?.Login || ""
   const operatorValue = operator || defaultOperator
 
@@ -106,6 +107,11 @@ export function CalibrationWorkflowClient() {
     setSelectedStandardId(String(session.standardId))
     setSelectedMediumId(String(session.mediumId))
     setOperator(session.operator)
+    setSelectedHistorySensorId((current) =>
+      session.sensors.some((sensor) => String(sensor.id) === current)
+        ? current
+        : String(session.sensors[0]?.id ?? ""),
+    )
     setStep("calibration")
   }, [session])
 
@@ -745,14 +751,16 @@ export function CalibrationWorkflowClient() {
                             </TableRow>
                           </TableHeader>
                           <TableBody>
-                            {session.standardSamples.map((standardSample, index) => (
+                            {session.standardSamples.slice(-10).map((standardSample) => (
                               <TableRow key={standardSample.order}>
                                 <TableCell>{standardSample.order}</TableCell>
                                 <TableCell className="bg-sky-50 font-medium text-sky-950 dark:bg-sky-500/10 dark:text-sky-100">
                                   {formatCampaignValue(standardSample.value, standardSample.unit)}
                                 </TableCell>
                                 {session.sensors.map((sensor) => {
-                                  const sample = session.sensorSamples[sensor.id]?.[index]
+                                  const sample = session.sensorSamples[sensor.id]?.find(
+                                    (item) => item.order === standardSample.order,
+                                  )
                                   return (
                                     <TableCell key={sensor.id} className="whitespace-nowrap">
                                       {formatCampaignValue(sample?.value, sample?.unit ?? sensor.unit)}
@@ -769,6 +777,93 @@ export function CalibrationWorkflowClient() {
                     )}
                   </CardContent>
                 </Card>
+
+                {session ? (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>{t("workflow.enhanced.sensor_history_title")}</CardTitle>
+                      <CardDescription>
+                        {t("workflow.enhanced.sensor_history_description")}
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="max-w-sm space-y-2">
+                        <Label htmlFor="calibration-history-sensor">
+                          {t("workflow.enhanced.sensor_history_selector")}
+                        </Label>
+                        <Select
+                          value={selectedHistorySensorId}
+                          onValueChange={setSelectedHistorySensorId}
+                        >
+                          <SelectTrigger id="calibration-history-sensor">
+                            <SelectValue
+                              placeholder={t("workflow.enhanced.sensor_history_placeholder")}
+                            />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {session.sensors.map((sensor) => (
+                              <SelectItem key={sensor.id} value={String(sensor.id)}>
+                                {sensor.serialNumber}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {selectedHistorySensorId &&
+                      (session.sensorSamples[Number(selectedHistorySensorId)]?.length ?? 0) > 0 ? (
+                        <div className="overflow-x-auto rounded-lg border">
+                          <Table>
+                            <TableHeader className="bg-slate-950">
+                              <TableRow className="hover:bg-slate-950">
+                                <TableHead className="text-white">
+                                  {t("workflow.enhanced.sample_number")}
+                                </TableHead>
+                                <TableHead className="text-white">
+                                  {t("workflow.table.date")}
+                                </TableHead>
+                                <TableHead className="text-white">
+                                  {t("workflow.enhanced.sensor_value")}
+                                </TableHead>
+                                <TableHead className="text-white">
+                                  {t("workflow.enhanced.standard_value")}
+                                </TableHead>
+                              </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                              {session.sensorSamples[Number(selectedHistorySensorId)]?.map(
+                                (sample) => {
+                                  const standardSample = session.standardSamples.find(
+                                    (item) => item.order === sample.order,
+                                  )
+                                  return (
+                                    <TableRow key={sample.order}>
+                                      <TableCell>{sample.order}</TableCell>
+                                      <TableCell>{formatDbDateTime(sample.measuredAt)}</TableCell>
+                                      <TableCell className="font-medium">
+                                        {formatCampaignValue(sample.value, sample.unit)}
+                                      </TableCell>
+                                      <TableCell>
+                                        {formatCampaignValue(
+                                          standardSample?.value,
+                                          standardSample?.unit ?? session.standardUnit,
+                                        )}
+                                      </TableCell>
+                                    </TableRow>
+                                  )
+                                },
+                              )}
+                            </TableBody>
+                          </Table>
+                        </div>
+                      ) : (
+                        <p className="text-sm text-muted-foreground">
+                          {t("workflow.enhanced.no_samples")}
+                        </p>
+                      )}
+                    </CardContent>
+                  </Card>
+                ) : null}
 
                 {hasResults && session ? (
                   <Card className="border-emerald-300/60 dark:border-emerald-500/30">
