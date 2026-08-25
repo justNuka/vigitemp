@@ -393,9 +393,9 @@ namespace Vigitemp_Serveur
             var logPrefix = GetOperationLogPrefix(request.OperationContext);
             var targetSource = string.IsNullOrWhiteSpace(address) ? request.Serial : address;
             var target = GspProtocol.NormalizeCommandTarget(targetSource);
-            var operationContext = NormalizeOperationContext(request.OperationContext);
-            var metrologyOperation = IsMetrologyOperation(operationContext);
-            var etalonnageOperation = string.Equals(operationContext, "ETALONNAGE", StringComparison.Ordinal);
+            var normalizedOperationContext = NormalizeOperationContext(request.OperationContext);
+            var metrologyOperation = IsMetrologyOperation(normalizedOperationContext);
+            var etalonnageOperation = string.Equals(normalizedOperationContext, "ETALONNAGE", StringComparison.Ordinal);
 
             Mutex namedMutex = null;
             var mutexAcquired = false;
