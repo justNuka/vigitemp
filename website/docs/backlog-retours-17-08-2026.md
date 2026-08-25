@@ -876,7 +876,7 @@ Checklist de validation :
 
 ## Temporisation des consignes d’étalonnage — 25/08/2026
 
-Statut : **corrigé sur `agent/metrology-command-spacing`, PR #45 ouverte en draft**.
+Statut : **mergé dans `dev` via la PR #45 ; correctif de build CS0136 ouvert sur `agent/fix-metrology-command-spacing-build`, PR #46 en draft**.
 
 Lors d’un étalonnage, les écritures de configuration GSP pouvaient partir avec seulement 150 ms d’intervalle. Malgré le verrouillage du port série, le module n’avait pas toujours le temps de traiter la rafale de consignes et les envois suivants pouvaient échouer.
 
@@ -894,4 +894,6 @@ Checklist :
 - [ ] compiler le serveur Windows en Release ;
 - [ ] lancer un étalonnage multi-sondes sur un même module ;
 - [ ] contrôler les horodatages TX et confirmer l’absence d’échec d’envoi.
+
+Correctif de build : renommage de la variable englobante en `normalizedOperationContext` pour supprimer la collision C# `CS0136`, sans changement de comportement.
 
