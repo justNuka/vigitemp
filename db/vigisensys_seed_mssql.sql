@@ -50,11 +50,13 @@ BEGIN
     [Valeur] FLOAT NULL,
     [Type] VARCHAR(1) NULL,
     [Date_Heure_Fin] DATETIME NULL,
+    [Est_Alarme_Vrai] BIT NULL DEFAULT(0),
     [Id_Lieu] INT NULL,
     [Sonde_Numero_Serie] VARCHAR(50) NULL,
     [Unite] VARCHAR(10) NULL,
     [Est_Acquittee] BIT NULL DEFAULT(0),
     [Date_Heure_Derniere_Mesure] DATETIME NULL,
+    [Date_Heure_Debut_Alarme_Vrai] DATETIME NULL,
     [Est_Alarme_Pour_VigiTel] BIT NULL DEFAULT(0),
     [Est_Mail_Envoye] BIT NULL,
     [Est_Mail_Fin_Envoye] BIT NOT NULL DEFAULT(0),
@@ -74,11 +76,13 @@ BEGIN
     [Valeur] FLOAT NULL,
     [Type] VARCHAR(1) NULL,
     [Date_Heure_Fin] DATETIME NULL,
+    [Est_Alarme_Vrai] BIT NULL DEFAULT(0),
     [Id_Lieu] INT NULL,
     [Sonde_Numero_Serie] VARCHAR(50) NULL,
     [Unite] VARCHAR(10) NULL,
     [Est_Acquittee] BIT NULL DEFAULT(0),
     [Date_Heure_Derniere_Mesure] DATETIME NULL,
+    [Date_Heure_Debut_Alarme_Vrai] DATETIME NULL,
     [Est_Alarme_Pour_VigiTel] BIT NULL,
     [Est_Mail_Envoye] BIT NULL,
     [Est_Tel_Acquittee] BIT NULL,
@@ -111,6 +115,10 @@ BEGIN
     [Code_Autorisation] VARCHAR(50) NULL,
     [Libelle_Autorisation] VARCHAR(50) NULL,
     [Commentaire] VARCHAR(200) NULL,
+    [A_Acces_Admin] BIT NULL DEFAULT(0),
+    [A_Acces_Metrologie] BIT NULL DEFAULT(0),
+    [A_Acces_Surveillance] BIT NULL DEFAULT(0),
+    [A_Acces_VigiLog] BIT NULL DEFAULT(0),
     CONSTRAINT [PK_t_autorisation] PRIMARY KEY ([Id_Autorisation])
   );
 END;
@@ -242,6 +250,7 @@ BEGIN
     [Moyenne_Sonde] FLOAT NULL,
     [Repetabilite] VARCHAR(50) NULL,
     [Id_Bain] INT NULL,
+    [Id_Milieu] INT NULL,
     [Err_Justesse] FLOAT NULL,
     CONSTRAINT [PK_t_etalonnage] PRIMARY KEY ([Id_Etalonnage])
   );
@@ -354,6 +363,7 @@ BEGIN
     [Est_Consigne_Inf_Pre_Alarme_Active] BIT NULL DEFAULT(0),
     [Frequence] INT NULL,
     [Lieu_Etat] VARCHAR(1) NULL,
+    [Surveillance_Etat] VARCHAR(1) NULL,
     [Retard_Alarme_Haut] INT NULL,
     [Retard_Alarme_Bas] INT NULL,
     [Id_Plan] INT NULL,
@@ -579,6 +589,7 @@ IF OBJECT_ID(N'dbo.t_site', N'U') IS NULL
 BEGIN
   CREATE TABLE dbo.[t_site] (
     [Id_Site] INT IDENTITY(1,1) NOT NULL,
+    [Code_Site] VARCHAR(20) NULL,
     [Libelle_Site] VARCHAR(50) NULL,
     [Commentaire] VARCHAR(200) NULL,
     [Est_Archive] BIT NULL DEFAULT(0),
@@ -598,6 +609,7 @@ BEGIN
     [Est_Sonde_GSO] BIT NOT NULL DEFAULT(0),
     [Port_Serie] VARCHAR(10) NULL,
     [Surveillance_Etat] VARCHAR(1) NOT NULL DEFAULT(N'D'),
+    [Etat_Sonde] VARCHAR(1) NULL DEFAULT(N'D'),
     [Id_Module] INT NULL,
     [Relai_1] VARCHAR(50) NULL,
     [Relai_2] VARCHAR(50) NULL,
@@ -610,6 +622,8 @@ BEGIN
     [Id_Worker] INT NULL,
     [Id_Sonde_Etat] INT NULL,
     [Sonde_Offset] FLOAT NOT NULL DEFAULT(0),
+    [Metrologie_en_cours] BIT NOT NULL DEFAULT(0),
+    [Metrologie_cmd_envoyee] BIT NOT NULL DEFAULT(0),
     CONSTRAINT [PK_t_sonde] PRIMARY KEY ([Id_Sonde])
   );
 END;
@@ -1189,6 +1203,7 @@ BEGIN
     [Sonde_Numero_Serie] VARCHAR(50) NULL,
     [Adresse_Sonde] VARCHAR(50) NULL,
     [COM_sonde] FLOAT NULL,
+    [Est_Mesure_Repeteur_GSO] FLOAT NULL CONSTRAINT [DF_tm_mesures_Est_Mesure_Repeteur_GSO] DEFAULT(0),
     [Id_Lieu] INT NOT NULL DEFAULT(0),
     [Est_Valeur_Null] TINYINT NOT NULL DEFAULT(0),
     [Frequence] INT NULL,
@@ -1277,9 +1292,9 @@ END;
 GO
 GO
 
-IF OBJECT_ID(N'dbo.tm_mesure_etalon', N'U') IS NULL
+IF OBJECT_ID(N'dbo.tm_mesures_etalon', N'U') IS NULL
 BEGIN
-  CREATE TABLE dbo.[tm_mesure_etalon] (
+  CREATE TABLE dbo.[tm_mesures_etalon] (
     [Id_Mesure_Etalon] INT IDENTITY(1,1) NOT NULL,
     [Id_Serveur_BDD] INT NOT NULL DEFAULT(0),
     [Valeur_Brute] FLOAT NOT NULL,
@@ -1287,8 +1302,12 @@ BEGIN
     [Est_Valeur_Null] TINYINT NOT NULL,
     [Date_Heure] DATETIME NOT NULL,
     [Message_Erreur] VARCHAR(50) NOT NULL,
-    CONSTRAINT [PK_tm_mesure_etalon] PRIMARY KEY ([Id_Mesure_Etalon], [Id_Serveur_BDD])
+    CONSTRAINT [PK_tm_mesures_etalon] PRIMARY KEY ([Id_Mesure_Etalon], [Id_Serveur_BDD])
   );
+  CREATE INDEX [IDX_tm_mesures_etalon_Valeur_Brute] ON dbo.[tm_mesures_etalon]([Valeur_Brute]);
+  CREATE INDEX [IDX_tm_mesures_etalon_Etalon_Numero_Serie] ON dbo.[tm_mesures_etalon]([Etalon_Numero_Serie]);
+  CREATE INDEX [IDX_tm_mesures_etalon_Est_Valeur_Null] ON dbo.[tm_mesures_etalon]([Est_Valeur_Null]);
+  CREATE INDEX [IDX_tm_mesures_etalon_Date_Heure] ON dbo.[tm_mesures_etalon]([Date_Heure]);
 END;
 GO
 GO
@@ -1992,6 +2011,7 @@ BEGIN
     [Sonde_Numero_Serie] VARCHAR(50) NULL,
     [Adresse_Sonde] VARCHAR(50) NULL,
     [COM_sonde] FLOAT NULL,
+    [Est_Mesure_Repeteur_GSO] FLOAT NULL CONSTRAINT [DF_tm_mesures_gso_build_Est_Mesure_Repeteur_GSO] DEFAULT(0),
     [Id_Lieu] INT NOT NULL CONSTRAINT [DF_tm_mesures_gso_build_Id_Lieu] DEFAULT(0),
     [Consigne_Inf_Pre_Alarme] FLOAT NULL,
     [Consigne_Sup_Pre_Alarme] FLOAT NULL,
@@ -3014,7 +3034,7 @@ BEGIN
   SET NOCOUNT ON;
 
   INSERT INTO dbo.[tm_mesures_gso_build]
-  ([Date_Heure_Mesure],[Valeur_Brute],[Unite],[Adresse_Sonde],[Rssi],[Tension],[COM_sonde],[Id_Lieu],[Est_Valeur_Memoire],[Planning_Actif],[Planning_Regle_Existe])
+  ([Date_Heure_Mesure],[Valeur_Brute],[Unite],[Adresse_Sonde],[Rssi],[Tension],[COM_sonde],[Est_Mesure_Repeteur_GSO],[Id_Lieu],[Est_Valeur_Memoire],[Planning_Actif],[Planning_Regle_Existe])
   SELECT
     i.[date_mesure],
     i.[tep],
@@ -3023,32 +3043,33 @@ BEGIN
     i.[rssi],
     i.[tension],
     i.[COM_sonde],
+    CASE WHEN i.[trame] = 0x0000000000989680 THEN 1 ELSE 0 END,
     v.[Id_Lieu],
     CASE WHEN i.[date_mesure] <= DATEADD(MINUTE, -45, GETDATE()) THEN 1 ELSE 0 END,
     v.[Planning_Actif],
     v.[Planning_Regle_Existe]
   FROM inserted i
   JOIN dbo.[v_config_lieu_sonde] v ON v.[Adresse_Sonde] = i.[id_capteur]
-  WHERE i.[trame] IN (0x0000000000000000, 0x0000000000000001)
-    AND i.[date_mesure] >= DATEADD(HOUR, -175, GETDATE());
+  WHERE i.[trame] IN (0x0000000000000000, 0x0000000000000001, 0x0000000000989680)
+    AND i.[date_mesure] >= DATEADD(HOUR, -192, GETDATE());
 
   INSERT INTO dbo.[tm_mesures_ajustage] ([Date_Heure_Mesure],[Valeur_Brute],[Unite],[Adresse_Sonde])
   SELECT i.[date_mesure], i.[tep], i.[unite], i.[id_capteur]
   FROM inserted i
   WHERE EXISTS (SELECT 1 FROM dbo.[v_config_sonde_com] v WHERE v.[Adresse_Sonde] = i.[id_capteur])
-    AND i.[trame] = 0x0000000000000010
+    AND i.[trame] IN (0x000000000000000A, 0x000000000000006E)
     AND i.[date_mesure] >= DATEADD(HOUR, -2, GETDATE());
 
   INSERT INTO dbo.[tm_mesures_etalonnage] ([Valeur],[Date_Heure_Mesure],[Valeur_Brute],[Unite],[Adresse_Sonde])
   SELECT
-    ROUND((i.[tep] * v.[coeff_a]) + v.[coeff_b], 2),
+    ROUND((i.[tep] * v.[coeff_a]) + v.[coeff_b] + ISNULL(v.[Sonde_Offset], 0), 2),
     i.[date_mesure],
     i.[tep],
     i.[unite],
     i.[id_capteur]
   FROM inserted i
   JOIN dbo.[v_config_sonde_com] v ON v.[Adresse_Sonde] = i.[id_capteur]
-  WHERE i.[trame] = 0x0000000000000010
+  WHERE i.[trame] IN (0x000000000000000A, 0x000000000000006E)
     AND i.[date_mesure] >= DATEADD(HOUR, -2, GETDATE());
 
   UPDATE m
@@ -3057,7 +3078,7 @@ BEGIN
   FROM dbo.[tm_mesures_gso_read_metro] m
   JOIN inserted i
     ON m.[GSO_SN] = CASE WHEN LEN(i.[id_capteur]) > 2 THEN LEFT(i.[id_capteur], LEN(i.[id_capteur]) - 2) ELSE i.[id_capteur] END
-  WHERE i.[trame] = 0x0000000000000010
+  WHERE i.[trame] IN (0x000000000000000A, 0x000000000000006E)
     AND i.[date_mesure] >= DATEADD(HOUR, -2, GETDATE());
 END;
 GO
@@ -3076,6 +3097,7 @@ BEGIN
       i.[Unite],
       i.[Adresse_Sonde],
       i.[COM_sonde],
+      i.[Est_Mesure_Repeteur_GSO],
       i.[Id_Lieu],
       i.[Rssi],
       i.[Tension],
@@ -3115,7 +3137,7 @@ BEGIN
     ) p
   )
   INSERT INTO dbo.[tm_mesures]
-  ([Valeur],[Sonde_Numero_Serie],[Consigne],[Consigne_Sup],[Consigne_Inf],[Consigne_Sup_Pre_Alarme],[Consigne_Inf_Pre_Alarme],[Date_Heure_Mesure],[Valeur_Brute],[Unite],[Adresse_Sonde],[COM_sonde],[Id_Lieu],[Rssi],[Tension],[Est_Valeur_Memoire],[Planning_Actif],[Planning_Regle_Existe])
+  ([Valeur],[Sonde_Numero_Serie],[Consigne],[Consigne_Sup],[Consigne_Inf],[Consigne_Sup_Pre_Alarme],[Consigne_Inf_Pre_Alarme],[Date_Heure_Mesure],[Valeur_Brute],[Unite],[Adresse_Sonde],[COM_sonde],[Est_Mesure_Repeteur_GSO],[Id_Lieu],[Rssi],[Tension],[Est_Valeur_Memoire],[Planning_Actif],[Planning_Regle_Existe])
   SELECT
     s.[ValeurCalc],
     s.[Sonde_Numero_Serie],
@@ -3144,6 +3166,7 @@ BEGIN
     s.[Unite],
     s.[Adresse_Sonde],
     s.[COM_sonde],
+    s.[Est_Mesure_Repeteur_GSO],
     s.[Id_Lieu],
     s.[Rssi],
     s.[Tension],
@@ -3159,6 +3182,7 @@ BEGIN
       i.[Unite],
       i.[Adresse_Sonde],
       i.[COM_sonde],
+      i.[Est_Mesure_Repeteur_GSO],
       i.[Id_Lieu],
       i.[Rssi],
       i.[Tension],

@@ -9,6 +9,33 @@
 
 SET NOCOUNT ON;
 
+PRINT '=== SEED / COLONNES DE PARITE MYSQL ===';
+
+SELECT
+  e.database_name,
+  e.table_name,
+  e.column_name,
+  CASE
+    WHEN COL_LENGTH(QUOTENAME(e.database_name) + N'.dbo.' + QUOTENAME(e.table_name), e.column_name) IS NULL
+      THEN 'MISSING'
+    ELSE 'OK'
+  END AS verification
+FROM (VALUES
+  (N'vigi_main', N't_alarme', N'Est_Alarme_Vrai'),
+  (N'vigi_main', N't_alarme', N'Date_Heure_Debut_Alarme_Vrai'),
+  (N'vigi_main', N't_alarme_histo', N'Est_Alarme_Vrai'),
+  (N'vigi_main', N't_autorisation', N'A_Acces_Admin'),
+  (N'vigi_main', N't_etalonnage', N'Id_Milieu'),
+  (N'vigi_main', N't_lieu', N'Surveillance_Etat'),
+  (N'vigi_main', N't_site', N'Code_Site'),
+  (N'vigi_main', N't_sonde', N'Metrologie_en_cours'),
+  (N'vigi_main', N't_sonde', N'Metrologie_cmd_envoyee'),
+  (N'vigi_mesures', N'tm_mesures', N'Est_Mesure_Repeteur_GSO'),
+  (N'vigi_mesures', N'tm_mesures_gso_build', N'Est_Mesure_Repeteur_GSO')
+) e(database_name, table_name, column_name)
+ORDER BY e.database_name, e.table_name, e.column_name;
+GO
+
 PRINT '=== VIGI_MAIN / VIEWS ===';
 USE [vigi_main];
 GO

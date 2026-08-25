@@ -842,3 +842,25 @@ Avant tout changement :
 8. mettre à jour ce backlog avec branche, PR, cause, fichiers et checklist;
 9. ne jamais merger la PR à la place de l’utilisateur;
 10. après annonce du merge, vérifier réellement la PR et le nouveau HEAD de `dev` avant le lot suivant.
+## Build MSSQL et parité du seed SQL Server — 25/08/2026
+
+Statut : **corrigé sur `agent/mssql-build-admin-prerender`, PR à ouvrir**.
+
+Le build avec le provider MSSQL échouait pendant le prérendu des routes admin (`/en/admin/utilisateurs`, puis `/fr/admin/audit`) parce que ces pages tentaient d'interroger Prisma pendant `next build`. Le layout du groupe admin est désormais un composant serveur qui appelle `connection()` pour forcer le rendu à la requête ; toute la logique interactive existante reste isolée dans `admin-layout-client.tsx`.
+
+Le seed `db/vigisensys_seed_mssql.sql` a également été rapproché du seed MySQL courant. La priorité a porté sur `TRG_AFT_INS_MES_GSO` et `TRG_AFT_INS_MES_GSO_BUILD` : fenêtre de remontée mémoire de 192 h, prise en charge de la trame répéteur `10000000`, propagation de `Est_Mesure_Repeteur_GSO`, codes de trame métrologie `10`/`110` et prise en compte de `Sonde_Offset` pour l'étalonnage. Les colonnes manquantes détectées sur les tables partagées ont été ajoutées sans supprimer les colonnes MSSQL historiques, et `tm_mesures_etalon` reprend le nom MySQL pluriel.
+
+Principaux fichiers :
+
+- `website/src/app/[locale]/(admin)/layout.tsx` ;
+- `website/src/app/[locale]/(admin)/admin-layout-client.tsx` ;
+- `db/vigisensys_seed_mssql.sql`.
+
+Checklist de validation :
+
+- [ ] exécuter `pnpm build` avec `DATABASE_PROVIDER=sqlserver` sans base accessible et confirmer l'absence d'accès Prisma au prérendu admin ;
+- [ ] créer une base SQL Server vide avec le seed complet ;
+- [ ] contrôler la présence des colonnes communes ajoutées et de `dbo.tm_mesures_etalon` ;
+- [ ] insérer des trames GSO `0`, `1` et `10000000`, puis contrôler `tm_mesures_gso_build`, `tm_mesures` et `tm_graphique` ;
+- [ ] insérer des trames métrologie `10` et `110`, puis contrôler les mesures d'ajustage/étalonnage et l'offset ;
+- [ ] exécuter `db/vigisensys_verify_mssql_objects.sql`.
