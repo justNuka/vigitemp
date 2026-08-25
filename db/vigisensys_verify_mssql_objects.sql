@@ -97,13 +97,32 @@ SELECT
   (SELECT COUNT(*) FROM dbo.t_actionneur_type) AS actionneur_types,
   (SELECT COUNT(*) FROM dbo.t_module_type) AS module_types,
   (SELECT COUNT(*) FROM dbo.t_etalon_type) AS etalon_types,
+  (SELECT COUNT(*) FROM dbo.t_parametre WHERE [Section] <> 'LICENCE') AS seeded_parameters,
   CASE
     WHEN (SELECT COUNT(*) FROM dbo.t_actionneur_type) >= 4
      AND (SELECT COUNT(*) FROM dbo.t_module_type) >= 8
      AND (SELECT COUNT(*) FROM dbo.t_etalon_type) >= 4
-     AND EXISTS (SELECT 1 FROM dbo.t_parametre WHERE [Section] = 'VIGISERV' AND [Mot_Cle] = 'FREQUENCE_VERIFICATION_MINUTES')
-     AND EXISTS (SELECT 1 FROM dbo.t_parametre WHERE [Section] = 'VIGISURV' AND [Mot_Cle] = 'MAX_VALIDITE_ETALONNAGE_JOURS')
-     AND EXISTS (SELECT 1 FROM dbo.t_parametre WHERE [Section] = 'VIGITEL' AND [Mot_Cle] = 'FREQUENCE_VERIFICATION_MINUTES')
+     AND (SELECT COUNT(*) FROM dbo.t_parametre WHERE [Section] <> 'LICENCE') = 89
+     AND EXISTS (SELECT 1 FROM dbo.t_parametre WHERE [Section] = 'CFR21' AND [Mot_Cle] = 'ACTIVATION_NORME_CFR21')
+     AND EXISTS (SELECT 1 FROM dbo.t_parametre WHERE [Section] = 'DASHBOARD' AND [Mot_Cle] = 'SURVEILLANCE_REFRESH')
+     AND EXISTS (SELECT 1 FROM dbo.t_parametre WHERE [Section] = 'NOTIFICATIONS' AND [Mot_Cle] = 'EMAIL')
+     AND EXISTS (SELECT 1 FROM dbo.t_parametre WHERE [Section] = 'SECURITE_EMAIL' AND [Mot_Cle] = 'SMTP_ACTIVATION')
+     AND EXISTS (SELECT 1 FROM dbo.t_parametre WHERE [Section] = 'TELEPHONIE' AND [Mot_Cle] = 'PROVIDER')
+     AND EXISTS (SELECT 1 FROM dbo.t_parametre WHERE [Section] = 'STATISTICS_MONTHLY_REPORT' AND [Mot_Cle] = 'ENABLED')
+     AND EXISTS (SELECT 1 FROM dbo.t_parametre WHERE [Section] = 'VERSION' AND [Mot_Cle] = 'SCHEMA_VERSION')
+     AND NOT EXISTS (
+       SELECT 1
+       FROM dbo.t_parametre
+       WHERE [Section] IN ('MYSQL', 'SAUVEGARDES', 'SECURITE', 'STATISTIQUE', 'VIGISERV', 'VIGISURV', 'VIGITEL')
+          OR [Section] + N'/' + [Mot_Cle] IN (
+            N'GENERAL/GLOBAL_LANGUAGE',
+            N'MESSAGING/ENABLED',
+            N'NOTIFICATIONS/EMAIL_CC_RECIPIENTS',
+            N'NOTIFICATIONS/EMAIL_SEND_ACK',
+            N'NOTIFICATIONS/EMAIL_SEND_RESOLVED',
+            N'NOTIFICATIONS_TEAMS/DEDUPE_WINDOW_MINUTES'
+          )
+     )
       THEN 'OK'
     ELSE 'KO'
   END AS status;
