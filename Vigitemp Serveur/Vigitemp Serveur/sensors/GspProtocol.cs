@@ -466,20 +466,12 @@ namespace Vigitemp_Serveur.sensors
             var commands = new List<KeyValuePair<string, string>>();
             commands.Add(new KeyValuePair<string, string>("ED-H", BuildDateTimePayload(DateTime.Now)));
 
-            var coeffX2 = 0d;
-            if (metrology != null && metrology.HasAjustage)
-            {
-                if (!GspExpectedConfigurationReader.TryGetByIdLieu(metrology.IdLieu, out var expected))
-                {
-                    throw new InvalidOperationException("Impossible de lire Coeff_X2 avant la synchronisation ECON GSP.");
-                }
-                coeffX2 = expected.CoeffX2;
-            }
-
-            var multipoint = Math.Abs(coeffX2) > ComparisonTolerance;
-            var coeffA = multipoint ? coeffX2 : (metrology?.CoeffX ?? 1d);
-            var coeffB = multipoint ? (metrology?.CoeffX ?? 1d) : (metrology?.CoeffConstant ?? 0d);
-            var coeffC = multipoint ? (metrology?.CoeffConstant ?? 0d) : 0d;
+            ResolvePhysicalCoefficients(
+                metrology,
+                out var coeffA,
+                out var coeffB,
+                out var coeffC,
+                out var multipoint);
             var offset = metrology?.Offset ?? 0d;
 
             // Runtime DB settings carry IdLieu. Hotline manual sync does not, so a
@@ -523,6 +515,56 @@ namespace Vigitemp_Serveur.sensors
             }
 
             return commands;
+        }
+
+        internal static string BuildMetrologyCoefficientsPayload(
+            SondeMetrologySettings metrology,
+            bool neutral)
+        {
+            var coeffA = 1d;
+            var coeffB = 0d;
+            var coeffC = 0d;
+
+            if (!neutral)
+            {
+                ResolvePhysicalCoefficients(
+                    metrology,
+                    out coeffA,
+                    out coeffB,
+                    out coeffC,
+                    out _);
+            }
+
+            return string.Format(
+                CultureInfo.InvariantCulture,
+                "{0}a{1}b{2}c",
+                FormatCoefficient(coeffA),
+                FormatCoefficient(coeffB),
+                FormatCoefficient(coeffC));
+        }
+
+        private static void ResolvePhysicalCoefficients(
+            SondeMetrologySettings metrology,
+            out double coeffA,
+            out double coeffB,
+            out double coeffC,
+            out bool multipoint)
+        {
+            var coeffX2 = 0d;
+            if (metrology != null && metrology.HasAjustage)
+            {
+                if (!GspExpectedConfigurationReader.TryGetByIdLieu(metrology.IdLieu, out var expected))
+                {
+                    throw new InvalidOperationException("Impossible de lire Coeff_X2 avant la synchronisation ECON GSP.");
+                }
+
+                coeffX2 = expected.CoeffX2;
+            }
+
+            multipoint = Math.Abs(coeffX2) > ComparisonTolerance;
+            coeffA = multipoint ? coeffX2 : (metrology?.CoeffX ?? 1d);
+            coeffB = multipoint ? (metrology?.CoeffX ?? 1d) : (metrology?.CoeffConstant ?? 0d);
+            coeffC = multipoint ? (metrology?.CoeffConstant ?? 0d) : 0d;
         }
 
         private static bool IsEnabledLimit(double? value, bool active)
@@ -580,6 +622,65 @@ namespace Vigitemp_Serveur.sensors
             return normalizedPayload.Length == 0
                 ? normalizedPrefix + normalizedTarget + " "
                 : normalizedPrefix + normalizedTarget + " " + normalizedPayload;
+        }
+
+        internal static bool TryBuildEconMetrologyCoefficientsCommand(
+            string command,
+            string target,
+            out string coefficientsCommand)
+        {
+            coefficientsCommand = string.Empty;
+
+            var normalizedCommand = (command ?? string.Empty).Trim();
+            var normalizedTarget = NormalizeCommandTarget(target);
+            if (string.IsNullOrWhiteSpace(normalizedCommand) || string.IsNullOrWhiteSpace(normalizedTarget))
+            {
+                return false;
+            }
+
+            var expectedPrefix = "ECON" + normalizedTarget;
+            if (!normalizedCommand.StartsWith(expectedPrefix, StringComparison.OrdinalIgnoreCase) ||
+                normalizedCommand.Length <= expectedPrefix.Length ||
+                !char.IsWhiteSpace(normalizedCommand[expectedPrefix.Length]))
+            {
+                return false;
+            }
+
+            var payload = normalizedCommand.Substring(expectedPrefix.Length).Trim();
+            var coefficientAEnd = payload.IndexOf('a');
+            var coefficientBEnd = coefficientAEnd < 0 ? -1 : payload.IndexOf('b', coefficientAEnd + 1);
+            var coefficientCEnd = coefficientBEnd < 0 ? -1 : payload.IndexOf('c', coefficientBEnd + 1);
+            if (coefficientAEnd <= 0 ||
+                coefficientBEnd <= coefficientAEnd + 1 ||
+                coefficientCEnd <= coefficientBEnd + 1)
+            {
+                return false;
+            }
+
+            if (!double.TryParse(
+                    payload.Substring(0, coefficientAEnd),
+                    NumberStyles.Float,
+                    CultureInfo.InvariantCulture,
+                    out _) ||
+                !double.TryParse(
+                    payload.Substring(coefficientAEnd + 1, coefficientBEnd - coefficientAEnd - 1),
+                    NumberStyles.Float,
+                    CultureInfo.InvariantCulture,
+                    out _) ||
+                !double.TryParse(
+                    payload.Substring(coefficientBEnd + 1, coefficientCEnd - coefficientBEnd - 1),
+                    NumberStyles.Float,
+                    CultureInfo.InvariantCulture,
+                    out _))
+            {
+                return false;
+            }
+
+            coefficientsCommand = BuildCommand(
+                "ECON",
+                normalizedTarget,
+                payload.Substring(0, coefficientCEnd + 1));
+            return true;
         }
 
         internal static bool TrySplitEconCalibrationCommand(
