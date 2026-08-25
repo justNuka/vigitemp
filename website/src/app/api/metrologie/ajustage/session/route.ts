@@ -11,6 +11,7 @@ import {
   shouldConfirmAdjustmentStop,
   startAdjustmentSession,
   stopAdjustmentSession,
+  updateAdjustmentCoefficients,
 } from "@/lib/metrology-adjustment-session"
 import { applyGspMetrologyConfiguration } from "@/lib/metrology-gsp-configuration"
 import { restoreGspMetrologyConfigurationOnce } from "@/lib/metrology-gsp-configuration-restore"
@@ -40,6 +41,25 @@ const startSchema = z.object({
 const stopSchema = z.object({
   cancelResults: z.boolean().default(false),
 })
+
+const patchSchema = z.discriminatedUnion("action", [
+  z.object({
+    action: z.literal("extend"),
+  }),
+  z.object({
+    action: z.literal("update-coefficients"),
+    coefficients: z
+      .array(
+        z.object({
+          sensorId: z.number().int().positive(),
+          coeffA: z.number().finite(),
+          coeffB: z.number().finite(),
+          coeffC: z.number().finite(),
+        }),
+      )
+      .min(1),
+  }),
+])
 
 function getSafeAdjustmentErrorMessage(error: unknown, fallback: string) {
   if (!(error instanceof Error)) return fallback
@@ -251,7 +271,22 @@ export const PATCH = withStandardOrExpertAnyAuthorizationLogging(
   METROLOGY_OPERATION_CODES,
   async (req: NextRequest, ctx) => {
     try {
+      const body = await req.json().catch(() => ({}))
+      const data = patchSchema.parse({
+        ...body,
+        action: body.action ?? "extend",
+      })
       const userId = ctx.user.userId
+
+      if (data.action === "update-coefficients") {
+        const session = await updateAdjustmentCoefficients(
+          userId,
+          data.coefficients,
+          getClientIp(req),
+        )
+        return apiOk({ session: normalizeAdjustmentSessionDates(session) })
+      }
+
       const session = await extendAdjustmentSession(userId, getClientIp(req))
       scheduleMetrologySessionWatchdog(
         adjustmentWatchdogKey(userId),
@@ -269,14 +304,19 @@ export const PATCH = withStandardOrExpertAnyAuthorizationLogging(
       )
       return apiOk({ session: normalizeAdjustmentSessionDates(session) })
     } catch (error) {
-      log.error("METROLOGY_ADJUSTMENT", "session_extension_failed", {
+      if (error instanceof z.ZodError) {
+        return apiError(400, "validation_error", "Données invalides", {
+          details: error.issues,
+        })
+      }
+      log.error("METROLOGY_ADJUSTMENT", "session_patch_failed", {
         userId: ctx.user.userId,
         error: error instanceof Error ? error.message : String(error),
       })
       return apiError(
         400,
-        "adjustment_extension_failed",
-        getSafeAdjustmentErrorMessage(error, "Impossible de prolonger l'ajustage."),
+        "adjustment_patch_failed",
+        getSafeAdjustmentErrorMessage(error, "Impossible de mettre à jour l'ajustage."),
       )
     }
   },
