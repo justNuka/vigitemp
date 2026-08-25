@@ -25,7 +25,7 @@ namespace Vigitemp_Serveur
         private const int MaxExchangeLogLength = 2000;
         private const int MetrologyPortPollMs = 250;
         private const int DefaultGspPostWriteDelayMs = 150;
-        private const int EtalonnageConfigurationCommandDelayMs = 500;
+        private const int MetrologyConfigurationCommandDelayMs = 500;
         private const int DefaultMetrologyPortQueueTimeoutMs = 30 * 60 * 1000;
 
         private HttpListener _listener;
@@ -321,6 +321,7 @@ namespace Vigitemp_Serveur
 
             try
             {
+                SondeMetrologySettings metrologySettings = null;
                 using (var database = DatabaseFactory.Create())
                 {
                     var idLieu = database.getIDLieuBySerialNumber(request.Serial);
@@ -352,6 +353,32 @@ namespace Vigitemp_Serveur
                         result.Address = infos.Item3;
                         result.Module = infos.Item4;
                     }
+
+                    if (IsMetrologyOperation(request.OperationContext) &&
+                        IsMetrologyReadAction(request.Action))
+                    {
+                        if (idLieu <= 0)
+                        {
+                            throw new InvalidOperationException(
+                                "Impossible d'identifier le lieu de la sonde pour préparer l'interrogation de métrologie.");
+                        }
+
+                        if (!database.setLieuInfosModifiees(idLieu, true))
+                        {
+                            throw new InvalidOperationException(
+                                "Impossible de marquer les informations du lieu comme modifiées avant l'interrogation de métrologie.");
+                        }
+
+                        metrologySettings = database.getSondeMetrologyBySerialNumber(request.Serial)
+                            ?? new SondeMetrologySettings();
+                        if (!metrologySettings.IdLieu.HasValue || metrologySettings.IdLieu.Value <= 0)
+                        {
+                            metrologySettings.IdLieu = idLieu;
+                        }
+
+                        VigitempServeur.Log(
+                            $"{logPrefix}[CFG] serial={request.Serial} idLieu={idLieu} infosModifiees=1 reason=metrology-read");
+                    }
                 }
 
                 result.Port = NormalizeSerialPortName(result.Port);
@@ -365,7 +392,7 @@ namespace Vigitemp_Serveur
                 }
                 else
                 {
-                    ProbeGsp(result, request, result.Port, result.Address);
+                    ProbeGsp(result, request, result.Port, result.Address, metrologySettings);
                 }
             }
             catch (Exception ex)
@@ -394,7 +421,12 @@ namespace Vigitemp_Serveur
             return 30000;
         }
 
-        private static void ProbeGsp(SensorTestResult result, SensorTestRequest request, string portName, string address)
+        private static void ProbeGsp(
+            SensorTestResult result,
+            SensorTestRequest request,
+            string portName,
+            string address,
+            SondeMetrologySettings metrologySettings)
         {
             var gsp = request.Gsp ?? new GspSensorTestRequest();
             var logPrefix = GetOperationLogPrefix(request.OperationContext);
@@ -402,7 +434,6 @@ namespace Vigitemp_Serveur
             var target = GspProtocol.NormalizeCommandTarget(targetSource);
             var normalizedOperationContext = NormalizeOperationContext(request.OperationContext);
             var metrologyOperation = IsMetrologyOperation(normalizedOperationContext);
-            var etalonnageOperation = string.Equals(normalizedOperationContext, "ETALONNAGE", StringComparison.Ordinal);
 
             Mutex namedMutex = null;
             var mutexAcquired = false;
@@ -504,8 +535,8 @@ namespace Vigitemp_Serveur
                                 command.Value,
                                 true,
                                 gsp.ListenWindowMs,
-                                etalonnageOperation
-                                    ? EtalonnageConfigurationCommandDelayMs
+                                metrologyOperation
+                                    ? MetrologyConfigurationCommandDelayMs
                                     : DefaultGspPostWriteDelayMs);
                             if (!string.IsNullOrWhiteSpace(response))
                             {
@@ -670,6 +701,45 @@ namespace Vigitemp_Serveur
                         return;
                     }
 
+                    if (metrologyOperation && IsMetrologyReadAction(request.Action))
+                    {
+                        var neutralCoefficients = string.Equals(
+                            normalizedOperationContext,
+                            "AJUSTAGE",
+                            StringComparison.Ordinal);
+                        var coefficientsPayload = GspProtocol.BuildMetrologyCoefficientsPayload(
+                            metrologySettings,
+                            neutralCoefficients);
+                        var coefficientsCommand = GspProtocol.BuildCommand(
+                            "ECON",
+                            target,
+                            coefficientsPayload);
+
+                        result.RequestedCommand = coefficientsCommand;
+                        AddExchange(
+                            result,
+                            "info",
+                            "ascii",
+                            $"<metrology-read-econ part=coefficients-a-b-c length={coefficientsCommand.Length}>");
+
+                        var coefficientsResponse = SendGspCommand(
+                            port,
+                            result,
+                            "ECON",
+                            target,
+                            coefficientsPayload,
+                            false,
+                            gsp.ListenWindowMs,
+                            MetrologyConfigurationCommandDelayMs);
+                        if (!IsEconAcknowledged(coefficientsResponse))
+                        {
+                            result.RawValue = coefficientsResponse;
+                            result.DetectedSerials = GspProtocol.ExtractDetectedSerials(coefficientsResponse);
+                            result.Error = "La commande ECON des coefficients A, B et C préalable à la lecture n'a pas été acquittée.";
+                            return;
+                        }
+                    }
+
                     var readPrefix = string.Equals(request.Action, "force-read", StringComparison.OrdinalIgnoreCase) ? "FTEM" : "TEMP";
                     result.RequestedCommand = GspProtocol.BuildCommand(readPrefix, target, string.Empty);
                     var readResponse = SendGspCommand(port, result, readPrefix, target, string.Empty, false, gsp.ListenWindowMs);
@@ -726,6 +796,12 @@ namespace Vigitemp_Serveur
                 : portName.Trim().ToUpperInvariant();
             var safe = new string(normalized.Select(ch => char.IsLetterOrDigit(ch) ? ch : '_').ToArray());
             return "Global\\VigitempSerialPort_" + safe;
+        }
+
+        private static bool IsMetrologyReadAction(string action)
+        {
+            return string.Equals(action, "read", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(action, "force-read", StringComparison.OrdinalIgnoreCase);
         }
 
         private static bool IsMetrologyOperation(string operationContext)
