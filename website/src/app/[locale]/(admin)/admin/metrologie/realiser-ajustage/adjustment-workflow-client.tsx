@@ -1174,11 +1174,15 @@ export function AdjustmentWorkflowClient() {
                             onClick={() => {
                               const coefficients = session.sensors.map((sensor) => {
                                 const draft = coefficientDrafts[sensor.id]
+                                const parseCoefficient = (value: string | undefined) => {
+                                  const normalized = value?.trim().replace(",", ".") ?? ""
+                                  return normalized.length > 0 ? Number(normalized) : Number.NaN
+                                }
                                 return {
                                   sensorId: sensor.id,
-                                  coeffA: Number(draft?.a.trim().replace(",", ".")),
-                                  coeffB: Number(draft?.b.trim().replace(",", ".")),
-                                  coeffC: Number(draft?.c.trim().replace(",", ".")),
+                                  coeffA: parseCoefficient(draft?.a),
+                                  coeffB: parseCoefficient(draft?.b),
+                                  coeffC: parseCoefficient(draft?.c),
                                 }
                               })
                               if (
