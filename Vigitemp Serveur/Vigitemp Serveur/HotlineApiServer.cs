@@ -323,6 +323,14 @@ namespace Vigitemp_Serveur
             {
                 using (var database = DatabaseFactory.Create())
                 {
+                    var idLieu = database.getIDLieuBySerialNumber(request.Serial);
+                    if (idLieu > 0 && IsMetrologyMeasurementRequest(request))
+                    {
+                        var markedDirty = database.setLieuInfosModifiees(idLieu, true);
+                        VigitempServeur.Log(
+                            $"{logPrefix}[INFOS-MODIFIEES] serial={request.Serial} idLieu={idLieu} value=1 status={(markedDirty ? "ok" : "error")}");
+                    }
+
                     if (!string.IsNullOrWhiteSpace(request.ManualPort))
                     {
                         result.Port = request.ManualPort;
@@ -331,7 +339,6 @@ namespace Vigitemp_Serveur
                     }
                     else
                     {
-                        var idLieu = database.getIDLieuBySerialNumber(request.Serial);
                         if (idLieu <= 0)
                         {
                             result.Error = "Sonde introuvable dans la base et aucun port manuel n'a été fourni.";
@@ -595,67 +602,40 @@ namespace Vigitemp_Serveur
                             || rawCommand.StartsWith("RTEMP", StringComparison.OrdinalIgnoreCase);
                         var rawIsEcon = rawCommand.StartsWith("ECON", StringComparison.OrdinalIgnoreCase);
 
-                        if (etalonnageOperation && rawIsEcon)
+                        if (metrologyOperation && rawIsEcon)
                         {
-                            if (!GspProtocol.TrySplitEconCalibrationCommand(
-                                    rawCommand,
-                                    target,
-                                    out var coefficientsCommand,
-                                    out var remainingParametersCommand))
+                            if (!TryBuildCompactMetrologyEconCommand(rawCommand, target, out var compactCommand))
                             {
-                                result.Error = "La commande ECON d'étalonnage ne peut pas être découpée entre les coefficients A/B et les autres paramètres.";
+                                result.Error = "La commande ECON de métrologie doit contenir les coefficients A, B et C dans cet ordre.";
                                 return;
                             }
 
-                            var splitCommands = new[]
+                            result.RequestedCommand = compactCommand;
+                            AddExchange(
+                                result,
+                                "info",
+                                "ascii",
+                                string.Format(
+                                    CultureInfo.InvariantCulture,
+                                    "<metrology-econ compact=abc sourceChars={0} sentChars={1}>",
+                                    rawCommand.Length,
+                                    compactCommand.Length));
+
+                            var compactResponse = SendRawCommand(
+                                port,
+                                result,
+                                compactCommand,
+                                false,
+                                gsp.ListenWindowMs,
+                                EtalonnageConfigurationCommandDelayMs);
+                            result.RawValue = compactResponse;
+                            result.DetectedSerials = GspProtocol.ExtractDetectedSerials(compactResponse);
+                            if (!IsEconAcknowledged(compactResponse))
                             {
-                                new { Command = coefficientsCommand, Step = "coefficients-a-b" },
-                                new { Command = remainingParametersCommand, Step = "remaining-parameters" },
-                            };
-                            var splitResponses = new List<string>();
-                            var detectedSerials = new List<string>();
-
-                            for (var splitIndex = 0; splitIndex < splitCommands.Length; splitIndex++)
-                            {
-                                var splitCommand = splitCommands[splitIndex];
-                                result.RequestedCommand = splitCommand.Command;
-                                AddExchange(
-                                    result,
-                                    "info",
-                                    "ascii",
-                                    string.Format(
-                                        CultureInfo.InvariantCulture,
-                                        "<etalonnage-econ step={0}/2 part={1}>",
-                                        splitIndex + 1,
-                                        splitCommand.Step));
-
-                                var splitResponse = SendRawCommand(
-                                    port,
-                                    result,
-                                    splitCommand.Command,
-                                    false,
-                                    gsp.ListenWindowMs,
-                                    EtalonnageConfigurationCommandDelayMs);
-                                splitResponses.Add(splitResponse ?? string.Empty);
-                                detectedSerials.AddRange(GspProtocol.ExtractDetectedSerials(splitResponse));
-
-                                if (!IsEconAcknowledged(splitResponse))
-                                {
-                                    result.RawValue = string.Join(Environment.NewLine, splitResponses);
-                                    result.DetectedSerials = detectedSerials
-                                        .Distinct(StringComparer.OrdinalIgnoreCase)
-                                        .ToList();
-                                    result.Error = splitIndex == 0
-                                        ? "La commande ECON des coefficients A et B n'a pas été acquittée."
-                                        : "La commande ECON des paramètres restants n'a pas été acquittée.";
-                                    return;
-                                }
+                                result.Error = "La commande ECON compacte A/B/C n'a pas été acquittée.";
+                                return;
                             }
 
-                            result.RawValue = string.Join(Environment.NewLine, splitResponses);
-                            result.DetectedSerials = detectedSerials
-                                .Distinct(StringComparer.OrdinalIgnoreCase)
-                                .ToList();
                             result.Unit = "config";
                             return;
                         }
@@ -753,6 +733,83 @@ namespace Vigitemp_Serveur
             var normalized = NormalizeOperationContext(operationContext);
             return string.Equals(normalized, "AJUSTAGE", StringComparison.Ordinal)
                 || string.Equals(normalized, "ETALONNAGE", StringComparison.Ordinal);
+        }
+
+        private static bool IsMetrologyMeasurementRequest(SensorTestRequest request)
+        {
+            if (request == null || !IsMetrologyOperation(request.OperationContext))
+            {
+                return false;
+            }
+
+            if (string.Equals(request.Action, "read", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(request.Action, "force-read", StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+
+            if (!string.Equals(request.Action, "raw", StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+
+            var rawCommand = (request.Gsp?.RawCommand ?? string.Empty).Trim();
+            return rawCommand.StartsWith("TEMP", StringComparison.OrdinalIgnoreCase)
+                || rawCommand.StartsWith("FTEM", StringComparison.OrdinalIgnoreCase)
+                || rawCommand.StartsWith("RTEMP", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static bool TryBuildCompactMetrologyEconCommand(string rawCommand, string target, out string compactCommand)
+        {
+            compactCommand = string.Empty;
+            var normalizedCommand = (rawCommand ?? string.Empty).Trim();
+            var normalizedTarget = GspProtocol.NormalizeCommandTarget(target);
+            if (string.IsNullOrWhiteSpace(normalizedCommand) || string.IsNullOrWhiteSpace(normalizedTarget))
+            {
+                return false;
+            }
+
+            var expectedPrefix = "ECON" + normalizedTarget;
+            if (!normalizedCommand.StartsWith(expectedPrefix, StringComparison.OrdinalIgnoreCase)
+                || normalizedCommand.Length <= expectedPrefix.Length
+                || !char.IsWhiteSpace(normalizedCommand[expectedPrefix.Length]))
+            {
+                return false;
+            }
+
+            var payload = normalizedCommand.Substring(expectedPrefix.Length).Trim();
+            var coefficientAEnd = payload.IndexOf('a');
+            var coefficientBEnd = coefficientAEnd < 0 ? -1 : payload.IndexOf('b', coefficientAEnd + 1);
+            var coefficientCEnd = coefficientBEnd < 0 ? -1 : payload.IndexOf('c', coefficientBEnd + 1);
+            if (coefficientAEnd <= 0
+                || coefficientBEnd <= coefficientAEnd + 1
+                || coefficientCEnd <= coefficientBEnd + 1)
+            {
+                return false;
+            }
+
+            if (!double.TryParse(
+                    payload.Substring(0, coefficientAEnd),
+                    NumberStyles.Float,
+                    CultureInfo.InvariantCulture,
+                    out _)
+                || !double.TryParse(
+                    payload.Substring(coefficientAEnd + 1, coefficientBEnd - coefficientAEnd - 1),
+                    NumberStyles.Float,
+                    CultureInfo.InvariantCulture,
+                    out _)
+                || !double.TryParse(
+                    payload.Substring(coefficientBEnd + 1, coefficientCEnd - coefficientBEnd - 1),
+                    NumberStyles.Float,
+                    CultureInfo.InvariantCulture,
+                    out _))
+            {
+                return false;
+            }
+
+            var compactPayload = payload.Substring(0, coefficientCEnd + 1);
+            compactCommand = GspProtocol.BuildCommand("ECON", normalizedTarget, compactPayload);
+            return true;
         }
 
         private static string NormalizeOperationContext(string value)
