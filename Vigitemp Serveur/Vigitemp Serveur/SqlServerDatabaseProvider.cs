@@ -2827,10 +2827,12 @@ namespace Vigitemp_Serveur
             {
                 var settings = new SondeMetrologySettings
                 {
+                    CoeffX2 = 0d,
                     CoeffX = 1d,
                     CoeffConstant = 0d,
                     Offset = null,
                     HasAjustage = false,
+                    InfosModifiees = false,
                 };
 
                 if (!EnsureConnected())
@@ -2840,10 +2842,14 @@ namespace Vigitemp_Serveur
 
                 using (var cmd = CreateCommand(
                     _connectionMain,
-                    "SELECT t_lieu.Id_Lieu, t_lieu.EMT_Choix_Mode, t_lieu.Est_Correction_Ej, t_sonde.Sonde_Offset, ta.Coeff_X, ta.Coeff_Constant, te.Err_Justesse, te.Incertitude, te.Date_Validite FROM t_sonde " +
-                    "LEFT JOIN t_lieu ON t_lieu.Sonde_Numero_Serie = t_sonde.Sonde_Numero_Serie AND t_lieu.Lieu_Etat = 'S' " +
+                    "SELECT TOP 1 t_lieu.Id_Lieu, t_lieu.Infos_Modifiees_Depuis_Derniere_Mesure, " +
+                    "t_lieu.EMT_Choix_Mode, t_lieu.Est_Correction_Ej, t_sonde.Sonde_Offset, " +
+                    "ta.Coeff_X2, ta.Coeff_X, ta.Coeff_Constant, " +
+                    "te.Err_Justesse, te.Incertitude, te.Date_Validite FROM t_sonde " +
+                    "LEFT JOIN t_lieu ON t_lieu.Sonde_Numero_Serie = t_sonde.Sonde_Numero_Serie " +
+                    "  AND ISNULL(t_lieu.Est_Archive, 0) = 0 " +
                     "OUTER APPLY (" +
-                    "  SELECT TOP 1 Coeff_X, Coeff_Constant FROM t_ajustage " +
+                    "  SELECT TOP 1 Coeff_X2, Coeff_X, Coeff_Constant FROM t_ajustage " +
                     "  WHERE Sonde_Numero_Serie = t_sonde.Sonde_Numero_Serie " +
                     "  ORDER BY Date_Heure_Ajustage DESC, Id_Ajustage DESC" +
                     ") ta " +
@@ -2852,7 +2858,10 @@ namespace Vigitemp_Serveur
                     "  WHERE Sonde_Numero_Serie = t_sonde.Sonde_Numero_Serie " +
                     "  ORDER BY Date_Heure_Etalonnage DESC, Id_Etalonnage DESC" +
                     ") te " +
-                    "WHERE t_sonde.Sonde_Numero_Serie = @serial"))
+                    "WHERE t_sonde.Sonde_Numero_Serie = @serial " +
+                    "ORDER BY CASE " +
+                    "  WHEN t_lieu.Lieu_Etat IN ('A', 'D', 'E') THEN 0 " +
+                    "  WHEN t_lieu.Lieu_Etat = 'S' THEN 1 ELSE 2 END, t_lieu.Id_Lieu"))
                 {
                     cmd.Parameters.AddWithValue("@serial", p_serial_number);
                     try
@@ -2867,12 +2876,14 @@ namespace Vigitemp_Serveur
                                     settings.Offset = offset;
                                 }
 
+                                var coeffX2 = GetOptionalDouble(reader, "Coeff_X2");
                                 var coeffX = GetOptionalDouble(reader, "Coeff_X");
                                 var coeffConstant = GetOptionalDouble(reader, "Coeff_Constant");
 
                                 if (coeffX.HasValue && coeffConstant.HasValue)
                                 {
                                     settings.HasAjustage = true;
+                                    settings.CoeffX2 = coeffX2 ?? 0d;
                                     settings.CoeffX = coeffX.Value;
                                     settings.CoeffConstant = coeffConstant.Value;
                                 }
@@ -2883,6 +2894,10 @@ namespace Vigitemp_Serveur
                                 var applyCorrectionEj = GetOptionalBool(reader, "Est_Correction_Ej", false);
 
                                 settings.IdLieu = GetNullableInt(reader, "Id_Lieu", 0);
+                                settings.InfosModifiees = GetOptionalBool(
+                                    reader,
+                                    "Infos_Modifiees_Depuis_Derniere_Mesure",
+                                    false);
                                 settings.EmtChoixMode = GetNullableInt(reader, "EMT_Choix_Mode", 0);
                                 settings.ApplyCorrectionEj = applyCorrectionEj;
 

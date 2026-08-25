@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import type { ColumnDef } from "@tanstack/react-table"
 import { AnimatePresence, LazyMotion, domAnimation, m } from "motion/react"
@@ -69,6 +69,9 @@ type SessionApiPayload = {
       moduleName: string | null
       modulePort: string | null
       isGso: boolean
+      coeffA: number
+      coeffB: number
+      coeffC: number
     }>
     latestStandardReading: {
       value: number | null
@@ -177,6 +180,10 @@ export function AdjustmentWorkflowClient() {
   const [actionError, setActionError] = useState<string | null>(null)
   const [showStopConfirm, setShowStopConfirm] = useState(false)
   const [previewReadingEnabled, setPreviewReadingEnabled] = useState(false)
+  const [coefficientDrafts, setCoefficientDrafts] = useState<
+    Record<number, { a: string; b: string; c: string }>
+  >({})
+  const coefficientSessionIdRef = useRef<string | null>(null)
 
   const { data: sessionPayload } = useQuery({
     queryKey: ["metrology-adjustment-session"],
@@ -333,6 +340,27 @@ export function AdjustmentWorkflowClient() {
     },
   })
 
+  const updateCoefficientsMutation = useMutation({
+    mutationFn: async (
+      coefficients: Array<{ sensorId: number; coeffA: number; coeffB: number; coeffC: number }>,
+    ) =>
+      fetchJson<{ session: SessionApiPayload["session"] }>("/api/metrologie/ajustage/session", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "update-coefficients",
+          coefficients,
+        }),
+      }),
+    onSuccess: async () => {
+      setActionError(null)
+      await refreshSession()
+    },
+    onError: (error) => {
+      setActionError(error instanceof Error ? error.message : String(error))
+    },
+  })
+
   const validatePointMutation = useMutation({
     mutationFn: async (payload: { pointIndex: 1 | 2; targetValue: number }) =>
       fetchJson<{ session: SessionApiPayload["session"] }>("/api/metrologie/ajustage/session/point", {
@@ -376,7 +404,28 @@ export function AdjustmentWorkflowClient() {
   )
 
   useEffect(() => {
-    if (!session || session.status !== "running") return
+    if (!session || session.status !== "running") {
+      coefficientSessionIdRef.current = null
+      setCoefficientDrafts({})
+      return
+    }
+
+    const startsNewSession = coefficientSessionIdRef.current !== session.id
+    coefficientSessionIdRef.current = session.id
+    setCoefficientDrafts((current) =>
+      Object.fromEntries(
+        session.sensors.map((sensor) => [
+          sensor.id,
+          startsNewSession || !current[sensor.id]
+            ? {
+                a: formatDecimalDisplay(sensor.coeffA, 10),
+                b: formatDecimalDisplay(sensor.coeffB, 10),
+                c: formatDecimalDisplay(sensor.coeffC, 10),
+              }
+            : current[sensor.id],
+        ]),
+      ),
+    )
     setSelectedSensorIds(session.sensors.map((sensor) => sensor.id))
     setOperator(session.operator)
     setDisplayDecimals(String(session.displayDecimals))
@@ -1057,6 +1106,110 @@ export function AdjustmentWorkflowClient() {
                     </CardContent>
                   </Card>
 
+                  {isAdjustmentRunning && session ? (
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>{t("adjustment.cards.coefficients.title")}</CardTitle>
+                        <CardDescription>
+                          {t("adjustment.cards.coefficients.description")}
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <div className="overflow-x-auto">
+                          <div className="min-w-[620px] space-y-3">
+                            <div className="grid grid-cols-[minmax(180px,1fr)_repeat(3,minmax(110px,0.5fr))] gap-3 text-sm font-medium text-muted-foreground">
+                              <span>{t("adjustment.cards.coefficients.sensor")}</span>
+                              <span>{t("adjustment.cards.coefficients.coeffA")}</span>
+                              <span>{t("adjustment.cards.coefficients.coeffB")}</span>
+                              <span>{t("adjustment.cards.coefficients.coeffC")}</span>
+                            </div>
+                            {session.sensors.map((sensor) => {
+                              const draft = coefficientDrafts[sensor.id] ?? {
+                                a: formatDecimalDisplay(sensor.coeffA, 10),
+                                b: formatDecimalDisplay(sensor.coeffB, 10),
+                                c: formatDecimalDisplay(sensor.coeffC, 10),
+                              }
+                              return (
+                                <div
+                                  key={sensor.id}
+                                  className="grid grid-cols-[minmax(180px,1fr)_repeat(3,minmax(110px,0.5fr))] items-center gap-3"
+                                >
+                                  <div>
+                                    <p className="font-medium">{sensor.serialNumber}</p>
+                                    <p className="text-xs text-muted-foreground">
+                                      {sensor.locationName ?? t("adjustment.cards.coefficients.noLocation")}
+                                    </p>
+                                  </div>
+                                  {(["a", "b", "c"] as const).map((coefficient) => (
+                                    <Input
+                                      key={coefficient}
+                                      inputMode="decimal"
+                                      aria-label={`${sensor.serialNumber} ${coefficient}`}
+                                      value={draft[coefficient]}
+                                      disabled={updateCoefficientsMutation.isPending}
+                                      onChange={(event) => {
+                                        const value = event.target.value
+                                        setCoefficientDrafts((current) => ({
+                                          ...current,
+                                          [sensor.id]: {
+                                            ...(current[sensor.id] ?? draft),
+                                            [coefficient]: value,
+                                          },
+                                        }))
+                                      }}
+                                    />
+                                  ))}
+                                </div>
+                              )
+                            })}
+                          </div>
+                        </div>
+                        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                          <p className="text-sm text-muted-foreground">
+                            {t("adjustment.cards.coefficients.nextReadNotice")}
+                          </p>
+                          <Button
+                            type="button"
+                            disabled={updateCoefficientsMutation.isPending}
+                            onClick={() => {
+                              const coefficients = session.sensors.map((sensor) => {
+                                const draft = coefficientDrafts[sensor.id]
+                                const parseCoefficient = (value: string | undefined) => {
+                                  const normalized = value?.trim().replace(",", ".") ?? ""
+                                  return normalized.length > 0 ? Number(normalized) : Number.NaN
+                                }
+                                return {
+                                  sensorId: sensor.id,
+                                  coeffA: parseCoefficient(draft?.a),
+                                  coeffB: parseCoefficient(draft?.b),
+                                  coeffC: parseCoefficient(draft?.c),
+                                }
+                              })
+                              if (
+                                coefficients.some(
+                                  (item) =>
+                                    !Number.isFinite(item.coeffA) ||
+                                    !Number.isFinite(item.coeffB) ||
+                                    !Number.isFinite(item.coeffC) ||
+                                    (Math.abs(item.coeffC) > 1e-12 &&
+                                      Math.abs(item.coeffA) <= 1e-12),
+                                )
+                              ) {
+                                setActionError(t("adjustment.cards.coefficients.invalid"))
+                                return
+                              }
+                              updateCoefficientsMutation.mutate(coefficients)
+                            }}
+                          >
+                            {updateCoefficientsMutation.isPending
+                              ? t("adjustment.cards.coefficients.saving")
+                              : t("adjustment.cards.coefficients.validate")}
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ) : null}
+
                   <div
                     className={`grid gap-4 ${
                       usesExternalStandard ? "xl:grid-cols-3" : "xl:grid-cols-4"
@@ -1137,6 +1290,11 @@ export function AdjustmentWorkflowClient() {
                             <>
                               <Square className="mr-2 h-4 w-4" />
                               {t("adjustment.cards.run.stop")}
+                            </>
+                          ) : startMutation.isPending ? (
+                            <>
+                              <TimerReset className="mr-2 h-4 w-4 animate-pulse" />
+                              {t("adjustment.cards.run.queued")}
                             </>
                           ) : (
                             <>

@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import { useEffect, useRef, useCallback } from "react";
+import { usePathname } from "next/navigation";
 import { buildLocalizedPath, resolveLocaleFromPathname } from "@/i18n/pathnames";
 import { fetchJson } from "@/lib/http";
 import { markDisconnectReason } from "@/lib/auth-disconnect-marker";
@@ -14,6 +15,14 @@ const DEFAULT_DURATION = 15; // 15 minutes par défaut
 const AUTO_LOCK_CONFIG_EVENT = "vigitemp:auto-lock-config-changed";
 
 export function useAutoLock() {
+  const pathname = usePathname();
+  const normalizedPathname = pathname.replace(/^\/[a-z]{2}(?=\/|$)/i, "") || "/";
+  const isMetrologyOperationPage =
+    normalizedPathname === "/admin/metrologie/realiser-ajustage" ||
+    normalizedPathname.startsWith("/admin/metrologie/realiser-ajustage/") ||
+    normalizedPathname === "/admin/metrologie/realiser-etalonnage" ||
+    normalizedPathname.startsWith("/admin/metrologie/realiser-etalonnage/");
+
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const configRef = useRef<AutoLockConfig | null>(null);
 
@@ -60,6 +69,16 @@ export function useAutoLock() {
     const config = configRef.current || loadConfig();
     configRef.current = config;
 
+    // Ces deux opérations doivent rester ouvertes même après une longue période
+    // sans activité afin qu'une action opérateur ne déclenche jamais l'auto-logout.
+    if (isMetrologyOperationPage) {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+        timeoutRef.current = null;
+      }
+      return;
+    }
+
     // Ne pas activer si désactivé
     if (!config.enabled) {
       if (timeoutRef.current) {
@@ -79,7 +98,7 @@ export function useAutoLock() {
     timeoutRef.current = setTimeout(() => {
       handleLogout();
     }, timeoutDuration);
-  }, [loadConfig, handleLogout]);
+  }, [loadConfig, handleLogout, isMetrologyOperationPage]);
 
   const refreshConfigFromApi = useCallback(async () => {
     try {

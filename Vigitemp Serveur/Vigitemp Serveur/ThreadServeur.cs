@@ -2055,7 +2055,50 @@ namespace Vigitemp_Serveur
             await localLock.WaitAsync(m_cts);
             try
             {
-                await action();
+                // Le même mutex nommé est utilisé par l'API hotline. Une opération
+                // d'ajustage/étalonnage attend ainsi la fin de la mesure de surveillance
+                // déjà engagée, et la surveillance attend symétriquement la libération
+                // du port par l'opération de métrologie.
+                await Task.Run(() =>
+                {
+                    var mutexName = BuildPortMutexName(portKey);
+                    using (var namedMutex = new Mutex(false, mutexName))
+                    {
+                        var mutexAcquired = false;
+                        try
+                        {
+                            while (!mutexAcquired)
+                            {
+                                m_cts.ThrowIfCancellationRequested();
+                                try
+                                {
+                                    mutexAcquired = namedMutex.WaitOne(100);
+                                }
+                                catch (AbandonedMutexException)
+                                {
+                                    mutexAcquired = true;
+                                    VigitempServeur.LogDetailed(
+                                        $"[SONDE][PORT-LOCK] status=abandoned-acquired port={portKey} serial={serial}");
+                                }
+                            }
+
+                            action().GetAwaiter().GetResult();
+                        }
+                        finally
+                        {
+                            if (mutexAcquired)
+                            {
+                                try
+                                {
+                                    namedMutex.ReleaseMutex();
+                                }
+                                catch (ApplicationException)
+                                {
+                                }
+                            }
+                        }
+                    }
+                }, m_cts);
             }
             finally
             {

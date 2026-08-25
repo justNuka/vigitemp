@@ -4,7 +4,9 @@ namespace Vigitemp_Serveur
     {
         public int? IdLieu { get; set; }
         public double? Offset { get; set; }
+        public bool InfosModifiees { get; set; }
         public bool HasAjustage { get; set; }
+        public double CoeffX2 { get; set; } = 0d;
         public double CoeffX { get; set; } = 1d;
         public double CoeffConstant { get; set; } = 0d;
 

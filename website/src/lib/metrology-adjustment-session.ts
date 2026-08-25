@@ -73,8 +73,12 @@ type ManagedSensor = AdjustmentSensorRow & {
     previousState: string | null
     previousStateN1: string | null
   }>
+  previousCoeffX2: number
   previousCoeffX: number
   previousCoeffConstant: number
+  currentCoeffA: number
+  currentCoeffB: number
+  currentCoeffC: number
 }
 
 type GsoAdjustmentMeasurementRow = {
@@ -182,6 +186,9 @@ type PublicSession = {
     moduleName: string | null
     modulePort: string | null
     isGso: boolean
+    coeffA: number
+    coeffB: number
+    coeffC: number
   }>
   latestStandardReading: RuntimeReading | null
   latestSensorReadings: Record<number, RuntimeReading>
@@ -578,6 +585,9 @@ function toPublicSession(session: AdjustmentSession): PublicSession {
       moduleName: sensor.moduleName,
       modulePort: sensor.modulePort,
       isGso: sensor.isGso,
+      coeffA: sensor.currentCoeffA,
+      coeffB: sensor.currentCoeffB,
+      coeffC: sensor.currentCoeffC,
     })),
     latestStandardReading: session.latestStandardReading,
     latestSensorReadings: session.latestSensorReadings,
@@ -673,8 +683,18 @@ async function persistFinalAdjustments(session: AdjustmentSession) {
           Mesure_Etalon2: result.standardValueTwo,
           Valeur_Brute1: result.rawValueOne,
           Valeur_Brute2: result.rawValueTwo,
-          Ancienne_Mesure1: sensor.previousCoeffX * result.rawValueOne + sensor.previousCoeffConstant,
-          Ancienne_Mesure2: sensor.previousCoeffX * result.rawValueTwo + sensor.previousCoeffConstant,
+          Ancienne_Mesure1:
+            Math.abs(sensor.previousCoeffX2) > 1e-12
+              ? sensor.previousCoeffX2 * result.rawValueOne ** 2 +
+                sensor.previousCoeffX * result.rawValueOne +
+                sensor.previousCoeffConstant
+              : sensor.previousCoeffX * result.rawValueOne + sensor.previousCoeffConstant,
+          Ancienne_Mesure2:
+            Math.abs(sensor.previousCoeffX2) > 1e-12
+              ? sensor.previousCoeffX2 * result.rawValueTwo ** 2 +
+                sensor.previousCoeffX * result.rawValueTwo +
+                sensor.previousCoeffConstant
+              : sensor.previousCoeffX * result.rawValueTwo + sensor.previousCoeffConstant,
           Nouvelle_Mesure1: result.correctedValueOne,
           Nouvelle_Mesure2: result.correctedValueTwo,
           Id_Milieu: session.mediumId,
@@ -1233,18 +1253,38 @@ export async function startAdjustmentSession(user: JWTPayload, input: StartAdjus
     orderBy: [{ Date_Heure_Ajustage: "desc" }, { Id_Ajustage: "desc" }],
     select: {
       Sonde_Numero_Serie: true,
+      Coeff_X2: true,
       Coeff_X: true,
       Coeff_Constant: true,
       Unite: true,
     },
   })
-  const latestAdjustmentBySerial = new Map<string, { coeffX: number; coeffConstant: number; unit: string | null }>()
+  const latestAdjustmentBySerial = new Map<
+    string,
+    {
+      coeffX2: number
+      coeffX: number
+      coeffConstant: number
+      coeffA: number
+      coeffB: number
+      coeffC: number
+      unit: string | null
+    }
+  >()
   for (const row of latestAdjustments) {
     const serial = row.Sonde_Numero_Serie?.trim()
     if (!serial || latestAdjustmentBySerial.has(serial)) continue
+    const coeffX2 = typeof row.Coeff_X2 === "number" ? row.Coeff_X2 : 0
+    const coeffX = typeof row.Coeff_X === "number" ? row.Coeff_X : 1
+    const coeffConstant = typeof row.Coeff_Constant === "number" ? row.Coeff_Constant : 0
+    const usesThreeCoefficients = Math.abs(coeffX2) > 1e-12
     latestAdjustmentBySerial.set(serial, {
-      coeffX: typeof row.Coeff_X === "number" ? row.Coeff_X : 1,
-      coeffConstant: typeof row.Coeff_Constant === "number" ? row.Coeff_Constant : 0,
+      coeffX2,
+      coeffX,
+      coeffConstant,
+      coeffA: usesThreeCoefficients ? coeffX2 : coeffX,
+      coeffB: usesThreeCoefficients ? coeffX : coeffConstant,
+      coeffC: usesThreeCoefficients ? coeffConstant : 0,
       unit: row.Unite?.trim() || null,
     })
   }
@@ -1287,8 +1327,12 @@ export async function startAdjustmentSession(user: JWTPayload, input: StartAdjus
         previousState: location.Lieu_Etat ?? null,
         previousStateN1: location.Lieu_Etat_N1 ?? null,
       })),
+      previousCoeffX2: previousAdjustment?.coeffX2 ?? 0,
       previousCoeffX: previousAdjustment?.coeffX ?? 1,
       previousCoeffConstant: previousAdjustment?.coeffConstant ?? 0,
+      currentCoeffA: previousAdjustment?.coeffA ?? 1,
+      currentCoeffB: previousAdjustment?.coeffB ?? 0,
+      currentCoeffC: previousAdjustment?.coeffC ?? 0,
     }
   })
 
@@ -1426,6 +1470,120 @@ export async function startAdjustmentSession(user: JWTPayload, input: StartAdjus
   })
 
   void scheduleLoop(session)
+  return toPublicSession(session)
+}
+
+export type AdjustmentCoefficientUpdate = {
+  sensorId: number
+  coeffA: number
+  coeffB: number
+  coeffC: number
+}
+
+export async function updateAdjustmentCoefficients(
+  userId: number,
+  updates: AdjustmentCoefficientUpdate[],
+  ip?: string,
+) {
+  const session = sessionsByUserId.get(userId)
+  if (!session || session.status !== "running") {
+    throw new Error("Aucun ajustage en cours.")
+  }
+  if (updates.length === 0) {
+    throw new Error("Aucun coefficient à valider.")
+  }
+
+  const updateBySensorId = new Map<number, AdjustmentCoefficientUpdate>()
+  for (const update of updates) {
+    if (
+      !Number.isFinite(update.coeffA) ||
+      !Number.isFinite(update.coeffB) ||
+      !Number.isFinite(update.coeffC)
+    ) {
+      throw new Error("Les coefficients a, b et c doivent être des nombres valides.")
+    }
+    if (Math.abs(update.coeffC) > 1e-12 && Math.abs(update.coeffA) <= 1e-12) {
+      throw new Error("Le coefficient a ne peut pas être nul lorsque c est utilisé.")
+    }
+    if (updateBySensorId.has(update.sensorId)) {
+      throw new Error("Une sonde ne peut apparaître qu'une fois dans la validation.")
+    }
+    updateBySensorId.set(update.sensorId, update)
+  }
+
+  const sessionSensorIds = new Set(session.sensors.map((sensor) => sensor.id))
+  if (
+    updateBySensorId.size !== sessionSensorIds.size ||
+    Array.from(updateBySensorId.keys()).some((sensorId) => !sessionSensorIds.has(sensorId))
+  ) {
+    throw new Error("Les coefficients doivent être renseignés pour toutes les sondes de l'ajustage.")
+  }
+
+  const adjustedAt = new Date()
+  await prisma.$transaction(async (tx) => {
+    for (const sensor of session.sensors) {
+      const update = updateBySensorId.get(sensor.id)
+      if (!update) continue
+
+      const usesThreeCoefficients = Math.abs(update.coeffC) > 1e-12
+      await tx.t_ajustage.create({
+        data: {
+          Date_Heure_Ajustage: adjustedAt,
+          Sonde_Numero_Serie: sensor.serialNumber,
+          Coeff_X2: usesThreeCoefficients ? update.coeffA : 0,
+          Coeff_X: usesThreeCoefficients ? update.coeffB : update.coeffA,
+          Coeff_Constant: usesThreeCoefficients ? update.coeffC : update.coeffB,
+          Unite: sensor.unit ?? session.standardUnit,
+          Nb_Decimale: session.displayDecimals,
+          Operateur: session.operator,
+          SE_Numero: session.standardSerial,
+          SE_Organisme: session.standardOrganization,
+          SE_Date_Certif: session.standardCertificateDate
+            ? new Date(session.standardCertificateDate)
+            : null,
+          SE_Numero_Certif: session.standardCertificateNumber,
+          Id_Milieu: session.mediumId,
+        },
+      })
+    }
+
+    const locationIds = Array.from(
+      new Set(session.sensors.flatMap((sensor) => sensor.locations.map((location) => location.id))),
+    )
+    if (locationIds.length > 0) {
+      await tx.t_lieu.updateMany({
+        where: { Id_Lieu: { in: locationIds } },
+        data: { Infos_Modifiees_Depuis_Derniere_Mesure: true },
+      })
+    }
+  })
+
+  for (const sensor of session.sensors) {
+    const update = updateBySensorId.get(sensor.id)
+    if (!update) continue
+    sensor.currentCoeffA = update.coeffA
+    sensor.currentCoeffB = update.coeffB
+    sensor.currentCoeffC = update.coeffC
+  }
+  session.message =
+    "Coefficients validés. Ils seront envoyés à la prochaine interrogation de chaque sonde."
+  session.lastError = null
+  session.lastUpdatedAt = nowIso()
+
+  log.audit("CA", {
+    user: session.username,
+    userId: session.userId,
+    userProfile: session.userProfile,
+    ip,
+    resource: "Ajustage (Coefficients)",
+    resourceId: session.id,
+    changes: {
+      coefficients: updates,
+      sentOnNextInterrogation: true,
+    },
+    success: true,
+  })
+
   return toPublicSession(session)
 }
 

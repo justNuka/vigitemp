@@ -325,13 +325,6 @@ namespace Vigitemp_Serveur
                 using (var database = DatabaseFactory.Create())
                 {
                     var idLieu = database.getIDLieuBySerialNumber(request.Serial);
-                    if (idLieu > 0 && IsMetrologyMeasurementRequest(request))
-                    {
-                        var markedDirty = database.setLieuInfosModifiees(idLieu, true);
-                        VigitempServeur.Log(
-                            $"{logPrefix}[INFOS-MODIFIEES] serial={request.Serial} idLieu={idLieu} value=1 status={(markedDirty ? "ok" : "error")}");
-                    }
-
                     if (!string.IsNullOrWhiteSpace(request.ManualPort))
                     {
                         result.Port = request.ManualPort;
@@ -363,21 +356,9 @@ namespace Vigitemp_Serveur
                                 "Impossible d'identifier le lieu de la sonde pour préparer l'interrogation de métrologie.");
                         }
 
-                        if (!database.setLieuInfosModifiees(idLieu, true))
-                        {
-                            throw new InvalidOperationException(
-                                "Impossible de marquer les informations du lieu comme modifiées avant l'interrogation de métrologie.");
-                        }
-
-                        metrologySettings = database.getSondeMetrologyBySerialNumber(request.Serial)
-                            ?? new SondeMetrologySettings();
-                        if (!metrologySettings.IdLieu.HasValue || metrologySettings.IdLieu.Value <= 0)
-                        {
-                            metrologySettings.IdLieu = idLieu;
-                        }
-
-                        VigitempServeur.Log(
-                            $"{logPrefix}[CFG] serial={request.Serial} idLieu={idLieu} infosModifiees=1 reason=metrology-read");
+                        // Les coefficients ne sont plus marqués comme modifiés par chaque lecture.
+                        // Le portail pose explicitement le drapeau lors d'une validation a/b/c.
+                        metrologySettings = new SondeMetrologySettings { IdLieu = idLieu };
                     }
                 }
 
@@ -403,6 +384,35 @@ namespace Vigitemp_Serveur
             result.Success = string.IsNullOrWhiteSpace(result.Error);
             LogSensorTestResult(result, startedAt, stopwatch.ElapsedMilliseconds);
             return result;
+        }
+
+        private static SondeMetrologySettings LoadCurrentMetrologySettings(
+            string serial,
+            int? fallbackIdLieu)
+        {
+            using (var database = DatabaseFactory.Create())
+            {
+                var settings = database.getSondeMetrologyBySerialNumber(serial)
+                    ?? new SondeMetrologySettings();
+                if (!settings.IdLieu.HasValue || settings.IdLieu.Value <= 0)
+                {
+                    settings.IdLieu = fallbackIdLieu;
+                }
+                return settings;
+            }
+        }
+
+        private static bool TrySetMetrologyDirtyFlag(int? idLieu, bool value)
+        {
+            if (!idLieu.HasValue || idLieu.Value <= 0)
+            {
+                return false;
+            }
+
+            using (var database = DatabaseFactory.Create())
+            {
+                return database.setLieuInfosModifiees(idLieu.Value, value);
+            }
         }
 
         private static int GetRecommendedMemoReadTimeoutMs(int memoryCount)
@@ -519,6 +529,13 @@ namespace Vigitemp_Serveur
                     port.Open();
                     port.DiscardInBuffer();
                     port.DiscardOutBuffer();
+
+                    if (metrologyOperation && IsMetrologyReadAction(request.Action))
+                    {
+                        metrologySettings = LoadCurrentMetrologySettings(
+                            request.Serial,
+                            metrologySettings != null ? metrologySettings.IdLieu : null);
+                    }
 
                     if (request.Action == "sync-config" || gsp.SyncConfiguration)
                     {
@@ -658,7 +675,7 @@ namespace Vigitemp_Serveur
                                 compactCommand,
                                 false,
                                 gsp.ListenWindowMs,
-                                EtalonnageConfigurationCommandDelayMs);
+                                MetrologyConfigurationCommandDelayMs);
                             result.RawValue = compactResponse;
                             result.DetectedSerials = GspProtocol.ExtractDetectedSerials(compactResponse);
                             if (!IsEconAcknowledged(compactResponse))
@@ -703,40 +720,73 @@ namespace Vigitemp_Serveur
 
                     if (metrologyOperation && IsMetrologyReadAction(request.Action))
                     {
-                        var neutralCoefficients = string.Equals(
-                            normalizedOperationContext,
-                            "AJUSTAGE",
-                            StringComparison.Ordinal);
-                        var coefficientsPayload = GspProtocol.BuildMetrologyCoefficientsPayload(
-                            metrologySettings,
-                            neutralCoefficients);
-                        var coefficientsCommand = GspProtocol.BuildCommand(
-                            "ECON",
-                            target,
-                            coefficientsPayload);
-
-                        result.RequestedCommand = coefficientsCommand;
-                        AddExchange(
-                            result,
-                            "info",
-                            "ascii",
-                            $"<metrology-read-econ part=coefficients-a-b-c length={coefficientsCommand.Length}>");
-
-                        var coefficientsResponse = SendGspCommand(
-                            port,
-                            result,
-                            "ECON",
-                            target,
-                            coefficientsPayload,
-                            false,
-                            gsp.ListenWindowMs,
-                            MetrologyConfigurationCommandDelayMs);
-                        if (!IsEconAcknowledged(coefficientsResponse))
+                        if (metrologySettings != null && metrologySettings.InfosModifiees)
                         {
-                            result.RawValue = coefficientsResponse;
-                            result.DetectedSerials = GspProtocol.ExtractDetectedSerials(coefficientsResponse);
-                            result.Error = "La commande ECON des coefficients A, B et C préalable à la lecture n'a pas été acquittée.";
-                            return;
+                            var idLieu = metrologySettings.IdLieu;
+                            if (!TrySetMetrologyDirtyFlag(idLieu, false))
+                            {
+                                result.Error = "Impossible de réserver la mise à jour des coefficients avant l'interrogation.";
+                                return;
+                            }
+
+                            var mustRestoreDirtyFlag = true;
+                            try
+                            {
+                                // Le démarrage d'ajustage peut envoyer les coefficients neutres via une
+                                // commande raw. Ici, une modification explicite depuis le portail doit
+                                // toujours envoyer les coefficients physiques a, b et c enregistrés.
+                                var coefficientsPayload = GspProtocol.BuildMetrologyCoefficientsPayload(
+                                    metrologySettings,
+                                    false);
+                                var coefficientsCommand = GspProtocol.BuildCommand(
+                                    "ECON",
+                                    target,
+                                    coefficientsPayload);
+
+                                result.RequestedCommand = coefficientsCommand;
+                                AddExchange(
+                                    result,
+                                    "info",
+                                    "ascii",
+                                    $"<metrology-read-econ reason=coefficients-modified part=a-b-c length={coefficientsCommand.Length}>");
+                                VigitempServeur.Log(
+                                    $"{logPrefix}[CFG] serial={request.Serial} idLieu={idLieu} infosModifiees=1 action=send-econ-abc");
+
+                                var coefficientsResponse = SendGspCommand(
+                                    port,
+                                    result,
+                                    "ECON",
+                                    target,
+                                    coefficientsPayload,
+                                    false,
+                                    gsp.ListenWindowMs,
+                                    MetrologyConfigurationCommandDelayMs);
+                                if (!IsEconAcknowledged(coefficientsResponse))
+                                {
+                                    result.RawValue = coefficientsResponse;
+                                    result.DetectedSerials = GspProtocol.ExtractDetectedSerials(coefficientsResponse);
+                                    result.Error = "La commande ECON des coefficients A, B et C préalable à la lecture n'a pas été acquittée.";
+                                    return;
+                                }
+
+                                mustRestoreDirtyFlag = false;
+                                VigitempServeur.Log(
+                                    $"{logPrefix}[CFG] serial={request.Serial} idLieu={idLieu} infosModifiees=0 action=econ-abc-ack");
+                            }
+                            finally
+                            {
+                                if (mustRestoreDirtyFlag)
+                                {
+                                    var restored = TrySetMetrologyDirtyFlag(idLieu, true);
+                                    VigitempServeur.Log(
+                                        $"{logPrefix}[CFG] serial={request.Serial} idLieu={idLieu} infosModifiees=1 action=restore-after-econ-failure status={(restored ? "ok" : "error")}");
+                                }
+                            }
+                        }
+                        else
+                        {
+                            LogHotlineDetailed(
+                                $"{logPrefix}[CFG] serial={request.Serial} idLieu={metrologySettings?.IdLieu} infosModifiees=0 action=skip-econ");
                         }
                     }
 

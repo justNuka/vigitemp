@@ -126,12 +126,12 @@
     "admin": "Administration",
     "users": "Users",
     "profile": "Profile",
-      "admin_dashboard": "Admin dashboard",
-      "admin_dashboard_tooltip": "Administrator dashboard",
-      "impact_analysis": "Impact analysis",
-      "services": "Services",
-      "messaging": "Messaging",
-      "vigilog": "VigiLog",
+    "admin_dashboard": "Admin dashboard",
+    "admin_dashboard_tooltip": "Administrator dashboard",
+    "impact_analysis": "Impact analysis",
+    "services": "Services",
+    "messaging": "Messaging",
+    "vigilog": "VigiLog",
     "statistics": "Statistics"
   },
   "sidebarGroups": {
@@ -3047,9 +3047,9 @@
       "details": "Details",
       "statistics_title": "Statistics by location",
       "statistics_description": "Open detailed per-location statistics with custom period selection.",
-      "open_statistics": "Open statistics"
-      ,"type_distribution": "Distribution by type"
-      ,"type_distribution_aria": "Distribution of {count} active alarms by type"
+      "open_statistics": "Open statistics",
+      "type_distribution": "Distribution by type",
+      "type_distribution_aria": "Distribution of {count} active alarms by type"
     },
     "ack_dialog": {
       "title": "Acknowledge alarm",
@@ -3419,18 +3419,18 @@
           "12": "Location details keep setpoint and tolerance labels readable even on smaller screens."
         }
       },
-        "admin": {
-          "title": "Administration",
-          "items": {
-            "0": "Added the system backup block for all license tiers.",
-            "1": "The acknowledgment history link from the admin dashboard now opens a real page.",
-            "2": "Acknowledgment history exports now correctly reapply the active filters.",
-            "3": "Free acknowledgment comments are now loaded from the dedicated journal source.",
-            "4": "The accuracy error preview now clearly shows the inverse sign applied by the correction.",
-            "5": "Excel exports now include a VigiSensys presentation sheet and a separate, readable data sheet."
-          }
+      "admin": {
+        "title": "Administration",
+        "items": {
+          "0": "Added the system backup block for all license tiers.",
+          "1": "The acknowledgment history link from the admin dashboard now opens a real page.",
+          "2": "Acknowledgment history exports now correctly reapply the active filters.",
+          "3": "Free acknowledgment comments are now loaded from the dedicated journal source.",
+          "4": "The accuracy error preview now clearly shows the inverse sign applied by the correction.",
+          "5": "Excel exports now include a VigiSensys presentation sheet and a separate, readable data sheet."
         }
       }
+    }
   },
   "servicesNav": {
     "upgrade": "License upgrade",
@@ -5831,7 +5831,8 @@
             "readingError": "Unable to read the selected probes.",
             "start": "Start adjustment",
             "stop": "Stop adjustment",
-            "hint": "The execution logic will be connected to the acquisition workflow."
+            "hint": "The execution logic will be connected to the acquisition workflow.",
+            "queued": "Waiting for the current measurement…"
           },
           "points": {
             "title": "Points",
@@ -5868,6 +5869,19 @@
             "longIntervalDescription": "A long interval between measurements may affect probe monitoring.",
             "mismatchTitle": "Check the stability plateau settings",
             "mismatchDescription": "This configuration represents approximately {count} measurement cycles during the plateau. Adjust the plateau duration or the time between measurements."
+          },
+          "coefficients": {
+            "title": "Coefficients sent to probes",
+            "description": "Change coefficients a, b and c for each probe while adjustment is running.",
+            "sensor": "Probe",
+            "coeffA": "Coefficient a",
+            "coeffB": "Coefficient b",
+            "coeffC": "Coefficient c",
+            "noLocation": "No assigned location",
+            "nextReadNotice": "After validation, the coefficients will be sent on the next interrogation of each probe.",
+            "invalid": "Enter valid coefficients. Coefficient a cannot be zero when c is used.",
+            "saving": "Saving…",
+            "validate": "Validate coefficients"
           }
         },
         "status": {
@@ -5972,6 +5986,49 @@
         "navigation": {
           "title": "Metrology navigation",
           "description": "Open the other metrology features."
+        },
+        "enhanced": {
+          "reference_title": "Reference and medium",
+          "reference_description": "Select the reference standard and medium used for this operation.",
+          "standard": "Reference standard",
+          "standard_placeholder": "Select a standard",
+          "standard_help": "The standard provides the reference value for acquisitions.",
+          "medium": "Medium",
+          "medium_placeholder": "Select a medium",
+          "medium_help": "The medium must remain stable throughout the operation.",
+          "phase_ready": "Ready",
+          "phase_reading": "Reading",
+          "phase_acquiring": "Acquiring",
+          "phase_completed": "Completed",
+          "progress": "{count} / {target} measurements",
+          "reading_queue_title": "Operation queued",
+          "reading_queue_description": "Startup waits for the current measurement to finish before acquiring the serial port.",
+          "start_reading_hint": "Start reading first to confirm that every probe responds.",
+          "reading_active": "All probes are responding. Acquisition can start.",
+          "reading_required": "Waiting for a first valid measurement from every probe.",
+          "last_reading_title": "Latest measurements",
+          "last_reading_description": "Latest value received from the standard and each probe.",
+          "standard_latest": "Standard",
+          "measured_at": "Measured at",
+          "standard_samples_title": "Standard measurements",
+          "standard_samples_description": "All reference values recorded during the operation.",
+          "no_samples": "No measurements recorded.",
+          "all_samples_title": "Latest 10 values for each probe",
+          "all_samples_description": "Summary of the ten most recent acquisitions for the standard and all probes.",
+          "sample_number": "No.",
+          "standard_column": "Standard {serial}",
+          "sensor_history_title": "Complete probe history",
+          "sensor_history_description": "Select a probe to display all its measurements since the operation started.",
+          "sensor_history_selector": "Probe",
+          "sensor_history_placeholder": "Select a probe",
+          "sensor_value": "Probe value",
+          "standard_value": "Standard value",
+          "results_title": "Calibration results",
+          "results_description": "Averages, accuracy error and uncertainty calculated for each probe.",
+          "mean_sensor": "Probe average",
+          "mean_standard": "Standard average",
+          "accuracy_error": "Accuracy error",
+          "uncertainty": "Uncertainty"
         }
       }
     },
