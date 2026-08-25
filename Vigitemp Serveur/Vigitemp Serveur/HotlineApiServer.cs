@@ -24,6 +24,8 @@ namespace Vigitemp_Serveur
         private const int GspEndOfResponseSilenceMs = 500;
         private const int MaxExchangeLogLength = 2000;
         private const int MetrologyPortPollMs = 250;
+        private const int DefaultGspPostWriteDelayMs = 150;
+        private const int EtalonnageConfigurationCommandDelayMs = 500;
         private const int DefaultMetrologyPortQueueTimeoutMs = 30 * 60 * 1000;
 
         private HttpListener _listener;
@@ -391,7 +393,9 @@ namespace Vigitemp_Serveur
             var logPrefix = GetOperationLogPrefix(request.OperationContext);
             var targetSource = string.IsNullOrWhiteSpace(address) ? request.Serial : address;
             var target = GspProtocol.NormalizeCommandTarget(targetSource);
-            var metrologyOperation = IsMetrologyOperation(request.OperationContext);
+            var operationContext = NormalizeOperationContext(request.OperationContext);
+            var metrologyOperation = IsMetrologyOperation(operationContext);
+            var etalonnageOperation = string.Equals(operationContext, "ETALONNAGE", StringComparison.Ordinal);
 
             Mutex namedMutex = null;
             var mutexAcquired = false;
@@ -483,7 +487,19 @@ namespace Vigitemp_Serveur
                         foreach (var command in BuildGspSyncCommands(gsp))
                         {
                             result.RequestedCommand = GspProtocol.BuildCommand(command.Key, target, command.Value);
-                            var response = SendGspCommand(port, result, command.Key, target, command.Value, true, gsp.ListenWindowMs);
+                            // Le mutex du port reste détenu pendant cette attente. Cela protège aussi
+                            // les requêtes suivantes visant d’autres sondes du même module/port.
+                            var response = SendGspCommand(
+                                port,
+                                result,
+                                command.Key,
+                                target,
+                                command.Value,
+                                true,
+                                gsp.ListenWindowMs,
+                                etalonnageOperation
+                                    ? EtalonnageConfigurationCommandDelayMs
+                                    : DefaultGspPostWriteDelayMs);
                             if (!string.IsNullOrWhiteSpace(response))
                             {
                                 result.RawValue = response;
@@ -734,7 +750,7 @@ namespace Vigitemp_Serveur
                 frequencySeconds: Math.Max(1, gsp.FrequencySeconds ?? 60));
         }
 
-        private static string SendGspCommand(SerialPort port, SensorTestResult result, string prefix, string target, string payload, bool allowEmptyResponse, int? listenWindowMs)
+        private static string SendGspCommand(SerialPort port, SensorTestResult result, string prefix, string target, string payload, bool allowEmptyResponse, int? listenWindowMs, int postWriteDelayMs = DefaultGspPostWriteDelayMs)
         {
             if (string.IsNullOrWhiteSpace(prefix)) return string.Empty;
 
@@ -751,7 +767,7 @@ namespace Vigitemp_Serveur
                 AddExchange(result, "tx", "ascii", EscapeForLog(command));
                 var commandBytes = GspProtocol.EncodeCommand(command);
                 port.Write(commandBytes, 0, commandBytes.Length);
-                Thread.Sleep(150);
+                Thread.Sleep(Math.Max(0, postWriteDelayMs));
 
                 string response;
                 try
