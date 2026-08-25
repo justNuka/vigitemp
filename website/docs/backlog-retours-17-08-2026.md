@@ -852,7 +852,7 @@ Le seed `db/vigisensys_seed_mssql.sql` a également été rapproché du seed MyS
 
 L'audit exhaustif a ensuite couvert les tables, colonnes, types, nullabilités, valeurs par défaut, vues, triggers, équivalents des events MySQL, référentiels et paramètres initiaux. Il a conduit à aligner les types/valeurs par défaut encore divergents, à matérialiser les trois `ENUM` MySQL avec des contraintes `CHECK`, et à injecter les référentiels actionneurs/modules/étalons ainsi que les 154 paramètres historiques du dump MySQL requis par les anciens services. Les paramètres et autorisations propres au web actuel sont conservés en extension ; leur suppression ne constituerait pas une parité fonctionnelle et casserait des fonctions livrées après le dump historique.
 
-Cette première installation de test porte la version produit **`0.01.001`**. La version technique SemVer du web est `0.1.1`, affichée sous la forme produit `0.01.001`. Le serveur .NET utilise `0.1.1.0` avec `AssemblyInformationalVersion("0.01.001")`, et les deux seeds enregistrent `VERSION/SCHEMA_VERSION = 0.01.001`.
+Cette première installation de test porte la version produit **`0.90.001`**, jalon de stabilisation avant la première version finie. La version technique SemVer du web est `0.90.1`, affichée sous la forme produit `0.90.001`. Le serveur .NET utilise `0.90.1.0` avec `AssemblyInformationalVersion("0.90.001")`, et les deux seeds enregistrent `VERSION/SCHEMA_VERSION = 0.90.001`.
 
 Principaux fichiers :
 
@@ -868,7 +868,7 @@ Checklist de validation :
 
 - [ ] exécuter `pnpm build` avec `DATABASE_PROVIDER=sqlserver` sans base accessible et confirmer l'absence d'accès Prisma au prérendu admin ;
 - [ ] créer une base SQL Server vide avec le seed complet ;
-- [ ] vérifier l'affichage web `0.01.001`, la version informative du service et `VERSION/SCHEMA_VERSION` dans les deux bases ;
+- [ ] vérifier l'affichage web `0.90.001`, la version informative du service et `VERSION/SCHEMA_VERSION` dans les deux bases ;
 - [ ] contrôler la présence des colonnes communes ajoutées et de `dbo.tm_mesures_etalon` ;
 - [ ] insérer des trames GSO `0`, `1` et `10000000`, puis contrôler `tm_mesures_gso_build`, `tm_mesures` et `tm_graphique` ;
 - [ ] insérer des trames métrologie `10` et `110`, puis contrôler les mesures d'ajustage/étalonnage et l'offset ;

@@ -1,6 +1,6 @@
 -- =====================================================================
 -- BOOTSTRAP SQL SERVER VigiSensys
--- Version produit / seed : 0.01.001
+-- Version produit / seed : 0.90.001
 -- Cree les 3 bases et les tables absentes avant le seed/alignement.
 -- Genere depuis les schemas Prisma, sans FK bloquantes pour rester idempotent.
 -- =====================================================================
@@ -1935,7 +1935,7 @@ DECLARE @RecentParams TABLE (
 );
 
 INSERT INTO @RecentParams (Section, Mot_Cle, Valeur, Commentaire) VALUES
-(N'VERSION',N'SCHEMA_VERSION',N'0.01.001',N'Version produit commune des seeds MySQL et SQL Server'),
+(N'VERSION',N'SCHEMA_VERSION',N'0.90.001',N'Version produit commune des seeds MySQL et SQL Server'),
 (N'GENERAL',N'TIMEZONE',N'Europe/Paris',N'Fuseau horaire par defaut'),
 (N'DASHBOARD',N'AUDIT_GRAPH_OPENINGS',N'false',N'Activer l audit trail a l ouverture des graphiques'),
 (N'DASHBOARD',N'ETALONNAGE_WARNING_DAYS',N'90',N'Delai alerte validite etalonnage en jours'),

@@ -32,7 +32,7 @@ using System.Runtime.InteropServices;
 // Vous pouvez spécifier toutes les valeurs ou indiquer les numéros de build et de révision par défaut
 // en utilisant '*', comme indiqué ci-dessous:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("0.1.1.0")]
-[assembly: AssemblyFileVersion("0.1.1.0")]
+[assembly: AssemblyVersion("0.90.1.0")]
+[assembly: AssemblyFileVersion("0.90.1.0")]
 // Version produit lisible commune au web et aux seeds.
-[assembly: AssemblyInformationalVersion("0.01.001")]
+[assembly: AssemblyInformationalVersion("0.90.001")]

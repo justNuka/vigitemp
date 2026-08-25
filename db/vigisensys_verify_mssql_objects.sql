@@ -41,10 +41,10 @@ USE [vigi_main];
 GO
 
 SELECT
-  N'0.01.001' AS expected_version,
+  N'0.90.001' AS expected_version,
   MAX(CASE WHEN [Section] = 'VERSION' AND [Mot_Cle] = 'SCHEMA_VERSION' THEN [Valeur] END) AS installed_version,
   CASE
-    WHEN MAX(CASE WHEN [Section] = 'VERSION' AND [Mot_Cle] = 'SCHEMA_VERSION' THEN [Valeur] END) = N'0.01.001' THEN 'OK'
+    WHEN MAX(CASE WHEN [Section] = 'VERSION' AND [Mot_Cle] = 'SCHEMA_VERSION' THEN [Valeur] END) = N'0.90.001' THEN 'OK'
     ELSE 'KO'
   END AS status
 FROM dbo.t_parametre;
