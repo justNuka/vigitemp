@@ -10,6 +10,9 @@
 .env.local
 .env.example
 
+# Generated Prisma clients in the website workspace
+website/src/generated/
+
 # User-specific files
 *.rsuser
 *.suo
@@ -419,6 +422,7 @@ VigiSensys agent/installer/wix/out/
 
 # next.js
 website/.next/
+website/src/generated/*
 /.next/
 /out/
 
