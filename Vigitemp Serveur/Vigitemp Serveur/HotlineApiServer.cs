@@ -675,7 +675,7 @@ namespace Vigitemp_Serveur
                                 compactCommand,
                                 false,
                                 gsp.ListenWindowMs,
-                                EtalonnageConfigurationCommandDelayMs);
+                                MetrologyConfigurationCommandDelayMs);
                             result.RawValue = compactResponse;
                             result.DetectedSerials = GspProtocol.ExtractDetectedSerials(compactResponse);
                             if (!IsEconAcknowledged(compactResponse))
