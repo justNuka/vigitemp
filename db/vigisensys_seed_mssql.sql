@@ -2462,7 +2462,7 @@ GO
 SET IDENTITY_INSERT dbo.t_profil ON;
 MERGE dbo.t_profil AS target
 USING (VALUES
-  (1, N'Administrateurs', NULL, 0, 0),
+  (1, N'Administrateurs', NULL, 0, 0)
 ) AS source (Id_Profil, Profil_Utilisateur, Commentaire, Est_MC2, Est_Archive)
 ON target.Id_Profil = source.Id_Profil
 WHEN MATCHED THEN UPDATE SET
@@ -2563,18 +2563,10 @@ GO
 
 -- templates de lieu
 -- parametres recents (uppercase)
-IF NOT EXISTS (SELECT 1 FROM dbo.t_parametre WHERE Section='GENERAL' AND Mot_Cle='GLOBAL_LANGUAGE')
-  INSERT INTO dbo.t_parametre(Section, Mot_Cle, Valeur, Commentaire) VALUES ('GENERAL','GLOBAL_LANGUAGE','fr','Langue globale de l''application (mails et futurs modules)');
 IF NOT EXISTS (SELECT 1 FROM dbo.t_parametre WHERE Section='DASHBOARD' AND Mot_Cle='SHOW_NULL_NON_RESPONSE')
   INSERT INTO dbo.t_parametre(Section, Mot_Cle, Valeur, Commentaire) VALUES ('DASHBOARD','SHOW_NULL_NON_RESPONSE','0','Afficher les mesures null (non-reponse) dans les graphiques');
 IF NOT EXISTS (SELECT 1 FROM dbo.t_parametre WHERE Section='DASHBOARD' AND Mot_Cle='SURVEILLANCE_REFRESH')
   INSERT INTO dbo.t_parametre(Section, Mot_Cle, Valeur, Commentaire) VALUES ('DASHBOARD','SURVEILLANCE_REFRESH','15','Rafraichissement surveillance en secondes');
-IF NOT EXISTS (SELECT 1 FROM dbo.t_parametre WHERE Section='NOTIFICATIONS' AND Mot_Cle='EMAIL_CC_RECIPIENTS')
-  INSERT INTO dbo.t_parametre(Section, Mot_Cle, Valeur, Commentaire) VALUES ('NOTIFICATIONS','EMAIL_CC_RECIPIENTS','','Destinataires en copie sur tous les emails');
-IF NOT EXISTS (SELECT 1 FROM dbo.t_parametre WHERE Section='NOTIFICATIONS' AND Mot_Cle='EMAIL_SEND_ACK')
-  INSERT INTO dbo.t_parametre(Section, Mot_Cle, Valeur, Commentaire) VALUES ('NOTIFICATIONS','EMAIL_SEND_ACK','1','Activer envoi email lors acquittement alarme');
-IF NOT EXISTS (SELECT 1 FROM dbo.t_parametre WHERE Section='NOTIFICATIONS' AND Mot_Cle='EMAIL_SEND_RESOLVED')
-  INSERT INTO dbo.t_parametre(Section, Mot_Cle, Valeur, Commentaire) VALUES ('NOTIFICATIONS','EMAIL_SEND_RESOLVED','1','Activer envoi email lors fin alarme');
 IF NOT EXISTS (SELECT 1 FROM dbo.t_parametre WHERE Section='NOTIFICATIONS' AND Mot_Cle='GSP_BATTERY_NOTIFY_PERCENT')
   INSERT INTO dbo.t_parametre(Section, Mot_Cle, Valeur, Commentaire) VALUES ('NOTIFICATIONS','GSP_BATTERY_NOTIFY_PERCENT','50','Seuil (%) notification batterie faible sonde GSP');
 IF NOT EXISTS (SELECT 1 FROM dbo.t_parametre WHERE Section='NOTIFICATIONS' AND Mot_Cle='GSP_BATTERY_EMAIL_PERCENT')
@@ -2611,7 +2603,7 @@ IF NOT EXISTS (SELECT 1 FROM dbo.t_parametre WHERE Section='STATISTICS_MONTHLY_R
   INSERT INTO dbo.t_parametre(Section, Mot_Cle, Valeur, Commentaire) VALUES ('STATISTICS_MONTHLY_REPORT','LAST_SENT_MONTH','','Dernier mois envoye au format YYYY-MM');
 GO
 
--- Parametres historiques du seed MySQL requis par les services legacy
+-- Parametres applicatifs conserves dans la base de reference
 MERGE dbo.t_parametre AS target
 USING (VALUES
   (N'CFR21', N'ACTIVATION_EXPIRATION_MOT_DE_PASSE', N'true', N'Activer l''expiration des mots de passe (CFR21)'),
@@ -2625,19 +2617,6 @@ USING (VALUES
   (N'CFR21', N'SECURITE', N'0', N'Mode sécurité renforcé'),
   (N'CFR21', N'TEMPS_DECONNEXION_MINUTES', N'20', N'Temps d''inactivité avant deconnexion automatique en minutes'),
   (N'CFR21', N'VALIDITE_MOT_DE_PASSE_JOURS', N'90', N'Durée de validité du mot de passe en jours'),
-  (N'MYSQL', N'MOT_DE_PASSE_CRYPTE', N'1', N'Le mot de passe MySQL est crypté'),
-  (N'MYSQL', N'VERSION_BASE_DONNEES', N'20200201', N'Version de la base de données (utile pour les mises à jour)'),
-  (N'SAUVEGARDES', N'ADRESSE_IP_MACHINE', N'', N'Adresse IP de la machine serveur'),
-  (N'SAUVEGARDES', N'CONSTRUCTION_BATCH', N'', N'Script de construction batch pour les sauvegardes'),
-  (N'SAUVEGARDES', N'DOSSIER_MYSQL', N'', N'Chemin du dossier d''installation MySQL'),
-  (N'SAUVEGARDES', N'DOSSIER_SAUVEGARDE', N'', N'Chemin du dossier de sauvegarde'),
-  (N'SAUVEGARDES', N'LISTE_FICHIERS', N'', N'Liste des fichiers de sauvegarde avec détails'),
-  (N'SAUVEGARDES', N'NOM_TACHE', N'', N'Nom de la tâche planifiée de sauvegarde'),
-  (N'SECURITE', N'LONGUEUR_MINIMALE_MOT_DE_PASSE', N'8', N'Nombre minimum de caractères pour un mot de passe'),
-  (N'SECURITE', N'NOMBRE_MIN_CARACTERES_SPECIAUX', N'1', N'Nombre minimum de caractères spéciaux requis (!@#$%^&* etc.)'),
-  (N'SECURITE', N'NOMBRE_MIN_CHIFFRES', N'1', N'Nombre minimum de chiffres requis'),
-  (N'SECURITE', N'NOMBRE_MIN_LETTRES_MAJUSCULES', N'1', N'Nombre minimum de lettres majuscules requises'),
-  (N'SECURITE', N'NOMBRE_MIN_LETTRES_MINUSCULES', N'1', N'Nombre minimum de lettres minuscules requises'),
   (N'SECURITE_EMAIL', N'SMTP_ACTIVATION', N'true', N'Activer l''envoi d''emails'),
   (N'SECURITE_EMAIL', N'SMTP_EXPEDITEUR', N'', N'Adresse email expediteur (doit correspondre au domaine SMTP)'),
   (N'SECURITE_EMAIL', N'SMTP_MOT_DE_PASSE', N'', N'Mot de passe SMTP'),
@@ -2648,131 +2627,12 @@ USING (VALUES
   (N'SECURITE_MOT_DE_PASSE', N'MIN_CARACTERES_SPECIAUX', N'1', N'Nombre minimum de caracteres speciaux'),
   (N'SECURITE_MOT_DE_PASSE', N'MIN_CHIFFRES', N'1', N'Nombre minimum de chiffres'),
   (N'SECURITE_MOT_DE_PASSE', N'MIN_LETTRES_MAJUSCULES', N'1', N'Nombre minimum de majuscules'),
-  (N'SECURITE_MOT_DE_PASSE', N'MIN_LETTRES_MINUSCULES', N'1', N'Nombre minimum de minuscules'),
-  (N'STATISTIQUE', N'ENTETE_RAPPORT_UTILISATEUR_221', N'', N'En-tête du rapport utilisateur 221'),
-  (N'STATISTIQUE', N'ENTETE_RAPPORT_UTILISATEUR_81', N'', N'En-tête du rapport utilisateur 81'),
-  (N'STATISTIQUE', N'HEURE_RAPPORT_UTILISATEUR_221', N'', N'Heure du rapport utilisateur 221'),
-  (N'STATISTIQUE', N'HEURE_RAPPORT_UTILISATEUR_81', N'', N'Heure du rapport utilisateur 81'),
-  (N'STATISTIQUE', N'ORIENTATION_RAPPORT_221', N'', N'Orientation du rapport 221'),
-  (N'STATISTIQUE', N'ORIENTATION_RAPPORT_81', N'', N'Orientation du rapport 81'),
-  (N'VIGISERV', N'ACTIONS_PRIORITAIRES', N'0', N'Activation des actions prioritaires'),
-  (N'VIGISERV', N'ACTIONS_PRIORITAIRES_DESACTIVATION', N'0', N'Desactivation des actions prioritaires (si egal à 1, les actions prioritaires n''ont pas d''effet)'),
-  (N'VIGISERV', N'DATE_DERNIER_FICHIER_SAUVEGARDE', N'', N'Date du dernier fichier de sauvegarde remonte par VigiServ'),
-  (N'VIGISERV', N'DELAI_ALERTE_MESURE_MINUTES', N'60', N'Delai de verification maximum avant de lancer une alerte sur la derniere mesure (en minutes)'),
-  (N'VIGISERV', N'DELAI_REPONSE_SONDE_AVR_CENTIEMES_SECONDES', N'100', N'Delai maximum pour l''attente de lecture des sondes AVR en centiemes de seconde'),
-  (N'VIGISERV', N'DELAI_REPONSE_SONDE_EI_CENTIEMES_SECONDES', N'150', N'Delai maximum pour l''attente de lecture des sondes EI en centiemes de seconde'),
-  (N'VIGISERV', N'DELAI_SONNERIE_ALARME_MINUTES', N'2', N'Delai pour la verification si des alarmes sont presentes avant activation d''une alarme sonore (en minutes)'),
-  (N'VIGISERV', N'DERNIER_MESURE_APPEL', N'SondesSurveillance', N'Derniere fonction appelee par le service VigiServ'),
-  (N'VIGISERV', N'DERNIER_MESURE_APPEL_1', N'SondesSurveillance', N'Derniere fonction appelee par le service VigiServ (serveur 1)'),
-  (N'VIGISERV', N'DERNIER_MESURE_APPEL_2', N'SondesSurveillance', N'Derniere fonction appelee par le service VigiServ (serveur 2)'),
-  (N'VIGISERV', N'DERNIER_MESURE_APPEL_3', N'SondesSurveillance', N'Derniere fonction appelee par le service VigiServ (serveur 3)'),
-  (N'VIGISERV', N'DERNIER_MESURE_DATE_HEURE', N'', N'Date heure de la derniere mesure inscrite par le service VigiServ'),
-  (N'VIGISERV', N'DERNIER_MESURE_DATE_HEURE_1', N'', N'Date heure de la derniere mesure inscrite par le service VigiServ (serveur 1)'),
-  (N'VIGISERV', N'DERNIER_MESURE_DATE_HEURE_2', N'', N'Date heure de la derniere mesure inscrite par le service VigiServ (serveur 2)'),
-  (N'VIGISERV', N'DERNIER_MESURE_DATE_HEURE_3', N'', N'Date heure de la derniere mesure inscrite par le service VigiServ (serveur 3)'),
-  (N'VIGISERV', N'DERNIER_MESURE_SONDE', N'', N'Numero de sonde de la derniere mesure inscrite par le service VigiServ'),
-  (N'VIGISERV', N'DERNIER_MESURE_SONDE_1', N'', N'Numero de sonde de la derniere mesure inscrite par le service VigiServ (serveur 1)'),
-  (N'VIGISERV', N'DERNIER_MESURE_SONDE_2', N'', N'Numero de sonde de la derniere mesure inscrite par le service VigiServ (serveur 2)'),
-  (N'VIGISERV', N'DERNIER_MESURE_SONDE_3', N'', N'Numero de sonde de la derniere mesure inscrite par le service VigiServ (serveur 3)'),
-  (N'VIGISERV', N'DIALOGUE_EN_MINUTES', N'1', N'Intervalle de dialogue avec le service VigiServ en minutes'),
-  (N'VIGISERV', N'DUREE_LOGIN_SECONDES', N'60', N'Duree de validite du login (le login ne sera pas redemande dans ce delai) (en secondes)'),
-  (N'VIGISERV', N'ECRAN_OFF', N'1', N'ecran eteint'),
-  (N'VIGISERV', N'ENREGISTREMENT_ON', N'1', N'Activation de l''enregistrement'),
-  (N'VIGISERV', N'FICHIER_EXTERNE', N'0', N'Utiliser un fichier externe'),
-  (N'VIGISERV', N'FREQUENCE_NON_REPONSE_MINUTES', N'15', N'Frequence à appliquer si la derniere mesure est en erreur (en minutes)'),
-  (N'VIGISERV', N'FREQUENCE_VERIFICATION_MINUTES', N'15', N'Frequence de verification en minutes'),
-  (N'VIGISERV', N'MEMOIRE_OFF', N'1', N'Memoire eteinte'),
-  (N'VIGISERV', N'NOM_UTILISATEUR_SERVEUR', N'', N'Nom de l''utilisateur du serveur'),
-  (N'VIGISERV', N'PING_MODULE', N'1', N'Autorise ou pas le ping en cas de test d''un module reseau (0 = OFF, 1 = ON)'),
-  (N'VIGISERV', N'SATURATION_SONDE_LINEAIRE', N'-40', N'Seuil de saturation d''une sonde lineaire'),
-  (N'VIGISERV', N'SECONDES_ENTRE_MESURES_ETALONNAGE', N'30', N'Nombre de secondes entre chaque mesure d''etalonnage'),
-  (N'VIGISERV', N'SERVEUR_ADRESSE_IP', N'', N'Adresse IP du serveur VigiServ'),
-  (N'VIGISERV', N'SERVEUR_ADRESSE_IP_1', N'', N'Adresse IP du serveur VigiServ (serveur 1)'),
-  (N'VIGISERV', N'SERVEUR_ADRESSE_IP_2', N'', N'Adresse IP du serveur VigiServ (serveur 2)'),
-  (N'VIGISERV', N'SERVEUR_ADRESSE_IP_3', N'', N'Adresse IP du serveur VigiServ (serveur 3)'),
-  (N'VIGISERV', N'SERVEUR_NOM', N'', N'Nom du serveur VigiServ'),
-  (N'VIGISERV', N'SERVEUR_NOM_1', N'', N'Nom du serveur VigiServ (serveur 1)'),
-  (N'VIGISERV', N'SERVEUR_NOM_2', N'', N'Nom du serveur VigiServ (serveur 2)'),
-  (N'VIGISERV', N'SERVEUR_NOM_3', N'', N'Nom du serveur VigiServ (serveur 3)'),
-  (N'VIGISERV', N'SERVICE_DATE_HEURE', N'', N'Date heure inscrite par le service VigiServ'),
-  (N'VIGISERV', N'SERVICE_DATE_HEURE_1', N'', N'Date heure inscrite par le service VigiServ (serveur 1)'),
-  (N'VIGISERV', N'SERVICE_DATE_HEURE_2', N'', N'Date heure inscrite par le service VigiServ (serveur 2)'),
-  (N'VIGISERV', N'SERVICE_DATE_HEURE_3', N'', N'Date heure inscrite par le service VigiServ (serveur 3)'),
-  (N'VIGISERV', N'SONDE_EN_SEUIL_BAS', N'-60', N'Seuil bas pour les sondes de type EN'),
-  (N'VIGISERV', N'SONDE_EN_SEUIL_HAUT', N'100', N'Seuil haut pour les sondes de type EN'),
-  (N'VIGISERV', N'SONDE_EP_SEUIL_BAS', N'-400', N'Seuil bas pour les sondes de type EP'),
-  (N'VIGISERV', N'SONDE_EP_SEUIL_HAUT', N'400', N'Seuil haut pour les sondes de type EP'),
-  (N'VIGISERV', N'SONDE_GN_SEUIL_BAS', N'-60', N'Seuil bas pour les sondes de type GN'),
-  (N'VIGISERV', N'SONDE_GN_SEUIL_HAUT', N'70', N'Seuil haut pour les sondes de type GN'),
-  (N'VIGISERV', N'SONDE_GP_SEUIL_BAS', N'-400', N'Seuil bas pour les sondes de type GP'),
-  (N'VIGISERV', N'SONDE_GP_SEUIL_HAUT', N'400', N'Seuil haut pour les sondes de type GP'),
-  (N'VIGISERV', N'SONDE_HN_SEUIL_BAS', N'-60', N'Seuil bas pour les sondes de type HN'),
-  (N'VIGISERV', N'SONDE_HN_SEUIL_HAUT', N'100', N'Seuil haut pour les sondes de type HN'),
-  (N'VIGISERV', N'SONDE_HP_SEUIL_BAS', N'-400', N'Seuil bas pour les sondes de type HP'),
-  (N'VIGISERV', N'SONDE_HP_SEUIL_HAUT', N'400', N'Seuil haut pour les sondes de type HP'),
-  (N'VIGISERV', N'SONDE_IC_SEUIL_BAS', N'-400', N'Seuil bas pour les sondes de type IC'),
-  (N'VIGISERV', N'SONDE_IC_SEUIL_HAUT', N'400', N'Seuil haut pour les sondes de type IC'),
-  (N'VIGISERV', N'SONDE_IHCQP_SEUIL_BAS', N'-400', N'Seuil bas pour les sondes de type IHCQP'),
-  (N'VIGISERV', N'SONDE_IHCQP_SEUIL_HAUT', N'1200', N'Seuil haut pour les sondes de type IHCQP'),
-  (N'VIGISERV', N'SONDE_IH_SEUIL_BAS', N'-400', N'Seuil bas pour les sondes de type IH'),
-  (N'VIGISERV', N'SONDE_IH_SEUIL_HAUT', N'400', N'Seuil haut pour les sondes de type IH'),
-  (N'VIGISERV', N'SONDE_IN_SEUIL_BAS', N'-60', N'Seuil bas pour les sondes de type IN'),
-  (N'VIGISERV', N'SONDE_IN_SEUIL_HAUT', N'80', N'Seuil haut pour les sondes de type IN'),
-  (N'VIGISERV', N'SONDE_IP_SEUIL_BAS', N'-400', N'Seuil bas pour les sondes de type IP'),
-  (N'VIGISERV', N'SONDE_IP_SEUIL_HAUT', N'400', N'Seuil haut pour les sondes de type IP'),
-  (N'VIGISERV', N'SONDE_IQ_SEUIL_BAS', N'-400', N'Seuil bas pour les sondes de type IQ'),
-  (N'VIGISERV', N'SONDE_IQ_SEUIL_HAUT', N'1100', N'Seuil haut pour les sondes de type IQ'),
-  (N'VIGISERV', N'TIMEOUT_PING_MILLISECONDES', N'200', N'TimeOut de la duree d''attente de la fonction Ping() en millisecondes'),
-  (N'VIGISERV', N'TIMEOUT_PORT_SERIE_MILLISECONDES', N'5000', N'TimeOut de la duree d''attente de la fonction sOuvre() en millisecondes'),
-  (N'VIGISURV', N'ALARME_SONORE_LIEU_NON_ACQUITE', N'0', N'Alarme sonore pour les lieux non acquittes'),
-  (N'VIGISURV', N'ALERTE_SURVEILLANCE', N'0', N'Alerte de surveillance'),
-  (N'VIGISURV', N'DELAI_ARRET_THREAD_CHANGEMENT_GROUPE_MILLISECONDES', N'500', N'Delai laisse à l''application pour arrêter le thread de mise à jour avant rafraîchissement pour le changement de groupe (en millisecondes)'),
-  (N'VIGISURV', N'DELAI_ARRET_THREAD_DESSIN_MILLISECONDES', N'100', N'Delai laisse à l''application avant de redemarrer le thread dessin apres un changement de groupe (en millisecondes)'),
-  (N'VIGISURV', N'DELAI_AVANT_ARCHIVE_JOURS', N'365', N'Nombre de jours avant archivage automatique'),
-  (N'VIGISURV', N'DELAI_PAUSE_THREAD_MAJ_DESSIN_SECONDES', N'25', N'Delai en secondes de pause entre 2 mises à jour completes des dessins. Augmenter ce nombre pour dessiner moins souvent les graphes'),
-  (N'VIGISURV', N'DELAI_PAUSE_THREAD_MAJ_SECONDES', N'30', N'Delai en secondes de pause entre 2 mises à jour completes des lieux. Augmenter ce nombre pour rafraîchir moins souvent'),
-  (N'VIGISURV', N'DELAI_RAFRAICHISSEMENT_ADMIN_SECONDES', N'300', N'Delai de mise à jour de l''ecran d''administration en secondes'),
-  (N'VIGISURV', N'DELAI_RAFRAICHISSEMENT_METROLOGIE_SECONDES', N'300', N'Delai de mise à jour de l''ecran de metrologie en secondes'),
-  (N'VIGISURV', N'DELAI_VERIFICATION_ALERTES_SECONDES', N'30', N'Delai de verification des alertes en secondes'),
-  (N'VIGISURV', N'DELAI_VERIFICATION_VIGISERV_MINUTES', N'60', N'Delai du message d''alarme VigiServ en minutes'),
-  (N'VIGISURV', N'DELAI_VERIFICATION_VIGITEL_MINUTES', N'60', N'Delai du message d''alarme VigiTel en minutes'),
-  (N'VIGISURV', N'EXPLICATIONS_TESTS', N'- Ping base VigiTemp' + NCHAR(13) + NCHAR(10) + N'  Permet de savoir si le serveur hebergeant la base de donnees VigiTemp est accessible. Un ping permet de connaître son etat de connexion au reseau.' + NCHAR(13) + NCHAR(10) + N'' + NCHAR(13) + NCHAR(10) + N'- Requête base VigiTemp' + NCHAR(13) + NCHAR(10) + N'  Une requête est executee sur la base de donnees VigiTemp afin de savoir si MySQL est bien operationnel.' + NCHAR(13) + NCHAR(10) + N'' + NCHAR(13) + NCHAR(10) + N'- Ping serveur VigiServ' + NCHAR(13) + NCHAR(10) + N'  Permet de savoir si le serveur hebergeant la base de donnees des mesures est accessible. Un ping permet de connaître son etat de connexion au reseau.' + NCHAR(13) + NCHAR(10) + N'' + NCHAR(13) + NCHAR(10) + N'- Requête serveur VigiServ' + NCHAR(13) + NCHAR(10) + N'  Une requête est executee sur la base de donnees VigiTemp afin de savoir si la base de donnees à bien ete initialisee.' + NCHAR(13) + NCHAR(10) + N'' + NCHAR(13) + NCHAR(10) + N'- Interrogation VigiServ' + NCHAR(13) + NCHAR(10) + N'  Verifie si VigiServ est actif. Le service VigiServ informe de son etat de façon reguliere en ecrivant dans la base de donnees. Si cette ecriture n''a pas ete effectuee recemment alors VigiServ est inactif.' + NCHAR(13) + NCHAR(10) + N'' + NCHAR(13) + NCHAR(10) + N'- Interrogation VigiTel' + NCHAR(13) + NCHAR(10) + N'  Verifie si VigiTel est actif. Le service VigiTel informe de son etat de façon reguliere en ecrivant dans la base de donnees. Si cette ecriture n''a pas ete effectuee recemment alors VigiTel est inactif.', N'Texte d''explication pour les tests de la fenêtre outils'),
-  (N'VIGISURV', N'IDENT_VIGILOG', N'0', N'Identifiant VigiLog'),
-  (N'VIGISURV', N'LANCEMENT_ROBOT_SURVEILLANCE_MINUTES', N'10', N'Lance la verification (Ping, Requêtes, Services) toutes les 10 minutes'),
-  (N'VIGISURV', N'LIAISON_ARMURE', N'0', N'Liaison avec l''armoire'),
-  (N'VIGISURV', N'LIAISON_ARMURE_MODE', N'1', N'Mode de liaison avec l''armoire'),
-  (N'VIGISURV', N'LIAISON_ARMURE_REPERTOIRE', N'', N'Repertoire de liaison avec l''armoire'),
-  (N'VIGISURV', N'MAX_VALIDITE_ETALONNAGE_JOURS', N'365', N'Nombre de jours durant lequel les etalonnages sont valides'),
-  (N'VIGISURV', N'MAX_VALIDITE_SAUVEGARDE_JOURS', N'7', N'Nombre de jours durant lequel la sauvegarde est valide'),
-  (N'VIGISURV', N'MOT_DE_PASSE_ETALONNAGE', N'METRO', N'Mot de passe pour les operations d''etalonnage'),
-  (N'VIGISURV', N'REMONTER_HEURE_SERVEUR_LOGIN', N'0', N'Activer la remontee de l''heure du serveur au login'),
-  (N'VIGISURV', N'TAUX_RAFRAICHISSEMENT_INITIALISATION_ECRAN', N'10', N'Nombre de lieux à afficher lors du chargement de l''ecran. Augmenter ce nombre pour accelerer le premier chargement'),
-  (N'VIGISURV', N'TEXTE_SAUVEGARDE', N'La mise en place des sauvegardes s''effectue sur le poste serveur VigiTemp.', N'Texte d''information sur les sauvegardes'),
-  (N'VIGISURV', N'VISION_SIMPLE', N'0', N'Mode vision simple'),
-  (N'VIGITEL', N'ALARME_NON_REPONSE', N'0', N'Alarme de non-reponse'),
-  (N'VIGITEL', N'DUREE_LOGIN_SECONDES', N'60', N'Duree de validite du login VigiTel (en secondes)'),
-  (N'VIGITEL', N'EMAIL_ALARME_EXPEDITEUR', N'', N'Adresse e-mail expediteur pour les alarmes'),
-  (N'VIGITEL', N'EMAIL_ALARME_MESSAGE', N'Le lieu en alarme est : %Lieu (sonde n° %NumSonde)' + NCHAR(13) + NCHAR(10) + N'Type d''alarme : %AlarmeTexteMessage' + NCHAR(13) + NCHAR(10) + N'Dernier releve : %Valeur %Unite', N'Template du message d''alarme par e-mail'),
-  (N'VIGITEL', N'EMAIL_ALARME_OBJET', N'Alarme VigiTemp', N'Objet de l''e-mail d''alarme'),
-  (N'VIGITEL', N'FORMAT_FICHIER_SON', N'41', N'Format du fichier son (41 = SAFTCCITT_ALaw_8kHzMono)'),
-  (N'VIGITEL', N'FREQUENCE_VERIFICATION_MINUTES', N'15', N'Frequence de verification VigiTel en minutes'),
-  (N'VIGITEL', N'MODE_DEBUG', N'0', N'Activer le mode debogage de VigiTel'),
-  (N'VIGITEL', N'NOM_MODEM', N'', N'Nom du modem utilise'),
-  (N'VIGITEL', N'SEPARATEUR_DECIMAL', N',', N'Separateur decimal (. ou ,) pour la mise en forme d''une valeur relevee'),
-  (N'VIGITEL', N'SERVICE_DATE_HEURE', N'', N'Date heure inscrite par le service VigiTel'),
-  (N'VIGITEL', N'SMTP_COMPTE', N'', N'Compte SMTP VigiTel'),
-  (N'VIGITEL', N'SMTP_MODE_ASYNCHRONE', N'0', N'Mode asynchrone SMTP'),
-  (N'VIGITEL', N'SMTP_MOT_DE_PASSE', N'', N'Mot de passe SMTP VigiTel'),
-  (N'VIGITEL', N'SMTP_PORT', N'25', N'Port SMTP VigiTel'),
-  (N'VIGITEL', N'SMTP_SECURISE_TSL', N'0', N'Activer la securisation TSL du SMTP'),
-  (N'VIGITEL', N'SMTP_SERVEUR', N'smtp', N'Serveur SMTP VigiTel'),
-  (N'VIGITEL', N'VITESSE_VOIX', N'1', N'Vitesse de la voix (de -10 à 10)'),
-  (N'VIGITEL', N'VOLUME_VOIX', N'100', N'Volume de la voix (de 1 à 100)')
+  (N'SECURITE_MOT_DE_PASSE', N'MIN_LETTRES_MINUSCULES', N'1', N'Nombre minimum de minuscules')
 ) AS source (Section, Mot_Cle, Valeur, Commentaire)
 ON target.Section = source.Section AND target.Mot_Cle = source.Mot_Cle
 WHEN NOT MATCHED THEN INSERT (Section, Mot_Cle, Valeur, Commentaire) VALUES (source.Section, source.Mot_Cle, source.Valeur, source.Commentaire);
 GO
--- 154 parametres MySQL de reference
+-- Parametres complementaires communs aux deux moteurs
 
 DECLARE @RecentParams TABLE (
   Section NVARCHAR(100) NOT NULL,
@@ -2800,10 +2660,8 @@ INSERT INTO @RecentParams (Section, Mot_Cle, Valeur, Commentaire) VALUES
 (N'NOTIFICATIONS_TEAMS',N'NOTIFY_ON_END',N'true',N'Envoie un message Teams a la fin alarme'),
 (N'NOTIFICATIONS_TEAMS',N'NOTIFY_ON_ACK',N'false',N'Envoie un message Teams a l acquittement'),
 (N'NOTIFICATIONS_TEAMS',N'TIMEOUT_MS',N'5000',N'Timeout HTTP du webhook Teams en millisecondes'),
-(N'NOTIFICATIONS_TEAMS',N'DEDUPE_WINDOW_MINUTES',N'10',N'Fenetre anti-doublon Teams par alarme/evenement'),
 (N'SERVICE',N'GSO_DERNIER_DATE_HEURE',NULL,N'Date et heure de derniere mesure inscrite par la boucle GSO dans tm_mesures'),
 (N'SERVICES',N'COMMERCIAL_CONTACT_EMAIL',N'',N'Adresse email du service commercial utilisee pour les demandes de devis materiel'),
-(N'messaging',N'enabled',N'true',N'Active la messagerie interne'),
 (N'TELEPHONIE',N'ENABLED',N'false',N'Activation globale de la telephonie VoIP'),
 (N'TELEPHONIE',N'PROVIDER',N'none',N'Fournisseur VoIP selectionne'),
 (N'TELEPHONIE',N'CALLER_ID',N'',N'Numero presente / caller ID'),
