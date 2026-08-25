@@ -929,7 +929,7 @@ Checklist :
 
 ## Découpage ECON pendant l’étalonnage — 25/08/2026
 
-Statut : **PR #48 ouverte sur `agent/split-calibration-econ-commands`, à valider avant merge**.
+Statut : **mergé dans `dev` via la PR #48, merge `42b651d7ac66c4c6c9cafcb8634a4db1800928af`**.
 
 Le module GSP ne doit plus recevoir tous les paramètres d’étalonnage dans une seule trame. Pour chaque sonde et pour toute configuration envoyée avec le contexte `ETALONNAGE`, le serveur découpe désormais la commande complète en deux écritures successives :
 
@@ -957,3 +957,34 @@ Checklist :
 - [ ] vérifier dans les logs deux TX et deux ACK par sonde, dans le bon ordre ;
 - [ ] confirmer un intervalle d’au moins 500 ms entre les écritures ;
 - [ ] simuler l’absence d’ACK de la première commande et confirmer que la seconde n’est pas envoyée.
+
+
+## Prérendu audit et build MSSQL — 25/08/2026
+
+Statut : **PR #49 ouverte sur `agent/fix-mssql-audit-prerender`, à valider avant merge**.
+
+Le build avec `DATABASE_PROVIDER=sqlserver` exécutait encore Prisma pendant l’export de `/[locale]/admin/audit`, sur le comptage `prismaMesure.tm_journal.count()`. Le `connection()` ajouté au layout du groupe admin ne suffisait pas : avec `cacheComponents: true`, les chargeurs marqués `"use cache"` pouvaient être préremplis pendant le prérendu.
+
+La page audit appelle désormais `connection()` elle-même avant tout accès aux données, puis charge directement les journaux sans cache de build. Les statistiques `tm_journal` inutilisées ont été supprimées, ainsi que les deux fichiers concurrents `server-audit-logs.ts` et `server-audit-logs.tsx`.
+
+Le même antipattern existait sur `admin/utilisateurs` et `admin/parametres`. Ces routes ont été corrigées dans le même lot afin qu’un autre worker de build ne soit pas le prochain à échouer.
+
+Fichiers :
+
+- `website/src/app/[locale]/(admin)/admin/audit/page.tsx` ;
+- `website/src/app/[locale]/(admin)/admin/utilisateurs/page.tsx` ;
+- `website/src/app/[locale]/(admin)/admin/utilisateurs/server-users.tsx` ;
+- `website/src/app/[locale]/(admin)/admin/parametres/page.tsx` ;
+- `website/src/app/[locale]/(admin)/admin/parametres/server-settings.tsx`.
+
+Checklist :
+
+- [x] placer `connection()` dans la page audit avant la requête Prisma ;
+- [x] supprimer le comptage audit inutilisé ;
+- [x] supprimer les deux modules audit concurrents ;
+- [x] retirer `"use cache"` des chargeurs Prisma utilisateurs et paramètres ;
+- [x] placer `connection()` dans les pages utilisateurs et paramètres ;
+- [x] contrôler les 33 pages et chargeurs serveur du groupe admin ;
+- [ ] exécuter `pnpm build` avec `DATABASE_PROVIDER=sqlserver` ;
+- [ ] ouvrir les pages audit, utilisateurs et paramètres sur une installation MSSQL ;
+- [ ] confirmer le rafraîchissement des données après navigation et `router.refresh()`.
