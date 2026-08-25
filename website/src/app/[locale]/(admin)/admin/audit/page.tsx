@@ -1,10 +1,11 @@
 import { Suspense } from "react";
-import { ServerAuditLogs, ServerAuditStats } from "./server-audit-logs";
+import { connection } from "next/server";
 import { AuditClient } from "./audit-client";
 import { PageHeader } from "@/components/page-header";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card } from "@/components/ui/card";
 import { getTranslations, setRequestLocale } from 'next-intl/server';
+import { loadRecentAuditLogs } from "@/lib/audit/enrich-audit-logs";
 
 export async function generateMetadata({
   params,
@@ -46,14 +47,16 @@ export default async function AuditPage({
 }: {
   params: Promise<{ locale: string }>;
 }) {
+  // La base cliente peut être indisponible pendant next build, notamment avec
+  // DATABASE_PROVIDER=sqlserver. Le point d'accès dynamique doit être placé dans
+  // la page avant toute requête Prisma : les fonctions "use cache" peuvent sinon
+  // être préremplies pendant le prérendu malgré le layout parent.
+  await connection();
+
   const { locale } = await params;
   setRequestLocale(locale);
   const t = await getTranslations({ locale, namespace: 'auditPage' });
-  // Chargement des données côté serveur avec cache
-  const [logsData, statsData] = await Promise.all([
-    ServerAuditLogs(100),
-    ServerAuditStats(),
-  ]);
+  const logsData = await loadRecentAuditLogs(100);
 
   return (
     <div className="flex flex-col min-h-full">

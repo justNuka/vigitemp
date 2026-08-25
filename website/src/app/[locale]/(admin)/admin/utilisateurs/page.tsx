@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { Metadata } from "next";
+import { connection } from "next/server";
 import { getTranslations } from "next-intl/server";
 import { ServerUsers } from "./server-users";
 import { UsersClient } from "./users-client";
@@ -39,8 +40,6 @@ function UsersLoadingSkeleton() {
 }
 
 async function getActiveAlarmsCount() {
-  "use cache";
-
   try {
     return await prisma.t_alarme.count({
       where: {
@@ -54,6 +53,8 @@ async function getActiveAlarmsCount() {
 }
 
 export default async function UsersPage() {
+  await connection();
+
   const [usersData, activeAlarmsCount] = await Promise.all([
     ServerUsers(),
     getActiveAlarmsCount(),

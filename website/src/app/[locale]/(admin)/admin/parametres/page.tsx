@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
+import { connection } from "next/server";
 import { getTranslations } from "next-intl/server";
 import { ServerSettings } from "./server-settings";
 import { SettingsClient } from "./_components/settings-client";
@@ -70,6 +71,8 @@ export default async function SettingsPage({
 }: {
   params: Promise<{ locale: string }>;
 }) {
+  await connection();
+
   const [{ locale }, settingsData] = await Promise.all([params, ServerSettings()]);
   const t = await getTranslations({ locale, namespace: "adminSettingsPage" });
   const title = t("title");

@@ -1,7 +1,3 @@
-"use cache";
-
-import { cacheTag } from "next/cache";
-
 import { log } from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
 
@@ -27,13 +23,10 @@ const DEFAULT_SETTINGS = [
 ];
 
 /**
- * Server component that loads settings from the database.
- * Uses Next.js cache tags for performance.
+ * Charge les paramètres à la requête, après le point d'accès dynamique
+ * déclaré par la page admin.
  */
 export async function ServerSettings() {
-  "use cache";
-  cacheTag("parametres-data");
-
   try {
     const dbSettings = await prisma.t_parametre.findMany({
       where: {
