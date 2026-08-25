@@ -1,17 +1,11 @@
-"use cache";
-
-import { cacheTag } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { getUserAvatarMap } from "@/lib/user-avatar-db";
 
 /**
- * Composant serveur pour charger les utilisateurs depuis la base de données
- * Utilise le cache Next.js 16 pour optimiser les performances
+ * Charge les utilisateurs à la requête, après le point d'accès dynamique
+ * déclaré par la page admin.
  */
 export async function ServerUsers() {
-  "use cache";
-  cacheTag("users-data");
-
   const users = await prisma.t_utilisateur.findMany({
     select: {
       Id_Utilisateur: true,
