@@ -2918,10 +2918,12 @@ namespace Vigitemp_Serveur
             {
                 var settings = new SondeMetrologySettings
                 {
+                    CoeffX2 = 0d,
                     CoeffX = 1d,
                     CoeffConstant = 0d,
                     Offset = null,
                     HasAjustage = false,
+                    InfosModifiees = false,
                 };
 
                 if (!EnsureConnected())
@@ -2930,10 +2932,13 @@ namespace Vigitemp_Serveur
                 }
 
                 var cmd = this.connection_vigitemp.CreateCommand();
-                cmd.CommandText = "SELECT t_lieu.Id_Lieu, t_lieu.EMT_Choix_Mode, t_lieu.Est_Correction_Ej, " +
-                                  "t_sonde.Sonde_Offset, ta.Coeff_X, ta.Coeff_Constant, te.Err_Justesse, te.Incertitude, te.Date_Validite " +
+                cmd.CommandText = "SELECT t_lieu.Id_Lieu, t_lieu.Infos_Modifiees_Depuis_Derniere_Mesure, " +
+                                  "t_lieu.EMT_Choix_Mode, t_lieu.Est_Correction_Ej, " +
+                                  "t_sonde.Sonde_Offset, ta.Coeff_X2, ta.Coeff_X, ta.Coeff_Constant, " +
+                                  "te.Err_Justesse, te.Incertitude, te.Date_Validite " +
                                   "FROM t_sonde " +
-                                  "LEFT JOIN t_lieu ON t_lieu.Sonde_Numero_Serie = t_sonde.Sonde_Numero_Serie AND t_lieu.Lieu_Etat = 'S' " +
+                                  "LEFT JOIN t_lieu ON t_lieu.Sonde_Numero_Serie = t_sonde.Sonde_Numero_Serie " +
+                                  "  AND IFNULL(t_lieu.Est_Archive, 0) = 0 " +
                                   "LEFT JOIN t_ajustage ta ON ta.Id_Ajustage = (" +
                                   "  SELECT ta2.Id_Ajustage FROM t_ajustage ta2 " +
                                   "  WHERE ta2.Sonde_Numero_Serie = t_sonde.Sonde_Numero_Serie " +
@@ -2945,6 +2950,9 @@ namespace Vigitemp_Serveur
                                   "  ORDER BY te2.Date_Heure_Etalonnage DESC, te2.Id_Etalonnage DESC LIMIT 1" +
                                   ") " +
                                   "WHERE t_sonde.Sonde_Numero_Serie = @serial " +
+                                  "ORDER BY CASE " +
+                                  "  WHEN t_lieu.Lieu_Etat IN ('A', 'D', 'E') THEN 0 " +
+                                  "  WHEN t_lieu.Lieu_Etat = 'S' THEN 1 ELSE 2 END, t_lieu.Id_Lieu " +
                                   "LIMIT 1";
                 cmd.Parameters.AddWithValue("@serial", p_serial_number);
 
@@ -2960,12 +2968,14 @@ namespace Vigitemp_Serveur
                                 settings.Offset = offset;
                             }
 
+                            var coeffX2 = GetOptionalDouble(reader, "Coeff_X2");
                             var coeffX = GetOptionalDouble(reader, "Coeff_X");
                             var coeffConstant = GetOptionalDouble(reader, "Coeff_Constant");
 
                             if (coeffX.HasValue && coeffConstant.HasValue)
                             {
                                 settings.HasAjustage = true;
+                                settings.CoeffX2 = coeffX2 ?? 0d;
                                 settings.CoeffX = coeffX.Value;
                                 settings.CoeffConstant = coeffConstant.Value;
                             }
@@ -2976,6 +2986,10 @@ namespace Vigitemp_Serveur
                             var applyCorrectionEj = GetOptionalBool(reader, "Est_Correction_Ej", false);
 
                             settings.IdLieu = GetNullableInt(reader, "Id_Lieu", 0);
+                            settings.InfosModifiees = GetOptionalBool(
+                                reader,
+                                "Infos_Modifiees_Depuis_Derniere_Mesure",
+                                false);
                             settings.EmtChoixMode = GetNullableInt(reader, "EMT_Choix_Mode", 0);
                             settings.ApplyCorrectionEj = applyCorrectionEj;
 
