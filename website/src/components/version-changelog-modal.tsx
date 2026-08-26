@@ -87,10 +87,7 @@ export function VersionChangelogModal() {
   )
 
   useEffect(() => {
-    if (isPublicRoute) {
-      setOpen(false)
-      return
-    }
+    if (isPublicRoute) return
 
     const seen = readCookieValue(COOKIE_NAME)
     if (seen !== RELEASE_VERSION) {
