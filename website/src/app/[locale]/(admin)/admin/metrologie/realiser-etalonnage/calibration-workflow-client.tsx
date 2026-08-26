@@ -166,7 +166,7 @@ export function CalibrationWorkflowClient() {
     setStep("calibration")
   }, [session])
 
-  const startReadingMutation = useMutation({
+  const startOperationMutation = useMutation({
     mutationFn: () => fetchJson<SessionPayload>("/api/metrologie/etalonnage/session", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -340,20 +340,22 @@ export function CalibrationWorkflowClient() {
   )
 
   const error =
-    startReadingMutation.error ??
+    startOperationMutation.error ??
     previewReadingQuery.error ??
     stopMutation.error
 
-  const canStartReading =
+  const canStartOperation =
     !running &&
     selectedSensorIds.length > 0 &&
     operatorValue.trim().length > 0 &&
     selectedStandardId.length > 0 &&
     selectedMediumId.length > 0 &&
-    !startReadingMutation.isPending
+    !startOperationMutation.isPending
 
   const phaseLabel = !session
-    ? t("workflow.enhanced.phase_ready")
+    ? previewReadingEnabled
+      ? t("workflow.enhanced.phase_reading")
+      : t("workflow.enhanced.phase_ready")
     : session.status === "completed"
       ? t("workflow.enhanced.phase_completed")
       : session.phase === "acquiring"
@@ -453,7 +455,7 @@ export function CalibrationWorkflowClient() {
                 exit={{ opacity: 0, x: 24 }}
                 className="space-y-6"
               >
-                {startReadingMutation.isPending ? (
+                {startOperationMutation.isPending ? (
                   <Alert className="border-sky-300 bg-sky-50 text-sky-950 dark:border-sky-500/40 dark:bg-sky-500/10 dark:text-sky-100">
                     <Clock3 className="h-4 w-4 text-sky-700 dark:text-sky-300" />
                     <AlertTitle>{t("workflow.enhanced.reading_queue_title")}</AlertTitle>
@@ -606,10 +608,10 @@ export function CalibrationWorkflowClient() {
                         <Button
                           type="button"
                           className="w-full"
-                          disabled={!canStartReading || previewReadingQuery.isFetching}
+                          disabled={!canStartOperation || previewReadingQuery.isFetching}
                           onClick={() => {
                             setPreviewReadingEnabled(false)
-                            startReadingMutation.mutate()
+                            startOperationMutation.mutate()
                           }}
                         >
                           <Play className="mr-2 h-4 w-4" />
