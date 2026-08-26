@@ -12,49 +12,12 @@ export type CalibrationUncertaintyInputs = {
   sensorResolution?: number
 }
 
-export type CalibrationCalculationDetails = {
-  sampleCount: number
-  sensorSum: number
-  standardSum: number
-  meanSensor: number
-  meanStandard: number
-  accuracyError: number
-  standardDeviation: {
-    squaredDeviationSum: number
-    divisor: number
-    variance: number
-    value: number
-  }
-  uncertainty: {
-    standardResolution: number
-    standardUncertainty: number
-    mediumStability: number
-    mediumHomogeneity: number
-    sensorResolution: number
-    sqrt3: number
-    u1: number
-    u2: number
-    u3: number
-    u4: number
-    u5: number
-    u6: number
-    u7: number
-    u8: number
-    u9: number
-    u10: number
-    u11: number
-    squaredSum: number
-    value: number
-  }
-}
-
 export type CalibrationCalculationResult = {
   meanSensor: number
   meanStandard: number
   accuracyError: number
   standardDeviation: number
   uncertainty: number
-  details: CalibrationCalculationDetails
 }
 
 function assertFiniteValues(values: number[], label: string) {
@@ -113,17 +76,6 @@ export function calculateCalibrationResult(
   const meanSensor = averageCalibrationValues(sensorValues)
   const meanStandard = averageCalibrationValues(standardValues)
   const standardDeviation = sampleStandardDeviation(sensorValues)
-  const accuracyError = meanSensor - meanStandard
-  const sensorSum = sensorValues.reduce((sum, value) => sum + value, 0)
-  const standardSum = standardValues.reduce((sum, value) => sum + value, 0)
-  const squaredDeviationSum = sensorValues.reduce(
-    (sum, value) => sum + (value - meanSensor) ** 2,
-    0,
-  )
-  const standardDeviationDivisor = Math.max(1, sensorValues.length - 1)
-  const standardDeviationVariance = sensorValues.length < 2
-    ? 0
-    : squaredDeviationSum / standardDeviationDivisor
 
   const sqrt3 = Math.sqrt(3)
   const u1 = standardResolution / (2 * sqrt3)
@@ -137,60 +89,26 @@ export function calculateCalibrationResult(
   const u9 = Math.sqrt((mediumStability / sqrt3) ** 2 + (mediumHomogeneity / sqrt3) ** 2)
   const u10 = 0
   const u11 = 0
-  const uncertaintySquaredSum =
+
+  const uncertainty = Math.sqrt(
     u1 ** 2 +
-    u2 ** 2 +
-    u3 ** 2 +
-    u4 ** 2 +
-    u5 ** 2 +
-    u6 ** 2 +
-    u7 ** 2 +
-    u8 ** 2 +
-    u9 ** 2 +
-    u10 ** 2 +
-    u11 ** 2
-  const uncertainty = Math.sqrt(uncertaintySquaredSum)
+      u2 ** 2 +
+      u3 ** 2 +
+      u4 ** 2 +
+      u5 ** 2 +
+      u6 ** 2 +
+      u7 ** 2 +
+      u8 ** 2 +
+      u9 ** 2 +
+      u10 ** 2 +
+      u11 ** 2,
+  )
 
   return {
     meanSensor,
     meanStandard,
-    accuracyError,
+    accuracyError: meanSensor - meanStandard,
     standardDeviation,
     uncertainty,
-    details: {
-      sampleCount: sensorValues.length,
-      sensorSum,
-      standardSum,
-      meanSensor,
-      meanStandard,
-      accuracyError,
-      standardDeviation: {
-        squaredDeviationSum,
-        divisor: standardDeviationDivisor,
-        variance: standardDeviationVariance,
-        value: standardDeviation,
-      },
-      uncertainty: {
-        standardResolution,
-        standardUncertainty,
-        mediumStability,
-        mediumHomogeneity,
-        sensorResolution,
-        sqrt3,
-        u1,
-        u2,
-        u3,
-        u4,
-        u5,
-        u6,
-        u7,
-        u8,
-        u9,
-        u10,
-        u11,
-        squaredSum: uncertaintySquaredSum,
-        value: uncertainty,
-      },
-    },
   }
 }
