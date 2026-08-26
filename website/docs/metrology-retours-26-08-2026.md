@@ -4,10 +4,9 @@
 
 - Dépôt : `justNuka/vigitemp`
 - Branche d’intégration : `dev`
-- HEAD vérifié au démarrage : `5a79b27fcd79e1b146b0b96cd48442907764aaf3` (merge PR #56)
-- Aucune PR ouverte au démarrage du lot.
-- Branche : `agent/metrology-adjustment-ui-accuracy`.
-- PR : #57 — ouverte vers `dev`.
+- PR #57 — **mergée** le 26/08/2026, merge `0a1a6aaf323200f521f02cc10689bb9596d0f0d5`.
+- Branche courante : `agent/metrology-adjustment-workflow-ui`.
+- PR courante : #58 — ouverte vers `dev`.
 
 Ce document conserve le détail des retours du 26/08/2026 pendant leur traitement. Il doit être consolidé dans `website/docs/backlog-retours-17-08-2026.md` au fur et à mesure des PR livrées.
 
@@ -21,9 +20,7 @@ Ajouter le helper de saisie float/décimale sur les coefficients de la page d’
 
 Le formulaire convertissait déjà les valeurs avec le helper de normalisation décimale lors de la soumission, notamment la virgule française vers le point. En revanche, les champs `Coeff A`, `Coeff B`, `Coeff C` et `Incertitude maximale` ne déclaraient pas `inputMode="decimal"`, contrairement aux saisies de coefficients utilisées dans le parcours Ajustage.
 
-### Correctif préparé
-
-Branche : `agent/metrology-adjustment-ui-accuracy`.
+### Correctif livré par la PR #57
 
 Fichier :
 
@@ -68,6 +65,59 @@ Avant correction :
 
 La cadence devra être modifiée simultanément côté React, API et moteur de session. Il ne faut pas livrer uniquement le sélecteur UI à 60 s tout en laissant la boucle serveur à 15 s.
 
+## Étalonnage — affichage à 3 décimales et diagnostic des calculs
+
+### Retours complémentaires
+
+- afficher les mesures d’étalonnage avec **3 chiffres après la virgule** au lieu des 5/6 visibles auparavant ;
+- inverser les colonnes `Moyenne étalon` et `Moyenne sonde` dans le tableau de résultats afin de conserver le même ordre que dans le tableau des 10 mesures situé au-dessus ;
+- ajouter sous le tableau de résultats un bouton permettant d’afficher le détail complet des calculs pour localiser un très petit écart observé sur l’erreur de justesse.
+
+### Correctif PR #58
+
+Fichiers principaux :
+
+- `website/src/app/[locale]/(admin)/admin/metrologie/realiser-etalonnage/calibration-workflow-client.tsx` ;
+- `website/src/lib/metrology-calibration-calculations.ts` ;
+- `website/src/messages/metrology-calibration-supplements.ts`.
+
+Comportement :
+
+- `formatCampaignValue()` demande désormais 3 décimales sur l’écran d’étalonnage uniquement ;
+- le helper global `formatMeasureValue()` n’est pas modifié, afin de ne pas imposer cette règle à Surveillance/Historique ;
+- le tableau final affiche `Moyenne étalon` avant `Moyenne sonde` ;
+- un bouton `Afficher le détail des calculs` / `Masquer le détail des calculs` est disponible sous les résultats ;
+- pour chaque sonde, le détail montre les 10 couples de valeurs brutes étalon/sonde et leur différence ;
+- les sommes et moyennes sont affichées sans arrondi d’interface et comparées aux valeurs du résultat serveur ;
+- l’erreur de justesse est affichée comme `moyenne sonde - moyenne étalon`, avec comparaison entre valeur recalculée et valeur serveur ;
+- l’écart-type expose la somme des écarts au carré, le diviseur `n - 1`, la variance et la racine ;
+- le calcul d’incertitude expose les entrées et les composantes `U1` à `U11`, leurs carrés, la somme des `U²` puis la racine finale ;
+- les formules métier et les résultats numériques restent identiques : le helper de calcul retourne seulement les intermédiaires supplémentaires utilisés pour le diagnostic.
+
+### Point important sur la petite différence de justesse
+
+L’erreur de justesse serveur est calculée avec les moyennes **en pleine précision** :
+
+```text
+Erreur de justesse = moyenne sonde brute - moyenne étalon brute
+```
+
+L’interface affiche désormais les moyennes sur 3 décimales. Une soustraction manuelle des deux valeurs affichées peut donc différer très légèrement du résultat calculé sur les moyennes brutes. Le panneau de détail permet de vérifier si la divergence apparaît à cette étape ou plus tôt dans les 10 mesures / sommes / moyennes.
+
+### Validation terrain PR #58
+
+- [ ] vérifier les dernières mesures étalon et sondes : 3 décimales ;
+- [ ] vérifier les 10 mesures appariées : 3 décimales ;
+- [ ] vérifier les résultats : 3 décimales ;
+- [ ] confirmer l’ordre `Moyenne étalon` puis `Moyenne sonde` ;
+- [ ] ouvrir le détail et comparer les 10 valeurs brutes à la campagne terrain ;
+- [ ] recalculer les sommes puis les moyennes et comparer aux valeurs serveur affichées dans le détail ;
+- [ ] comparer `moyenne sonde brute - moyenne étalon brute` à l’erreur de justesse serveur ;
+- [ ] comparer également la soustraction des moyennes arrondies à 3 décimales afin de voir si le petit écart vient uniquement de l’affichage ;
+- [ ] contrôler l’écart-type puis les composantes `U1` à `U11` et l’incertitude finale ;
+- [ ] vérifier les libellés FR et EN ;
+- [ ] confirmer qu’aucune valeur persistée ni aucun calcul métier n’est arrondi à 3 décimales.
+
 ## Étalonnage — audit de la moyenne des 10 mesures
 
 ### Retour
@@ -103,15 +153,17 @@ Les champs de résultat historiques de `t_etalonnage` sont de type SQL `FLOAT`. 
 
 Aucune conversion navigateur ni aucun arrondi intermédiaire susceptible d’expliquer `0,01` n’a été trouvé. La formule métier n’est donc pas modifiée sans preuve de la cause.
 
+La PR #58 ajoute maintenant le diagnostic détaillé nécessaire pour effectuer ce contrôle avec les valeurs brutes de la campagne sans modifier la formule.
+
 Le prochain contrôle terrain doit partir d’une campagne réelle et comparer exactement les mêmes données :
 
-- [ ] relever les 10 valeurs étalon affichées ;
+- [ ] relever les 10 valeurs étalon ;
 - [ ] relever les 10 valeurs de la sonde concernée ;
-- [ ] calculer les deux moyennes manuellement avec ces valeurs exactes ;
+- [ ] comparer les sommes et moyennes recalculées au détail de la PR #58 ;
 - [ ] comparer avec `Moyenne_Etalon` / `Moyenne_Sonde` du résultat en mémoire puis en base ;
 - [ ] comparer les 10 lignes persistées dans `t_etalonnage_mesure` ;
 - [ ] vérifier si la valeur attendue par l’opérateur utilise des mesures arrondies/formatées différentes des valeurs réellement reçues ;
-- [ ] si un écart de `0,01` est reproductible avec exactement les mêmes 10 nombres, corriger à l’endroit précis où apparaît la divergence.
+- [ ] si un écart de `0,01` est reproductible avec exactement les mêmes 10 nombres bruts, corriger à l’endroit précis où apparaît la divergence.
 
 Cette approche évite d’introduire un arrondi artificiel dans un calcul métrologique critique sans cause démontrée.
 
