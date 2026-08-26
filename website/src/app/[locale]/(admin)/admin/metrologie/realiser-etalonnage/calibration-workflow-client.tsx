@@ -82,7 +82,7 @@ function normalizeUnit(value: string | null | undefined) {
 
 function formatCampaignValue(value: number | null | undefined, unit?: string | null) {
   if (value == null || !Number.isFinite(value)) return "-"
-  return `${formatMeasureValue(value, 6)}${unit ? ` ${unit}` : ""}`
+  return `${formatMeasureValue(value, 3)}${unit ? ` ${unit}` : ""}`
 }
 
 export function CalibrationWorkflowClient() {
