@@ -160,7 +160,7 @@ export function StandardInfoForm({
           <FormItem>
             <FormLabel>{t('fields.coeffA.label')}</FormLabel>
             <FormControl>
-              <Input placeholder={t('fields.coeffA.placeholder')} {...field} />
+              <Input inputMode="decimal" placeholder={t('fields.coeffA.placeholder')} {...field} />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -174,7 +174,7 @@ export function StandardInfoForm({
           <FormItem>
             <FormLabel>{t('fields.coeffB.label')}</FormLabel>
             <FormControl>
-              <Input placeholder={t('fields.coeffB.placeholder')} {...field} />
+              <Input inputMode="decimal" placeholder={t('fields.coeffB.placeholder')} {...field} />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -188,7 +188,7 @@ export function StandardInfoForm({
           <FormItem>
             <FormLabel>{t('fields.coeffC.label')}</FormLabel>
             <FormControl>
-              <Input placeholder={t('fields.coeffC.placeholder')} {...field} />
+              <Input inputMode="decimal" placeholder={t('fields.coeffC.placeholder')} {...field} />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -202,7 +202,7 @@ export function StandardInfoForm({
           <FormItem>
             <FormLabel>{t('fields.maxUncertainty.label')}</FormLabel>
             <FormControl>
-              <Input placeholder={t('fields.maxUncertainty.placeholder')} {...field} />
+              <Input inputMode="decimal" placeholder={t('fields.maxUncertainty.placeholder')} {...field} />
             </FormControl>
             <FormMessage />
           </FormItem>
