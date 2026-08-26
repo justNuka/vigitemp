@@ -27,6 +27,13 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Checkbox } from "@/components/ui/checkbox"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
@@ -50,11 +57,20 @@ import { useStandards } from "@/hooks/useStandards"
 import { formatDbDateTime } from "@/lib/date-display"
 import { fetchJson, getJson } from "@/lib/http"
 import { formatMeasureValue } from "@/lib/measurements"
-import type { PublicCalibrationSession } from "@/lib/metrology-calibration-session"
+import type {
+  CalibrationReading,
+  PublicCalibrationSession,
+} from "@/lib/metrology-calibration-session"
+import type { MetrologyPreviewReading } from "@/lib/metrology-reading-preview"
 import { MetrologySubpagesCards } from "../_components/metrology-subpages-cards"
 
 type Step = "selection" | "calibration"
 type SessionPayload = { session: PublicCalibrationSession | null }
+type PreviewPayload = {
+  readings: Record<number, MetrologyPreviewReading>
+  standardReading: CalibrationReading | null
+  readAt: string
+}
 
 function normalizeUnit(value: string | null | undefined) {
   const normalized = value?.trim().toLowerCase().replace(/\s+/g, "") || null
@@ -86,7 +102,8 @@ export function CalibrationWorkflowClient() {
   const [selectedStandardId, setSelectedStandardId] = useState("")
   const [selectedMediumId, setSelectedMediumId] = useState("")
   const [addSensorSearch, setAddSensorSearch] = useState("")
-  const [selectedHistorySensorId, setSelectedHistorySensorId] = useState("")
+  const [addSensorDialogOpen, setAddSensorDialogOpen] = useState(false)
+  const [previewReadingEnabled, setPreviewReadingEnabled] = useState(false)
   const defaultOperator = [user?.Prenom, user?.Nom].filter(Boolean).join(" ").trim() || user?.Login || ""
   const operatorValue = operator || defaultOperator
 
@@ -99,7 +116,47 @@ export function CalibrationWorkflowClient() {
   const running = session?.status === "running"
   const hasResults = Object.keys(session?.results ?? {}).length > 0
   const visibleStep = running || hasResults ? "calibration" : step
-  const displayedReadings = session?.latestReadings ?? {}
+  const previewIntervalMs = sensors.some(
+    (sensor) => selectedSensorIds.includes(sensor.id) && sensor.isGso,
+  )
+    ? 60_000
+    : 15_000
+  const previewReadingQuery = useQuery({
+    queryKey: [
+      "metrology-reading-preview",
+      "ETALONNAGE",
+      selectedSensorIds,
+      selectedStandardId,
+      selectedMediumId,
+    ],
+    queryFn: ({ signal }) => fetchJson<PreviewPayload>("/api/metrologie/lecture-sondes", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      signal,
+      body: JSON.stringify({
+        selectedSensorIds,
+        operation: "ETALONNAGE",
+        standardId: Number(selectedStandardId),
+        mediumId: Number(selectedMediumId),
+      }),
+    }),
+    enabled:
+      previewReadingEnabled &&
+      !running &&
+      selectedSensorIds.length > 0 &&
+      selectedStandardId.length > 0 &&
+      selectedMediumId.length > 0 &&
+      visibleStep === "calibration",
+    refetchInterval: previewReadingEnabled ? previewIntervalMs : false,
+    refetchIntervalInBackground: false,
+  })
+  const displayedReadings = running
+    ? session?.latestReadings ?? {}
+    : previewReadingQuery.data?.readings ?? {}
+  const displayedStandardReading = running
+    ? session?.latestStandardReading ?? null
+    : previewReadingQuery.data?.standardReading ?? null
 
   useEffect(() => {
     if (!session || (session.status !== "running" && Object.keys(session.results).length === 0)) return
@@ -107,11 +164,6 @@ export function CalibrationWorkflowClient() {
     setSelectedStandardId(String(session.standardId))
     setSelectedMediumId(String(session.mediumId))
     setOperator(session.operator)
-    setSelectedHistorySensorId((current) =>
-      session.sensors.some((sensor) => String(sensor.id) === current)
-        ? current
-        : String(session.sensors[0]?.id ?? ""),
-    )
     setStep("calibration")
   }, [session])
 
@@ -130,30 +182,6 @@ export function CalibrationWorkflowClient() {
     onSuccess: (data) => {
       queryClient.setQueryData(["metrology-calibration-session"], data)
       setStep("calibration")
-    },
-  })
-
-  const startAcquisitionMutation = useMutation({
-    mutationFn: () => fetchJson<SessionPayload>("/api/metrologie/etalonnage/session", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify({ action: "start-acquisition" }),
-    }),
-    onSuccess: (data) => queryClient.setQueryData(["metrology-calibration-session"], data),
-  })
-
-  const addSensorMutation = useMutation({
-    mutationFn: (sensorId: number) => fetchJson<SessionPayload>("/api/metrologie/etalonnage/session", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify({ sensorId }),
-    }),
-    onSuccess: (data) => {
-      queryClient.setQueryData(["metrology-calibration-session"], data)
-      if (data.session) setSelectedSensorIds(data.session.sensors.map((sensor) => sensor.id))
-      setAddSensorSearch("")
     },
   })
 
@@ -192,10 +220,10 @@ export function CalibrationWorkflowClient() {
     [lockedUnit, standards],
   )
 
-  const runningUnit = normalizeUnit(session?.sensors[0]?.unit)
+  const runningUnit = normalizeUnit(selectedSensors[0]?.unit)
   const addSensorCandidates = useMemo(() => {
-    if (!running || !session || session.phase !== "reading") return []
-    const ids = new Set(session.sensors.map((sensor) => sensor.id))
+    if (running) return []
+    const ids = new Set(selectedSensorIds)
     const query = addSensorSearch.trim().toLowerCase()
     return sensors
       .filter((sensor) => !ids.has(sensor.id))
@@ -204,8 +232,8 @@ export function CalibrationWorkflowClient() {
         if (!query) return true
         return sensor.serialNumber.toLowerCase().includes(query) || sensor.locationName?.toLowerCase().includes(query)
       })
-      .slice(0, 8)
-  }, [addSensorSearch, running, runningUnit, sensors, session])
+      .slice(0, 20)
+  }, [addSensorSearch, running, runningUnit, selectedSensorIds, sensors])
 
   const selectionSummaryColumns = useMemo<ColumnDef<AdjustmentSensorRow>[]>(
     () => [
@@ -309,8 +337,7 @@ export function CalibrationWorkflowClient() {
 
   const error =
     startReadingMutation.error ??
-    startAcquisitionMutation.error ??
-    addSensorMutation.error ??
+    previewReadingQuery.error ??
     stopMutation.error
 
   const canStartReading =
