@@ -11,6 +11,7 @@ type MetrologySubpageKey = "dashboard" | "baths" | "adjustment" | "calibration"
 
 type MetrologySubpagesCardsProps = {
   current: MetrologySubpageKey
+  disabled?: boolean
 }
 
 const CARD_CONFIG = {
@@ -44,7 +45,7 @@ const CARD_CONFIG = {
   },
 } as const
 
-export function MetrologySubpagesCards({ current }: MetrologySubpagesCardsProps) {
+export function MetrologySubpagesCards({ current, disabled = false }: MetrologySubpagesCardsProps) {
   const t = useTranslations("metrologyAdmin.subpagesCards")
 
   const cards = (Object.entries(CARD_CONFIG) as Array<
@@ -75,9 +76,15 @@ export function MetrologySubpagesCards({ current }: MetrologySubpagesCardsProps)
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <Button asChild className="w-full">
-                    <Link href={config.href}>{t(config.ctaKey)}</Link>
-                  </Button>
+                  {disabled ? (
+                    <Button className="w-full" disabled>
+                      {t(config.ctaKey)}
+                    </Button>
+                  ) : (
+                    <Button asChild className="w-full">
+                      <Link href={config.href}>{t(config.ctaKey)}</Link>
+                    </Button>
+                  )}
                 </CardContent>
               </Card>
             )
