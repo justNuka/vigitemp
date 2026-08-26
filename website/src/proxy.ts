@@ -75,6 +75,13 @@ function isRefreshTokenCurrentlyValid(token: string | undefined): boolean {
 }
 
 function clearAuthCookies(response: NextResponse, request: NextRequest) {
+  response.cookies.set("token", "", {
+    httpOnly: true,
+    secure: shouldUseSecureCookies(request),
+    sameSite: "lax",
+    maxAge: 0,
+    path: "/",
+  })
   response.cookies.set("auth-token", "", {
     httpOnly: true,
     secure: shouldUseSecureCookies(request),
@@ -168,6 +175,18 @@ export default function middleware(request: NextRequest) {
     const response = NextResponse.redirect(loginUrl)
     clearAuthCookies(response, request)
     return response
+  }
+
+  const disconnectReason = request.nextUrl.searchParams.get("reason")
+  const shouldForceDisconnect =
+    isAuthRoute && (disconnectReason === "session-expired" || disconnectReason === "inactivity")
+
+  if (shouldForceDisconnect) {
+    if (shouldLog) {
+      console.log(`[Proxy] Explicit disconnect on ${pathname}, clearing authentication cookies`)
+    }
+    clearAuthCookies(intlResponse, request)
+    return intlResponse
   }
 
   if (isAuthRoute && hasValidToken) {
