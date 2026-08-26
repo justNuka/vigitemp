@@ -114,7 +114,7 @@ export function CalibrationWorkflowClient() {
   const session = sessionQuery.data?.session ?? null
   const running = session?.status === "running"
   const hasResults = Object.keys(session?.results ?? {}).length > 0
-  const visibleStep = running || hasResults ? "calibration" : step
+  const visibleStep = running ? "calibration" : step
   const previewIntervalMs = sensors.some(
     (sensor) => selectedSensorIds.includes(sensor.id) && sensor.isGso,
   )
@@ -158,13 +158,19 @@ export function CalibrationWorkflowClient() {
     : previewReadingQuery.data?.standardReading ?? null
 
   useEffect(() => {
-    if (!session || (session.status !== "running" && Object.keys(session.results).length === 0)) return
+    if (!session) return
+    if (session.status !== "running") {
+      if (step === "selection") {
+        queryClient.setQueryData<SessionPayload>(["metrology-calibration-session"], { session: null })
+      }
+      return
+    }
     setSelectedSensorIds(session.sensors.map((sensor) => sensor.id))
     setSelectedStandardId(String(session.standardId))
     setSelectedMediumId(String(session.mediumId))
     setOperator(session.operator)
     setStep("calibration")
-  }, [session])
+  }, [queryClient, session, step])
 
   const startOperationMutation = useMutation({
     mutationFn: () => fetchJson<SessionPayload>("/api/metrologie/etalonnage/session", {
