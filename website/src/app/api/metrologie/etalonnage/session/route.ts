@@ -250,7 +250,7 @@ export const POST = withStandardOrExpertAnyAuthorizationLogging(
         userId: ctx.user.userId,
         error: error instanceof Error ? error.message : String(error),
       })
-      return apiError(400, "calibration_start_failed", safeErrorMessage(error, "Impossible de démarrer la lecture d'étalonnage."))
+      return apiError(400, "calibration_start_failed", safeErrorMessage(error, "Impossible de démarrer l'étalonnage."))
     }
   },
 )
