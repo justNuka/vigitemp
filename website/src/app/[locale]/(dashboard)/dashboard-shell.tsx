@@ -17,19 +17,23 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   const router = useRouter()
   const pathname = usePathname()
   const normalizedPathname = stripLocalePrefix(pathname)
-  const { hasPermission, loading: accessLoading } = useAppAccess()
+  const { hasPermission, loading: accessLoading, user: accessUser } = useAppAccess()
   const hasUserDashboardAccess = hasPermission("DASHBOARD_USER_ACCESS")
 
   useEffect(() => {
     if (accessLoading) return
-    if (normalizedPathname === "/" && !hasUserDashboardAccess) {
+    if (normalizedPathname === "/" && accessUser && !hasUserDashboardAccess) {
       router.replace("/surveillance")
     }
-  }, [accessLoading, hasUserDashboardAccess, normalizedPathname, router])
+  }, [accessLoading, accessUser, hasUserDashboardAccess, normalizedPathname, router])
 
   // Sidebar badge should stay reasonably fresh without stressing heavy pages.
   const alarmsQueryKey = ["alarms", "active"] as const
-  const canRenderDashboardShell = !(normalizedPathname === "/" && !hasUserDashboardAccess)
+  const canRenderDashboardShell = !(
+    normalizedPathname === "/" &&
+    Boolean(accessUser) &&
+    !hasUserDashboardAccess
+  )
 
   const { data: alarms } = useQuery({
     queryKey: alarmsQueryKey,
