@@ -70,7 +70,7 @@ export function formatMeasureValue(
     }).format(value)
   }
 
-  const fractionDigits = Math.max(0, Math.min(10, Math.trunc(decimals)))
+  const fractionDigits = Math.max(0, Math.min(3, Math.trunc(decimals)))
   return new Intl.NumberFormat(locale, {
     minimumFractionDigits: fractionDigits,
     maximumFractionDigits: fractionDigits,
