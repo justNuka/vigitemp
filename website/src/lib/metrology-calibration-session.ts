@@ -525,6 +525,20 @@ async function readGspMeasurement(target: CalibrationReadTarget): Promise<Calibr
   }
 }
 
+export async function readCalibrationStandardPreview(
+  standardId: number,
+  mediumId: number,
+): Promise<CalibrationReading> {
+  const reference = await loadCalibrationReference(standardId, mediumId, null)
+  return readGspMeasurement({
+    serialNumber: reference.standardSerial,
+    unit: reference.standardUnit,
+    modulePort: reference.standardPort,
+    moduleName: reference.standardModuleName,
+    address: null,
+  })
+}
+
 async function readLatestGsoMeasurement(
   sensor: ManagedCalibrationSensor,
   after: Date,
@@ -909,7 +923,7 @@ export async function startCalibrationSession(
     stoppedAt: null,
     intervalSeconds: CALIBRATION_INTERVAL_MS / 1000,
     status: "running",
-    phase: "reading",
+    phase: "acquiring",
     stopRequested: false,
     sensors,
     latestStandardReading: null,
@@ -918,7 +932,7 @@ export async function startCalibrationSession(
     standardSamples: [],
     sensorSamples: Object.fromEntries(sensors.map((sensor) => [sensor.id, []])),
     results: {},
-    message: "Lecture d'etalonnage demarree. Attente des premieres valeurs valides.",
+    message: `Acquisition etalonnage demarree : 0/${CALIBRATION_SAMPLE_COUNT}.`,
     lastError: null,
     lastUpdatedAt: nowIso(),
     loopTimer: null,
@@ -948,7 +962,7 @@ export async function startCalibrationSession(
     await updateSensorMetrologyFlags(sensors.map((sensor) => sensor.id), { metrologyInProgress: 1 })
     for (const sensor of sensors) sensorLocks.set(sensor.id, session.id)
     sessionsByUserId.set(user.userId, session)
-    log.info("METROLOGY_CALIBRATION", "reading_started", {
+    log.info("METROLOGY_CALIBRATION", "operation_started", {
       sessionId: session.id,
       userId: user.userId,
       standard: session.standardSerial,
