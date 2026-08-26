@@ -1025,7 +1025,7 @@ Fichier serveur principal :
 Comportement :
 
 - avant chaque lecture GSP en contexte Ajustage/Étalonnage, le serveur résout le lieu par numéro de série et appelle `setLieuInfosModifiees(idLieu, true)` ;
-- cela couvre `read`, `force-read` et les lectures raw `TEMP` / `FTEMP` / `RTEMP` ;
+- cela couvre `read`, `force-read` et les lectures raw `TEMP` / `FTEM` / `RTEMP` ;
 - la mise à jour est tentée même lorsque le port série est fourni explicitement par le web ;
 - un échec SQL est journalisé mais n'empêche pas l'interrogation série ;
 - toute commande raw `ECON` ayant un contexte `AJUSTAGE` ou `ETALONNAGE` est validée puis tronquée juste après le marqueur `c` ;
