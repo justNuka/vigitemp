@@ -350,15 +350,13 @@ namespace Vigitemp_Serveur
                     if (IsMetrologyOperation(request.OperationContext) &&
                         IsMetrologyReadAction(request.Action))
                     {
-                        if (idLieu <= 0)
+                        // Une sonde de métrologie (notamment un étalon) peut ne pas être affectée
+                        // à un lieu. Le port/module manuel suffit alors pour l'interroger.
+                        // Sans lieu, aucun drapeau de configuration n'est à consommer.
+                        metrologySettings = new SondeMetrologySettings
                         {
-                            throw new InvalidOperationException(
-                                "Impossible d'identifier le lieu de la sonde pour préparer l'interrogation de métrologie.");
-                        }
-
-                        // Les coefficients ne sont plus marqués comme modifiés par chaque lecture.
-                        // Le portail pose explicitement le drapeau lors d'une validation a/b/c.
-                        metrologySettings = new SondeMetrologySettings { IdLieu = idLieu };
+                            IdLieu = idLieu > 0 ? (int?)idLieu : null
+                        };
                     }
                 }
 
