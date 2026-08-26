@@ -798,39 +798,6 @@ export function CalibrationWorkflowClient() {
 
                 <Card>
                   <CardHeader>
-                    <CardTitle>{t("workflow.enhanced.standard_samples_title")}</CardTitle>
-                    <CardDescription>{t("workflow.enhanced.standard_samples_description")}</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    {session?.standardSamples.length ? (
-                      <div className="overflow-hidden rounded-lg border">
-                        <Table>
-                          <TableHeader className="bg-sky-950">
-                            <TableRow className="hover:bg-sky-950">
-                              <TableHead className="text-white">{t("workflow.enhanced.sample_number")}</TableHead>
-                              <TableHead className="text-white">{t("workflow.enhanced.measured_at")}</TableHead>
-                              <TableHead className="text-white">{t("workflow.table.value")}</TableHead>
-                            </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                            {session.standardSamples.map((sample) => (
-                              <TableRow key={sample.order} className="bg-sky-50/70 dark:bg-sky-500/5">
-                                <TableCell>{sample.order}</TableCell>
-                                <TableCell>{formatDbDateTime(sample.measuredAt)}</TableCell>
-                                <TableCell className="font-medium">{formatCampaignValue(sample.value, sample.unit)}</TableCell>
-                              </TableRow>
-                            ))}
-                          </TableBody>
-                        </Table>
-                      </div>
-                    ) : (
-                      <p className="text-sm text-muted-foreground">{t("workflow.enhanced.no_samples")}</p>
-                    )}
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader>
                     <CardTitle>{t("workflow.enhanced.all_samples_title")}</CardTitle>
                     <CardDescription>{t("workflow.enhanced.all_samples_description")}</CardDescription>
                   </CardHeader>
@@ -919,7 +886,7 @@ export function CalibrationWorkflowClient() {
           </AnimatePresence>
         </LazyMotion>
 
-        <MetrologySubpagesCards current="calibration" />
+        <MetrologySubpagesCards current="calibration" disabled={running} />
       </div>
     </>
   )
