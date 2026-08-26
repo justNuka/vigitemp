@@ -9,6 +9,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { useTranslations } from "next-intl"
+import { usePathname } from "next/navigation"
+import { stripLocalePrefix } from "@/i18n/pathnames"
 
 const RELEASE_VERSION = "0.3.7"
 const COOKIE_NAME = "vigitemp_release_seen"
@@ -38,6 +40,15 @@ function setSessionCookie(name: string, value: string) {
 
 export function VersionChangelogModal() {
   const t = useTranslations("versionChangelog")
+  const pathname = usePathname()
+  const normalizedPathname = stripLocalePrefix(pathname || "")
+  const isPublicRoute =
+    normalizedPathname === "/login" ||
+    normalizedPathname === "/connexion" ||
+    normalizedPathname === "/reset-password" ||
+    normalizedPathname === "/reinitialisation-mot-de-passe" ||
+    normalizedPathname === "/force-password-change" ||
+    normalizedPathname === "/changement-mot-de-passe-obligatoire"
   const [open, setOpen] = useState(false)
 
   const changelog = useMemo<ChangelogItem[]>(
@@ -76,6 +87,11 @@ export function VersionChangelogModal() {
   )
 
   useEffect(() => {
+    if (isPublicRoute) {
+      setOpen(false)
+      return
+    }
+
     const seen = readCookieValue(COOKIE_NAME)
     if (seen !== RELEASE_VERSION) {
       const syncTimer = window.setTimeout(() => {
@@ -86,7 +102,9 @@ export function VersionChangelogModal() {
         window.clearTimeout(syncTimer)
       }
     }
-  }, [])
+  }, [isPublicRoute])
+
+  if (isPublicRoute) return null
 
   const handleOpenChange = (nextOpen: boolean) => {
     setOpen(nextOpen)
