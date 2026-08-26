@@ -733,6 +733,67 @@ export function CalibrationWorkflowClient() {
                   </CardContent>
                 </Card>
 
+                <Dialog
+                  open={addSensorDialogOpen}
+                  onOpenChange={(open) => {
+                    setAddSensorDialogOpen(open)
+                    if (!open) setAddSensorSearch("")
+                  }}
+                >
+                  <DialogContent className="max-w-xl">
+                    <DialogHeader>
+                      <DialogTitle>{t("workflow.enhanced.add_sensor")}</DialogTitle>
+                      <DialogDescription>
+                        {t("workflow.enhanced.add_sensor_description")}
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                      <Input
+                        value={addSensorSearch}
+                        onChange={(event) => setAddSensorSearch(event.target.value)}
+                        placeholder={t("workflow.selection.table.searchPlaceholder")}
+                        autoFocus
+                      />
+                      <div className="max-h-80 space-y-2 overflow-y-auto pr-1">
+                        {addSensorCandidates.length === 0 ? (
+                          <p className="py-6 text-center text-sm text-muted-foreground">
+                            {t("workflow.selection.empty")}
+                          </p>
+                        ) : (
+                          addSensorCandidates.map((sensor) => (
+                            <div
+                              key={sensor.id}
+                              className="flex items-center justify-between gap-3 rounded-md border p-3"
+                            >
+                              <div className="min-w-0">
+                                <div className="font-medium">{sensor.serialNumber}</div>
+                                <div className="truncate text-xs text-muted-foreground">
+                                  {sensor.locationName ?? t("workflow.selection.unassigned")} ·{" "}
+                                  {sensor.unit ?? "-"}
+                                </div>
+                              </div>
+                              <Button
+                                type="button"
+                                size="sm"
+                                onClick={() => {
+                                  setSelectedSensorIds((current) =>
+                                    current.includes(sensor.id) ? current : [...current, sensor.id],
+                                  )
+                                  setAddSensorDialogOpen(false)
+                                  setAddSensorSearch("")
+                                }}
+                              >
+                                <Plus className="mr-1 h-4 w-4" />
+                                {tCommon("add")}
+                              </Button>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+
                 <Card>
                   <CardHeader>
                     <CardTitle>{t("workflow.enhanced.standard_samples_title")}</CardTitle>
@@ -814,93 +875,6 @@ export function CalibrationWorkflowClient() {
                   </CardContent>
                 </Card>
 
-                {session ? (
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>{t("workflow.enhanced.sensor_history_title")}</CardTitle>
-                      <CardDescription>
-                        {t("workflow.enhanced.sensor_history_description")}
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div className="max-w-sm space-y-2">
-                        <Label htmlFor="calibration-history-sensor">
-                          {t("workflow.enhanced.sensor_history_selector")}
-                        </Label>
-                        <Select
-                          value={selectedHistorySensorId}
-                          onValueChange={setSelectedHistorySensorId}
-                        >
-                          <SelectTrigger id="calibration-history-sensor">
-                            <SelectValue
-                              placeholder={t("workflow.enhanced.sensor_history_placeholder")}
-                            />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {session.sensors.map((sensor) => (
-                              <SelectItem key={sensor.id} value={String(sensor.id)}>
-                                {sensor.serialNumber}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      {selectedHistorySensorId &&
-                      (session.sensorSamples[Number(selectedHistorySensorId)]?.length ?? 0) > 0 ? (
-                        <div className="overflow-x-auto rounded-lg border">
-                          <Table>
-                            <TableHeader className="bg-slate-950">
-                              <TableRow className="hover:bg-slate-950">
-                                <TableHead className="text-white">
-                                  {t("workflow.enhanced.sample_number")}
-                                </TableHead>
-                                <TableHead className="text-white">
-                                  {t("workflow.table.measuredAt")}
-                                </TableHead>
-                                <TableHead className="text-white">
-                                  {t("workflow.enhanced.sensor_value")}
-                                </TableHead>
-                                <TableHead className="text-white">
-                                  {t("workflow.enhanced.standard_value")}
-                                </TableHead>
-                              </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                              {session.sensorSamples[Number(selectedHistorySensorId)]?.map(
-                                (sample) => {
-                                  const standardSample = session.standardSamples.find(
-                                    (item) => item.order === sample.order,
-                                  )
-                                  return (
-                                    <TableRow key={sample.order}>
-                                      <TableCell>{sample.order}</TableCell>
-                                      <TableCell>{formatDbDateTime(sample.measuredAt)}</TableCell>
-                                      <TableCell className="font-medium">
-                                        {formatCampaignValue(sample.value, sample.unit)}
-                                      </TableCell>
-                                      <TableCell>
-                                        {formatCampaignValue(
-                                          standardSample?.value,
-                                          standardSample?.unit ?? session.standardUnit,
-                                        )}
-                                      </TableCell>
-                                    </TableRow>
-                                  )
-                                },
-                              )}
-                            </TableBody>
-                          </Table>
-                        </div>
-                      ) : (
-                        <p className="text-sm text-muted-foreground">
-                          {t("workflow.enhanced.no_samples")}
-                        </p>
-                      )}
-                    </CardContent>
-                  </Card>
-                ) : null}
-
                 {hasResults && session ? (
                   <Card className="border-emerald-300/60 dark:border-emerald-500/30">
                     <CardHeader>
@@ -943,13 +917,7 @@ export function CalibrationWorkflowClient() {
           </AnimatePresence>
         </LazyMotion>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>{t("workflow.navigation.title")}</CardTitle>
-            <CardDescription>{t("workflow.navigation.description")}</CardDescription>
-          </CardHeader>
-          <CardContent><MetrologySubpagesCards current="calibration" /></CardContent>
-        </Card>
+        <MetrologySubpagesCards current="calibration" />
       </div>
     </>
   )
