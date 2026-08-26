@@ -6,6 +6,8 @@
 - Branche d’intégration : `dev`
 - HEAD vérifié au démarrage : `5a79b27fcd79e1b146b0b96cd48442907764aaf3` (merge PR #56)
 - Aucune PR ouverte au démarrage du lot.
+- Branche : `agent/metrology-adjustment-ui-accuracy`.
+- PR : #57 — ouverte vers `dev`.
 
 Ce document conserve le détail des retours du 26/08/2026 pendant leur traitement. Il doit être consolidé dans `website/docs/backlog-retours-17-08-2026.md` au fur et à mesure des PR livrées.
 
@@ -112,3 +114,43 @@ Le prochain contrôle terrain doit partir d’une campagne réelle et comparer e
 - [ ] si un écart de `0,01` est reproductible avec exactement les mêmes 10 nombres, corriger à l’endroit précis où apparaît la divergence.
 
 Cette approche évite d’introduire un arrondi artificiel dans un calcul métrologique critique sans cause démontrée.
+
+## Étalonnage — session terminée restaurée et écran bloqué
+
+### Retour
+
+Après la dixième mesure et la fin automatique d’un étalonnage, le résultat restait associé au compte utilisateur. En quittant puis en rouvrant `Réaliser étalonnage`, y compris depuis un autre poste avec le même compte, l’ancienne campagne était restaurée et le retour vers la sélection de nouvelles sondes ne fonctionnait pas.
+
+### Cause
+
+La session serveur reste volontairement consultable après sa terminaison pour afficher les résultats. Elle est indexée par utilisateur, ce qui explique sa visibilité depuis un autre poste connecté avec le même compte. Ce stockage n’empêche toutefois pas une nouvelle campagne : `startCalibrationSession()` bloque uniquement lorsqu’une session existante est encore `running`.
+
+Le verrouillage venait du frontend :
+
+- `visibleStep` imposait l’écran calibration avec `running || hasResults` ;
+- l’effet de restauration rechargeait également les sondes, l’étalon et le milieu pour une session terminale contenant des résultats ;
+- `setStep("selection")` était donc immédiatement neutralisé par `hasResults`.
+
+### Correctif PR #57
+
+Fichier :
+
+- `website/src/app/[locale]/(admin)/admin/metrologie/realiser-etalonnage/calibration-workflow-client.tsx`.
+
+Comportement :
+
+- une session `running` continue de forcer l’écran d’étalonnage et d’être restaurée entre pages/postes ;
+- une session terminée n’impose plus l’étape calibration ;
+- les résultats restent visibles à la fin de l’opération tant que l’utilisateur reste sur cet écran ;
+- dès qu’il revient à la sélection, la session terminale est retirée du cache client ;
+- lorsqu’une page est ouverte avec seulement une ancienne session terminale côté serveur, elle revient à la sélection au lieu de restaurer l’ancienne campagne.
+
+### Validation terrain
+
+- [ ] terminer naturellement une campagne de 10 mesures et vérifier que les résultats restent affichés ;
+- [ ] cliquer sur Retour et vérifier que la sélection des sondes redevient accessible ;
+- [ ] sélectionner un nouveau lot et démarrer une nouvelle campagne ;
+- [ ] quitter la page après une campagne terminée puis revenir : ne pas être renvoyé de force sur l’ancienne campagne ;
+- [ ] répéter depuis un autre poste avec le même compte ;
+- [ ] pendant une vraie session `running`, quitter puis revenir : la campagne en cours doit au contraire être restaurée ;
+- [ ] vérifier qu’un autre compte n’est pas impacté.
