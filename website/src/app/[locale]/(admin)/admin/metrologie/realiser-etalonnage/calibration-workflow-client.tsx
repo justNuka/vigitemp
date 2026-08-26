@@ -57,6 +57,10 @@ import { useStandards } from "@/hooks/useStandards"
 import { formatDbDateTime } from "@/lib/date-display"
 import { fetchJson, getJson } from "@/lib/http"
 import { formatMeasureValue } from "@/lib/measurements"
+import {
+  calculateCalibrationResult,
+  DEFAULT_SENSOR_RESOLUTION,
+} from "@/lib/metrology-calibration-calculations"
 import type {
   CalibrationReading,
   PublicCalibrationSession,
@@ -85,6 +89,18 @@ function formatCampaignValue(value: number | null | undefined, unit?: string | n
   return `${formatMeasureValue(value, 3)}${unit ? ` ${unit}` : ""}`
 }
 
+function parseDiagnosticNumber(value: unknown) {
+  if (typeof value === "number" && Number.isFinite(value)) return value
+  if (value === null || value === undefined || value === "") return null
+  const parsed = Number(String(value).replace(",", "."))
+  return Number.isFinite(parsed) ? parsed : null
+}
+
+function formatDiagnosticNumber(value: number | null | undefined) {
+  if (value == null || !Number.isFinite(value)) return "-"
+  return String(value)
+}
+
 export function CalibrationWorkflowClient() {
   const t = useTranslations("metrologyAdmin.calibrationPage")
   const tCommon = useTranslations("common")
@@ -103,6 +119,7 @@ export function CalibrationWorkflowClient() {
   const [addSensorSearch, setAddSensorSearch] = useState("")
   const [addSensorDialogOpen, setAddSensorDialogOpen] = useState(false)
   const [previewReadingEnabled, setPreviewReadingEnabled] = useState(false)
+  const [showCalculationDetails, setShowCalculationDetails] = useState(false)
   const defaultOperator = [user?.Prenom, user?.Nom].filter(Boolean).join(" ").trim() || user?.Login || ""
   const operatorValue = operator || defaultOperator
 
@@ -186,6 +203,7 @@ export function CalibrationWorkflowClient() {
     }),
     onSuccess: (data) => {
       queryClient.setQueryData(["metrology-calibration-session"], data)
+      setShowCalculationDetails(false)
       setStep("calibration")
     },
   })
@@ -207,6 +225,10 @@ export function CalibrationWorkflowClient() {
   const selectedSensors = useMemo(
     () => sensors.filter((sensor) => selectedSensorIds.includes(sensor.id)),
     [selectedSensorIds, sensors],
+  )
+  const selectedMedium = useMemo(
+    () => media.find((item) => String(item.Id_Milieu) === selectedMediumId) ?? null,
+    [media, selectedMediumId],
   )
   const lockedUnit = useMemo(() => {
     const knownSelectedUnits = selectedSensors
@@ -856,14 +878,14 @@ export function CalibrationWorkflowClient() {
                       <CardTitle>{t("workflow.enhanced.results_title")}</CardTitle>
                       <CardDescription>{t("workflow.enhanced.results_description")}</CardDescription>
                     </CardHeader>
-                    <CardContent>
+                    <CardContent className="space-y-4">
                       <div className="overflow-x-auto rounded-lg border">
                         <Table>
                           <TableHeader className="bg-emerald-950">
                             <TableRow className="hover:bg-emerald-950">
                               <TableHead className="text-white">{t("workflow.table.serial")}</TableHead>
-                              <TableHead className="text-white">{t("workflow.enhanced.mean_sensor")}</TableHead>
                               <TableHead className="text-white">{t("workflow.enhanced.mean_standard")}</TableHead>
+                              <TableHead className="text-white">{t("workflow.enhanced.mean_sensor")}</TableHead>
                               <TableHead className="text-white">{t("workflow.enhanced.accuracy_error")}</TableHead>
                               <TableHead className="text-white">{t("workflow.enhanced.uncertainty")}</TableHead>
                             </TableRow>
@@ -874,8 +896,8 @@ export function CalibrationWorkflowClient() {
                               return (
                                 <TableRow key={result.sensorId}>
                                   <TableCell className="font-medium">{result.serialNumber}</TableCell>
-                                  <TableCell>{formatCampaignValue(result.meanSensor, unit)}</TableCell>
                                   <TableCell>{formatCampaignValue(result.meanStandard, unit)}</TableCell>
+                                  <TableCell>{formatCampaignValue(result.meanSensor, unit)}</TableCell>
                                   <TableCell>{formatCampaignValue(result.accuracyError, unit)}</TableCell>
                                   <TableCell>{formatCampaignValue(result.uncertainty, unit)}</TableCell>
                                 </TableRow>
@@ -884,6 +906,229 @@ export function CalibrationWorkflowClient() {
                           </TableBody>
                         </Table>
                       </div>
+
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => setShowCalculationDetails((current) => !current)}
+                      >
+                        {showCalculationDetails
+                          ? t("workflow.enhanced.hide_calculation_details")
+                          : t("workflow.enhanced.show_calculation_details")}
+                      </Button>
+
+                      {showCalculationDetails ? (
+                        <div className="space-y-5">
+                          {Object.values(session.results).map((result) => {
+                            const sensor = session.sensors.find((item) => item.id === result.sensorId)
+                            const sensorSamples = session.sensorSamples[result.sensorId] ?? []
+                            const standardSamples = session.standardSamples
+                            const mediumStability = parseDiagnosticNumber(selectedMedium?.Stabilite)
+                            const mediumHomogeneity = parseDiagnosticNumber(selectedMedium?.Homogeneite)
+                            let diagnostic: ReturnType<typeof calculateCalibrationResult> | null = null
+
+                            if (
+                              sensorSamples.length === standardSamples.length &&
+                              sensorSamples.length > 0 &&
+                              mediumStability != null &&
+                              mediumHomogeneity != null
+                            ) {
+                              try {
+                                diagnostic = calculateCalibrationResult(
+                                  sensorSamples.map((sample) => sample.value),
+                                  standardSamples.map((sample) => sample.value),
+                                  {
+                                    standardResolution: session.standardResolution,
+                                    standardUncertainty: session.standardUncertainty,
+                                    mediumStability,
+                                    mediumHomogeneity,
+                                    sensorResolution: DEFAULT_SENSOR_RESOLUTION,
+                                  },
+                                )
+                              } catch {
+                                diagnostic = null
+                              }
+                            }
+
+                            const details = diagnostic?.details
+                            const uncertaintyComponents = details
+                              ? [
+                                  ["U1", details.uncertainty.u1],
+                                  ["U2", details.uncertainty.u2],
+                                  ["U3", details.uncertainty.u3],
+                                  ["U4", details.uncertainty.u4],
+                                  ["U5", details.uncertainty.u5],
+                                  ["U6", details.uncertainty.u6],
+                                  ["U7", details.uncertainty.u7],
+                                  ["U8", details.uncertainty.u8],
+                                  ["U9", details.uncertainty.u9],
+                                  ["U10", details.uncertainty.u10],
+                                  ["U11", details.uncertainty.u11],
+                                ] as const
+                              : []
+
+                            return (
+                              <div key={result.sensorId} className="space-y-4 rounded-lg border bg-muted/20 p-4">
+                                <div>
+                                  <h4 className="font-semibold">
+                                    {t("workflow.enhanced.calculation_details_title", { serial: result.serialNumber })}
+                                  </h4>
+                                  <p className="mt-1 text-sm text-muted-foreground">
+                                    {t("workflow.enhanced.calculation_details_description")}
+                                  </p>
+                                </div>
+
+                                <div className="overflow-x-auto rounded-md border bg-background">
+                                  <Table>
+                                    <TableHeader>
+                                      <TableRow>
+                                        <TableHead>{t("workflow.enhanced.sample_number")}</TableHead>
+                                        <TableHead>{t("workflow.enhanced.raw_standard")}</TableHead>
+                                        <TableHead>{t("workflow.enhanced.raw_sensor")}</TableHead>
+                                        <TableHead>{t("workflow.enhanced.raw_difference")}</TableHead>
+                                      </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                      {standardSamples.map((standardSample, index) => {
+                                        const sensorSample = sensorSamples[index]
+                                        return (
+                                          <TableRow key={standardSample.order}>
+                                            <TableCell>{standardSample.order}</TableCell>
+                                            <TableCell className="font-mono text-xs">
+                                              {formatDiagnosticNumber(standardSample.value)}
+                                            </TableCell>
+                                            <TableCell className="font-mono text-xs">
+                                              {formatDiagnosticNumber(sensorSample?.value)}
+                                            </TableCell>
+                                            <TableCell className="font-mono text-xs">
+                                              {sensorSample
+                                                ? formatDiagnosticNumber(sensorSample.value - standardSample.value)
+                                                : "-"}
+                                            </TableCell>
+                                          </TableRow>
+                                        )
+                                      })}
+                                    </TableBody>
+                                  </Table>
+                                </div>
+
+                                {details ? (
+                                  <>
+                                    <div className="grid gap-3 lg:grid-cols-2">
+                                      <div className="rounded-md border bg-background p-3 text-sm">
+                                        <div className="font-medium">{t("workflow.enhanced.mean_standard")}</div>
+                                        <div className="mt-2 font-mono text-xs break-all">
+                                          {t("workflow.enhanced.standard_sum")}: {formatDiagnosticNumber(details.standardSum)}
+                                        </div>
+                                        <div className="mt-1 font-mono text-xs break-all">
+                                          {formatDiagnosticNumber(details.standardSum)} / {details.sampleCount} = {formatDiagnosticNumber(details.meanStandard)}
+                                        </div>
+                                        <div className="mt-2 text-xs text-muted-foreground">
+                                          {t("workflow.enhanced.server_value")}: <span className="font-mono">{formatDiagnosticNumber(result.meanStandard)}</span>
+                                        </div>
+                                      </div>
+
+                                      <div className="rounded-md border bg-background p-3 text-sm">
+                                        <div className="font-medium">{t("workflow.enhanced.mean_sensor")}</div>
+                                        <div className="mt-2 font-mono text-xs break-all">
+                                          {t("workflow.enhanced.sensor_sum")}: {formatDiagnosticNumber(details.sensorSum)}
+                                        </div>
+                                        <div className="mt-1 font-mono text-xs break-all">
+                                          {formatDiagnosticNumber(details.sensorSum)} / {details.sampleCount} = {formatDiagnosticNumber(details.meanSensor)}
+                                        </div>
+                                        <div className="mt-2 text-xs text-muted-foreground">
+                                          {t("workflow.enhanced.server_value")}: <span className="font-mono">{formatDiagnosticNumber(result.meanSensor)}</span>
+                                        </div>
+                                      </div>
+                                    </div>
+
+                                    <div className="rounded-md border bg-background p-3 text-sm">
+                                      <div className="font-medium">{t("workflow.enhanced.accuracy_error")}</div>
+                                      <div className="mt-2 font-mono text-xs break-all">
+                                        {formatDiagnosticNumber(details.meanSensor)} - {formatDiagnosticNumber(details.meanStandard)} = {formatDiagnosticNumber(details.accuracyError)}
+                                      </div>
+                                      <div className="mt-2 grid gap-1 text-xs text-muted-foreground sm:grid-cols-2">
+                                        <span>
+                                          {t("workflow.enhanced.server_value")}: <span className="font-mono">{formatDiagnosticNumber(result.accuracyError)}</span>
+                                        </span>
+                                        <span>
+                                          {t("workflow.enhanced.recalculated_value")}: <span className="font-mono">{formatDiagnosticNumber(details.accuracyError)}</span>
+                                        </span>
+                                      </div>
+                                    </div>
+
+                                    <div className="rounded-md border bg-background p-3 text-sm">
+                                      <div className="font-medium">{t("workflow.enhanced.standard_deviation")}</div>
+                                      <div className="mt-2 grid gap-1 font-mono text-xs break-all">
+                                        <span>{t("workflow.enhanced.squared_deviation_sum")}: {formatDiagnosticNumber(details.standardDeviation.squaredDeviationSum)}</span>
+                                        <span>{t("workflow.enhanced.variance")}: {formatDiagnosticNumber(details.standardDeviation.squaredDeviationSum)} / {details.standardDeviation.divisor} = {formatDiagnosticNumber(details.standardDeviation.variance)}</span>
+                                        <span>√{formatDiagnosticNumber(details.standardDeviation.variance)} = {formatDiagnosticNumber(details.standardDeviation.value)}</span>
+                                      </div>
+                                      <div className="mt-2 text-xs text-muted-foreground">
+                                        {t("workflow.enhanced.server_value")}: <span className="font-mono">{formatDiagnosticNumber(result.standardDeviation)}</span>
+                                      </div>
+                                    </div>
+
+                                    <div className="space-y-3 rounded-md border bg-background p-3 text-sm">
+                                      <div className="font-medium">{t("workflow.enhanced.uncertainty_components")}</div>
+                                      <div className="grid gap-1 font-mono text-xs break-all md:grid-cols-2">
+                                        <span>Résolution étalon: {formatDiagnosticNumber(details.uncertainty.standardResolution)}</span>
+                                        <span>Incertitude étalon: {formatDiagnosticNumber(details.uncertainty.standardUncertainty)}</span>
+                                        <span>Stabilité milieu: {formatDiagnosticNumber(details.uncertainty.mediumStability)}</span>
+                                        <span>Homogénéité milieu: {formatDiagnosticNumber(details.uncertainty.mediumHomogeneity)}</span>
+                                        <span>Résolution sonde: {formatDiagnosticNumber(details.uncertainty.sensorResolution)}</span>
+                                        <span>√3: {formatDiagnosticNumber(details.uncertainty.sqrt3)}</span>
+                                      </div>
+                                      <div className="overflow-x-auto rounded-md border">
+                                        <Table>
+                                          <TableHeader>
+                                            <TableRow>
+                                              <TableHead>{t("workflow.enhanced.component")}</TableHead>
+                                              <TableHead>{t("workflow.enhanced.raw_value")}</TableHead>
+                                              <TableHead>U²</TableHead>
+                                            </TableRow>
+                                          </TableHeader>
+                                          <TableBody>
+                                            {uncertaintyComponents.map(([label, value]) => (
+                                              <TableRow key={label}>
+                                                <TableCell className="font-medium">{label}</TableCell>
+                                                <TableCell className="font-mono text-xs">{formatDiagnosticNumber(value)}</TableCell>
+                                                <TableCell className="font-mono text-xs">{formatDiagnosticNumber(value ** 2)}</TableCell>
+                                              </TableRow>
+                                            ))}
+                                          </TableBody>
+                                        </Table>
+                                      </div>
+                                      <div className="grid gap-1 font-mono text-xs break-all">
+                                        <span>{t("workflow.enhanced.uncertainty_squared_sum")}: {formatDiagnosticNumber(details.uncertainty.squaredSum)}</span>
+                                        <span>√{formatDiagnosticNumber(details.uncertainty.squaredSum)} = {formatDiagnosticNumber(details.uncertainty.value)}</span>
+                                      </div>
+                                      <div className="grid gap-1 text-xs text-muted-foreground sm:grid-cols-2">
+                                        <span>
+                                          {t("workflow.enhanced.server_value")}: <span className="font-mono">{formatDiagnosticNumber(result.uncertainty)}</span>
+                                        </span>
+                                        <span>
+                                          {t("workflow.enhanced.recalculated_value")}: <span className="font-mono">{formatDiagnosticNumber(details.uncertainty.value)}</span>
+                                        </span>
+                                      </div>
+                                    </div>
+                                  </>
+                                ) : (
+                                  <Alert>
+                                    <AlertDescription>
+                                      {t("workflow.enhanced.calculation_details_description")}
+                                    </AlertDescription>
+                                  </Alert>
+                                )}
+
+                                <div className="text-xs text-muted-foreground">
+                                  {sensor?.serialNumber ?? result.serialNumber}
+                                </div>
+                              </div>
+                            )
+                          })}
+                        </div>
+                      ) : null}
                     </CardContent>
                   </Card>
                 ) : null}
