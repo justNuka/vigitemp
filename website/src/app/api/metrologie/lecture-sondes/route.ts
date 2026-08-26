@@ -5,7 +5,10 @@ import { apiError, apiOk } from "@/lib/api-response"
 import { withStandardOrExpertAnyAuthorizationLogging } from "@/lib/license-guards"
 import { log } from "@/lib/logger"
 import { getAdjustmentSessionForUser } from "@/lib/metrology-adjustment-session"
-import { getCalibrationSessionForUser } from "@/lib/metrology-calibration-session"
+import {
+  getCalibrationSessionForUser,
+  readCalibrationStandardPreview,
+} from "@/lib/metrology-calibration-session"
 import { readMetrologySensorsPreview } from "@/lib/metrology-reading-preview"
 import {
   ensureMetrologyReadingPreviewSession,
@@ -17,6 +20,8 @@ const METROLOGY_OPERATION_CODES = getPermissionAliases("METROLOGY_OPERATION_ACCE
 const schema = z.object({
   selectedSensorIds: z.array(z.number().int().positive()).min(1),
   operation: z.enum(["AJUSTAGE", "ETALONNAGE"]),
+  standardId: z.number().int().positive().optional(),
+  mediumId: z.number().int().positive().optional(),
 })
 
 export const POST = withStandardOrExpertAnyAuthorizationLogging(
@@ -42,11 +47,17 @@ export const POST = withStandardOrExpertAnyAuthorizationLogging(
       )
       const startedAt = new Date(previewSession.startedAt)
 
-      return apiOk(await readMetrologySensorsPreview(
+      const sensorPreview = await readMetrologySensorsPreview(
         input.selectedSensorIds,
         input.operation,
         startedAt,
-      ))
+      )
+      const standardReading =
+        input.operation === "ETALONNAGE" && input.standardId && input.mediumId
+          ? await readCalibrationStandardPreview(input.standardId, input.mediumId)
+          : null
+
+      return apiOk({ ...sensorPreview, standardReading })
     } catch (error) {
       if (error instanceof z.ZodError) {
         return apiError(400, "validation_error", "Donnees invalides", { details: error.issues })
