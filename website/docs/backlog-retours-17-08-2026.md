@@ -1025,7 +1025,7 @@ Fichier serveur principal :
 Comportement :
 
 - avant chaque lecture GSP en contexte Ajustage/Étalonnage, le serveur résout le lieu par numéro de série et appelle `setLieuInfosModifiees(idLieu, true)` ;
-- cela couvre `read`, `force-read` et les lectures raw `TEMP` / `FTEM` / `RTEMP` ;
+- cela couvre `read`, `force-read` et les lectures raw `TEMP` / `FTEMP` / `RTEMP` ;
 - la mise à jour est tentée même lorsque le port série est fourni explicitement par le web ;
 - un échec SQL est journalisé mais n'empêche pas l'interrogation série ;
 - toute commande raw `ECON` ayant un contexte `AJUSTAGE` ou `ETALONNAGE` est validée puis tronquée juste après le marqueur `c` ;
@@ -1062,3 +1062,53 @@ Documentation mise à jour :
 - [ ] sortir de la métrologie, remettre la sonde en Surveillance et vérifier une synchronisation complète puis le retour du flag à `0` ;
 - [ ] vérifier qu'une synchronisation normale hors métrologie conserve le `ECON` étendu ;
 - [ ] vérifier qu'une GSO n'est jamais ciblée par ce chemin série GSP.
+
+
+## Ajustements interface étalonnage — 26/08/2026
+
+Statut : **`PR_OUVERTE` — PR #55 — branche `agent/calibration-ui-cleanup-navigation`**.
+
+### Contexte vérifié avant correction
+
+Le lot part du HEAD réel de `dev` `f8c87bc1f349d85dbcdc5b58593b70284a65c697`, merge de la PR #54 `agent/calibration-preview-ui-unassigned-sensors`. Aucune PR n'était ouverte au démarrage du lot. La PR #54 avait volontairement conservé le tableau récapitulatif des 10 acquisitions et avait ajouté l'étalon à la première ligne du tableau de dernière mesure.
+
+Le retour du 26/08/2026 demande deux simplifications d'interface :
+
+- supprimer le tableau séparé des 10 dernières mesures de l'étalon, devenu redondant avec le tableau global alignant l'étalon et les sondes ;
+- empêcher l'utilisateur de quitter la page via le bandeau de navigation métrologie en bas tant qu'un étalonnage est réellement en cours.
+
+### Correctif PR #55
+
+Fichiers principaux :
+
+- `website/src/app/[locale]/(admin)/admin/metrologie/realiser-etalonnage/calibration-workflow-client.tsx` ;
+- `website/src/app/[locale]/(admin)/admin/metrologie/_components/metrology-subpages-cards.tsx`.
+
+Comportement :
+
+- le bloc `standard_samples` dédié uniquement aux mesures de l'étalon n'est plus rendu ;
+- le tableau global `all_samples`, qui conserve les 10 acquisitions alignées entre l'étalon et toutes les sondes, reste inchangé ;
+- `MetrologySubpagesCards` accepte désormais un prop optionnel `disabled` sans changer le comportement des autres pages ;
+- la page d'étalonnage transmet `disabled={running}` ;
+- tant que la session d'étalonnage est `running`, les CTA du bandeau restent visibles mais sont rendus comme de vrais boutons désactivés, sans `Link` navigable ;
+- avant le démarrage et après arrêt/fin de la session, la navigation redevient normale.
+
+### Vérifications effectuées
+
+- [x] branche créée depuis le HEAD actuel de `dev` ;
+- [x] vérification des PR ouvertes avant modification ;
+- [x] comparaison avec la PR #54 pour ne pas supprimer le tableau récapitulatif utile ;
+- [x] suppression limitée au tableau séparé de l'étalon ;
+- [x] diff UI contrôlé avant ouverture de la PR ;
+- [x] PR #55 ouverte vers `dev` sans merge automatique.
+
+### Checklist terrain
+
+- [ ] préparer un étalonnage sans le démarrer : le bandeau de navigation reste utilisable ;
+- [ ] démarrer l'étalonnage : les trois CTA du bandeau deviennent inactifs ;
+- [ ] confirmer qu'aucun clic sur ce bandeau ne permet de changer de sous-page pendant la session ;
+- [ ] arrêter ou terminer l'étalonnage : le bandeau redevient utilisable ;
+- [ ] confirmer la disparition du tableau séparé des mesures étalon ;
+- [ ] confirmer que le tableau récapitulatif des 10 acquisitions étalon + sondes est toujours présent ;
+- [ ] vérifier thème clair/sombre et FR/EN ;
+- [ ] lancer `pnpm lint` et `pnpm build` dans l'environnement projet complet.
