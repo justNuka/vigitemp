@@ -11,6 +11,14 @@ export const POST = withLogging(async (req: NextRequest) => {
   const { ip } = getRequestContext(req)
 
   const response = apiOk({ success: true })
+  response.cookies.set("token", "", {
+    httpOnly: true,
+    secure: shouldUseSecureCookies(req),
+    sameSite: "lax",
+    maxAge: 0,
+    path: "/",
+  })
+
   response.cookies.set("auth-token", "", {
     httpOnly: true,
     secure: shouldUseSecureCookies(req),
