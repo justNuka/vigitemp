@@ -158,6 +158,7 @@ async function loadConfigurations(sensorIds: number[], mode: GspMetrologyConfigu
       Id_Module: true,
       Est_Sonde_GSO: true,
       Surveillance_Etat: true,
+      Frequence_Mesure: true,
       t_lieu: {
         where: { Est_Archive: false },
         select: {
@@ -238,8 +239,7 @@ async function loadConfigurations(sensorIds: number[], mode: GspMetrologyConfigu
     const modulePort = normalizeSerialPortName(moduleRow?.Port_Serie)
     if (!modulePort) throw new Error(`Aucun port serie n'est configure pour la GSP ${serial}.`)
 
-    const location = sensor.t_lieu.find((item) => item.Lieu_Etat === "S") ?? sensor.t_lieu[0]
-    if (!location) throw new Error(`Aucun lieu actif n'est associe a la GSP ${serial}.`)
+    const location = sensor.t_lieu.find((item) => item.Lieu_Etat === "S") ?? sensor.t_lieu[0] ?? null
 
     const adjustment = latestAdjustmentBySerial.get(serial)
     const calibration = latestCalibrationBySerial.get(serial)
@@ -255,14 +255,16 @@ async function loadConfigurations(sensorIds: number[], mode: GspMetrologyConfigu
       coeffConstant: asFiniteNumber(adjustment?.Coeff_Constant, 0),
       offset: asFiniteNumber(sensor.Sonde_Offset, 0),
       accuracyError: asFiniteNumber(calibration?.Err_Justesse, 0),
-      applyAccuracyError: Number(location.Est_Correction_Ej ?? 0) === 1,
-      highLimit: location.Tolerance_Surveillance_Sup == null ? null : Number(location.Tolerance_Surveillance_Sup),
-      highLimitActive: Boolean(location.Est_Consigne_Sup_Active),
-      lowLimit: location.Tolerance_Surveillance_Inf == null ? null : Number(location.Tolerance_Surveillance_Inf),
-      lowLimitActive: Boolean(location.Est_Consigne_Inf_Active),
-      frequencySeconds: Math.max(1, location.Frequence ?? 60),
-      alarmDelayLowMinutes: Math.max(0, location.Retard_Alarme_Bas ?? 0),
-      alarmDelayHighMinutes: Math.max(0, location.Retard_Alarme_Haut ?? 0),
+      applyAccuracyError: Number(location?.Est_Correction_Ej ?? 0) === 1,
+      highLimit:
+        location?.Tolerance_Surveillance_Sup == null ? null : Number(location.Tolerance_Surveillance_Sup),
+      highLimitActive: Boolean(location?.Est_Consigne_Sup_Active),
+      lowLimit:
+        location?.Tolerance_Surveillance_Inf == null ? null : Number(location.Tolerance_Surveillance_Inf),
+      lowLimitActive: Boolean(location?.Est_Consigne_Inf_Active),
+      frequencySeconds: Math.max(1, location?.Frequence ?? sensor.Frequence_Mesure ?? 60),
+      alarmDelayLowMinutes: Math.max(0, location?.Retard_Alarme_Bas ?? 0),
+      alarmDelayHighMinutes: Math.max(0, location?.Retard_Alarme_Haut ?? 0),
     }
   })
 }
