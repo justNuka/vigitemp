@@ -5,6 +5,7 @@ import { apiError, apiOk } from "@/lib/api-response"
 import { getClientIp } from "@/lib/api-logger"
 import { withStandardOrExpertAnyAuthorizationLogging } from "@/lib/license-guards"
 import { log } from "@/lib/logger"
+import { fetchEtalonById, fetchIntercomparisonMediaRows } from "@/lib/metrology-db"
 import { requireMetrologyReadingPreviewSession } from "@/lib/metrology-reading-preview-session"
 import { getPermissionAliases } from "@/lib/permissions"
 import { prisma } from "@/lib/prisma"
@@ -37,6 +38,14 @@ function safeErrorMessage(error: unknown, fallback: string) {
   return message
 }
 
+function asBoolean(value: unknown) {
+  if (typeof value === "boolean") return value
+  if (typeof value === "number") return value !== 0
+  if (typeof value === "bigint") return value !== 0n
+  const normalized = String(value ?? "").trim().toLowerCase()
+  return normalized === "1" || normalized === "true"
+}
+
 export const PATCH = withStandardOrExpertAnyAuthorizationLogging(
   METROLOGY_OPERATION_CODES,
   async (req: NextRequest, ctx) => {
@@ -61,7 +70,7 @@ export const PATCH = withStandardOrExpertAnyAuthorizationLogging(
       const sensorIds = [...updateBySensorId.keys()]
       requireMetrologyReadingPreviewSession(ctx.user.userId, "ETALONNAGE", sensorIds)
 
-      const [sensors, standard, medium] = await Promise.all([
+      const [sensors, standardRow, mediumRows] = await Promise.all([
         prisma.t_sonde.findMany({
           where: { Id_Sonde: { in: sensorIds }, Sonde_Numero_Serie: { not: null } },
           select: {
@@ -74,27 +83,21 @@ export const PATCH = withStandardOrExpertAnyAuthorizationLogging(
             },
           },
         }),
-        prisma.t_etalon.findUnique({
-          where: { Id_Etalon: input.standardId },
-          select: {
-            Id_Etalon: true,
-            Etalon_Numero_Serie: true,
-            Est_Archive: true,
-          },
-        }),
-        prisma.t_milieu.findUnique({
-          where: { Id_Milieu: input.mediumId },
-          select: { Id_Milieu: true, Est_Archive: true },
-        }),
+        fetchEtalonById(input.standardId),
+        fetchIntercomparisonMediaRows("active"),
       ])
 
       if (sensors.length !== sensorIds.length) {
         return apiError(400, "sensor_not_found", "Une ou plusieurs sondes sont introuvables.")
       }
-      if (!standard?.Etalon_Numero_Serie || standard.Est_Archive) {
+
+      const standardSerial = String(standardRow?.Etalon_Numero_Serie ?? "").trim()
+      if (!standardSerial || asBoolean(standardRow?.Est_Archive)) {
         return apiError(400, "standard_not_found", "L'etalon selectionne est introuvable ou archive.")
       }
-      if (!medium || medium.Est_Archive) {
+
+      const medium = mediumRows.find((row) => Number(row.Id_Milieu) === input.mediumId)
+      if (!medium || asBoolean(medium.Est_Archive)) {
         return apiError(400, "medium_not_found", "Le milieu selectionne est introuvable ou archive.")
       }
 
@@ -117,7 +120,7 @@ export const PATCH = withStandardOrExpertAnyAuthorizationLogging(
           },
         }),
         prisma.t_certif.findFirst({
-          where: { Etalon_Numero_Serie: standard.Etalon_Numero_Serie },
+          where: { Etalon_Numero_Serie: standardSerial },
           orderBy: [{ Date: "desc" }, { Id_Certif: "desc" }],
           select: {
             Organisme: true,
@@ -163,7 +166,7 @@ export const PATCH = withStandardOrExpertAnyAuthorizationLogging(
                 null,
               Nb_Decimale: previousAdjustment?.Nb_Decimale ?? null,
               Operateur: operator,
-              SE_Numero: standard.Etalon_Numero_Serie,
+              SE_Numero: standardSerial,
               SE_Organisme: certificate?.Organisme ?? null,
               SE_Date_Certif: certificate?.Date ?? null,
               SE_Numero_Certif: certificate?.Numero ?? null,
