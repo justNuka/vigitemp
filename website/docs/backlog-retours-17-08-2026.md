@@ -37,7 +37,7 @@ Objectif : permettre une reprise immédiate du travail dans une nouvelle convers
 - PR #37 : nettoyage lint Next 16 / diagnostics React Compiler non bloquants — **mergée dans `dev` le 21/08/2026**.
 - PR #38 : B21-001, campagne d’étalonnage sur 10 mesures + calculs métrologiques — **mergée dans `dev` le 21/08/2026**, merge `b5ccccb20b6bc28cf1c05db3acaa075a32dc6ec1`.
 - PR #39 : B20-007, cohérence des dates dans la liste et la fenêtre d’acquittement — **mergée dans `dev` le 21/08/2026**, merge `dc8ecfd2e08976ddcd192dc8836fe0838a6476a2`.
-- PR #40 : B21-002, coefficients métrologiques embarqués dans les GSP / protocole `ECON` étendu — **ouverte en draft** sur `agent/gsp-onboard-metrology-coefficients`.
+- PR #40 : B21-002, coefficients métrologiques embarqués dans les GSP / protocole `ECON` étendu — **mergée dans `dev` le 22/08/2026**, merge `c40aeb9dbbb49b32fe669208b2224a60ddc2bafa`.
 
 ### Statuts
 
@@ -704,7 +704,7 @@ Fichiers principaux :
 
 ## B21-002 — GSP : coefficients métrologiques embarqués dans `ECON`
 
-**Statut : `PR_OUVERTE` — PR #40 — branche `agent/gsp-onboard-metrology-coefficients`**
+**Statut : `CORRIGE_DEV` — PR #40 — branche `agent/gsp-onboard-metrology-coefficients` — merge `c40aeb9dbbb49b32fe669208b2224a60ddc2bafa`**
 
 ### Retour du 21/08/2026
 
@@ -897,7 +897,6 @@ Checklist :
 
 Correctif de build : renommage de la variable englobante en `normalizedOperationContext` pour supprimer la collision C# `CS0136`, sans changement de comportement.
 
-
 ## Nettoyage des paramètres et profils des seeds — 25/08/2026
 
 Statut : **mergé dans `dev` via la PR #47, merge `afa59e2e7f19294f52d29830cc36122c23d274f7`**.
@@ -992,7 +991,7 @@ Checklist :
 
 ## ECON métrologique compact + infos modifiées — 25/08/2026
 
-Statut : **`PR_OUVERTE` — PR #50 — branche `agent/gsp-metrology-compact-abc`**.
+Statut : **`CORRIGE_DEV` — PR #50 — branche `agent/gsp-metrology-compact-abc` — merge `a2720060a413f39d7bd2ce7a287e29bdd77f828f`**.
 
 ### Retour
 
@@ -1066,7 +1065,7 @@ Documentation mise à jour :
 
 ## Ajustements interface étalonnage — 26/08/2026
 
-Statut : **`PR_OUVERTE` — PR #55 — branche `agent/calibration-ui-cleanup-navigation`**.
+Statut : **`CORRIGE_DEV` — PR #55 — branche `agent/calibration-ui-cleanup-navigation` — merge `fcf20fb2fed2cc06b95d38878a79edd56d4c96c0`**.
 
 ### Contexte vérifié avant correction
 
@@ -1116,7 +1115,7 @@ Comportement :
 
 ## GSP — filtrage `+++` en Surveillance et rejet des coefficients `ovf` — 27/08/2026
 
-Statut : **`PR_OUVERTE` — PR #62 — branche `agent/gsp-surveillance-coefficients`**.
+Statut : **`CORRIGE_DEV` — PR #62 — branche `agent/gsp-surveillance-coefficients` — merge `83c1234c52b7a4e50f16e8950278bf8d541c9d7e`**.
 
 ### Retours terrain
 
@@ -1139,7 +1138,7 @@ Serveur :
 
 - ajout de `GspProtocol.StripTransportNoise()` et utilisation depuis `StripCommandEcho()` ;
 - seul le token exact `+++` est supprimé, y compris lorsqu'il précède la vraie trame ;
-- les valeurs métier contenant des `+`, notamment `Alarm=F+D+E+LH+LB+RB+RH`, restent intactes ;
+- les valeurs métier contenant des `+`, notamment `Alarm=F+D+E+LH+LB+RH`, restent intactes ;
 - ajout de `TryGetOverflowField()` ;
 - `IsAcknowledgementForTarget()` refuse désormais toute réponse contenant un champ `*=ovf`, même si `ACK=ECON` est présent ;
 - la synchronisation de configuration de Surveillance ne considère donc plus `B=ovf` comme un succès.
