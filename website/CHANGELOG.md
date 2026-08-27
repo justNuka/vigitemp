@@ -8,7 +8,11 @@ Les versions suivent `MAJOR.MINOR.PATCH` sans zéros de tête. La source de vers
 
 ## [Unreleased]
 
-Aucun changement supplémentaire documenté.
+### Corrigé
+
+- Correction du contrat TypeScript des sondes de métrologie : `coeffA`, `coeffB` et `coeffC` sont désormais obligatoires dans `AdjustmentSensorRow`, conformément au payload réel de `/api/metrologie/ajustage/sondes` qui fournit toujours des valeurs numériques avec fallback `1 / 0 / 0`.
+- Le build Next.js ne doit plus échouer dans la validation des coefficients d'étalonnage sur `Math.abs(item.coeffC)` / `Math.abs(item.coeffA)` avec le type `number | undefined`.
+- Aucun comportement métier, payload API ou stockage BDD n'est modifié par ce hotfix.
 
 ## [0.90.2] — 2026-08-27
 
