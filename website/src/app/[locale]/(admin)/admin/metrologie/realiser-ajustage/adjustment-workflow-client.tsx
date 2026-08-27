@@ -40,6 +40,9 @@ import type { MetrologyPreviewReading } from "@/lib/metrology-reading-preview"
 import { MetrologySubpagesCards } from "../_components/metrology-subpages-cards"
 
 type Step = "selection" | "adjustment"
+type CoefficientKey = "a" | "b" | "c"
+
+const COEFFICIENT_DISPLAY_DECIMALS = 3
 
 function readGspFrameField(rawValue: string | null, field: string) {
   if (!rawValue) return null
@@ -144,6 +147,10 @@ function formatDecimalDisplay(value: unknown, maxFractionDigits = 6) {
   return parsed.toFixed(maxFractionDigits).replace(/\.?0+$/, "")
 }
 
+function formatCoefficientDisplay(value: unknown) {
+  return formatDecimalDisplay(value, COEFFICIENT_DISPLAY_DECIMALS)
+}
+
 function normalizeUnit(value: string | null | undefined) {
   const normalized = value?.trim().toLowerCase().replace(/\s+/g, "") || null
   if (!normalized) return null
@@ -182,6 +189,9 @@ export function AdjustmentWorkflowClient() {
   const [previewReadingEnabled, setPreviewReadingEnabled] = useState(false)
   const [coefficientDrafts, setCoefficientDrafts] = useState<
     Record<number, { a: string; b: string; c: string }>
+  >({})
+  const [coefficientTouched, setCoefficientTouched] = useState<
+    Record<number, Partial<Record<CoefficientKey, boolean>>>
   >({})
   const coefficientSessionIdRef = useRef<string | null>(null)
 
@@ -354,6 +364,7 @@ export function AdjustmentWorkflowClient() {
       }),
     onSuccess: async () => {
       setActionError(null)
+      setCoefficientTouched({})
       await refreshSession()
     },
     onError: (error) => {
@@ -407,20 +418,22 @@ export function AdjustmentWorkflowClient() {
     if (!session || session.status !== "running") {
       coefficientSessionIdRef.current = null
       setCoefficientDrafts({})
+      setCoefficientTouched({})
       return
     }
 
     const startsNewSession = coefficientSessionIdRef.current !== session.id
     coefficientSessionIdRef.current = session.id
+    if (startsNewSession) setCoefficientTouched({})
     setCoefficientDrafts((current) =>
       Object.fromEntries(
         session.sensors.map((sensor) => [
           sensor.id,
           startsNewSession || !current[sensor.id]
             ? {
-                a: formatDecimalDisplay(sensor.coeffA, 10),
-                b: formatDecimalDisplay(sensor.coeffB, 10),
-                c: formatDecimalDisplay(sensor.coeffC, 10),
+                a: formatCoefficientDisplay(sensor.coeffA),
+                b: formatCoefficientDisplay(sensor.coeffB),
+                c: formatCoefficientDisplay(sensor.coeffC),
               }
             : current[sensor.id],
         ]),
@@ -444,6 +457,10 @@ export function AdjustmentWorkflowClient() {
   const selectedSensors = useMemo(
     () => sensors.filter((sensor) => selectedSensorIds.includes(sensor.id)),
     [selectedSensorIds, sensors],
+  )
+  const coefficientSensors = useMemo(
+    () => isAdjustmentRunning && session ? session.sensors : selectedSensors,
+    [isAdjustmentRunning, selectedSensors, session],
   )
   const hasSelectedGso = useMemo(
     () => selectedSensors.some((sensor) => sensor.isGso),
@@ -1106,7 +1123,7 @@ export function AdjustmentWorkflowClient() {
                     </CardContent>
                   </Card>
 
-                  {isAdjustmentRunning && session ? (
+                  {coefficientSensors.length > 0 ? (
                     <Card>
                       <CardHeader>
                         <CardTitle>{t("adjustment.cards.coefficients.title")}</CardTitle>
@@ -1123,11 +1140,11 @@ export function AdjustmentWorkflowClient() {
                               <span>{t("adjustment.cards.coefficients.coeffB")}</span>
                               <span>{t("adjustment.cards.coefficients.coeffC")}</span>
                             </div>
-                            {session.sensors.map((sensor) => {
+                            {coefficientSensors.map((sensor) => {
                               const draft = coefficientDrafts[sensor.id] ?? {
-                                a: formatDecimalDisplay(sensor.coeffA, 10),
-                                b: formatDecimalDisplay(sensor.coeffB, 10),
-                                c: formatDecimalDisplay(sensor.coeffC, 10),
+                                a: formatCoefficientDisplay(sensor.coeffA),
+                                b: formatCoefficientDisplay(sensor.coeffB),
+                                c: formatCoefficientDisplay(sensor.coeffC),
                               }
                               return (
                                 <div
@@ -1146,14 +1163,23 @@ export function AdjustmentWorkflowClient() {
                                       inputMode="decimal"
                                       aria-label={`${sensor.serialNumber} ${coefficient}`}
                                       value={draft[coefficient]}
+                                      readOnly={!isAdjustmentRunning}
                                       disabled={updateCoefficientsMutation.isPending}
                                       onChange={(event) => {
+                                        if (!isAdjustmentRunning) return
                                         const value = event.target.value
                                         setCoefficientDrafts((current) => ({
                                           ...current,
                                           [sensor.id]: {
                                             ...(current[sensor.id] ?? draft),
                                             [coefficient]: value,
+                                          },
+                                        }))
+                                        setCoefficientTouched((current) => ({
+                                          ...current,
+                                          [sensor.id]: {
+                                            ...current[sensor.id],
+                                            [coefficient]: true,
                                           },
                                         }))
                                       }}
@@ -1164,48 +1190,51 @@ export function AdjustmentWorkflowClient() {
                             })}
                           </div>
                         </div>
-                        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                          <p className="text-sm text-muted-foreground">
-                            {t("adjustment.cards.coefficients.nextReadNotice")}
-                          </p>
-                          <Button
-                            type="button"
-                            disabled={updateCoefficientsMutation.isPending}
-                            onClick={() => {
-                              const coefficients = session.sensors.map((sensor) => {
-                                const draft = coefficientDrafts[sensor.id]
-                                const parseCoefficient = (value: string | undefined) => {
-                                  const normalized = value?.trim().replace(",", ".") ?? ""
-                                  return normalized.length > 0 ? Number(normalized) : Number.NaN
+                        {isAdjustmentRunning && session ? (
+                          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                            <p className="text-sm text-muted-foreground">
+                              {t("adjustment.cards.coefficients.nextReadNotice")}
+                            </p>
+                            <Button
+                              type="button"
+                              disabled={updateCoefficientsMutation.isPending}
+                              onClick={() => {
+                                const coefficients = session.sensors.map((sensor) => {
+                                  const draft = coefficientDrafts[sensor.id]
+                                  const touched = coefficientTouched[sensor.id] ?? {}
+                                  const parseCoefficient = (value: string | undefined) => {
+                                    const normalized = value?.trim().replace(",", ".") ?? ""
+                                    return normalized.length > 0 ? Number(normalized) : Number.NaN
+                                  }
+                                  return {
+                                    sensorId: sensor.id,
+                                    coeffA: touched.a ? parseCoefficient(draft?.a) : sensor.coeffA,
+                                    coeffB: touched.b ? parseCoefficient(draft?.b) : sensor.coeffB,
+                                    coeffC: touched.c ? parseCoefficient(draft?.c) : sensor.coeffC,
+                                  }
+                                })
+                                if (
+                                  coefficients.some(
+                                    (item) =>
+                                      !Number.isFinite(item.coeffA) ||
+                                      !Number.isFinite(item.coeffB) ||
+                                      !Number.isFinite(item.coeffC) ||
+                                      (Math.abs(item.coeffC) > 1e-12 &&
+                                        Math.abs(item.coeffA) <= 1e-12),
+                                  )
+                                ) {
+                                  setActionError(t("adjustment.cards.coefficients.invalid"))
+                                  return
                                 }
-                                return {
-                                  sensorId: sensor.id,
-                                  coeffA: parseCoefficient(draft?.a),
-                                  coeffB: parseCoefficient(draft?.b),
-                                  coeffC: parseCoefficient(draft?.c),
-                                }
-                              })
-                              if (
-                                coefficients.some(
-                                  (item) =>
-                                    !Number.isFinite(item.coeffA) ||
-                                    !Number.isFinite(item.coeffB) ||
-                                    !Number.isFinite(item.coeffC) ||
-                                    (Math.abs(item.coeffC) > 1e-12 &&
-                                      Math.abs(item.coeffA) <= 1e-12),
-                                )
-                              ) {
-                                setActionError(t("adjustment.cards.coefficients.invalid"))
-                                return
-                              }
-                              updateCoefficientsMutation.mutate(coefficients)
-                            }}
-                          >
-                            {updateCoefficientsMutation.isPending
-                              ? t("adjustment.cards.coefficients.saving")
-                              : t("adjustment.cards.coefficients.validate")}
-                          </Button>
-                        </div>
+                                updateCoefficientsMutation.mutate(coefficients)
+                              }}
+                            >
+                              {updateCoefficientsMutation.isPending
+                                ? t("adjustment.cards.coefficients.saving")
+                                : t("adjustment.cards.coefficients.validate")}
+                            </Button>
+                          </div>
+                        ) : null}
                       </CardContent>
                     </Card>
                   ) : null}
