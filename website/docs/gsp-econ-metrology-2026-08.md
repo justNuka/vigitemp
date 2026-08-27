@@ -68,6 +68,19 @@ Le découpage introduit par la PR #48 pour l'étalonnage (`a/b` puis `c/d/e/m/h/
 
 Les synchronisations `ECON` hors contexte `AJUSTAGE` / `ETALONNAGE` ne sont pas compactées et conservent le comportement complet de Surveillance.
 
+## Dépassement firmware `ovf`
+
+Le retour terrain du 27/08/2026 a montré le cas suivant : une trame `ECON` contenait déjà une valeur de coefficient très grande (`B≈450000000`) puis le firmware répondait `ACK=ECON` avec `B=ovf`.
+
+Ce cas ne doit pas être assimilé à un acquittement réussi :
+
+- côté Serveur/Surveillance, `GspProtocol.IsAcknowledgementForTarget()` refuse maintenant tout `ACK` dont la réponse contient un champ `*=ovf` ;
+- côté Web/Métrologie, le helper d'envoi inspecte également la réponse brute et remonte une erreur explicite avec le nom du champ concerné ;
+- aucun clamp ni remplacement automatique du coefficient n'est appliqué, car la plage numérique officiellement supportée par le firmware n'est pas documentée dans le dépôt ;
+- le formatage sur 10 décimales ne crée pas cette valeur : il faut diagnostiquer la dernière ligne `t_ajustage` et les valeurs ayant servi à son calcul.
+
+Le diagnostic détaillé et la requête SQL de contrôle sont conservés dans `website/docs/gsp-econ-overflow-27-08-2026.md`.
+
 ## Infos modifiées depuis la dernière mesure
 
 À **chaque interrogation de mesure GSP** réalisée avec le contexte `AJUSTAGE` ou `ETALONNAGE`, le serveur force :
@@ -120,14 +133,16 @@ Le helper `GspProtocol.TrySplitEconCalibrationCommand` peut encore être présen
 - `Vigitemp Serveur/Vigitemp Serveur/SqlServerDatabaseProvider.cs` ;
 - `website/src/lib/metrology-gsp-configuration.ts` ;
 - `website/src/lib/metrology-adjustment-session.ts` ;
-- `website/src/lib/metrology-calibration-session.ts`.
+- `website/src/lib/metrology-calibration-session.ts` ;
+- `website/docs/gsp-econ-overflow-27-08-2026.md`.
 
 ## Validation terrain
 
 - Ajustage : contrôler qu'une configuration GSP produit **une seule** trame `ECON` contenant uniquement `a/b/c` ;
 - Étalonnage : même contrôle, sans seconde trame contenant `d/e/m/h/l/f/r/t` ;
 - avec `SPNB-26000065` et `1.0000000000 / 0.0000000000 / 0.0000000000`, vérifier une trame de 57 caractères ;
-- contrôler que chaque `ECON` compact reçoit bien `ACK=ECON` ;
+- contrôler que chaque `ECON` compact normal reçoit bien `ACK=ECON` ;
+- vérifier qu'un retour `A=ovf`, `B=ovf` ou `C=ovf` est rejeté malgré `ACK=ECON` ;
 - pendant plusieurs interrogations successives en Ajustage, vérifier que `Infos_Modifiees_Depuis_Derniere_Mesure` reste/revient à `1` ;
 - faire le même contrôle pendant l'Étalonnage ;
 - vérifier le comportement avec `read`, `force-read` et, si utilisé, un `TEMP` brut ;
