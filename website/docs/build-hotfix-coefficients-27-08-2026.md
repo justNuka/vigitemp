@@ -12,7 +12,7 @@ Type error: Argument of type 'number | undefined' is not assignable to parameter
 
 Branche de correction : `agent/fix-coefficient-types-build`.
 
-Statut : **EN_COURS**.
+Statut : **PR_OUVERTE — PR #65**.
 
 ## Cause confirmée
 
@@ -48,7 +48,8 @@ Modification :
 - [x] aucune PR ouverte au démarrage ;
 - [x] vérification de `/api/metrologie/ajustage/sondes` : A/B/C sont présents sur toutes les lignes avec fallback numérique ;
 - [x] correction limitée au contrat TypeScript partagé ;
-- [x] changelog Web mis à jour.
+- [x] changelog Web mis à jour ;
+- [x] PR #65 ouverte vers `dev` sans merge automatique.
 
 ## Validation à effectuer
 
