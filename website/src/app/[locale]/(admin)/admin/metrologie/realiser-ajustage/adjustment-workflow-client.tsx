@@ -148,7 +148,10 @@ function formatDecimalDisplay(value: unknown, maxFractionDigits = 6) {
 }
 
 function formatCoefficientDisplay(value: unknown) {
-  return formatDecimalDisplay(value, COEFFICIENT_DISPLAY_DECIMALS)
+  if (value === null || value === undefined || value === "") return ""
+  const parsed = typeof value === "number" ? value : Number(String(value).replace(",", "."))
+  if (!Number.isFinite(parsed)) return String(value)
+  return parsed.toFixed(COEFFICIENT_DISPLAY_DECIMALS)
 }
 
 function normalizeUnit(value: string | null | undefined) {
