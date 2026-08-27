@@ -5,6 +5,7 @@
 - Dépôt : `justNuka/vigitemp`
 - Branche d’intégration : `dev`
 - Branche du correctif : `agent/server-gsp-plus-response`
+- PR : #61 — ouverte vers `dev`
 - Date du retour terrain : 27/08/2026
 - Composant concerné : Serveur d’interrogation Windows
 - Version produit Serveur visée : `0.90.2`
