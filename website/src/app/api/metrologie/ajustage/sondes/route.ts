@@ -75,39 +75,70 @@ export const GET = withStandardOrExpertAnyAuthorizationLogging(
             select: {
               Sonde_Numero_Serie: true,
               Unite: true,
+              Coeff_X2: true,
+              Coeff_X: true,
+              Coeff_Constant: true,
               Date_Heure_Ajustage: true,
+              Id_Ajustage: true,
             },
-            orderBy: [{ Sonde_Numero_Serie: "asc" }, { Date_Heure_Ajustage: "desc" }],
+            orderBy: [
+              { Sonde_Numero_Serie: "asc" },
+              { Date_Heure_Ajustage: "desc" },
+              { Id_Ajustage: "desc" },
+            ],
           })
         : []
 
-      const latestAdjustmentUnitBySerial = new Map<string, string | null>()
+      const latestAdjustmentBySerial = new Map<
+        string,
+        {
+          unit: string | null
+          coeffA: number
+          coeffB: number
+          coeffC: number
+        }
+      >()
       for (const adjustment of latestAdjustments) {
         const serial = adjustment.Sonde_Numero_Serie?.trim()
-        if (!serial || latestAdjustmentUnitBySerial.has(serial)) continue
-        latestAdjustmentUnitBySerial.set(serial, adjustment.Unite?.trim() || null)
+        if (!serial || latestAdjustmentBySerial.has(serial)) continue
+
+        const coeffX2 = typeof adjustment.Coeff_X2 === "number" ? adjustment.Coeff_X2 : 0
+        const coeffX = typeof adjustment.Coeff_X === "number" ? adjustment.Coeff_X : 1
+        const coeffConstant = typeof adjustment.Coeff_Constant === "number" ? adjustment.Coeff_Constant : 0
+        const usesThreeCoefficients = Math.abs(coeffX2) > 1e-12
+
+        latestAdjustmentBySerial.set(serial, {
+          unit: adjustment.Unite?.trim() || null,
+          coeffA: usesThreeCoefficients ? coeffX2 : coeffX,
+          coeffB: usesThreeCoefficients ? coeffX : coeffConstant,
+          coeffC: usesThreeCoefficients ? coeffConstant : 0,
+        })
       }
 
-      const data = sondes.map((sonde) => ({
-        id: sonde.Id_Sonde,
-        serialNumber: sonde.Sonde_Numero_Serie ?? "-",
-        locationId: sonde.t_lieu[0]?.Id_Lieu ?? null,
-        locationName: sonde.t_lieu[0]?.Nom_Lieu ?? null,
-        unit: sonde.Sonde_Numero_Serie
-          ? latestAdjustmentUnitBySerial.get(sonde.Sonde_Numero_Serie.trim()) ||
-            sonde.t_sonde_type?.Unite?.trim() ||
-            null
-          : sonde.t_sonde_type?.Unite?.trim() || null,
-        moduleId: sonde.Id_Module ?? null,
-        moduleName:
-          (typeof sonde.Id_Module === "number" ? moduleById.get(sonde.Id_Module)?.Module_Numero_Serie : null) ??
-          (typeof sonde.Id_Module === "number" ? moduleById.get(sonde.Id_Module)?.Emplacement : null) ??
-          null,
-        modulePort:
-          (typeof sonde.Id_Module === "number" ? moduleById.get(sonde.Id_Module)?.Port_Serie : null) ?? null,
-        currentCalibrationValue: typeof sonde.Sonde_Offset === "number" ? sonde.Sonde_Offset : 0,
-        isGso: Boolean(sonde.Est_Sonde_GSO),
-      }))
+      const data = sondes.map((sonde) => {
+        const serial = sonde.Sonde_Numero_Serie?.trim() ?? ""
+        const previousAdjustment = serial ? latestAdjustmentBySerial.get(serial) : undefined
+
+        return {
+          id: sonde.Id_Sonde,
+          serialNumber: sonde.Sonde_Numero_Serie ?? "-",
+          locationId: sonde.t_lieu[0]?.Id_Lieu ?? null,
+          locationName: sonde.t_lieu[0]?.Nom_Lieu ?? null,
+          unit: previousAdjustment?.unit || sonde.t_sonde_type?.Unite?.trim() || null,
+          moduleId: sonde.Id_Module ?? null,
+          moduleName:
+            (typeof sonde.Id_Module === "number" ? moduleById.get(sonde.Id_Module)?.Module_Numero_Serie : null) ??
+            (typeof sonde.Id_Module === "number" ? moduleById.get(sonde.Id_Module)?.Emplacement : null) ??
+            null,
+          modulePort:
+            (typeof sonde.Id_Module === "number" ? moduleById.get(sonde.Id_Module)?.Port_Serie : null) ?? null,
+          currentCalibrationValue: typeof sonde.Sonde_Offset === "number" ? sonde.Sonde_Offset : 0,
+          isGso: Boolean(sonde.Est_Sonde_GSO),
+          coeffA: previousAdjustment?.coeffA ?? 1,
+          coeffB: previousAdjustment?.coeffB ?? 0,
+          coeffC: previousAdjustment?.coeffC ?? 0,
+        }
+      })
 
       return apiOk(data)
     } catch (error) {

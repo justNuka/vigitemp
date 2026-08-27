@@ -67,6 +67,7 @@ import type {
 } from "@/lib/metrology-calibration-session"
 import type { MetrologyPreviewReading } from "@/lib/metrology-reading-preview"
 import { MetrologySubpagesCards } from "../_components/metrology-subpages-cards"
+import { CalibrationCoefficientsCard } from "./calibration-coefficients-card"
 
 type Step = "selection" | "calibration"
 type SessionPayload = { session: PublicCalibrationSession | null }
@@ -222,6 +223,16 @@ export function CalibrationWorkflowClient() {
     },
   })
 
+  const stopPreviewMutation = useMutation({
+    mutationFn: () => fetchJson<{ stopped: boolean }>("/api/metrologie/lecture-sondes", {
+      method: "DELETE",
+      credentials: "include",
+    }),
+    onSettled: () => {
+      setPreviewReadingEnabled(false)
+    },
+  })
+
   const selectedSensors = useMemo(
     () => sensors.filter((sensor) => selectedSensorIds.includes(sensor.id)),
     [selectedSensorIds, sensors],
@@ -370,6 +381,7 @@ export function CalibrationWorkflowClient() {
   const error =
     startOperationMutation.error ??
     previewReadingQuery.error ??
+    stopPreviewMutation.error ??
     stopMutation.error
 
   const canStartOperation =
@@ -405,7 +417,14 @@ export function CalibrationWorkflowClient() {
                   {t("workflow.selection.continue")}
                 </Button>
               ) : !running ? (
-                <Button type="button" variant="outline" onClick={() => setStep("selection")}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    if (previewReadingEnabled) stopPreviewMutation.mutate()
+                    setStep("selection")
+                  }}
+                >
                   <ChevronLeft className="mr-2 h-4 w-4" />
                   {t("workflow.calibration.back")}
                 </Button>
@@ -605,11 +624,18 @@ export function CalibrationWorkflowClient() {
                         className="w-full"
                         disabled={
                           running ||
+                          stopPreviewMutation.isPending ||
                           selectedSensorIds.length === 0 ||
                           selectedStandardId.length === 0 ||
                           selectedMediumId.length === 0
                         }
-                        onClick={() => setPreviewReadingEnabled((current) => !current)}
+                        onClick={() => {
+                          if (previewReadingEnabled) {
+                            stopPreviewMutation.mutate()
+                          } else {
+                            setPreviewReadingEnabled(true)
+                          }
+                        }}
                       >
                         {previewReadingEnabled ? (
                           <>
@@ -668,6 +694,16 @@ export function CalibrationWorkflowClient() {
                     </CardContent>
                   </Card>
                 </div>
+
+                {!running && !startOperationMutation.isPending && selectedSensors.length > 0 ? (
+                  <CalibrationCoefficientsCard
+                    sensors={selectedSensors}
+                    readingActive={previewReadingEnabled}
+                    operator={operatorValue}
+                    standardId={selectedStandardId}
+                    mediumId={selectedMediumId}
+                  />
+                ) : null}
 
                 <Card>
                   <CardHeader className="flex flex-row items-start justify-between gap-4">
