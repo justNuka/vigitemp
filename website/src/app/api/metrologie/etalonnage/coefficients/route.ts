@@ -40,8 +40,7 @@ function safeErrorMessage(error: unknown, fallback: string) {
 
 function asBoolean(value: unknown) {
   if (typeof value === "boolean") return value
-  if (typeof value === "number") return value !== 0
-  if (typeof value === "bigint") return value !== 0n
+  if (typeof value === "number" || typeof value === "bigint") return Number(value) !== 0
   const normalized = String(value ?? "").trim().toLowerCase()
   return normalized === "1" || normalized === "true"
 }
