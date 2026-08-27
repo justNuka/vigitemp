@@ -35,4 +35,4 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyVersion("0.90.1.0")]
 [assembly: AssemblyFileVersion("0.90.1.0")]
 // Version produit SemVer du serveur.
-[assembly: AssemblyInformationalVersion("0.90.2")]
+[assembly: AssemblyInformationalVersion("0.90.3")]

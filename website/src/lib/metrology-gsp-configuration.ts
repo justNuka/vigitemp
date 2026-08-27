@@ -80,6 +80,11 @@ function normalizeCommandTarget(value: string) {
   return trimmed
 }
 
+function findFirmwareOverflowField(response: string) {
+  const match = /(?:^|\r?\n)\s*([A-Za-z][A-Za-z0-9_]*)\s*=\s*ovf\b/i.exec(response)
+  return match?.[1]?.trim() || null
+}
+
 function formatCoefficient(value: number) {
   const normalized = Math.abs(value) < 0.00000000005 ? 0 : value
   return normalized.toFixed(10)
@@ -310,10 +315,15 @@ async function sendConfiguration(
   const data = body?.data
   const rawResponse = String(data?.RawValue ?? data?.rawValue ?? "")
   const acknowledged = /(?:^|\r?\n)\s*ACK\s*=\s*ECON\b/i.test(rawResponse)
-  // ECON est une commande de configuration : un ACK explicite du firmware est
-  // la source de verite, même si l'ancienne API raw n'extrait aucune valeur numérique.
-  if (!response.ok || !acknowledged) {
-    const reason = String(data?.Error ?? data?.error ?? body?.message ?? "ACK ECON absent")
+  const overflowField = findFirmwareOverflowField(rawResponse)
+
+  // ECON est une commande de configuration : un ACK explicite du firmware reste
+  // la source de verite, mais un champ `*=ovf` signifie que le firmware n'a pas
+  // pu stocker la valeur et doit donc être considéré comme un échec explicite.
+  if (!response.ok || !acknowledged || overflowField) {
+    const reason = overflowField
+      ? `le firmware signale un dépassement sur le paramètre ${overflowField}`
+      : String(data?.Error ?? data?.error ?? body?.message ?? "ACK ECON absent")
     throw new Error(`ECON refuse pour ${config.serial}: ${reason}`)
   }
 

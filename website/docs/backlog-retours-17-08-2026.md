@@ -1112,3 +1112,73 @@ Comportement :
 - [ ] confirmer que le tableau récapitulatif des 10 acquisitions étalon + sondes est toujours présent ;
 - [ ] vérifier thème clair/sombre et FR/EN ;
 - [ ] lancer `pnpm lint` et `pnpm build` dans l'environnement projet complet.
+
+
+## GSP — filtrage `+++` en Surveillance et rejet des coefficients `ovf` — 27/08/2026
+
+Statut : **`PR_OUVERTE` — PR #62 — branche `agent/gsp-surveillance-coefficients`**.
+
+### Retours terrain
+
+Deux retours sont regroupés dans ce lot :
+
+- la PR #61 a corrigé le token série `+++` pour les lectures Hotline / métrologie, mais la Surveillance utilise le lecteur `SensorGSP` et devait bénéficier du même filtrage dans sa propre boucle de lecture ;
+- une capture montre une trame `ECON` contenant déjà un coefficient B d'environ `450000000` avant l'arrivée de la réponse firmware, puis `ACK=ECON` avec `B=ovf`.
+
+### État vérifié / cause
+
+- `SensorGSP` appelle `GspProtocol.StripCommandEcho()` pour déterminer si les octets reçus sont significatifs et démarrer les temporisations de réponse ; le filtre `+++` doit donc être situé dans la couche protocolaire commune pour couvrir réellement Surveillance ;
+- les helpers `FormatCoefficient()` côté C# et `formatCoefficient()` côté Web ne multiplient pas les valeurs, ils les sérialisent sur 10 décimales ; le `450000000` observé est donc déjà une valeur source avant l'envoi à la sonde ;
+- le mapping A/B/C reste le mapping existant : linéaire `A=Coeff_X`, `B=Coeff_Constant`, `C=0`, multipoint `A=Coeff_X2`, `B=Coeff_X`, `C=Coeff_Constant` ;
+- aucune plage numérique firmware exploitable n'est documentée dans le dépôt : aucun clamp arbitraire n'est ajouté ;
+- le moteur d'ajustage refuse déjà le cas strict où les deux valeurs brutes sont égales, mais une différence très faible et non nulle peut mathématiquement produire un coefficient très grand. La capture seule ne permet pas d'affirmer que c'est la cause du cas terrain : la dernière ligne `t_ajustage` doit être vérifiée.
+
+### Correctif PR #62
+
+Serveur :
+
+- ajout de `GspProtocol.StripTransportNoise()` et utilisation depuis `StripCommandEcho()` ;
+- seul le token exact `+++` est supprimé, y compris lorsqu'il précède la vraie trame ;
+- les valeurs métier contenant des `+`, notamment `Alarm=F+D+E+LH+LB+RB+RH`, restent intactes ;
+- ajout de `TryGetOverflowField()` ;
+- `IsAcknowledgementForTarget()` refuse désormais toute réponse contenant un champ `*=ovf`, même si `ACK=ECON` est présent ;
+- la synchronisation de configuration de Surveillance ne considère donc plus `B=ovf` comme un succès.
+
+Web / métrologie :
+
+- `metrology-gsp-configuration.ts` détecte aussi `*=ovf` dans la réponse brute ;
+- Ajustage / Étalonnage remontent une erreur explicite avec le nom du paramètre concerné au lieu de valider silencieusement l'ECON.
+
+Versioning :
+
+- Serveur `0.90.3` ;
+- Installateur Serveur `0.90.3` ;
+- Web technique `0.90.2`, affiché côté produit sous la forme `0.90.002` ;
+- Agent inchangé `1.0.1` ;
+- aucune migration BDD.
+
+### Fichiers principaux
+
+- `Vigitemp Serveur/Vigitemp Serveur/sensors/GspProtocol.cs` ;
+- `Vigitemp Serveur/Vigitemp Serveur/Properties/AssemblyInfo.cs` ;
+- `Vigitemp Serveur/VigitempServerInstaller/VigitempServerInstaller.csproj` ;
+- `website/src/lib/metrology-gsp-configuration.ts` ;
+- `website/package.json` ;
+- `CHANGELOG.md` ;
+- `website/docs/gsp-plus-transport-noise-27-08-2026.md` ;
+- `website/docs/gsp-econ-metrology-2026-08.md` ;
+- `website/docs/gsp-econ-overflow-27-08-2026.md`.
+
+### Validation terrain
+
+- [ ] en Surveillance, reproduire `+++` avant `ACK=TEMP` et confirmer que le lecteur attend la vraie réponse ;
+- [ ] vérifier une lecture GSP sans `+++` ;
+- [ ] confirmer que `Alarm=F+D+E+LH+LB+RB+RH` reste intact ;
+- [ ] vérifier qu'un `ACK=ECON` normal reste accepté ;
+- [ ] reproduire `A=ovf`, `B=ovf` et `C=ovf` si possible et confirmer le rejet côté Surveillance ;
+- [ ] reproduire `ovf` pendant Ajustage / Étalonnage et confirmer l'erreur explicite côté Web ;
+- [ ] exécuter la requête de diagnostic documentée sur les derniers `t_ajustage` de `SPNB-26000102` ;
+- [ ] comparer les coefficients stockés et les deux valeurs brutes à la trame TX observée ;
+- [ ] compiler le service Windows et l'installateur Serveur `0.90.3` ;
+- [ ] lancer `pnpm lint`, `pnpm i18n:check` et `pnpm build` ;
+- [ ] valider un ajustage linéaire normal puis un cas multipoint normal.

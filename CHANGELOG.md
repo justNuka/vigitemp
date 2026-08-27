@@ -9,19 +9,52 @@ Le format de version retenu est `MAJOR.MINOR.PATCH` (SemVer), sans zéros de tê
 
 ## [Unreleased]
 
-### Versions
+### Versions prévues par composant
 
-- Serveur d'interrogation : `0.90.1 -> 0.90.2`.
-- Installateur Serveur : `0.90.1 -> 0.90.2`, afin de suivre le binaire Serveur distribué.
-- Web : inchangé (`0.90.1`).
-- Agent Windows : inchangé (`1.0.1`).
+| Composant | Version précédente | Version de ce lot | Version minimale associée à ce lot |
+| --- | --- | --- | --- |
+| Serveur d'interrogation | `0.90.2` | `0.90.3` | `0.90.3` pour bénéficier du filtrage `+++` en Surveillance et du rejet des réponses `ovf` |
+| Installateur Serveur | `0.90.2` | `0.90.3` | `0.90.3` lorsqu'il distribue le Serveur `0.90.3` |
+| Web | `0.90.1` | `0.90.2` | `0.90.2` pour faire remonter explicitement un `ovf` ECON pendant les opérations de métrologie |
+| Agent Windows | `1.0.1` | inchangé | aucune nouvelle contrainte |
+| BDD / seeds | `0.90.1` canonique | inchangé | aucune migration |
+| Générateur de licences | `0.1.0` | inchangé | aucune nouvelle contrainte |
+
+### Corrigé — GSP / Surveillance
+
+- Le filtrage du token série de transport exact `+++`, introduit en Serveur `0.90.2` pour les lectures Hotline/Ajustage/Étalonnage, est déplacé dans la couche protocolaire GSP commune.
+- La Surveillance GSP ne considère donc plus `+++` comme la première donnée significative d'une réponse. Le délai de réponse incomplète ne démarre plus sur ce bruit et le lecteur continue d'attendre la vraie trame `ACK=TEMP ... END` dans ses délais normaux.
+- Le filtrage reste volontairement strict : seul le token exact `+++` est supprimé. Les valeurs métier contenant des `+`, notamment `Alarm=F+D+E+LH+LB+RB+RH`, sont conservées.
+
+### Corrigé — GSP / ECON
+
+- Une réponse firmware contenant un marqueur explicite de dépassement, par exemple `B=ovf`, n'est plus considérée comme un acquittement ECON réussi même si `ACK=ECON` est présent.
+- Le Serveur refuse désormais cet acquittement lors des synchronisations de configuration GSP utilisées par la Surveillance.
+- Le Web détecte également `*=ovf` dans la réponse brute des ECON de métrologie et remonte une erreur explicite indiquant le paramètre concerné au lieu de considérer l'ACK comme un succès.
+- Le correctif ne tronque, ne borne et ne remplace pas automatiquement le coefficient fautif : la plage numérique réellement acceptée par le firmware n'étant pas formalisée dans le dépôt, la valeur source doit être diagnostiquée plutôt que modifiée arbitrairement.
+- Le retour terrain ayant motivé ce contrôle montrait une trame sortante contenant déjà `B=450000000.0000000000`, suivie de `ACK=ECON`, `B=ovf`. Le problème n'est donc pas un simple défaut de parsing de la réponse : la valeur anormalement grande est présente avant l'envoi à la sonde.
+
+### Compatibilité / migration
+
+- Aucune migration BDD.
+- Aucun changement de formule d'ajustage ni de mapping linéaire/multipoint A/B/C.
+- Aucun changement des délais de Surveillance GSP : seuls les tokens considérés comme données significatives sont corrigés.
+- Pour un déploiement couvrant à la fois les deux corrections de ce lot, utiliser **Serveur >= `0.90.3`** et **Web >= `0.90.2`**.
+- L'Agent reste compatible sans mise à jour (`1.0.1`).
+
+## Serveur `0.90.2` / Installateur Serveur `0.90.2` — 2026-08-27
 
 ### Corrigé
 
-- Lecture GSP via le Serveur/Hotline : la séquence de contrôle série exacte `+++` n'est plus considérée comme une réponse métier. Le lecteur continue d'attendre la vraie trame GSP (`ACK=TEMP`, `Serial`, `Mesure`, `END`) au lieu de terminer sur `+++` puis de purger la réponse utile arrivée juste après.
+- Lecture GSP via le Serveur/Hotline : la séquence de contrôle série exacte `+++` n'est plus considérée comme une réponse métier dans le lecteur utilisé par Hotline, Ajustage et Étalonnage. Le lecteur continue d'attendre la vraie trame GSP (`ACK=TEMP`, `Serial`, `Mesure`, `END`) au lieu de terminer sur `+++` puis de purger la réponse utile arrivée juste après.
 - Le filtrage est volontairement limité au token de transport `+++` ; les signes `+` présents dans des données métier comme `Alarm=F+D+E+LH+LB+RB+RH` restent intacts.
 
-### Versioning et maintenance
+### Compatibilité / migration
+
+- Aucune migration BDD ni modification de contrat Web/API.
+- Le Serveur `0.90.2` suffit pour corriger le chemin Hotline/Métrologie, mais la Surveillance GSP nécessite le correctif complémentaire du Serveur `0.90.3`.
+
+## Versioning et maintenance — 2026-08-27
 
 - Ajout de ce changelog racine pour centraliser les évolutions livrables.
 - Formalisation de la convention SemVer `MAJOR.MINOR.PATCH` pour les versions produit lisibles.
@@ -29,12 +62,7 @@ Le format de version retenu est `MAJOR.MINOR.PATCH` (SemVer), sans zéros de tê
 - Ajout d'une version produit SemVer explicite pour l'Agent (`1.0.1`) tout en conservant ses versions techniques d'assembly existantes (`1.0.1.1`).
 - Ajout d'une version produit explicite aux installateurs/outils qui suivent directement un composant : installateur Serveur `0.90.1`, installateur Agent `1.0.1`, générateur de licences `0.1.0`.
 - Les scripts de seed MySQL et SQL Server portent encore historiquement l'étiquette `0.90.001`. Dans la nouvelle convention, cette valeur se lit `0.90.1`; leurs prochains changements devront utiliser l'écriture canonique sans zéro de tête.
-
-### Compatibilité / migration
-
-- Le correctif `+++` n'introduit aucune migration BDD ni modification de contrat Web/API ; seul le Serveur d'interrogation doit être remplacé pour bénéficier du correctif.
-- Aucune migration de données n'est introduite par le lot de versioning.
-- Aucun protocole Web ↔ Serveur ↔ Agent n'est modifié par le lot de versioning.
+- Aucune migration de données n'a été introduite par ce lot de versioning.
 - Les attributs .NET techniques à quatre composantes restent distincts de la version produit SemVer lorsqu'ils sont déjà utilisés par les projets historiques.
 
 ## Baseline de référence — 2026-08-27
@@ -49,7 +77,7 @@ Cette section fixe le **point de départ du changelog** à partir de l'état ré
 | Serveur d'interrogation | `0.90.1` | `AssemblyInformationalVersion`; les métadonnées d'assembly à 4 composantes restent techniques |
 | Agent Windows | `1.0.1` | version produit SemVer ajoutée à partir de la version technique existante `1.0.1.1` |
 | Installateur Serveur | `0.90.1` | suit la version du Serveur qu'il distribue |
-| Installateur Agent | `1.0.1` | suit la version de l'Agent distribué |
+| Installateur Agent | `1.0.1` | suit la version de l'Agent qu'il distribue |
 | Générateur de licences | `0.1.0` | outil interne versionné indépendamment |
 | Seeds BDD MySQL / SQL Server | `0.90.1` canonique | les fichiers existants portent encore le libellé historique `0.90.001`; pas de réécriture des gros seeds dans ce lot documentaire |
 | Installateur de prérequis Serveur | non versionné fonctionnellement | utilitaire de prérequis; sa version d'assembly par défaut n'est pas considérée comme une version produit VigiSensys |
