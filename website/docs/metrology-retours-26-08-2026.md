@@ -5,8 +5,9 @@
 - Dépôt : `justNuka/vigitemp`
 - Branche d’intégration : `dev`
 - PR #57 — **mergée** le 26/08/2026, merge `0a1a6aaf323200f521f02cc10689bb9596d0f0d5`.
-- Branche courante : `agent/metrology-adjustment-workflow-ui`.
-- PR courante : #58 — ouverte vers `dev`.
+- PR #58 — **mergée** le 27/08/2026, merge `3f93d7c192828faf46497541b8b7e82e7638c250`.
+- Branche courante : `agent/adjustment-coefficients-display`.
+- PR courante : à ouvrir vers `dev`.
 
 Ce document conserve le détail des retours du 26/08/2026 pendant leur traitement. Il doit être consolidé dans `website/docs/backlog-retours-17-08-2026.md` au fur et à mesure des PR livrées.
 
@@ -64,6 +65,54 @@ Avant correction :
 - le composant `MetrologySubpagesCards` reste rendu pendant l’opération.
 
 La cadence devra être modifiée simultanément côté React, API et moteur de session. Il ne faut pas livrer uniquement le sélecteur UI à 60 s tout en laissant la boucle serveur à 15 s.
+
+## Ajustage — coefficients visibles avant le démarrage
+
+### Retour complémentaire du 27/08/2026
+
+- les coefficients A/B/C doivent être visibles dès la préparation de l’Ajustage, sans attendre le démarrage de la session ni les premières réponses des sondes ;
+- l’affichage des coefficients doit être limité à **3 décimales**, comme l’affichage retenu pour l’Étalonnage.
+
+### État vérifié avant correction
+
+La carte des coefficients était conditionnée à `isAdjustmentRunning && session`. Les coefficients n’étaient donc disponibles dans l’interface qu’après création de la session. De plus, les valeurs initiales des inputs étaient formatées avec jusqu’à 10 décimales.
+
+L’endpoint `/api/metrologie/ajustage/sondes` interrogeait déjà les derniers enregistrements `t_ajustage` pour retrouver l’unité, mais ne remontait pas `Coeff_X2`, `Coeff_X` et `Coeff_Constant`. Le moteur de session possédait déjà la logique de conversion historique vers les coefficients A/B/C :
+
+- ajustage à deux coefficients : `A = Coeff_X`, `B = Coeff_Constant`, `C = 0` ;
+- ajustage à trois coefficients : `A = Coeff_X2`, `B = Coeff_X`, `C = Coeff_Constant`.
+
+### Correctif préparé
+
+Branche : `agent/adjustment-coefficients-display`.
+
+Fichiers principaux :
+
+- `website/src/app/api/metrologie/ajustage/sondes/route.ts` ;
+- `website/src/hooks/useAdjustmentSensors.ts` ;
+- `website/src/app/[locale]/(admin)/admin/metrologie/realiser-ajustage/adjustment-workflow-client.tsx`.
+
+Comportement :
+
+- l’API des sondes Ajustage renvoie maintenant les coefficients A/B/C issus du dernier `t_ajustage`, avec les mêmes valeurs par défaut que le moteur de session (`1 / 0 / 0`) lorsqu’aucun ajustage n’existe ;
+- la carte coefficients est visible dès que des sondes ont été sélectionnées et que l’utilisateur arrive sur l’étape Ajustage ;
+- avant le démarrage, les coefficients sont affichés en lecture seule : le besoin est d’abord de les rendre visibles, sans ajouter un nouveau chemin de persistance hors session ;
+- pendant une session active, les inputs restent modifiables et le bouton de validation existant reste disponible ;
+- l’affichage initial est limité à 3 décimales au lieu de 10 ;
+- afin d’éviter une perte de précision silencieuse, une valeur uniquement arrondie pour l’affichage n’est pas réécrite en base si l’utilisateur ne modifie pas le champ : la valeur brute de session est conservée pour les coefficients non touchés ;
+- seuls les coefficients effectivement modifiés par l’opérateur sont convertis depuis le texte affiché lors de la validation.
+
+### Checklist terrain
+
+- [ ] sélectionner une sonde possédant déjà un ajustage puis aller sur l’étape Ajustage sans démarrer : A/B/C sont immédiatement visibles ;
+- [ ] vérifier une sonde sans historique d’ajustage : affichage `1 / 0 / 0` ;
+- [ ] vérifier un historique à deux coefficients et un historique à trois coefficients ;
+- [ ] confirmer qu’aucune lecture sonde n’est nécessaire pour faire apparaître la carte ;
+- [ ] vérifier que les coefficients affichés ne dépassent pas 3 décimales ;
+- [ ] démarrer l’Ajustage : les mêmes coefficients restent affichés et deviennent modifiables ;
+- [ ] cliquer sur Valider sans modifier un coefficient dont la valeur brute contient plus de 3 décimales, puis vérifier qu’il n’a pas été arrondi en base ;
+- [ ] modifier explicitement A/B/C puis valider et vérifier l’enregistrement / l’envoi à la prochaine interrogation ;
+- [ ] contrôler une locale FR avec saisie virgule et une locale EN avec saisie point.
 
 ## Étalonnage — affichage à 3 décimales et diagnostic des calculs
 
