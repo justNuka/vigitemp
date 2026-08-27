@@ -35,4 +35,4 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyVersion("0.90.1.0")]
 [assembly: AssemblyFileVersion("0.90.1.0")]
 // Version produit lisible commune au web et aux seeds.
-[assembly: AssemblyInformationalVersion("0.90.001")]
+[assembly: AssemblyInformationalVersion("0.90.1")]
