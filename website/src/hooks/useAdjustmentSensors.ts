@@ -13,6 +13,9 @@ export type AdjustmentSensorRow = {
   modulePort: string | null
   currentCalibrationValue: number
   isGso: boolean
+  coeffA: number
+  coeffB: number
+  coeffC: number
 }
 
 async function fetchAdjustmentSensors() {
