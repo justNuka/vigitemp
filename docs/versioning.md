@@ -7,9 +7,46 @@ VigiSensys est composé de plusieurs exécutables, applications et artefacts qui
 - identifier sans ambiguïté la version réellement livrée d'un composant ;
 - savoir quels composants doivent être incrémentés lors d'un changement ;
 - documenter les compatibilités sans les supposer ;
-- garder un changelog exploitable par le développement, l'installation et le support terrain.
+- garder un historique lisible aussi bien au niveau produit qu'au niveau technique.
 
-Le fichier racine [`CHANGELOG.md`](../CHANGELOG.md) est la référence lisible des changements livrables.
+## Organisation des changelogs
+
+Le suivi est volontairement séparé en **deux niveaux**.
+
+### 1. Changelog produit racine
+
+[`CHANGELOG.md`](../CHANGELOG.md) est la vue synthétique de VigiSensys.
+
+Il contient uniquement :
+
+- les versions des composants présentes dans une livraison ou un état intégré ;
+- les grandes évolutions par composant ;
+- les migrations ou actions d'installation importantes ;
+- les contraintes de compatibilité réellement vérifiées ;
+- des liens vers les changelogs détaillés.
+
+Il ne doit pas devenir un journal exhaustif de commits, de fichiers ou de retours terrain.
+
+### 2. Changelogs détaillés par composant
+
+Les détails sont conservés au plus près de chaque composant :
+
+- Web : [`website/CHANGELOG.md`](../website/CHANGELOG.md)
+- Serveur Windows : [`Vigitemp Serveur/CHANGELOG.md`](../Vigitemp%20Serveur/CHANGELOG.md)
+- Agent Windows : [`Vigitemp agent/CHANGELOG.md`](../Vigitemp%20agent/CHANGELOG.md)
+- Base de données / seeds : [`db/CHANGELOG.md`](../db/CHANGELOG.md)
+- Générateur de licences : [`Vigitemp Serveur/Vigitemp License Generator/CHANGELOG.md`](../Vigitemp%20Serveur/Vigitemp%20License%20Generator/CHANGELOG.md)
+
+Chaque changelog de composant peut détailler :
+
+- `Ajouté` ;
+- `Modifié` ;
+- `Corrigé` ;
+- compatibilité / migration ;
+- PR principales ;
+- références techniques utiles.
+
+Les checklists terrain exhaustives et les détails de reprise restent dans les backlogs et documents dédiés, notamment `website/docs/backlog-retours-17-08-2026.md`.
 
 ## Format retenu
 
@@ -28,7 +65,7 @@ Exemples valides :
 2.4.17
 ```
 
-Les zéros de tête ne sont pas utilisés. Ainsi :
+Chaque partie peut contenir plusieurs chiffres. Les zéros de tête ne sont pas utilisés :
 
 ```text
 0.90.001  ->  0.90.1
@@ -54,7 +91,7 @@ Exemple : `0.90.1 -> 0.90.2`.
 
 À incrémenter lorsqu'une capacité fonctionnelle est ajoutée ou qu'un lot cohérent modifie sensiblement le comportement du composant.
 
-Avant `1.0.0`, le produit reste en phase `0.x.y` : une évolution MINOR peut exceptionnellement contenir une incompatibilité. Si c'est le cas, elle doit être signalée explicitement dans le changelog et dans la PR.
+Avant `1.0.0`, le produit reste en phase `0.x.y` : une évolution MINOR peut exceptionnellement contenir une incompatibilité. Si c'est le cas, elle doit être signalée explicitement.
 
 Exemple : `0.90.2 -> 0.91.0`.
 
@@ -66,19 +103,17 @@ Exemple : `1.8.3 -> 2.0.0`.
 
 ## Les composants ne sont pas obligatoirement synchronisés
 
-Il n'y a pas de règle imposant que le Web, le Serveur, l'Agent et les outils aient toujours le même numéro.
+Il n'y a pas de règle imposant que le Web, le Serveur, l'Agent, la BDD et les outils aient le même numéro.
 
-Exemple : si une correction ne concerne que le Web :
+Exemple :
 
 ```text
 Web      0.90.1 -> 0.90.2
-Serveur  0.90.1 (inchangé)
+Serveur  0.90.3 (inchangé)
 Agent    1.0.1  (inchangé)
 ```
 
 Cette règle évite de créer de fausses releases pour des composants dont le binaire ou le comportement n'a pas changé.
-
-Une synchronisation volontaire reste possible pour un lot de livraison global, mais elle doit être décidée explicitement et documentée.
 
 ## Sources de version par composant
 
@@ -96,7 +131,7 @@ Champ :
 "version": "x.y.z"
 ```
 
-La version n'est incrémentée que si le Web fait partie du lot livré.
+L'interface doit afficher directement cette notation canonique, sans rajouter artificiellement de zéros.
 
 ### Serveur Windows
 
@@ -106,13 +141,13 @@ Projet :
 Vigitemp Serveur/Vigitemp Serveur/
 ```
 
-La version produit SemVer destinée à être lue par l'équipe et les outils est :
+Version produit de référence :
 
 ```csharp
 AssemblyInformationalVersion("x.y.z")
 ```
 
-`AssemblyVersion` et `AssemblyFileVersion` sont des métadonnées techniques .NET à quatre composantes. Elles peuvent rester distinctes de la version produit et ne doivent pas être modifiées uniquement pour rendre leur format visuellement identique à SemVer.
+`AssemblyVersion` et `AssemblyFileVersion` peuvent rester à quatre composantes lorsque l'historique .NET du projet l'exige.
 
 ### Agent Windows
 
@@ -122,13 +157,13 @@ Projet :
 Vigitemp agent/Vigitemp agent/
 ```
 
-Comme pour le Serveur, la version produit de référence est :
+Version produit de référence :
 
 ```csharp
 AssemblyInformationalVersion("x.y.z")
 ```
 
-Les versions historiques `AssemblyVersion` / `AssemblyFileVersion` restent des métadonnées techniques.
+Les métadonnées techniques historiques à quatre composantes restent indépendantes.
 
 ### Installateur Serveur
 
@@ -138,13 +173,13 @@ Projet :
 Vigitemp Serveur/VigitempServerInstaller/
 ```
 
-L'installateur suit la version produit du Serveur qu'il embarque. Son projet SDK déclare donc une propriété :
+Il suit normalement la version du Serveur distribué via :
 
 ```xml
 <Version>x.y.z</Version>
 ```
 
-Une modification de l'installateur seul peut nécessiter une nouvelle livraison d'installateur ; dans ce cas le changelog doit expliquer clairement si la version du Serveur embarqué reste inchangée.
+Si seul l'installateur change, le changelog Serveur doit expliquer clairement la relation entre version de l'installateur et version du binaire embarqué.
 
 ### Installateur Agent
 
@@ -154,9 +189,7 @@ Projet :
 Vigitemp agent/VigitempAgentInstaller/
 ```
 
-Sa version produit lisible suit celle de l'Agent distribué via `AssemblyInformationalVersion`.
-
-Ses versions d'assembly historiques à quatre composantes restent techniques.
+Il suit normalement la version produit de l'Agent distribué.
 
 ### Générateur de licences
 
@@ -166,9 +199,7 @@ Projet :
 Vigitemp Serveur/Vigitemp License Generator/
 ```
 
-Cet outil est versionné indépendamment, car une évolution du générateur ne signifie pas nécessairement une nouvelle version du Web, du Serveur ou de l'Agent.
-
-Sa version produit de référence est `AssemblyInformationalVersion`.
+Il est versionné indépendamment via `AssemblyInformationalVersion`.
 
 ### Base de données / seeds
 
@@ -179,62 +210,63 @@ db/vigisensys_seed.sql
 db/vigisensys_seed_mssql.sql
 ```
 
-contiennent un marqueur de version de seed/bootstrap. Ce marqueur doit utiliser la notation canonique `x.y.z` lors de toute prochaine régénération ou modification du seed.
+portent une révision VigiSensys du bootstrap/seed.
 
-Le numéro de seed :
+Ce numéro :
 
 - n'est pas la version du moteur MySQL ou SQL Server ;
-- ne remplace pas une vraie stratégie de migration de schéma ;
-- doit être incrémenté uniquement lorsqu'un changement du bootstrap/DDL justifie une nouvelle révision de cet artefact.
+- ne remplace pas une stratégie de migration ;
+- ne doit évoluer que lorsque le bootstrap, le DDL ou les données initiales changent de manière significative.
 
-Les seeds existants à la création de cette convention portent encore `0.90.001`. Cette écriture historique correspond canoniquement à `0.90.1`.
+Les seeds historiques `0.90.001` correspondent canoniquement à `0.90.1`.
 
 ### Fichiers de licence
 
-Les fichiers `.vtlic` sont des données de licence générées, pas des versions du logiciel. Ils ne reçoivent donc pas un numéro SemVer de composant.
+Les fichiers `.vtlic` sont des données générées, pas des releases logicielles autonomes. Ils ne reçoivent pas de numéro SemVer propre.
 
 ## Compatibilité entre composants
 
-Une proximité de numéros de version ne prouve pas la compatibilité.
+Une proximité de numéros ne prouve pas la compatibilité.
 
-Lorsqu'un changement crée une dépendance entre deux composants, le changelog doit préciser la combinaison réellement requise ou testée, par exemple :
+Une version minimale ne doit être déclarée que lorsqu'elle est justifiée par :
+
+- un contrat d'API ou de payload ;
+- une dépendance de schéma BDD ;
+- le protocole Agent ↔ Web/Serveur ;
+- un format de licence ;
+- une exigence d'installation/configuration ;
+- ou une validation terrain explicite.
+
+Exemple :
 
 ```text
 Serveur 0.92.0 requiert Web >= 0.91.3.
 ```
 
-Cette information ne doit être ajoutée que si le contrat a été vérifié dans le code et/ou testé. En l'absence de contrainte vérifiée, ne pas inventer de version minimale.
-
-Les points à surveiller en priorité sont :
-
-- formats d'API et de payload ;
-- schéma et données BDD ;
-- protocole Agent ↔ Web/Serveur ;
-- format de licence et options de licence ;
-- configuration d'installation et variables requises.
+En l'absence de contrainte vérifiée, écrire qu'aucune nouvelle contrainte n'est connue plutôt que d'inventer un minimum.
 
 ## Processus pour une nouvelle livraison
 
 1. Partir du `HEAD` actuel de `dev` sur une branche dédiée.
-2. Identifier exactement les composants modifiés par le lot.
-3. Choisir PATCH, MINOR ou MAJOR pour chaque composant concerné.
-4. Modifier uniquement les sources de version des composants réellement livrés.
-5. Compléter `[Unreleased]` dans `CHANGELOG.md` avec les changements, migrations et compatibilités.
-6. Vérifier le diff complet de la branche contre `dev`.
-7. Faire relire et merger la PR vers `dev`.
-8. Au moment où une livraison est réellement figée, déplacer les éléments de `[Unreleased]` dans une section datée correspondant aux versions livrées.
+2. Identifier les composants réellement modifiés.
+3. Choisir PATCH, MINOR ou MAJOR pour chacun des composants concernés.
+4. Mettre à jour uniquement leurs sources de version.
+5. Compléter le `[Unreleased]` du changelog de chaque composant modifié avec le détail utile.
+6. Compléter le `[Unreleased]` du changelog racine avec une synthèse courte et les versions/compatibilités importantes.
+7. Vérifier le diff complet contre `dev` et supprimer tout changement parasite.
+8. Mettre à jour le backlog/document de reprise concerné.
+9. Ouvrir la PR vers `dev` sans la merger.
+10. Lorsqu'une livraison est réellement figée, transformer les entrées `[Unreleased]` en sections datées/versionnées.
 
-## Format conseillé d'une entrée de changelog
+## Format conseillé — changelog composant
 
 ```md
-## Livraison — 2026-09-15
-
-### Versions
-- Web : 0.90.1 -> 0.91.0
-- Serveur : 0.90.1 -> 0.90.2
-- Agent : inchangé (1.0.1)
+## [0.91.0] — 2026-09-15
 
 ### Ajouté
+- ...
+
+### Modifié
 - ...
 
 ### Corrigé
@@ -247,4 +279,23 @@ Les points à surveiller en priorité sont :
 - #...
 ```
 
-L'objectif est qu'une personne qui n'a pas suivi les commits puisse comprendre rapidement ce qui a changé, ce qu'elle doit installer et ce qu'elle doit vérifier.
+## Format conseillé — changelog produit
+
+```md
+## Livraison / état intégré — 2026-09-15
+
+### Versions des composants
+| Composant | Version | Compatibilité / remarque |
+| --- | --- | --- |
+| Web | 0.91.0 | ... |
+| Serveur | 0.90.4 | ... |
+| Agent | 1.0.1 | inchangé |
+
+### Web — principales évolutions
+- ...
+
+### Serveur — principales évolutions
+- ...
+```
+
+L'objectif est qu'une personne puisse comprendre rapidement **ce qu'elle doit installer** dans le changelog racine, puis ouvrir uniquement le changelog du composant concerné lorsqu'elle a besoin du détail technique.

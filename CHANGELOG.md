@@ -1,124 +1,86 @@
-# Changelog VigiSensys
+# Changelog VigiSensys — vue produit
 
-Ce fichier est la référence lisible des changements destinés à être livrés avec VigiSensys.
-Il complète l'historique Git : le but est d'indiquer **ce qui change pour une installation**, **quels composants sont concernés** et **s'il existe une contrainte de compatibilité ou de migration**.
+Ce fichier donne une **vue synthétique des livraisons VigiSensys** : versions des composants, grandes évolutions et contraintes de compatibilité.
 
-Le format de version retenu est `MAJOR.MINOR.PATCH` (SemVer), sans zéros de tête. La convention complète est décrite dans [`docs/versioning.md`](docs/versioning.md).
+Les détails techniques sont volontairement conservés dans les changelogs de chaque composant :
 
-> VigiSensys contient plusieurs composants qui peuvent évoluer indépendamment. Une entrée de changelog doit donc indiquer les versions réellement modifiées au lieu de supposer qu'une version unique s'applique automatiquement au Web, au Serveur, à l'Agent, aux outils et aux scripts de base de données.
+- [Web](website/CHANGELOG.md)
+- [Serveur Windows](Vigitemp%20Serveur/CHANGELOG.md)
+- [Agent Windows](Vigitemp%20agent/CHANGELOG.md)
+- [Base de données / seeds](db/CHANGELOG.md)
+- [Générateur de licences](Vigitemp%20Serveur/Vigitemp%20License%20Generator/CHANGELOG.md)
+
+La convention de versioning est décrite dans [`docs/versioning.md`](docs/versioning.md). Les versions lisibles utilisent `MAJOR.MINOR.PATCH` sans zéros de tête, par exemple `0.90.2` ou `0.76.112`.
+
+> Les composants évoluent indépendamment. Une livraison VigiSensys est donc décrite par un ensemble de versions de composants, et non par l'obligation de donner le même numéro à tous les exécutables et artefacts.
 
 ## [Unreleased]
 
-### Versions prévues par composant
+Aucun changement supplémentaire documenté depuis l'état intégré du 27/08/2026.
 
-| Composant | Version précédente | Version de ce lot | Version minimale associée à ce lot |
-| --- | --- | --- | --- |
-| Serveur d'interrogation | `0.90.2` | `0.90.3` | `0.90.3` pour bénéficier du filtrage `+++` en Surveillance et du rejet des réponses `ovf` |
-| Installateur Serveur | `0.90.2` | `0.90.3` | `0.90.3` lorsqu'il distribue le Serveur `0.90.3` |
-| Web | `0.90.1` | `0.90.2` | `0.90.2` pour faire remonter explicitement un `ovf` ECON pendant les opérations de métrologie |
-| Agent Windows | `1.0.1` | inchangé | aucune nouvelle contrainte |
-| BDD / seeds | `0.90.1` canonique | inchangé | aucune migration |
-| Générateur de licences | `0.1.0` | inchangé | aucune nouvelle contrainte |
+## État intégré — 2026-08-27
 
-### Corrigé — GSP / Surveillance
+Cette entrée constitue la première vue produit structurée du changelog. Elle résume l'état présent dans `dev` après les PR #60, #61 et #62 ; elle ne prétend pas reconstituer toutes les anciennes versions historiques de Vigitemp/VigiSensys.
 
-- Le filtrage du token série de transport exact `+++`, introduit en Serveur `0.90.2` pour les lectures Hotline/Ajustage/Étalonnage, est déplacé dans la couche protocolaire GSP commune.
-- La Surveillance GSP ne considère donc plus `+++` comme la première donnée significative d'une réponse. Le délai de réponse incomplète ne démarre plus sur ce bruit et le lecteur continue d'attendre la vraie trame `ACK=TEMP ... END` dans ses délais normaux.
-- Le filtrage reste volontairement strict : seul le token exact `+++` est supprimé. Les valeurs métier contenant des `+`, notamment `Alarm=F+D+E+LH+LB+RB+RH`, sont conservées.
+### Versions des composants
 
-### Corrigé — GSP / ECON
-
-- Une réponse firmware contenant un marqueur explicite de dépassement, par exemple `B=ovf`, n'est plus considérée comme un acquittement ECON réussi même si `ACK=ECON` est présent.
-- Le Serveur refuse désormais cet acquittement lors des synchronisations de configuration GSP utilisées par la Surveillance.
-- Le Web détecte également `*=ovf` dans la réponse brute des ECON de métrologie et remonte une erreur explicite indiquant le paramètre concerné au lieu de considérer l'ACK comme un succès.
-- Le correctif ne tronque, ne borne et ne remplace pas automatiquement le coefficient fautif : la plage numérique réellement acceptée par le firmware n'étant pas formalisée dans le dépôt, la valeur source doit être diagnostiquée plutôt que modifiée arbitrairement.
-- Le retour terrain ayant motivé ce contrôle montrait une trame sortante contenant déjà `B=450000000.0000000000`, suivie de `ACK=ECON`, `B=ovf`. Le problème n'est donc pas un simple défaut de parsing de la réponse : la valeur anormalement grande est présente avant l'envoi à la sonde.
-
-### Compatibilité / migration
-
-- Aucune migration BDD.
-- Aucun changement de formule d'ajustage ni de mapping linéaire/multipoint A/B/C.
-- Aucun changement des délais de Surveillance GSP : seuls les tokens considérés comme données significatives sont corrigés.
-- Pour un déploiement couvrant à la fois les deux corrections de ce lot, utiliser **Serveur >= `0.90.3`** et **Web >= `0.90.2`**.
-- L'Agent reste compatible sans mise à jour (`1.0.1`).
-
-## Serveur `0.90.2` / Installateur Serveur `0.90.2` — 2026-08-27
-
-### Corrigé
-
-- Lecture GSP via le Serveur/Hotline : la séquence de contrôle série exacte `+++` n'est plus considérée comme une réponse métier dans le lecteur utilisé par Hotline, Ajustage et Étalonnage. Le lecteur continue d'attendre la vraie trame GSP (`ACK=TEMP`, `Serial`, `Mesure`, `END`) au lieu de terminer sur `+++` puis de purger la réponse utile arrivée juste après.
-- Le filtrage est volontairement limité au token de transport `+++` ; les signes `+` présents dans des données métier comme `Alarm=F+D+E+LH+LB+RB+RH` restent intacts.
-
-### Compatibilité / migration
-
-- Aucune migration BDD ni modification de contrat Web/API.
-- Le Serveur `0.90.2` suffit pour corriger le chemin Hotline/Métrologie, mais la Surveillance GSP nécessite le correctif complémentaire du Serveur `0.90.3`.
-
-## Versioning et maintenance — 2026-08-27
-
-- Ajout de ce changelog racine pour centraliser les évolutions livrables.
-- Formalisation de la convention SemVer `MAJOR.MINOR.PATCH` pour les versions produit lisibles.
-- Normalisation de la version produit du Serveur de `0.90.001` vers `0.90.1`. Il s'agit uniquement d'une normalisation d'écriture : aucun comportement métier n'est modifié.
-- Ajout d'une version produit SemVer explicite pour l'Agent (`1.0.1`) tout en conservant ses versions techniques d'assembly existantes (`1.0.1.1`).
-- Ajout d'une version produit explicite aux installateurs/outils qui suivent directement un composant : installateur Serveur `0.90.1`, installateur Agent `1.0.1`, générateur de licences `0.1.0`.
-- Les scripts de seed MySQL et SQL Server portent encore historiquement l'étiquette `0.90.001`. Dans la nouvelle convention, cette valeur se lit `0.90.1`; leurs prochains changements devront utiliser l'écriture canonique sans zéro de tête.
-- Aucune migration de données n'a été introduite par ce lot de versioning.
-- Les attributs .NET techniques à quatre composantes restent distincts de la version produit SemVer lorsqu'ils sont déjà utilisés par les projets historiques.
-
-## Baseline de référence — 2026-08-27
-
-Cette section fixe le **point de départ du changelog** à partir de l'état réel de `dev` au moment de sa création. Elle ne prétend pas reconstituer toutes les anciennes releases du produit.
-
-### Versions constatées / formalisées
-
-| Composant | Version produit de référence | Source / remarque |
+| Composant | Version | Compatibilité / remarque |
 | --- | --- | --- |
-| Web | `0.90.1` | `website/package.json` |
-| Serveur d'interrogation | `0.90.1` | `AssemblyInformationalVersion`; les métadonnées d'assembly à 4 composantes restent techniques |
-| Agent Windows | `1.0.1` | version produit SemVer ajoutée à partir de la version technique existante `1.0.1.1` |
-| Installateur Serveur | `0.90.1` | suit la version du Serveur qu'il distribue |
-| Installateur Agent | `1.0.1` | suit la version de l'Agent qu'il distribue |
-| Générateur de licences | `0.1.0` | outil interne versionné indépendamment |
-| Seeds BDD MySQL / SQL Server | `0.90.1` canonique | les fichiers existants portent encore le libellé historique `0.90.001`; pas de réécriture des gros seeds dans ce lot documentaire |
-| Installateur de prérequis Serveur | non versionné fonctionnellement | utilitaire de prérequis; sa version d'assembly par défaut n'est pas considérée comme une version produit VigiSensys |
-| Fichier de licence `.vtlic` | non applicable | le fichier de licence n'est pas une release logicielle autonome |
+| Web | `0.90.2` | Serveur `>= 0.90.3` pour bénéficier de l'ensemble des correctifs GSP/ECON du 27/08 |
+| Serveur Windows | `0.90.3` | Web `>= 0.90.2` pour faire remonter explicitement les erreurs `ECON *=ovf` en métrologie |
+| Installateur Serveur | `0.90.3` | suit le Serveur distribué |
+| Agent Windows | `1.0.1` | aucune nouvelle contrainte introduite par les lots du 27/08 |
+| Installateur Agent | `1.0.1` | suit l'Agent distribué |
+| BDD / seeds | `0.90.1` canonique | aucune migration requise pour les correctifs GSP du 27/08 |
+| Générateur de licences | `0.1.0` | aucun changement fonctionnel dans les lots du 27/08 |
 
-### Évolutions récentes présentes dans cette baseline
+### Web — principales évolutions
 
-#### Métrologie — Étalonnage
+- Parcours de métrologie enrichis et stabilisés : étalonnage en 10 mesures, séparation lecture/démarrage, ajout de sondes, meilleure lisibilité des résultats et des calculs.
+- Coefficients A/B/C visibles dans les parcours de métrologie avec conservation de la précision des valeurs non modifiées.
+- Support du nouveau comportement GSP `ECON` utilisé pendant Ajustage/Étalonnage.
+- Une réponse firmware `ACK=ECON` contenant `A=ovf`, `B=ovf`, `C=ovf`, etc. est maintenant remontée comme une erreur explicite au lieu d'être considérée comme un succès.
+- La version affichée du Web suit directement la notation SemVer canonique de `package.json` (`0.90.2`, sans remplissage en zéros).
 
-Les derniers lots intégrés avant cette baseline ont notamment :
+[Détail du Web](website/CHANGELOG.md)
 
-- séparé la prévisualisation de lecture du démarrage réel de l'étalonnage ;
-- mis en avant l'étalon dans les mesures et simplifié l'interface d'historique ;
-- permis d'ajouter/rechercher une sonde depuis le workflow ;
-- autorisé l'interrogation d'une sonde non affectée à un lieu, cas attendu pour l'étalon ;
-- désactivé la navigation de métrologie pendant une opération active ;
-- corrigé le retour à la sélection après une session terminée ;
-- harmonisé l'affichage des mesures/résultats à trois décimales ;
-- ajouté un détail des calculs d'étalonnage pour faciliter les audits terrain (moyennes, erreur d'exactitude, écarts-types et contributions d'incertitude).
+### Serveur Windows — principales évolutions
 
-Détails terrain : `website/docs/metrology-retours-26-08-2026.md` et `website/docs/backlog-retours-17-08-2026.md`.
+- Support du protocole GSP `ECON` étendu pour les coefficients métrologiques embarqués dans la sonde.
+- Transport `ECON` compact `a/b/c` pendant Ajustage/Étalonnage afin de respecter les contraintes du module de réception.
+- La séquence série exacte `+++` est traitée comme un bruit de transport et ne masque plus la vraie réponse GSP.
+- Le filtrage `+++` est partagé par la couche protocolaire et couvre désormais Hotline, Ajustage, Étalonnage et Surveillance.
+- Un acquittement `ECON` contenant un champ `*=ovf` est rejeté : le Serveur ne considère plus une configuration en dépassement comme synchronisée.
 
-#### Métrologie — Ajustage
+[Détail du Serveur](Vigitemp%20Serveur/CHANGELOG.md)
 
-Les derniers lots intégrés avant cette baseline ont notamment :
+### Agent Windows — principales évolutions
 
-- rendu les coefficients A/B/C visibles dès la sélection des sondes, avant le démarrage de l'ajustage ;
-- limité leur affichage à trois décimales pour rester cohérent avec l'étalonnage ;
-- conservé la précision brute des coefficients non modifiés lors d'une validation, afin qu'un simple affichage arrondi ne tronque pas silencieusement une valeur existante.
+- Aucun changement fonctionnel dans les lots de versioning/GSP du 27/08.
+- La version produit de référence est formalisée en `1.0.1` tout en conservant les métadonnées techniques .NET historiques à quatre composantes.
 
-Les autres retours Ajustage encore prévus doivent rester documentés dans le backlog et apparaître ici seulement lorsqu'ils feront partie d'un lot livrable.
+[Détail de l'Agent](Vigitemp%20agent/CHANGELOG.md)
 
-## Comment rédiger les prochaines entrées
+### Base de données / seeds — principales évolutions
 
-Pour chaque future livraison, créer une section datée et indiquer au minimum :
+- Baseline canonique `0.90.1` pour les seeds MySQL et SQL Server.
+- Les fichiers historiques peuvent encore contenir le libellé `0.90.001`, qui correspond à la même version selon la nouvelle convention sans zéros de tête.
+- Les correctifs GSP `0.90.2` / `0.90.3` du Serveur ne nécessitent aucune migration de schéma.
 
-1. les composants dont la version change, avec `ancienne → nouvelle` ;
-2. les changements visibles ou fonctionnels, rédigés en termes compréhensibles ;
-3. les corrections importantes et leur impact ;
-4. les migrations de BDD, de configuration ou d'installation éventuelles ;
-5. les contraintes de compatibilité réellement testées ;
-6. les PR principales permettant de retrouver le détail technique.
+[Détail BDD](db/CHANGELOG.md)
 
-Ne pas déclarer une compatibilité minimale ou une migration comme acquise si elle n'a pas été vérifiée.
+### Générateur de licences — principales évolutions
+
+- Version produit de référence formalisée en `0.1.0`.
+- Aucun changement du format `.vtlic` ni des règles de licence dans les lots du 27/08.
+
+[Détail du générateur de licences](Vigitemp%20Serveur/Vigitemp%20License%20Generator/CHANGELOG.md)
+
+## Règle de maintenance
+
+Lorsqu'un lot est livré :
+
+1. détailler les modifications dans le ou les `CHANGELOG.md` des composants réellement modifiés ;
+2. ajouter ici uniquement les **grandes évolutions**, les versions livrées et les contraintes de compatibilité importantes ;
+3. ne pas recopier dans ce fichier les détails de code, les checklists terrain ou les listes exhaustives de fichiers : ces informations restent dans les PR et les backlogs ;
+4. ne jamais inventer une version minimale : une contrainte de compatibilité doit être justifiée par le code ou par une validation réelle.
