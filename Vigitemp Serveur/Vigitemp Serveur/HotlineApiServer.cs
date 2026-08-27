@@ -1145,6 +1145,32 @@ namespace Vigitemp_Serveur
             }
         }
 
+        private static string StripGspTransportNoise(string response)
+        {
+            var normalized = (response ?? string.Empty).Trim();
+            if (normalized.Length == 0) return string.Empty;
+
+            // Certains modules passent brièvement par leur séquence de contrôle « +++ »
+            // avant de délivrer la vraie réponse de la sonde. Cette séquence n'est pas une
+            // réponse GSP et ne doit surtout pas démarrer le délai de silence de fin de trame.
+            // On ne retire que le token exact « +++ », jamais les '+' contenus dans une
+            // valeur métier (par exemple Alarm=F+D+E+LH+LB+RB+RH).
+            while (normalized.StartsWith("+++", StringComparison.Ordinal))
+            {
+                normalized = normalized.Substring(3).TrimStart();
+            }
+
+            if (normalized.Length == 0) return string.Empty;
+
+            var lines = normalized
+                .Replace("\r\n", "\n")
+                .Replace('\r', '\n')
+                .Split(new[] { '\n' }, StringSplitOptions.None)
+                .Where(line => !string.Equals(line.Trim(), "+++", StringComparison.Ordinal));
+
+            return string.Join(Environment.NewLine, lines).Trim();
+        }
+
         private static string ReadGspResponse(SerialPort port, string command, int? listenWindowMs)
         {
             var endOfResponseSilenceMs = listenWindowMs.HasValue && listenWindowMs.Value > 0
@@ -1168,7 +1194,8 @@ namespace Vigitemp_Serveur
                 }
 
                 buffer += chunk;
-                var responseWithoutEcho = GspProtocol.StripCommandEcho(buffer, command);
+                var responseWithoutEcho = StripGspTransportNoise(
+                    GspProtocol.StripCommandEcho(buffer, command));
                 if (string.IsNullOrWhiteSpace(responseWithoutEcho))
                 {
                     continue;
@@ -1181,7 +1208,8 @@ namespace Vigitemp_Serveur
                 }
             }
 
-            return GspProtocol.StripCommandEcho(buffer, command).Trim();
+            return StripGspTransportNoise(
+                GspProtocol.StripCommandEcho(buffer, command));
         }
 
         private static SerialPort CreatePort(string portName, SensorTestRequest request)
