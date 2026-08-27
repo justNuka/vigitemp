@@ -9,6 +9,18 @@ Le format de version retenu est `MAJOR.MINOR.PATCH` (SemVer), sans zéros de tê
 
 ## [Unreleased]
 
+### Versions
+
+- Serveur d'interrogation : `0.90.1 -> 0.90.2`.
+- Installateur Serveur : `0.90.1 -> 0.90.2`, afin de suivre le binaire Serveur distribué.
+- Web : inchangé (`0.90.1`).
+- Agent Windows : inchangé (`1.0.1`).
+
+### Corrigé
+
+- Lecture GSP via le Serveur/Hotline : la séquence de contrôle série exacte `+++` n'est plus considérée comme une réponse métier. Le lecteur continue d'attendre la vraie trame GSP (`ACK=TEMP`, `Serial`, `Mesure`, `END`) au lieu de terminer sur `+++` puis de purger la réponse utile arrivée juste après.
+- Le filtrage est volontairement limité au token de transport `+++` ; les signes `+` présents dans des données métier comme `Alarm=F+D+E+LH+LB+RB+RH` restent intacts.
+
 ### Versioning et maintenance
 
 - Ajout de ce changelog racine pour centraliser les évolutions livrables.
@@ -20,8 +32,9 @@ Le format de version retenu est `MAJOR.MINOR.PATCH` (SemVer), sans zéros de tê
 
 ### Compatibilité / migration
 
-- Aucune migration de données n'est introduite par ce lot de versioning.
-- Aucun protocole Web ↔ Serveur ↔ Agent n'est modifié.
+- Le correctif `+++` n'introduit aucune migration BDD ni modification de contrat Web/API ; seul le Serveur d'interrogation doit être remplacé pour bénéficier du correctif.
+- Aucune migration de données n'est introduite par le lot de versioning.
+- Aucun protocole Web ↔ Serveur ↔ Agent n'est modifié par le lot de versioning.
 - Les attributs .NET techniques à quatre composantes restent distincts de la version produit SemVer lorsqu'ils sont déjà utilisés par les projets historiques.
 
 ## Baseline de référence — 2026-08-27
@@ -36,7 +49,7 @@ Cette section fixe le **point de départ du changelog** à partir de l'état ré
 | Serveur d'interrogation | `0.90.1` | `AssemblyInformationalVersion`; les métadonnées d'assembly à 4 composantes restent techniques |
 | Agent Windows | `1.0.1` | version produit SemVer ajoutée à partir de la version technique existante `1.0.1.1` |
 | Installateur Serveur | `0.90.1` | suit la version du Serveur qu'il distribue |
-| Installateur Agent | `1.0.1` | suit la version de l'Agent qu'il distribue |
+| Installateur Agent | `1.0.1` | suit la version de l'Agent distribué |
 | Générateur de licences | `0.1.0` | outil interne versionné indépendamment |
 | Seeds BDD MySQL / SQL Server | `0.90.1` canonique | les fichiers existants portent encore le libellé historique `0.90.001`; pas de réécriture des gros seeds dans ce lot documentaire |
 | Installateur de prérequis Serveur | non versionné fonctionnellement | utilitaire de prérequis; sa version d'assembly par défaut n'est pas considérée comme une version produit VigiSensys |
