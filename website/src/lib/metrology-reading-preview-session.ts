@@ -242,6 +242,31 @@ export async function ensureMetrologyReadingPreviewSession(
   return { startedAt, operation, sensorIds }
 }
 
+export function requireMetrologyReadingPreviewSession(
+  userId: number,
+  operation: MetrologyPreviewOperation,
+  requiredSensorIds: number[],
+) {
+  const session = sessionsByUserId.get(userId)
+  if (!session || session.operation !== operation) {
+    throw new Error("La lecture des sondes doit etre active pour valider les coefficients.")
+  }
+
+  const requiredIds = normalizeIds(requiredSensorIds)
+  const activeIds = new Set(session.sensorIds)
+  if (requiredIds.length === 0 || requiredIds.some((sensorId) => !activeIds.has(sensorId))) {
+    throw new Error("Les coefficients ne peuvent etre modifies que pour les sondes de la lecture active.")
+  }
+
+  session.lastTouchedAt = new Date().toISOString()
+  scheduleExpiration(session)
+  return {
+    startedAt: session.startedAt,
+    operation: session.operation,
+    sensorIds: [...session.sensorIds],
+  }
+}
+
 export async function stopMetrologyReadingPreviewSession(userId: number) {
   const session = sessionsByUserId.get(userId)
   if (!session) return false
