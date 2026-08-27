@@ -7,7 +7,7 @@
 - PR #57 — **mergée** le 26/08/2026, merge `0a1a6aaf323200f521f02cc10689bb9596d0f0d5`.
 - PR #58 — **mergée** le 27/08/2026, merge `3f93d7c192828faf46497541b8b7e82e7638c250`.
 - Branche courante : `agent/adjustment-coefficients-display`.
-- PR courante : à ouvrir vers `dev`.
+- PR courante : #59 — ouverte vers `dev`.
 
 Ce document conserve le détail des retours du 26/08/2026 pendant leur traitement. Il doit être consolidé dans `website/docs/backlog-retours-17-08-2026.md` au fur et à mesure des PR livrées.
 
@@ -71,7 +71,7 @@ La cadence devra être modifiée simultanément côté React, API et moteur de s
 ### Retour complémentaire du 27/08/2026
 
 - les coefficients A/B/C doivent être visibles dès la préparation de l’Ajustage, sans attendre le démarrage de la session ni les premières réponses des sondes ;
-- l’affichage des coefficients doit être limité à **3 décimales**, comme l’affichage retenu pour l’Étalonnage.
+- les coefficients doivent être affichés avec **exactement 3 décimales** (`1.000`, `0.000`, etc.).
 
 ### État vérifié avant correction
 
@@ -82,7 +82,7 @@ L’endpoint `/api/metrologie/ajustage/sondes` interrogeait déjà les derniers 
 - ajustage à deux coefficients : `A = Coeff_X`, `B = Coeff_Constant`, `C = 0` ;
 - ajustage à trois coefficients : `A = Coeff_X2`, `B = Coeff_X`, `C = Coeff_Constant`.
 
-### Correctif préparé
+### Correctif PR #59
 
 Branche : `agent/adjustment-coefficients-display`.
 
@@ -98,21 +98,81 @@ Comportement :
 - la carte coefficients est visible dès que des sondes ont été sélectionnées et que l’utilisateur arrive sur l’étape Ajustage ;
 - avant le démarrage, les coefficients sont affichés en lecture seule : le besoin est d’abord de les rendre visibles, sans ajouter un nouveau chemin de persistance hors session ;
 - pendant une session active, les inputs restent modifiables et le bouton de validation existant reste disponible ;
-- l’affichage initial est limité à 3 décimales au lieu de 10 ;
+- les valeurs affichées utilisent exactement 3 décimales, y compris les zéros finaux ;
 - afin d’éviter une perte de précision silencieuse, une valeur uniquement arrondie pour l’affichage n’est pas réécrite en base si l’utilisateur ne modifie pas le champ : la valeur brute de session est conservée pour les coefficients non touchés ;
 - seuls les coefficients effectivement modifiés par l’opérateur sont convertis depuis le texte affiché lors de la validation.
 
 ### Checklist terrain
 
 - [ ] sélectionner une sonde possédant déjà un ajustage puis aller sur l’étape Ajustage sans démarrer : A/B/C sont immédiatement visibles ;
-- [ ] vérifier une sonde sans historique d’ajustage : affichage `1 / 0 / 0` ;
+- [ ] vérifier une sonde sans historique d’ajustage : affichage `1.000 / 0.000 / 0.000` ;
 - [ ] vérifier un historique à deux coefficients et un historique à trois coefficients ;
 - [ ] confirmer qu’aucune lecture sonde n’est nécessaire pour faire apparaître la carte ;
-- [ ] vérifier que les coefficients affichés ne dépassent pas 3 décimales ;
+- [ ] confirmer l’affichage de **3 décimales fixes**, y compris les zéros finaux ;
 - [ ] démarrer l’Ajustage : les mêmes coefficients restent affichés et deviennent modifiables ;
 - [ ] cliquer sur Valider sans modifier un coefficient dont la valeur brute contient plus de 3 décimales, puis vérifier qu’il n’a pas été arrondi en base ;
 - [ ] modifier explicitement A/B/C puis valider et vérifier l’enregistrement / l’envoi à la prochaine interrogation ;
 - [ ] contrôler une locale FR avec saisie virgule et une locale EN avec saisie point.
+
+## Étalonnage — coefficients modifiables pendant la lecture des sondes
+
+### Retour complémentaire du 27/08/2026
+
+- afficher dans **Réaliser un étalonnage** le même tableau A/B/C que dans Ajustage pour les sondes sélectionnées ;
+- afficher les coefficients avec **exactement 3 décimales** ;
+- permettre leur modification et leur validation uniquement pendant la phase de **lecture des sondes** précédant la campagne ;
+- dès que l’utilisateur démarre réellement l’opération d’étalonnage, faire disparaître ce tableau.
+
+### État vérifié avant correction
+
+L’Étalonnage réutilise déjà `useAdjustmentSensors()`. Avec la PR #59, chaque sonde sélectionnable dispose donc de ses coefficients A/B/C courants provenant du dernier `t_ajustage`.
+
+La « lecture des sondes » est un flux distinct de la session d’étalonnage :
+
+- l’interface appelle `POST /api/metrologie/lecture-sondes` ;
+- `metrology-reading-preview-session.ts` conserve une session temporaire par utilisateur et met les sondes en état métrologie `E` ;
+- au démarrage réel, `POST /api/metrologie/etalonnage/session` arrête d’abord cette lecture temporaire, puis applique la configuration GSP `calibration-without-accuracy` avant la première acquisition.
+
+Cette séparation permet de verrouiller la modification des coefficients avant le début des 10 mesures sans modifier les calculs de campagne.
+
+### Correctif PR #59
+
+Fichiers principaux :
+
+- `website/src/app/[locale]/(admin)/admin/metrologie/realiser-etalonnage/calibration-coefficients-card.tsx` ;
+- `website/src/app/[locale]/(admin)/admin/metrologie/realiser-etalonnage/calibration-workflow-client.tsx` ;
+- `website/src/app/api/metrologie/etalonnage/coefficients/route.ts` ;
+- `website/src/lib/metrology-reading-preview-session.ts` ;
+- `website/src/messages/metrology-calibration-supplements.ts`.
+
+Comportement :
+
+- le tableau reprend les sondes actuellement sélectionnées et affiche A/B/C sur exactement 3 décimales ;
+- tant que la lecture simple n’est pas active, les champs sont visibles mais en lecture seule et la validation est désactivée ;
+- pendant la lecture, l’opérateur peut modifier les coefficients ;
+- seules les sondes réellement modifiées sont persistées, afin de ne pas créer de lignes historiques inutiles pour les autres sondes ;
+- une modification crée une nouvelle ligne `t_ajustage` avec le même mapping A/B/C que l’Ajustage et conserve la traçabilité étalon / certificat / milieu / opérateur ;
+- les lieux concernés sont marqués `Infos_Modifiees_Depuis_Derniere_Mesure = true` ;
+- le backend vérifie qu’une session de lecture `ETALONNAGE` est réellement active pour le même utilisateur et que chaque sonde modifiée appartient bien à cette lecture : le verrouillage ne dépend donc pas seulement du bouton React ;
+- les valeurs non modifiées d’une ligne conservent leur précision brute même si l’écran n’en montre que 3 décimales ;
+- au démarrage réel de la campagne, la lecture temporaire est arrêtée puis la configuration GSP d’étalonnage relit les derniers `t_ajustage` : les coefficients validés sont donc ceux appliqués à la campagne ;
+- le tableau est retiré du DOM dès que le démarrage de l’étalonnage est demandé (`startOperationMutation.isPending`), puis reste absent pendant toute session `running` ;
+- l’arrêt manuel de la lecture appelle maintenant explicitement `DELETE /api/metrologie/lecture-sondes`, au lieu d’attendre seulement l’expiration du preview serveur.
+
+### Checklist terrain
+
+- [ ] sélectionner une ou plusieurs sondes et ouvrir l’étape Étalonnage : tableau A/B/C visible avec 3 décimales fixes ;
+- [ ] avant « Lancer la lecture », vérifier que les inputs et la validation ne permettent aucune modification ;
+- [ ] lancer la lecture : les inputs deviennent modifiables ;
+- [ ] modifier seulement une sonde puis valider : vérifier une nouvelle ligne `t_ajustage` uniquement pour cette sonde ;
+- [ ] vérifier le mapping linéaire (`A/B`, `C=0`) puis un cas à trois coefficients ;
+- [ ] vérifier qu’un coefficient brut plus précis que 3 décimales n’est pas tronqué si le champ n’est pas touché ;
+- [ ] arrêter la lecture : les champs redeviennent immédiatement non modifiables et l’état `E` est restauré côté serveur ;
+- [ ] tenter un PATCH API après arrêt de la lecture : la validation doit être refusée ;
+- [ ] relancer la lecture, modifier/valider puis démarrer l’étalonnage : le tableau disparaît immédiatement ;
+- [ ] contrôler la trame/configuration GSP appliquée au démarrage et confirmer qu’elle reprend les nouveaux coefficients avec l’ancienne erreur de justesse neutralisée ;
+- [ ] tester une GSO : persistance des coefficients et absence de commande série GSP parasite ;
+- [ ] vérifier FR/EN et clair/sombre.
 
 ## Étalonnage — affichage à 3 décimales et diagnostic des calculs
 
