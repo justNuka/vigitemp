@@ -897,6 +897,7 @@ Checklist :
 
 Correctif de build : renommage de la variable englobante en `normalizedOperationContext` pour supprimer la collision C# `CS0136`, sans changement de comportement.
 
+
 ## Nettoyage des paramètres et profils des seeds — 25/08/2026
 
 Statut : **mergé dans `dev` via la PR #47, merge `afa59e2e7f19294f52d29830cc36122c23d274f7`**.
@@ -1138,7 +1139,7 @@ Serveur :
 
 - ajout de `GspProtocol.StripTransportNoise()` et utilisation depuis `StripCommandEcho()` ;
 - seul le token exact `+++` est supprimé, y compris lorsqu'il précède la vraie trame ;
-- les valeurs métier contenant des `+`, notamment `Alarm=F+D+E+LH+LB+RH`, restent intactes ;
+- les valeurs métier contenant des `+`, notamment `Alarm=F+D+E+LH+LB+RB+RH`, restent intactes ;
 - ajout de `TryGetOverflowField()` ;
 - `IsAcknowledgementForTarget()` refuse désormais toute réponse contenant un champ `*=ovf`, même si `ACK=ECON` est présent ;
 - la synchronisation de configuration de Surveillance ne considère donc plus `B=ovf` comme un succès.
