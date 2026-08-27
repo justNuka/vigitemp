@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Data;
@@ -769,7 +769,7 @@ namespace Vigitemp_Serveur.sensors
 
         internal static string StripCommandEcho(string response, string command)
         {
-            var raw = (response ?? string.Empty).Trim();
+            var raw = StripTransportNoise(response);
             var normalizedCommand = NormalizeCommandWhitespace(command);
             if (string.IsNullOrWhiteSpace(raw) || string.IsNullOrWhiteSpace(normalizedCommand)) return raw;
 
@@ -788,7 +788,33 @@ namespace Vigitemp_Serveur.sensors
                     StringComparison.OrdinalIgnoreCase))
                 .ToList();
 
-            return filtered.Count == 0 ? string.Empty : string.Join(Environment.NewLine, filtered);
+            return StripTransportNoise(filtered.Count == 0 ? string.Empty : string.Join(Environment.NewLine, filtered));
+        }
+
+        internal static string StripTransportNoise(string response)
+        {
+            var normalized = (response ?? string.Empty).Trim();
+            if (normalized.Length == 0) return string.Empty;
+
+            // Certains modules utilisent ponctuellement la séquence de contrôle série
+            // « +++ » avant de délivrer la vraie trame GSP. Ce token n'est pas une
+            // réponse métier et ne doit pas démarrer les délais de fin de réponse.
+            // On ne supprime que le token exact, jamais les '+' contenus dans les
+            // valeurs métier (par exemple Alarm=F+D+E+LH+LB+RB+RH).
+            while (normalized.StartsWith("+++", StringComparison.Ordinal))
+            {
+                normalized = normalized.Substring(3).TrimStart();
+            }
+
+            if (normalized.Length == 0) return string.Empty;
+
+            var lines = normalized
+                .Replace("\r\n", "\n")
+                .Replace('\r', '\n')
+                .Split(new[] { '\n' }, StringSplitOptions.None)
+                .Where(line => !string.Equals(line.Trim(), "+++", StringComparison.Ordinal));
+
+            return string.Join(Environment.NewLine, lines).Trim();
         }
 
         private static string NormalizeCommandWhitespace(string value)
@@ -1150,9 +1176,25 @@ namespace Vigitemp_Serveur.sensors
                 .ToList();
         }
 
+        internal static bool TryGetOverflowField(string response, out string field)
+        {
+            field = null;
+            if (string.IsNullOrWhiteSpace(response)) return false;
+
+            var match = Regex.Match(
+                response,
+                @"(?:^|\r?\n)\s*([A-Za-z][A-Za-z0-9_]*)\s*=\s*ovf\b",
+                RegexOptions.IgnoreCase);
+            if (!match.Success || match.Groups.Count < 2) return false;
+
+            field = match.Groups[1].Value.Trim();
+            return field.Length > 0;
+        }
+
         internal static bool IsAcknowledgementForTarget(string response, string commandPrefix, string target)
         {
             if (string.IsNullOrWhiteSpace(response) || string.IsNullOrWhiteSpace(commandPrefix) || string.IsNullOrWhiteSpace(target)) return false;
+            if (TryGetOverflowField(response, out _)) return false;
             var normalizedPrefix = commandPrefix.Trim().ToUpperInvariant();
             var normalizedTarget = target.Trim().ToUpperInvariant();
             if (!Regex.IsMatch(response, @"(?:^|\r?\n)\s*ACK\s*=\s*" + Regex.Escape(normalizedPrefix) + @"\b", RegexOptions.IgnoreCase)) return false;
