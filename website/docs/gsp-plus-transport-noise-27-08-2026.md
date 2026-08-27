@@ -4,11 +4,12 @@
 
 - Dépôt : `justNuka/vigitemp`
 - Branche d’intégration : `dev`
-- Branche du correctif : `agent/server-gsp-plus-response`
-- PR : #61 — ouverte vers `dev`
+- Correctif initial : branche `agent/server-gsp-plus-response`, PR #61 — **mergée** le 27/08/2026, merge `2164f017a761a163a1a397a89afb7dbd17a42ece`.
+- Correctif complémentaire Surveillance : branche `agent/gsp-surveillance-coefficients`.
 - Date du retour terrain : 27/08/2026
 - Composant concerné : Serveur d’interrogation Windows
-- Version produit Serveur visée : `0.90.2`
+- Version Serveur du correctif initial Hotline/Métrologie : `0.90.2`
+- Version Serveur visée pour la couverture Surveillance : `0.90.3`
 
 ## Retour terrain
 
@@ -27,51 +28,80 @@ Le Serveur terminait la lecture dès `+++`, considérait cette séquence comme u
 Aucune température exploitable pour la sonde demandée dans la réponse GSP.
 ```
 
-## Cause confirmée dans le code
+## Cause confirmée — Hotline / métrologie
 
-`ReadGspResponse()` considérait toute donnée non vide après suppression de l’écho comme une donnée significative. `+++` démarrait donc le délai de silence de fin de réponse (`GspEndOfResponseSilenceMs`, 500 ms par défaut). Si la vraie trame n’arrivait pas avant ce délai, la fonction retournait `+++` et `PurgeAfterGspCommand()` récupérait ensuite la réponse utile.
+Dans `HotlineApiServer.ReadGspResponse()`, toute donnée non vide après suppression de l’écho était considérée comme significative. `+++` démarrait donc le délai de silence de fin de réponse (`GspEndOfResponseSilenceMs`, 500 ms par défaut). Si la vraie trame n’arrivait pas avant ce délai, la fonction retournait `+++` et `PurgeAfterGspCommand()` récupérait ensuite la réponse utile.
 
 Le log terrain correspond exactement à ce scénario : `RX=+++`, puis la trame complète dans `PURGE`.
 
-## Correctif
+La PR #61 a corrigé ce chemin pour Hotline, Ajustage et Étalonnage.
+
+## Complément confirmé — Surveillance
+
+La Surveillance GSP n’utilise pas `HotlineApiServer` pour ses interrogations périodiques : elle passe par `SensorGSP` et le lecteur `ReadResponseAsync()`.
+
+Dans ce lecteur :
+
+- le délai avant la première donnée significative est de 2 secondes par défaut ;
+- une fois une donnée considérée significative, le lecteur applique ses délais de réponse incomplète/completion ;
+- avant ce complément, `+++` était lui aussi vu comme une première donnée significative.
+
+Cela pouvait donc provoquer le même défaut en Surveillance si la vraie trame arrivait après le délai de silence appliqué à cette réponse incomplète.
+
+## Correctif complémentaire
 
 Fichier principal :
 
-- `Vigitemp Serveur/Vigitemp Serveur/HotlineApiServer.cs`
+- `Vigitemp Serveur/Vigitemp Serveur/sensors/GspProtocol.cs`
 
-Le lecteur série applique désormais un filtrage de bruit de transport avant de décider qu’une donnée est significative :
+Le filtrage du token exact `+++` est maintenant placé dans la couche protocolaire commune `GspProtocol.StripCommandEcho()` :
 
-- le token exact `+++` est ignoré lorsqu’il apparaît seul ou en tête du flux ;
-- `+++` ne démarre donc plus le délai de silence de fin de réponse ;
-- le lecteur continue d’attendre la vraie trame jusqu’à `END` ou jusqu’au timeout normal du port ;
-- le même filtrage est appliqué à la valeur retournée au parseur ;
-- le filtrage ne supprime jamais les signes `+` contenus dans les valeurs métier, par exemple `Alarm=F+D+E+LH+LB+RB+RH`.
+- `+++` seul devient une réponse vide/non significative ;
+- `+++` en tête du flux est retiré ;
+- une ligne dédiée `+++` est retirée ;
+- le lecteur Surveillance continue donc d’attendre la vraie trame dans ses délais normaux ;
+- Hotline/Métrologie continuent également de bénéficier du filtrage ;
+- aucune temporisation Surveillance n’est augmentée ou diminuée par ce lot.
 
-Le parseur métier GSP et les formules de métrologie ne sont pas modifiés.
+Le filtrage ne supprime jamais les signes `+` contenus dans les valeurs métier, par exemple :
+
+```text
+Alarm=F+D+E+LH+LB+RB+RH
+```
 
 ## Versioning
 
-Conformément à `docs/versioning.md`, il s’agit d’un correctif compatible du Serveur :
-
-- Serveur : `0.90.1 -> 0.90.2` via `AssemblyInformationalVersion` ;
-- Installateur Serveur : `0.90.1 -> 0.90.2` ;
-- Web et Agent : inchangés.
-
-Aucune migration BDD ni modification de contrat API n’est nécessaire.
+- Serveur `0.90.2 -> 0.90.3` pour le complément Surveillance et les contrôles ECON associés au même lot ;
+- Installateur Serveur `0.90.2 -> 0.90.3` ;
+- le Web évolue séparément en `0.90.2` pour le contrôle des réponses ECON `ovf` documenté dans `gsp-econ-overflow-27-08-2026.md` ;
+- Agent inchangé (`1.0.1`) ;
+- aucune migration BDD.
 
 ## Checklist de validation terrain
 
+### Hotline / Ajustage / Étalonnage
+
 - [ ] reproduire une lecture où le module émet `+++` avant `ACK=TEMP` ;
-- [ ] vérifier que le log `RX` contient désormais la vraie réponse exploitable et non `+++` seul ;
+- [ ] vérifier que le log `RX` contient la vraie réponse exploitable et non `+++` seul ;
 - [ ] vérifier que la valeur `Mesure` est bien remontée dans Ajustage ;
+- [ ] vérifier Étalonnage ;
+- [ ] vérifier une lecture Hotline GSP hors métrologie.
+
+### Surveillance
+
+- [ ] placer une GSP en Surveillance sur le firmware/module qui peut produire `+++` ;
+- [ ] provoquer ou observer `+++` avant la vraie trame `ACK=TEMP` ;
+- [ ] confirmer qu’aucun timeout/parse error n’est généré uniquement à cause de `+++` ;
+- [ ] confirmer que la vraie valeur `Mesure` est insérée ;
 - [ ] vérifier plusieurs sondes successives sur le même port/module ;
-- [ ] vérifier une lecture sans `+++` afin de confirmer l’absence de régression ;
-- [ ] vérifier que `Alarm=F+D+E+LH+LB+RB+RH` reste intact ;
-- [ ] vérifier Étalonnage, qui utilise le même lecteur série GSP ;
-- [ ] vérifier une lecture Hotline GSP hors métrologie ;
+- [ ] vérifier une lecture normale sans `+++` ;
+- [ ] vérifier que `Alarm=F+D+E+LH+LB+RB+RH` reste intact.
+
+### Build
+
 - [ ] compiler le projet Serveur Windows ;
-- [ ] compiler/publier l’installateur Serveur `0.90.2`.
+- [ ] compiler/publier l’installateur Serveur `0.90.3`.
 
 ## Limites
 
-Le correctif traite `+++` comme une séquence de contrôle de transport et non comme une réponse métier. Il ne modifie pas les timings firmware/module et ne masque pas les autres réponses non reconnues : toute autre donnée inattendue continue d’être journalisée et traitée selon le comportement existant.
+Le correctif traite uniquement le token exact `+++` comme séquence de contrôle de transport. Il ne modifie pas les timings firmware/module et ne masque pas les autres réponses non reconnues : toute autre donnée inattendue continue d’être journalisée et traitée selon le comportement existant.
