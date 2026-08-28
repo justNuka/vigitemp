@@ -38,13 +38,5 @@ export async function markLatestAdjustmentCoefficientRowsDirty(serialNumbers: st
 
       await tx.$executeRawUnsafe(sql, 1, latest.Id_Ajustage)
     }
-
-    // Les coefficients de métrologie ne doivent plus dépendre du dirty flag du lieu.
-    // On nettoie une éventuelle valeur posée par l'ancien parcours d'Ajustage afin
-    // que la Surveillance conserve seule la maîtrise de ce drapeau historique.
-    await tx.t_lieu.updateMany({
-      where: { Sonde_Numero_Serie: { in: serials } },
-      data: { Infos_Modifiees_Depuis_Derniere_Mesure: false },
-    })
   })
 }
