@@ -319,4 +319,4 @@ Comportement :
 
 ## Ajustage — acquisitions pilotées par point et moyenne du plateau — 28/08/2026
 
-Le flux est repris sur `agent/adjustment-acquisition-stability-flow` depuis `dev` `156da60c3847ee751fa3ad7077b35f4bdd505c02` après merge de la PR #69. Le détail d’implémentation et la checklist de reprise sont centralisés dans `website/docs/metrology-adjustment-acquisition-flow-28-08-2026.md`.
+Le flux est repris sur `agent/adjustment-acquisition-stability-flow` depuis `dev` `156da60c3847ee751fa3ad7077b35f4bdd505c02` après merge de la PR #69. La PR #70 est ouverte vers `dev`. Le détail d’implémentation et la checklist de reprise sont centralisés dans `website/docs/metrology-adjustment-acquisition-flow-28-08-2026.md`.

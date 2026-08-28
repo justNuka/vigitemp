@@ -2,7 +2,7 @@
 
 ## Statut
 
-**EN COURS — branche `agent/adjustment-acquisition-stability-flow` — base `dev` `156da60c3847ee751fa3ad7077b35f4bdd505c02`.**
+**PR OUVERTE — PR #70 — branche `agent/adjustment-acquisition-stability-flow` — base `dev` `156da60c3847ee751fa3ad7077b35f4bdd505c02`.**
 
 ## Retour terrain
 
@@ -69,4 +69,4 @@ Cette présentation correspond au calcul déjà utilisé par `computeLinearAdjus
 - [ ] vérifier un étalon externe sans régression ;
 - [ ] vérifier GSP puis GSO ;
 - [ ] vérifier FR/EN et thèmes clair/sombre ;
-- [ ] lancer `pnpm lint`, `pnpm i18n:check` et `pnpm build`.
+- [x] validations techniques : lint sans erreur bloquante, nouveau flux FR/EN contrôlé, TypeScript OK après génération Prisma et `pnpm build` Next.js OK en GitHub Actions.

@@ -1186,7 +1186,7 @@ Versioning :
 
 ## GSP — limite 60 caractères des commandes de configuration — 28/08/2026
 
-Statut : **`PR_OUVERTE` — branche `agent/gsp-econ-60-char-limit` — PR #69 vers `dev`**.
+Statut : **`CORRIGE_DEV` — PR #69 — merge `156da60c3847ee751fa3ad7077b35f4bdd505c02`**.
 
 ### Retour terrain / cause
 
@@ -1233,7 +1233,7 @@ Exemple de référence avec `SPNB-26000065` : une commande complète de 80 carac
 
 ## Ajustage — acquisitions pilotées par point et moyenne du plateau — 28/08/2026
 
-Statut : **`EN_COURS` — branche `agent/adjustment-acquisition-stability-flow` — PR à ouvrir vers `dev`**.
+Statut : **`PR_OUVERTE` — branche `agent/adjustment-acquisition-stability-flow` — PR #70 vers `dev`**.
 
 ### Retour / comportement attendu
 
@@ -1264,4 +1264,4 @@ Statut : **`EN_COURS` — branche `agent/adjustment-acquisition-stability-flow` 
 - [ ] vérifier moyenne et validation automatique du point 2 ;
 - [ ] contrôler la formule A/B/C via le détail des calculs ;
 - [ ] vérifier GSP/GSO, FR/EN et thèmes clair/sombre ;
-- [ ] lancer lint, i18n check et build Web.
+- [x] validations techniques : lint sans erreur bloquante, nouveau flux FR/EN contrôlé, TypeScript OK après génération Prisma et build Web Next.js OK en GitHub Actions.
