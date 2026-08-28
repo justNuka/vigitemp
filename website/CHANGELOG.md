@@ -8,6 +8,13 @@ Les versions suivent `MAJOR.MINOR.PATCH` sans zéros de tête. La source de vers
 
 ## [Unreleased]
 
+### Métrologie
+
+- Les validations de coefficients A/B/C en Ajustage et en prévisualisation d'Étalonnage marquent désormais la dernière ligne `t_ajustage` via `Coeffs_Modifies_Depuis_Derniere_Mesure`.
+- La validation refuse explicitement de poursuivre si la migration BDD `0.90.2` n'a pas encore ajouté cette colonne.
+- Le schéma Prisma préparé conserve temporairement le champ afin qu'un `prisma db push` ne tente pas de supprimer la colonne avant la prochaine régénération complète du schéma source.
+- Ce nouveau signal permet la synchronisation des coefficients pour une sonde de métrologie non affectée à un lieu ; le dirty flag historique de `t_lieu` reste un mécanisme distinct de Surveillance.
+
 ### Corrigé
 
 - La validation des coefficients d'Étalonnage normalise désormais explicitement les valeurs non modifiées avec les mêmes valeurs par défaut que l'API (`A=1`, `B=0`, `C=0`) avant les contrôles numériques et l'appel à `Math.abs()`.
