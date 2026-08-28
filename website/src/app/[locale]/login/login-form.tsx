@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 import { showFormValidationToast } from "@/lib/form-toast"
 
 import { useCallback, useEffect, useState } from "react";
@@ -35,6 +35,7 @@ import { clearDisconnectReason, consumeDisconnectReason } from "@/lib/auth-disco
 import { LoginCredentialsForm } from "./_components/login-credentials-form";
 import { ForgotPasswordDialog } from "./_components/forgot-password-dialog";
 import { LoginInactivityAlert } from "./_components/login-inactivity-alert";
+import { FirstLoginWelcome } from "./_components/first-login-welcome";
 import { useLicense } from "@/components/license/license-provider";
 import { formatLicenseLabel } from "@/lib/license-label";
 import { z } from "zod";
@@ -49,6 +50,9 @@ type LoginResponse = {
   authorizations: string[];
   token: string;
   passwordExpiryWarningDays?: number | null;
+  isFirstLogin: boolean;
+  passwordExpiryEnabled: boolean;
+  passwordValidityDays: number | null;
 };
 
 type AuthApiErrorPayload = {
@@ -69,6 +73,7 @@ export function LoginForm() {
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [resetSuccess, setResetSuccess] = useState(false);
   const [showPasswordExpiryWarning, setShowPasswordExpiryWarning] = useState(false);
+  const [showFirstLoginWelcome, setShowFirstLoginWelcome] = useState(false);
   const [pendingLoginResponse, setPendingLoginResponse] = useState<LoginResponse | null>(null);
   const shouldReduceMotion = useReducedMotion();
   const ease = [0.22, 1, 0.36, 1] as const;
@@ -189,6 +194,12 @@ export function LoginForm() {
       }
     },
     onSuccess: async (data: LoginResponse) => {
+      if (data.isFirstLogin) {
+        setPendingLoginResponse(data);
+        setShowFirstLoginWelcome(true);
+        return;
+      }
+
       if (data.passwordExpiryWarningDays && data.passwordExpiryWarningDays > 0) {
         setPendingLoginResponse(data);
         setShowPasswordExpiryWarning(true);
@@ -375,6 +386,26 @@ export function LoginForm() {
         <p className="relative z-10 w-full text-center text-xs text-muted-foreground/70 pb-4">
           Vigi<span className="font-semibold">Sensys</span> - MC2 Lab
         </p>
+
+        <FirstLoginWelcome
+          open={showFirstLoginWelcome}
+          displayName={pendingLoginResponse?.displayName || pendingLoginResponse?.username || ""}
+          passwordExpiryEnabled={pendingLoginResponse?.passwordExpiryEnabled ?? false}
+          passwordValidityDays={pendingLoginResponse?.passwordValidityDays ?? null}
+          onContinue={() => {
+            const response = pendingLoginResponse;
+            setShowFirstLoginWelcome(false);
+            if (!response) return;
+
+            if (response.passwordExpiryWarningDays && response.passwordExpiryWarningDays > 0) {
+              setShowPasswordExpiryWarning(true);
+              return;
+            }
+
+            setPendingLoginResponse(null);
+            void finalizeLogin(response);
+          }}
+        />
 
         <AlertDialog
           open={showPasswordExpiryWarning}

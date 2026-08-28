@@ -1310,3 +1310,32 @@ Le parcours terminal restaurait automatiquement la configuration GSP en mode `no
 - [ ] échec ACK puis nouvelle tentative ;
 - [ ] FR/EN, clair/sombre ;
 - [ ] lint, typecheck et build Web.
+
+
+## Authentification — écran de bienvenue à la première connexion — 28/08/2026
+
+Statut : **`PR_OUVERTE` — branche `agent/first-login-welcome-password-validity` — PR #72 vers `dev`**.
+
+### Retour / besoin
+
+Afficher, lors de la première connexion réussie, une animation de bienvenue puis les informations de renouvellement du mot de passe. La durée affichée doit suivre `CFR21 / VALIDITE_MOT_DE_PASSE_JOURS`.
+
+### Choix d’implémentation
+
+- réutilisation de `t_utilisateur.Date_Heure_Derniere_Connexion` comme marqueur serveur de première connexion ;
+- aucune migration BDD et aucun `localStorage` ;
+- exposition de la politique CFR21 dans la réponse de login ;
+- onboarding plein écran en deux temps, puis reprise du flux de redirection existant ;
+- aucun changement des règles existantes de mot de passe temporaire, expiration, warning J-7, sessions JWT/cookies, licences ou droits ;
+- FR/EN, clair/sombre et reduced-motion.
+
+### Validation terrain
+
+- [ ] première connexion uniquement ;
+- [ ] durée CFR21 correcte ;
+- [ ] expiration désactivée ;
+- [ ] changement temporaire/expiré toujours prioritaire ;
+- [ ] warning J-7 après onboarding ;
+- [ ] redirections et Agent inchangés ;
+- [ ] FR/EN, clair/sombre, reduced-motion ;
+- [ ] lint, typecheck et build Web.

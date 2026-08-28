@@ -1,6 +1,23 @@
 export type MessageCatalog = Record<string, unknown>
 
 export const frSupplements: MessageCatalog = {
+  login: {
+    first_login: {
+      fallback_name: "utilisateur",
+      eyebrow: "Première connexion",
+      welcome_title: "Bienvenue {name}",
+      welcome_description: "Votre espace VigiSensys est prêt. Quelques informations de sécurité avant de commencer.",
+      policy_title: "Votre compte est prêt",
+      policy_description: "Voici les règles appliquées à votre mot de passe sur cette installation VigiSensys.",
+      password_title: "Validité du mot de passe",
+      password_validity: "Selon la configuration CFR21 de cette installation, votre mot de passe est valable {days} jours. Il devra être renouvelé à l’issue de cette période.",
+      password_validity_unavailable: "L’expiration des mots de passe est activée, mais aucune durée valide n’est actuellement disponible dans la configuration CFR21.",
+      password_expiry_disabled: "L’expiration automatique des mots de passe est désactivée dans la configuration CFR21 de cette installation.",
+      expiry_reminder: "À l’approche de l’échéance, VigiSensys vous avertira à la connexion pendant les 7 derniers jours avant l’expiration.",
+      forced_change_note: "Un mot de passe temporaire ou arrivé à expiration doit toujours être remplacé avant de pouvoir accéder à l’application.",
+      continue: "Accéder à VigiSensys",
+    },
+  },
   alarmAckHistoryPage: {
     table: { type: { disabled_since: "Surveillance désactivée depuis le {date}" } },
   },
@@ -269,6 +286,23 @@ export const frSupplements: MessageCatalog = {
 }
 
 export const enSupplements: MessageCatalog = {
+  login: {
+    first_login: {
+      fallback_name: "user",
+      eyebrow: "First sign-in",
+      welcome_title: "Welcome {name}",
+      welcome_description: "Your VigiSensys workspace is ready. A few security details before you get started.",
+      policy_title: "Your account is ready",
+      policy_description: "These are the password rules configured for this VigiSensys installation.",
+      password_title: "Password validity",
+      password_validity: "According to this installation’s CFR21 configuration, your password is valid for {days} days. It must be renewed at the end of that period.",
+      password_validity_unavailable: "Password expiration is enabled, but no valid duration is currently available in the CFR21 configuration.",
+      password_expiry_disabled: "Automatic password expiration is disabled in this installation’s CFR21 configuration.",
+      expiry_reminder: "As the deadline approaches, VigiSensys will warn you at sign-in during the final 7 days before expiration.",
+      forced_change_note: "A temporary or expired password must always be replaced before the application can be accessed.",
+      continue: "Open VigiSensys",
+    },
+  },
   alarmsPage: {
     tabs: { results_with_total: "{visible} result(s) out of {total} in this tab" },
   },
