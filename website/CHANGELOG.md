@@ -10,9 +10,10 @@ Les versions suivent `MAJOR.MINOR.PATCH` sans zéros de tête. La source de vers
 
 ### Corrigé
 
-- Correction du contrat TypeScript des sondes de métrologie : `coeffA`, `coeffB` et `coeffC` sont désormais obligatoires dans `AdjustmentSensorRow`, conformément au payload réel de `/api/metrologie/ajustage/sondes` qui fournit toujours des valeurs numériques avec fallback `1 / 0 / 0`.
-- Le build Next.js ne doit plus échouer dans la validation des coefficients d'étalonnage sur `Math.abs(item.coeffC)` / `Math.abs(item.coeffA)` avec le type `number | undefined`.
-- Aucun comportement métier, payload API ou stockage BDD n'est modifié par ce hotfix.
+- La validation des coefficients d'Étalonnage normalise désormais explicitement les valeurs non modifiées avec les mêmes valeurs par défaut que l'API (`A=1`, `B=0`, `C=0`) avant les contrôles numériques et l'appel à `Math.abs()`.
+- `AdjustmentSensorRow` conserve `coeffA`, `coeffB` et `coeffC` optionnels car ce type partagé sert aussi de base au `ManagedSensor` interne du moteur d'Ajustage, qui stocke ses coefficients courants dans `currentCoeffA/B/C`.
+- Ce correctif complète la PR #65 : rendre globalement A/B/C obligatoires corrigeait le premier diagnostic TypeScript mais rendait incompatible le mapper `ManagedSensor` du moteur d'Ajustage.
+- Aucun comportement métier, formule métrologique, payload API ou stockage BDD n'est modifié par ce hotfix de typage/build.
 
 ## [0.90.2] — 2026-08-27
 
