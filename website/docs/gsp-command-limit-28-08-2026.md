@@ -2,7 +2,7 @@
 
 ## Statut
 
-**EN COURS — branche `agent/gsp-econ-60-char-limit` — PR à ouvrir vers `dev`.**
+**PR_OUVERTE — branche `agent/gsp-econ-60-char-limit` — PR #69 vers `dev`.**
 
 ## Retour terrain
 

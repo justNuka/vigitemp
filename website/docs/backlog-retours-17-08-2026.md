@@ -1186,7 +1186,7 @@ Versioning :
 
 ## GSP — limite 60 caractères des commandes de configuration — 28/08/2026
 
-Statut : **`EN COURS` — branche `agent/gsp-econ-60-char-limit` — PR à ouvrir vers `dev`**.
+Statut : **`PR_OUVERTE` — branche `agent/gsp-econ-60-char-limit` — PR #69 vers `dev`**.
 
 ### Retour terrain / cause
 
