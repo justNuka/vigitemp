@@ -30,6 +30,10 @@ jobs:
           corepack enable
           pnpm install --frozen-lockfile --ignore-scripts
 
+      - name: Generate Prisma clients
+        working-directory: website
+        run: pnpm prisma:generate:mysql
+
       - name: Lint
         working-directory: website
         run: pnpm lint
