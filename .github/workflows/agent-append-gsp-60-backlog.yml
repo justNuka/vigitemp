@@ -20,59 +20,14 @@ jobs:
 
       - name: Append backlog entry
         shell: bash
+        env:
+          BACKLOG_SECTION_BASE64: CgojIyBHU1Ag4oCUIGxpbWl0ZSA2MCBjYXJhY3TDqHJlcyBkZXMgY29tbWFuZGVzIGRlIGNvbmZpZ3VyYXRpb24g4oCUIDI4LzA4LzIwMjYKCkN0YXR1dCA6ICoqYEVOIENPVVJTYCDigJQgYnJhbmNoZSBgYWdlbnQvZ3NwLWVjb24tNjAtY2hhci1saW1pdGAg4oCUIFBSIMOgIG91dnJpciB2ZXJzIGBkZXZgKiouCgojIyMgUmV0b3VyIHRlcnJhaW4gLyBjYXVzZQoKTGVzIG1vZHVsZXMgZGUgY29tbXVuaWNhdGlvbiBHU1AgYWNjZXB0ZW50IGF1IG1heGltdW0gKio2MCBjYXJhY3TDqHJlcyBwYXIgY29tbWFuZGUqKi4gQXUtZGVsw6AsIGxhIGNvbW1hbmRlIHBldXQgw6p0cmUgaWdub3LDqWUgY29tcGzDqHRlbWVudCBwYXIgbGUgbW9kdWxlLiBMZSByaXNxdWUgY29uY2VybmUgbm90YW1tZW50IGxlcyBncm9zc2VzIHJlc3luY2hyb25pc2F0aW9ucyBkZSBTdXJ2ZWlsbGFuY2UgOiBsZSBgRUNPTmAgY29tcGxldCByZWdyb3VwZSBsZXMgY29lZmZpY2llbnRzLCBsJ29mZnNldCwgbGEgY29ycmVjdGlvbiBkZSBqdXN0ZXNzZSwgbGVzIGNvbnNpZ25lcywgbGEgZnLDqXF1ZW5jZSBldCBsZXMgZMOpbGFpcyAoYGEvYi9jL2QvZS9tL2gvbC9mL3IvdGApIGV0IGTDqXBhc3NlIGZhY2lsZW1lbnQgY2V0dGUgbGltaXRlLgoKQWp1c3RhZ2UgZXQgw4l0YWxvbm5hZ2Ugw6l0YWllbnQgZMOpasOgIHByb3TDqWfDqXMgZGVwdWlzIGxhIFBSICM1MCA6IGxldXIgYEVDT05gIGRlIG3DqXRyb2xvZ2llIGVzdCBjb21wYWN0w6kgYXV4IHNldWxzIGNvZWZmaWNpZW50cyBgYS9iL2NgLCBzb2l0IDU3IGNhcmFjdMOocmVzIHBvdXIgbCdleGVtcGxlIGBTUE5CLTI2MDAwMDY1YC4gTGUgY2hlbWluIG5vcm1hbCBkZSBTdXJ2ZWlsbGFuY2UgZXQgbGEgc3luY2hyb25pc2F0aW9uIHN0cnVjdHVyw6llIGRlIGxhIEhvdGxpbmUgcG91dmFpZW50IGVuY29yZSBlbnZveWVyIHVuIGBFQ09OYCBjb21wbGV0IHRyb3AgbG9uZy4KCiMjIyBDb3JyZWN0aWYKCi0gYWpvdXQgZCd1bmUgbGltaXRlIHBhcnRhZ8OpZSBgR3NwUHJvdG9jb2wuTWF4TW9kdWxlQ29tbWFuZENoYXJhY3RlcnMgPSA2MGAgOwotIGFqb3V0IGRlIGBUcnlCdWlsZENvbW1hbmRGcmFnbWVudHMoLi4uKWAsIHF1aSBjb25zZXJ2ZSBsZSBwYXlsb2FkIG3DqXRpZXIgY29tcGxldCBtYWlzIGxlIGTDqWNvdXBlIHVuaXF1ZW1lbnQgYXV4IGZyb250acOocmVzIGRlcyBwYXJhbcOodHJlcyBgYS9iL2MvZC9lL20vaC9sL2Yvci90YCA7Ci0gbGEgbG9uZ3VldXIgaW5jbHV0IGBFQ09OYCwgbGEgY2libGUgcsOpZWxsZSBkZSBsYSBzb25kZSwgbCdlc3BhY2UgZXQgbGUgcGF5bG9hZCA7Ci0gYXVjdW5lIHZhbGV1ciBudW3DqXJpcXVlIG4nZXN0IGNvdXDDqWUgYXUgbWlsaWV1IDsKLSBgU2Vuc29yR1NQYCBhcHBsaXF1ZSBsZSBkw6ljb3VwYWdlIGF1eCBzeW5jaHJvbmlzYXRpb25zIGF1dG9tYXRpcXVlcyBkZSBTdXJ2ZWlsbGFuY2UgOwotIGBIb3RsaW5lQXBpU2VydmVyLlNlbmRHc3BDb21tYW5kKClgIGFwcGxpcXVlIGxhIG3Dqm1lIHByb3RlY3Rpb24gw6AgbGEgc3luY2hyb25pc2F0aW9uIHN0cnVjdHVyw6llIEhvdGxpbmUgOwotIGNoYXF1ZSBmcmFnbWVudCBkb2l0IHJlY2V2b2lyIHNvbiBBQ0sgYXZhbnQgbCdlbnZvaSBkdSBzdWl2YW50IDsgZW4gY2FzIGQnw6ljaGVjLCBsYSBzw6lxdWVuY2UgcydhcnLDqnRlIGltbcOpZGlhdGVtZW50IDsKLSBsZSBtb2RlIGByYXdgIGxpYnJlIGRlIGxhIEhvdGxpbmUgbiduZXN0IHBhcyBtb2RpZmnDqSA7IGxlcyBwYXJjb3VycyByYXcgZCdBanVzdGFnZS/DiXRhbG9ubmFnZSByZXN0ZW50IHByb3TDqWfDqXMgcGFyIGxldXIgY29tcGFjdGFnZSBgYS9iL2NgIGV4aXN0YW50LgoKRXhlbXBsZSBkZSByw6lmw6lyZW5jZSBhdmVjIGBTUE5CLTI2MDAwMDY1YCA6IHVuZSBjb21tYW5kZSBjb21wbMOodGUgZGUgODAgY2FyYWN0w6hyZXMgZXN0IGTDqWNvdXDDqWUgZW4gKio1NyArIDQxIGNhcmFjdMOocmVzKiouIExlIG5vbWJyZSBkZSBmcmFnbWVudHMgbidlc3QgcGFzIGZvcmPDqSDDoCBkZXV4IDogc2kgZGVzIHZhbGV1cnMgZXhjZXB0aW9ubmVsbGVtZW50IGxvbmd1ZXMgbCdleGlnZW50LCBsZSBTZXJ2ZXVyIGNyw6llIGF1dGFudCBkZSBmcmFnbWVudHMgcXVlIG7DqWNlc3NhaXJlIHBvdXIgcmVzcGVjdGVyIHN0cmljdGVtZW50IGxlcyA2MCBjYXJhY3TDqHJlcy4KCiMjIyBGaWNoaWVycyBwcmluY2lwYXV4CgotIGBWaWdpdGVtcCBTZXJ2ZXVyL1ZpZ2l0ZW1wIFNlcnZldXIvc2Vuc29ycy9Hc3BQcm90b2NvbC5jc2AgOwotIGBWaWdpdGVtcCBTZXJ2ZXVyL1ZpZ2l0ZW1wIFNlcnZldXIvc2Vuc29ycy9TZW5zb3JHU1AuY3NgIDsKLSBgVmlnaXRlbXAgU2VydmV1ci9WaWdpdGVtcCBTZXJ2ZXVyL0hvdGxpbmVBcGlTZXJ2ZXIuY3NgIDsKLSBgVmlnaXRlbXAgU2VydmV1ci9DSEFOR0VMT0cubWRgIDsKLSBgd2Vic2l0ZS9kb2NzL2dzcC1jb21tYW5kLWxpbWl0LTI4LTA4LTIwMjYubWRgLgoKIyMjIFbDqXJpZmljYXRpb25zIC8gY2hlY2tsaXN0IHRlcnJhaW4KCi0gW3hdIGJyYW5jaGUgY3LDqcOpZSBkZXB1aXMgbGUgSEVBRCBgZGV2YCBgMjM3YjU4MmVjNmQyZGM5NzYzOTgyOTIxNjg5OWJhODQxYjg5MTRjOWAgOwotIFt4XSBhdWN1bmUgUFIgb3V2ZXJ0ZSBhdSBkw6ltYXJyYWdlIDsKLSBbeF0gZXhlbXBsZSA4MCBjYXJhY3TDqHJlcyA9PiA1NyArIDQxIDsKLSBbeF0gYEVDT04gYS9iL2NgIGRlIDU3IGNhcmFjdMOocmVzIGxhaXNz w6kgaW50YWN0IDsKLSBbeF0gcGF5bG9hZCBhcnRpZmljaWVsbGVtZW50IHBsdXMgbG9uZyB0ZXN0w6kgOiBhdWN1biBmcmFnbWVudCBhdS1kZWzDoCBkZSA2MCBjYXJhY3TDqHJlcyA7Ci0gW3hdIGFycsOqdCBkZSBsYSBzw6lxdWVuY2UgcHLDqXZ1IGTDqHMgbGUgcHJlbWllciBBQ0sgbWFucXVhbnQgOwotIFsgXSBjb21waWxlciBsZSBTZXJ2ZXVyIFdpbmRvd3MgOwotIFsgXSBtb2RpZmllciBzaW11bHRhbsOpbWVudCBjb25zaWduZXMsIGZyw6lxdWVuY2UgZXQgZMOpbGFpcyBzdXIgdW5lIEdTUCBldCB2w6lyaWZpZXIgcGx1c2lldXJzIFRYIGBFQ09OYCBkZSA2MCBjYXJhY3TDqHJlcyBtYXhpbXVtIDsKLSBbIF0gdsOpcmlmaWVyIHVuIEFDSyBhcHLDqHMgY2hhcXVlIGZyYWdtZW50IDsKLSBbIF0gc2ltdWxlciBsJ2Fic2VuY2UgZCdBQ0sgZHUgcHJlbWllciBmcmFnbWVudCBldCBjb25maXJtZXIgcXVlIGxlIHN1aXZhbnQgbiduZXN0IHBhcyBlbnZvecOpIDsKLSBbIF0gdmFsaWRlciBBanVzdGFnZSBldCDDqXRhbG9ubmFnZSBzYW5zIHLDqWdyZXNzaW9uIHN1ciBsYCBFQ09OIGEvYi9jYCBjb21wYWN0Lgo=
         run: |
           set -euo pipefail
           file='website/docs/backlog-retours-17-08-2026.md'
           marker='## GSP — limite 60 caractères des commandes de configuration — 28/08/2026'
           if ! grep -Fq "$marker" "$file"; then
-            cat >> "$file" <<'EOF'
-
-
-## GSP — limite 60 caractères des commandes de configuration — 28/08/2026
-
-Statut : **`EN COURS` — branche `agent/gsp-econ-60-char-limit` — PR à ouvrir vers `dev`**.
-
-### Retour terrain / cause
-
-Les modules de communication GSP acceptent au maximum **60 caractères par commande**. Au-delà, la commande peut être ignorée complètement par le module. Le risque concerne notamment les grosses resynchronisations de Surveillance : le `ECON` complet regroupe les coefficients, l'offset, la correction de justesse, les consignes, la fréquence et les délais (`a/b/c/d/e/m/h/l/f/r/t`) et dépasse facilement cette limite.
-
-Ajustage et Étalonnage étaient déjà protégés depuis la PR #50 : leur `ECON` de métrologie est compacté aux seuls coefficients `a/b/c`, soit 57 caractères pour l'exemple `SPNB-26000065`. Le chemin normal de Surveillance et la synchronisation structurée de la Hotline pouvaient encore envoyer un `ECON` complet trop long.
-
-### Correctif
-
-- ajout d'une limite partagée `GspProtocol.MaxModuleCommandCharacters = 60` ;
-- ajout de `TryBuildCommandFragments(...)`, qui conserve le payload métier complet mais le découpe uniquement aux frontières des paramètres `a/b/c/d/e/m/h/l/f/r/t` ;
-- la longueur inclut `ECON`, la cible réelle de la sonde, l'espace et le payload ;
-- aucune valeur numérique n'est coupée au milieu ;
-- `SensorGSP` applique le découpage aux synchronisations automatiques de Surveillance ;
-- `HotlineApiServer.SendGspCommand()` applique la même protection à la synchronisation structurée Hotline ;
-- chaque fragment doit recevoir son ACK avant l'envoi du suivant ; en cas d'échec, la séquence s'arrête immédiatement ;
-- le mode `raw` libre de la Hotline n'est pas modifié ; les parcours raw d'Ajustage/Étalonnage restent protégés par leur compactage `a/b/c` existant.
-
-Exemple de référence avec `SPNB-26000065` : une commande complète de 80 caractères est découpée en **57 + 41 caractères**. Le nombre de fragments n'est pas forcé à deux : si des valeurs exceptionnellement longues l'exigent, le Serveur crée autant de fragments que nécessaire pour respecter strictement les 60 caractères.
-
-### Fichiers principaux
-
-- `Vigitemp Serveur/Vigitemp Serveur/sensors/GspProtocol.cs` ;
-- `Vigitemp Serveur/Vigitemp Serveur/sensors/SensorGSP.cs` ;
-- `Vigitemp Serveur/Vigitemp Serveur/HotlineApiServer.cs` ;
-- `Vigitemp Serveur/CHANGELOG.md` ;
-- `website/docs/gsp-command-limit-28-08-2026.md`.
-
-### Vérifications / checklist terrain
-
-- [x] branche créée depuis le HEAD `dev` `237b582ec6d2dc97639829216899ba841b8914c9` ;
-- [x] aucune PR ouverte au démarrage ;
-- [x] exemple 80 caractères => 57 + 41 ;
-- [x] `ECON a/b/c` de 57 caractères laissé intact ;
-- [x] payload artificiellement plus long testé : aucun fragment au-delà de 60 caractères ;
-- [x] arrêt de la séquence prévu dès le premier ACK manquant ;
-- [ ] compiler le Serveur Windows ;
-- [ ] modifier simultanément consignes, fréquence et délais sur une GSP et vérifier plusieurs TX `ECON` de 60 caractères maximum ;
-- [ ] vérifier un ACK après chaque fragment ;
-- [ ] simuler l'absence d'ACK du premier fragment et confirmer que le suivant n'est pas envoyé ;
-- [ ] valider Ajustage et Étalonnage sans régression sur le `ECON a/b/c` compact.
-EOF
+            printf '%s' "$BACKLOG_SECTION_BASE64" | base64 -d >> "$file"
           fi
           rm -f '.github/workflows/agent-append-gsp-60-backlog.yml'
           git config user.name 'github-actions[bot]'
