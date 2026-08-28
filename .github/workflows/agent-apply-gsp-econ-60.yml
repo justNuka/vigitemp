@@ -20,10 +20,10 @@ jobs:
           fetch-depth: 0
 
       - name: Validate patch
-        run: git apply --check .agent/gsp-econ-60.patch
+        run: git apply --check --recount .agent/gsp-econ-60.patch
 
       - name: Apply patch
-        run: git apply .agent/gsp-econ-60.patch
+        run: git apply --recount .agent/gsp-econ-60.patch
 
       - name: Commit source changes
         run: |
