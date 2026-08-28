@@ -32,6 +32,10 @@ jobs:
         working-directory: website
         env:
           JWT_SECRET: ${{ github.sha }}${{ github.sha }}
+          DATABASE_PROVIDER: mysql
+          DATABASE_URL: mysql://ci:ci@127.0.0.1:3306/vigi_main
+          DATABASE_MESURES_URL: mysql://ci:ci@127.0.0.1:3306/vigi_mesures
+          DATABASE_CHAT_URL: mysql://ci:ci@127.0.0.1:3306/vigi_chat
         run: pnpm build
 
       - name: Clean validation workflow
