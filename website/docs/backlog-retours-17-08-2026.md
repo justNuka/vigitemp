@@ -1186,7 +1186,7 @@ Versioning :
 
 ## GSP — limite 60 caractères des commandes de configuration — 28/08/2026
 
-Statut : **`PR_OUVERTE` — branche `agent/gsp-econ-60-char-limit` — PR #69 vers `dev`**.
+Statut : **`CORRIGE_DEV` — PR #69 — merge `156da60c3847ee751fa3ad7077b35f4bdd505c02`**.
 
 ### Retour terrain / cause
 
@@ -1228,3 +1228,40 @@ Exemple de référence avec `SPNB-26000065` : une commande complète de 80 carac
 - [ ] vérifier un ACK après chaque fragment ;
 - [ ] simuler l'absence d'ACK du premier fragment et confirmer que le suivant n'est pas envoyé ;
 - [ ] valider Ajustage et Étalonnage sans régression sur le `ECON a/b/c` compact.
+
+
+
+## Ajustage — acquisitions pilotées par point et moyenne du plateau — 28/08/2026
+
+Statut : **`PR_OUVERTE` — branche `agent/adjustment-acquisition-stability-flow` — PR #70 vers `dev`**.
+
+### Retour / comportement attendu
+
+- supprimer le bouton séparé de lecture des sondes ;
+- le lancement de l’ajustage active directement la lecture continue des sondes et de l’étalon sans démarrer de plateau ;
+- `Lancer l’acquisition du premier/deuxième point` démarre le plateau correspondant ;
+- un plateau stable arrivé à sa durée configurée valide automatiquement le point ;
+- le point utilise la moyenne étalon et les moyennes sondes calculées sur toutes les mesures de la fenêtre ;
+- les coefficients restent modifiables avant le point 1 mais sont verrouillés dès son acquisition, avec confirmation utilisateur préalable ;
+- un détail de la formule linéaire d’ajustage est disponible après les deux points.
+
+### Fichiers principaux
+
+- `website/src/lib/metrology-adjustment-session.ts` ;
+- `website/src/app/api/metrologie/ajustage/session/point/route.ts` ;
+- `website/src/app/[locale]/(admin)/admin/metrologie/realiser-ajustage/adjustment-workflow-client.tsx` ;
+- `website/src/messages/supplements.ts` ;
+- `website/docs/metrology-adjustment-acquisition-flow-28-08-2026.md`.
+
+### Validation terrain
+
+- [ ] vérifier lecture sonde + étalon dès le lancement, plateau inactif ;
+- [ ] vérifier démarrage du plateau exactement au clic d’acquisition ;
+- [ ] vérifier moyenne et validation automatique du point 1 ;
+- [ ] vérifier verrouillage A/B/C côté interface et API ;
+- [ ] vérifier redémarrage du plateau si l’écart maximum est dépassé ;
+- [ ] vérifier lecture continue entre les points ;
+- [ ] vérifier moyenne et validation automatique du point 2 ;
+- [ ] contrôler la formule A/B/C via le détail des calculs ;
+- [ ] vérifier GSP/GSO, FR/EN et thèmes clair/sombre ;
+- [x] validations techniques : lint sans erreur bloquante, nouveau flux FR/EN contrôlé, TypeScript OK après génération Prisma et build Web Next.js OK en GitHub Actions.

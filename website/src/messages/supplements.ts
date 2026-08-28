@@ -225,6 +225,39 @@ export const frSupplements: MessageCatalog = {
       start_hint: "Lancez un test pour afficher le récap.",
     },
   },
+  metrologyAdmin: {
+    adjustmentPage: {
+      adjustment: {
+        cards: {
+          points: {
+            startFirstAcquisition: "Lancer l’acquisition du premier point",
+            startSecondAcquisition: "Lancer l’acquisition du deuxième point",
+            confirmCoefficientsTitle: "Vérifier les coefficients avant l’acquisition",
+            confirmCoefficientsDescription: "À partir du lancement de l’acquisition du premier point, les coefficients A/B/C seront verrouillés jusqu’à la fin de l’ajustage. Vérifiez et enregistrez vos coefficients avant de continuer.",
+            confirmCoefficientsUnsavedDescription: "Des coefficients A/B/C ont été modifiés mais ne sont pas encore enregistrés. Revenez aux coefficients et enregistrez-les avant de lancer l’acquisition du premier point.",
+            confirmCoefficientsCancel: "Revenir aux coefficients",
+            confirmCoefficientsStart: "Lancer l’acquisition",
+          },
+          coefficients: {
+            lockedTitle: "Coefficients verrouillés",
+            lockedDescription: "L’acquisition du premier point a commencé. Les coefficients A/B/C ne peuvent plus être modifiés jusqu’à la fin de l’ajustage.",
+          },
+          calculation: {
+            title: "Calcul de l’ajustage",
+            description: "Détail du calcul linéaire obtenu à partir des moyennes des deux plateaux.",
+            showDetails: "Afficher le détail des calculs",
+            hideDetails: "Masquer le détail des calculs",
+            pointOne: "Point 1 — moyenne étalon : {standard} ; moyenne sonde : {sensor}",
+            pointTwo: "Point 2 — moyenne étalon : {standard} ; moyenne sonde : {sensor}",
+            invalid: "Le calcul est impossible : les deux moyennes sonde sont identiques ou une valeur est absente.",
+            formulaA: "A = ({standardTwo} - {standardOne}) / ({sensorTwo} - {sensorOne}) = {result}",
+            formulaB: "B = {standardOne} - {coefficientA} × {sensorOne} = {result}",
+            formulaC: "C = 0",
+          },
+        },
+      },
+    },
+  },
 }
 
 export const enSupplements: MessageCatalog = {
@@ -451,6 +484,39 @@ export const enSupplements: MessageCatalog = {
       target: "Target sensor: {serial}.",
       loading: "Loading summary...",
       start_hint: "Run a test to display the summary.",
+    },
+  },
+  metrologyAdmin: {
+    adjustmentPage: {
+      adjustment: {
+        cards: {
+          points: {
+            startFirstAcquisition: "Start first-point acquisition",
+            startSecondAcquisition: "Start second-point acquisition",
+            confirmCoefficientsTitle: "Check coefficients before acquisition",
+            confirmCoefficientsDescription: "Once first-point acquisition starts, A/B/C coefficients are locked until the adjustment operation ends. Check and save the coefficients before continuing.",
+            confirmCoefficientsUnsavedDescription: "A/B/C coefficients have been changed but are not saved yet. Go back to the coefficients and save them before starting first-point acquisition.",
+            confirmCoefficientsCancel: "Back to coefficients",
+            confirmCoefficientsStart: "Start acquisition",
+          },
+          coefficients: {
+            lockedTitle: "Coefficients locked",
+            lockedDescription: "First-point acquisition has started. A/B/C coefficients can no longer be changed until the adjustment operation ends.",
+          },
+          calculation: {
+            title: "Adjustment calculation",
+            description: "Details of the linear calculation based on the averages of both stability plateaus.",
+            showDetails: "Show calculation details",
+            hideDetails: "Hide calculation details",
+            pointOne: "Point 1 — standard average: {standard}; sensor average: {sensor}",
+            pointTwo: "Point 2 — standard average: {standard}; sensor average: {sensor}",
+            invalid: "The calculation cannot be performed: both sensor averages are identical or a value is missing.",
+            formulaA: "A = ({standardTwo} - {standardOne}) / ({sensorTwo} - {sensorOne}) = {result}",
+            formulaB: "B = {standardOne} - {coefficientA} × {sensorOne} = {result}",
+            formulaC: "C = 0",
+          },
+        },
+      },
     },
   },
 }

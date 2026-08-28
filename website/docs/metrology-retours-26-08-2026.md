@@ -315,3 +315,8 @@ Comportement :
 - [ ] répéter depuis un autre poste avec le même compte ;
 - [ ] pendant une vraie session `running`, quitter puis revenir : la campagne en cours doit au contraire être restaurée ;
 - [ ] vérifier qu’un autre compte n’est pas impacté.
+
+
+## Ajustage — acquisitions pilotées par point et moyenne du plateau — 28/08/2026
+
+Le flux est repris sur `agent/adjustment-acquisition-stability-flow` depuis `dev` `156da60c3847ee751fa3ad7077b35f4bdd505c02` après merge de la PR #69. La PR #70 est ouverte vers `dev`. Le détail d’implémentation et la checklist de reprise sont centralisés dans `website/docs/metrology-adjustment-acquisition-flow-28-08-2026.md`.
