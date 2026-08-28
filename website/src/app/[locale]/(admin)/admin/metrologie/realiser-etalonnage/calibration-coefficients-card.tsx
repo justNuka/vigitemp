@@ -106,9 +106,9 @@ export function CalibrationCoefficientsCard({
         const sensorTouched = touched[sensor.id] ?? {}
         return {
           sensorId: sensor.id,
-          coeffA: sensorTouched.a ? parseCoefficient(sensorDraft.a) : sensor.coeffA,
-          coeffB: sensorTouched.b ? parseCoefficient(sensorDraft.b) : sensor.coeffB,
-          coeffC: sensorTouched.c ? parseCoefficient(sensorDraft.c) : sensor.coeffC,
+          coeffA: sensorTouched.a ? parseCoefficient(sensorDraft.a) : sensor.coeffA ?? 1,
+          coeffB: sensorTouched.b ? parseCoefficient(sensorDraft.b) : sensor.coeffB ?? 0,
+          coeffC: sensorTouched.c ? parseCoefficient(sensorDraft.c) : sensor.coeffC ?? 0,
         }
       })
 
