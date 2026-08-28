@@ -1,4 +1,4 @@
-﻿import { NextRequest, NextResponse } from "next/server"
+import { NextRequest, NextResponse } from "next/server"
 import bcrypt from "bcryptjs"
 import { z } from "zod"
 
@@ -63,6 +63,7 @@ export const POST = withLogging(async (req: NextRequest) => {
     }
 
     const passwordValid = await bcrypt.compare(password, user.Mot_De_Passe as string)
+    const isFirstLogin = user.Date_Heure_Derniere_Connexion == null
 
     if (!passwordValid) {
       log.auth.login(username, ip, false, "Invalid password")
@@ -86,6 +87,7 @@ export const POST = withLogging(async (req: NextRequest) => {
     const expiryDays = parseInt(
       cfr21Params.find((p) => p.Mot_Cle === "VALIDITE_MOT_DE_PASSE_JOURS")?.Valeur || "90",
     )
+    const passwordValidityDays = Number.isFinite(expiryDays) && expiryDays > 0 ? expiryDays : null
 
     let passwordExpiryWarningDays: number | null = null
 
@@ -159,6 +161,9 @@ export const POST = withLogging(async (req: NextRequest) => {
       authorizations,
       token,
       passwordExpiryWarningDays,
+      isFirstLogin,
+      passwordExpiryEnabled: expiryEnabled,
+      passwordValidityDays,
     }
 
     const response = apiOk(userData)

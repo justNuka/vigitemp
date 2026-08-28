@@ -8,6 +8,12 @@ Les versions suivent `MAJOR.MINOR.PATCH` sans zéros de tête. La source de vers
 
 ## [Unreleased]
 
+### Authentification / expérience utilisateur
+
+- Première connexion : après une authentification réussie, VigiSensys affiche un accueil animé puis présente la politique de mot de passe CFR21 avant la redirection vers l’application.
+- La première connexion est déterminée côté serveur à partir de `t_utilisateur.Date_Heure_Derniere_Connexion`, sans stockage navigateur ni nouvelle colonne.
+- La durée affichée reprend `CFR21 / VALIDITE_MOT_DE_PASSE_JOURS` et respecte `ACTIVATION_EXPIRATION_MOT_DE_PASSE`. Le changement forcé des mots de passe temporaires/expirés et l’avertissement existant à J-7 sont conservés.
+
 ### Métrologie
 
 - Ajustage : après le calcul final, l’application demande désormais si les nouveaux coefficients doivent être envoyés aux GSP. Les coefficients précédents sont restaurés par sécurité avant la décision ; un refus conserve ces anciens coefficients sur les sondes, tandis qu’une confirmation envoie la configuration normale avec les nouveaux coefficients et contrôle l’ACK `ECON`.
