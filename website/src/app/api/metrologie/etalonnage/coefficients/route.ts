@@ -5,6 +5,10 @@ import { apiError, apiOk } from "@/lib/api-response"
 import { getClientIp } from "@/lib/api-logger"
 import { withStandardOrExpertAnyAuthorizationLogging } from "@/lib/license-guards"
 import { log } from "@/lib/logger"
+import {
+  markLatestAdjustmentCoefficientRowsDirty,
+  requireAdjustmentCoefficientDirtyColumn,
+} from "@/lib/metrology-adjustment-coefficient-dirty"
 import { fetchEtalonById, fetchIntercomparisonMediaRows } from "@/lib/metrology-db"
 import { requireMetrologyReadingPreviewSession } from "@/lib/metrology-reading-preview-session"
 import { getPermissionAliases } from "@/lib/permissions"
@@ -68,6 +72,7 @@ export const PATCH = withStandardOrExpertAnyAuthorizationLogging(
 
       const sensorIds = [...updateBySensorId.keys()]
       requireMetrologyReadingPreviewSession(ctx.user.userId, "ETALONNAGE", sensorIds)
+      await requireAdjustmentCoefficientDirtyColumn()
 
       const [sensors, standardRow, mediumRows] = await Promise.all([
         prisma.t_sonde.findMany({
@@ -76,10 +81,6 @@ export const PATCH = withStandardOrExpertAnyAuthorizationLogging(
             Id_Sonde: true,
             Sonde_Numero_Serie: true,
             t_sonde_type: { select: { Unite: true } },
-            t_lieu: {
-              where: { Est_Archive: false },
-              select: { Id_Lieu: true },
-            },
           },
         }),
         fetchEtalonById(input.standardId),
@@ -140,7 +141,6 @@ export const PATCH = withStandardOrExpertAnyAuthorizationLogging(
 
       const adjustedAt = new Date()
       const operator = input.operator || ctx.user.username
-      const locationIds = new Set<number>()
 
       await prisma.$transaction(async (tx) => {
         for (const sensor of sensors) {
@@ -172,17 +172,10 @@ export const PATCH = withStandardOrExpertAnyAuthorizationLogging(
               Id_Milieu: input.mediumId,
             },
           })
-
-          for (const location of sensor.t_lieu) locationIds.add(location.Id_Lieu)
-        }
-
-        if (locationIds.size > 0) {
-          await tx.t_lieu.updateMany({
-            where: { Id_Lieu: { in: [...locationIds] } },
-            data: { Infos_Modifiees_Depuis_Derniere_Mesure: true },
-          })
         }
       })
+
+      await markLatestAdjustmentCoefficientRowsDirty(serials)
 
       log.audit("CA", {
         user: ctx.user.username,
