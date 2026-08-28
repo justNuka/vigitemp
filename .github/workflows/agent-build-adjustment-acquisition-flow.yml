@@ -30,6 +30,8 @@ jobs:
 
       - name: Build Web
         working-directory: website
+        env:
+          JWT_SECRET: ${{ github.sha }}${{ github.sha }}
         run: pnpm build
 
       - name: Clean validation workflow
