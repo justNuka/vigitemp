@@ -1233,7 +1233,7 @@ Exemple de référence avec `SPNB-26000065` : une commande complète de 80 carac
 
 ## Ajustage — acquisitions pilotées par point et moyenne du plateau — 28/08/2026
 
-Statut : **`PR_OUVERTE` — branche `agent/adjustment-acquisition-stability-flow` — PR #70 vers `dev`**.
+Statut : **`CORRIGE_DEV` — PR #70 mergée (`2eb6c7f6b2f42d6cc6ea1471836dd443fb1fb7e2`) ; complément application coefficients sur `agent/adjustment-apply-calculated-coefficients`**.
 
 ### Retour / comportement attendu
 
@@ -1265,3 +1265,48 @@ Statut : **`PR_OUVERTE` — branche `agent/adjustment-acquisition-stability-flow
 - [ ] contrôler la formule A/B/C via le détail des calculs ;
 - [ ] vérifier GSP/GSO, FR/EN et thèmes clair/sombre ;
 - [x] validations techniques : lint sans erreur bloquante, nouveau flux FR/EN contrôlé, TypeScript OK après génération Prisma et build Web Next.js OK en GitHub Actions.
+
+
+## Ajustage — confirmation d’application des coefficients calculés — 28/08/2026
+
+Statut : **`PR_OUVERTE` — branche `agent/adjustment-apply-calculated-coefficients` — PR #71 vers `dev` — base `2eb6c7f6b2f42d6cc6ea1471836dd443fb1fb7e2`**.
+
+### Retour terrain
+
+Après validation des deux points et calcul des nouveaux coefficients, demander à l’utilisateur s’il souhaite envoyer ces coefficients à la ou aux sondes.
+
+### État vérifié avant correction
+
+Le parcours terminal restaurait automatiquement la configuration GSP en mode `normal`. Comme ce mode relit le dernier `t_ajustage`, les coefficients nouvellement calculés pouvaient être envoyés automatiquement sans confirmation. L’Ajustage ayant neutralisé les coefficients au démarrage, un simple blocage de cet envoi aurait en outre laissé les GSP en `1/0/0`.
+
+### Correctif du lot
+
+- restauration sûre des coefficients précédents dès la fin du calcul ;
+- nouveaux coefficients conservés dans `t_ajustage` indépendamment du choix ;
+- popup bloquante proposant de conserver les anciens coefficients ou d’envoyer les nouveaux ;
+- confirmation : configuration GSP normale avec les nouveaux coefficients + ACK `ECON` obligatoire ;
+- refus : aucune application des nouveaux coefficients, les anciens restent sur les GSP ;
+- GSO explicitement exclues de l’envoi série ;
+- en cas d’échec de communication, la décision reste en attente pour permettre une nouvelle tentative ;
+- réutilisation du helper de configuration GSP existant avec surcharge explicite des coefficients, sans dupliquer le protocole.
+
+### Fichiers principaux
+
+- `website/src/lib/metrology-adjustment-session.ts` ;
+- `website/src/lib/metrology-gsp-configuration.ts` ;
+- `website/src/lib/metrology-gsp-configuration-restore.ts` ;
+- `website/src/app/api/metrologie/ajustage/session/route.ts` ;
+- `website/src/app/[locale]/(admin)/admin/metrologie/realiser-ajustage/adjustment-workflow-client.tsx` ;
+- `website/src/messages/supplements.ts`.
+
+### Validation terrain
+
+- [ ] fin Ajustage : popup affichée après calcul ;
+- [ ] anciens coefficients restaurés avant le choix ;
+- [ ] refus : aucune application des nouveaux coefficients ;
+- [ ] confirmation : nouveaux coefficients transmis et ACK vérifié ;
+- [ ] plusieurs GSP ;
+- [ ] lot mixte GSP/GSO ;
+- [ ] échec ACK puis nouvelle tentative ;
+- [ ] FR/EN, clair/sombre ;
+- [ ] lint, typecheck et build Web.

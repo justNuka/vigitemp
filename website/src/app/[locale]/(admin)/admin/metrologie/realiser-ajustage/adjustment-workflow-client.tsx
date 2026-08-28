@@ -63,6 +63,12 @@ type SessionApiPayload = {
     standardSerial: string
     standardIsExternal: boolean
     coefficientsLocked: boolean
+    coefficientApplication: {
+      status: "not-applicable" | "pending" | "applied" | "declined"
+      gspSensorCount: number
+      gsoSensorCount: number
+      previousConfigurationRestored: boolean
+    }
     sensors: Array<{
       id: number
       serialNumber: string
@@ -349,6 +355,25 @@ export function AdjustmentWorkflowClient() {
     onSuccess: async () => {
       setActionError(null)
       setCoefficientTouched({})
+      await refreshSession()
+    },
+    onError: (error) => {
+      setActionError(error instanceof Error ? error.message : String(error))
+    },
+  })
+
+  const resolveCalculatedCoefficientsMutation = useMutation({
+    mutationFn: async (apply: boolean) =>
+      fetchJson<{ session: SessionApiPayload["session"] }>("/api/metrologie/ajustage/session", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "resolve-calculated-coefficients",
+          apply,
+        }),
+      }),
+    onSuccess: async () => {
+      setActionError(null)
       await refreshSession()
     },
     onError: (error) => {
@@ -1644,6 +1669,50 @@ export function AdjustmentWorkflowClient() {
         </div>
 
         <MetrologySubpagesCards current="adjustment" />
+
+        <AlertDialog
+          open={session?.coefficientApplication.status === "pending"}
+          onOpenChange={() => undefined}
+        >
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>{t("adjustment.cards.calculatedCoefficients.title")}</AlertDialogTitle>
+              <AlertDialogDescription>
+                {t("adjustment.cards.calculatedCoefficients.description", {
+                  count: session?.coefficientApplication.gspSensorCount ?? 0,
+                })}
+              </AlertDialogDescription>
+              {(session?.coefficientApplication.gsoSensorCount ?? 0) > 0 ? (
+                <p className="text-sm text-muted-foreground">
+                  {t("adjustment.cards.calculatedCoefficients.gsoNotice", {
+                    count: session?.coefficientApplication.gsoSensorCount ?? 0,
+                  })}
+                </p>
+              ) : null}
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                disabled={resolveCalculatedCoefficientsMutation.isPending}
+                onClick={() => resolveCalculatedCoefficientsMutation.mutate(false)}
+              >
+                {t("adjustment.cards.calculatedCoefficients.keepPrevious")}
+              </Button>
+              <AlertDialogAction
+                disabled={resolveCalculatedCoefficientsMutation.isPending}
+                onClick={(event) => {
+                  event.preventDefault()
+                  resolveCalculatedCoefficientsMutation.mutate(true)
+                }}
+              >
+                {resolveCalculatedCoefficientsMutation.isPending
+                  ? t("adjustment.cards.calculatedCoefficients.applying")
+                  : t("adjustment.cards.calculatedCoefficients.apply")}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
 
         <AlertDialog open={showFirstPointConfirm} onOpenChange={setShowFirstPointConfirm}>
           <AlertDialogContent>

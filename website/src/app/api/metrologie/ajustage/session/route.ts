@@ -8,6 +8,7 @@ import { log } from "@/lib/logger"
 import {
   extendAdjustmentSession,
   getAdjustmentSessionForUser,
+  resolveAdjustmentCalculatedCoefficientApplication,
   shouldConfirmAdjustmentStop,
   startAdjustmentSession,
   stopAdjustmentSession,
@@ -49,6 +50,10 @@ const stopSchema = z.object({
 const patchSchema = z.discriminatedUnion("action", [
   z.object({
     action: z.literal("extend"),
+  }),
+  z.object({
+    action: z.literal("resolve-calculated-coefficients"),
+    apply: z.boolean(),
   }),
   z.object({
     action: z.literal("update-coefficients"),
@@ -126,11 +131,17 @@ function shouldExposeAdjustmentSession(
 async function getAdjustmentSessionAndRestoreTerminalGsp(userId: number) {
   const session = await getAdjustmentSessionForUser(userId)
   if (session && session.status !== "running" && session.status !== "idle") {
-    await restoreGspMetrologyConfigurationOnce(
-      `adjustment:${session.id}`,
-      session.sensors.map((sensor) => sensor.id),
-      "AJUSTAGE",
-    ).catch(() => undefined)
+    const completedWithCoefficientDecision =
+      session.status === "completed" &&
+      session.coefficientApplication.status !== "not-applicable"
+
+    if (!completedWithCoefficientDecision) {
+      await restoreGspMetrologyConfigurationOnce(
+        `adjustment:${session.id}`,
+        session.sensors.map((sensor) => sensor.id),
+        "AJUSTAGE",
+      ).catch(() => undefined)
+    }
   }
   return session
 }
@@ -281,6 +292,15 @@ export const PATCH = withStandardOrExpertAnyAuthorizationLogging(
         action: body.action ?? "extend",
       })
       const userId = ctx.user.userId
+
+      if (data.action === "resolve-calculated-coefficients") {
+        const session = await resolveAdjustmentCalculatedCoefficientApplication(
+          userId,
+          data.apply,
+          getClientIp(req),
+        )
+        return apiOk({ session: normalizeAdjustmentSessionDates(session) })
+      }
 
       if (data.action === "update-coefficients") {
         await requireAdjustmentCoefficientDirtyColumn()

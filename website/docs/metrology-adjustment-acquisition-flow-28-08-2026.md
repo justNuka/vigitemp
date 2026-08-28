@@ -2,7 +2,7 @@
 
 ## Statut
 
-**PR OUVERTE — PR #70 — branche `agent/adjustment-acquisition-stability-flow` — base `dev` `156da60c3847ee751fa3ad7077b35f4bdd505c02`.**
+**PR #70 mergée dans `dev` (`2eb6c7f6b2f42d6cc6ea1471836dd443fb1fb7e2`) ; complément d’application des coefficients en PR #71 via `agent/adjustment-apply-calculated-coefficients`.**
 
 ## Retour terrain
 
@@ -70,3 +70,24 @@ Cette présentation correspond au calcul déjà utilisé par `computeLinearAdjus
 - [ ] vérifier GSP puis GSO ;
 - [ ] vérifier FR/EN et thèmes clair/sombre ;
 - [x] validations techniques : lint sans erreur bloquante, nouveau flux FR/EN contrôlé, TypeScript OK après génération Prisma et `pnpm build` Next.js OK en GitHub Actions.
+
+
+## Complément — choix d’application des coefficients calculés — 28/08/2026
+
+Après validation automatique du deuxième point, les nouveaux coefficients restent enregistrés dans `t_ajustage`, mais ils ne doivent plus être envoyés automatiquement aux GSP. Le flux restaure d’abord la configuration normale avec les coefficients présents avant l’opération, puis demande à l’utilisateur s’il souhaite appliquer les nouveaux coefficients calculés.
+
+- **Envoyer les nouveaux coefficients** : la configuration normale est renvoyée avec le dernier `t_ajustage` calculé et un ACK `ECON` est exigé.
+- **Conserver les anciens coefficients** : les résultats restent enregistrés mais la configuration précédente reste appliquée sur les GSP.
+- Les GSO ne sont pas concernées par cet envoi série.
+- Un échec d’envoi ne valide pas la décision : la popup reste disponible pour permettre une nouvelle tentative.
+
+Checklist :
+
+- [ ] terminer un ajustage GSP et vérifier l’ouverture automatique de la confirmation ;
+- [ ] avant toute réponse, vérifier que les anciens coefficients ont été restaurés sur la GSP ;
+- [ ] choisir « Conserver les anciens coefficients » et vérifier qu’aucun ECON avec les nouveaux coefficients n’est envoyé ;
+- [ ] refaire l’opération, choisir « Envoyer les nouveaux coefficients » et contrôler la trame + ACK ;
+- [ ] tester plusieurs GSP ;
+- [ ] tester un lot mixte GSP/GSO et vérifier le message d’information GSO ;
+- [ ] simuler un ACK absent et vérifier que la décision reste à relancer ;
+- [ ] vérifier FR/EN, lint, TypeScript et build Web.

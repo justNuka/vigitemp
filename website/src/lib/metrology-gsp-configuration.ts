@@ -12,6 +12,12 @@ export type GspMetrologyConfigurationMode =
   | "calibration-without-accuracy"
   | "normal"
 
+export type GspCoefficientOverride = {
+  coeffX2: number
+  coeffX: number
+  coeffConstant: number
+}
+
 type GspRuntimeConfiguration = {
   sensorId: number
   serial: string
@@ -149,7 +155,11 @@ function buildEconPayload(config: GspRuntimeConfiguration, mode: GspMetrologyCon
   ].join("")
 }
 
-async function loadConfigurations(sensorIds: number[], mode: GspMetrologyConfigurationMode) {
+async function loadConfigurations(
+  sensorIds: number[],
+  mode: GspMetrologyConfigurationMode,
+  coefficientOverrides?: Readonly<Record<number, GspCoefficientOverride>>,
+) {
   const ids = [...new Set(sensorIds.filter((id) => Number.isInteger(id) && id > 0))]
   if (ids.length === 0) return []
 
@@ -248,6 +258,7 @@ async function loadConfigurations(sensorIds: number[], mode: GspMetrologyConfigu
 
     const adjustment = latestAdjustmentBySerial.get(serial)
     const calibration = latestCalibrationBySerial.get(serial)
+    const coefficientOverride = coefficientOverrides?.[sensor.Id_Sonde]
 
     return {
       sensorId: sensor.Id_Sonde,
@@ -255,9 +266,15 @@ async function loadConfigurations(sensorIds: number[], mode: GspMetrologyConfigu
       address: sensor.Adresse_Sonde?.trim() || null,
       modulePort,
       moduleName: moduleRow?.Module_Numero_Serie ?? moduleRow?.Emplacement ?? null,
-      coeffX2: asFiniteNumber(adjustment?.Coeff_X2, 0),
-      coeffX: asFiniteNumber(adjustment?.Coeff_X, 1),
-      coeffConstant: asFiniteNumber(adjustment?.Coeff_Constant, 0),
+      coeffX2: coefficientOverride
+        ? asFiniteNumber(coefficientOverride.coeffX2, 0)
+        : asFiniteNumber(adjustment?.Coeff_X2, 0),
+      coeffX: coefficientOverride
+        ? asFiniteNumber(coefficientOverride.coeffX, 1)
+        : asFiniteNumber(adjustment?.Coeff_X, 1),
+      coeffConstant: coefficientOverride
+        ? asFiniteNumber(coefficientOverride.coeffConstant, 0)
+        : asFiniteNumber(adjustment?.Coeff_Constant, 0),
       offset: asFiniteNumber(sensor.Sonde_Offset, 0),
       accuracyError: asFiniteNumber(calibration?.Err_Justesse, 0),
       applyAccuracyError: Number(location?.Est_Correction_Ej ?? 0) === 1,
@@ -339,8 +356,9 @@ export async function applyGspMetrologyConfiguration(
   sensorIds: number[],
   mode: GspMetrologyConfigurationMode,
   operationContext: "AJUSTAGE" | "ETALONNAGE",
+  coefficientOverrides?: Readonly<Record<number, GspCoefficientOverride>>,
 ) {
-  const configurations = await loadConfigurations(sensorIds, mode)
+  const configurations = await loadConfigurations(sensorIds, mode, coefficientOverrides)
   for (const config of configurations) {
     await sendConfiguration(config, mode, operationContext)
   }

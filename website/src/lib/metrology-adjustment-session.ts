@@ -8,6 +8,8 @@ import { prisma, prismaMesure } from "@/lib/prisma"
 import { buildAdjustmentExportFileName } from "@/lib/adjustment-export"
 import { hasMainDbColumn } from "@/lib/db-schema"
 import { getTableReference, isMssqlProvider, quoteIdentifier } from "@/lib/metrology-db"
+import { restoreGspMetrologyConfigurationOnce } from "@/lib/metrology-gsp-configuration-restore"
+import type { GspCoefficientOverride } from "@/lib/metrology-gsp-configuration"
 import type { AdjustmentSensorRow } from "@/hooks/useAdjustmentSensors"
 import type { JWTPayload } from "@/lib/jwt"
 
@@ -97,6 +99,13 @@ type PersistedAdjustment = {
   exportUrl: string
 }
 
+type CoefficientApplicationState = {
+  status: "not-applicable" | "pending" | "applied" | "declined"
+  gspSensorCount: number
+  gsoSensorCount: number
+  previousConfigurationRestored: boolean
+}
+
 type AdjustmentSession = {
   id: string
   userId: number
@@ -133,6 +142,7 @@ type AdjustmentSession = {
   currentPoint: RunningPoint | null
   plateauStatus: PlateauStatus
   coefficientsLocked: boolean
+  coefficientApplication: CoefficientApplicationState
   validatedPoints: Partial<Record<PointIndex, ValidatedPoint>>
   message: string | null
   lastError: string | null
@@ -200,6 +210,7 @@ type PublicSession = {
   } | null
   plateauStatus: PlateauStatus
   coefficientsLocked: boolean
+  coefficientApplication: CoefficientApplicationState
   validatedPoints: Partial<Record<PointIndex, ValidatedPoint>>
   message: string | null
   lastError: string | null
@@ -605,6 +616,7 @@ function toPublicSession(session: AdjustmentSession): PublicSession {
       : null,
     plateauStatus: session.plateauStatus,
     coefficientsLocked: session.coefficientsLocked,
+    coefficientApplication: session.coefficientApplication,
     validatedPoints: session.validatedPoints,
     message: session.message,
     lastError: session.lastError,
@@ -719,6 +731,35 @@ async function persistFinalAdjustments(session: AdjustmentSession) {
   return createdRows
 }
 
+function getAdjustmentGspSensors(session: AdjustmentSession) {
+  return session.sensors.filter((sensor) => !sensor.isGso && getSensorFamilyFromSerial(sensor.serialNumber) === "GSP")
+}
+
+function buildPreviousCoefficientOverrides(session: AdjustmentSession) {
+  return Object.fromEntries(
+    getAdjustmentGspSensors(session).map((sensor) => [
+      sensor.id,
+      {
+        coeffX2: sensor.previousCoeffX2,
+        coeffX: sensor.previousCoeffX,
+        coeffConstant: sensor.previousCoeffConstant,
+      } satisfies GspCoefficientOverride,
+    ]),
+  ) satisfies Record<number, GspCoefficientOverride>
+}
+
+async function restorePreviousAdjustmentGspConfiguration(session: AdjustmentSession) {
+  const gspSensors = getAdjustmentGspSensors(session)
+  if (gspSensors.length === 0) return
+
+  await restoreGspMetrologyConfigurationOnce(
+    `adjustment:${session.id}:previous`,
+    gspSensors.map((sensor) => sensor.id),
+    "AJUSTAGE",
+    buildPreviousCoefficientOverrides(session),
+  )
+}
+
 async function restoreSessionStates(session: AdjustmentSession) {
   const sensorUpdates = session.sensors.map((sensor) =>
     prisma.t_sonde.update({
@@ -821,6 +862,29 @@ async function finalizeSession(session: AdjustmentSession, status: SessionStatus
 
   if (status === "completed" && session.persistedAdjustments.length === 0 && session.validatedPoints[1] && session.validatedPoints[2]) {
     session.persistedAdjustments = await persistFinalAdjustments(session)
+
+    const gspSensorCount = getAdjustmentGspSensors(session).length
+    session.coefficientApplication = {
+      status: gspSensorCount > 0 ? "pending" : "not-applicable",
+      gspSensorCount,
+      gsoSensorCount: session.sensors.filter((sensor) => sensor.isGso).length,
+      previousConfigurationRestored: false,
+    }
+
+    if (gspSensorCount > 0) {
+      try {
+        await restorePreviousAdjustmentGspConfiguration(session)
+        session.coefficientApplication.previousConfigurationRestored = true
+      } catch (error) {
+        session.lastError =
+          "Les coefficients précédents n'ont pas pu être restaurés automatiquement sur les sondes GSP."
+        log.error("METROLOGY_ADJUSTMENT", "previous_coefficients_restore_failed", {
+          sessionId: session.id,
+          sensorIds: getAdjustmentGspSensors(session).map((sensor) => sensor.id),
+          error: error instanceof Error ? error.message : String(error),
+        })
+      }
+    }
   }
 
   try {
@@ -1416,6 +1480,12 @@ export async function startAdjustmentSession(user: JWTPayload, input: StartAdjus
       status: "idle",
     },
     coefficientsLocked: false,
+    coefficientApplication: {
+      status: "not-applicable",
+      gspSensorCount: sensors.filter((sensor) => !sensor.isGso).length,
+      gsoSensorCount: sensors.filter((sensor) => sensor.isGso).length,
+      previousConfigurationRestored: false,
+    },
     validatedPoints: {},
     message: standardIsExternal
       ? "Séquence d'ajustage démarrée. Lecture des sondes active ; lancez l'acquisition du premier point lorsque vous êtes prêt."
@@ -1616,6 +1686,71 @@ export async function updateAdjustmentCoefficients(
     changes: {
       coefficients: updates,
       sentOnNextInterrogation: true,
+    },
+    success: true,
+  })
+
+  return toPublicSession(session)
+}
+
+export async function resolveAdjustmentCalculatedCoefficientApplication(
+  userId: number,
+  applyCalculatedCoefficients: boolean,
+  ip?: string,
+) {
+  const session = sessionsByUserId.get(userId)
+  if (!session || session.status !== "completed" || session.persistedAdjustments.length === 0) {
+    throw new Error("Aucun ajustage terminé avec de nouveaux coefficients à appliquer.")
+  }
+
+  if (session.coefficientApplication.status === "not-applicable") {
+    throw new Error("Aucune sonde GSP de cet ajustage ne nécessite d'envoi de coefficients.")
+  }
+  if (session.coefficientApplication.status !== "pending") {
+    return toPublicSession(session)
+  }
+
+  const gspSensors = getAdjustmentGspSensors(session)
+  if (gspSensors.length === 0) {
+    session.coefficientApplication.status = "not-applicable"
+    session.lastUpdatedAt = nowIso()
+    return toPublicSession(session)
+  }
+
+  if (applyCalculatedCoefficients) {
+    await restoreGspMetrologyConfigurationOnce(
+      `adjustment:${session.id}:calculated`,
+      gspSensors.map((sensor) => sensor.id),
+      "AJUSTAGE",
+    )
+    session.coefficientApplication.status = "applied"
+    session.message =
+      gspSensors.length === 1
+        ? "Les nouveaux coefficients calculés ont été envoyés à la sonde GSP."
+        : `Les nouveaux coefficients calculés ont été envoyés aux ${gspSensors.length} sondes GSP.`
+  } else {
+    await restorePreviousAdjustmentGspConfiguration(session)
+    session.coefficientApplication.previousConfigurationRestored = true
+    session.coefficientApplication.status = "declined"
+    session.message =
+      "Les nouveaux coefficients restent enregistrés dans l'ajustage mais n'ont pas été envoyés aux sondes GSP. Les coefficients précédents restent appliqués sur les sondes."
+  }
+
+  session.lastError = null
+  session.lastUpdatedAt = nowIso()
+
+  log.audit("CA", {
+    user: session.username,
+    userId: session.userId,
+    userProfile: session.userProfile,
+    ip,
+    resource: "Ajustage (Application coefficients calculés)",
+    resourceId: session.id,
+    changes: {
+      applyCalculatedCoefficients,
+      gspSensorIds: gspSensors.map((sensor) => sensor.id),
+      gspSerialNumbers: gspSensors.map((sensor) => sensor.serialNumber),
+      gsoSensorCount: session.coefficientApplication.gsoSensorCount,
     },
     success: true,
   })
