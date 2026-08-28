@@ -2,7 +2,9 @@
 
 ## Contexte
 
-Le build Web échoue après les évolutions de la PR #59 avec l'erreur TypeScript suivante dans la validation des coefficients d'étalonnage :
+Deux erreurs TypeScript successives ont été révélées par `pnpm build` après les évolutions de la PR #59 autour de l'affichage et de la modification des coefficients A/B/C.
+
+### Première erreur
 
 ```text
 Type error: Argument of type 'number | undefined' is not assignable to parameter of type 'number'.
@@ -10,54 +12,83 @@ Type error: Argument of type 'number | undefined' is not assignable to parameter
 (Math.abs(item.coeffC) > 1e-12 && Math.abs(item.coeffA) <= 1e-12)
 ```
 
-Branche de correction : `agent/fix-coefficient-types-build`.
+La PR #65 a tenté d'aligner `AdjustmentSensorRow` sur le payload réel de `/api/metrologie/ajustage/sondes`, qui fournit toujours A/B/C avec les fallbacks `1 / 0 / 0`.
 
-Statut : **PR_OUVERTE — PR #65**.
+PR #65 : **mergée dans `dev`**, merge `08c5112bbfe6ae4ffe2ce108cffff86023b9da9f`.
+
+### Deuxième erreur révélée après #65
+
+```text
+Type '{ ... currentCoeffC: number; }' is not assignable to type 'ManagedSensor'.
+Type '{ ... }' is missing the following properties from type 'AdjustmentSensorRow': coeffA, coeffB, coeffC
+
+const sensors: ManagedSensor[] = sensorRows.map((sensor) => {
+```
+
+Branche de correction : `agent/fix-managed-sensor-coefficient-type`.
+
+Statut : **EN_COURS**.
 
 ## Cause confirmée
 
-`CalibrationCoefficientsCard` travaille avec des `AdjustmentSensorRow` provenant de `/api/metrologie/ajustage/sondes`.
+Le premier diagnostic était correct pour le composant d'Étalonnage, mais le type `AdjustmentSensorRow` n'est pas utilisé uniquement comme contrat de réponse de l'API `/api/metrologie/ajustage/sondes`.
 
-L'API garantit déjà les trois coefficients pour chaque sonde :
+Le moteur d'Ajustage définit également :
 
-- `coeffA: previousAdjustment?.coeffA ?? 1` ;
-- `coeffB: previousAdjustment?.coeffB ?? 0` ;
-- `coeffC: previousAdjustment?.coeffC ?? 0`.
+```ts
+type ManagedSensor = AdjustmentSensorRow & {
+  // ...
+  currentCoeffA: number
+  currentCoeffB: number
+  currentCoeffC: number
+}
+```
 
-Le type partagé `AdjustmentSensorRow` déclarait néanmoins ces propriétés comme optionnelles (`coeffA?: number`, `coeffB?: number`, `coeffC?: number`). Lorsqu'un coefficient non modifié est repris directement depuis `sensor.coeffA/B/C`, TypeScript conserve donc le type `number | undefined`. La validation numérique appelle ensuite `Math.abs()` sur ces propriétés et le build Next.js s'arrête.
+Son mapper interne construit les coefficients dans `currentCoeffA/B/C`, puis le serializer public expose ces valeurs sous les noms `coeffA/B/C`. Lors d'une modification de coefficients pendant la session, seuls `currentCoeffA/B/C` sont mis à jour.
 
-Le problème est uniquement un décalage entre le contrat TypeScript et le payload réel ; aucun cas runtime légitime ne nécessite `undefined` pour ces trois valeurs.
+Ajouter aussi `coeffA/B/C` obligatoires dans le mapper interne créerait donc une duplication de données et deux sources de vérité susceptibles de diverger.
 
-## Correctif
+## Correctif retenu
 
-Fichier applicatif :
+Le correctif reste volontairement local et évite une refonte des types du moteur :
 
-- `website/src/hooks/useAdjustmentSensors.ts`.
+- `AdjustmentSensorRow` retrouve ses propriétés optionnelles `coeffA?: number`, `coeffB?: number`, `coeffC?: number` afin de rester compatible avec le `ManagedSensor` interne existant ;
+- dans `CalibrationCoefficientsCard`, les valeurs non modifiées sont normalisées avant validation avec les mêmes valeurs par défaut que l'API :
+  - `A = sensor.coeffA ?? 1` ;
+  - `B = sensor.coeffB ?? 0` ;
+  - `C = sensor.coeffC ?? 0` ;
+- le tableau `coefficients` construit par la carte contient donc toujours des `number` avant `Number.isFinite()`, `Math.abs()` et l'appel de mutation ;
+- les champs explicitement saisis par l'utilisateur continuent de passer par `parseCoefficient()` et peuvent produire `NaN`, ensuite rejeté par la validation existante ;
+- le moteur d'Ajustage conserve une seule source de vérité interne via `currentCoeffA/B/C` ;
+- aucune formule, persistance, API ou BDD n'est modifiée.
 
-Modification :
+## Fichiers principaux
 
-- `coeffA`, `coeffB` et `coeffC` deviennent des propriétés obligatoires de type `number` dans `AdjustmentSensorRow` ;
-- aucun fallback supplémentaire n'est ajouté dans les composants ;
-- le comportement et les valeurs par défaut de l'API restent inchangés ;
-- aucun changement de formule, de persistance, de payload JSON ou de base de données.
+- `website/src/hooks/useAdjustmentSensors.ts` ;
+- `website/src/app/[locale]/(admin)/admin/metrologie/realiser-etalonnage/calibration-coefficients-card.tsx` ;
+- `website/CHANGELOG.md` ;
+- ce document.
 
 ## Vérifications effectuées
 
-- [x] PR #64 vérifiée comme mergée avant création de la branche ;
-- [x] branche créée depuis le HEAD `dev` `65e602060f4c7a7f0f3eb4a8c3e2672898e3399a` ;
-- [x] aucune PR ouverte au démarrage ;
-- [x] vérification de `/api/metrologie/ajustage/sondes` : A/B/C sont présents sur toutes les lignes avec fallback numérique ;
-- [x] correction limitée au contrat TypeScript partagé ;
-- [x] changelog Web mis à jour ;
-- [x] PR #65 ouverte vers `dev` sans merge automatique.
+- [x] PR #65 vérifiée comme réellement mergée ;
+- [x] `dev` vérifié sur le merge #65 `08c5112bbfe6ae4ffe2ce108cffff86023b9da9f` ;
+- [x] aucune PR ouverte au démarrage de ce lot ;
+- [x] `ManagedSensor` vérifié : coefficients courants stockés dans `currentCoeffA/B/C` ;
+- [x] serializer de session vérifié : `currentCoeffA/B/C` sont exposés en `coeffA/B/C` ;
+- [x] mutation de session vérifiée : elle met à jour `currentCoeffA/B/C`, pas une copie parallèle ;
+- [x] normalisation de la carte alignée sur les fallbacks API `1 / 0 / 0` ;
+- [x] aucun cast `as number` ni assertion non-null ajouté.
 
 ## Validation à effectuer
 
-- [ ] relancer `pnpm build` et confirmer la disparition de l'erreur sur `Math.abs(item.coeffC)` / `Math.abs(item.coeffA)` ;
+- [ ] relancer `pnpm build` et confirmer la disparition de l'erreur `ManagedSensor` ;
+- [ ] confirmer que l'erreur précédente `Math.abs(item.coeffC)` / `Math.abs(item.coeffA)` ne revient pas ;
 - [ ] lancer `pnpm lint` ;
 - [ ] lancer `pnpm i18n:check` ;
 - [ ] ouvrir Ajustage et vérifier l'affichage A/B/C avant puis pendant une session ;
+- [ ] modifier A/B/C pendant un Ajustage et confirmer que les valeurs publiques suivent `currentCoeffA/B/C` ;
 - [ ] ouvrir Étalonnage, lancer la lecture et vérifier la modification/validation A/B/C ;
 - [ ] vérifier une sonde sans historique : `1.000 / 0.000 / 0.000` ;
 - [ ] vérifier une sonde avec ajustage existant ;
-- [ ] si le build révèle une erreur suivante, la traiter séparément à partir de la nouvelle sortie complète plutôt que de masquer les types.
+- [ ] si le build révèle une erreur suivante, repartir de la nouvelle sortie complète.
