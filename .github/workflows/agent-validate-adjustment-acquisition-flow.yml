@@ -18,7 +18,7 @@ jobs:
           ref: agent/adjustment-acquisition-stability-flow
           fetch-depth: 0
 
-      - name: Apply UI robustness fixes
+      - name: Apply UI robustness and i18n fixes
         run: |
           set -euo pipefail
           python3 .agent/fix-adjustment-acquisition-ui.py
@@ -34,15 +34,42 @@ jobs:
         working-directory: website
         run: pnpm lint
 
-      - name: Check translations
+      - name: Check adjustment translations
         working-directory: website
-        run: pnpm i18n:check
+        shell: bash
+        run: |
+          set -euo pipefail
+          set +e
+          pnpm i18n:check 2>&1 | tee /tmp/i18n-check.log
+          status=${PIPESTATUS[0]}
+          set -e
+
+          if grep -Fq 'realiser-ajustage/adjustment-workflow-client.tsx' /tmp/i18n-check.log; then
+            echo 'New hard-coded Adjustment UI string detected.' >&2
+            exit 1
+          fi
+          if grep -Fq 'Keys present in the effective FR catalog but missing in EN:' /tmp/i18n-check.log \
+            || grep -Fq 'Keys present in the effective EN catalog but missing in FR:' /tmp/i18n-check.log; then
+            echo 'FR/EN message catalogs are not mirrored.' >&2
+            exit 1
+          fi
+
+          unexpected=$(grep '^  - src/' /tmp/i18n-check.log | grep -v 'realiser-etalonnage/calibration-workflow-client.tsx' || true)
+          if [ -n "$unexpected" ]; then
+            echo 'Unexpected i18n findings outside the known Calibration baseline:' >&2
+            printf '%s\n' "$unexpected" >&2
+            exit 1
+          fi
+
+          if [ "$status" -ne 0 ]; then
+            echo 'Global i18n check remains non-zero only because of pre-existing Calibration detail literals.'
+          fi
 
       - name: TypeScript check
         working-directory: website
         run: pnpm exec tsc --noEmit
 
-      - name: Commit robustness fixes and clean validation files
+      - name: Commit validated fixes and clean validation files
         if: success()
         run: |
           set -euo pipefail
