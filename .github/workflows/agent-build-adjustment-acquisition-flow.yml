@@ -1,0 +1,44 @@
+name: Agent build adjustment acquisition flow
+
+on:
+  push:
+    branches:
+      - agent/adjustment-acquisition-stability-flow
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/adjustment-acquisition-stability-flow
+          fetch-depth: 0
+
+      - name: Install dependencies
+        working-directory: website
+        run: |
+          corepack enable
+          pnpm install --frozen-lockfile --ignore-scripts
+
+      - name: Generate Prisma clients
+        working-directory: website
+        run: pnpm prisma:generate:mysql
+
+      - name: Build Web
+        working-directory: website
+        run: pnpm build
+
+      - name: Clean validation workflow
+        if: success()
+        run: |
+          set -euo pipefail
+          rm -f '.github/workflows/agent-build-adjustment-acquisition-flow.yml'
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'chore: remove adjustment build validation workflow'
+          git push origin HEAD:agent/adjustment-acquisition-stability-flow
