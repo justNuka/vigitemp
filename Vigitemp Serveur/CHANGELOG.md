@@ -8,6 +8,15 @@ La version produit de référence du Serveur est `AssemblyInformationalVersion("
 
 ## [Unreleased]
 
+### GSP — commandes de configuration limitées à 60 caractères
+
+- Les commandes `ECON` générées automatiquement par le Serveur respectent désormais la limite firmware/module de **60 caractères maximum par trame**.
+- Une commande plus longue est découpée uniquement entre deux paramètres `a/b/c/d/e/m/h/l/f/r/t` : aucune valeur n'est tronquée.
+- Le découpage est calculé avec la cible réelle de la sonde, donc les 60 caractères incluent `ECON`, le numéro/adresse de la sonde et l'espace avant le payload.
+- Chaque fragment doit être acquitté avant l'envoi du suivant ; un ACK manquant arrête immédiatement la synchronisation et la laisse en échec.
+- Le comportement couvre la synchronisation de Surveillance (`SensorGSP`) et la synchronisation de configuration via la Hotline. Les `ECON a/b/c` compacts d'Ajustage/Étalonnage restent inchangés lorsqu'ils tiennent déjà dans la limite.
+- Le nombre de fragments n'est pas forcé à deux : une configuration habituelle est envoyée en deux trames, mais une valeur exceptionnellement longue peut produire davantage de fragments afin de ne jamais dépasser la limite.
+
 ### Métrologie — synchronisation A/B/C
 
 - Le Serveur lit désormais `t_ajustage.Coeffs_Modifies_Depuis_Derniere_Mesure` sur le dernier ajustage de la sonde pour décider de l'envoi des coefficients A/B/C pendant Ajustage / Étalonnage.
