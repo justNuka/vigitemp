@@ -242,6 +242,14 @@ export const frSupplements: MessageCatalog = {
             lockedTitle: "Coefficients verrouillés",
             lockedDescription: "L’acquisition du premier point a commencé. Les coefficients A/B/C ne peuvent plus être modifiés jusqu’à la fin de l’ajustage.",
           },
+          calculatedCoefficients: {
+            title: "Appliquer les nouveaux coefficients ?",
+            description: "Les nouveaux coefficients ont été calculés et enregistrés. Voulez-vous les envoyer maintenant à {count} sonde(s) GSP ? Si vous conservez les anciens coefficients, les résultats restent enregistrés mais les sondes gardent leurs coefficients précédents.",
+            gsoNotice: "{count} sonde(s) GSO ne sont pas concernées par cet envoi série.",
+            keepPrevious: "Conserver les anciens coefficients",
+            apply: "Envoyer les nouveaux coefficients",
+            applying: "Envoi en cours…",
+          },
           calculation: {
             title: "Calcul de l’ajustage",
             description: "Détail du calcul linéaire obtenu à partir des moyennes des deux plateaux.",
@@ -502,6 +510,14 @@ export const enSupplements: MessageCatalog = {
           coefficients: {
             lockedTitle: "Coefficients locked",
             lockedDescription: "First-point acquisition has started. A/B/C coefficients can no longer be changed until the adjustment operation ends.",
+          },
+          calculatedCoefficients: {
+            title: "Apply the new coefficients?",
+            description: "The new coefficients have been calculated and saved. Do you want to send them now to {count} GSP sensor(s)? If you keep the previous coefficients, the adjustment results remain saved but the sensors keep their previous coefficients.",
+            gsoNotice: "{count} GSO sensor(s) are not affected by this serial configuration send.",
+            keepPrevious: "Keep previous coefficients",
+            apply: "Send new coefficients",
+            applying: "Sending…",
           },
           calculation: {
             title: "Adjustment calculation",
