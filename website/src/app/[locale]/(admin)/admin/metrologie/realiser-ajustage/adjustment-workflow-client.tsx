@@ -36,7 +36,6 @@ import { useStandards } from "@/hooks/useStandards"
 import { fetchJson, getJson, isUnauthorizedError } from "@/lib/http"
 import { formatDbDateTime } from "@/lib/date-display"
 import { formatMeasureValue } from "@/lib/measurements"
-import type { MetrologyPreviewReading } from "@/lib/metrology-reading-preview"
 import { MetrologySubpagesCards } from "../_components/metrology-subpages-cards"
 
 type Step = "selection" | "adjustment"
@@ -63,6 +62,7 @@ type SessionApiPayload = {
     measurementIntervalSeconds: number
     standardSerial: string
     standardIsExternal: boolean
+    coefficientsLocked: boolean
     sensors: Array<{
       id: number
       serialNumber: string
@@ -189,7 +189,8 @@ export function AdjustmentWorkflowClient() {
   const [currentDateTime, setCurrentDateTime] = useState(() => new Date())
   const [actionError, setActionError] = useState<string | null>(null)
   const [showStopConfirm, setShowStopConfirm] = useState(false)
-  const [previewReadingEnabled, setPreviewReadingEnabled] = useState(false)
+  const [showFirstPointConfirm, setShowFirstPointConfirm] = useState(false)
+  const [showCalculationDetails, setShowCalculationDetails] = useState(false)
   const [coefficientDrafts, setCoefficientDrafts] = useState<
     Record<number, { a: string; b: string; c: string }>
   >({})
@@ -212,39 +213,9 @@ export function AdjustmentWorkflowClient() {
   const shouldConfirmStop = sessionPayload?.shouldConfirmStop ?? false
   const isAdjustmentRunning = session?.status === "running"
   const localeTag = locale === "fr" ? "fr-FR" : "en-US"
-  const previewIntervalMs = sensors.some(
-    (sensor) => selectedSensorIds.includes(sensor.id) && sensor.isGso,
-  )
-    ? 60_000
-    : measurementIntervalSeconds === "30"
-      ? 30_000
-      : 15_000
-  const previewReadingQuery = useQuery({
-    queryKey: ["metrology-reading-preview", "AJUSTAGE", selectedSensorIds],
-    queryFn: ({ signal }) =>
-      fetchJson<{
-        readings: Record<number, MetrologyPreviewReading>
-        readAt: string
-      }>("/api/metrologie/lecture-sondes", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        signal,
-        body: JSON.stringify({ selectedSensorIds, operation: "AJUSTAGE" }),
-      }),
-    enabled:
-      previewReadingEnabled &&
-      selectedSensorIds.length > 0 &&
-      !isAdjustmentRunning &&
-      step === "adjustment",
-    refetchInterval: previewReadingEnabled ? previewIntervalMs : false,
-    refetchIntervalInBackground: false,
-  })
   const signalReadings = useMemo(
-    () => isAdjustmentRunning
-      ? session?.latestSensorReadings ?? {}
-      : previewReadingQuery.data?.readings ?? {},
-    [isAdjustmentRunning, previewReadingQuery.data?.readings, session?.latestSensorReadings],
+    () => (isAdjustmentRunning ? session?.latestSensorReadings ?? {} : {}),
+    [isAdjustmentRunning, session?.latestSensorReadings],
   )
   const validatedPoints = {
     pointOne: Boolean(session?.validatedPoints?.[1]),
@@ -260,22 +231,28 @@ export function AdjustmentWorkflowClient() {
   )
   const pointOneManualValue = Number(pointOne.trim().replace(",", "."))
   const pointTwoManualValue = Number(pointTwo.trim().replace(",", "."))
-  const pointOneReady = isExternalSession
-    ? session?.currentPoint?.pointIndex === 1 &&
-      pointOne.trim().length > 0 &&
-      Number.isFinite(pointOneManualValue) &&
-      allSensorReadingsAvailable
-    : session?.plateauStatus.status === "ready" &&
-      session.plateauStatus.pointIndex === 1 &&
-      session.currentPoint?.pointIndex === 1
-  const pointTwoReady = isExternalSession
-    ? session?.currentPoint?.pointIndex === 2 &&
-      pointTwo.trim().length > 0 &&
-      Number.isFinite(pointTwoManualValue) &&
-      allSensorReadingsAvailable
-    : session?.plateauStatus.status === "ready" &&
-      session.plateauStatus.pointIndex === 2 &&
-      session.currentPoint?.pointIndex === 2
+  const coefficientsLocked = Boolean(session?.coefficientsLocked)
+  const activeAcquisitionPoint = session?.currentPoint?.pointIndex ?? null
+  const hasReadableStandard = isExternalSession
+    ? true
+    : Number.isFinite(session?.latestStandardReading?.value)
+  const canStartPointOneAcquisition = Boolean(
+    isAdjustmentRunning &&
+      !validatedPoints.pointOne &&
+      activeAcquisitionPoint == null &&
+      allSensorReadingsAvailable &&
+      hasReadableStandard &&
+      (!isExternalSession || (pointOne.trim().length > 0 && Number.isFinite(pointOneManualValue))),
+  )
+  const canStartPointTwoAcquisition = Boolean(
+    isAdjustmentRunning &&
+      validatedPoints.pointOne &&
+      !validatedPoints.pointTwo &&
+      activeAcquisitionPoint == null &&
+      allSensorReadingsAvailable &&
+      hasReadableStandard &&
+      (!isExternalSession || (pointTwo.trim().length > 0 && Number.isFinite(pointTwoManualValue))),
+  )
   const latestStandardMeasure = session?.latestStandardReading
     ? session.latestStandardReading.value != null
       ? `${session.latestStandardReading.value}${session.latestStandardReading.unit ? ` ${session.latestStandardReading.unit}` : ""}`
@@ -326,6 +303,7 @@ export function AdjustmentWorkflowClient() {
       setActionError(null)
       setPointOne("")
       setPointTwo("")
+      setShowCalculationDetails(false)
       setDirection(1)
       setStep("adjustment")
       await refreshSession()
@@ -375,8 +353,8 @@ export function AdjustmentWorkflowClient() {
     },
   })
 
-  const validatePointMutation = useMutation({
-    mutationFn: async (payload: { pointIndex: 1 | 2; targetValue: number }) =>
+  const startPointAcquisitionMutation = useMutation({
+    mutationFn: async (payload: { pointIndex: 1 | 2; targetValue?: number }) =>
       fetchJson<{ session: SessionApiPayload["session"] }>("/api/metrologie/ajustage/session/point", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -384,10 +362,12 @@ export function AdjustmentWorkflowClient() {
       }),
     onSuccess: async () => {
       setActionError(null)
+      setShowFirstPointConfirm(false)
       await refreshSession()
     },
     onError: (error) => {
       setActionError(error instanceof Error ? error.message : String(error))
+      setShowFirstPointConfirm(false)
     },
   })
 
@@ -761,7 +741,6 @@ export function AdjustmentWorkflowClient() {
                   type="button"
                   variant="outline"
                   onClick={() => {
-                    setPreviewReadingEnabled(false)
                     setDirection(-1)
                     setStep("selection")
                   }}
@@ -1166,10 +1145,10 @@ export function AdjustmentWorkflowClient() {
                                       inputMode="decimal"
                                       aria-label={`${sensor.serialNumber} ${coefficient}`}
                                       value={draft[coefficient]}
-                                      readOnly={!isAdjustmentRunning}
-                                      disabled={updateCoefficientsMutation.isPending}
+                                      readOnly={!isAdjustmentRunning || coefficientsLocked}
+                                      disabled={updateCoefficientsMutation.isPending || coefficientsLocked}
                                       onChange={(event) => {
-                                        if (!isAdjustmentRunning) return
+                                        if (!isAdjustmentRunning || coefficientsLocked) return
                                         const value = event.target.value
                                         setCoefficientDrafts((current) => ({
                                           ...current,
@@ -1193,6 +1172,13 @@ export function AdjustmentWorkflowClient() {
                             })}
                           </div>
                         </div>
+                        {coefficientsLocked ? (
+                          <Alert className="border-amber-300 bg-amber-50 text-amber-950">
+                            <BadgeInfo className="h-4 w-4" />
+                            <AlertTitle>{t("adjustment.cards.coefficients.lockedTitle")}</AlertTitle>
+                            <AlertDescription>{t("adjustment.cards.coefficients.lockedDescription")}</AlertDescription>
+                          </Alert>
+                        ) : null}
                         {isAdjustmentRunning && session ? (
                           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                             <p className="text-sm text-muted-foreground">
@@ -1200,7 +1186,7 @@ export function AdjustmentWorkflowClient() {
                             </p>
                             <Button
                               type="button"
-                              disabled={updateCoefficientsMutation.isPending}
+                              disabled={updateCoefficientsMutation.isPending || coefficientsLocked}
                               onClick={() => {
                                 const coefficients = session.sensors.map((sensor) => {
                                   const draft = coefficientDrafts[sensor.id]
@@ -1256,54 +1242,11 @@ export function AdjustmentWorkflowClient() {
                         <Button
                           type="button"
                           className="w-full"
-                          variant="outline"
-                          disabled={
-                            isAdjustmentRunning ||
-                            selectedSensorIds.length === 0
-                          }
-                          onClick={() => {
-                            if (previewReadingEnabled) {
-                              setPreviewReadingEnabled(false)
-                              return
-                            }
-                            setActionError(null)
-                            setPreviewReadingEnabled(true)
-                          }}
-                        >
-                          {previewReadingEnabled ? (
-                            <>
-                              <Square className="mr-2 h-4 w-4" />
-                              {t("adjustment.cards.run.stopReading")}
-                            </>
-                          ) : (
-                            <>
-                              <Play className="mr-2 h-4 w-4" />
-                              {t("adjustment.cards.run.startReading")}
-                            </>
-                          )}
-                        </Button>
-                        {previewReadingEnabled ? (
-                          <p className="text-xs text-muted-foreground">
-                            {previewReadingQuery.isFetching
-                              ? t("adjustment.cards.run.reading")
-                              : t("adjustment.cards.run.readingActive")}
-                          </p>
-                        ) : null}
-                        {previewReadingQuery.error ? (
-                          <p className="text-xs text-destructive">
-                            {previewReadingQuery.error instanceof Error
-                              ? previewReadingQuery.error.message
-                              : t("adjustment.cards.run.readingError")}
-                          </p>
-                        ) : null}
-                        <Button
-                          type="button"
-                          className="w-full"
                           variant={isAdjustmentRunning ? "destructive" : "default"}
                           disabled={
                             isAdjustmentRunning
                               ? stopMutation.isPending
-                              : !canRunAdjustment || previewReadingQuery.isFetching
+                              : !canRunAdjustment
                           }
                           onClick={() => {
                             if (isAdjustmentRunning) {
@@ -1314,8 +1257,7 @@ export function AdjustmentWorkflowClient() {
                               stopMutation.mutate(false)
                               return
                             }
-                            setPreviewReadingEnabled(false)
-                            startMutation.mutate()
+                                    startMutation.mutate()
                           }}
                         >
                           {isAdjustmentRunning ? (
@@ -1356,32 +1298,22 @@ export function AdjustmentWorkflowClient() {
                               }
                               readOnly={!isExternalSession}
                               onChange={(event) => setPointOne(event.target.value)}
-                              disabled={!isAdjustmentRunning || Boolean(session?.validatedPoints?.[1])}
+                              disabled={!isAdjustmentRunning || Boolean(session?.validatedPoints?.[1]) || activeAcquisitionPoint === 1}
                             />
                           </div>
                           <Button
                             type="button"
                             variant="outline"
-                            disabled={
-                              !isAdjustmentRunning ||
-                              Boolean(session?.validatedPoints?.[1]) ||
-                              !pointOneReady ||
-                              (!isExternalSession && session?.latestStandardReading?.value == null) ||
-                              validatePointMutation.isPending
-                            }
+                            disabled={!canStartPointOneAcquisition || startPointAcquisitionMutation.isPending}
                             onClick={() => {
-                              const value = isExternalSession
-                                ? pointOneManualValue
-                                : session?.latestStandardReading?.value
-                              if (value == null || !Number.isFinite(value)) {
+                              if (isExternalSession && !Number.isFinite(pointOneManualValue)) {
                                 setActionError(t("adjustment.cards.points.invalidValue"))
                                 return
                               }
-                              setPointOne(formatDecimalDisplay(value))
-                              validatePointMutation.mutate({ pointIndex: 1, targetValue: value })
+                              setShowFirstPointConfirm(true)
                             }}
                           >
-                            {t("adjustment.cards.points.validate")}
+                            {t("adjustment.cards.points.startFirstAcquisition")}
                           </Button>
                         </div>
                         <div className="flex items-end gap-2">
@@ -1396,38 +1328,30 @@ export function AdjustmentWorkflowClient() {
                               }
                               readOnly={!isExternalSession}
                               onChange={(event) => setPointTwo(event.target.value)}
-                              disabled={!isAdjustmentRunning || !validatedPoints.pointOne || Boolean(session?.validatedPoints?.[2])}
+                              disabled={!isAdjustmentRunning || !validatedPoints.pointOne || Boolean(session?.validatedPoints?.[2]) || activeAcquisitionPoint === 2}
                             />
                           </div>
                           <Button
                             type="button"
                             variant="outline"
-                            disabled={
-                              !isAdjustmentRunning ||
-                              !validatedPoints.pointOne ||
-                              Boolean(session?.validatedPoints?.[2]) ||
-                              !pointTwoReady ||
-                              (!isExternalSession && session?.latestStandardReading?.value == null) ||
-                              validatePointMutation.isPending
-                            }
+                            disabled={!canStartPointTwoAcquisition || startPointAcquisitionMutation.isPending}
                             onClick={() => {
-                              const value = isExternalSession
-                                ? pointTwoManualValue
-                                : session?.latestStandardReading?.value
-                              if (value == null || !Number.isFinite(value)) {
+                              if (isExternalSession && !Number.isFinite(pointTwoManualValue)) {
                                 setActionError(t("adjustment.cards.points.invalidValue"))
                                 return
                               }
-                              setPointTwo(formatDecimalDisplay(value))
-                              validatePointMutation.mutate({ pointIndex: 2, targetValue: value })
+                              startPointAcquisitionMutation.mutate({
+                                pointIndex: 2,
+                                targetValue: isExternalSession ? pointTwoManualValue : undefined,
+                              })
                             }}
                           >
-                            {t("adjustment.cards.points.validate")}
+                            {t("adjustment.cards.points.startSecondAcquisition")}
                           </Button>
                         </div>
-                        {session?.currentPoint ? (
+                        {activeAcquisitionPoint ? (
                           <p className="text-sm text-muted-foreground">
-                            {t("adjustment.cards.points.collecting", { point: session.currentPoint.pointIndex })}
+                            {t("adjustment.cards.points.collecting", { point: activeAcquisitionPoint })}
                           </p>
                         ) : null}
                       </CardContent>
@@ -1606,12 +1530,6 @@ export function AdjustmentWorkflowClient() {
                             {session.message}
                           </div>
                         ) : null}
-                        {session?.plateauStatus.status === "ready" ? (
-                          <div className="flex items-center gap-2 rounded-xl border border-emerald-300 bg-emerald-50 p-4 font-medium text-emerald-950">
-                            <CheckCircle2 className="size-5" />
-                            {session.message}
-                          </div>
-                        ) : null}
                         </CardContent>
                       </Card>
                     ) : null}
@@ -1636,6 +1554,71 @@ export function AdjustmentWorkflowClient() {
                       />
                     </CardContent>
                   </Card>
+
+                  {session?.validatedPoints?.[1] && session?.validatedPoints?.[2] ? (
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>{t("adjustment.cards.calculation.title")}</CardTitle>
+                        <CardDescription>{t("adjustment.cards.calculation.description")}</CardDescription>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => setShowCalculationDetails((current) => !current)}
+                        >
+                          {showCalculationDetails
+                            ? t("adjustment.cards.calculation.hideDetails")
+                            : t("adjustment.cards.calculation.showDetails")}
+                        </Button>
+
+                        {showCalculationDetails ? (
+                          <div className="space-y-4">
+                            {session.sensors.map((sensor) => {
+                              const pointOneResult = session.validatedPoints[1]
+                              const pointTwoResult = session.validatedPoints[2]
+                              if (!pointOneResult || !pointTwoResult) return null
+                              const rawOne = pointOneResult.sensorAverages[sensor.id]
+                              const rawTwo = pointTwoResult.sensorAverages[sensor.id]
+                              const standardOne = pointOneResult.standardAverage
+                              const standardTwo = pointTwoResult.standardAverage
+                              const denominator =
+                                rawOne != null && rawTwo != null ? rawTwo - rawOne : null
+                              const coeffA =
+                                denominator != null && denominator !== 0 && standardOne != null && standardTwo != null
+                                  ? (standardTwo - standardOne) / denominator
+                                  : null
+                              const coeffB =
+                                coeffA != null && rawOne != null && standardOne != null
+                                  ? standardOne - coeffA * rawOne
+                                  : null
+
+                              return (
+                                <div key={sensor.id} className="space-y-3 rounded-xl border p-4">
+                                  <p className="font-semibold">{sensor.serialNumber}</p>
+                                  <div className="grid gap-2 text-sm md:grid-cols-2">
+                                    <p>{t("adjustment.cards.calculation.pointOne", { standard: String(standardOne ?? "-"), sensor: String(rawOne ?? "-") })}</p>
+                                    <p>{t("adjustment.cards.calculation.pointTwo", { standard: String(standardTwo ?? "-"), sensor: String(rawTwo ?? "-") })}</p>
+                                  </div>
+                                  {coeffA == null || coeffB == null ? (
+                                    <p className="text-sm text-destructive">
+                                      {t("adjustment.cards.calculation.invalid")}
+                                    </p>
+                                  ) : (
+                                    <div className="space-y-2 rounded-lg bg-muted/40 p-3 font-mono text-sm">
+                                      <p>A = ({String(standardTwo)} - {String(standardOne)}) / ({String(rawTwo)} - {String(rawOne)}) = {String(coeffA)}</p>
+                                      <p>B = {String(standardOne)} - {String(coeffA)} × {String(rawOne)} = {String(coeffB)}</p>
+                                      <p>C = 0</p>
+                                    </div>
+                                  )}
+                                </div>
+                              )
+                            })}
+                          </div>
+                        ) : null}
+                      </CardContent>
+                    </Card>
+                  ) : null}
                 </m.div>
               )}
             </AnimatePresence>
@@ -1643,6 +1626,30 @@ export function AdjustmentWorkflowClient() {
         </div>
 
         <MetrologySubpagesCards current="adjustment" />
+
+        <AlertDialog open={showFirstPointConfirm} onOpenChange={setShowFirstPointConfirm}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>{t("adjustment.cards.points.confirmCoefficientsTitle")}</AlertDialogTitle>
+              <AlertDialogDescription>{t("adjustment.cards.points.confirmCoefficientsDescription")}</AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>{t("adjustment.cards.points.confirmCoefficientsCancel")}</AlertDialogCancel>
+              <AlertDialogAction
+                disabled={startPointAcquisitionMutation.isPending}
+                onClick={() => {
+                  setShowFirstPointConfirm(false)
+                  startPointAcquisitionMutation.mutate({
+                    pointIndex: 1,
+                    targetValue: isExternalSession ? pointOneManualValue : undefined,
+                  })
+                }}
+              >
+                {t("adjustment.cards.points.confirmCoefficientsStart")}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
 
         <AlertDialog open={showStopConfirm} onOpenChange={setShowStopConfirm}>
           <AlertDialogContent>

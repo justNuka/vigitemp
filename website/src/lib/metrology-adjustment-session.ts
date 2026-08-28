@@ -46,7 +46,8 @@ type ValidatedPoint = {
 
 type RunningPoint = {
   pointIndex: PointIndex
-  startedAt: number | null
+  startedAt: number
+  targetValue: number | null
   standardSamples: PlateauSample[]
   sensorSamples: Record<number, PlateauSample[]>
   lastStandardValue: number | null
@@ -131,6 +132,7 @@ type AdjustmentSession = {
   latestSensorReadings: Record<number, RuntimeReading>
   currentPoint: RunningPoint | null
   plateauStatus: PlateauStatus
+  coefficientsLocked: boolean
   validatedPoints: Partial<Record<PointIndex, ValidatedPoint>>
   message: string | null
   lastError: string | null
@@ -197,6 +199,7 @@ type PublicSession = {
     startedAt: string | null
   } | null
   plateauStatus: PlateauStatus
+  coefficientsLocked: boolean
   validatedPoints: Partial<Record<PointIndex, ValidatedPoint>>
   message: string | null
   lastError: string | null
@@ -601,6 +604,7 @@ function toPublicSession(session: AdjustmentSession): PublicSession {
         }
       : null,
     plateauStatus: session.plateauStatus,
+    coefficientsLocked: session.coefficientsLocked,
     validatedPoints: session.validatedPoints,
     message: session.message,
     lastError: session.lastError,
@@ -885,10 +889,15 @@ function scheduleSessionExpiration(session: AdjustmentSession) {
   }, remainingMs)
 }
 
-function createRunningPoint(pointIndex: PointIndex): RunningPoint {
+function createRunningPoint(
+  pointIndex: PointIndex,
+  startedAt: number,
+  targetValue: number | null = null,
+): RunningPoint {
   return {
     pointIndex,
-    startedAt: null,
+    startedAt,
+    targetValue,
     standardSamples: [],
     sensorSamples: {},
     lastStandardValue: null,
@@ -926,25 +935,7 @@ function applyStandardReadingToPlateau(session: AdjustmentSession, reading: Runt
   const measuredGap =
     previousStandardValue == null ? null : Math.abs(reading.value - previousStandardValue)
 
-  if (currentPoint.startedAt == null) {
-    const startedAt = Date.now()
-    currentPoint.startedAt = startedAt
-    currentPoint.standardSamples = [sample]
-    currentPoint.sensorSamples = {}
-    currentPoint.lastStandardValue = reading.value
-    session.plateauStatus = {
-      status: "running",
-      pointIndex: currentPoint.pointIndex,
-      startedAt: new Date(startedAt).toISOString(),
-      endedAt: null,
-      standardSampleCount: 1,
-      lastGap: null,
-      maxGap: session.plateauMaxGap,
-      resetCount: session.plateauStatus.resetCount,
-      lastResetAt: session.plateauStatus.lastResetAt,
-    }
-    session.message = `Plateau de stabilite demarre pour le point ${currentPoint.pointIndex}.`
-  } else if (measuredGap != null && measuredGap > session.plateauMaxGap) {
+  if (measuredGap != null && measuredGap > session.plateauMaxGap) {
     const restartedAt = Date.now()
     currentPoint.startedAt = restartedAt
     currentPoint.standardSamples = [sample]
@@ -962,8 +953,8 @@ function applyStandardReadingToPlateau(session: AdjustmentSession, reading: Runt
       lastResetAt: new Date(restartedAt).toISOString(),
     }
     session.message =
-      `Plateau du point ${currentPoint.pointIndex} redemarre : ` +
-      `ecart ${measuredGap} superieur au maximum ${session.plateauMaxGap}.`
+      `Plateau du point ${currentPoint.pointIndex} redémarré : ` +
+      `écart ${measuredGap} supérieur au maximum ${session.plateauMaxGap}.`
   } else {
     currentPoint.standardSamples.push(sample)
     currentPoint.lastStandardValue = reading.value
@@ -977,6 +968,58 @@ function applyStandardReadingToPlateau(session: AdjustmentSession, reading: Runt
 
   session.lastError = null
   session.lastUpdatedAt = nowIso()
+}
+
+async function completeAdjustmentPoint(session: AdjustmentSession) {
+  const currentPoint = session.currentPoint
+  if (!currentPoint) return
+
+  const pointIndex = currentPoint.pointIndex
+  const standardAverage = session.standardIsExternal
+    ? roundValue(currentPoint.targetValue, session.displayDecimals)
+    : averageValues(
+        currentPoint.standardSamples.map((sample) => sample.value),
+        session.displayDecimals,
+      )
+
+  if (standardAverage == null) {
+    throw new Error(`Aucune mesure étalon exploitable pour le point ${pointIndex}.`)
+  }
+
+  const sensorAverages: Record<number, number | null> = {}
+  for (const sensor of session.sensors) {
+    const sensorAverage = averageValues(
+      (currentPoint.sensorSamples[sensor.id] ?? []).map((sample) => sample.value),
+      session.displayDecimals,
+    )
+    if (sensorAverage == null) {
+      throw new Error(`Aucune mesure exploitable pour la sonde ${sensor.serialNumber}.`)
+    }
+    sensorAverages[sensor.id] = sensorAverage
+  }
+
+  const completedAt = nowIso()
+  session.validatedPoints[pointIndex] = {
+    pointIndex,
+    targetValue: standardAverage,
+    startedAt: new Date(currentPoint.startedAt).toISOString(),
+    completedAt,
+    standardAverage,
+    sensorAverages,
+  }
+  session.plateauStatus = {
+    ...session.plateauStatus,
+    status: "validated",
+    endedAt: completedAt,
+  }
+  session.currentPoint = null
+  session.message = `Point ${pointIndex} validé automatiquement avec la moyenne du plateau.`
+  session.lastError = null
+  session.lastUpdatedAt = completedAt
+
+  if (pointIndex === 2) {
+    await finalizeSession(session, "completed", "Les deux points d'ajustage sont validés automatiquement.")
+  }
 }
 
 async function runOneLoop(session: AdjustmentSession) {
@@ -1054,11 +1097,12 @@ async function runOneLoop(session: AdjustmentSession) {
   const sensorsWithoutSample = session.sensors.filter(
     (sensor) => !(currentPoint.sensorSamples[sensor.id] ?? []).some((sample) => sample.value != null),
   )
+  const missingStandardSamples = !session.standardIsExternal && validStandardSampleCount < 2
 
-  if (validStandardSampleCount < 2 || sensorsWithoutSample.length > 0) {
+  if (missingStandardSamples || sensorsWithoutSample.length > 0) {
     const pendingParts: string[] = []
-    if (validStandardSampleCount < 2) {
-      pendingParts.push(`${2 - validStandardSampleCount} mesure(s) etalon`)
+    if (missingStandardSamples) {
+      pendingParts.push(`${2 - validStandardSampleCount} mesure(s) étalon`)
     }
     if (sensorsWithoutSample.length > 0) {
       pendingParts.push(`${sensorsWithoutSample.length} sonde(s)`)
@@ -1068,22 +1112,13 @@ async function runOneLoop(session: AdjustmentSession) {
       status: "waiting",
       standardSampleCount: validStandardSampleCount,
     }
-    session.message = `Plateau termine pour le point ${pointIndex}, attente de ${pendingParts.join(" et ")}.`
+    session.message = `Plateau terminé pour le point ${pointIndex}, attente de ${pendingParts.join(" et ")}.`
     session.lastError = null
     session.lastUpdatedAt = nowIso()
     return
   }
 
-  session.plateauStatus = {
-    ...session.plateauStatus,
-    status: "ready",
-    pointIndex,
-    endedAt: null,
-    standardSampleCount: validStandardSampleCount,
-  }
-  session.message = `Plateau stable pour le point ${pointIndex}. Le point peut etre valide.`
-  session.lastError = null
-  session.lastUpdatedAt = nowIso()
+  await completeAdjustmentPoint(session)
 }
 
 async function scheduleLoop(session: AdjustmentSession) {
@@ -1106,7 +1141,6 @@ async function scheduleLoop(session: AdjustmentSession) {
   }
 
   if (session.stopRequested || session.status !== "running") return
-  if (session.plateauStatus.status === "ready") return
   const elapsedMs = Date.now() - loopStartedAt
   const remainingDelayMs = Math.max(0, session.measurementIntervalSeconds * 1000 - elapsedMs)
   session.loopTimer = setTimeout(() => {
@@ -1376,17 +1410,16 @@ export async function startAdjustmentSession(user: JWTPayload, input: StartAdjus
     stopRequested: false,
     latestStandardReading: null,
     latestSensorReadings: {},
-    currentPoint: createRunningPoint(1),
-    plateauStatus: standardIsExternal
-      ? {
-          ...createWaitingPlateauStatus(1, Math.max(0, input.plateauMaxGap)),
-          status: "idle",
-        }
-      : createWaitingPlateauStatus(1, Math.max(0, input.plateauMaxGap)),
+    currentPoint: null,
+    plateauStatus: {
+      ...createWaitingPlateauStatus(1, Math.max(0, input.plateauMaxGap)),
+      status: "idle",
+    },
+    coefficientsLocked: false,
     validatedPoints: {},
     message: standardIsExternal
-      ? "Séquence d'ajustage demarrée. Saisissez le premier point lorsque les mesures des sondes sont disponibles."
-      : "Séquence d'ajustage demarrée. Attente de la première mesure étalon du point 1.",
+      ? "Séquence d'ajustage démarrée. Lecture des sondes active ; lancez l'acquisition du premier point lorsque vous êtes prêt."
+      : "Séquence d'ajustage démarrée. Lecture continue des sondes et de l'étalon active ; lancez l'acquisition du premier point lorsque vous êtes prêt.",
     lastError: null,
     lastUpdatedAt: nowIso(),
     persistedAdjustments: [],
@@ -1488,6 +1521,9 @@ export async function updateAdjustmentCoefficients(
   const session = sessionsByUserId.get(userId)
   if (!session || session.status !== "running") {
     throw new Error("Aucun ajustage en cours.")
+  }
+  if (session.coefficientsLocked) {
+    throw new Error("Les coefficients sont verrouillés depuis le lancement de l'acquisition du premier point.")
   }
   if (updates.length === 0) {
     throw new Error("Aucun coefficient à valider.")
@@ -1630,94 +1666,85 @@ export async function extendAdjustmentSession(userId: number, ip?: string) {
   return toPublicSession(session)
 }
 
-export async function validateAdjustmentPoint(
+export async function startAdjustmentPointAcquisition(
   userId: number,
   pointIndex: PointIndex,
-  targetValue: number,
+  targetValue?: number,
 ) {
   const session = sessionsByUserId.get(userId)
   if (!session) throw new Error("Aucune session d'ajustage en cours.")
   if (session.status !== "running") throw new Error("La session d'ajustage n'est plus active.")
+  if (session.currentPoint) {
+    throw new Error(`L'acquisition du point ${session.currentPoint.pointIndex} est déjà en cours.`)
+  }
+  if (pointIndex === 1 && session.validatedPoints[1]) {
+    throw new Error("Le premier point a déjà été validé.")
+  }
   if (pointIndex === 2 && !session.validatedPoints[1]) {
-    throw new Error("Le premier point doit etre valide avant le second.")
+    throw new Error("Le premier point doit être validé avant de lancer le second.")
   }
   if (session.validatedPoints[pointIndex]) {
-    throw new Error(`Le point ${pointIndex} a deja ete valide.`)
-  }
-  const currentPoint = session.currentPoint
-  if (!currentPoint || currentPoint.pointIndex !== pointIndex) {
-    throw new Error(`Le point ${pointIndex} n'est pas en cours.`)
-  }
-  if (
-    !session.standardIsExternal &&
-    (session.plateauStatus.status !== "ready" || currentPoint.startedAt == null)
-  ) {
-    throw new Error(`Le plateau du point ${pointIndex} n'est pas encore stable.`)
+    throw new Error(`Le point ${pointIndex} a déjà été validé.`)
   }
 
-  const currentStandardValue = roundValue(
-    session.standardIsExternal
-      ? targetValue
-      : session.latestStandardReading?.value ?? currentPoint.lastStandardValue,
-    session.displayDecimals,
+  const unavailableSensors = session.sensors.filter(
+    (sensor) => !Number.isFinite(session.latestSensorReadings[sensor.id]?.value),
   )
-  if (currentStandardValue == null) {
-    throw new Error(`Aucune mesure etalon exploitable pour le point ${pointIndex}.`)
+  if (unavailableSensors.length > 0) {
+    throw new Error(
+      `Attendez une mesure valide pour ${unavailableSensors.length} sonde(s) avant de lancer l'acquisition.`,
+    )
+  }
+  if (!session.standardIsExternal && !Number.isFinite(session.latestStandardReading?.value)) {
+    throw new Error("Attendez une mesure valide de l'étalon avant de lancer l'acquisition.")
+  }
+  if (session.standardIsExternal && !Number.isFinite(targetValue)) {
+    throw new Error("La valeur du point étalon externe doit être renseignée.")
   }
 
-  const sensorAverages: Record<number, number | null> = {}
-  for (const sensor of session.sensors) {
-    const sensorAverage = session.standardIsExternal
-      ? roundValue(session.latestSensorReadings[sensor.id]?.value, session.displayDecimals)
-      : averageValues(
-          (currentPoint.sensorSamples[sensor.id] ?? []).map((sample) => sample.value),
-          session.displayDecimals,
-        )
-    if (sensorAverage == null) {
-      throw new Error(`Aucune mesure exploitable pour la sonde ${sensor.serialNumber}.`)
-    }
-    sensorAverages[sensor.id] = sensorAverage
-  }
-
-  session.validatedPoints[pointIndex] = {
+  const startedAt = Date.now()
+  session.currentPoint = createRunningPoint(
     pointIndex,
-    targetValue: currentStandardValue,
-    startedAt: new Date(currentPoint.startedAt ?? Date.now()).toISOString(),
-    completedAt: nowIso(),
-    standardAverage: currentStandardValue,
-    sensorAverages,
-  }
+    startedAt,
+    session.standardIsExternal ? Number(targetValue) : null,
+  )
   session.plateauStatus = {
-    ...session.plateauStatus,
-    status: "validated",
-    endedAt: nowIso(),
+    status: "running",
+    pointIndex,
+    startedAt: new Date(startedAt).toISOString(),
+    endedAt: null,
+    standardSampleCount: 0,
+    lastGap: null,
+    maxGap: session.plateauMaxGap,
+    resetCount: session.plateauStatus.resetCount,
+    lastResetAt: null,
   }
-  session.currentPoint = null
-  session.message = `Point ${pointIndex} valide.`
+  if (pointIndex === 1) {
+    session.coefficientsLocked = true
+  }
+  session.message = `Acquisition du point ${pointIndex} lancée. Le plateau de stabilité est en cours.`
   session.lastError = null
   session.lastUpdatedAt = nowIso()
 
-  if (pointIndex === 1) {
-    session.currentPoint = createRunningPoint(2)
-    if (session.standardIsExternal) {
-      session.plateauStatus = {
-        ...createWaitingPlateauStatus(2, session.plateauMaxGap),
-        status: "idle",
-      }
-      session.message = "Point 1 validé. Le point 2 peut être saisi quand l'opérateur le souhaite."
-    } else {
-      session.plateauStatus = createWaitingPlateauStatus(
-        2,
-        session.plateauMaxGap,
-        session.plateauStatus.resetCount,
-      )
-      session.message = "Point 1 validé. Attente de la première mesure du point 2."
-      void scheduleLoop(session)
+  if (session.standardIsExternal) {
+    for (const sensor of session.sensors) {
+      const reading = session.latestSensorReadings[sensor.id]
+      if (!reading || reading.value == null) continue
+      session.currentPoint.sensorSamples[sensor.id] = [{
+        measuredAt: reading.measuredAt,
+        value: reading.value,
+        rawValue: reading.rawValue,
+      }]
     }
-  } else {
-    await finalizeSession(session, "completed", "Les deux points d'ajustage sont validés.")
+    await completeAdjustmentPoint(session)
+    return toPublicSession(session)
   }
 
+  if (session.loopTimer) {
+    clearTimeout(session.loopTimer)
+    session.loopTimer = null
+  }
+  void scheduleLoop(session)
   return toPublicSession(session)
 }
 
