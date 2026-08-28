@@ -630,6 +630,51 @@ namespace Vigitemp_Serveur.sensors
                 return string.Empty;
             }
 
+            if (string.Equals(commandPrefix, "ECON", StringComparison.OrdinalIgnoreCase))
+            {
+                if (!GspProtocol.TryBuildCommandFragments(
+                        commandPrefix,
+                        _commandTarget,
+                        payload,
+                        GspProtocol.MaxModuleCommandCharacters,
+                        out var econCommands))
+                {
+                    VigitempServeur.Log(
+                        $"[SONDE][TX] type=GSP serial={m_sondeSerialNumber} port={m_comPort} command=ECON status=rejected reason=command-overflow-unsplittable");
+                    return string.Empty;
+                }
+
+                if (econCommands.Count > 1)
+                {
+                    VigitempServeur.Log(
+                        $"[SONDE][TX] type=GSP serial={m_sondeSerialNumber} port={m_comPort} command=ECON status=split parts={econCommands.Count} maxChars={GspProtocol.MaxModuleCommandCharacters}");
+
+                    var commandHead = "ECON" + _commandTarget;
+                    var lastResponse = string.Empty;
+                    for (var partIndex = 0; partIndex < econCommands.Count; partIndex++)
+                    {
+                        var fragment = econCommands[partIndex];
+                        var fragmentPayload = fragment.Substring(commandHead.Length).Trim();
+                        VigitempServeur.LogDetailed(
+                            $"[SONDE][TX] type=GSP serial={m_sondeSerialNumber} port={m_comPort} command=ECON part={partIndex + 1}/{econCommands.Count} chars={fragment.Length}");
+
+                        lastResponse = await SendRequestAndReadAsync(
+                            "ECON",
+                            fragmentPayload,
+                            allowEmptyResponse: false,
+                            endOfResponseSilenceMs);
+                        if (!GspProtocol.IsAcknowledgementForTarget(lastResponse, "ECON", _commandTarget))
+                        {
+                            VigitempServeur.Log(
+                                $"[SONDE][CFG] type=GSP serial={m_sondeSerialNumber} command=ECON status=split-ack-mismatch part={partIndex + 1}/{econCommands.Count} response={(string.IsNullOrWhiteSpace(lastResponse) ? "<empty>" : TrimForLog(lastResponse))}");
+                            return lastResponse;
+                        }
+                    }
+
+                    return lastResponse;
+                }
+            }
+
             var command = GspProtocol.BuildCommand(commandPrefix, _commandTarget, payload);
             var candidates = new List<string>(GspProtocol.BuildCandidateCommands(command));
             for (var index = 0; index < candidates.Count; index++)
