@@ -379,6 +379,7 @@ namespace Vigitemp_Serveur.sensors
     {
         internal const int MaxMemoryMeasurementCount = 5330;
         internal const int MaxMemoryMeasurementsPerRequest = 500;
+        internal const int MaxModuleCommandCharacters = 60;
         private const double ComparisonTolerance = 0.000001d;
 
         private static readonly string[] GspTypePrefixes =
@@ -622,6 +623,100 @@ namespace Vigitemp_Serveur.sensors
             return normalizedPayload.Length == 0
                 ? normalizedPrefix + normalizedTarget + " "
                 : normalizedPrefix + normalizedTarget + " " + normalizedPayload;
+        }
+
+        internal static bool TryBuildCommandFragments(
+            string prefix,
+            string target,
+            string payload,
+            int maxCommandCharacters,
+            out List<string> commands)
+        {
+            commands = new List<string>();
+
+            var normalizedPrefix = (prefix ?? string.Empty).Trim();
+            var normalizedTarget = (target ?? string.Empty).Trim();
+            var normalizedPayload = (payload ?? string.Empty).Trim();
+            var fullCommand = BuildCommand(normalizedPrefix, normalizedTarget, normalizedPayload);
+
+            if (maxCommandCharacters <= 0)
+            {
+                return false;
+            }
+
+            if (fullCommand.Length <= maxCommandCharacters)
+            {
+                commands.Add(fullCommand);
+                return true;
+            }
+
+            if (!string.Equals(normalizedPrefix, "ECON", StringComparison.OrdinalIgnoreCase)
+                || string.IsNullOrWhiteSpace(normalizedTarget)
+                || string.IsNullOrWhiteSpace(normalizedPayload))
+            {
+                return false;
+            }
+
+            // ECON est composé de couples valeur + marqueur. Les valeurs émises par
+            // le Serveur sont décimales fixes (ou NAN), donc les marqueurs minuscules
+            // constituent des frontières sûres pour découper sans tronquer une valeur.
+            const string parameterMarkers = "abcdemhlfrt";
+            var tokens = new List<string>();
+            var tokenStart = 0;
+            for (var index = 0; index < normalizedPayload.Length; index++)
+            {
+                if (parameterMarkers.IndexOf(normalizedPayload[index]) < 0)
+                {
+                    continue;
+                }
+
+                if (index <= tokenStart)
+                {
+                    return false;
+                }
+
+                tokens.Add(normalizedPayload.Substring(tokenStart, index - tokenStart + 1));
+                tokenStart = index + 1;
+            }
+
+            if (tokens.Count == 0 || tokenStart != normalizedPayload.Length)
+            {
+                return false;
+            }
+
+            var currentPayload = new StringBuilder();
+            foreach (var token in tokens)
+            {
+                var candidatePayload = currentPayload.ToString() + token;
+                if (BuildCommand(normalizedPrefix, normalizedTarget, candidatePayload).Length <= maxCommandCharacters)
+                {
+                    currentPayload.Append(token);
+                    continue;
+                }
+
+                if (currentPayload.Length == 0)
+                {
+                    return false;
+                }
+
+                commands.Add(BuildCommand(normalizedPrefix, normalizedTarget, currentPayload.ToString()));
+                currentPayload.Clear();
+
+                if (BuildCommand(normalizedPrefix, normalizedTarget, token).Length > maxCommandCharacters)
+                {
+                    commands.Clear();
+                    return false;
+                }
+
+                currentPayload.Append(token);
+            }
+
+            if (currentPayload.Length > 0)
+            {
+                commands.Add(BuildCommand(normalizedPrefix, normalizedTarget, currentPayload.ToString()));
+            }
+
+            return commands.Count > 0 && commands.All(command => command.Length <= maxCommandCharacters);
         }
 
         internal static bool TryBuildEconMetrologyCoefficientsCommand(

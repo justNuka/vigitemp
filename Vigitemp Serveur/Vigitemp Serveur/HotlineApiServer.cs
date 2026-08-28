@@ -998,6 +998,55 @@ namespace Vigitemp_Serveur
             if (string.IsNullOrWhiteSpace(prefix)) return string.Empty;
 
             var baseCommand = GspProtocol.BuildCommand(prefix, target, payload);
+            if (string.Equals(prefix, "ECON", StringComparison.OrdinalIgnoreCase)
+                && baseCommand.Length > GspProtocol.MaxModuleCommandCharacters)
+            {
+                if (!GspProtocol.TryBuildCommandFragments(
+                        prefix,
+                        target,
+                        payload,
+                        GspProtocol.MaxModuleCommandCharacters,
+                        out var econCommands))
+                {
+                    AddExchange(result, "info", "ascii", "<econ-split status=rejected reason=unsplittable>");
+                    return string.Empty;
+                }
+
+                AddExchange(
+                    result,
+                    "info",
+                    "ascii",
+                    string.Format(
+                        CultureInfo.InvariantCulture,
+                        "<econ-split parts={0} maxChars={1}>",
+                        econCommands.Count,
+                        GspProtocol.MaxModuleCommandCharacters));
+
+                var commandHead = "ECON" + (target ?? string.Empty).Trim();
+                var lastResponse = string.Empty;
+                for (var partIndex = 0; partIndex < econCommands.Count; partIndex++)
+                {
+                    var fragment = econCommands[partIndex];
+                    var fragmentPayload = fragment.Substring(commandHead.Length).Trim();
+                    lastResponse = SendGspCommand(
+                        port,
+                        result,
+                        "ECON",
+                        target,
+                        fragmentPayload,
+                        false,
+                        listenWindowMs,
+                        postWriteDelayMs);
+                    if (!IsEconAcknowledged(lastResponse))
+                    {
+                        AddExchange(result, "info", "ascii", $"<econ-split status=ack-mismatch part={partIndex + 1}/{econCommands.Count}>");
+                        return lastResponse;
+                    }
+                }
+
+                return lastResponse;
+            }
+
             var commands = GspProtocol.BuildCandidateCommands(baseCommand).ToList();
             for (var index = 0; index < commands.Count; index++)
             {
