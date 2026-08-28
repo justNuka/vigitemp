@@ -1,0 +1,31 @@
+name: Agent mark PR69 docs
+
+on:
+  push:
+    branches:
+      - agent/gsp-econ-60-char-limit
+
+permissions:
+  contents: write
+
+jobs:
+  update-docs:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/gsp-econ-60-char-limit
+          fetch-depth: 0
+
+      - name: Mark PR open and clean workflow
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -c 'from pathlib import Path; old="Statut : **`EN COURS` — branche `agent/gsp-econ-60-char-limit` — PR à ouvrir vers `dev`**."; new="Statut : **`PR_OUVERTE` — branche `agent/gsp-econ-60-char-limit` — PR #69 vers `dev`**."; files=[Path("website/docs/backlog-retours-17-08-2026.md"),Path("website/docs/gsp-command-limit-28-08-2026.md")]; [(lambda p: (lambda s: (p.write_text(s.replace(old,new,1), encoding="utf-8") if old in s else (_ for _ in ()).throw(RuntimeError(f"status not found in {p}"))))(p.read_text(encoding="utf-8")))(p) for p in files]'
+          rm -f '.github/workflows/agent-mark-pr69-docs.yml'
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'docs: mark GSP command limit PR 69 open'
+          git push origin HEAD:agent/gsp-econ-60-char-limit
