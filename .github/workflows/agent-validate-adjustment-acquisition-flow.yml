@@ -1,0 +1,54 @@
+name: Agent validate adjustment acquisition flow
+
+on:
+  push:
+    branches:
+      - agent/adjustment-acquisition-stability-flow
+
+permissions:
+  contents: write
+
+jobs:
+  validate:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/adjustment-acquisition-stability-flow
+          fetch-depth: 0
+
+      - name: Apply UI robustness fixes
+        run: |
+          set -euo pipefail
+          python3 .agent/fix-adjustment-acquisition-ui.py
+          git diff --check
+
+      - name: Install dependencies
+        working-directory: website
+        run: |
+          corepack enable
+          pnpm install --frozen-lockfile
+
+      - name: Lint
+        working-directory: website
+        run: pnpm lint
+
+      - name: Check translations
+        working-directory: website
+        run: pnpm i18n:check
+
+      - name: TypeScript check
+        working-directory: website
+        run: pnpm exec tsc --noEmit
+
+      - name: Commit robustness fixes and clean validation files
+        if: success()
+        run: |
+          set -euo pipefail
+          rm -f '.agent/fix-adjustment-acquisition-ui.py' '.github/workflows/agent-validate-adjustment-acquisition-flow.yml'
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'fix(metrology): harden adjustment acquisition controls'
+          git push origin HEAD:agent/adjustment-acquisition-stability-flow
