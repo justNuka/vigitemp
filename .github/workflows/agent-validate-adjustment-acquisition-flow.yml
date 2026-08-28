@@ -24,11 +24,11 @@ jobs:
           python3 .agent/fix-adjustment-acquisition-ui.py
           git diff --check
 
-      - name: Install dependencies
+      - name: Install dependencies for static checks
         working-directory: website
         run: |
           corepack enable
-          pnpm install --frozen-lockfile
+          pnpm install --frozen-lockfile --ignore-scripts
 
       - name: Lint
         working-directory: website
