@@ -1,0 +1,46 @@
+
+
+## GSP — limite 60 caractères des commandes de configuration — 28/08/2026
+
+Statut : **`EN COURS` — branche `agent/gsp-econ-60-char-limit` — PR à ouvrir vers `dev`**.
+
+### Retour terrain / cause
+
+Les modules de communication GSP acceptent au maximum **60 caractères par commande**. Au-delà, la commande peut être ignorée complètement par le module. Le risque concerne notamment les grosses resynchronisations de Surveillance : le `ECON` complet regroupe les coefficients, l'offset, la correction de justesse, les consignes, la fréquence et les délais (`a/b/c/d/e/m/h/l/f/r/t`) et dépasse facilement cette limite.
+
+Ajustage et Étalonnage étaient déjà protégés depuis la PR #50 : leur `ECON` de métrologie est compacté aux seuls coefficients `a/b/c`, soit 57 caractères pour l'exemple `SPNB-26000065`. Le chemin normal de Surveillance et la synchronisation structurée de la Hotline pouvaient encore envoyer un `ECON` complet trop long.
+
+### Correctif
+
+- ajout d'une limite partagée `GspProtocol.MaxModuleCommandCharacters = 60` ;
+- ajout de `TryBuildCommandFragments(...)`, qui conserve le payload métier complet mais le découpe uniquement aux frontières des paramètres `a/b/c/d/e/m/h/l/f/r/t` ;
+- la longueur inclut `ECON`, la cible réelle de la sonde, l'espace et le payload ;
+- aucune valeur numérique n'est coupée au milieu ;
+- `SensorGSP` applique le découpage aux synchronisations automatiques de Surveillance ;
+- `HotlineApiServer.SendGspCommand()` applique la même protection à la synchronisation structurée Hotline ;
+- chaque fragment doit recevoir son ACK avant l'envoi du suivant ; en cas d'échec, la séquence s'arrête immédiatement ;
+- le mode `raw` libre de la Hotline n'est pas modifié ; les parcours raw d'Ajustage/Étalonnage restent protégés par leur compactage `a/b/c` existant.
+
+Exemple de référence avec `SPNB-26000065` : une commande complète de 80 caractères est découpée en **57 + 41 caractères**. Le nombre de fragments n'est pas forcé à deux : si des valeurs exceptionnellement longues l'exigent, le Serveur crée autant de fragments que nécessaire pour respecter strictement les 60 caractères.
+
+### Fichiers principaux
+
+- `Vigitemp Serveur/Vigitemp Serveur/sensors/GspProtocol.cs` ;
+- `Vigitemp Serveur/Vigitemp Serveur/sensors/SensorGSP.cs` ;
+- `Vigitemp Serveur/Vigitemp Serveur/HotlineApiServer.cs` ;
+- `Vigitemp Serveur/CHANGELOG.md` ;
+- `website/docs/gsp-command-limit-28-08-2026.md`.
+
+### Vérifications / checklist terrain
+
+- [x] branche créée depuis le HEAD `dev` `237b582ec6d2dc97639829216899ba841b8914c9` ;
+- [x] aucune PR ouverte au démarrage ;
+- [x] exemple 80 caractères => 57 + 41 ;
+- [x] `ECON a/b/c` de 57 caractères laissé intact ;
+- [x] payload artificiellement plus long testé : aucun fragment au-delà de 60 caractères ;
+- [x] arrêt de la séquence prévu dès le premier ACK manquant ;
+- [ ] compiler le Serveur Windows ;
+- [ ] modifier simultanément consignes, fréquence et délais sur une GSP et vérifier plusieurs TX `ECON` de 60 caractères maximum ;
+- [ ] vérifier un ACK après chaque fragment ;
+- [ ] simuler l'absence d'ACK du premier fragment et confirmer que le suivant n'est pas envoyé ;
+- [ ] valider Ajustage et Étalonnage sans régression sur le `ECON a/b/c` compact.
