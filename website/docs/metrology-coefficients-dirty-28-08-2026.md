@@ -2,7 +2,7 @@
 
 ## Statut
 
-`EN_COURS` — branche `agent/metrology-adjustment-coeff-dirty`.
+`PR_OUVERTE` — branche `agent/metrology-adjustment-coeff-dirty` — PR #67.
 
 ## Contexte
 
