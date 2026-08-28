@@ -1,0 +1,228 @@
+diff --git a/Vigitemp Serveur/Vigitemp Serveur/sensors/GspProtocol.cs b/Vigitemp Serveur/Vigitemp Serveur/sensors/GspProtocol.cs
+--- a/Vigitemp Serveur/Vigitemp Serveur/sensors/GspProtocol.cs	
++++ b/Vigitemp Serveur/Vigitemp Serveur/sensors/GspProtocol.cs	
+@@ -382,6 +382,7 @@ namespace Vigitemp_Serveur.sensors
+     {
+         internal const int MaxMemoryMeasurementCount = 5330;
+         internal const int MaxMemoryMeasurementsPerRequest = 500;
++        internal const int MaxModuleCommandCharacters = 60;
+         private const double ComparisonTolerance = 0.000001d;
+ 
+         private static readonly string[] GspTypePrefixes =
+@@ -620,6 +621,84 @@ namespace Vigitemp_Serveur.sensors
+                 ? normalizedPrefix + normalizedTarget + " "
+                 : normalizedPrefix + normalizedTarget + " " + normalizedPayload;
+         }
++
++        internal static bool TryBuildCommandFragments(
++            string prefix,
++            string target,
++            string payload,
++            int maxCommandCharacters,
++            out List<string> commands)
++        {
++            commands = new List<string>();
++
++            var normalizedPrefix = (prefix ?? string.Empty).Trim();
++            var normalizedTarget = (target ?? string.Empty).Trim();
++            var normalizedPayload = (payload ?? string.Empty).Trim();
++            var fullCommand = BuildCommand(normalizedPrefix, normalizedTarget, normalizedPayload);
++
++            if (maxCommandCharacters <= 0)
++            {
++                return false;
++            }
++
++            if (fullCommand.Length <= maxCommandCharacters)
++            {
++                commands.Add(fullCommand);
++                return true;
++            }
++
++            if (!string.Equals(normalizedPrefix, "ECON", StringComparison.OrdinalIgnoreCase)
++                || string.IsNullOrWhiteSpace(normalizedTarget)
++                || string.IsNullOrWhiteSpace(normalizedPayload))
++            {
++                return false;
++            }
++
++            // ECON est composé de couples valeur + marqueur. Les valeurs émises par
++            // le Serveur sont décimales fixes (ou NAN), donc les marqueurs minuscules
++            // constituent des frontières sûres pour découper sans tronquer une valeur.
++            const string parameterMarkers = "abcdemhlfrt";
++            var tokens = new List<string>();
++            var tokenStart = 0;
++            for (var index = 0; index < normalizedPayload.Length; index++)
++            {
++                if (parameterMarkers.IndexOf(normalizedPayload[index]) < 0)
++                {
++                    continue;
++                }
++
++                if (index <= tokenStart)
++                {
++                    return false;
++                }
++
++                tokens.Add(normalizedPayload.Substring(tokenStart, index - tokenStart + 1));
++                tokenStart = index + 1;
++            }
++
++            if (tokens.Count == 0 || tokenStart != normalizedPayload.Length)
++            {
++                return false;
++            }
++
++            var currentPayload = new StringBuilder();
++            foreach (var token in tokens)
++            {
++                var candidatePayload = currentPayload.ToString() + token;
++                if (BuildCommand(normalizedPrefix, normalizedTarget, candidatePayload).Length <= maxCommandCharacters)
++                {
++                    currentPayload.Append(token);
++                    continue;
++                }
++
++                if (currentPayload.Length == 0)
++                {
++                    return false;
++                }
++
++                commands.Add(BuildCommand(normalizedPrefix, normalizedTarget, currentPayload.ToString()));
++                currentPayload.Clear();
++
++                if (BuildCommand(normalizedPrefix, normalizedTarget, token).Length > maxCommandCharacters)
++                {
++                    commands.Clear();
++                    return false;
++                }
++
++                currentPayload.Append(token);
++            }
++
++            if (currentPayload.Length > 0)
++            {
++                commands.Add(BuildCommand(normalizedPrefix, normalizedTarget, currentPayload.ToString()));
++            }
++
++            return commands.Count > 0 && commands.All(command => command.Length <= maxCommandCharacters);
++        }
+ 
+         internal static bool TryBuildEconMetrologyCoefficientsCommand(
+             string command,
+             string target,
+             out string coefficientsCommand)
+diff --git a/Vigitemp Serveur/Vigitemp Serveur/sensors/SensorGSP.cs b/Vigitemp Serveur/Vigitemp Serveur/sensors/SensorGSP.cs
+--- a/Vigitemp Serveur/Vigitemp Serveur/sensors/SensorGSP.cs	
++++ b/Vigitemp Serveur/Vigitemp Serveur/sensors/SensorGSP.cs	
+@@ -602,6 +602,44 @@ namespace Vigitemp_Serveur.sensors
+                 return string.Empty;
+             }
+ 
++            if (string.Equals(commandPrefix, "ECON", StringComparison.OrdinalIgnoreCase))
++            {
++                if (!GspProtocol.TryBuildCommandFragments(
++                        commandPrefix,
++                        _commandTarget,
++                        payload,
++                        GspProtocol.MaxModuleCommandCharacters,
++                        out var econCommands))
++                {
++                    VigitempServeur.Log(
++                        $"[SONDE][TX] type=GSP serial={m_sondeSerialNumber} port={m_comPort} command=ECON status=rejected reason=command-overflow-unsplittable");
++                    return string.Empty;
++                }
++
++                if (econCommands.Count > 1)
++                {
++                    VigitempServeur.Log(
++                        $"[SONDE][TX] type=GSP serial={m_sondeSerialNumber} port={m_comPort} command=ECON status=split parts={econCommands.Count} maxChars={GspProtocol.MaxModuleCommandCharacters}");
++
++                    var commandHead = "ECON" + _commandTarget;
++                    var lastResponse = string.Empty;
++                    for (var partIndex = 0; partIndex < econCommands.Count; partIndex++)
++                    {
++                        var fragment = econCommands[partIndex];
++                        var fragmentPayload = fragment.Substring(commandHead.Length).Trim();
++                        VigitempServeur.LogDetailed(
++                            $"[SONDE][TX] type=GSP serial={m_sondeSerialNumber} port={m_comPort} command=ECON part={partIndex + 1}/{econCommands.Count} chars={fragment.Length}");
++
++                        lastResponse = await SendRequestAndReadAsync(
++                            "ECON",
++                            fragmentPayload,
++                            allowEmptyResponse: false,
++                            endOfResponseSilenceMs);
++                        if (!GspProtocol.IsAcknowledgementForTarget(lastResponse, "ECON", _commandTarget))
++                        {
++                            VigitempServeur.Log(
++                                $"[SONDE][CFG] type=GSP serial={m_sondeSerialNumber} command=ECON status=split-ack-mismatch part={partIndex + 1}/{econCommands.Count} response={(string.IsNullOrWhiteSpace(lastResponse) ? "<empty>" : TrimForLog(lastResponse))}");
++                            return lastResponse;
++                        }
++                    }
++
++                    return lastResponse;
++                }
++            }
++
+             var command = GspProtocol.BuildCommand(commandPrefix, _commandTarget, payload);
+             var candidates = new List<string>(GspProtocol.BuildCandidateCommands(command));
+             for (var index = 0; index < candidates.Count; index++)
+diff --git a/Vigitemp Serveur/Vigitemp Serveur/HotlineApiServer.cs b/Vigitemp Serveur/Vigitemp Serveur/HotlineApiServer.cs
+--- a/Vigitemp Serveur/Vigitemp Serveur/HotlineApiServer.cs	
++++ b/Vigitemp Serveur/Vigitemp Serveur/HotlineApiServer.cs	
+@@ -999,6 +999,42 @@ namespace Vigitemp_Serveur
+             if (string.IsNullOrWhiteSpace(prefix)) return string.Empty;
+ 
+             var baseCommand = GspProtocol.BuildCommand(prefix, target, payload);
++            if (string.Equals(prefix, "ECON", StringComparison.OrdinalIgnoreCase)
++                && baseCommand.Length > GspProtocol.MaxModuleCommandCharacters)
++            {
++                if (!GspProtocol.TryBuildCommandFragments(
++                        prefix,
++                        target,
++                        payload,
++                        GspProtocol.MaxModuleCommandCharacters,
++                        out var econCommands))
++                {
++                    AddExchange(result, "info", "ascii", "<econ-split status=rejected reason=unsplittable>");
++                    return string.Empty;
++                }
++
++                AddExchange(
++                    result,
++                    "info",
++                    "ascii",
++                    string.Format(
++                        CultureInfo.InvariantCulture,
++                        "<econ-split parts={0} maxChars={1}>",
++                        econCommands.Count,
++                        GspProtocol.MaxModuleCommandCharacters));
++
++                var commandHead = "ECON" + (target ?? string.Empty).Trim();
++                var lastResponse = string.Empty;
++                for (var partIndex = 0; partIndex < econCommands.Count; partIndex++)
++                {
++                    var fragment = econCommands[partIndex];
++                    var fragmentPayload = fragment.Substring(commandHead.Length).Trim();
++                    lastResponse = SendGspCommand(
++                        port,
++                        result,
++                        "ECON",
++                        target,
++                        fragmentPayload,
++                        false,
++                        listenWindowMs,
++                        postWriteDelayMs);
++                    if (!IsEconAcknowledged(lastResponse))
++                    {
++                        AddExchange(result, "info", "ascii", $"<econ-split status=ack-mismatch part={partIndex + 1}/{econCommands.Count}>");
++                        return lastResponse;
++                    }
++                }
++
++                return lastResponse;
++            }
++
+             var commands = GspProtocol.BuildCandidateCommands(baseCommand).ToList();
+             for (var index = 0; index < commands.Count; index++)
+             {
