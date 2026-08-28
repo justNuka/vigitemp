@@ -66,6 +66,22 @@ function detectProvider(): Provider {
     : "mysql";
 }
 
+function ensureMainMetrologyFields(schema: string): string {
+  if (schema.includes("Coeffs_Modifies_Depuis_Derniere_Mesure")) return schema;
+
+  const modelPattern = /(model t_ajustage \{[\s\S]*?\n\s*Coeff_Constant\s+Float\?\s+@db\.Float)(\r?\n)/;
+  if (!modelPattern.test(schema)) {
+    throw new Error(
+      "Impossible d'ajouter Coeffs_Modifies_Depuis_Derniere_Mesure au modèle Prisma t_ajustage.",
+    );
+  }
+
+  return schema.replace(
+    modelPattern,
+    `$1$2  Coeffs_Modifies_Depuis_Derniere_Mesure Boolean   @default(false)$2`,
+  );
+}
+
 function toSqlServerSchema(schema: string): string {
   let next = schema;
 
@@ -116,6 +132,13 @@ for (const schema of schemas) {
   const targetPath = path.join(targetDir, "schema.prisma");
 
   let content = fs.readFileSync(sourcePath, "utf8");
+  if (schema.name === "db-main") {
+    // La colonne est introduite par la migration DB 0.90.2. Tant que le gros
+    // schema.prisma source n'a pas été régénéré depuis une base migrée, on
+    // l'injecte dans le schéma préparé afin que `prisma db push` ne tente pas
+    // de supprimer la colonne et que les clients générés connaissent le champ.
+    content = ensureMainMetrologyFields(content);
+  }
   if (provider === "mssql") {
     content = toSqlServerSchema(content);
   }
