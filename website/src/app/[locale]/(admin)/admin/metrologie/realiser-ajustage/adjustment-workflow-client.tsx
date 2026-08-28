@@ -232,6 +232,9 @@ export function AdjustmentWorkflowClient() {
   const pointOneManualValue = Number(pointOne.trim().replace(",", "."))
   const pointTwoManualValue = Number(pointTwo.trim().replace(",", "."))
   const coefficientsLocked = Boolean(session?.coefficientsLocked)
+  const hasUnsavedCoefficientChanges = Object.values(coefficientTouched).some((fields) =>
+    Object.values(fields).some(Boolean),
+  )
   const activeAcquisitionPoint = session?.currentPoint?.pointIndex ?? null
   const hasReadableStandard = isExternalSession
     ? true
@@ -1257,7 +1260,7 @@ export function AdjustmentWorkflowClient() {
                               stopMutation.mutate(false)
                               return
                             }
-                                    startMutation.mutate()
+                            startMutation.mutate()
                           }}
                         >
                           {isAdjustmentRunning ? (
@@ -1304,7 +1307,7 @@ export function AdjustmentWorkflowClient() {
                           <Button
                             type="button"
                             variant="outline"
-                            disabled={!canStartPointOneAcquisition || startPointAcquisitionMutation.isPending}
+                            disabled={!canStartPointOneAcquisition || startPointAcquisitionMutation.isPending || updateCoefficientsMutation.isPending}
                             onClick={() => {
                               if (isExternalSession && !Number.isFinite(pointOneManualValue)) {
                                 setActionError(t("adjustment.cards.points.invalidValue"))
@@ -1606,9 +1609,24 @@ export function AdjustmentWorkflowClient() {
                                     </p>
                                   ) : (
                                     <div className="space-y-2 rounded-lg bg-muted/40 p-3 font-mono text-sm">
-                                      <p>A = ({String(standardTwo)} - {String(standardOne)}) / ({String(rawTwo)} - {String(rawOne)}) = {String(coeffA)}</p>
-                                      <p>B = {String(standardOne)} - {String(coeffA)} × {String(rawOne)} = {String(coeffB)}</p>
-                                      <p>C = 0</p>
+                                      <p>
+                                        {t("adjustment.cards.calculation.formulaA", {
+                                          standardTwo: formatDecimalDisplay(standardTwo),
+                                          standardOne: formatDecimalDisplay(standardOne),
+                                          sensorTwo: formatDecimalDisplay(rawTwo),
+                                          sensorOne: formatDecimalDisplay(rawOne),
+                                          result: formatCoefficientDisplay(coeffA),
+                                        })}
+                                      </p>
+                                      <p>
+                                        {t("adjustment.cards.calculation.formulaB", {
+                                          standardOne: formatDecimalDisplay(standardOne),
+                                          coefficientA: formatCoefficientDisplay(coeffA),
+                                          sensorOne: formatDecimalDisplay(rawOne),
+                                          result: formatCoefficientDisplay(coeffB),
+                                        })}
+                                      </p>
+                                      <p>{t("adjustment.cards.calculation.formulaC")}</p>
                                     </div>
                                   )}
                                 </div>
@@ -1631,12 +1649,16 @@ export function AdjustmentWorkflowClient() {
           <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>{t("adjustment.cards.points.confirmCoefficientsTitle")}</AlertDialogTitle>
-              <AlertDialogDescription>{t("adjustment.cards.points.confirmCoefficientsDescription")}</AlertDialogDescription>
+              <AlertDialogDescription>
+                {hasUnsavedCoefficientChanges
+                  ? t("adjustment.cards.points.confirmCoefficientsUnsavedDescription")
+                  : t("adjustment.cards.points.confirmCoefficientsDescription")}
+              </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel>{t("adjustment.cards.points.confirmCoefficientsCancel")}</AlertDialogCancel>
               <AlertDialogAction
-                disabled={startPointAcquisitionMutation.isPending}
+                disabled={startPointAcquisitionMutation.isPending || updateCoefficientsMutation.isPending || hasUnsavedCoefficientChanges}
                 onClick={() => {
                   setShowFirstPointConfirm(false)
                   startPointAcquisitionMutation.mutate({
