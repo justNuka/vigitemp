@@ -8,15 +8,21 @@ namespace Vigitemp_Serveur
         public static IDatabaseProvider Create()
         {
             var provider = GetSetting("Vigi.Db.Provider", "mysql").Trim().ToLowerInvariant();
+            IDatabaseProvider database;
             switch (provider)
             {
                 case "mysql":
-                    return new MySqlDatabaseProvider();
+                    database = new MySqlDatabaseProvider();
+                    break;
                 case "mssql":
-                    return new SqlServerDatabaseProvider();
+                case "sqlserver":
+                    database = new SqlServerDatabaseProvider();
+                    break;
                 default:
                     throw new NotSupportedException("Unknown DB provider: " + provider);
             }
+
+            return new MetrologyDatabaseProvider(database);
         }
 
         private static string GetSetting(string key, string defaultValue)
