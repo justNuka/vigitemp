@@ -200,7 +200,7 @@ BEGIN
     [Coeff_X2] FLOAT NULL DEFAULT('0'),
     [Coeff_X] FLOAT NULL,
     [Coeff_Constant] FLOAT NULL,
-    [Coeffs_Modifies_Depuis_Derniere_Mesure] BIT NULL DEFAULT('0'),
+    [Coeffs_Modifies_Depuis_Derniere_Mesure] BIT NOT NULL DEFAULT('0'),
     [Unite] VARCHAR(10) NULL,
     [Nb_Decimale] INT NULL,
     [Operateur] VARCHAR(255) NULL,

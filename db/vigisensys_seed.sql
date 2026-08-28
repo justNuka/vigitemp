@@ -224,7 +224,7 @@ CREATE TABLE `t_ajustage` (
   `Coeff_X2` float DEFAULT '0',
   `Coeff_X` float DEFAULT NULL,
   `Coeff_Constant` float DEFAULT NULL,
-  `Coeffs_Modifies_Depuis_Derniere_Mesure` tinyint(1) DEFAULT '0',
+  `Coeffs_Modifies_Depuis_Derniere_Mesure` tinyint(1) NOT NULL DEFAULT '0',
   `Unite` varchar(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `Nb_Decimale` int DEFAULT NULL,
   `Operateur` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
