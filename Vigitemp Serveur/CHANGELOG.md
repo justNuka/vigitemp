@@ -8,7 +8,13 @@ La version produit de référence du Serveur est `AssemblyInformationalVersion("
 
 ## [Unreleased]
 
-Aucun changement supplémentaire documenté.
+### Métrologie — synchronisation A/B/C
+
+- Le Serveur lit désormais `t_ajustage.Coeffs_Modifies_Depuis_Derniere_Mesure` sur le dernier ajustage de la sonde pour décider de l'envoi des coefficients A/B/C pendant Ajustage / Étalonnage.
+- Une sonde de métrologie peut ainsi recevoir ses coefficients même si elle n'est affectée à aucun `t_lieu`.
+- Après acquittement `ECON`, le dirty flag est remis à `0`; en cas d'échec, le mécanisme existant le restaure à `1`.
+- Le dirty flag historique de `t_lieu` reste utilisé par le chemin normal de Surveillance.
+- La migration BDD `0.90.2` MySQL ou SQL Server est requise pour activer ce nouveau parcours. Si elle manque, le décorateur DB retombe sur le provider historique afin d'éviter de neutraliser les paramètres métrologiques.
 
 ## [0.90.3] — 2026-08-27
 

@@ -139,6 +139,7 @@
     <Compile Include="AlarmSummary.cs" />
     <Compile Include="AlarmStateEvaluator.cs" />
     <Compile Include="DatabaseFactory.cs" />
+    <Compile Include="MetrologyDatabaseProvider.cs" />
     <Compile Include="GspRecoverySpan.cs" />
     <Compile Include="IDatabaseProvider.cs" />
     <Compile Include="MySqlCacheService.cs" />

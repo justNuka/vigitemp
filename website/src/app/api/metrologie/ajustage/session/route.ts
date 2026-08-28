@@ -13,6 +13,10 @@ import {
   stopAdjustmentSession,
   updateAdjustmentCoefficients,
 } from "@/lib/metrology-adjustment-session"
+import {
+  markLatestAdjustmentCoefficientRowsDirty,
+  requireAdjustmentCoefficientDirtyColumn,
+} from "@/lib/metrology-adjustment-coefficient-dirty"
 import { applyGspMetrologyConfiguration } from "@/lib/metrology-gsp-configuration"
 import { restoreGspMetrologyConfigurationOnce } from "@/lib/metrology-gsp-configuration-restore"
 import { stopMetrologyReadingPreviewSession } from "@/lib/metrology-reading-preview-session"
@@ -279,10 +283,14 @@ export const PATCH = withStandardOrExpertAnyAuthorizationLogging(
       const userId = ctx.user.userId
 
       if (data.action === "update-coefficients") {
+        await requireAdjustmentCoefficientDirtyColumn()
         const session = await updateAdjustmentCoefficients(
           userId,
           data.coefficients,
           getClientIp(req),
+        )
+        await markLatestAdjustmentCoefficientRowsDirty(
+          session.sensors.map((sensor) => sensor.serialNumber),
         )
         return apiOk({ session: normalizeAdjustmentSessionDates(session) })
       }

@@ -8,7 +8,18 @@ Le numéro indiqué ici correspond à la révision VigiSensys du bootstrap/seed.
 
 ## [Unreleased]
 
-Aucun changement supplémentaire documenté.
+### Métrologie
+
+- Ajout de la migration BDD `0.90.2` pour la colonne `t_ajustage.Coeffs_Modifies_Depuis_Derniere_Mesure`.
+- La colonne est un booléen non nul, à `0` par défaut, disponible en MySQL et SQL Server.
+- Ce drapeau devient la source de synchronisation des coefficients A/B/C des parcours Ajustage / Étalonnage, y compris lorsqu'une sonde n'est affectée à aucun `t_lieu`.
+- `t_lieu.Infos_Modifiees_Depuis_Derniere_Mesure` reste réservé au mécanisme normal de configuration de Surveillance.
+- Les scripts de migration sont idempotents et doivent être appliqués avant d'utiliser la nouvelle synchronisation des coefficients.
+
+### Références
+
+- `db/migrations/0.90.2_metrology_adjustment_coeff_dirty_mysql.sql`
+- `db/migrations/0.90.2_metrology_adjustment_coeff_dirty_mssql.sql`
 
 ## [0.90.1] — baseline de référence au 2026-08-27
 
