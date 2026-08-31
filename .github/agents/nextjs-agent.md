@@ -51,11 +51,20 @@ Toujours vérifier ensuite le code courant, les helpers existants et les PR réc
 - `website/src/lib/license-guards.ts`
 - `website/src/lib/parameter-license-guards.ts`
 
-### Dates
+### Dates et nombres
 
-- `website/src/lib/date-display.ts`
+- `website/src/lib/date-display.ts` est le helper date canonique actuel.
+- Le Lot 9A de `docs/architecture/refactor-roadmap.md` prévoit de rendre ses formats/presets plus explicites et de créer un helper numérique canonique paramétrable.
 
 Ne jamais traiter un `DATETIME` historique Prisma comme un instant UTC sans vérifier sa sémantique. Utiliser notamment `serializeStoredDbDateTime` lorsque la valeur stockée représente une heure locale sans fuseau.
+
+Pour l'affichage :
+
+- ne pas disperser de nouveaux `toFixed(...)`, `toLocaleString(...)` ou `Intl.*` directement dans les composants si le besoin peut être porté par un helper commun ;
+- le format de date doit être un paramètre/preset du helper, sans modifier la sémantique de parsing ou stockage ;
+- le nombre de décimales d'un float doit être un paramètre du contexte, pas une constante globale ;
+- utiliser `Intl.NumberFormat` pour la présentation localisée lorsque le helper numérique sera créé ;
+- ne jamais arrondir la valeur métier/persistée uniquement pour répondre à un besoin d'affichage.
 
 ### UI partagée
 
@@ -84,6 +93,7 @@ Avant de créer une nouvelle primitive ou un composant générique, rechercher d
 10. **Componentisation pragmatique** — extraire une responsabilité nommable/testable/réutilisable ; ne pas découper chaque `div` ni créer un mega-composant à dizaines de flags.
 11. **Pas de migration d'arborescence massive** — la cible `features/` est progressive et accompagne les vrais chantiers.
 12. **Performance** — Surveillance reste bornée aux mesures récentes ; historique détaillé paginé ; profiler avant d'optimiser.
+13. **Formatage partagé** — centraliser les formats date/nombre dans les helpers canoniques paramétrables plutôt que dans les composants, tableaux ou tooltips.
 
 ## Métrologie
 
