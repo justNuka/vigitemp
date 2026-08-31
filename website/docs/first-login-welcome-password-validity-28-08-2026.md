@@ -2,7 +2,7 @@
 
 ## Statut
 
-**PR #72 OUVERTE vers `dev` — branche `agent/first-login-welcome-password-validity` — base `fd4120dce332477fd7db737ee67ce17c72648f07`.**
+**PR #72 MERGÉE dans `dev` le 28/08/2026. Correctif de transition du 31/08/2026 : branche `fix/first-login-transition-loading` depuis `dev` `2fbb7bf95240b6256af7c338370ca6f62c1f415e` — PR #74 OUVERTE vers `dev`.**
 
 ## Besoin
 
@@ -51,3 +51,25 @@ Aucune nouvelle règle de sécurité n’est donc introduite par ce lot.
 - [ ] échéance <= 7 jours : vérifier que l’avertissement existant apparaît après l’onboarding ;
 - [ ] vérifier les redirections `from`, dashboard/surveillance et l’initialisation Agent ;
 - [ ] vérifier FR/EN, clair/sombre et réduction des animations.
+
+
+## Correctif de transition après l’onboarding — 31/08/2026
+
+Retour terrain : après le clic sur **Accéder à VigiSensys**, l’onboarding était fermé immédiatement alors que l’initialisation Agent, la lecture de `/api/me` et la redirection n’étaient pas encore terminées. Le formulaire de connexion redevenait donc visible brièvement.
+
+Correction :
+
+- l’overlay de première connexion reste ouvert pendant la finalisation ;
+- la carte de politique est remplacée par un écran de préparation avec une phrase explicite ;
+- la transition est conservée au minimum 1,6 seconde pour éviter un flash si l’initialisation est très rapide ;
+- l’écran reste visible plus longtemps si l’initialisation réelle prend davantage de temps ;
+- le cas où l’avertissement d’expiration J-7 doit être affiché reste prioritaire ; après validation de cet avertissement, la même transition est utilisée pour une première connexion ;
+- aucune temporisation n’est ajoutée aux connexions ordinaires ;
+- FR/EN et réduction des animations restent respectés.
+
+Validation terrain complémentaire :
+
+- [ ] première connexion sans warning J-7 : le formulaire ne doit jamais réapparaître entre l’onboarding et l’application ;
+- [ ] première connexion avec warning J-7 : politique → warning → écran de préparation → application ;
+- [ ] connexion ordinaire : aucune temporisation artificielle ;
+- [ ] vérifier FR/EN, clair/sombre et reduced-motion.

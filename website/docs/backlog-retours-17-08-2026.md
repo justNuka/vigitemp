@@ -1339,3 +1339,28 @@ Afficher, lors de la première connexion réussie, une animation de bienvenue pu
 - [ ] redirections et Agent inchangés ;
 - [ ] FR/EN, clair/sombre, reduced-motion ;
 - [ ] lint, typecheck et build Web.
+
+
+## Authentification — transition après la première connexion — 31/08/2026
+
+Statut : **`PR_OUVERTE` — branche `fix/first-login-transition-loading` — base `dev` `2fbb7bf95240b6256af7c338370ca6f62c1f415e` — PR #74 vers `dev`**.
+
+### Retour
+
+Après le clic sur **Accéder à VigiSensys**, le formulaire de connexion pouvait réapparaître brièvement pendant la finalisation de la session avant la redirection.
+
+### Correction
+
+- conserver l’overlay de première connexion pendant l’initialisation Agent, `/api/me` et la redirection ;
+- afficher un écran de préparation avec une phrase FR/EN plutôt qu’un simple libellé de chargement ;
+- garantir une transition minimale de 1,6 seconde uniquement pour la première connexion ;
+- conserver le warning J-7 avant cette transition lorsqu’il est applicable ;
+- ne pas ralentir les connexions ordinaires.
+
+### Validation terrain
+
+- [ ] première connexion sans retour visuel au formulaire ;
+- [ ] première connexion avec warning J-7 ;
+- [ ] connexion ordinaire inchangée ;
+- [ ] FR/EN, clair/sombre, reduced-motion ;
+- [ ] lint, typecheck et build Web.

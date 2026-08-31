@@ -10,6 +10,7 @@ Les versions suivent `MAJOR.MINOR.PATCH` sans zéros de tête. La source de vers
 
 ### Authentification / expérience utilisateur
 
+- Première connexion : après le bouton d’accès, l’onboarding reste affiché sous forme d’écran de préparation pendant la finalisation de la session et jusqu’à la redirection, au lieu de laisser réapparaître brièvement le formulaire de connexion.
 - Première connexion : après une authentification réussie, VigiSensys affiche un accueil animé puis présente la politique de mot de passe CFR21 avant la redirection vers l’application.
 - La première connexion est déterminée côté serveur à partir de `t_utilisateur.Date_Heure_Derniere_Connexion`, sans stockage navigateur ni nouvelle colonne.
 - La durée affichée reprend `CFR21 / VALIDITE_MOT_DE_PASSE_JOURS` et respecte `ACTIVATION_EXPIRATION_MOT_DE_PASSE`. Le changement forcé des mots de passe temporaires/expirés et l’avertissement existant à J-7 sont conservés.
