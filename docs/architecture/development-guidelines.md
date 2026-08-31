@@ -14,7 +14,7 @@ Toujours commencer par :
 4. rechercher les helpers, composants, services et abstractions déjà existants ;
 5. vérifier si le comportement remonté n'a pas déjà été corrigé ;
 6. identifier les invariants métier, les impacts droits/licence, dates/fuseaux, performances et compatibilité MySQL/SQL Server ;
-7. créer une branche `agent/<sujet>` depuis le HEAD courant de `dev`.
+7. créer depuis le HEAD courant de `dev` une branche dont le préfixe décrit le type d'opération (`fix/`, `feature/`, `refactor/`, `docs/`, `chore/`, etc.) ; ne pas utiliser `agent/`.
 
 Ne pas décider d'une architecture uniquement à partir du nom d'un fichier. Lire les appels entrants/sortants et les dépendances avant d'extraire quoi que ce soit.
 
@@ -163,7 +163,77 @@ Toujours distinguer deux catégories :
 
 Si une nouvelle convention de stockage est introduite, documenter explicitement la sémantique de la colonne plutôt que compter sur le nom `Date_Heure_*`.
 
-### 3.5 Composants React et réutilisation UI
+#### Cible du refactor de formatage des dates
+
+Le helper actuel est déjà partiellement paramétrable : `formatDbDateTime` accepte notamment `withSeconds`, `withYear`, `dateOnly`, `timeOnly`, `locale` et `timeZone`, et `formatDbDateTimeIntl` accepte des `Intl.DateTimeFormatOptions`.
+
+Le chantier de refactor ne doit donc pas recréer un second système de dates. Il doit rendre **le format d'affichage explicite et homogène** tout en préservant strictement les règles de parsing/sérialisation ci-dessus.
+
+Direction recommandée :
+
+- conserver les fonctions de parsing et de sérialisation séparées des fonctions de présentation ;
+- faire évoluer le helper canonique pour accepter un paramètre de format clair, par exemple un preset (`date`, `time`, `dateTime`, `dateTimeSeconds`, etc.) et/ou des options `Intl.DateTimeFormatOptions` ;
+- conserver `locale`, `timeZone` et `fallback` comme paramètres explicites lorsque nécessaires ;
+- ne pas introduire un format string maison si `Intl.DateTimeFormat` ou quelques presets typés couvrent le besoin ;
+- permettre une migration progressive des anciens appels (`withSeconds`, `dateOnly`, etc.) afin d'éviter une PR de remplacement global risquée ;
+- utiliser les mêmes presets dans l'UI, les tooltips, les tableaux et les exports destinés à l'humain lorsque la sémantique est identique ;
+- ne jamais utiliser un helper de présentation pour décider de la valeur stockée en base ou d'un instant métier.
+
+Exemples conceptuels de cible, les noms exacts restant à confirmer lors du chantier après lecture du code courant :
+
+```ts
+formatDbDateTime(value, { format: "date", locale })
+formatDbDateTime(value, { format: "dateTimeSeconds", locale })
+formatDbDateTimeIntl(value, {
+  locale,
+  intl: { day: "2-digit", month: "2-digit", year: "numeric" },
+})
+```
+
+Le refactor doit ajouter des tests couvrant au minimum : formats/presets supportés, fallback invalide, FR/EN, heure d'été/hiver et conservation des `DATETIME` sans fuseau.
+
+### 3.5 Formatage des nombres et valeurs flottantes
+
+À la baseline du 31/08/2026, aucun helper de formatage numérique canonique équivalent à `date-display.ts` n'est présent dans `website/src/lib/`. Le formatage de valeurs flottantes ne doit donc pas continuer à se disperser sous forme de `toFixed(...)`, concaténations ou règles locales différentes selon les composants.
+
+Créer lors du chantier un helper canonique de présentation numérique, par exemple `website/src/lib/number-display.ts` ou `number-format.ts` — le nom exact doit être choisi après une dernière recherche dans le code courant.
+
+L'API doit être paramétrable et rester simple. Elle doit permettre au minimum :
+
+- de choisir le nombre de décimales ;
+- si nécessaire, de distinguer nombre minimal et maximal de décimales ;
+- de choisir la locale (`fr-FR`, `en-US` ou locale applicative) ;
+- de définir un fallback pour `null`, `undefined`, `NaN` ou valeur invalide ;
+- de contrôler le séparateur de milliers/grouping lorsque le contexte le nécessite.
+
+Exemple conceptuel :
+
+```ts
+formatNumber(value, { decimals: 2, locale })
+formatNumber(value, { minimumDecimals: 0, maximumDecimals: 3, locale })
+```
+
+L'implémentation doit privilégier `Intl.NumberFormat` pour l'affichage localisé plutôt que `toFixed()` dans l'UI. `toFixed()` peut rester pertinent pour un format technique/machine explicitement défini, mais ne doit pas devenir la convention d'affichage utilisateur.
+
+Règles importantes :
+
+- **ne jamais arrondir la valeur métier avant les calculs ou avant la persistance uniquement pour l'affichage** ; le helper retourne une représentation, pas une nouvelle valeur de référence ;
+- séparer parsing et formatage : accepter `12,5` dans un champ FR relève d'un helper de parsing/validation, pas du helper d'affichage ;
+- ne pas concaténer l'unité dans tous les composants si un besoin partagé `formatMeasurement` apparaît, mais ne pas créer ce helper spécialisé avant d'avoir plusieurs usages réels ;
+- les exports machine/CSV ne doivent pas hériter aveuglément de la locale de l'UI si leur contrat exige un séparateur ou une précision déterministe ;
+- pour les mesures, coefficients et calculs métrologiques, la précision d'affichage doit être un paramètre du contexte et non une constante globale supposée correcte pour tous les types de sonde.
+
+Tests minimum du helper numérique :
+
+- `0`, valeurs positives/négatives ;
+- `null` / `undefined` / `NaN` ;
+- 0, 1, 2, 3 décimales et valeurs supérieures si un domaine le demande ;
+- arrondis aux limites ;
+- `fr-FR` et `en-US` ;
+- présence/absence de zéros finaux selon les options ;
+- grands nombres et grouping si supporté.
+
+### 3.6 Composants React et réutilisation UI
 
 Avant de créer un composant générique, rechercher notamment dans :
 
@@ -202,7 +272,7 @@ Extraire lorsqu'une sous-partie :
 
 Ne pas créer un "mega component générique" piloté par des dizaines de flags juste pour mutualiser du JSX visuellement proche.
 
-### 3.6 Organisation par feature
+### 3.7 Organisation par feature
 
 La direction à long terme peut converger progressivement vers :
 
@@ -227,7 +297,7 @@ src/
 
 Cette arborescence est une direction, pas une migration à effectuer en bloc. Déplacer un fichier lorsqu'un chantier fonctionnel/refactor justifie le déplacement et que le diff reste relisible.
 
-### 3.7 Internationalisation
+### 3.8 Internationalisation
 
 Toute nouvelle chaîne visible par l'utilisateur doit respecter le mécanisme FR/EN existant avec `next-intl`.
 
@@ -427,7 +497,8 @@ Priorités Web :
 - permissions/licences ;
 - règles de mot de passe ;
 - chiffrement des secrets ;
-- helpers de date ;
+- helpers de date, leurs formats/presets et les cas `DATETIME` ;
+- helper de formatage numérique : décimales, locales, fallbacks et arrondis d'affichage ;
 - calculs ajustage/étalonnage ;
 - verrouillage/session métrologie.
 
@@ -450,6 +521,7 @@ Pour les flows critiques, compléter par quelques tests E2E plutôt que chercher
 - Ma route/composant/provider a-t-il une responsabilité identifiable ?
 - Les droits et la licence sont-ils vérifiés ?
 - Ai-je distingué instant UTC et `DATETIME` local ?
+- Pour un affichage de date/nombre, ai-je utilisé ou amélioré le helper canonique au lieu d'introduire un formatage local (`toFixed`, concaténation, `new Date` + format ad hoc) ?
 - Ai-je considéré MySQL et SQL Server si la zone est multi-provider ?
 - Ai-je considéré 500–850 sondes / gros historique si la requête est volumétrique ?
 - Les timeouts et verrous matériels sont-ils toujours sûrs ?
