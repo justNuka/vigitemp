@@ -1,4 +1,4 @@
--- Version produit / seed : 0.90.001
+-- Version produit / seed : 0.90.1
 -- DDL synchronise sur le dump schema courant du 2026-08-25.
 -- Les DEFINER et compteurs AUTO_INCREMENT de production sont volontairement retires.
 
@@ -782,9 +782,9 @@ CREATE TABLE `t_lieu` (
   `Derniere_Date_Etalonnage` date DEFAULT NULL,
   `Derniere_Erreur_Justesse` float DEFAULT NULL,
   `Derniere_Incertitude` float DEFAULT NULL,
-  `Retard_Non_Reponse` int DEFAULT '60' COMMENT 'Retard de non-reponse de la sonde en minutes, 60 par defaut',
-  `Date_Heure_Derniere_Reponse` datetime DEFAULT NULL COMMENT 'Date/Heure derniere vraie reponse sonde (hors ou dans tolerances)',
-  `Date_Heure_Derniere_Reponse_Recue_OK` datetime DEFAULT NULL COMMENT 'Date/Heure derniere vraie reponse sonde dans les tolerances',
+  `Retard_Non_Reponse` int DEFAULT '60' COMMENT 'Retard de non-réponse de la sonde en minutes, 60 par défaut',
+  `Date_Heure_Derniere_Reponse` datetime DEFAULT NULL COMMENT 'Date/Heure dernière vraie réponse sonde (hors ou dans tolérances)',
+  `Date_Heure_Derniere_Reponse_Recue_OK` datetime DEFAULT NULL COMMENT 'Date/Heure dernière vraie réponse sonde dans les tolérances',
   `Est_Correction_Ej` tinyint DEFAULT '0',
   `Derive` float DEFAULT '0',
   `Est_Correction_derive` tinyint(1) DEFAULT '0',
@@ -4938,44 +4938,44 @@ INSERT INTO `t_actionneur_type` VALUES (1,4,'IACTX Lumineux',1),(2,5,'IACTX Lumi
 INSERT INTO `t_autorisation`
   (`Code_Autorisation`,`Libelle_Autorisation`,`Commentaire`)
 VALUES
-  ('ACCES_DASHBOARD_UTILISATEUR','Acces dashboard utilisateur','Acces dashboard utilisateur'),
-  ('ACCES_TABLEAU_BORD_UTILISATEUR','Acces tableau de bord utilisateur','Acces tableau de bord utilisateur'),
-  ('ACCES_DASHBOARD_USER','Acces dashboard user','Acces dashboard user'),
-  ('ACCES_SURVEILLANCE','Acces surveillance','Acces surveillance'),
+  ('ACCES_DASHBOARD_UTILISATEUR','Accès dashboard utilisateur','Accès dashboard utilisateur'),
+  ('ACCES_TABLEAU_BORD_UTILISATEUR','Accès tableau de bord utilisateur','Accès tableau de bord utilisateur'),
+  ('ACCES_DASHBOARD_USER','Accès dashboard user','Accès dashboard user'),
+  ('ACCES_SURVEILLANCE','Accès surveillance','Accès surveillance'),
   ('LIEU_VISUALISER','Visualiser les lieux','Visualiser les lieux'),
-  ('ALARMES_GERER','Gerer les alarmes','Gerer les alarmes'),
-  ('ACCES_DASHBOARD_ADMIN','Acces dashboard admin','Acces dashboard admin'),
-  ('ACCES_TABLEAU_BORD_ADMIN','Acces tableau de bord admin','Acces tableau de bord admin'),
-  ('ACCES_ADMIN','Acces admin','Acces admin'),
-  ('ACCES_PARAMETRAGE_GENERAL','Acces parametrage general','Acces parametrage general'),
-  ('PARAMETRAGE_GENERAL','Parametrage general','Parametrage general'),
-  ('GERER_PROFIL','Gerer les profils','Gerer les profils'),
-  ('PARAMETRES_GERER','Gerer les parametres','Gerer les parametres'),
+  ('ALARMES_GERER','Gérer les alarmes','Gérer les alarmes'),
+  ('ACCES_DASHBOARD_ADMIN','Accès dashboard admin','Accès dashboard admin'),
+  ('ACCES_TABLEAU_BORD_ADMIN','Accès tableau de bord admin','Accès tableau de bord admin'),
+  ('ACCES_ADMIN','Accès admin','Accès admin'),
+  ('ACCES_PARAMETRAGE_GENERAL','Accès paramétrage général','Accès paramétrage général'),
+  ('PARAMETRAGE_GENERAL','Paramétrage général','Paramétrage général'),
+  ('GERER_PROFIL','Gérer les profils','Gérer les profils'),
+  ('PARAMETRES_GERER','Gérer les paramètres','Gérer les paramètres'),
   ('ACQUITTER_ALARME','Acquitter alarme','Acquitter alarme'),
-  ('ACCES_ACQUITTEMENT_ALARME','Acces acquittement alarme','Acces acquittement alarme'),
-  ('DESACTIVER_LIEU','Desactiver lieu','Desactiver lieu'),
-  ('ACCES_DESACTIVATION_LIEU','Acces desactivation lieu','Acces desactivation lieu'),
-  ('LIEU_ACTIV_DESACT','Activer/desactiver lieu','Activer/desactiver lieu'),
-  ('PARAMETRER_LIEU','Parametrer lieu','Parametrer lieu'),
-  ('ACCES_PARAMETRAGE_LIEU','Acces parametrage lieu','Acces parametrage lieu'),
-  ('LIEU_GERER','Gerer les lieux','Gerer les lieux'),
-  ('PARAMETRAGE_MATERIEL','Parametrage materiel','Parametrage materiel'),
-  ('ACCES_PARAMETRAGE_MATERIEL','Acces parametrage materiel','Acces parametrage materiel'),
-  ('ACCES_METROLOGIE','Acces metrologie','Acces metrologie'),
-  ('ACCES_CONVERSATION','Acces conversation','Acces conversation'),
+  ('ACCES_ACQUITTEMENT_ALARME','Accès acquittement alarme','Accès acquittement alarme'),
+  ('DESACTIVER_LIEU','Désactiver lieu','Désactiver lieu'),
+  ('ACCES_DESACTIVATION_LIEU','Accès désactivation lieu','Accès désactivation lieu'),
+  ('LIEU_ACTIV_DESACT','Activer/désactiver lieu','Activer/désactiver lieu'),
+  ('PARAMETRER_LIEU','Paramétrer lieu','Paramétrer lieu'),
+  ('ACCES_PARAMETRAGE_LIEU','Accès paramétrage lieu','Accès paramétrage lieu'),
+  ('LIEU_GERER','Gérer les lieux','Gérer les lieux'),
+  ('PARAMETRAGE_MATERIEL','Paramétrage matériel','Paramétrage matériel'),
+  ('ACCES_PARAMETRAGE_MATERIEL','Accès paramétrage matériel','Accès paramétrage matériel'),
+  ('ACCES_METROLOGIE','Accès métrologie','Accès métrologie'),
+  ('ACCES_CONVERSATION','Accès conversation','Accès conversation'),
   ('MODULE_CONVERSATION','Module conversation','Module conversation'),
-  ('REALISER_AJUSTAGE_ETALONNAGE','Realiser ajustage etalonnage','Realiser ajustage etalonnage'),
-  ('ACCES_AJUSTAGE_ETALONNAGE','Acces ajustage etalonnage','Acces ajustage etalonnage');
-INSERT INTO `t_etalon_type` VALUES ('ES','VigiTemp Type ES','Sonde talon radio type E',1,0,0.05),('EX','Externe','Sonde externe',1,1,0),('SEF','VigiTemp Type SEF','Sonde talon filaire ou filaire/radio avec prise RJ45',1,0,0.02),('SPET','Sonde etalon platine','Sonde etalon GSP platine',1,0,0.02);
-INSERT INTO `t_module_type` VALUES (1,'BIN','Boitier filaire avec prise DB9 (port serie)',0),(2,'BIR (filaire)','Boitier reseau filaire avec pris RJ45 (prise reseau)',1),(3,'BTR','Boitier radio avec prise DB9 (port serie)',0),(4,'BIR (radio)','Boitier reseau radio avec prise RJ45 (port serie)',1),(5,'CORONIS','Boitier radio CORONIS avec prise DB9 (port serie)',0),(6,'MRH','Boitier MRH',0),(7,'ITR','Module port serie',0),(8,'IETH','Module ethernet',0);
-INSERT INTO `t_parametre` (`Section`, `Mot_Cle`, `Valeur`, `Commentaire`) VALUES ('CFR21','ACTIVATION_EXPIRATION_MOT_DE_PASSE','true','Activer l\'expiration des mots de passe (CFR21)'),('CFR21','ACTIVATION_NORME_CFR21','1','Activer la conformite CFR21 (saisie des configurations)'),('CFR21','EVENEMENTS','1','Activation des evenements'),('CFR21','JOURS_VALIDITE_MOT_DE_PASSE','90',NULL),('CFR21','MOT_DE_PASSE_PERMANENT','1','Le mot de passe ne peut pas être changé par l\'utilisateur'),('CFR21','MOT_DE_PASSE_REUTILISABLE','0','L\'utilisateur ne peut pas réutiliser un ancien mot de passe'),('CFR21','NOMBRE_TENTATIVES_MOT_DE_PASSE','3','Nombre de tentatives autorisées avant verrouillage du compte'),('CFR21','REACTIVATION_ALARME_SONORE','500','Délai de réactivation de l\'alarme sonore en millisecondes'),('CFR21','SECURITE','0','Mode sécurité renforcé'),('CFR21','TEMPS_DECONNEXION_MINUTES','20','Temps d\'inactivité avant deconnexion automatique en minutes'),('CFR21','VALIDITE_MOT_DE_PASSE_JOURS','90','Durée de validité du mot de passe en jours'),('SECURITE_EMAIL','SMTP_ACTIVATION','true','Activer l\'envoi d\'emails'),('SECURITE_EMAIL','SMTP_EXPEDITEUR','','Adresse email expediteur (doit correspondre au domaine SMTP)'),('SECURITE_EMAIL','SMTP_MOT_DE_PASSE','','Mot de passe SMTP'),('SECURITE_EMAIL','SMTP_PORT','587','Port SMTP (587 pour TLS, 465 pour SSL)'),('SECURITE_EMAIL','SMTP_SERVEUR','','Serveur SMTP pour l\'envoi d\'emails'),('SECURITE_EMAIL','SMTP_UTILISATEUR','','Utilisateur SMTP'),('SECURITE_MOT_DE_PASSE','LONGUEUR_MINIMALE','8','Longueur minimale du mot de passe'),('SECURITE_MOT_DE_PASSE','MIN_CARACTERES_SPECIAUX','1','Nombre minimum de caracteres speciaux'),('SECURITE_MOT_DE_PASSE','MIN_CHIFFRES','1','Nombre minimum de chiffres'),('SECURITE_MOT_DE_PASSE','MIN_LETTRES_MAJUSCULES','1','Nombre minimum de majuscules'),('SECURITE_MOT_DE_PASSE','MIN_LETTRES_MINUSCULES','1','Nombre minimum de minuscules');
+  ('REALISER_AJUSTAGE_ETALONNAGE','Réaliser ajustage étalonnage','Réaliser ajustage étalonnage'),
+  ('ACCES_AJUSTAGE_ETALONNAGE','Accès ajustage étalonnage','Accès ajustage étalonnage');
+INSERT INTO `t_etalon_type` VALUES ('ES','VigiTemp Type ES','Sonde étalon radio type E',1,0,0.05),('EX','Externe','Sonde externe',1,1,0),('SEF','VigiTemp Type SEF','Sonde étalon filaire ou filaire/radio avec prise RJ45',1,0,0.02),('SPET','Sonde étalon platine','Sonde étalon GSP platine',1,0,0.02);
+INSERT INTO `t_module_type` VALUES (1,'BIN','Boîtier filaire avec prise DB9 (port série)',0),(2,'BIR (filaire)','Boîtier réseau filaire avec prise RJ45 (prise réseau)',1),(3,'BTR','Boîtier radio avec prise DB9 (port série)',0),(4,'BIR (radio)','Boîtier réseau radio avec prise RJ45 (port série)',1),(5,'CORONIS','Boîtier radio CORONIS avec prise DB9 (port série)',0),(6,'MRH','Boîtier MRH',0),(7,'ITR','Module port série',0),(8,'IETH','Module ethernet',0);
+INSERT INTO `t_parametre` (`Section`, `Mot_Cle`, `Valeur`, `Commentaire`) VALUES ('CFR21','ACTIVATION_EXPIRATION_MOT_DE_PASSE','true','Activer l\'expiration des mots de passe (CFR21)'),('CFR21','ACTIVATION_NORME_CFR21','1','Activer la conformité CFR21 (saisie des configurations)'),('CFR21','EVENEMENTS','1','Activation des événements'),('CFR21','JOURS_VALIDITE_MOT_DE_PASSE','90',NULL),('CFR21','MOT_DE_PASSE_PERMANENT','1','Le mot de passe ne peut pas être changé par l\'utilisateur'),('CFR21','MOT_DE_PASSE_REUTILISABLE','0','L\'utilisateur ne peut pas réutiliser un ancien mot de passe'),('CFR21','NOMBRE_TENTATIVES_MOT_DE_PASSE','3','Nombre de tentatives autorisées avant verrouillage du compte'),('CFR21','REACTIVATION_ALARME_SONORE','500','Délai de réactivation de l\'alarme sonore en millisecondes'),('CFR21','SECURITE','0','Mode sécurité renforcé'),('CFR21','TEMPS_DECONNEXION_MINUTES','20','Temps d\'inactivité avant deconnexion automatique en minutes'),('CFR21','VALIDITE_MOT_DE_PASSE_JOURS','90','Durée de validité du mot de passe en jours'),('SECURITE_EMAIL','SMTP_ACTIVATION','true','Activer l\'envoi d\'emails'),('SECURITE_EMAIL','SMTP_EXPEDITEUR','','Adresse email expéditeur (doit correspondre au domaine SMTP)'),('SECURITE_EMAIL','SMTP_MOT_DE_PASSE','','Mot de passe SMTP'),('SECURITE_EMAIL','SMTP_PORT','587','Port SMTP (587 pour TLS, 465 pour SSL)'),('SECURITE_EMAIL','SMTP_SERVEUR','','Serveur SMTP pour l\'envoi d\'emails'),('SECURITE_EMAIL','SMTP_UTILISATEUR','','Utilisateur SMTP'),('SECURITE_MOT_DE_PASSE','LONGUEUR_MINIMALE','8','Longueur minimale du mot de passe'),('SECURITE_MOT_DE_PASSE','MIN_CARACTERES_SPECIAUX','1','Nombre minimum de caractères spéciaux'),('SECURITE_MOT_DE_PASSE','MIN_CHIFFRES','1','Nombre minimum de chiffres'),('SECURITE_MOT_DE_PASSE','MIN_LETTRES_MAJUSCULES','1','Nombre minimum de majuscules'),('SECURITE_MOT_DE_PASSE','MIN_LETTRES_MINUSCULES','1','Nombre minimum de minuscules');
 INSERT INTO `t_profil` (`Id_Profil`, `Profil_Utilisateur`, `Commentaire`, `Est_MC2`, `Est_Archive`) VALUES
 (1,'Administrateurs',NULL,0,0);
 INSERT INTO `t_liaison_profil_autorisation` (`Id_Profil`,`Id_Autorisation`)
 SELECT p.`Id_Profil`, a.`Id_Autorisation`
 FROM `t_profil` p CROSS JOIN `t_autorisation` a
 WHERE p.`Profil_Utilisateur`='Administrateurs';
-INSERT INTO `t_etat_surveillance` VALUES (1,'A','En ajustage'),(2,'D','Surveillance desactivee'),(3,'E','En etalonnage'),(4,'S','Utilisee en surveillance'),(5,'T','En test');
+INSERT INTO `t_etat_surveillance` VALUES (1,'A','En ajustage'),(2,'D','Surveillance désactivée'),(3,'E','En étalonnage'),(4,'S','Utilisée en surveillance'),(5,'T','En test');
 INSERT INTO `t_sonde_type` (`Id_Sonde_Type`,`Sonde_Type`,`Libelle_Sonde_Type`,`Est_Gestion_Relais`,`Est_Double_Capteur`,`Famille_Sonde`,`Unite`) VALUES
 (1,'E','Sonde radio relais type E',1,0,'CLASSIC',NULL),
 (2,'G','Sonde radio relais type G',1,0,'CLASSIC',NULL),
@@ -4983,12 +4983,12 @@ INSERT INTO `t_sonde_type` (`Id_Sonde_Type`,`Sonde_Type`,`Libelle_Sonde_Type`,`E
 (4,'I','Sonde radio de type I',0,0,'CLASSIC',NULL),
 (5,'R','Sonde radio',0,0,'CLASSIC',NULL),
 (6,'V','Sonde filaire',0,0,'CLASSIC',NULL),
-(9,'SOIT','Gemsense One Temperature interne',0,0,'GSO',NULL),
-(10,'SOIH','Gemsense One Temperature & humidite interne',0,1,'GSO',NULL),
-(11,'SOET','Gemsense One Temperature externe',0,0,'GSO',NULL),
-(12,'SOEH','Gemsense One Temperature & humidite externe',0,1,'GSO',NULL),
-(13,'SPNB','Gemsense Pro Numerique blanc',0,0,'GSP',NULL),
-(14,'SPNG','Gemsense Pro Numerique gris',0,0,'GSP',NULL),
+(9,'SOIT','Gemsense One Température interne',0,0,'GSO',NULL),
+(10,'SOIH','Gemsense One Température & humidité interne',0,1,'GSO',NULL),
+(11,'SOET','Gemsense One Température externe',0,0,'GSO',NULL),
+(12,'SOEH','Gemsense One Température & humidité externe',0,1,'GSO',NULL),
+(13,'SPNB','Gemsense Pro Numérique blanc',0,0,'GSP',NULL),
+(14,'SPNG','Gemsense Pro Numérique gris',0,0,'GSP',NULL),
 (15,'SPPS','Gemsense Pro platine',0,0,'GSP',NULL),
 (16,'SPAL','Gemsense Pro platine alimentaire',0,0,'GSP',NULL),
 (17,'SPPC','Gemsense Pro platine contact',0,0,'GSP',NULL),
@@ -4996,49 +4996,49 @@ INSERT INTO `t_sonde_type` (`Id_Sonde_Type`,`Sonde_Type`,`Libelle_Sonde_Type`,`E
 (19,'SPCF','Gemsense Pro platine chambre froide',0,0,'GSP',NULL),
 (20,'SPMI','Gemsense Pro platine micro-capteur',0,0,'GSP',NULL),
 (21,'SPCO','Gemsense Pro CO2',0,0,'GSP',NULL),
-(22,'SPHY','Gemsense Pro hygrometrie',0,0,'GSP',NULL),
+(22,'SPHY','Gemsense Pro hygrométrie',0,0,'GSP',NULL),
 (23,'SPTH','Gemsense Pro thermocouple',0,0,'GSP',NULL),
-(24,'SPDI','Gemsense Pro pression differentielle',0,0,'GSP',NULL),
-(25,'SPAT','Gemsense Pro pression atmospherique',0,0,'GSP',NULL),
-(26,'SPLU','Gemsense Pro lumiere',0,0,'GSP',NULL),
+(24,'SPDI','Gemsense Pro pression différentielle',0,0,'GSP',NULL),
+(25,'SPAT','Gemsense Pro pression atmosphérique',0,0,'GSP',NULL),
+(26,'SPLU','Gemsense Pro lumière',0,0,'GSP',NULL),
 (27,'SP01','Gemsense Pro 0-1 Volt',0,0,'GSP',NULL),
 (28,'SP42','Gemsense Pro 4-20 mA',0,0,'GSP',NULL),
 (29,'SPOF','Gemsense Pro NO NF',0,0,'GSP',NULL),
-(30,'SPXB','Gemsense Pro Ethernet numerique blanc',0,0,'GSP',NULL),
-(31,'SPXG','Gemsense Pro Ethernet numerique gris',0,0,'GSP',NULL),
+(30,'SPXB','Gemsense Pro Ethernet numérique blanc',0,0,'GSP',NULL),
+(31,'SPXG','Gemsense Pro Ethernet numérique gris',0,0,'GSP',NULL),
 (32,'SPXP','Gemsense Pro Ethernet platine',0,0,'GSP',NULL),
-(33,'SPFB','Gemsense Pro filaire numerique blanc',0,0,'GSP',NULL),
-(34,'SPFG','Gemsense Pro filaire numerique gris',0,0,'GSP',NULL),
+(33,'SPFB','Gemsense Pro filaire numérique blanc',0,0,'GSP',NULL),
+(34,'SPFG','Gemsense Pro filaire numérique gris',0,0,'GSP',NULL),
 (35,'SPFP','Gemsense Pro filaire platine',0,0,'GSP',NULL);
 INSERT INTO `t_utilisateur` (Login, Mot_De_Passe, Est_Archive, Profil_Utilisateur, Est_Mot_De_Passe_Temporaire, Date_Creation, Date_Derniere_Modification_MDP) VALUES ('admin', '$2b$10$PkfaBJ2yztneolPwfIcaI.QX5ppoeMa5e1rDA2hspODHvQSYFSn6W', 0, 'Administrateurs', 1, NOW(), NOW());
 SET FOREIGN_KEY_CHECKS=1;
 
 INSERT INTO `t_parametre` (`Section`, `Mot_Cle`, `Valeur`, `Commentaire`)
-VALUES ('VERSION', 'SCHEMA_VERSION', '0.90.001', 'Version produit commune des seeds MySQL et SQL Server')
+VALUES ('VERSION', 'SCHEMA_VERSION', '0.90.1', 'Version produit commune des seeds MySQL et SQL Server')
 ON DUPLICATE KEY UPDATE
   `Valeur` = VALUES(`Valeur`),
   `Commentaire` = VALUES(`Commentaire`);
 
 INSERT INTO `t_parametre` (`Section`, `Mot_Cle`, `Valeur`, `Commentaire`)
-VALUES ('dashboard', 'surveillance_refresh', '15', 'Delai auto de rafraichissement de la surveillance (secondes)')
+VALUES ('dashboard', 'surveillance_refresh', '15', 'Délai auto de rafraîchissement de la surveillance (secondes)')
 ON DUPLICATE KEY UPDATE
   `Valeur` = VALUES(`Valeur`),
   `Commentaire` = VALUES(`Commentaire`);
 
 INSERT INTO `t_parametre` (`Section`, `Mot_Cle`, `Valeur`, `Commentaire`)
-VALUES ('dashboard', 'show_null_non_response', 'false', 'Afficher les mesures de non-reponse (valeur null) sur la courbe et le tableau')
+VALUES ('dashboard', 'show_null_non_response', 'false', 'Afficher les mesures de non-réponse (valeur null) sur la courbe et le tableau')
 ON DUPLICATE KEY UPDATE
   `Valeur` = VALUES(`Valeur`),
   `Commentaire` = VALUES(`Commentaire`);
 
 INSERT INTO `t_parametre` (`Section`, `Mot_Cle`, `Valeur`, `Commentaire`)
-VALUES ('dashboard', 'etalonnage_warning_days', '30', 'Nombre de jours avant expiration pour avertir sur la validite des etalonnages')
+VALUES ('dashboard', 'etalonnage_warning_days', '30', 'Nombre de jours avant expiration pour avertir sur la validité des étalonnages')
 ON DUPLICATE KEY UPDATE
   `Valeur` = VALUES(`Valeur`),
   `Commentaire` = VALUES(`Commentaire`);
 
 INSERT INTO `t_parametre` (`Section`, `Mot_Cle`, `Valeur`, `Commentaire`)
-VALUES ('notifications', 'alarm_email_recipients', '', 'Liste des destinataires des emails d''alarme (separes par virgule, point-virgule ou retour ligne)')
+VALUES ('notifications', 'alarm_email_recipients', '', 'Liste des destinataires des emails d''alarme (séparés par virgule, point-virgule ou retour ligne)')
 ON DUPLICATE KEY UPDATE
   `Valeur` = VALUES(`Valeur`),
   `Commentaire` = VALUES(`Commentaire`);
@@ -5059,8 +5059,8 @@ INSERT IGNORE INTO `t_materiel` (`Id_Materiel`,`Ref_Commercial`,`Designation`,`D
   (12, 'GSP-RP-CONT', 'Gemsense Pro platine contact', 'Sonde GemSense Pro avec écran 2,9" \\r\\nFonction mémoire (5300 valeurs)\\r\\nBatterie de secours (15 jours)\\r\\nGamme pro avec portée étendue\\r\\nCapteur de température\\r\\nSonde : Pt 100 CEI 60751 classe A, \\r\\nsimple enroulement, élément de mesure couche mince sous rétractable PFA\\r\\nSous film polyester \\r\\nTempérature d\'utilisation : -80+160 °C\\r\\nFixation par colle silicone sur surface dégraissée\\r\\nCâble de raccordement : PFA/PFA, section 0,09 mm², longueur 2 mètres, 3 conducteurs', 'GSP', 'RADIO'),
   (13, 'GSP-RP-AU', 'Gemsense Pro platine autoclave', 'Sonde GemSense Pro avec écran 2,9" \\r\\nFonction mémoire (5300 valeurs)\\r\\nBatterie de secours (15 jours)\\r\\nGamme pro avec portée étendue\\r\\nCapteur de température\\r\\nGaine de protection : acier inox 316 L - Ø 6 x 200 mm, \\r\\nprolongée par câble PFA/silicone protégé par flexible inox Ø 7 mm, longueur 1,5 mètres puis gaine étanche Ø 6 x 100 mm pour passage de cloison\\r\\nSonde : Pt 100 céramique CEI 60751 classe A, simple ou double enroulement en montage 3 fils\\r\\nCâble de raccordement : PFA/silicone, longueur 2 mètres\\r\\nTempérature maximale d\'utilisation : +180 °C\\r\\nExécution étanche', 'GSP', 'RADIO'),
   (14, 'GSP-RP-CF', 'Gemsense Pro platine chambre froide', 'Sonde GemSense Pro avec écran 2,9" \\r\\nFonction mémoire (5300 valeurs)\\r\\nBatterie de secours (15 jours)\\r\\nGamme pro avec portée étendue\\r\\nCapteur de température\\r\\nCapteur muni à l\'extrémité d\'une ogive inox diamètre 6 mm \\r\\nsertie sur 15 mètres de câble silicone.\\r\\nConfiguration 3 fils\\r\\nElément sensible Pt100 suivant NF EN 60751 classe B\\r\\nOgive inox diamètre 6 mm, longueur 50 mm\\r\\nTempérature d\'utilisation : -50°C à + 100°C\\r\\nSortie sur 15 mètres de câble : Conducteurs souples 7 brins \\r\\nde ø 0.2 mm isolés PFA sous gaine caoutchouc de silicone. \\r\\n2 conducteurs rouges, 1 conducteur blanc', 'GSP', 'RADIO'),
-  (15, 'GSP-RP-MICRO', 'Gemsense Pro platine micro-capteur', 'Sonde GemSense Pro avec écran 2,9" \\r\\nFonction mémoire (5300 valeurs)\\r\\nBatterie de secours (15 jours)\\r\\nGamme pro avec portée étendue\\r\\nCapteur de temperature platine\\r\\nCapteur micro ø 2,18mm L 4,75m : -70°C à + 250°C', 'GSP', 'RADIO'),
-  (16, 'GSP-RQ-CO2', 'Gemsense Pro CO2', 'Sonde GemSense Pro avec écran 2,9" \\r\\nFonction mémoire (5300 valeurs)\\r\\nGamme pro avec portée étendue\\r\\nLe capteur de dioxyde de carbone Vaisala CARBOCAP® GMP251 est une sonde intelligente et autonome.\\r\\nLa plage de température de fonctionnement va de -40 à +60 °C, \\r\\net la plage de mesure est comprise entre 0 et 20 % de CO2\\r\\nLe capteur GMP251 fait appel à la technologie unique de deuxième génération Vaisala CARBOCAP® qui offre une stabilité exceptionnelle. \\r\\nLa durée de vie de la GMP251 est prolongée grâce à un nouveau type de source de lumière infrarouge (IR) qui remplace l\'ampoule à incandescence traditionnelle. Elle bénéficie de compensations complètes de température et de pression de la mesure du COCO2 - mesure de température intégrée pour la compensation.', 'GSP', 'RADIO'),
+  (15, 'GSP-RP-MICRO', 'Gemsense Pro platine micro-capteur', 'Sonde GemSense Pro avec écran 2,9" \\r\\nFonction mémoire (5300 valeurs)\\r\\nBatterie de secours (15 jours)\\r\\nGamme pro avec portée étendue\\r\\nCapteur de température platine\\r\\nCapteur micro ø 2,18mm L 4,75m : -70°C à + 250°C', 'GSP', 'RADIO'),
+  (16, 'GSP-RQ-CO2', 'Gemsense Pro CO2', 'Sonde GemSense Pro avec écran 2,9" \\r\\nFonction mémoire (5300 valeurs)\\r\\nGamme pro avec portée étendue\\r\\nLe capteur de dioxyde de carbone Vaisala CARBOCAP® GMP251 est une sonde intelligente et autonome.\\r\\nLa plage de température de fonctionnement va de -40 à +60 °C, \\r\\net la plage de mesure est comprise entre 0 et 20 % de CO2\\r\\nLe capteur GMP251 fait appel à la technologie unique de deuxième génération Vaisala CARBOCAP® qui offre une stabilité exceptionnelle. \\r\\nLa durée de vie de la GMP251 est prolongée grâce à un nouveau type de source de lumière infrarouge (IR) qui remplace l\'ampoule à incandescence traditionnelle. Elle bénéficie de compensations complètes de température et de pression de la mesure du CO2 - mesure de température intégrée pour la compensation.', 'GSP', 'RADIO'),
   (17, 'GSP-RQ-HYG', 'Gemsense Pro hygrométrie', 'Sonde GemSense Pro avec écran 2,9" \\r\\nFonction mémoire (5300 valeurs)\\r\\nGamme pro avec portée étendue\\r\\nPlage de mesure de 0% à 100 %hr\\r\\nTempérature d\'utilisation de 10°C à +60°C\\r\\nCapteur de diamètre 12 mm longueur 71 mm', 'GSP', 'RADIO'),
   (18, 'GSP-RQ-THE', 'Gemsense Pro thermocouple', 'Sonde GemSense Pro avec écran 2,9" \\r\\nFonction mémoire (5300 valeurs)\\r\\nBatterie de secours (15 jours)\\r\\nGamme pro avec portée étendue\\r\\nCapteur de température\\r\\nCapteur thermocouple J chemise (déformable) :\\r\\nø 3 mm longueur 50 cm\\r\\nTempérature d\'utilisation  : 100°C à + 1500°C\\r\\nSortie sur câble tresse inox 1m', 'GSP', 'RADIO'),
   (19, 'GSP-RQ-PRES', 'Gemsense Pro pression différentielle', 'Sonde GemSense Pro avec écran 2,9" \\r\\nFonction mémoire (5300 valeurs)\\r\\nBatterie de secours (10 jours)\\r\\nGamme pro avec portée étendue\\r\\nCapteur de pression \\r\\nCapteur piézoélectique\\r\\nDomaine d\'utilisation  : 0 à 250 Pa\\r\\nSortie sur câble tresse inox 1m', 'GSP', 'RADIO'),
@@ -5069,7 +5069,7 @@ INSERT IGNORE INTO `t_materiel` (`Id_Materiel`,`Ref_Commercial`,`Designation`,`D
   (22, 'GSP-RQ-01V', 'Gemsense Pro 0-1 Volt', 'Sonde GemSense Pro avec écran 2,9" \\r\\nFonction mémoire (5300 valeurs)\\r\\nBatterie de secours (10 jours)\\r\\nGamme pro avec portée étendue\\r\\nCapteur de tension \\r\\nEntrée 0-1Volt', 'GSP', 'RADIO'),
   (23, 'GSP-RQ-420MA', 'Gemsense Pro 4-20 mA', 'Sonde GemSense Pro avec écran 2,9" \\r\\nFonction mémoire (5300 valeurs)\\r\\nBatterie de secours (10 jours)\\r\\nGamme pro avec portée étendue\\r\\nCapteur de courant \\r\\nEntrée 4-20mA', 'GSP', 'RADIO'),
   (24, 'GSP-RQ-NONF', 'Gemsense Pro NO NF', 'Sonde GemSense Pro avec écran 2,9" \\r\\nFonction mémoire (5300 valeurs)\\r\\nBatterie de secours (10 jours)\\r\\nGamme pro avec portée étendue\\r\\nCapteur TOR \\r\\nEntrée récuperation de contact NO ou NF\\r\\nDomaine d\'utilisation : reprise de contact', 'GSP', 'RADIO'),
-  (25, 'GSP-RP-ETAL', 'Gemsense Pro Etalon', 'Sonde GemSense Pro avec écran 2,9" \\r\\nLecture écran sous forme de liste pour des étalonnages \\r\\nplus faciles\\r\\nBatterie de secours (15 jours)\\r\\nGamme pro avec portée étendue\\r\\nGaine de protection : acier inox 316 L, Ø 3,5 longueur utile 150 mm \\r\\nTempérature d\'utilisation : -200 à 200°C\\r\\nSonde : Pt 100 céramique CEI 60751 classe 1/3DIN, \\r\\nen montage 4 fils\\r\\nCâble de raccordement : PFA/PFA \\r\\nRésolution d’affichage : 0,01°C \\r\\nRésolution de mesure : 0,003°C', 'GSP', 'ETALON'),
+  (25, 'GSP-RP-ETAL', 'Gemsense Pro Étalon', 'Sonde GemSense Pro avec écran 2,9" \\r\\nLecture écran sous forme de liste pour des étalonnages \\r\\nplus faciles\\r\\nBatterie de secours (15 jours)\\r\\nGamme pro avec portée étendue\\r\\nGaine de protection : acier inox 316 L, Ø 3,5 longueur utile 150 mm \\r\\nTempérature d\'utilisation : -200 à 200°C\\r\\nSonde : Pt 100 céramique CEI 60751 classe 1/3DIN, \\r\\nen montage 4 fils\\r\\nCâble de raccordement : PFA/PFA \\r\\nRésolution d’affichage : 0,01°C \\r\\nRésolution de mesure : 0,003°C', 'GSP', 'ETALON'),
   (26, 'GSP-XN-BL', 'Gemsense Pro Ethernet numérique blanc', 'Liaison Ethernet RJ45 \\r\\nCapteur numérique\\r\\nTempérature d\'utilisation : -30°C à 125°C\\r\\nCapteur numérique Ø 6mm l, 50mm  / -30°C à 125 °C | Câble long 3 m BLANC', 'GSP', 'ETHERNET'),
   (27, 'GSP-XN-GR', 'Gemsense Pro Ethernet numérique gris', 'Liaison Ethernet RJ45 \\r\\nCapteur numérique\\r\\nTempérature d\'utilisation : -30°C à 70°C\\r\\nCapteur numérique Ø 6mm l, 50mm  / -30°C à 70 °C | Câble long 3 m GRIS PLAT', 'GSP', 'ETHERNET'),
   (28, 'GSP-XP', 'Gemsense Pro Ethernet platine', 'Liaison Ethernet RJ45 \\r\\nGaine de protection : acier inox 316 L, Ø 6 \\r\\nTempérature d\'utilisation : -200 à 200°C\\r\\nSonde : Pt 100 céramique CEI 60751 classe A, en montage 4 fils\\r\\nCâble de raccordement : PFA/PFA', 'GSP', 'ETHERNET'),
@@ -5088,22 +5088,22 @@ INSERT IGNORE INTO `t_sonde_etat` (`Id_Sonde_Etat`,`Etat_Sonde`,`Etat_Libelle`) 
 
 INSERT INTO `t_parametre` (`Section`,`Mot_Cle`,`Valeur`,`Commentaire`,`Champ_DATETIME`) VALUES
   ('CFR21', 'ACTIVATION_EXPIRATION_MOT_DE_PASSE', 'true', 'Activer l\'expiration des mots de passe (CFR21)', NULL),
-  ('CFR21', 'ACTIVATION_NORME_CFR21', '0', 'Activer la conformite CFR21 (saisie des configurations)', NULL),
-  ('CFR21', 'EVENEMENTS', '1', 'Activation des evenements', NULL),
+  ('CFR21', 'ACTIVATION_NORME_CFR21', '0', 'Activer la conformité CFR21 (saisie des configurations)', NULL),
+  ('CFR21', 'EVENEMENTS', '1', 'Activation des événements', NULL),
   ('CFR21', 'JOURS_VALIDITE_MOT_DE_PASSE', '0', NULL, NULL),
   ('CFR21', 'MOT_DE_PASSE_PERMANENT', '1', 'Le mot de passe ne peut pas etre change par l\'utilisateur', NULL),
   ('CFR21', 'MOT_DE_PASSE_REUTILISABLE', '0', 'L\'utilisateur ne peut pas reutiliser un ancien mot de passe', NULL),
   ('CFR21', 'NOMBRE_TENTATIVES_MOT_DE_PASSE', '3', 'Nombre de tentatives autorisees avant verrouillage du compte', NULL),
-  ('CFR21', 'REACTIVATION_ALARME_SONORE', '500', 'Delai de reactivation de l\'alarme sonore en millisecondes', NULL),
+  ('CFR21', 'REACTIVATION_ALARME_SONORE', '500', 'Délai de réactivation de l\'alarme sonore en millisecondes', NULL),
   ('CFR21', 'SECURITE', '0', 'Mode securite renforcee', NULL),
-  ('CFR21', 'TEMPS_DECONNEXION_MINUTES', '20', 'Temps d\'inactivite avant deconnexion automatique en minutes', NULL),
-  ('CFR21', 'VALIDITE_MOT_DE_PASSE_JOURS', '90', 'Duree de validite du mot de passe en jours', NULL),
+  ('CFR21', 'TEMPS_DECONNEXION_MINUTES', '20', 'Temps d\'inactivité avant déconnexion automatique en minutes', NULL),
+  ('CFR21', 'VALIDITE_MOT_DE_PASSE_JOURS', '90', 'Durée de validité du mot de passe en jours', NULL),
   ('DASHBOARD', 'AUDIT_GRAPH_OPENINGS', 'false', 'Activer l\'audit trail a l\'ouverture des graphiques', NULL),
   ('DASHBOARD', 'ETALONNAGE_WARNING_DAYS', '90', NULL, NULL),
-  ('DASHBOARD', 'REFRESH', '30', 'Intervalle de rafraichissement dashboard (secondes)', NULL),
+  ('DASHBOARD', 'REFRESH', '30', 'Intervalle de rafraîchissement dashboard (secondes)', NULL),
   ('DASHBOARD', 'REQUIRE_ACTION_COMMENT', 'false', NULL, NULL),
   ('DASHBOARD', 'SHOW_NULL_NON_RESPONSE', 'true', 'Afficher les non-reponses (valeurs null) sur les graphes', NULL),
-  ('DASHBOARD', 'SURVEILLANCE_REFRESH', '30', 'Delai auto de rafraichissement de la surveillance (secondes)', NULL),
+  ('DASHBOARD', 'SURVEILLANCE_REFRESH', '30', 'Délai auto de rafraîchissement de la surveillance (secondes)', NULL),
   ('GENERAL', 'TIMEZONE', 'Europe/Paris', 'Fuseau horaire par defaut', NULL),
   ('NOTIFICATIONS', 'ALARM_EMAIL_ACKNOWLEDGED', 'true', 'Envoyer les emails d acquittement', NULL),
   ('NOTIFICATIONS', 'ALARM_EMAIL_ENDED', 'true', 'Envoyer les emails d alarme terminee', NULL),
@@ -5120,18 +5120,18 @@ INSERT INTO `t_parametre` (`Section`,`Mot_Cle`,`Valeur`,`Commentaire`,`Champ_DAT
   ('NOTIFICATIONS_TEAMS', 'TIMEOUT_MS', '5000', 'Timeout HTTP du webhook Teams en millisecondes.', NULL),
   ('NOTIFICATIONS_TEAMS', 'WEBHOOK_URL', '', 'URL du webhook Teams Workflows. Secret a proteger.', NULL),
   ('SECURITE_EMAIL', 'SMTP_ACTIVATION', 'false', 'Activer l\'envoi d\'emails', NULL),
-  ('SECURITE_EMAIL', 'SMTP_EXPEDITEUR', '', 'Adresse email expediteur (doit correspondre au domaine SMTP)', NULL),
+  ('SECURITE_EMAIL', 'SMTP_EXPEDITEUR', '', 'Adresse email expéditeur (doit correspondre au domaine SMTP)', NULL),
   ('SECURITE_EMAIL', 'SMTP_MOT_DE_PASSE', '', 'Mot de passe SMTP', NULL),
   ('SECURITE_EMAIL', 'SMTP_PORT', '587', 'Port SMTP (587 pour TLS, 465 pour SSL)', NULL),
   ('SECURITE_EMAIL', 'SMTP_SERVEUR', '', 'Serveur SMTP pour l\'envoi d\'emails', NULL),
   ('SECURITE_EMAIL', 'SMTP_UTILISATEUR', '', 'Utilisateur SMTP', NULL),
   ('SECURITE_MOT_DE_PASSE', 'LONGUEUR_MINIMALE', '4', 'Longueur minimale du mot de passe', NULL),
-  ('SECURITE_MOT_DE_PASSE', 'MIN_CARACTERES_SPECIAUX', '0', 'Nombre minimum de caracteres speciaux', NULL),
+  ('SECURITE_MOT_DE_PASSE', 'MIN_CARACTERES_SPECIAUX', '0', 'Nombre minimum de caractères spéciaux', NULL),
   ('SECURITE_MOT_DE_PASSE', 'MIN_CHIFFRES', '0', 'Nombre minimum de chiffres', NULL),
   ('SECURITE_MOT_DE_PASSE', 'MIN_LETTRES_MAJUSCULES', '0', 'Nombre minimum de majuscules', NULL),
   ('SECURITE_MOT_DE_PASSE', 'MIN_LETTRES_MINUSCULES', '0', 'Nombre minimum de minuscules', NULL),
   ('SERVICE', 'GSO_DERNIER_DATE_HEURE', NULL, 'Date et heure de derniere mesure inscrite par la boucle GSO dans tm_mesures', NULL),
-  ('SERVICES', 'COMMERCIAL_CONTACT_EMAIL', '', 'Adresse email du service commercial utilisee pour les demandes de devis materiel', NULL),
+  ('SERVICES', 'COMMERCIAL_CONTACT_EMAIL', '', 'Adresse email du service commercial utilisée pour les demandes de devis matériel', NULL),
   ('STATISTICS_MONTHLY_REPORT', 'DAY_OF_MONTH', '1', 'Jour du mois (1..31, replie au dernier jour du mois si necessaire)', NULL),
   ('STATISTICS_MONTHLY_REPORT', 'ENABLED', '0', 'Activation envoi recap mensuel stats', NULL),
   ('STATISTICS_MONTHLY_REPORT', 'HOUR_LOCAL', '8', 'Heure locale (0..23)', NULL),
@@ -5145,23 +5145,23 @@ INSERT INTO `t_parametre` (`Section`,`Mot_Cle`,`Valeur`,`Commentaire`,`Champ_DAT
   ('STATISTICS_MONTHLY_REPORT', 'INCLUDE_OVER_HIGH_NO_ALARM', '1', 'Inclure depassement haut sans alarme', NULL),
   ('STATISTICS_MONTHLY_REPORT', 'INCLUDE_OVER_LOW_NO_ALARM', '1', 'Inclure depassement bas sans alarme', NULL),
   ('STATISTICS_MONTHLY_REPORT', 'INCLUDE_SETTINGS_SUMMARY', '1', 'Inclure consignes/tolerances/frequence/retards', NULL),
-  ('STATISTICS_MONTHLY_REPORT', 'LAST_SENT_MONTH', '', 'Dernier mois envoye au format YYYY-MM', NULL),
-  ('STATISTICS_MONTHLY_REPORT', 'RECIPIENTS', '', 'Destinataires separes par ; ou ,', NULL)
+  ('STATISTICS_MONTHLY_REPORT', 'LAST_SENT_MONTH', '', 'Dernier mois envoyé au format YYYY-MM', NULL),
+  ('STATISTICS_MONTHLY_REPORT', 'RECIPIENTS', '', 'Destinataires séparés par ; ou ,', NULL)
 ON DUPLICATE KEY UPDATE `Valeur` = VALUES(`Valeur`), `Commentaire` = VALUES(`Commentaire`), `Champ_DATETIME` = VALUES(`Champ_DATETIME`);
 
 -- Parametres applicatifs communs aux deux fournisseurs de base de donnees.
 INSERT INTO `t_parametre` (`Section`,`Mot_Cle`,`Valeur`,`Commentaire`) VALUES
-  ('TELEPHONIE','ENABLED','false','Activation globale de la telephonie VoIP'),
-  ('TELEPHONIE','PROVIDER','none','Fournisseur VoIP selectionne'),
-  ('TELEPHONIE','CALLER_ID','','Numero presente / caller ID'),
-  ('TELEPHONIE','NOTES','','Notes d integration telephonie'),
-  ('TELEPHONIE','TWILIO_AUTH_MODE','api_key','Mode authentification Twilio'),
+  ('TELEPHONIE','ENABLED','false','Activation globale de la téléphonie VoIP'),
+  ('TELEPHONIE','PROVIDER','none','Fournisseur VoIP sélectionné'),
+  ('TELEPHONIE','CALLER_ID','','Numéro présenté / caller ID'),
+  ('TELEPHONIE','NOTES','','Notes d’intégration téléphonie'),
+  ('TELEPHONIE','TWILIO_AUTH_MODE','api_key','Mode d’authentification Twilio'),
   ('TELEPHONIE','TWILIO_ACCOUNT_SID','','Compte Twilio'),
   ('TELEPHONIE','TWILIO_API_KEY_SID','','API Key SID Twilio'),
   ('TELEPHONIE','TWILIO_API_KEY_SECRET','','API Key Secret Twilio'),
   ('TELEPHONIE','TWILIO_AUTH_TOKEN','','Auth Token Twilio'),
-  ('TELEPHONIE','TWILIO_FROM_NUMBER','','Numero expediteur Twilio'),
-  ('TELEPHONIE','OVH_ENDPOINT','ovh-eu','Point d acces API OVH'),
+  ('TELEPHONIE','TWILIO_FROM_NUMBER','','Numéro expéditeur Twilio'),
+  ('TELEPHONIE','OVH_ENDPOINT','ovh-eu','Point d’accès API OVH'),
   ('TELEPHONIE','OVH_APPLICATION_KEY','','Application Key OVH'),
   ('TELEPHONIE','OVH_APPLICATION_SECRET','','Application Secret OVH'),
   ('TELEPHONIE','OVH_CONSUMER_KEY','','Consumer Key OVH'),

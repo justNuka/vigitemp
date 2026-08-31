@@ -16,7 +16,9 @@ La convention de versioning est décrite dans [`docs/versioning.md`](docs/versio
 
 ## [Unreleased]
 
-Aucun changement supplémentaire documenté depuis l'état intégré du 27/08/2026.
+### Base de données / seeds
+
+- Nettoyage des libellés français des seeds MySQL/SQL Server : accents, fautes historiques confirmées et marqueur SemVer canonique `0.90.1`, sans changement de schéma.
 
 ## État intégré — 2026-08-27
 
@@ -64,7 +66,7 @@ Cette entrée constitue la première vue produit structurée du changelog. Elle 
 ### Base de données / seeds — principales évolutions
 
 - Baseline canonique `0.90.1` pour les seeds MySQL et SQL Server.
-- Les fichiers historiques peuvent encore contenir le libellé `0.90.001`, qui correspond à la même version selon la nouvelle convention sans zéros de tête.
+- Les fichiers historiques utilisaient le libellé `0.90.001`; les seeds courants ont depuis été normalisés en `0.90.1` sans changement de schéma.
 - Les correctifs GSP `0.90.2` / `0.90.3` du Serveur ne nécessitent aucune migration de schéma.
 
 [Détail BDD](db/CHANGELOG.md)

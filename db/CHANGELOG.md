@@ -8,6 +8,14 @@ Le numéro indiqué ici correspond à la révision VigiSensys du bootstrap/seed.
 
 ## [Unreleased]
 
+
+### Qualité des données de seed
+
+- Harmonisation des libellés, descriptions et commentaires humains des seeds MySQL et SQL Server avec les accents français attendus, sans modifier les clés techniques, codes d’autorisation, noms de colonnes ou identifiants de paramètres.
+- Correction d’artefacts historiques confirmés : `Sonde talon` → `Sonde étalon`, `avec pris RJ45` → `avec prise RJ45` et `COCO2` → `CO2`.
+- Audit explicite des anciens placeholders `%1`, `%2`, `%3` et des mojibakes (`Ã`, `Â`, `�`) : aucun de ces artefacts n’est présent dans les seeds actuels.
+- Normalisation du marqueur de version des deux seeds de `0.90.001` vers la notation SemVer canonique `0.90.1`, sans changement de schéma.
+
 ### Métrologie
 
 - Ajout de la migration BDD `0.90.2` pour la colonne `t_ajustage.Coeffs_Modifies_Depuis_Derniere_Mesure`.
@@ -28,8 +36,8 @@ Cette entrée fixe la première baseline documentée des seeds. Elle ne reconsti
 ### Versioning
 
 - La notation canonique retenue est `0.90.1`.
-- Les fichiers de seed existants peuvent encore contenir le libellé historique `0.90.001`; cette écriture correspond à la même version selon la nouvelle convention sans zéros de tête.
-- Lors de la prochaine modification/régénération des seeds, le marqueur de version devra utiliser directement la notation SemVer canonique.
+- Les fichiers de seed historiques utilisaient le libellé `0.90.001`; depuis le nettoyage du 31/08/2026, les deux seeds utilisent directement la notation SemVer canonique `0.90.1`.
+- Cette normalisation du marqueur ne modifie ni le schéma ni la compatibilité de la baseline `0.90.1`.
 
 ### MySQL / SQL Server
 
