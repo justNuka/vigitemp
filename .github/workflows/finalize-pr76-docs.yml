@@ -1,0 +1,37 @@
+name: Finalize PR76 docs
+
+on:
+  push:
+    branches:
+      - fix/db-seed-french-labels
+
+permissions:
+  contents: write
+
+jobs:
+  finalize:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/db-seed-french-labels
+      - name: Mark PR76 open in backlog
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          path = Path('website/docs/backlog-retours-17-08-2026.md')
+          text = path.read_text(encoding='utf-8')
+          old = '**Statut : `EN_COURS` — branche `fix/db-seed-french-labels` — PR à ouvrir vers `dev`.**'
+          new = '**Statut : `PR_OUVERTE` — PR #76 — branche `fix/db-seed-french-labels` — vers `dev`.**'
+          if old not in text:
+              raise SystemExit('Seed cleanup backlog status not found')
+          path.write_text(text.replace(old, new, 1), encoding='utf-8')
+          PY
+      - name: Commit docs and remove workflow
+        run: |
+          rm -f .github/workflows/finalize-pr76-docs.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add website/docs/backlog-retours-17-08-2026.md .github/workflows
+          git commit -m "docs: mark seed cleanup PR76 open"
+          git push origin HEAD:fix/db-seed-french-labels
