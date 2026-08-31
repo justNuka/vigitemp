@@ -103,7 +103,7 @@ Avant chaque lot de développement :
 4. vérifier les branches existantes liées au sujet ;
 5. lire le code et les docs/backlogs concernés ;
 6. ne jamais supposer qu'un bug remonté n'a pas déjà été corrigé ;
-7. créer une branche `agent/<sujet>` depuis le HEAD **actuel** de `dev` ;
+7. créer depuis le HEAD **actuel** de `dev` une branche dont le préfixe décrit le type d'opération, par exemple `fix/<sujet>`, `feature/<sujet>`, `refactor/<sujet>`, `docs/<sujet>` ou `chore/<sujet>` ; ne pas utiliser `agent/` ;
 8. limiter la branche à un sujet cohérent ;
 9. avant la PR, comparer le diff complet à `dev` et retirer tout changement parasite ;
 10. mettre à jour la documentation/backlog concerné ;
