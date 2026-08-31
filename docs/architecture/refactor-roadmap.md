@@ -31,6 +31,7 @@ Principes d'ordre :
 | 7 | Découpler l'API métrologie de l'API Hotline | P1 | À faire | Étape 6 |
 | 8 | Mutualiser le runtime Web ajustage/étalonnage | P1/P2 | Partiellement commencé | Étapes 6–7 recommandées |
 | 9 | Consolider les fondations Web | P2 | Partiellement en place | Tests/CI |
+| 9A | Standardiser les helpers de formatage dates et nombres | P2 | Date partiellement paramétré ; helper numérique canonique absent | Lot 5 puis Lot 9 |
 | 10 | Décomposer progressivement les gros composants React | P2 | Partiellement commencé | Au fil des features |
 | 11 | Scinder les responsabilités du serveur C# | P2 | À faire progressivement | Tests/CI |
 | 12 | Agent V1 : durcissement local ciblé | P1/P2 | À faire | Pas de gros refactor |
@@ -192,7 +193,8 @@ Web :
 - permissions/licences ;
 - mot de passe/reset ;
 - crypto ;
-- dates `DATETIME` ;
+- dates `DATETIME` et formats d'affichage ;
+- formatage numérique (précision, locales, fallbacks) ;
 - calculs métrologie ;
 - runtime/verrous de métrologie.
 
@@ -255,6 +257,77 @@ Partager session registry, verrouillage sonde, gateway de lecture et restauratio
 - converger les helpers `api.ts` / `http.ts` / wrappers plutôt que créer de nouveaux chemins concurrents ;
 - centraliser les query keys TanStack Query par domaine ;
 - partager les schémas de validation lorsque client/serveur décrivent le même DTO et qu'un partage apporte réellement de la valeur.
+
+### 9A — standardiser les helpers de formatage dates et nombres
+
+Ce chantier est volontairement placé dans les fondations Web, après l'installation des tests/CI et avant une généralisation des refactors de composants. Il est transversal mais suffisamment local pour rester une PR dédiée ou deux petites PR séparées (dates puis nombres) si le diff devient trop large.
+
+#### État actuel
+
+- `website/src/lib/date-display.ts` est déjà le helper date canonique et accepte plusieurs paramètres (`withSeconds`, `withYear`, `dateOnly`, `timeOnly`, `locale`, `timeZone`) ;
+- `formatDbDateTimeIntl` permet déjà de transmettre des `Intl.DateTimeFormatOptions` ;
+- il ne faut donc pas créer un deuxième moteur de dates ;
+- aucun helper numérique canonique comparable n'a été identifié dans `website/src/lib/` à la vérification du 31/08/2026 ;
+- le code historique contient des formatages numériques locaux, notamment des usages de `toFixed(...)`, qui devront être migrés progressivement après vérification du code courant.
+
+#### Cible dates
+
+Faire évoluer le helper existant pour que le format demandé soit explicite et réutilisable :
+
+- presets typés simples (`date`, `time`, `dateTime`, `dateTimeSeconds`, noms exacts à confirmer) et/ou options `Intl.DateTimeFormatOptions` ;
+- paramètres `locale`, `timeZone`, `fallback` conservés ;
+- compatibilité temporaire des anciennes options pendant la migration si nécessaire ;
+- aucune modification de la sémantique critique de `serializeStoredDbDateTime` et des `DATETIME` sans fuseau ;
+- pas de format string maison si `Intl.DateTimeFormat` couvre le besoin.
+
+Le format d'affichage doit rester distinct du parsing, de la sérialisation et de la sémantique de stockage.
+
+#### Cible nombres / floats
+
+Introduire une seule source de vérité pour l'affichage numérique, par exemple un helper `number-display.ts` ou `number-format.ts` après vérification finale des noms existants.
+
+Le helper doit accepter au minimum :
+
+- nombre de décimales ;
+- éventuellement minimum/maximum de décimales lorsque le contexte le demande ;
+- locale ;
+- fallback pour valeur absente/invalide ;
+- grouping/séparateur de milliers lorsque pertinent.
+
+Privilégier `Intl.NumberFormat` pour la présentation utilisateur. Ne pas utiliser le helper pour modifier la valeur métier : aucun arrondi de stockage ou de calcul ne doit être introduit pour satisfaire un besoin purement visuel.
+
+La précision ne doit pas devenir une constante universelle. Une température, un coefficient d'ajustage, une humidité ou une valeur d'étalon peuvent avoir des besoins d'affichage différents : **le nombre de décimales doit être un paramètre du contexte**.
+
+#### Migration
+
+1. écrire les tests du helper date actuel avant de modifier son contrat ;
+2. définir les presets/paramètres cibles ;
+3. migrer quelques usages représentatifs et conserver la compatibilité des anciens appels ;
+4. créer le helper numérique avec tests ;
+5. rechercher les `toFixed`, `toLocaleString`, `Intl.NumberFormat` locaux et autres formatages manuels ;
+6. migrer par domaine/composant, pas via une PR géante de remplacement aveugle ;
+7. supprimer les anciens chemins uniquement lorsque plus aucun appel utile ne dépend d'eux.
+
+#### Tests obligatoires
+
+Dates :
+
+- formats/presets ;
+- FR/EN ;
+- fallbacks ;
+- heure d'été/hiver ;
+- `DATETIME` sans fuseau ;
+- instant UTC lorsqu'il est explicitement traité comme tel.
+
+Nombres :
+
+- 0 et valeurs négatives/positives ;
+- `null`, `undefined`, `NaN` ;
+- 0/1/2/3 décimales et précisions supplémentaires si un domaine le demande ;
+- arrondis de présentation ;
+- `fr-FR` / `en-US` ;
+- zéros finaux ;
+- grouping des grands nombres.
 
 ## 10. Lot 10 — décomposition progressive du frontend
 
@@ -356,19 +429,20 @@ Projet séparé à planifier ultérieurement :
 Exemples de branches cohérentes :
 
 ```text
-agent/hotline-security
-agent/auth-absolute-session
-agent/secret-encryption-key
-agent/ci-quality-gates
-agent/metrology-server-service
-agent/metrology-api-boundary
-agent/metrology-shared-runtime
-agent/database-provider-interfaces
-agent/thread-server-alarm-workers
-agent/agent-v1-local-security
+fix/hotline-security
+fix/auth-absolute-session
+refactor/secret-encryption-key
+chore/ci-quality-gates
+refactor/metrology-server-service
+refactor/metrology-api-boundary
+refactor/metrology-shared-runtime
+refactor/formatting-helpers
+refactor/database-provider-interfaces
+refactor/thread-server-alarm-workers
+fix/agent-v1-local-security
 ```
 
-Les noms sont indicatifs.
+Les noms sont indicatifs. Le préfixe doit décrire le type d'opération ; ne pas utiliser `agent/`.
 
 Après chaque PR mergée : vérifier réellement le nouveau HEAD de `dev` avant de créer la suivante. Ne pas empiler cinq branches de refactor depuis un ancien `dev`.
 
