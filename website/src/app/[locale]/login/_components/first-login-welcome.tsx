@@ -13,6 +13,7 @@ type FirstLoginWelcomeProps = {
   displayName: string
   passwordExpiryEnabled: boolean
   passwordValidityDays: number | null
+  isCompleting: boolean
   onContinue: () => void
 }
 
@@ -21,6 +22,7 @@ export function FirstLoginWelcome({
   displayName,
   passwordExpiryEnabled,
   passwordValidityDays,
+  isCompleting,
   onContinue,
 }: FirstLoginWelcomeProps) {
   const t = useTranslations("login.first_login")
@@ -50,7 +52,31 @@ export function FirstLoginWelcome({
         </div>
 
         <AnimatePresence mode="wait">
-          {step === "welcome" ? (
+          {isCompleting ? (
+            <m.div
+              key="loading"
+              className="relative z-10 flex max-w-xl flex-col items-center text-center"
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: reduceMotion ? 0 : 0.35, ease: [0.22, 1, 0.36, 1] }}
+              role="status"
+              aria-live="polite"
+            >
+              <div className="mb-7 rounded-3xl border border-primary/20 bg-card/80 p-6 shadow-2xl shadow-primary/10">
+                <Logo size="lg" showText />
+              </div>
+              <div
+                aria-hidden="true"
+                className={`mb-6 h-11 w-11 rounded-full border-[3px] border-primary/20 border-t-primary ${reduceMotion ? "" : "animate-spin"}`}
+              />
+              <h2 className="text-balance text-2xl font-bold tracking-tight sm:text-3xl">
+                {t("loading_title")}
+              </h2>
+              <p className="mt-3 max-w-lg text-pretty text-sm leading-6 text-muted-foreground sm:text-base">
+                {t("loading_description")}
+              </p>
+            </m.div>
+          ) : step === "welcome" ? (
             <m.div
               key="welcome"
               className="relative z-10 flex max-w-2xl flex-col items-center text-center"

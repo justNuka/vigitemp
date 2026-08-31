@@ -16,6 +16,8 @@ export const frSupplements: MessageCatalog = {
       expiry_reminder: "À l’approche de l’échéance, VigiSensys vous avertira à la connexion pendant les 7 derniers jours avant l’expiration.",
       forced_change_note: "Un mot de passe temporaire ou arrivé à expiration doit toujours être remplacé avant de pouvoir accéder à l’application.",
       continue: "Accéder à VigiSensys",
+      loading_title: "Nous préparons votre espace",
+      loading_description: "VigiSensys finalise votre session et prépare vos accès. Vous allez être redirigé dans quelques instants.",
     },
   },
   alarmAckHistoryPage: {
@@ -301,6 +303,8 @@ export const enSupplements: MessageCatalog = {
       expiry_reminder: "As the deadline approaches, VigiSensys will warn you at sign-in during the final 7 days before expiration.",
       forced_change_note: "A temporary or expired password must always be replaced before the application can be accessed.",
       continue: "Open VigiSensys",
+      loading_title: "We’re preparing your workspace",
+      loading_description: "VigiSensys is finalizing your session and preparing your access. You’ll be redirected in just a moment.",
     },
   },
   alarmsPage: {

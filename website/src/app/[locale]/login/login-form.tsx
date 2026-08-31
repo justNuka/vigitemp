@@ -55,6 +55,8 @@ type LoginResponse = {
   passwordValidityDays: number | null;
 };
 
+const FIRST_LOGIN_TRANSITION_MIN_MS = 1600;
+
 type AuthApiErrorPayload = {
   ok: false;
   error: string;
@@ -74,6 +76,7 @@ export function LoginForm() {
   const [resetSuccess, setResetSuccess] = useState(false);
   const [showPasswordExpiryWarning, setShowPasswordExpiryWarning] = useState(false);
   const [showFirstLoginWelcome, setShowFirstLoginWelcome] = useState(false);
+  const [isCompletingFirstLogin, setIsCompletingFirstLogin] = useState(false);
   const [pendingLoginResponse, setPendingLoginResponse] = useState<LoginResponse | null>(null);
   const shouldReduceMotion = useReducedMotion();
   const ease = [0.22, 1, 0.36, 1] as const;
@@ -238,7 +241,8 @@ export function LoginForm() {
     resetPasswordMutation.mutate(values.email);
   };
 
-  const finalizeLogin = useCallback(async (data: LoginResponse) => {
+  const finalizeLogin = useCallback(async (data: LoginResponse, minimumTransitionMs = 0) => {
+    const transitionStartedAt = Date.now();
     clearDisconnectReason();
     toast.success(t("toasts.login_success"));
 
@@ -276,6 +280,11 @@ export function LoginForm() {
       canAccessDashboard = hasPermission(me, "DASHBOARD_USER_ACCESS");
     } catch {
       // fallback on default redirect
+    }
+
+    const remainingTransitionMs = minimumTransitionMs - (Date.now() - transitionStartedAt);
+    if (remainingTransitionMs > 0) {
+      await new Promise<void>((resolve) => window.setTimeout(resolve, remainingTransitionMs));
     }
 
     router.push(getRedirectTarget(canAccessDashboard));
@@ -392,18 +401,23 @@ export function LoginForm() {
           displayName={pendingLoginResponse?.displayName || pendingLoginResponse?.username || ""}
           passwordExpiryEnabled={pendingLoginResponse?.passwordExpiryEnabled ?? false}
           passwordValidityDays={pendingLoginResponse?.passwordValidityDays ?? null}
+          isCompleting={isCompletingFirstLogin}
           onContinue={() => {
             const response = pendingLoginResponse;
-            setShowFirstLoginWelcome(false);
-            if (!response) return;
+            if (!response) {
+              setShowFirstLoginWelcome(false);
+              return;
+            }
 
             if (response.passwordExpiryWarningDays && response.passwordExpiryWarningDays > 0) {
+              setShowFirstLoginWelcome(false);
               setShowPasswordExpiryWarning(true);
               return;
             }
 
+            setIsCompletingFirstLogin(true);
             setPendingLoginResponse(null);
-            void finalizeLogin(response);
+            void finalizeLogin(response, FIRST_LOGIN_TRANSITION_MIN_MS);
           }}
         />
 
@@ -428,10 +442,21 @@ export function LoginForm() {
                 onClick={() => {
                   const response = pendingLoginResponse;
                   setShowPasswordExpiryWarning(false);
-                  setPendingLoginResponse(null);
-                  if (response) {
-                    void finalizeLogin(response);
+                  if (!response) {
+                    setPendingLoginResponse(null);
+                    return;
                   }
+
+                  if (response.isFirstLogin) {
+                    setShowFirstLoginWelcome(true);
+                    setIsCompletingFirstLogin(true);
+                    setPendingLoginResponse(null);
+                    void finalizeLogin(response, FIRST_LOGIN_TRANSITION_MIN_MS);
+                    return;
+                  }
+
+                  setPendingLoginResponse(null);
+                  void finalizeLogin(response);
                 }}
               >
                 {t("expiry_warning_dialog.continue")}
