@@ -1364,3 +1364,44 @@ Après le clic sur **Accéder à VigiSensys**, le formulaire de connexion pouvai
 - [ ] connexion ordinaire inchangée ;
 - [ ] FR/EN, clair/sombre, reduced-motion ;
 - [ ] lint, typecheck et build Web.
+
+
+---
+
+## Seeds BDD — accents, fautes et artefacts historiques — 31/08/2026
+
+**Statut : `PR_OUVERTE` — PR #76 — branche `fix/db-seed-french-labels` — vers `dev`.**
+
+### Audit du code courant
+
+Les deux seeds de référence ont été contrôlés ensemble :
+
+- `db/vigisensys_seed.sql` ;
+- `db/vigisensys_seed_mssql.sql`.
+
+Les anciens placeholders `%1`, `%2`, `%3` ainsi que les signatures de mauvais encodage `Ã`, `Â` et `�` ne sont plus présents dans les fichiers actuels. En revanche, de nombreux textes humains provenaient encore des anciennes bases sans accents (`Acces`, `Gerer`, `Boitier reseau`, `Temperature`, `hygrometrie`, `Delai`, etc.). Trois fautes/artefacts certains ont aussi été confirmés dans les deux moteurs : `Sonde talon`, `avec pris RJ45` et `COCO2`.
+
+### Correctif du lot
+
+- correction des libellés/commentaires/descriptions humains avec accents français ;
+- correction des trois artefacts confirmés ;
+- conservation stricte des clés techniques, codes d’autorisation, noms de colonnes/tables et `Mot_Cle` des paramètres ;
+- parité maintenue entre les données communes MySQL et SQL Server ;
+- passage du marqueur historique de seed `0.90.001` au SemVer canonique `0.90.1`, conformément à `db/CHANGELOG.md`, sans migration ni changement de schéma.
+
+### Validation
+
+- [x] audit `%1` / `%2` / `%3` : absents avant et après le correctif ;
+- [x] audit mojibake `Ã` / `Â` / `�` : absent avant et après le correctif ;
+- [x] clés techniques sensibles inchangées ;
+- [x] mêmes corrections appliquées aux deux seeds ;
+- [ ] exécuter le seed MySQL sur une base vierge ;
+- [ ] exécuter le seed SQL Server sur une base vierge ;
+- [ ] contrôler dans l’interface les libellés d’autorisations, types de sondes/modules et commentaires de paramètres.
+
+### Fichiers principaux
+
+- `db/vigisensys_seed.sql` ;
+- `db/vigisensys_seed_mssql.sql` ;
+- `db/CHANGELOG.md` ;
+- `CHANGELOG.md`.

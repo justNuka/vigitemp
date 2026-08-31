@@ -1,6 +1,6 @@
 -- =====================================================================
 -- BOOTSTRAP SQL SERVER VigiSensys
--- Version produit / seed : 0.90.001
+-- Version produit / seed : 0.90.1
 -- DDL traduit depuis le dump schema courant MySQL du 2026-08-25.
 -- Les FK MySQL ne sont pas reproduites: SQL Server ne prend pas en
 -- charge ON UPDATE CASCADE et refuse certains chemins de cascade multiples.
@@ -2494,13 +2494,13 @@ GO
 SET IDENTITY_INSERT dbo.t_module_type ON;
 MERGE dbo.t_module_type AS target
 USING (VALUES
-  (1, N'BIN', N'Boitier filaire avec prise DB9 (port serie)', 0),
-  (2, N'BIR (filaire)', N'Boitier reseau filaire avec pris RJ45 (prise reseau)', 1),
-  (3, N'BTR', N'Boitier radio avec prise DB9 (port serie)', 0),
-  (4, N'BIR (radio)', N'Boitier reseau radio avec prise RJ45 (port serie)', 1),
-  (5, N'CORONIS', N'Boitier radio CORONIS avec prise DB9 (port serie)', 0),
-  (6, N'MRH', N'Boitier MRH', 0),
-  (7, N'ITR', N'Module port serie', 0),
+  (1, N'BIN', N'Boîtier filaire avec prise DB9 (port série)', 0),
+  (2, N'BIR (filaire)', N'Boîtier réseau filaire avec prise RJ45 (prise réseau)', 1),
+  (3, N'BTR', N'Boîtier radio avec prise DB9 (port série)', 0),
+  (4, N'BIR (radio)', N'Boîtier réseau radio avec prise RJ45 (port série)', 1),
+  (5, N'CORONIS', N'Boîtier radio CORONIS avec prise DB9 (port série)', 0),
+  (6, N'MRH', N'Boîtier MRH', 0),
+  (7, N'ITR', N'Module port série', 0),
   (8, N'IETH', N'Module ethernet', 0)
 ) AS source (Id_Module_Type, Libelle_Type_Module, Libelle_Module, Est_Flag_Affiche_Plan)
 ON target.Id_Module_Type = source.Id_Module_Type
@@ -2511,10 +2511,10 @@ GO
 
 MERGE dbo.t_etalon_type AS target
 USING (VALUES
-  (N'ES', N'VigiTemp Type ES', N'Sonde talon radio type E', 1, 0, 0.05),
+  (N'ES', N'VigiTemp Type ES', N'Sonde étalon radio type E', 1, 0, 0.05),
   (N'EX', N'Externe', N'Sonde externe', 1, 1, 0),
-  (N'SEF', N'VigiTemp Type SEF', N'Sonde talon filaire ou filaire/radio avec prise RJ45', 1, 0, 0.02),
-  (N'SPET', N'Sonde etalon platine', N'Sonde etalon GSP platine', 1, 0, 0.02)
+  (N'SEF', N'VigiTemp Type SEF', N'Sonde étalon filaire ou filaire/radio avec prise RJ45', 1, 0, 0.02),
+  (N'SPET', N'Sonde étalon platine', N'Sonde étalon GSP platine', 1, 0, 0.02)
 ) AS source (Type_Etalon, Nom, Descriptif, Est_Saisie_Module, Est_Sonde_Externe, Resolution)
 ON target.Type_Etalon = source.Type_Etalon
 WHEN MATCHED THEN UPDATE SET Nom = source.Nom, Descriptif = source.Descriptif, Est_Saisie_Module = source.Est_Saisie_Module, Est_Sonde_Externe = source.Est_Sonde_Externe, Resolution = source.Resolution
@@ -2522,34 +2522,34 @@ WHEN NOT MATCHED THEN INSERT (Type_Etalon, Nom, Descriptif, Est_Saisie_Module, E
 GO
 DECLARE @BootstrapAuth TABLE (Code NVARCHAR(50), Libelle NVARCHAR(100));
 INSERT INTO @BootstrapAuth (Code, Libelle) VALUES
-(N'ACCES_DASHBOARD_UTILISATEUR',N'Acces dashboard utilisateur'),
-(N'ACCES_TABLEAU_BORD_UTILISATEUR',N'Acces tableau de bord utilisateur'),
-(N'ACCES_DASHBOARD_USER',N'Acces dashboard user'),
-(N'ACCES_SURVEILLANCE',N'Acces surveillance'),
+(N'ACCES_DASHBOARD_UTILISATEUR',N'Accès dashboard utilisateur'),
+(N'ACCES_TABLEAU_BORD_UTILISATEUR',N'Accès tableau de bord utilisateur'),
+(N'ACCES_DASHBOARD_USER',N'Accès dashboard user'),
+(N'ACCES_SURVEILLANCE',N'Accès surveillance'),
 (N'LIEU_VISUALISER',N'Visualiser les lieux'),
-(N'ALARMES_GERER',N'Gerer les alarmes'),
-(N'ACCES_DASHBOARD_ADMIN',N'Acces dashboard admin'),
-(N'ACCES_TABLEAU_BORD_ADMIN',N'Acces tableau de bord admin'),
-(N'ACCES_ADMIN',N'Acces admin'),
-(N'ACCES_PARAMETRAGE_GENERAL',N'Acces parametrage general'),
-(N'PARAMETRAGE_GENERAL',N'Parametrage general'),
-(N'GERER_PROFIL',N'Gerer les profils'),
-(N'PARAMETRES_GERER',N'Gerer les parametres'),
+(N'ALARMES_GERER',N'Gérer les alarmes'),
+(N'ACCES_DASHBOARD_ADMIN',N'Accès dashboard admin'),
+(N'ACCES_TABLEAU_BORD_ADMIN',N'Accès tableau de bord admin'),
+(N'ACCES_ADMIN',N'Accès admin'),
+(N'ACCES_PARAMETRAGE_GENERAL',N'Accès paramétrage général'),
+(N'PARAMETRAGE_GENERAL',N'Paramétrage général'),
+(N'GERER_PROFIL',N'Gérer les profils'),
+(N'PARAMETRES_GERER',N'Gérer les paramètres'),
 (N'ACQUITTER_ALARME',N'Acquitter alarme'),
-(N'ACCES_ACQUITTEMENT_ALARME',N'Acces acquittement alarme'),
-(N'DESACTIVER_LIEU',N'Desactiver lieu'),
-(N'ACCES_DESACTIVATION_LIEU',N'Acces desactivation lieu'),
-(N'LIEU_ACTIV_DESACT',N'Activer/desactiver lieu'),
-(N'PARAMETRER_LIEU',N'Parametrer lieu'),
-(N'ACCES_PARAMETRAGE_LIEU',N'Acces parametrage lieu'),
-(N'LIEU_GERER',N'Gerer les lieux'),
-(N'PARAMETRAGE_MATERIEL',N'Parametrage materiel'),
-(N'ACCES_PARAMETRAGE_MATERIEL',N'Acces parametrage materiel'),
-(N'ACCES_METROLOGIE',N'Acces metrologie'),
-(N'ACCES_CONVERSATION',N'Acces conversation'),
+(N'ACCES_ACQUITTEMENT_ALARME',N'Accès acquittement alarme'),
+(N'DESACTIVER_LIEU',N'Désactiver lieu'),
+(N'ACCES_DESACTIVATION_LIEU',N'Accès désactivation lieu'),
+(N'LIEU_ACTIV_DESACT',N'Activer/désactiver lieu'),
+(N'PARAMETRER_LIEU',N'Paramétrer lieu'),
+(N'ACCES_PARAMETRAGE_LIEU',N'Accès paramétrage lieu'),
+(N'LIEU_GERER',N'Gérer les lieux'),
+(N'PARAMETRAGE_MATERIEL',N'Paramétrage matériel'),
+(N'ACCES_PARAMETRAGE_MATERIEL',N'Accès paramétrage matériel'),
+(N'ACCES_METROLOGIE',N'Accès métrologie'),
+(N'ACCES_CONVERSATION',N'Accès conversation'),
 (N'MODULE_CONVERSATION',N'Module conversation'),
-(N'REALISER_AJUSTAGE_ETALONNAGE',N'Realiser ajustage etalonnage'),
-(N'ACCES_AJUSTAGE_ETALONNAGE',N'Acces ajustage etalonnage');
+(N'REALISER_AJUSTAGE_ETALONNAGE',N'Réaliser ajustage étalonnage'),
+(N'ACCES_AJUSTAGE_ETALONNAGE',N'Accès ajustage étalonnage');
 INSERT INTO dbo.t_autorisation (Code_Autorisation, Libelle_Autorisation, Commentaire) SELECT Code, Libelle, Libelle FROM @BootstrapAuth a WHERE NOT EXISTS (SELECT 1 FROM dbo.t_autorisation x WHERE x.Code_Autorisation = a.Code);
 GO
 DECLARE @AdminProfilId INT = (SELECT TOP 1 Id_Profil FROM dbo.t_profil WHERE Profil_Utilisateur = N'Administrateurs');
@@ -2565,9 +2565,9 @@ GO
 -- templates de lieu
 -- parametres recents (uppercase)
 IF NOT EXISTS (SELECT 1 FROM dbo.t_parametre WHERE Section='DASHBOARD' AND Mot_Cle='SHOW_NULL_NON_RESPONSE')
-  INSERT INTO dbo.t_parametre(Section, Mot_Cle, Valeur, Commentaire) VALUES ('DASHBOARD','SHOW_NULL_NON_RESPONSE','0','Afficher les mesures null (non-reponse) dans les graphiques');
+  INSERT INTO dbo.t_parametre(Section, Mot_Cle, Valeur, Commentaire) VALUES ('DASHBOARD','SHOW_NULL_NON_RESPONSE','0','Afficher les mesures null (non-réponse) dans les graphiques');
 IF NOT EXISTS (SELECT 1 FROM dbo.t_parametre WHERE Section='DASHBOARD' AND Mot_Cle='SURVEILLANCE_REFRESH')
-  INSERT INTO dbo.t_parametre(Section, Mot_Cle, Valeur, Commentaire) VALUES ('DASHBOARD','SURVEILLANCE_REFRESH','15','Rafraichissement surveillance en secondes');
+  INSERT INTO dbo.t_parametre(Section, Mot_Cle, Valeur, Commentaire) VALUES ('DASHBOARD','SURVEILLANCE_REFRESH','15','Rafraîchissement surveillance en secondes');
 IF NOT EXISTS (SELECT 1 FROM dbo.t_parametre WHERE Section='NOTIFICATIONS' AND Mot_Cle='GSP_BATTERY_NOTIFY_PERCENT')
   INSERT INTO dbo.t_parametre(Section, Mot_Cle, Valeur, Commentaire) VALUES ('NOTIFICATIONS','GSP_BATTERY_NOTIFY_PERCENT','50','Seuil (%) notification batterie faible sonde GSP');
 IF NOT EXISTS (SELECT 1 FROM dbo.t_parametre WHERE Section='NOTIFICATIONS' AND Mot_Cle='GSP_BATTERY_EMAIL_PERCENT')
@@ -2575,7 +2575,7 @@ IF NOT EXISTS (SELECT 1 FROM dbo.t_parametre WHERE Section='NOTIFICATIONS' AND M
 IF NOT EXISTS (SELECT 1 FROM dbo.t_parametre WHERE Section='STATISTICS_MONTHLY_REPORT' AND Mot_Cle='ENABLED')
   INSERT INTO dbo.t_parametre(Section, Mot_Cle, Valeur, Commentaire) VALUES ('STATISTICS_MONTHLY_REPORT','ENABLED','0','Activation envoi recap mensuel stats');
 IF NOT EXISTS (SELECT 1 FROM dbo.t_parametre WHERE Section='STATISTICS_MONTHLY_REPORT' AND Mot_Cle='RECIPIENTS')
-  INSERT INTO dbo.t_parametre(Section, Mot_Cle, Valeur, Commentaire) VALUES ('STATISTICS_MONTHLY_REPORT','RECIPIENTS','','Destinataires separes par ; ou ,');
+  INSERT INTO dbo.t_parametre(Section, Mot_Cle, Valeur, Commentaire) VALUES ('STATISTICS_MONTHLY_REPORT','RECIPIENTS','','Destinataires séparés par ; ou ,');
 IF NOT EXISTS (SELECT 1 FROM dbo.t_parametre WHERE Section='STATISTICS_MONTHLY_REPORT' AND Mot_Cle='DAY_OF_MONTH')
   INSERT INTO dbo.t_parametre(Section, Mot_Cle, Valeur, Commentaire) VALUES ('STATISTICS_MONTHLY_REPORT','DAY_OF_MONTH','1','Jour du mois (1..31, replie au dernier jour du mois si necessaire)');
 IF NOT EXISTS (SELECT 1 FROM dbo.t_parametre WHERE Section='STATISTICS_MONTHLY_REPORT' AND Mot_Cle='HOUR_LOCAL')
@@ -2601,15 +2601,15 @@ IF NOT EXISTS (SELECT 1 FROM dbo.t_parametre WHERE Section='STATISTICS_MONTHLY_R
 IF NOT EXISTS (SELECT 1 FROM dbo.t_parametre WHERE Section='STATISTICS_MONTHLY_REPORT' AND Mot_Cle='INCLUDE_OVER_LOW_NO_ALARM')
   INSERT INTO dbo.t_parametre(Section, Mot_Cle, Valeur, Commentaire) VALUES ('STATISTICS_MONTHLY_REPORT','INCLUDE_OVER_LOW_NO_ALARM','1','Inclure depassement bas sans alarme');
 IF NOT EXISTS (SELECT 1 FROM dbo.t_parametre WHERE Section='STATISTICS_MONTHLY_REPORT' AND Mot_Cle='LAST_SENT_MONTH')
-  INSERT INTO dbo.t_parametre(Section, Mot_Cle, Valeur, Commentaire) VALUES ('STATISTICS_MONTHLY_REPORT','LAST_SENT_MONTH','','Dernier mois envoye au format YYYY-MM');
+  INSERT INTO dbo.t_parametre(Section, Mot_Cle, Valeur, Commentaire) VALUES ('STATISTICS_MONTHLY_REPORT','LAST_SENT_MONTH','','Dernier mois envoyé au format YYYY-MM');
 GO
 
 -- Parametres applicatifs conserves dans la base de reference
 MERGE dbo.t_parametre AS target
 USING (VALUES
   (N'CFR21', N'ACTIVATION_EXPIRATION_MOT_DE_PASSE', N'true', N'Activer l''expiration des mots de passe (CFR21)'),
-  (N'CFR21', N'ACTIVATION_NORME_CFR21', N'1', N'Activer la conformite CFR21 (saisie des configurations)'),
-  (N'CFR21', N'EVENEMENTS', N'1', N'Activation des evenements'),
+  (N'CFR21', N'ACTIVATION_NORME_CFR21', N'1', N'Activer la conformité CFR21 (saisie des configurations)'),
+  (N'CFR21', N'EVENEMENTS', N'1', N'Activation des événements'),
   (N'CFR21', N'JOURS_VALIDITE_MOT_DE_PASSE', N'90', NULL),
   (N'CFR21', N'MOT_DE_PASSE_PERMANENT', N'1', N'Le mot de passe ne peut pas être changé par l''utilisateur'),
   (N'CFR21', N'MOT_DE_PASSE_REUTILISABLE', N'0', N'L''utilisateur ne peut pas réutiliser un ancien mot de passe'),
@@ -2619,13 +2619,13 @@ USING (VALUES
   (N'CFR21', N'TEMPS_DECONNEXION_MINUTES', N'20', N'Temps d''inactivité avant deconnexion automatique en minutes'),
   (N'CFR21', N'VALIDITE_MOT_DE_PASSE_JOURS', N'90', N'Durée de validité du mot de passe en jours'),
   (N'SECURITE_EMAIL', N'SMTP_ACTIVATION', N'true', N'Activer l''envoi d''emails'),
-  (N'SECURITE_EMAIL', N'SMTP_EXPEDITEUR', N'', N'Adresse email expediteur (doit correspondre au domaine SMTP)'),
+  (N'SECURITE_EMAIL', N'SMTP_EXPEDITEUR', N'', N'Adresse email expéditeur (doit correspondre au domaine SMTP)'),
   (N'SECURITE_EMAIL', N'SMTP_MOT_DE_PASSE', N'', N'Mot de passe SMTP'),
   (N'SECURITE_EMAIL', N'SMTP_PORT', N'587', N'Port SMTP (587 pour TLS, 465 pour SSL)'),
   (N'SECURITE_EMAIL', N'SMTP_SERVEUR', N'', N'Serveur SMTP pour l''envoi d''emails'),
   (N'SECURITE_EMAIL', N'SMTP_UTILISATEUR', N'', N'Utilisateur SMTP'),
   (N'SECURITE_MOT_DE_PASSE', N'LONGUEUR_MINIMALE', N'8', N'Longueur minimale du mot de passe'),
-  (N'SECURITE_MOT_DE_PASSE', N'MIN_CARACTERES_SPECIAUX', N'1', N'Nombre minimum de caracteres speciaux'),
+  (N'SECURITE_MOT_DE_PASSE', N'MIN_CARACTERES_SPECIAUX', N'1', N'Nombre minimum de caractères spéciaux'),
   (N'SECURITE_MOT_DE_PASSE', N'MIN_CHIFFRES', N'1', N'Nombre minimum de chiffres'),
   (N'SECURITE_MOT_DE_PASSE', N'MIN_LETTRES_MAJUSCULES', N'1', N'Nombre minimum de majuscules'),
   (N'SECURITE_MOT_DE_PASSE', N'MIN_LETTRES_MINUSCULES', N'1', N'Nombre minimum de minuscules')
@@ -2643,11 +2643,11 @@ DECLARE @RecentParams TABLE (
 );
 
 INSERT INTO @RecentParams (Section, Mot_Cle, Valeur, Commentaire) VALUES
-(N'VERSION',N'SCHEMA_VERSION',N'0.90.001',N'Version produit commune des seeds MySQL et SQL Server'),
+(N'VERSION',N'SCHEMA_VERSION',N'0.90.1',N'Version produit commune des seeds MySQL et SQL Server'),
 (N'GENERAL',N'TIMEZONE',N'Europe/Paris',N'Fuseau horaire par defaut'),
 (N'DASHBOARD',N'AUDIT_GRAPH_OPENINGS',N'false',N'Activer l audit trail a l ouverture des graphiques'),
-(N'DASHBOARD',N'ETALONNAGE_WARNING_DAYS',N'90',N'Delai alerte validite etalonnage en jours'),
-(N'DASHBOARD',N'REFRESH',N'30',N'Intervalle de rafraichissement dashboard en secondes'),
+(N'DASHBOARD',N'ETALONNAGE_WARNING_DAYS',N'90',N'Délai alerte validité étalonnage en jours'),
+(N'DASHBOARD',N'REFRESH',N'30',N'Intervalle de rafraîchissement dashboard en secondes'),
 (N'DASHBOARD',N'REQUIRE_ACTION_COMMENT',N'false',N'Exiger un commentaire pour les actions de surveillance'),
 (N'NOTIFICATIONS',N'EMAIL',N'true',N'Activation globale des emails systeme'),
 (N'NOTIFICATIONS',N'ALARM_EMAIL_RECIPIENTS',N'',N'Emails systeme utilises en copie ou fallback selon configuration'),
@@ -2662,18 +2662,18 @@ INSERT INTO @RecentParams (Section, Mot_Cle, Valeur, Commentaire) VALUES
 (N'NOTIFICATIONS_TEAMS',N'NOTIFY_ON_ACK',N'false',N'Envoie un message Teams a l acquittement'),
 (N'NOTIFICATIONS_TEAMS',N'TIMEOUT_MS',N'5000',N'Timeout HTTP du webhook Teams en millisecondes'),
 (N'SERVICE',N'GSO_DERNIER_DATE_HEURE',NULL,N'Date et heure de derniere mesure inscrite par la boucle GSO dans tm_mesures'),
-(N'SERVICES',N'COMMERCIAL_CONTACT_EMAIL',N'',N'Adresse email du service commercial utilisee pour les demandes de devis materiel'),
-(N'TELEPHONIE',N'ENABLED',N'false',N'Activation globale de la telephonie VoIP'),
-(N'TELEPHONIE',N'PROVIDER',N'none',N'Fournisseur VoIP selectionne'),
-(N'TELEPHONIE',N'CALLER_ID',N'',N'Numero presente / caller ID'),
-(N'TELEPHONIE',N'NOTES',N'',N'Notes d integration telephonie'),
-(N'TELEPHONIE',N'TWILIO_AUTH_MODE',N'api_key',N'Mode authentification Twilio'),
+(N'SERVICES',N'COMMERCIAL_CONTACT_EMAIL',N'',N'Adresse email du service commercial utilisée pour les demandes de devis matériel'),
+(N'TELEPHONIE',N'ENABLED',N'false',N'Activation globale de la téléphonie VoIP'),
+(N'TELEPHONIE',N'PROVIDER',N'none',N'Fournisseur VoIP sélectionné'),
+(N'TELEPHONIE',N'CALLER_ID',N'',N'Numéro présenté / caller ID'),
+(N'TELEPHONIE',N'NOTES',N'',N'Notes d’intégration téléphonie'),
+(N'TELEPHONIE',N'TWILIO_AUTH_MODE',N'api_key',N'Mode d’authentification Twilio'),
 (N'TELEPHONIE',N'TWILIO_ACCOUNT_SID',N'',N'Compte Twilio'),
 (N'TELEPHONIE',N'TWILIO_API_KEY_SID',N'',N'API Key SID Twilio'),
 (N'TELEPHONIE',N'TWILIO_API_KEY_SECRET',N'',N'API Key Secret Twilio'),
 (N'TELEPHONIE',N'TWILIO_AUTH_TOKEN',N'',N'Auth Token Twilio'),
-(N'TELEPHONIE',N'TWILIO_FROM_NUMBER',N'',N'Numero expediteur Twilio'),
-(N'TELEPHONIE',N'OVH_ENDPOINT',N'ovh-eu',N'Point d acces API OVH'),
+(N'TELEPHONIE',N'TWILIO_FROM_NUMBER',N'',N'Numéro expéditeur Twilio'),
+(N'TELEPHONIE',N'OVH_ENDPOINT',N'ovh-eu',N'Point d’accès API OVH'),
 (N'TELEPHONIE',N'OVH_APPLICATION_KEY',N'',N'Application Key OVH'),
 (N'TELEPHONIE',N'OVH_APPLICATION_SECRET',N'',N'Application Secret OVH'),
 (N'TELEPHONIE',N'OVH_CONSUMER_KEY',N'',N'Consumer Key OVH'),
@@ -2721,8 +2721,8 @@ USING (VALUES
   (12, N'GSP-RP-CONT', N'Gemsense Pro platine contact', N'Sonde GemSense Pro avec écran 2,9" ' + CHAR(13) + '' + CHAR(10) + 'Fonction mémoire (5300 valeurs)' + CHAR(13) + '' + CHAR(10) + 'Batterie de secours (15 jours)' + CHAR(13) + '' + CHAR(10) + 'Gamme pro avec portée étendue' + CHAR(13) + '' + CHAR(10) + 'Capteur de température' + CHAR(13) + '' + CHAR(10) + 'Sonde : Pt 100 CEI 60751 classe A, ' + CHAR(13) + '' + CHAR(10) + 'simple enroulement, élément de mesure couche mince sous rétractable PFA' + CHAR(13) + '' + CHAR(10) + 'Sous film polyester ' + CHAR(13) + '' + CHAR(10) + 'Température d''utilisation : -80+160 °C' + CHAR(13) + '' + CHAR(10) + 'Fixation par colle silicone sur surface dégraissée' + CHAR(13) + '' + CHAR(10) + 'Câble de raccordement : PFA/PFA, section 0,09 mm², longueur 2 mètres, 3 conducteurs', N'GSP', N'RADIO'),
   (13, N'GSP-RP-AU', N'Gemsense Pro platine autoclave', N'Sonde GemSense Pro avec écran 2,9" ' + CHAR(13) + '' + CHAR(10) + 'Fonction mémoire (5300 valeurs)' + CHAR(13) + '' + CHAR(10) + 'Batterie de secours (15 jours)' + CHAR(13) + '' + CHAR(10) + 'Gamme pro avec portée étendue' + CHAR(13) + '' + CHAR(10) + 'Capteur de température' + CHAR(13) + '' + CHAR(10) + 'Gaine de protection : acier inox 316 L - Ø 6 x 200 mm, ' + CHAR(13) + '' + CHAR(10) + 'prolongée par câble PFA/silicone protégé par flexible inox Ø 7 mm, longueur 1,5 mètres puis gaine étanche Ø 6 x 100 mm pour passage de cloison' + CHAR(13) + '' + CHAR(10) + 'Sonde : Pt 100 céramique CEI 60751 classe A, simple ou double enroulement en montage 3 fils' + CHAR(13) + '' + CHAR(10) + 'Câble de raccordement : PFA/silicone, longueur 2 mètres' + CHAR(13) + '' + CHAR(10) + 'Température maximale d''utilisation : +180 °C' + CHAR(13) + '' + CHAR(10) + 'Exécution étanche', N'GSP', N'RADIO'),
   (14, N'GSP-RP-CF', N'Gemsense Pro platine chambre froide', N'Sonde GemSense Pro avec écran 2,9" ' + CHAR(13) + '' + CHAR(10) + 'Fonction mémoire (5300 valeurs)' + CHAR(13) + '' + CHAR(10) + 'Batterie de secours (15 jours)' + CHAR(13) + '' + CHAR(10) + 'Gamme pro avec portée étendue' + CHAR(13) + '' + CHAR(10) + 'Capteur de température' + CHAR(13) + '' + CHAR(10) + 'Capteur muni à l''extrémité d''une ogive inox diamètre 6 mm ' + CHAR(13) + '' + CHAR(10) + 'sertie sur 15 mètres de câble silicone.' + CHAR(13) + '' + CHAR(10) + 'Configuration 3 fils' + CHAR(13) + '' + CHAR(10) + 'Elément sensible Pt100 suivant NF EN 60751 classe B' + CHAR(13) + '' + CHAR(10) + 'Ogive inox diamètre 6 mm, longueur 50 mm' + CHAR(13) + '' + CHAR(10) + 'Température d''utilisation : -50°C à + 100°C' + CHAR(13) + '' + CHAR(10) + 'Sortie sur 15 mètres de câble : Conducteurs souples 7 brins ' + CHAR(13) + '' + CHAR(10) + 'de ø 0.2 mm isolés PFA sous gaine caoutchouc de silicone. ' + CHAR(13) + '' + CHAR(10) + '2 conducteurs rouges, 1 conducteur blanc', N'GSP', N'RADIO'),
-  (15, N'GSP-RP-MICRO', N'Gemsense Pro platine micro-capteur', N'Sonde GemSense Pro avec écran 2,9" ' + CHAR(13) + '' + CHAR(10) + 'Fonction mémoire (5300 valeurs)' + CHAR(13) + '' + CHAR(10) + 'Batterie de secours (15 jours)' + CHAR(13) + '' + CHAR(10) + 'Gamme pro avec portée étendue' + CHAR(13) + '' + CHAR(10) + 'Capteur de temperature platine' + CHAR(13) + '' + CHAR(10) + 'Capteur micro ø 2,18mm L 4,75m : -70°C à + 250°C', N'GSP', N'RADIO'),
-  (16, N'GSP-RQ-CO2', N'Gemsense Pro CO2', N'Sonde GemSense Pro avec écran 2,9" ' + CHAR(13) + '' + CHAR(10) + 'Fonction mémoire (5300 valeurs)' + CHAR(13) + '' + CHAR(10) + 'Gamme pro avec portée étendue' + CHAR(13) + '' + CHAR(10) + 'Le capteur de dioxyde de carbone Vaisala CARBOCAP® GMP251 est une sonde intelligente et autonome.' + CHAR(13) + '' + CHAR(10) + 'La plage de température de fonctionnement va de -40 à +60 °C, ' + CHAR(13) + '' + CHAR(10) + 'et la plage de mesure est comprise entre 0 et 20 % de CO2' + CHAR(13) + '' + CHAR(10) + 'Le capteur GMP251 fait appel à la technologie unique de deuxième génération Vaisala CARBOCAP® qui offre une stabilité exceptionnelle. ' + CHAR(13) + '' + CHAR(10) + 'La durée de vie de la GMP251 est prolongée grâce à un nouveau type de source de lumière infrarouge (IR) qui remplace l''ampoule à incandescence traditionnelle. Elle bénéficie de compensations complètes de température et de pression de la mesure du COCO2 - mesure de température intégrée pour la compensation.', N'GSP', N'RADIO'),
+  (15, N'GSP-RP-MICRO', N'Gemsense Pro platine micro-capteur', N'Sonde GemSense Pro avec écran 2,9" ' + CHAR(13) + '' + CHAR(10) + 'Fonction mémoire (5300 valeurs)' + CHAR(13) + '' + CHAR(10) + 'Batterie de secours (15 jours)' + CHAR(13) + '' + CHAR(10) + 'Gamme pro avec portée étendue' + CHAR(13) + '' + CHAR(10) + 'Capteur de température platine' + CHAR(13) + '' + CHAR(10) + 'Capteur micro ø 2,18mm L 4,75m : -70°C à + 250°C', N'GSP', N'RADIO'),
+  (16, N'GSP-RQ-CO2', N'Gemsense Pro CO2', N'Sonde GemSense Pro avec écran 2,9" ' + CHAR(13) + '' + CHAR(10) + 'Fonction mémoire (5300 valeurs)' + CHAR(13) + '' + CHAR(10) + 'Gamme pro avec portée étendue' + CHAR(13) + '' + CHAR(10) + 'Le capteur de dioxyde de carbone Vaisala CARBOCAP® GMP251 est une sonde intelligente et autonome.' + CHAR(13) + '' + CHAR(10) + 'La plage de température de fonctionnement va de -40 à +60 °C, ' + CHAR(13) + '' + CHAR(10) + 'et la plage de mesure est comprise entre 0 et 20 % de CO2' + CHAR(13) + '' + CHAR(10) + 'Le capteur GMP251 fait appel à la technologie unique de deuxième génération Vaisala CARBOCAP® qui offre une stabilité exceptionnelle. ' + CHAR(13) + '' + CHAR(10) + 'La durée de vie de la GMP251 est prolongée grâce à un nouveau type de source de lumière infrarouge (IR) qui remplace l''ampoule à incandescence traditionnelle. Elle bénéficie de compensations complètes de température et de pression de la mesure du CO2 - mesure de température intégrée pour la compensation.', N'GSP', N'RADIO'),
   (17, N'GSP-RQ-HYG', N'Gemsense Pro hygrométrie', N'Sonde GemSense Pro avec écran 2,9" ' + CHAR(13) + '' + CHAR(10) + 'Fonction mémoire (5300 valeurs)' + CHAR(13) + '' + CHAR(10) + 'Gamme pro avec portée étendue' + CHAR(13) + '' + CHAR(10) + 'Plage de mesure de 0% à 100 %hr' + CHAR(13) + '' + CHAR(10) + 'Température d''utilisation de 10°C à +60°C' + CHAR(13) + '' + CHAR(10) + 'Capteur de diamètre 12 mm longueur 71 mm', N'GSP', N'RADIO'),
   (18, N'GSP-RQ-THE', N'Gemsense Pro thermocouple', N'Sonde GemSense Pro avec écran 2,9" ' + CHAR(13) + '' + CHAR(10) + 'Fonction mémoire (5300 valeurs)' + CHAR(13) + '' + CHAR(10) + 'Batterie de secours (15 jours)' + CHAR(13) + '' + CHAR(10) + 'Gamme pro avec portée étendue' + CHAR(13) + '' + CHAR(10) + 'Capteur de température' + CHAR(13) + '' + CHAR(10) + 'Capteur thermocouple J chemise (déformable) :' + CHAR(13) + '' + CHAR(10) + 'ø 3 mm longueur 50 cm' + CHAR(13) + '' + CHAR(10) + 'Température d''utilisation  : 100°C à + 1500°C' + CHAR(13) + '' + CHAR(10) + 'Sortie sur câble tresse inox 1m', N'GSP', N'RADIO'),
   (19, N'GSP-RQ-PRES', N'Gemsense Pro pression différentielle', N'Sonde GemSense Pro avec écran 2,9" ' + CHAR(13) + '' + CHAR(10) + 'Fonction mémoire (5300 valeurs)' + CHAR(13) + '' + CHAR(10) + 'Batterie de secours (10 jours)' + CHAR(13) + '' + CHAR(10) + 'Gamme pro avec portée étendue' + CHAR(13) + '' + CHAR(10) + 'Capteur de pression ' + CHAR(13) + '' + CHAR(10) + 'Capteur piézoélectique' + CHAR(13) + '' + CHAR(10) + 'Domaine d''utilisation  : 0 à 250 Pa' + CHAR(13) + '' + CHAR(10) + 'Sortie sur câble tresse inox 1m', N'GSP', N'RADIO'),
@@ -2731,7 +2731,7 @@ USING (VALUES
   (22, N'GSP-RQ-01V', N'Gemsense Pro 0-1 Volt', N'Sonde GemSense Pro avec écran 2,9" ' + CHAR(13) + '' + CHAR(10) + 'Fonction mémoire (5300 valeurs)' + CHAR(13) + '' + CHAR(10) + 'Batterie de secours (10 jours)' + CHAR(13) + '' + CHAR(10) + 'Gamme pro avec portée étendue' + CHAR(13) + '' + CHAR(10) + 'Capteur de tension ' + CHAR(13) + '' + CHAR(10) + 'Entrée 0-1Volt', N'GSP', N'RADIO'),
   (23, N'GSP-RQ-420MA', N'Gemsense Pro 4-20 mA', N'Sonde GemSense Pro avec écran 2,9" ' + CHAR(13) + '' + CHAR(10) + 'Fonction mémoire (5300 valeurs)' + CHAR(13) + '' + CHAR(10) + 'Batterie de secours (10 jours)' + CHAR(13) + '' + CHAR(10) + 'Gamme pro avec portée étendue' + CHAR(13) + '' + CHAR(10) + 'Capteur de courant ' + CHAR(13) + '' + CHAR(10) + 'Entrée 4-20mA', N'GSP', N'RADIO'),
   (24, N'GSP-RQ-NONF', N'Gemsense Pro NO NF', N'Sonde GemSense Pro avec écran 2,9" ' + CHAR(13) + '' + CHAR(10) + 'Fonction mémoire (5300 valeurs)' + CHAR(13) + '' + CHAR(10) + 'Batterie de secours (10 jours)' + CHAR(13) + '' + CHAR(10) + 'Gamme pro avec portée étendue' + CHAR(13) + '' + CHAR(10) + 'Capteur TOR ' + CHAR(13) + '' + CHAR(10) + 'Entrée récuperation de contact NO ou NF' + CHAR(13) + '' + CHAR(10) + 'Domaine d''utilisation : reprise de contact', N'GSP', N'RADIO'),
-  (25, N'GSP-RP-ETAL', N'Gemsense Pro Etalon', N'Sonde GemSense Pro avec écran 2,9" ' + CHAR(13) + '' + CHAR(10) + 'Lecture écran sous forme de liste pour des étalonnages ' + CHAR(13) + '' + CHAR(10) + 'plus faciles' + CHAR(13) + '' + CHAR(10) + 'Batterie de secours (15 jours)' + CHAR(13) + '' + CHAR(10) + 'Gamme pro avec portée étendue' + CHAR(13) + '' + CHAR(10) + 'Gaine de protection : acier inox 316 L, Ø 3,5 longueur utile 150 mm ' + CHAR(13) + '' + CHAR(10) + 'Température d''utilisation : -200 à 200°C' + CHAR(13) + '' + CHAR(10) + 'Sonde : Pt 100 céramique CEI 60751 classe 1/3DIN, ' + CHAR(13) + '' + CHAR(10) + 'en montage 4 fils' + CHAR(13) + '' + CHAR(10) + 'Câble de raccordement : PFA/PFA ' + CHAR(13) + '' + CHAR(10) + 'Résolution d’affichage : 0,01°C ' + CHAR(13) + '' + CHAR(10) + 'Résolution de mesure : 0,003°C', N'GSP', N'ETALON'),
+  (25, N'GSP-RP-ETAL', N'Gemsense Pro Étalon', N'Sonde GemSense Pro avec écran 2,9" ' + CHAR(13) + '' + CHAR(10) + 'Lecture écran sous forme de liste pour des étalonnages ' + CHAR(13) + '' + CHAR(10) + 'plus faciles' + CHAR(13) + '' + CHAR(10) + 'Batterie de secours (15 jours)' + CHAR(13) + '' + CHAR(10) + 'Gamme pro avec portée étendue' + CHAR(13) + '' + CHAR(10) + 'Gaine de protection : acier inox 316 L, Ø 3,5 longueur utile 150 mm ' + CHAR(13) + '' + CHAR(10) + 'Température d''utilisation : -200 à 200°C' + CHAR(13) + '' + CHAR(10) + 'Sonde : Pt 100 céramique CEI 60751 classe 1/3DIN, ' + CHAR(13) + '' + CHAR(10) + 'en montage 4 fils' + CHAR(13) + '' + CHAR(10) + 'Câble de raccordement : PFA/PFA ' + CHAR(13) + '' + CHAR(10) + 'Résolution d’affichage : 0,01°C ' + CHAR(13) + '' + CHAR(10) + 'Résolution de mesure : 0,003°C', N'GSP', N'ETALON'),
   (26, N'GSP-XN-BL', N'Gemsense Pro Ethernet numérique blanc', N'Liaison Ethernet RJ45 ' + CHAR(13) + '' + CHAR(10) + 'Capteur numérique' + CHAR(13) + '' + CHAR(10) + 'Température d''utilisation : -30°C à 125°C' + CHAR(13) + '' + CHAR(10) + 'Capteur numérique Ø 6mm l, 50mm  / -30°C à 125 °C | Câble long 3 m BLANC', N'GSP', N'ETHERNET'),
   (27, N'GSP-XN-GR', N'Gemsense Pro Ethernet numérique gris', N'Liaison Ethernet RJ45 ' + CHAR(13) + '' + CHAR(10) + 'Capteur numérique' + CHAR(13) + '' + CHAR(10) + 'Température d''utilisation : -30°C à 70°C' + CHAR(13) + '' + CHAR(10) + 'Capteur numérique Ø 6mm l, 50mm  / -30°C à 70 °C | Câble long 3 m GRIS PLAT', N'GSP', N'ETHERNET'),
   (28, N'GSP-XP', N'Gemsense Pro Ethernet platine', N'Liaison Ethernet RJ45 ' + CHAR(13) + '' + CHAR(10) + 'Gaine de protection : acier inox 316 L, Ø 6 ' + CHAR(13) + '' + CHAR(10) + 'Température d''utilisation : -200 à 200°C' + CHAR(13) + '' + CHAR(10) + 'Sonde : Pt 100 céramique CEI 60751 classe A, en montage 4 fils' + CHAR(13) + '' + CHAR(10) + 'Câble de raccordement : PFA/PFA', N'GSP', N'ETHERNET'),
@@ -2765,8 +2765,8 @@ GO
 MERGE dbo.t_parametre AS target
 USING (VALUES
   (N'CFR21', N'ACTIVATION_EXPIRATION_MOT_DE_PASSE', N'true', N'Activer l''expiration des mots de passe (CFR21)', NULL),
-  (N'CFR21', N'ACTIVATION_NORME_CFR21', N'0', N'Activer la conformite CFR21 (saisie des configurations)', NULL),
-  (N'CFR21', N'EVENEMENTS', N'1', N'Activation des evenements', NULL),
+  (N'CFR21', N'ACTIVATION_NORME_CFR21', N'0', N'Activer la conformité CFR21 (saisie des configurations)', NULL),
+  (N'CFR21', N'EVENEMENTS', N'1', N'Activation des événements', NULL),
   (N'CFR21', N'JOURS_VALIDITE_MOT_DE_PASSE', N'0', NULL, NULL),
   (N'CFR21', N'MOT_DE_PASSE_PERMANENT', N'1', N'Le mot de passe ne peut pas etre change par l''utilisateur', NULL),
   (N'CFR21', N'MOT_DE_PASSE_REUTILISABLE', N'0', N'L''utilisateur ne peut pas reutiliser un ancien mot de passe', NULL),
@@ -2774,13 +2774,13 @@ USING (VALUES
   (N'CFR21', N'REACTIVATION_ALARME_SONORE', N'500', N'Delai de reactivation de l''alarme sonore en millisecondes', NULL),
   (N'CFR21', N'SECURITE', N'0', N'Mode securite renforcee', NULL),
   (N'CFR21', N'TEMPS_DECONNEXION_MINUTES', N'20', N'Temps d''inactivite avant deconnexion automatique en minutes', NULL),
-  (N'CFR21', N'VALIDITE_MOT_DE_PASSE_JOURS', N'90', N'Duree de validite du mot de passe en jours', NULL),
+  (N'CFR21', N'VALIDITE_MOT_DE_PASSE_JOURS', N'90', N'Durée de validité du mot de passe en jours', NULL),
   (N'DASHBOARD', N'AUDIT_GRAPH_OPENINGS', N'false', N'Activer l''audit trail a l''ouverture des graphiques', NULL),
   (N'DASHBOARD', N'ETALONNAGE_WARNING_DAYS', N'90', NULL, NULL),
-  (N'DASHBOARD', N'REFRESH', N'30', N'Intervalle de rafraichissement dashboard (secondes)', NULL),
+  (N'DASHBOARD', N'REFRESH', N'30', N'Intervalle de rafraîchissement dashboard (secondes)', NULL),
   (N'DASHBOARD', N'REQUIRE_ACTION_COMMENT', N'false', NULL, NULL),
   (N'DASHBOARD', N'SHOW_NULL_NON_RESPONSE', N'true', N'Afficher les non-reponses (valeurs null) sur les graphes', NULL),
-  (N'DASHBOARD', N'SURVEILLANCE_REFRESH', N'30', N'Delai auto de rafraichissement de la surveillance (secondes)', NULL),
+  (N'DASHBOARD', N'SURVEILLANCE_REFRESH', N'30', N'Délai auto de rafraîchissement de la surveillance (secondes)', NULL),
   (N'GENERAL', N'TIMEZONE', N'Europe/Paris', N'Fuseau horaire par defaut', NULL),
   (N'NOTIFICATIONS', N'ALARM_EMAIL_ACKNOWLEDGED', N'true', N'Envoyer les emails d acquittement', NULL),
   (N'NOTIFICATIONS', N'ALARM_EMAIL_ENDED', N'true', N'Envoyer les emails d alarme terminee', NULL),
@@ -2797,18 +2797,18 @@ USING (VALUES
   (N'NOTIFICATIONS_TEAMS', N'TIMEOUT_MS', N'5000', N'Timeout HTTP du webhook Teams en millisecondes.', NULL),
   (N'NOTIFICATIONS_TEAMS', N'WEBHOOK_URL', N'', N'URL du webhook Teams Workflows. Secret a proteger.', NULL),
   (N'SECURITE_EMAIL', N'SMTP_ACTIVATION', N'false', N'Activer l''envoi d''emails', NULL),
-  (N'SECURITE_EMAIL', N'SMTP_EXPEDITEUR', N'', N'Adresse email expediteur (doit correspondre au domaine SMTP)', NULL),
+  (N'SECURITE_EMAIL', N'SMTP_EXPEDITEUR', N'', N'Adresse email expéditeur (doit correspondre au domaine SMTP)', NULL),
   (N'SECURITE_EMAIL', N'SMTP_MOT_DE_PASSE', N'', N'Mot de passe SMTP', NULL),
   (N'SECURITE_EMAIL', N'SMTP_PORT', N'587', N'Port SMTP (587 pour TLS, 465 pour SSL)', NULL),
   (N'SECURITE_EMAIL', N'SMTP_SERVEUR', N'', N'Serveur SMTP pour l''envoi d''emails', NULL),
   (N'SECURITE_EMAIL', N'SMTP_UTILISATEUR', N'', N'Utilisateur SMTP', NULL),
   (N'SECURITE_MOT_DE_PASSE', N'LONGUEUR_MINIMALE', N'4', N'Longueur minimale du mot de passe', NULL),
-  (N'SECURITE_MOT_DE_PASSE', N'MIN_CARACTERES_SPECIAUX', N'0', N'Nombre minimum de caracteres speciaux', NULL),
+  (N'SECURITE_MOT_DE_PASSE', N'MIN_CARACTERES_SPECIAUX', N'0', N'Nombre minimum de caractères spéciaux', NULL),
   (N'SECURITE_MOT_DE_PASSE', N'MIN_CHIFFRES', N'0', N'Nombre minimum de chiffres', NULL),
   (N'SECURITE_MOT_DE_PASSE', N'MIN_LETTRES_MAJUSCULES', N'0', N'Nombre minimum de majuscules', NULL),
   (N'SECURITE_MOT_DE_PASSE', N'MIN_LETTRES_MINUSCULES', N'0', N'Nombre minimum de minuscules', NULL),
   (N'SERVICE', N'GSO_DERNIER_DATE_HEURE', NULL, N'Date et heure de derniere mesure inscrite par la boucle GSO dans tm_mesures', NULL),
-  (N'SERVICES', N'COMMERCIAL_CONTACT_EMAIL', N'', N'Adresse email du service commercial utilisee pour les demandes de devis materiel', NULL),
+  (N'SERVICES', N'COMMERCIAL_CONTACT_EMAIL', N'', N'Adresse email du service commercial utilisée pour les demandes de devis matériel', NULL),
   (N'STATISTICS_MONTHLY_REPORT', N'DAY_OF_MONTH', N'1', N'Jour du mois (1..31, replie au dernier jour du mois si necessaire)', NULL),
   (N'STATISTICS_MONTHLY_REPORT', N'ENABLED', N'0', N'Activation envoi recap mensuel stats', NULL),
   (N'STATISTICS_MONTHLY_REPORT', N'HOUR_LOCAL', N'8', N'Heure locale (0..23)', NULL),
@@ -2822,8 +2822,8 @@ USING (VALUES
   (N'STATISTICS_MONTHLY_REPORT', N'INCLUDE_OVER_HIGH_NO_ALARM', N'1', N'Inclure depassement haut sans alarme', NULL),
   (N'STATISTICS_MONTHLY_REPORT', N'INCLUDE_OVER_LOW_NO_ALARM', N'1', N'Inclure depassement bas sans alarme', NULL),
   (N'STATISTICS_MONTHLY_REPORT', N'INCLUDE_SETTINGS_SUMMARY', N'1', N'Inclure consignes/tolerances/frequence/retards', NULL),
-  (N'STATISTICS_MONTHLY_REPORT', N'LAST_SENT_MONTH', N'', N'Dernier mois envoye au format YYYY-MM', NULL),
-  (N'STATISTICS_MONTHLY_REPORT', N'RECIPIENTS', N'', N'Destinataires separes par ; ou ,', NULL)
+  (N'STATISTICS_MONTHLY_REPORT', N'LAST_SENT_MONTH', N'', N'Dernier mois envoyé au format YYYY-MM', NULL),
+  (N'STATISTICS_MONTHLY_REPORT', N'RECIPIENTS', N'', N'Destinataires séparés par ; ou ,', NULL)
 ) AS source (Section, Mot_Cle, Valeur, Commentaire, Champ_DATETIME)
 ON target.Section = source.Section AND target.Mot_Cle = source.Mot_Cle
 WHEN MATCHED THEN UPDATE SET Valeur = source.Valeur, Commentaire = source.Commentaire, Champ_DATETIME = source.Champ_DATETIME
