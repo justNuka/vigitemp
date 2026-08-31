@@ -1370,7 +1370,7 @@ Après le clic sur **Accéder à VigiSensys**, le formulaire de connexion pouvai
 
 ## Seeds BDD — accents, fautes et artefacts historiques — 31/08/2026
 
-**Statut : `EN_COURS` — branche `fix/db-seed-french-labels` — PR à ouvrir vers `dev`.**
+**Statut : `PR_OUVERTE` — PR #76 — branche `fix/db-seed-french-labels` — vers `dev`.**
 
 ### Audit du code courant
 
