@@ -20,11 +20,11 @@ import StepperCalibrationFileUpload, {
 } from "@/components/stepper-calibration-file-upload";
 
 const formatDateTime = (value: string | Date | null | undefined, locale: string) => {
-  return formatDbDateTime(value, { locale, fallback: "" }) || null;
+  return formatDbDateTime(value, { format: "dateTimeSeconds", locale, fallback: "" }) || null;
 };
 
 const formatDate = (value: string | Date | null | undefined, locale: string) => {
-  return formatDbDateTime(value, { locale, dateOnly: true, fallback: "" }) || null;
+  return formatDbDateTime(value, { format: "date", locale, fallback: "" }) || null;
 };
 
 const normalizeOptionalText = (value: string | null | undefined) => {
