@@ -1201,7 +1201,7 @@ export function VigilogPageClient() {
               <span className={`h-3 w-3 rounded-full ${trafficLightClass(row.original.trafficLight)}`} />
               <span className="text-sm text-foreground">
                 {row.original.trafficLight
-                  ? t(`history.traffic.${row.original.trafficLight.toLowerCase()}` as never)}
+                  ? t(`history.traffic.${row.original.trafficLight.toLowerCase()}` as never)
                   : "-"}
               </span>
             </div>
@@ -1899,7 +1899,7 @@ export function VigilogPageClient() {
                             current?.serial === event.target.value ? current : null,
                           )
                         }}
-                        placeholder={t("usage.placeholders.loggerSerial")}
+                        placeholder={t("departure.placeholders.loggerSerial")}
                         maxLength={30}
                       />
                     </div>
