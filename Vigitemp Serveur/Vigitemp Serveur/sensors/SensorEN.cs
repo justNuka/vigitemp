@@ -21,137 +21,153 @@ namespace Vigitemp_Serveur.sensors
 
         public override async Task<bool> read()
         {
-            try
+            return await ExecuteWithPortLockAsync(async () =>
             {
-                pendingResults = true;
-                m_port.Encoding = Encoding.UTF32;
-                m_port.Open();
-                m_port.DiscardInBuffer();
-                m_port.DiscardOutBuffer();
-
-                int sRelais1 = int.Parse(m_sondeAdresse); //adresse sonde
-
-                byte[] bytestosend = {  0x51,
-                                    Convert.ToByte(sRelais1),
-                                    Convert.ToByte(sRelais1),
-                                    Convert.ToByte(sRelais1),
-                                    Convert.ToByte(sRelais1),
-                                    Convert.ToByte(sRelais1),
-                                    0x30,
-                                    Convert.ToByte(sRelais1),
-                                    Convert.ToByte(sRelais1),
-                                    Convert.ToByte(sRelais1),
-                                    Convert.ToByte(sRelais1),
-                                    Convert.ToByte(sRelais1),
-                                    0x30,
-                                    0x30
-                                };
-                m_port.Write(bytestosend, 0, bytestosend.Length);
-
-                Stopwatch tmp_sw = new Stopwatch();
-                tmp_sw.Start();
-                Console.WriteLine("write");
-                Trace.WriteLine("write");
-                while (pendingResults)
+                if (!int.TryParse(m_sondeAdresse, out int sRelais1))
                 {
-                    await Task.Delay(25);
-                    if (tmp_sw.Elapsed.TotalMilliseconds > 2000)
-                    {
-                        m_port.Close();
-                        m_sensor_response = "";
-                        pendingResults = false;
-                        break;
-                    }
+                    VigitempServeur.Log($"[SONDE][ERR] type=EN serial={m_sondeSerialNumber} adresse invalide='{m_sondeAdresse}'");
+                    HandleNoResponseAlarm(false, "invalid-address");
+                    return false;
                 }
 
-                tmp_sw.Stop();
-            }
-            catch (TimeoutException e)
-            {
-                Console.WriteLine("erreur: " + e);
-                Trace.WriteLine("erreur: " + e);
-                m_port.Close();
-                return false;
-            }
-            return true;
+                try
+                {
+                    BeginReadCycle();
+                    // L'encodage du port n'est pas utilisé directement : les bytes sont lus via
+                    // sp.Read(buf) et décodés manuellement avec ISO-8859-1 dans le handler.
+                    m_port.Encoding = Encoding.GetEncoding("ISO-8859-1");
+                    m_port.Open();
+                    m_port.DiscardInBuffer();
+                    m_port.DiscardOutBuffer();
+
+
+                    byte[] bytestosend = {  0x51,
+                                        Convert.ToByte(sRelais1),
+                                        Convert.ToByte(sRelais1),
+                                        Convert.ToByte(sRelais1),
+                                        Convert.ToByte(sRelais1),
+                                        Convert.ToByte(sRelais1),
+                                        0x30,
+                                        Convert.ToByte(sRelais1),
+                                        Convert.ToByte(sRelais1),
+                                        Convert.ToByte(sRelais1),
+                                        Convert.ToByte(sRelais1),
+                                        Convert.ToByte(sRelais1),
+                                        0x30,
+                                        0x30
+                                    };
+                    VigitempServeur.Log($"[SONDE][TX] type=EN serial={m_sondeSerialNumber} port={m_comPort} adresse={m_sondeAdresse} cmdHex={BitConverter.ToString(bytestosend)}");
+                    m_port.Write(bytestosend, 0, bytestosend.Length);
+
+                    Stopwatch tmp_sw = new Stopwatch();
+                    tmp_sw.Start();
+                    while (pendingResults)
+                    {
+                        await Task.Delay(25);
+                        if (tmp_sw.Elapsed.TotalMilliseconds > 2000)
+                        {
+                            if (!TryCompleteRead())
+                            {
+                                break;
+                            }
+                            VigitempServeur.Log($"[SONDE][DONE] type=EN serial={m_sondeSerialNumber} port={m_comPort} status=timeout elapsedMs={tmp_sw.Elapsed.TotalMilliseconds:0}");
+                            HandleNoResponseAlarm(false, "timeout");
+                            m_port.Close();
+                            m_sensor_response = "";
+                            break;
+                        }
+                    }
+
+                    tmp_sw.Stop();
+                }
+                catch (Exception e)
+                {
+                    VigitempServeur.Log($"[SONDE][ERR] type=EN serial={m_sondeSerialNumber} port={m_comPort} error={e}");
+                    HandleNoResponseAlarm(false, "exception");
+                    DisposePort();
+                    return false;
+                }
+                return true;
+            });
         }
 
         protected override void DataReceivedHandler(
                             object sender,
                             SerialDataReceivedEventArgs e)
         {
-            SerialPort sp = (SerialPort)sender;
-            Encoding iso = Encoding.GetEncoding("ISO-8859-1");
-            string regex_res;
-            string suplex;
-            int length = sp.BytesToRead;
-            byte[] buf = new byte[length];
-            Console.WriteLine("read");
-            Trace.WriteLine("read");
-
-
-            Console.WriteLine("byte buf length: " + length);
-            Trace.WriteLine("byte buf length: " + length);
-            sp.Read(buf, 0, length);
-            m_sensor_response += iso.GetString(buf);
-            m_sensor_response = m_sensor_response.Replace(@"/(/\r?\n|\r/)/gm", "");
-            Console.WriteLine("reponse: " + m_sensor_response + "       | " + m_sensor_response.Length);
-            Trace.WriteLine("reponse: " + m_sensor_response + "       | " + m_sensor_response.Length);
-            var m = Regex.Match(m_sensor_response, m_regexResponseTempSensor, RegexOptions.None);
-            if (m_sensor_response.Length == 14)
+            try
             {
-                regex_res = m_sensor_response;
-                m_sensor_response = "";
+                if (HasReadCompleted())
+                {
+                    return;
+                }
+
+                SerialPort sp = (SerialPort)sender;
+                Encoding iso = Encoding.GetEncoding("ISO-8859-1");
+                string regex_res;
+                string suplex;
+                int length = sp.BytesToRead;
+                byte[] buf = new byte[length];
+                sp.Read(buf, 0, length);
+                AppendToResponse(iso.GetString(buf));
+                m_sensor_response = Regex.Replace(m_sensor_response, @"\r?\n|\r", "");
+                VigitempServeur.Log($"[SONDE][RX] type=EN serial={m_sondeSerialNumber} port={m_comPort} raw={m_sensor_response} len={m_sensor_response.Length}");
+                var m = Regex.Match(m_sensor_response, m_regexResponseTempSensor, RegexOptions.None);
+                if (m_sensor_response.Length == 14)
+                {
+                    regex_res = m_sensor_response;
+                    m_sensor_response = "";
+                }
+                else
+                {
+                    return;
+                }
+
+                if (!TryCompleteRead())
+                {
+                    return;
+                }
+                byte[] bytes = iso.GetBytes(regex_res);
+                string hexString = Hex.ToHexString(bytes);
+
+                suplex = hexString.Substring(24, 2);
+                int poidsFort = int.Parse(suplex, NumberStyles.HexNumber);
+
+                suplex = hexString.Substring(26, 2);
+                int poidsFaible = int.Parse(suplex, NumberStyles.HexNumber);
+
+                tmp_resistance = (poidsFort * 256 + poidsFaible - 2048).ToString();
+
+                if (int.Parse(tmp_resistance) > -2048 && int.Parse(tmp_resistance) < 2048)
+                {
+                    // recuperer a et b our corriger la valeur brute
+                    var rawValue = Convert.ToDouble(float.Parse(tmp_resistance, CultureInfo.InvariantCulture.NumberFormat));
+                    var correctedValue = RoundMeasure(ApplyMetrology(rawValue));
+
+                    HandleNoResponseAlarm(true);
+                    compareMeasuresAndLimits(correctedValue, "C");
+                    ths.GetDatabase().AddMesure(m_sondeSerialNumber, correctedValue, "C", ToInvariantRaw(rawValue));
+                    VigitempServeur.Log($"[SONDE][DONE] type=EN serial={m_sondeSerialNumber} port={m_comPort} status=success value={correctedValue} unit=C raw={ToInvariantRaw(rawValue)}");
+                }
+                else
+                {
+                    VigitempServeur.Log($"[SONDE][DONE] type=EN serial={m_sondeSerialNumber} port={m_comPort} status=ignored reason=out_of_range raw={tmp_resistance}");
+                    HandleNoResponseAlarm(true);
+                }
+
+
+                //m_port.DiscardInBuffer();
+                //m_port.DiscardOutBuffer();
+                m_port.Close();
+                //sp.Dispose();
             }
-            else
+            catch (Exception ex)
             {
-                return;
+                VigitempServeur.Log($"[SONDE][ERR] type=EN serial={m_sondeSerialNumber} port={m_comPort} error={ex}");
+                DisposePort();
+                TryCompleteRead();
             }
-            Console.WriteLine("resultat complet regex_res: " + regex_res);
-            Trace.WriteLine("resultat complet regex_res: " + regex_res);
-
-            byte[] bytes = iso.GetBytes(regex_res);
-            string hexString = Hex.ToHexString(bytes);
-            Console.WriteLine($"resultat complet hexString: \"{hexString}\"");
-            Trace.WriteLine($"resultat complet hexString: \"{hexString}\"");
-
-            suplex = hexString.Substring(24, 2);
-            Console.WriteLine("suplex: " + suplex);
-            Trace.WriteLine("suplex: " + suplex);
-            int poidsFort = int.Parse(suplex, NumberStyles.HexNumber);
-            Console.WriteLine("suplex decimal: " + poidsFort);
-            Trace.WriteLine("suplex decimal: " + poidsFort);
-
-            suplex = hexString.Substring(26, 2);
-            Console.WriteLine("suplex: " + suplex);
-            Trace.WriteLine("suplex: " + suplex);
-            int poidsFaible = int.Parse(suplex, NumberStyles.HexNumber);
-            Console.WriteLine("suplex decimal: " + poidsFaible);
-            Trace.WriteLine("suplex decimal: " + poidsFaible);
-
-
-            tmp_resistance = (poidsFort * 256 + poidsFaible - 2048).ToString();
-            Console.WriteLine("resultat décimal: " + tmp_resistance);
-            Trace.WriteLine("resultat décimal: " + tmp_resistance);
-
-            if (int.Parse(tmp_resistance) > -2048 && int.Parse(tmp_resistance) < 2048)
-            {
-                // recuperer a et b our corriger la valeur brute
-                (double coeffX, double coeffConstant) = ths.GetDatabase().getCoeffCalibrageBySerialNumber(m_sondeSerialNumber);
-                // Console.WriteLine("Convert.ToDouble: " + (Convert.ToDouble(tmp_temperature, CultureInfo.InvariantCulture.NumberFormat)*coeffX+coeffConstant).ToString());
-                tmp_valeur = (Convert.ToDouble(float.Parse(tmp_resistance, CultureInfo.InvariantCulture.NumberFormat)) * coeffX + coeffConstant).ToString();
-                // Console.WriteLine("Données corrigées: " + Math.Round(Convert.ToDouble(tmp_temperature), 2, MidpointRounding.AwayFromZero));
-
-                ths.GetDatabase().AddMesure(m_sondeSerialNumber, Math.Round(Convert.ToDouble(tmp_valeur), 2, MidpointRounding.AwayFromZero), "°C", tmp_resistance);
-            }
-
-
-            //m_port.DiscardInBuffer();
-            //m_port.DiscardOutBuffer();
-            m_port.Close();
-            //sp.Dispose();
-            pendingResults = false;
-            System.Diagnostics.Trace.WriteLine("Fermeture du port " + m_comPort);
         }
     }
 }
+

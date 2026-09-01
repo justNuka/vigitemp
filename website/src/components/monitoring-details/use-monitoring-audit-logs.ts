@@ -1,0 +1,69 @@
+import { useCallback, useEffect, useState } from "react"
+
+import { serializeDbDateTime } from "@/lib/date-display"
+import type { AuditLog } from "./types"
+
+export function useMonitoringAuditLogs(
+  idLieu: number,
+  options: {
+    enabled: boolean
+    errorMessage: string
+    rangeStart?: Date | null
+    rangeEnd?: Date | null
+  },
+) {
+  const { enabled, errorMessage, rangeStart, rangeEnd } = options
+  const [logs, setLogs] = useState<AuditLog[]>([])
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!enabled) return
+
+    const controller = new AbortController()
+
+    const loadAudit = async () => {
+      try {
+        setIsLoading(true)
+        setError(null)
+
+        const queryParams = new URLSearchParams({ limit: "200" })
+        const serializedFrom = rangeStart ? serializeDbDateTime(rangeStart) : null
+        const serializedTo = rangeEnd ? serializeDbDateTime(rangeEnd) : null
+        if (serializedFrom) queryParams.set("dateFrom", serializedFrom)
+        if (serializedTo) queryParams.set("dateTo", serializedTo)
+
+        const response = await fetch(`/api/lieux/${idLieu}/audit?${queryParams.toString()}`, {
+          signal: controller.signal,
+        })
+
+        if (!response.ok) {
+          throw new Error(errorMessage)
+        }
+
+        const payload = await response.json()
+        if (!payload?.ok) {
+          throw new Error(payload?.message || errorMessage)
+        }
+
+        const nextLogs = Array.isArray(payload?.data?.logs) ? (payload.data.logs as AuditLog[]) : []
+        setLogs(nextLogs)
+      } catch (nextError) {
+        if ((nextError as Error)?.name === "AbortError") return
+        setError(errorMessage)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    void loadAudit()
+    return () => controller.abort()
+  }, [enabled, errorMessage, idLieu, rangeEnd, rangeStart])
+
+  const reset = useCallback(() => {
+    setLogs([])
+    setError(null)
+  }, [])
+
+  return { logs, isLoading, error, isLoaded: logs.length > 0 || !isLoading, reset }
+}

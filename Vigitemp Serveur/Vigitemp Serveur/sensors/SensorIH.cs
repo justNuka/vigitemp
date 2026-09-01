@@ -20,29 +20,38 @@ namespace Vigitemp_Serveur.sensors
 
         public override async Task<bool> read()
         {
+            return await ExecuteWithPortLockAsync(ReadCoreAsync);
+        }
+
+        private async Task<bool> ReadCoreAsync()
+        {
             try
             {
-                pendingResults = true;
+                BeginReadCycle();
                 m_port.Open();
                 m_port.DiscardInBuffer();
                 m_port.DiscardOutBuffer();
-                m_port.Write("SM" + m_sondeAdresse + "0000000000000000");
+                var command = "SM" + m_sondeAdresse + "0000000000000000";
+                VigitempServeur.Log($"[SONDE][TX] type=IH serial={m_sondeSerialNumber} port={m_comPort} adresse={m_sondeAdresse} cmd={command}");
+                m_port.Write(command);
                 Stopwatch tmp_sw = new Stopwatch();
                 tmp_sw.Start();
                 // while (tmp_sw.Elapsed.TotalMilliseconds < 100) {}
                 // m_port.Write("SM"+m_serialNumber.Substring(m_serialNumber.Length - 4)+"0000000000000000");
-
-                Console.WriteLine("Données ecrites dans le port COM: " + "SM" + m_sondeAdresse + "0000000000000000");
-                Trace.WriteLine("Données ecrites dans le port COM: " + "SM" + m_sondeAdresse + "0000000000000000");
 
                 while (pendingResults)
                 {
                     await Task.Delay(25);
                     if (tmp_sw.Elapsed.TotalMilliseconds > 2000)
                     {
+                        if (!TryCompleteRead())
+                        {
+                            break;
+                        }
+                        VigitempServeur.Log($"[SONDE][DONE] type=IH serial={m_sondeSerialNumber} port={m_comPort} status=timeout elapsedMs={tmp_sw.Elapsed.TotalMilliseconds:0}");
+                        HandleNoResponseAlarm(false, "timeout");
                         m_port.Close();
                         m_sensor_response = "";
-                        pendingResults = false;
                         break;
                     }
                 }
@@ -51,9 +60,9 @@ namespace Vigitemp_Serveur.sensors
             }
             catch (Exception e)
             {
-                Console.WriteLine("erreur: " + e);
-                Trace.WriteLine("erreur: " + e);
-                m_port.Close();
+                VigitempServeur.Log($"[SONDE][ERR] type=IH serial={m_sondeSerialNumber} port={m_comPort} error={e}");
+                HandleNoResponseAlarm(false, "exception");
+                DisposePort();
                 return false;
             }
             return true;
@@ -63,48 +72,73 @@ namespace Vigitemp_Serveur.sensors
                             object sender,
                             SerialDataReceivedEventArgs e)
         {
-
-            SerialPort sp = (SerialPort)sender;
-            string regex_res;
-            m_sensor_response += sp.ReadExisting();     //ajout sp.readExisting à m_sensor_response
-            Console.WriteLine("Données recues dans le port COM: " + m_sensor_response);
-            Trace.WriteLine("Données recues dans le port COM: " + m_sensor_response);
-            var m = Regex.Match(m_sensor_response, m_regexResponseTempSensor, RegexOptions.None);
-            if (m.Groups[1].Value != "")
+            try
             {
-                regex_res = m.Groups[1].Value;
-                m_sensor_response = "";
-            }
-            else
-            {
-                if (m_sensor_response.Length > sp.ReadExisting().Length)
+                if (HasReadCompleted())
                 {
-                    m_sensor_response.Substring(sp.ReadExisting().Length, m_sensor_response.Length - sp.ReadExisting().Length);
+                    return;
                 }
-                return;
+
+                SerialPort sp = (SerialPort)sender;
+                string regex_res;
+                var chunk = sp.ReadExisting();
+                if (!string.IsNullOrEmpty(chunk))
+                {
+                    AppendToResponse(chunk);
+                }
+                VigitempServeur.Log($"[SONDE][RX] type=IH serial={m_sondeSerialNumber} port={m_comPort} raw={m_sensor_response}");
+                var m = Regex.Match(m_sensor_response, m_regexResponseTempSensor, RegexOptions.None);
+                if (m.Groups[1].Value != "")
+                {
+                    regex_res = m.Groups[1].Value;
+                    m_sensor_response = "";
+                }
+                else
+                {
+                    if (m_sensor_response.Length > 1024)
+                    {
+                        m_sensor_response = m_sensor_response.Substring(m_sensor_response.Length - 1024);
+                    }
+                    return;
+                }
+
+                if (!TryCompleteRead())
+                {
+                    return;
+                }
+
+                int poidsFort = regex_res[6];
+                int poidsFaible = regex_res[7];
+                tmp_resistance = (poidsFort * 256 + poidsFaible - 2048).ToString();
+                if (int.Parse(tmp_resistance) > -2048 && int.Parse(tmp_resistance) < 2048)
+                {
+                    // recuperer a et b our corriger la valeur brute
+                    var rawValue = Convert.ToDouble(float.Parse(tmp_resistance, CultureInfo.InvariantCulture.NumberFormat));
+                    var correctedValue = RoundMeasure(ApplyMetrology(rawValue));
+
+                    HandleNoResponseAlarm(true);
+                    compareMeasuresAndLimits(correctedValue, "%HR");
+                    ths.GetDatabase().AddMesure(m_sondeSerialNumber, correctedValue, "%HR", ToInvariantRaw(rawValue));
+                    VigitempServeur.Log($"[SONDE][DONE] type=IH serial={m_sondeSerialNumber} port={m_comPort} status=success value={correctedValue} unit=%HR raw={ToInvariantRaw(rawValue)}");
+                }
+                else
+                {
+                    VigitempServeur.Log($"[SONDE][DONE] type=IH serial={m_sondeSerialNumber} port={m_comPort} status=ignored reason=out_of_range raw={tmp_resistance}");
+                    HandleNoResponseAlarm(true);
+                }
+
+                m_port.Close();
             }
-
-            int poidsFort = regex_res[6];
-            int poidsFaible = regex_res[7];
-            tmp_resistance = (poidsFort * 256 + poidsFaible - 2048).ToString();
-
-            if (int.Parse(tmp_resistance) > -2048 && int.Parse(tmp_resistance) < 2048)
+            catch (Exception ex)
             {
-                // recuperer a et b our corriger la valeur brute
-                (double coeffX, double coeffConstant) = ths.GetDatabase().getCoeffCalibrageBySerialNumber(m_sondeSerialNumber);
-                // Console.WriteLine("Convert.ToDouble: " + (Convert.ToDouble(tmp_temperature, CultureInfo.InvariantCulture.NumberFormat)*coeffX+coeffConstant).ToString());
-                tmp_valeur = (Convert.ToDouble(float.Parse(tmp_resistance, CultureInfo.InvariantCulture.NumberFormat)) * coeffX + coeffConstant).ToString();
-                Console.WriteLine("Données corrigées: " + Math.Round(Convert.ToDouble(tmp_valeur), 2, MidpointRounding.AwayFromZero));
-                Trace.WriteLine("Données corrigées: " + Math.Round(Convert.ToDouble(tmp_valeur), 2, MidpointRounding.AwayFromZero));
-
-                ths.GetDatabase().AddMesure(m_sondeSerialNumber, Math.Round(Convert.ToDouble(tmp_valeur), 2, MidpointRounding.AwayFromZero), "%HR", tmp_resistance);
+                VigitempServeur.Log($"[SONDE][ERR] type=IH serial={m_sondeSerialNumber} port={m_comPort} error={ex}");
+                DisposePort();
+                TryCompleteRead();
             }
-
-            m_port.Close();
-            pendingResults = false;
-            Trace.WriteLine("Fermeture du port " + m_comPort);
-            Trace.WriteLine("Taux de réponse:  " + VigitempServeur.nombres_reponses + "/" + VigitempServeur.nombres_interrogations + "(" + ((float)VigitempServeur.nombres_reponses / (float)VigitempServeur.nombres_interrogations * 100) + "%)");
-            Trace.WriteLine("-----------------------------------");
         }
     }
 }
+
+
+
+

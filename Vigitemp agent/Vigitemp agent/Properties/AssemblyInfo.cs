@@ -4,12 +4,12 @@ using System.Runtime.InteropServices;
 // Les informations générales relatives à un assembly dépendent de
 // l'ensemble d'attributs suivant. Changez les valeurs de ces attributs pour modifier les informations
 // associées à un assembly.
-[assembly: AssemblyTitle("Vigitemp Agent")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyTitle("VigiSensys Agent")]
+[assembly: AssemblyDescription("Agent local VigiSensys pour la detection VigiLog et les integrations poste")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("Vigitemp Agent")]
-[assembly: AssemblyCopyright("Copyright ©  2024")]
+[assembly: AssemblyCompany("VigiSensys by MC2")]
+[assembly: AssemblyProduct("VigiSensys Agent")]
+[assembly: AssemblyCopyright("Copyright © VigiSensys by MC2")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -21,7 +21,7 @@ using System.Runtime.InteropServices;
 // Le GUID suivant est pour l'ID de la typelib si ce projet est exposé à COM
 [assembly: Guid("1e375fb8-30c7-4275-857b-9bf3b92b818d")]
 
-// Les informations de version pour un assembly se composent des quatre valeurs suivantes :
+// Les informations de version pour un assembly se composent des quatre valeurs suivantes:
 //
 //      Version principale
 //      Version secondaire
@@ -29,7 +29,9 @@ using System.Runtime.InteropServices;
 //      Révision
 //
 // Vous pouvez spécifier toutes les valeurs ou indiquer les numéros de build et de révision par défaut
-// en utilisant '*', comme indiqué ci-dessous :
+// en utilisant '*', comme indiqué ci-dessous:
 // [assembly: AssemblyVersion("1.0.*")]
 [assembly: AssemblyVersion("1.0.1.1")]
 [assembly: AssemblyFileVersion("1.0.1.1")]
+// Version produit lisible selon la convention SemVer VigiSensys.
+[assembly: AssemblyInformationalVersion("1.0.1")]

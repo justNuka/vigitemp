@@ -1,0 +1,643 @@
+Param(
+    [string]$SourcePath,
+    [string]$InstallDir,
+    [string]$ServiceName,
+    [string]$InstallMode,
+    [string]$AlarmDispatchSecret,
+    [string]$AlarmDispatchSecretFile
+)
+
+Set-StrictMode -Version Latest
+$ErrorActionPreference = "Stop"
+
+$utf8 = New-Object System.Text.UTF8Encoding $false
+[Console]::OutputEncoding = $utf8
+[Console]::InputEncoding = $utf8
+try { chcp 65001 | Out-Null } catch { }
+
+$scriptRoot = $PSScriptRoot
+$defaultSource = Resolve-Path (Join-Path $scriptRoot "..")
+$packageRoot = $null
+try {
+    $packageRoot = Resolve-Path (Join-Path $scriptRoot "..\\..\\..")
+} catch {
+    $packageRoot = $null
+}
+
+$lang = "fr"
+$lang = Read-Host "Langue / Language (fr/en) [fr]"
+if ([string]::IsNullOrWhiteSpace($lang)) { $lang = "fr" }
+$lang = $lang.ToLowerInvariant()
+if ($lang -ne "en") { $lang = "fr" }
+
+function T($fr, $en) {
+    if ($lang -eq "en") { return $en }
+    return $fr
+}
+
+function Write-Log($message) {
+    $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+    Write-Host "[$timestamp] $message"
+}
+
+function Test-Admin {
+    $currentIdentity = [Security.Principal.WindowsIdentity]::GetCurrent()
+    $principal = New-Object Security.Principal.WindowsPrincipal($currentIdentity)
+    return $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+}
+
+function Read-InstallValue($label, $defaultValue = $null) {
+    if ([string]::IsNullOrWhiteSpace($defaultValue)) {
+        return Read-Host $label
+    }
+    $value = Read-Host "$label [$defaultValue]"
+    if ([string]::IsNullOrWhiteSpace($value)) { return $defaultValue }
+    return $value
+}
+
+function Convert-SecureStringToPlainText([Security.SecureString]$secureValue) {
+    if ($null -eq $secureValue) { return "" }
+    $bstr = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($secureValue)
+    try {
+        return [Runtime.InteropServices.Marshal]::PtrToStringBSTR($bstr)
+    } finally {
+        [Runtime.InteropServices.Marshal]::ZeroFreeBSTR($bstr)
+    }
+}
+
+function Read-InstallSecret($label, $defaultValue = $null) {
+    $prompt = $label
+    if (-not [string]::IsNullOrWhiteSpace($defaultValue)) {
+        $prompt = "$label [$defaultValue]"
+    }
+    $secure = Read-Host $prompt -AsSecureString
+    $value = Convert-SecureStringToPlainText $secure
+    if ([string]::IsNullOrWhiteSpace($value) -and -not [string]::IsNullOrWhiteSpace($defaultValue)) {
+        return $defaultValue
+    }
+    return $value
+}
+
+function Normalize-InstallMode([string]$value) {
+    if ([string]::IsNullOrWhiteSpace($value)) { return "" }
+    $normalized = $value.Trim().ToLowerInvariant()
+    if ($normalized -in @("update", "upgrade", "migration", "migrate", "maj", "mise-a-jour", "miseajour", "vigitemp-to-vigisensys")) {
+        return "update"
+    }
+    return "normal"
+}
+
+function Resolve-PathInput($value) {
+    if ([string]::IsNullOrWhiteSpace($value)) { return $value }
+    return $value.Trim().Trim('"')
+}
+
+function Find-FirstFile($directoryPath, $filter) {
+    if ([string]::IsNullOrWhiteSpace($directoryPath)) { return $null }
+    if (-not (Test-Path $directoryPath)) { return $null }
+    $file = Get-ChildItem -Path $directoryPath -Filter $filter -File -ErrorAction SilentlyContinue | Select-Object -First 1
+    if ($null -eq $file) { return $null }
+    return $file.FullName
+}
+
+function ConvertFrom-Base64Url([string]$rawInput) {
+    $base64 = $rawInput.Replace('-', '+').Replace('_', '/')
+    switch ($base64.Length % 4) {
+        2 { $base64 += '==' }
+        3 { $base64 += '=' }
+    }
+    return [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($base64))
+}
+
+function Read-LicensePayload([string]$tokenPath) {
+    $token = (Get-Content -Raw -Path $tokenPath).Trim()
+    if ([string]::IsNullOrWhiteSpace($token)) { return $null }
+    $parts = $token.Split('.')
+    if ($parts.Length -ne 3) { return $null }
+    $payloadJson = ConvertFrom-Base64Url $parts[1]
+    return $payloadJson | ConvertFrom-Json
+}
+
+function Set-AppSetting($configPath, $key, $value) {
+    $xml = New-Object System.Xml.XmlDocument
+    $xml.PreserveWhitespace = $true
+    $xml.Load($configPath)
+
+    $appSettings = $xml.configuration.appSettings
+    if ($null -eq $appSettings) {
+        $appSettings = $xml.CreateElement("appSettings")
+        $xml.configuration.AppendChild($appSettings) | Out-Null
+    }
+
+    $node = $appSettings.SelectSingleNode("add[@key='$key']")
+    if ($null -eq $node) {
+        $node = $xml.CreateElement("add")
+        $node.SetAttribute("key", $key)
+        $appSettings.AppendChild($node) | Out-Null
+    }
+    $node.SetAttribute("value", $value)
+    $xml.Save($configPath)
+}
+
+function New-RandomSecret([int]$byteLength = 32) {
+    $bytes = New-Object byte[] $byteLength
+    [System.Security.Cryptography.RandomNumberGenerator]::Create().GetBytes($bytes)
+    $base64 = [Convert]::ToBase64String($bytes).TrimEnd('=').Replace('+', '-').Replace('/', '_')
+    return $base64
+}
+
+function Resolve-SecretFilePath($customPath, $defaultPath) {
+    $path = $customPath
+    if ([string]::IsNullOrWhiteSpace($path)) {
+        $path = $defaultPath
+    }
+    return $path
+}
+
+function Resolve-DispatchSecret([string]$providedSecret, [string]$providedFilePath, [string]$defaultSharedSecretPath) {
+    $secret = $null
+    $secretFile = Resolve-SecretFilePath $providedFilePath $defaultSharedSecretPath
+
+    if (-not [string]::IsNullOrWhiteSpace($providedSecret)) {
+        $secret = $providedSecret.Trim()
+    }
+
+    if ([string]::IsNullOrWhiteSpace($secret) -and -not [string]::IsNullOrWhiteSpace($secretFile) -and (Test-Path $secretFile)) {
+        $secret = (Get-Content -Path $secretFile -Raw -ErrorAction SilentlyContinue).Trim()
+        if (-not [string]::IsNullOrWhiteSpace($secret)) {
+            Write-Log (T "Secret dispatch lu depuis: $secretFile" "Dispatch secret loaded from: $secretFile")
+        }
+    }
+
+    if ([string]::IsNullOrWhiteSpace($secret)) {
+        $typedSecret = Read-InstallSecret (T "Secret dispatch alarmes (laisser vide pour generation auto)" "Alarm dispatch secret (leave empty for auto generation)") ""
+        if (-not [string]::IsNullOrWhiteSpace($typedSecret)) {
+            $secret = $typedSecret.Trim()
+        }
+    }
+
+    if ([string]::IsNullOrWhiteSpace($secret)) {
+        $secret = New-RandomSecret
+        Write-Log (T "Secret dispatch gener? automatiquement." "Dispatch secret generated automatically.")
+    }
+
+    if (-not [string]::IsNullOrWhiteSpace($secretFile)) {
+        New-Item -ItemType Directory -Force -Path (Split-Path -Parent $secretFile) | Out-Null
+        Set-Content -Path $secretFile -Value $secret -Encoding UTF8
+        Write-Log (T "Secret dispatch sauvegard?: $secretFile" "Dispatch secret saved: $secretFile")
+        Write-Log (T "Copiez ce fichier sur l'autre machine pour r?utiliser le m?me secret." "Copy this file to the other machine to reuse the same secret.")
+    }
+
+    return $secret
+}
+
+function Get-HardwareProfile {
+    $cpuCores = 0
+    $ramGb = 0
+
+    try {
+        $cpu = Get-CimInstance Win32_ComputerSystem -ErrorAction Stop
+        $cpuCores = [int]$cpu.NumberOfLogicalProcessors
+        $ramGb = [math]::Round(($cpu.TotalPhysicalMemory / 1GB), 1)
+    } catch {
+        $cpuCores = 0
+        $ramGb = 0
+    }
+
+    return @{
+        CpuCores = $cpuCores
+        RamGb = $ramGb
+    }
+}
+
+function Get-RecommendedWorkerCount([int]$sondeCount, [bool]$hasFastPolling, [int]$cpuCores, [double]$ramGb) {
+    $workers = 1
+
+    if ($sondeCount -le 60) {
+        $workers = 1
+    } elseif ($sondeCount -le 180) {
+        $workers = 2
+    } elseif ($sondeCount -le 350) {
+        $workers = 3
+    } elseif ($sondeCount -le 500) {
+        $workers = 4
+    } else {
+        $workers = 5
+    }
+
+    if ($hasFastPolling) {
+        $workers += 1
+    }
+
+    if ($cpuCores -gt 0 -and $cpuCores -le 2) {
+        $workers = [Math]::Min($workers, 2)
+    }
+    if ($ramGb -gt 0 -and $ramGb -lt 8) {
+        $workers = [Math]::Min($workers, 2)
+    }
+    if ($cpuCores -ge 4 -and $ramGb -ge 16) {
+        $workers = [Math]::Min($workers, 6)
+    }
+
+    if ($workers -lt 1) { $workers = 1 }
+    if ($workers -gt 16) { $workers = 16 }
+
+    return $workers
+}
+
+function Write-InstallRegistryInfo($installPath, $version) {
+    try {
+        $baseKey = "HKLM:\\SOFTWARE\\VigiSensys"
+        $serverKey = Join-Path $baseKey "Server"
+        New-Item -Path $baseKey -Force | Out-Null
+        New-Item -Path $serverKey -Force | Out-Null
+        New-ItemProperty -Path $serverKey -Name "InstallPath" -Value $installPath -PropertyType String -Force | Out-Null
+        New-ItemProperty -Path $serverKey -Name "Version" -Value $version -PropertyType String -Force | Out-Null
+        New-ItemProperty -Path $serverKey -Name "LastInstalledUtc" -Value ([DateTime]::UtcNow.ToString("o")) -PropertyType String -Force | Out-Null
+    } catch {
+        Write-Log (T "Impossible d'ecrire dans le registre." "Failed to write registry keys.")
+    }
+}
+
+if (-not (Test-Admin)) {
+    Write-Error (T "Ce script doit ?tre lanc? en tant qu'administrateur." "This installer must be run as Administrator.")
+}
+
+$programData = [Environment]::GetFolderPath("CommonApplicationData")
+$defaultInstallDir = Join-Path $programData "VigiSensys\\server"
+$defaultServiceName = "VigiSensysServeur"
+$preferredLocalIpv4 = Get-PreferredLocalIpv4
+$websiteUrlDefault = if ([string]::IsNullOrWhiteSpace($preferredLocalIpv4)) { "http://<ip-machine>:3000" } else { "http://$preferredLocalIpv4`:3000" }
+$dbHostDefault = if ([string]::IsNullOrWhiteSpace($preferredLocalIpv4)) { "<ip-machine>" } else { $preferredLocalIpv4 }
+
+if ([string]::IsNullOrWhiteSpace($SourcePath)) {
+    $SourcePath = Read-InstallValue (T "Chemin du build serveur (dossier contenant VigiSensysServeur.exe)" "Path to server build output (folder with VigiSensysServeur.exe)") $defaultSource.Path
+}
+ $SourcePath = Resolve-PathInput $SourcePath
+if ([string]::IsNullOrWhiteSpace($InstallDir)) {
+    $InstallDir = Read-InstallValue (T "Dossier d'installation" "Install folder") $defaultInstallDir
+}
+ $InstallDir = Resolve-PathInput $InstallDir
+if ([string]::IsNullOrWhiteSpace($ServiceName)) {
+    $ServiceName = Read-InstallValue (T "Nom du service Windows" "Windows service name") $defaultServiceName
+}
+$InstallMode = Normalize-InstallMode $InstallMode
+if ([string]::IsNullOrWhiteSpace($InstallMode)) {
+    $modeAnswer = Read-InstallValue (T "Mode d'installation (normal/update-vigitemp)" "Install mode (normal/update-vigitemp)") "normal"
+    $InstallMode = Normalize-InstallMode $modeAnswer
+}
+if ($InstallMode -eq "update") {
+    Write-Log (T "Mode migration Vigitemp -> VigiSensys: aucune seed SQL ne sera appliquee par l'installation serveur." "Vigitemp -> VigiSensys migration mode: no SQL seed will be applied by the server installer.")
+}
+
+if (-not (Test-Path $SourcePath)) {
+    Write-Error (T "SourcePath introuvable : $SourcePath" "SourcePath not found: $SourcePath")
+}
+
+$exeName = "VigiSensysServeur.exe"
+$exePath = Join-Path $SourcePath $exeName
+if (-not (Test-Path $exePath)) {
+    Write-Error (T "Ex?cutable introuvable : $exePath" "Executable not found: $exePath")
+}
+
+$logDir = Join-Path $programData "VigiSensys\\install-logs"
+New-Item -ItemType Directory -Force -Path $logDir | Out-Null
+$logPath = Join-Path $logDir "install-server-$(Get-Date -Format yyyyMMdd-HHmmss).log"
+Start-Transcript -Path $logPath | Out-Null
+
+Write-Log (T "Installation du serveur VigiSensys vers $InstallDir" "Installing VigiSensys server to $InstallDir")
+New-Item -ItemType Directory -Force -Path $InstallDir | Out-Null
+Copy-Item -Path (Join-Path $SourcePath '*') -Destination $InstallDir -Recurse -Force
+
+$configPath = Join-Path $InstallDir "$exeName.config"
+if (-not (Test-Path $configPath)) {
+    Write-Error (T "Fichier config introuvable : $configPath" "Config file not found: $configPath")
+}
+
+$websiteBaseUrl = Read-InstallValue (T "URL du site web (ex: http://192.168.1.10:3000)" "Website base URL (example: http://192.168.1.10:3000)") $websiteUrlDefault
+$dbHost = Read-InstallValue (T "H?te BDD" "DB host") $dbHostDefault
+$dbProvider = Read-InstallValue (T "Type de BDD (mysql/mssql)" "DB provider (mysql/mssql)") "mysql"
+$dbProvider = $dbProvider.ToLowerInvariant()
+if ($dbProvider -ne "mssql") { $dbProvider = "mysql" }
+$dbDefaultPort = if ($dbProvider -eq "mssql") { "1433" } else { "3306" }
+$dbDefaultUser = ""
+$dbPort = Read-InstallValue (T "Port BDD" "DB port") $dbDefaultPort
+$dbUser = Read-InstallValue (T "Utilisateur BDD" "DB user") $dbDefaultUser
+$dbPassword = Read-InstallSecret (T "Mot de passe BDD" "DB password") ""
+$dbUserTrimmed = $dbUser.Trim().ToLowerInvariant()
+if ($dbProvider -eq "mysql" -and $dbUserTrimmed -eq "root") {
+    Write-Error (T "Le compte MySQL root n'est pas supporte. Creez un compte SQL dedie." "MySQL root account is not supported. Create a dedicated SQL account.")
+}
+$dbMain = Read-InstallValue (T "Nom BDD principale" "Main DB name") "vigi_main"
+$dbMeasure = Read-InstallValue (T "Nom BDD mesures" "Measure DB name") "vigi_mesures"
+$dbConnectionTimeoutSeconds = Read-InstallValue (T "Timeout connexion BDD (secondes)" "DB connection timeout (seconds)") "5"
+$dbCommandTimeoutSeconds = Read-InstallValue (T "Timeout requete BDD (secondes)" "DB command timeout (seconds)") "30"
+$sqlServerEncrypt = Read-InstallValue (T "SQL Server encrypt (true/false)" "SQL Server encrypt (true/false)") "false"
+$sqlServerTrustServerCertificate = Read-InstallValue (T "SQL Server trustServerCertificate (true/false)" "SQL Server trustServerCertificate (true/false)") "true"
+$licenseHysteresisDelta = Read-InstallValue (T "Delta hysteresis alarmes" "Alarm hysteresis delta") "0"
+$licenseDebounceSeconds = Read-InstallValue (T "Debounce alarmes (secondes)" "Alarm debounce (seconds)") "0"
+$licenseShowWhileSnoozed = Read-InstallValue (T "Afficher alarmes pendant snooze (true/false)" "Show alarms while snoozed (true/false)") "true"
+$settingsCacheSeconds = Read-InstallValue (T "Cache reglages alarmes (secondes)" "Alarm settings cache (seconds)") "60"
+$metrologyLogDetailed = Read-InstallValue (T "Logs metrologie detailles (true/false)" "Detailed metrology logs (true/false)") "false"
+$hardwareProfile = Get-HardwareProfile
+$autoWorkerSizing = Read-InstallValue (T "Dimensionnement workers automatique (y/n)" "Automatic worker sizing (y/n)") "y"
+$autoWorkerSizing = $autoWorkerSizing.Trim().ToLowerInvariant()
+$workerCount = 1
+if ($autoWorkerSizing -eq "y") {
+    if ($hardwareProfile.CpuCores -gt 0) {
+        Write-Log (T "Materiel detecte: CPU logiques=$($hardwareProfile.CpuCores), RAM=$($hardwareProfile.RamGb) Go" "Detected hardware: logical CPU=$($hardwareProfile.CpuCores), RAM=$($hardwareProfile.RamGb) GB")
+    } else {
+        Write-Log (T "Materiel non detecte automatiquement (valeurs manuelles conseillees)." "Hardware could not be auto-detected (manual values recommended).")
+    }
+
+    $sondeCountRaw = Read-InstallValue (T "Nombre de sondes actives" "Active probe count") "60"
+    $sondeCount = 60
+    if (-not [int]::TryParse($sondeCountRaw, [ref]$sondeCount)) {
+        $sondeCount = 60
+    }
+    if ($sondeCount -lt 1) { $sondeCount = 1 }
+
+    $fastPollingAnswer = Read-InstallValue (T "Beaucoup de sondes en frequence <= 5 min ? (y/n)" "Many probes with frequency <= 5 min? (y/n)") "n"
+    $fastPolling = $fastPollingAnswer.Trim().ToLowerInvariant() -eq "y"
+
+    $recommendedWorkers = Get-RecommendedWorkerCount -sondeCount $sondeCount -hasFastPolling $fastPolling -cpuCores $hardwareProfile.CpuCores -ramGb $hardwareProfile.RamGb
+    $workerCountRaw = Read-InstallValue (T "Nombre de workers d'interrogation" "Interrogation worker count") ([string]$recommendedWorkers)
+    if (-not [int]::TryParse($workerCountRaw, [ref]$workerCount)) {
+        $workerCount = $recommendedWorkers
+    }
+} else {
+    $workerCountRaw = Read-InstallValue (T "Nombre de workers d'interrogation (1..16)" "Interrogation worker count (1..16)") "1"
+    if (-not [int]::TryParse($workerCountRaw, [ref]$workerCount)) {
+        $workerCount = 1
+    }
+}
+
+function Write-UninstallRegistryInfo($installPath, $serviceName, $version) {
+    try {
+        $uninstallScriptSource = Join-Path $scriptRoot "Uninstall-VigitempServer.ps1"
+        $uninstallScriptTarget = Join-Path $installPath "Uninstall-VigitempServer.ps1"
+        if (Test-Path $uninstallScriptSource) {
+            Copy-Item -Path $uninstallScriptSource -Destination $uninstallScriptTarget -Force
+        }
+
+        $uninstallCommand = "powershell.exe -NoProfile -ExecutionPolicy Bypass -File `"$uninstallScriptTarget`" -ServiceName `"$serviceName`" -InstallDir `"$installPath`""
+        $quietUninstallCommand = $uninstallCommand + " -Force"
+        $uninstallKey = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\VigiSensysServer"
+
+        New-Item -Path $uninstallKey -Force | Out-Null
+        Set-ItemProperty -Path $uninstallKey -Name "DisplayName" -Value "VigiSensys Server"
+        $displayVersion = ""
+        if (-not [string]::IsNullOrWhiteSpace($version)) { $displayVersion = $version }
+        Set-ItemProperty -Path $uninstallKey -Name "DisplayVersion" -Value $displayVersion
+        Set-ItemProperty -Path $uninstallKey -Name "Publisher" -Value "VigiSensys"
+        Set-ItemProperty -Path $uninstallKey -Name "InstallLocation" -Value $installPath
+        Set-ItemProperty -Path $uninstallKey -Name "DisplayIcon" -Value (Join-Path $installPath "VigiSensysServeur.exe")
+        Set-ItemProperty -Path $uninstallKey -Name "UninstallString" -Value $uninstallCommand
+        Set-ItemProperty -Path $uninstallKey -Name "QuietUninstallString" -Value $quietUninstallCommand
+        Set-ItemProperty -Path $uninstallKey -Name "NoModify" -Value 1 -Type DWord
+        Set-ItemProperty -Path $uninstallKey -Name "NoRepair" -Value 1 -Type DWord
+
+        try {
+            if (Test-Path $installPath) {
+                $sizeBytes = (Get-ChildItem -Path $installPath -File -Recurse -ErrorAction SilentlyContinue | Measure-Object -Property Length -Sum).Sum
+                if ($sizeBytes -gt 0) {
+                    $sizeKb = [Math]::Max(1, [int][Math]::Ceiling($sizeBytes / 1KB))
+                    Set-ItemProperty -Path $uninstallKey -Name "EstimatedSize" -Value $sizeKb -Type DWord
+                }
+            }
+        } catch { }
+    } catch {
+        Write-Log (T "Impossible d'ecrire l'entree Applications installees du serveur." "Failed to write server installed-apps registry entry.")
+    }
+}
+
+if ($workerCount -lt 1) { $workerCount = 1 }
+if ($workerCount -gt 16) { $workerCount = 16 }
+Write-Log (T "Workers configures: $workerCount" "Configured workers: $workerCount")
+
+if ([string]::IsNullOrWhiteSpace($AlarmDispatchSecretFile)) {
+    $AlarmDispatchSecretFile = Join-Path $programData "VigiSensys\shared-secrets\alarm-dispatch-secret.txt"
+}
+$alarmSecret = Resolve-DispatchSecret -providedSecret $AlarmDispatchSecret -providedFilePath $AlarmDispatchSecretFile -defaultSharedSecretPath $AlarmDispatchSecretFile
+
+$licenseDefault = $null
+$publicKeyDefault = $null
+if ($packageRoot) {
+    $licenseDir = Join-Path $packageRoot "licence"
+    $publicKeyDir = Join-Path $packageRoot "public_key"
+    $licenseDefault = Find-FirstFile $licenseDir "*.vtlic"
+    $publicKeyDefault = Find-FirstFile $publicKeyDir "*.pem"
+}
+
+$licenseSourcePath = Read-InstallValue (T "Chemin du fichier licence (.vtlic)" "License file path (.vtlic)") $licenseDefault
+$licenseSourcePath = Resolve-PathInput $licenseSourcePath
+if ([string]::IsNullOrWhiteSpace($licenseSourcePath) -and -not [string]::IsNullOrWhiteSpace($licenseDefault)) {
+    $licenseSourcePath = $licenseDefault
+}
+if (-not (Test-Path $licenseSourcePath)) {
+    Write-Error (T "Fichier licence introuvable : $licenseSourcePath" "License file not found: $licenseSourcePath")
+}
+
+$publicKeySourcePath = Read-InstallValue (T "Chemin de la cle publique licence (.pem)" "License public key path (.pem)") $publicKeyDefault
+$publicKeySourcePath = Resolve-PathInput $publicKeySourcePath
+if ([string]::IsNullOrWhiteSpace($publicKeySourcePath) -and -not [string]::IsNullOrWhiteSpace($publicKeyDefault)) {
+    $publicKeySourcePath = $publicKeyDefault
+}
+if (-not (Test-Path $publicKeySourcePath)) {
+    Write-Error (T "Clee publique introuvable : $publicKeySourcePath" "Public key file not found: $publicKeySourcePath")
+}
+
+$licensePayload = Read-LicensePayload $licenseSourcePath
+if ($null -ne $licensePayload) {
+    Write-Log (T "Licence charg?e :" "License loaded:")
+    Write-Log ("  licenseId: {0}" -f $licensePayload.licenseId)
+    Write-Log ("  customerId: {0}" -f $licensePayload.customerId)
+    Write-Log ("  edition: {0}" -f $licensePayload.edition)
+    Write-Log ("  concurrentAccess: {0}" -f $licensePayload.concurrentAccess)
+    Write-Log ("  options: {0}" -f ([string]::Join(',', $licensePayload.options)))
+    $expiresProp = $licensePayload.PSObject.Properties["expiresAt"]
+    if ($expiresProp -and $expiresProp.Value) {
+        Write-Log ("  expiresAt: {0}" -f $expiresProp.Value)
+    } else {
+        Write-Log (T "  expiration: illimitee" "  expiration: unlimited")
+    }
+    if ($licensePayload.PSObject.Properties.Match("bind").Count -gt 0 -and $licensePayload.bind -and $licensePayload.bind.instancePublicKey) {
+        Write-Log ("  bind.instancePublicKey: {0}" -f $licensePayload.bind.instancePublicKey)
+    }
+}
+
+$instancePublicKey = Read-InstallValue (T "Clee publique instance (optionnel)" "Instance public key (optional)") ""
+if ($licensePayload -and $licensePayload.PSObject.Properties.Match("bind").Count -gt 0 -and $licensePayload.bind -and $licensePayload.bind.instancePublicKey) {
+    if ([string]::IsNullOrWhiteSpace($instancePublicKey)) {
+        Write-Warning (T "La licence exige un binding d'instance. Renseignez la cl pour viter un refus." "License requires instance binding. Provide instance public key to avoid mismatch.")
+    }
+}
+
+$licenseDir = Join-Path $programData "VigiSensys\\licenses"
+$publicKeyDir = Join-Path $programData "VigiSensys\\license_keys"
+New-Item -ItemType Directory -Force -Path $licenseDir | Out-Null
+New-Item -ItemType Directory -Force -Path $publicKeyDir | Out-Null
+
+$licenseDestPath = Join-Path $licenseDir (Split-Path $licenseSourcePath -Leaf)
+$publicKeyDestPath = Join-Path $publicKeyDir "public_key.pem"
+
+Copy-Item -Path $licenseSourcePath -Destination $licenseDestPath -Force
+Copy-Item -Path $publicKeySourcePath -Destination $publicKeyDestPath -Force
+
+Set-AppSetting $configPath "Vigi.WebsiteBaseUrl" $websiteBaseUrl
+Set-AppSetting $configPath "VigiSensys.WebsiteBaseUrl" $websiteBaseUrl
+Set-AppSetting $configPath "Vigi.AlarmDispatchSecret" $alarmSecret
+Set-AppSetting $configPath "VigiSensys.AlarmDispatchSecret" $alarmSecret
+Set-AppSetting $configPath "Vigi.Db.Provider" $dbProvider
+Set-AppSetting $configPath "Vigi.Db.Host" $dbHost
+Set-AppSetting $configPath "Vigi.Db.Port" $dbPort
+Set-AppSetting $configPath "Vigi.Db.User" $dbUser
+Set-AppSetting $configPath "Vigi.Db.Password" $dbPassword
+Set-AppSetting $configPath "Vigi.Db.MainDatabase" $dbMain
+Set-AppSetting $configPath "Vigi.Db.MeasureDatabase" $dbMeasure
+Set-AppSetting $configPath "Vigi.Db.ConnectionTimeoutSeconds" $dbConnectionTimeoutSeconds
+Set-AppSetting $configPath "Vigi.Db.CommandTimeoutSeconds" $dbCommandTimeoutSeconds
+Set-AppSetting $configPath "Vigi.Db.SqlServer.Encrypt" $sqlServerEncrypt
+Set-AppSetting $configPath "Vigi.Db.SqlServer.TrustServerCertificate" $sqlServerTrustServerCertificate
+Set-AppSetting $configPath "Vigi.License.HysteresisDelta" $licenseHysteresisDelta
+Set-AppSetting $configPath "Vigi.License.DebounceSeconds" $licenseDebounceSeconds
+Set-AppSetting $configPath "Vigi.License.ShowWhileSnoozed" $licenseShowWhileSnoozed
+Set-AppSetting $configPath "Vigi.License.SettingsCacheSeconds" $settingsCacheSeconds
+Set-AppSetting $configPath "Vigitemp.Metrology.LogDetailed" $metrologyLogDetailed
+Set-AppSetting $configPath "Vigitemp.Workers.Count" ([string]$workerCount)
+Set-AppSetting $configPath "Vigitemp.Alarms.PollServerId" "1"
+Set-AppSetting $configPath "Vigitemp.LegacyAgentNotifications.Enabled" "false"
+Set-AppSetting $configPath "Vigitemp.LegacyAgentNotifications.MaxRecipients" "25"
+Set-AppSetting $configPath "Vigi.License.Path" $licenseDestPath
+Set-AppSetting $configPath "VigiSensys.License.Path" $licenseDestPath
+Set-AppSetting $configPath "Vigi.License.PublicKeyPath" $publicKeyDestPath
+Set-AppSetting $configPath "VigiSensys.License.PublicKeyPath" $publicKeyDestPath
+Set-AppSetting $configPath "Vigi.License.InstancePublicKey" $instancePublicKey
+
+$serviceExePath = Join-Path $InstallDir $exeName
+$version = ""
+try {
+    $version = (Get-Item $serviceExePath).VersionInfo.ProductVersion
+} catch {
+    $version = ""
+}
+
+$existingService = Get-Service -Name $ServiceName -ErrorAction SilentlyContinue
+if ($null -ne $existingService) {
+    $answer = Read-InstallValue (T "Le service $ServiceName existe. Arreter et reinstaller ? (y/n)" "Service $ServiceName exists. Stop and reinstall? (y/n)") "y"
+    if ($answer -ne "y") {
+        Write-Error (T "Installation annule par l'utilisateur." "Installation cancelled by user.")
+    }
+    try { Stop-Service -Name $ServiceName -Force -ErrorAction SilentlyContinue } catch { }
+    & sc.exe delete $ServiceName | Out-Null
+    Start-Sleep -Seconds 2
+}
+
+$binPath = '"' + $serviceExePath + '"'
+& sc.exe create $ServiceName binPath= $binPath start= auto | Out-Null
+& sc.exe description $ServiceName "VigiSensys interrogation server service" | Out-Null
+& sc.exe failure $ServiceName reset= 86400 actions= restart/60000/restart/60000/restart/60000 | Out-Null
+& sc.exe failureflag $ServiceName 1 | Out-Null
+
+try {
+    Start-Service -Name $ServiceName
+} catch {
+    Write-Log (T "Impossible de demarrer le service : $ServiceName" "Failed to start service: $ServiceName")
+    try {
+        $events = Get-WinEvent -LogName System -MaxEvents 5 |
+            Where-Object { $_.ProviderName -eq "Service Control Manager" } |
+            Select-Object -First 2
+        foreach ($evt in $events) {
+            Write-Log ($evt.Message)
+        }
+    } catch { }
+    $logPath = Join-Path $programData "VigiSensys\\logs\\vigisensys-serveur.log"
+    if (Test-Path $logPath) {
+        Write-Log (T "Log serveur: $logPath" "Server log: $logPath")
+    }
+    throw
+}
+
+
+Write-InstallRegistryInfo -installPath $InstallDir -version $version
+Write-UninstallRegistryInfo -installPath $InstallDir -serviceName $ServiceName -version $version
+
+try {
+    $regServerRoot = "HKLM:\\SOFTWARE\\VigiSensys\\Server"
+    New-Item -Path $regServerRoot -Force | Out-Null
+    if ($licenseDestPath) {
+        Set-ItemProperty -Path $regServerRoot -Name "LicensePath" -Value $licenseDestPath -Type String
+        Write-Log (T "Registre LicensePath: $licenseDestPath" "Registry LicensePath: $licenseDestPath")
+    }
+    if ($publicKeyDestPath) {
+        Set-ItemProperty -Path $regServerRoot -Name "LicensePublicKeyPath" -Value $publicKeyDestPath -Type String
+        Write-Log (T "Registre LicensePublicKeyPath: $publicKeyDestPath" "Registry LicensePublicKeyPath: $publicKeyDestPath")
+    }
+} catch {
+    Write-Log (T "Echec ecriture registre licence." "Failed to write license registry.")
+}
+
+Write-Log (T "Registre: HKLM\\SOFTWARE\\VigiSensys\\Server" "Registry: HKLM\\SOFTWARE\\VigiSensys\\Server")
+Write-Log (T "  InstallPath: $InstallDir" "  InstallPath: $InstallDir")
+if (-not [string]::IsNullOrWhiteSpace($version)) {
+    Write-Log (T "  Version: $version" "  Version: $version")
+}
+Write-Log (T "  LastInstalledUtc: $([DateTime]::UtcNow.ToString('o'))" "  LastInstalledUtc: $([DateTime]::UtcNow.ToString('o'))")
+Write-Log (T "Installation terminee. Service : $ServiceName" "Install complete. Service: $ServiceName")
+if (-not [string]::IsNullOrWhiteSpace($version)) {
+    Write-Log (T "Version : $version" "Version: $version")
+}
+Write-Log (T "Config : $configPath" "Config: $configPath")
+Write-Log (T "Workers : $workerCount" "Workers: $workerCount")
+Write-Log (T "Licence : $licenseDestPath" "License: $licenseDestPath")
+Write-Log (T "Clee publique : $publicKeyDestPath" "Public key: $publicKeyDestPath")
+Write-Log (T "Log : $logPath" "Log: $logPath")
+
+function Test-ServerInstall {
+    Write-Log (T "Verification post-installation..." "Post-install verification...")
+    $checks = @()
+    $checks += @{ Label = "InstallDir"; Path = $InstallDir }
+    $checks += @{ Label = "ServerExe"; Path = $serviceExePath }
+    $checks += @{ Label = "Config"; Path = $configPath }
+    $checks += @{ Label = "License"; Path = $licenseDestPath }
+    $checks += @{ Label = "LicensePublicKey"; Path = $publicKeyDestPath }
+    foreach ($check in $checks) {
+        if (Test-Path $check.Path) {
+            Write-Log (T "OK: $($check.Label) -> $($check.Path)" "OK: $($check.Label) -> $($check.Path)")
+        } else {
+            Write-Warning (T "Manquant: $($check.Label) -> $($check.Path)" "Missing: $($check.Label) -> $($check.Path)")
+        }
+    }
+    $svc = Get-Service -Name $ServiceName -ErrorAction SilentlyContinue
+    if ($svc) {
+        Write-Log (T "Service ${ServiceName}: $($svc.Status)" "Service ${ServiceName}: $($svc.Status)")
+    } else {
+        Write-Warning (T "Service $ServiceName introuvable." "Service $ServiceName not found.")
+    }
+    try {
+        $reg = Get-ItemProperty -Path "HKLM:\\SOFTWARE\\VigiSensys\\Server" -ErrorAction Stop
+        if ($reg.InstallPath) {
+            Write-Log (T "Registre InstallPath: $($reg.InstallPath)" "Registry InstallPath: $($reg.InstallPath)")
+        }
+        if ($reg.Version) {
+            Write-Log (T "Registre Version: $($reg.Version)" "Registry Version: $($reg.Version)")
+        }
+    } catch {
+        Write-Warning (T "Registre: lecture impossible." "Registry: unable to read.")
+    }
+}
+
+Test-ServerInstall
+
+foreach ($dirName in @("installer", "VigitempServerInstaller", "shared-secrets")) {
+    $targetDir = Join-Path $InstallDir $dirName
+    if (Test-Path $targetDir) {
+        Remove-Item -LiteralPath $targetDir -Recurse -Force -ErrorAction SilentlyContinue
+    }
+}
+foreach ($pattern in @("setup*.exe", "*installer*.exe", "VigiSensysServerSetup.exe", "VigiSensysServerSetup.pdb")) {
+    Get-ChildItem -Path $InstallDir -File -Filter $pattern -ErrorAction SilentlyContinue | Remove-Item -Force -ErrorAction SilentlyContinue
+}
+Write-Log (T "Artefacts d'installation supprimes du dossier installe." "Installation artifacts removed from installed folder.")
+
+Stop-Transcript | Out-Null

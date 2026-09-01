@@ -1,6 +1,7 @@
-﻿using System;
+using System;
 using System.Drawing;
 using System.Drawing.Text;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 
@@ -8,18 +9,35 @@ namespace VigitempAgent
 {
     public partial class Form_Alert : Form
     {
-
-
         PrivateFontCollection fonts = new PrivateFontCollection();
+        private Font _alertFont;
         private string SITEWEB_URL;
+        private const string DefaultAlertText = "Une alarme VigiSensys est actuellement en cours";
         public Form_Alert(string p_SITEWEB_URL)
         {
             InitializeComponent();
             SITEWEB_URL = p_SITEWEB_URL;
+            // Load font once - prevents PrivateFontCollection leak on every showAlert()
+            byte[] fontData = Properties.Resources.Poppins_SemiBold;
+            IntPtr fontPtr = System.Runtime.InteropServices.Marshal.AllocCoTaskMem(fontData.Length);
+            Marshal.Copy(fontData, 0, fontPtr, fontData.Length);
+            uint dummy = 0;
+            fonts.AddMemoryFont(fontPtr, fontData.Length);
+            AddFontMemResourceEx(fontPtr, (uint)fontData.Length, IntPtr.Zero, ref dummy);
+            Marshal.FreeCoTaskMem(fontPtr);
             foreach (Control ctl in this.Controls)
             {
                 ctl.MouseClick += new MouseEventHandler(Form_Alert_Click);
             }
+        }
+
+        public class AlarmBannerDetails
+        {
+            public string Location { get; set; }
+            public string TriggeredAt { get; set; }
+            public string AlarmType { get; set; }
+            public string LastValue { get; set; }
+            public string LastMeasureAt { get; set; }
         }
 
         public enum enumAction
@@ -33,7 +51,7 @@ namespace VigitempAgent
 
         private Form_Alert.enumAction action;
 
-        private int x, y;
+        private int x;
 
         private void button2_Click(object sender, EventArgs e)
         {
@@ -43,11 +61,6 @@ namespace VigitempAgent
 
         private void timer1_Tick(object sender, EventArgs e)
         {
-
-
-            //if (!this.IsHandleCreated)
-            //    this.CreateHandle();
-            //this.Invoke((MethodInvoker)delegate {
             switch (this.action)
             {
                 case enumAction.wait:
@@ -82,7 +95,7 @@ namespace VigitempAgent
                 case enumAction.restart_2:
                     timer1.Interval = 1;
                     this.Opacity += 0.02;
-                    if (this.Opacity == 1)
+                    if (this.Opacity >= 1.0)
                     {
                         action = enumAction.wait;
                     }
@@ -91,70 +104,32 @@ namespace VigitempAgent
                     timer1.Interval = 1;
                     this.Opacity -= 0.1;
                     this.Top -= 3;
-                    if (base.Opacity == 0.0)
+                    if (this.Opacity <= 0.0)
                     {
                         base.Hide();
+                        timer1.Stop();
                     }
                     break;
             }
-            //});
-            //switch (this.action)
-            //{
-            //    case enumAction.wait:
-            //        timer1.Interval = 5000;
-            //        action = enumAction.close;
-            //        break;
-            //    case enumAction.start:
-            //        timer1.Interval = 1;
-            //        this.Opacity += 0.1;
-            //        if (this.x < this.Location.X)
-            //        {
-            //            this.Left--;
-            //        }
-            //        else
-            //        {
-            //            if (this.Opacity == 1.0)
-            //            {
-            //                action = enumAction.wait;
-            //            }
-            //        }
-            //        break;
-            //    case enumAction.close:
-            //        timer1.Interval = 1;
-            //        this.Opacity -= 0.1;
-            //        this.Left -= 3;
-            //        if (base.Opacity == 0.0)
-            //        {
-            //            base.Close();
-            //        }
-            //        break;
-            //}
         }
 
         public void showAlert(string msg)
         {
-
-            byte[] fontData = Properties.Resources.Poppins_SemiBold;
-            IntPtr fontPtr = System.Runtime.InteropServices.Marshal.AllocCoTaskMem(fontData.Length);
-            Marshal.Copy(fontData, 0, fontPtr, fontData.Length);
-            uint dummy = 0;
-            fonts.AddMemoryFont(fontPtr, Properties.Resources.Poppins_SemiBold.Length);
-            AddFontMemResourceEx(fontPtr, (uint)Properties.Resources.Poppins_SemiBold.Length, IntPtr.Zero, ref dummy);
-            Marshal.FreeCoTaskMem(fontPtr);
-
-            this.label2.Font = new Font(fonts.Families[0], 14.0F);
+            if (fonts.Families.Length > 0)
+            {
+                if (_alertFont == null)
+                    _alertFont = new Font(fonts.Families[0], 14.0F);
+                this.label2.Font = _alertFont;
+            }
             this.Opacity = 1.0;
             this.StartPosition = FormStartPosition.Manual;
-
-            //Form_Alert frm = (Form_Alert)Application.OpenForms["form_Alert"];
 
             if(this.Visible == false)
             {
                 this.Name = "form_Alert";
-                this.x = Screen.PrimaryScreen.WorkingArea.Width - Screen.PrimaryScreen.WorkingArea.Width / 2 - this.Width / 2;
-                this.y = -this.Height - 15;
-                this.Location = new Point(this.x, this.y);
                 this.x = Screen.PrimaryScreen.WorkingArea.Width - base.Width - 5;
+                int startY = -this.Height - 15;
+                this.Location = new Point(this.x, startY);
                 this.Show();
             }
             
@@ -167,11 +142,45 @@ namespace VigitempAgent
 
         public void hideAlert(string msg)
         {
-            //this.action = enumAction.start;
-            //this.timer1.Interval = 1;
-            //timer1.Start();
             timer1.Interval = 1;
             action = enumAction.close;
+        }
+
+        public void SetAlarmBannerDetails(AlarmBannerDetails details)
+        {
+            if (details == null)
+            {
+                ResetAlarmBannerDetails();
+                return;
+            }
+
+            var line1 = DefaultAlertText;
+            var line2Parts = new[]
+            {
+                !string.IsNullOrWhiteSpace(details.Location) ? $"Lieu: {details.Location}" : null,
+                !string.IsNullOrWhiteSpace(details.AlarmType) ? $"Type: {details.AlarmType}" : null,
+                !string.IsNullOrWhiteSpace(details.LastValue) ? $"Valeur: {details.LastValue}" : null,
+            }.Where(part => !string.IsNullOrWhiteSpace(part)).ToList();
+
+            var line3Parts = new[]
+            {
+                !string.IsNullOrWhiteSpace(details.TriggeredAt) ? $"Déclenchement: {details.TriggeredAt}" : null,
+                !string.IsNullOrWhiteSpace(details.LastMeasureAt) ? $"Dernière mesure: {details.LastMeasureAt}" : null,
+            }.Where(part => !string.IsNullOrWhiteSpace(part)).ToList();
+
+            var lines = new[]
+            {
+                line1,
+                line2Parts.Count > 0 ? string.Join(" | ", line2Parts) : null,
+                line3Parts.Count > 0 ? string.Join(" | ", line3Parts) : null,
+            }.Where(line => !string.IsNullOrWhiteSpace(line));
+
+            label2.Text = string.Join(Environment.NewLine, lines);
+        }
+
+        public void ResetAlarmBannerDetails()
+        {
+            label2.Text = DefaultAlertText;
         }
 
 
@@ -197,27 +206,32 @@ namespace VigitempAgent
 
         private void Form_Alert_Click(object sender, EventArgs e)
         {
-            System.Diagnostics.Process.Start(SITEWEB_URL + "/metrologie/alarmes");
-            //timer1.Interval = 1;
-            //action = enumAction.close;
+            try
+            {
+                var url = (SITEWEB_URL ?? "").TrimEnd('/') + "/alarmes";
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(url) { UseShellExecute = true });
+            }
+            catch (Exception ex)
+            {
+                AgentLog.Error("Failed to open alarm URL.", ex);
+            }
+            HideAlarm();
         }
 
         private void button1_Click_1(object sender, EventArgs e)
         {
-            System.Diagnostics.Process.Start(SITEWEB_URL + "/metrologie/alarmes");
-            //timer1.Interval = 1;
-            action = enumAction.close;
+            try
+            {
+                var url = (SITEWEB_URL ?? "").TrimEnd('/') + "/alarmes";
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(url) { UseShellExecute = true });
+            }
+            catch (Exception ex)
+            {
+                AgentLog.Error("Failed to open alarm URL.", ex);
+            }
+            HideAlarm();
         }
 
-        private void labelmessage_Click_1(object sender, EventArgs e)
-        {
-
-        }
-
-        private void button2_Click_1(object sender, EventArgs e)
-        {
-
-        }
 
         public void DisplayAlarm()
         {
@@ -226,36 +240,14 @@ namespace VigitempAgent
                 this.Invoke(new Action(() =>
                 {
                     this.showAlert("alarm");
-                    //MessageBox.Show("Alarm triggered!");
                 }));
             }
             else
             {
-
                 this.showAlert("alarm");
-                //MessageBox.Show("Alarm triggered!");
             }
         }
 
-        private void button3_Click(object sender, EventArgs e)
-        {
-
-        }
-
-        private void label1_Click(object sender, EventArgs e)
-        {
-
-        }
-
-        private void pictureBox1_Click(object sender, EventArgs e)
-        {
-
-        }
-
-        private void button1_Click(object sender, EventArgs e)
-        {
-
-        }
 
         public void HideAlarm()
         {
@@ -263,15 +255,14 @@ namespace VigitempAgent
             {
                 this.Invoke(new Action(() =>
                 {
+                    ResetAlarmBannerDetails();
                     this.hideAlert("alarm");
-                    //MessageBox.Show("Alarm triggered!");
                 }));
             }
             else
             {
-
+                ResetAlarmBannerDetails();
                 this.hideAlert("alarm");
-                //MessageBox.Show("Alarm triggered!");
             }
         }
 

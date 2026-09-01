@@ -1,4 +1,4 @@
-﻿
+
 using System.Drawing;
 using System.Drawing.Text;
 using System.Runtime.InteropServices;
@@ -18,9 +18,11 @@ namespace VigitempAgent
         /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
         protected override void Dispose(bool disposing)
         {
-            if (disposing && (components != null))
+            if (disposing)
             {
-                components.Dispose();
+                components?.Dispose();
+                _alertFont?.Dispose();
+                fonts?.Dispose();
             }
             base.Dispose(disposing);
         }
@@ -64,7 +66,7 @@ namespace VigitempAgent
             this.button2.TabIndex = 2;
             this.button2.TabStop = false;
             this.button2.UseVisualStyleBackColor = false;
-            this.button2.Click += new System.EventHandler(this.button2_Click_1);
+            this.button2.Click += new System.EventHandler(this.button2_Click);
             // 
             // label1
             // 
@@ -85,7 +87,7 @@ namespace VigitempAgent
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(490, 81);
             this.label2.TabIndex = 6;
-            this.label2.Text = "Une alarme Vigitemp est actuellement en cours";
+            this.label2.Text = "Une alarme VigiSensys est actuellement en cours";
             this.label2.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // pictureBox1

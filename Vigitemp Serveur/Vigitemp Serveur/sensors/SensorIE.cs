@@ -11,6 +11,38 @@ namespace Vigitemp_Serveur.sensors
     {
         private string m_regexResponseTempSensor = @".*(R[A-Z0-9]{4}TEMP-?[0-9]{1,3}.[0-9]{2}'C).*";
 
+        private bool ContainsBatteryMarker(string response)
+        {
+            if (string.IsNullOrWhiteSpace(response))
+            {
+                return false;
+            }
+
+            var frame = Regex.Match(response, @"R[A-Z0-9]{4}[^\r\n]*", RegexOptions.IgnoreCase);
+            if (!frame.Success)
+            {
+                return false;
+            }
+
+            var payload = frame.Value.Substring(5).ToUpperInvariant();
+            if (string.IsNullOrEmpty(payload))
+            {
+                return false;
+            }
+
+            if (payload.Contains("BAT"))
+            {
+                return true;
+            }
+
+            if (payload.StartsWith("B", StringComparison.Ordinal))
+            {
+                return true;
+            }
+
+            return Regex.IsMatch(payload, @"(^|[^A-Z0-9])B([^A-Z0-9]|$)", RegexOptions.None);
+        }
+
         // Constructeur
         public SensorIE(ThreadServeur p_ths, string p_comPort, string p_sondeSerialNumber, string p_sondeAdresse) : base(p_ths, p_comPort, p_sondeSerialNumber, p_sondeAdresse)
         {
@@ -19,30 +51,39 @@ namespace Vigitemp_Serveur.sensors
 
         public override async Task<bool> read()
         {
+            return await ExecuteWithPortLockAsync(ReadCoreAsync);
+        }
+
+        private async Task<bool> ReadCoreAsync()
+        {
             try
             {
-                pendingResults = true;
+                BeginReadCycle();
                 m_port.Open();
                 m_port.DiscardInBuffer();
                 m_port.DiscardOutBuffer();
-                m_port.Write("SM" + m_sondeAdresse + "0000000000000000");
+                var command = "SM" + m_sondeAdresse + "0000000000000000";
+                VigitempServeur.Log($"[SONDE][TX] type=IE serial={m_sondeSerialNumber} port={m_comPort} adresse={m_sondeAdresse} cmd={command}");
+                m_port.Write(command);
                 Stopwatch tmp_sw = new Stopwatch();
                 tmp_sw.Start();
-                while (tmp_sw.Elapsed.TotalMilliseconds < 100) { }
-                m_port.Write("SM" + m_sondeAdresse + "0000000000000000");
-
-                //Console.WriteLine("Données ecrites dans le port COM: " + "SM" + m_sondeAdresse + "0000000000000000");
-                //Trace.WriteLine("Données ecrites dans le port COM: " + "SM" + m_sondeAdresse + "0000000000000000");
-                VigitempServeur.Log("Données ecrites dans le port COM: " + "SM" + m_sondeAdresse + "0000000000000000");
+                await Task.Delay(100);
+                VigitempServeur.Log($"[SONDE][TX] type=IE serial={m_sondeSerialNumber} port={m_comPort} adresse={m_sondeAdresse} cmd={command} (repeat)");
+                m_port.Write(command);
 
                 while (pendingResults)
                 {
                     await Task.Delay(25);
                     if (tmp_sw.Elapsed.TotalMilliseconds > 2000)
                     {
+                        if (!TryCompleteRead())
+                        {
+                            break;
+                        }
+                        VigitempServeur.Log($"[SONDE][DONE] type=IE serial={m_sondeSerialNumber} port={m_comPort} status=timeout elapsedMs={tmp_sw.Elapsed.TotalMilliseconds:0}");
+                        HandleNoResponseAlarm(false, "timeout");
                         m_port.Close();
                         m_sensor_response = "";
-                        pendingResults = false;
                         break;
                     }
                 }
@@ -51,9 +92,9 @@ namespace Vigitemp_Serveur.sensors
             }
             catch (Exception e)
             {
-                Console.WriteLine("erreur: " + e);
-                Trace.WriteLine("erreur: " + e);
-                m_port.Close();
+                VigitempServeur.Log("SensorIE.read error: " + e);
+                HandleNoResponseAlarm(false, "exception");
+                DisposePort();
                 return false;
             }
             return true;
@@ -63,44 +104,87 @@ namespace Vigitemp_Serveur.sensors
                             object sender,
                             SerialDataReceivedEventArgs e)
         {
-
-            SerialPort sp = (SerialPort)sender;
-            string regex_res;
-            m_sensor_response += sp.ReadExisting();     //ajout sp.readExisting à m_sensor_response
-            var m = Regex.Match(m_sensor_response, m_regexResponseTempSensor, RegexOptions.None);
-            if (m.Groups[1].Value != "")
+            try
             {
-                regex_res = m.Groups[1].Value;
-                m_sensor_response = "";
-            }
-            else
-            {
-                if (m_sensor_response.Length > sp.ReadExisting().Length)
+                if (HasReadCompleted())
                 {
-                    m_sensor_response.Substring(sp.ReadExisting().Length, m_sensor_response.Length - sp.ReadExisting().Length);
+                    return;
                 }
-                return;
+
+                SerialPort sp = (SerialPort)sender;
+                string regex_res;
+                var chunk = sp.ReadExisting();
+                if (!string.IsNullOrEmpty(chunk))
+                {
+                    AppendToResponse(chunk);
+                }
+                VigitempServeur.Log($"[SONDE][RX] type=IE serial={m_sondeSerialNumber} port={m_comPort} raw={m_sensor_response}");
+                var hasBatteryMarker = ContainsBatteryMarker(m_sensor_response);
+                var m = Regex.Match(m_sensor_response, m_regexResponseTempSensor, RegexOptions.None);
+                if (m.Groups[1].Value != "")
+                {
+                    regex_res = m.Groups[1].Value;
+                    m_sensor_response = "";
+                }
+                else
+                {
+                    if (hasBatteryMarker)
+                    {
+                        if (!TryCompleteRead())
+                        {
+                            return;
+                        }
+                        HandleSensorPowerAlarm(true, "IE-BAT");
+                        HandleNoResponseAlarm(true);
+                        m_port.Close();
+                        VigitempServeur.Log($"[SONDE][DONE] type=IE serial={m_sondeSerialNumber} port={m_comPort} status=battery-flag");
+                        return;
+                    }
+
+                    if (m_sensor_response.Length > 1024)
+                    {
+                        m_sensor_response = m_sensor_response.Substring(m_sensor_response.Length - 1024);
+                    }
+                    return;
+                }
+
+                if (!TryCompleteRead())
+                {
+                    return;
+                }
+
+                // Console.WriteLine("Donnees recues dans le port COM: " + regex_res);
+                tmp_valeur = regex_res.Split(new string[] { "TEMP" }, StringSplitOptions.None)[1];
+                tmp_numeroSerie = regex_res.Split(new string[] { "TEMP" }, StringSplitOptions.None)[0];
+                VigitempServeur.Log($"[SONDE][RX] type=IE serial={m_sondeSerialNumber} parsedSerial={tmp_numeroSerie} rawValue={tmp_valeur}");
+
+                //recuperer a et b our corriger la valeur brute
+                // (double coeffX, double coeffConstant) = ThreadServeur.GetDatabase().getCoeffCalibrageBySerialNumber(m_serialNumber);
+                var rawValue = Convert.ToDouble(float.Parse(tmp_valeur.Remove(tmp_valeur.Length - 2, 2), CultureInfo.InvariantCulture.NumberFormat));
+                var correctedValue = RoundMeasure(ApplyMetrology(rawValue));
+                // tmp_temperature = (-19.5262).ToString();
+
+
+                // ThreadServeur.GetDatabase().AddMesure(m_serialNumber, float.Parse(String.Format("{0:0.00}", tmp_temperature)), "°C");
+                HandleSensorPowerAlarm(hasBatteryMarker, hasBatteryMarker ? "IE-BAT" : "IE-NORMAL");
+                HandleNoResponseAlarm(true);
+                compareMeasuresAndLimits(correctedValue, "°C");
+                ths.GetDatabase().AddMesure(m_sondeSerialNumber, correctedValue, "°C", ToInvariantRaw(rawValue));
+                VigitempServeur.Log($"[SONDE][DONE] type=IE serial={m_sondeSerialNumber} port={m_comPort} status=success value={correctedValue} unit=°C raw={ToInvariantRaw(rawValue)}");
+                m_port.Close();
             }
-
-            // Console.WriteLine("Données recues dans le port COM: " + regex_res);
-            tmp_valeur = regex_res.Split(new string[] { "TEMP" }, StringSplitOptions.None)[1];
-            tmp_numeroSerie = regex_res.Split(new string[] { "TEMP" }, StringSplitOptions.None)[0];
-
-            //recuperer a et b our corriger la valeur brute
-            // (double coeffX, double coeffConstant) = ThreadServeur.GetDatabase().getCoeffCalibrageBySerialNumber(m_serialNumber);
-            (double coeffX, double coeffConstant) = ths.GetDatabase().getCoeffCalibrageBySerialNumber(m_sondeSerialNumber);
-            tmp_valeur = (Convert.ToDouble(float.Parse(tmp_valeur.Remove(tmp_valeur.Length - 2, 2), CultureInfo.InvariantCulture.NumberFormat)) * coeffX + coeffConstant).ToString();
-            // tmp_temperature = (-19.5262).ToString();
-            Console.WriteLine("Données corrigées: " + float.Parse(String.Format("{0:0.00}", tmp_valeur)));
-            Trace.WriteLine("Données corrigées: " + float.Parse(String.Format("{0:0.00}", tmp_valeur)));
-
-
-            // ThreadServeur.GetDatabase().AddMesure(m_serialNumber, float.Parse(String.Format("{0:0.00}", tmp_temperature)), "°C");
-            ths.GetDatabase().AddMesure(m_sondeSerialNumber, float.Parse(String.Format("{0:0.00}", tmp_valeur)), "°C", null);
-            m_port.Close();
-            pendingResults = false;
-            System.Diagnostics.Trace.WriteLine("Fermeture du port " + m_comPort);
+            catch (Exception ex)
+            {
+                VigitempServeur.Log($"[SONDE][ERR] type=IE serial={m_sondeSerialNumber} port={m_comPort} error={ex}");
+                DisposePort();
+                TryCompleteRead();
+            }
         }
 
     }
 }
+
+
+
+
+
