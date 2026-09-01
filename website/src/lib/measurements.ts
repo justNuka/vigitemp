@@ -108,7 +108,7 @@ export function getMeasureSummary(
   const lastMeasureText = lastWithValue ? `${formattedValue}${normalizeUnitLabel(lastWithValue.Unite || unite)}` : "N/A"
   const lastDateTime = last
     ? formatDbDateTime(last.DateHeureMesureIso ?? last.DateHeureMesure, {
-        withSeconds: false,
+        format: "dateTime",
         fallback: "",
       })
     : ""
@@ -193,10 +193,10 @@ export function formatTimeAxisLabel(
 
   if (spanMs >= 24 * 60 * 60 * 1000) {
     return [
-      formatDbDateTime(date, { dateOnly: true, withYear: false, locale }),
-      formatDbDateTime(date, { timeOnly: true, withSeconds: false, locale }),
+      formatDbDateTime(date, { format: "dateShort", locale }),
+      formatDbDateTime(date, { format: "time", locale }),
     ]
   }
 
-  return formatDbDateTime(date, { timeOnly: true, withSeconds: false, locale })
+  return formatDbDateTime(date, { format: "time", locale })
 }
