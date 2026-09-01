@@ -79,14 +79,14 @@ function normalizePresenceDetails(value: string | null | undefined) {
 
 function formatDateTime(value: string | null, locale: string) {
   return formatDbDateTime(value, {
-    withSeconds: false,
+    format: "dateTime",
     locale: locale === "fr" ? "fr-FR" : "en-GB",
   })
 }
 
 function formatDate(value: string | null, locale: string) {
   return formatDbDateTime(value, {
-    dateOnly: true,
+    format: "date",
     locale: locale === "fr" ? "fr-FR" : "en-GB",
   })
 }
@@ -1201,7 +1201,7 @@ export function VigilogPageClient() {
               <span className={`h-3 w-3 rounded-full ${trafficLightClass(row.original.trafficLight)}`} />
               <span className="text-sm text-foreground">
                 {row.original.trafficLight
-                  ? t(`history.traffic.${row.original.trafficLight.toLowerCase()}` as never)
+                  ? t(`history.traffic.${row.original.trafficLight.toLowerCase()}` as never)}
                   : "-"}
               </span>
             </div>
@@ -1899,7 +1899,7 @@ export function VigilogPageClient() {
                             current?.serial === event.target.value ? current : null,
                           )
                         }}
-                        placeholder={t("departure.placeholders.loggerSerial")}
+                        placeholder={t("usage.placeholders.loggerSerial")}
                         maxLength={30}
                       />
                     </div>
