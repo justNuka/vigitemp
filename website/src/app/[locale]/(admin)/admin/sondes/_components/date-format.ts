@@ -11,7 +11,7 @@ export function formatDateTimeFr(
   void timezone;
   void localeTag;
   if (!date) return "-";
-  return formatDbDateTime(date);
+  return formatDbDateTime(date, { format: "dateTimeSeconds" });
 }
 
 export function formatDateFr(
@@ -22,5 +22,5 @@ export function formatDateFr(
   void timezone;
   void localeTag;
   if (!date) return "-";
-  return formatDbDateTime(date, { dateOnly: true });
+  return formatDbDateTime(date, { format: "date" });
 }
