@@ -2,9 +2,11 @@ export type DbDateInput = string | number | Date | null | undefined;
 
 export type DateDisplayFormat =
   | "date"
+  | "dateShort"
   | "time"
   | "timeSeconds"
   | "dateTime"
+  | "dateTimeShort"
   | "dateTimeSeconds";
 
 export type DateDisplayOptions = {
@@ -16,11 +18,11 @@ export type DateDisplayOptions = {
   fallback?: string;
   locale?: string | string[];
   timeZone?: string;
-  /** @deprecated Prefer `format: "timeSeconds" | "dateTimeSeconds"`. */
+  /** @deprecated Prefer a named `format`. */
   withSeconds?: boolean;
-  /** @deprecated Prefer a named `format`, or `formatDbDateTimeIntl` for custom date parts. */
+  /** @deprecated Prefer `format: "dateShort" | "dateTimeShort"`, or `formatDbDateTimeIntl` for custom date parts. */
   withYear?: boolean;
-  /** @deprecated Prefer `format: "date"`. */
+  /** @deprecated Prefer `format: "date" | "dateShort"`. */
   dateOnly?: boolean;
   /** @deprecated Prefer `format: "time" | "timeSeconds"`. */
   timeOnly?: boolean;
@@ -47,6 +49,12 @@ const DATE_DISPLAY_FORMATS: Record<DateDisplayFormat, ResolvedDateDisplayFormat>
     includeSeconds: false,
     includeYear: true,
   },
+  dateShort: {
+    includeDate: true,
+    includeTime: false,
+    includeSeconds: false,
+    includeYear: false,
+  },
   time: {
     includeDate: false,
     includeTime: true,
@@ -64,6 +72,12 @@ const DATE_DISPLAY_FORMATS: Record<DateDisplayFormat, ResolvedDateDisplayFormat>
     includeTime: true,
     includeSeconds: false,
     includeYear: true,
+  },
+  dateTimeShort: {
+    includeDate: true,
+    includeTime: true,
+    includeSeconds: false,
+    includeYear: false,
   },
   dateTimeSeconds: {
     includeDate: true,
@@ -203,7 +217,8 @@ const resolveLegacyDisplayFormat = (options: DateDisplayOptions): ResolvedDateDi
 
 const resolveDisplayFormat = (options: DateDisplayOptions): ResolvedDateDisplayFormat => {
   if (options.format) {
-    return DATE_DISPLAY_FORMATS[options.format];
+    const resolved = DATE_DISPLAY_FORMATS[options.format];
+    if (resolved) return resolved;
   }
 
   return resolveLegacyDisplayFormat(options);
