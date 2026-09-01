@@ -189,9 +189,9 @@ export function AlarmAcknowledgmentHistoryClient() {
         header: t("table.columns.acknowledgedAt"),
         meta: {
           exportLabel: t("table.columns.acknowledgedAt"),
-          exportValue: (row: AckHistoryItem) => row.acknowledgedAt ? formatDbDateTime(row.acknowledgedAt) : "-",
+          exportValue: (row: AckHistoryItem) => row.acknowledgedAt ? formatDbDateTime(row.acknowledgedAt, { format: "dateTimeSeconds" }) : "-",
         },
-        cell: ({ row }) => row.original.acknowledgedAt ? formatDbDateTime(row.original.acknowledgedAt) : "-",
+        cell: ({ row }) => row.original.acknowledgedAt ? formatDbDateTime(row.original.acknowledgedAt, { format: "dateTimeSeconds" }) : "-",
       },
       {
         accessorKey: "acknowledgedBy",
@@ -256,19 +256,19 @@ export function AlarmAcknowledgmentHistoryClient() {
         meta: {
           exportLabel: t("table.columns.period"),
           exportValue: (row: AckHistoryItem) => [
-            `${t("table.period.start")} ${row.triggeredAt ? formatDbDateTime(row.triggeredAt) : "-"}`,
-            `${t("table.period.end")} ${row.endedAt ? formatDbDateTime(row.endedAt) : "-"}`,
+            `${t("table.period.start")} ${row.triggeredAt ? formatDbDateTime(row.triggeredAt, { format: "dateTimeSeconds" }) : "-"}`,
+            `${t("table.period.end")} ${row.endedAt ? formatDbDateTime(row.endedAt, { format: "dateTimeSeconds" }) : "-"}`,
           ].join(" / "),
         },
         cell: ({ row }) => (
           <div className="space-y-1 text-xs">
             <div>
               <span className="text-muted-foreground">{t("table.period.start")} </span>
-              <span>{row.original.triggeredAt ? formatDbDateTime(row.original.triggeredAt) : "-"}</span>
+              <span>{row.original.triggeredAt ? formatDbDateTime(row.original.triggeredAt, { format: "dateTimeSeconds" }) : "-"}</span>
             </div>
             <div>
               <span className="text-muted-foreground">{t("table.period.end")} </span>
-              <span>{row.original.endedAt ? formatDbDateTime(row.original.endedAt) : "-"}</span>
+              <span>{row.original.endedAt ? formatDbDateTime(row.original.endedAt, { format: "dateTimeSeconds" }) : "-"}</span>
             </div>
           </div>
         ),

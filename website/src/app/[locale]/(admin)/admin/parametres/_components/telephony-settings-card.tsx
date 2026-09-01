@@ -201,7 +201,7 @@ export function TelephonySettingsCard() {
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <KeyRound className="h-4 w-4" />
             {savedAt
-              ? `${copy.localSaved}: ${formatDbDateTime(savedAt, { locale: locale === "en" ? "en-US" : "fr-FR" })}`
+              ? `${copy.localSaved}: ${formatDbDateTime(savedAt, { format: "dateTimeSeconds", locale: locale === "en" ? "en-US" : "fr-FR" })}`
               : copy.warning}
           </div>
           <div className="flex gap-2">

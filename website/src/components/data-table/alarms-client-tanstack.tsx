@@ -276,7 +276,7 @@ export function AlarmsClientTanStack() {
 
   const formatDateTime = useCallback((date: string | null) => {
     if (!date) return t("date.na");
-    return formatDbDateTime(date);
+    return formatDbDateTime(date, { format: "dateTimeSeconds" });
   }, [t]);
 
   const mapAlarmsToRows = useCallback((source: Alarm[]): AlarmRow[] => source
@@ -826,8 +826,8 @@ export function AlarmsClientTanStack() {
         isSubmitting={isSubmitting}
         t={tDialog}
         alarmTypeLabel={selectedAlarm?.type === "high" ? tDialog("dialog.type_high") : selectedAlarm?.type === "low" ? tDialog("dialog.type_low") : selectedAlarm?.type === "no-response" ? tDialog("dialog.type_no_response") : selectedAlarm?.type === "sector" ? tDialog("dialog.type_sector") : selectedAlarm?.type === "module" ? tDialog("dialog.type_module") : tDialog("dialog.type_other")}
-        formattedStart={selectedAlarm?.triggeredAt ? formatDbDateTime(selectedAlarm.triggeredAt) : tDialog("dialog.na")}
-        formattedEnd={selectedAlarm?.resolvedAt ? formatDbDateTime(selectedAlarm.resolvedAt) : tDialog("dialog.end_in_progress")}
+        formattedStart={selectedAlarm?.triggeredAt ? formatDbDateTime(selectedAlarm.triggeredAt, { format: "dateTimeSeconds" }) : tDialog("dialog.na")}
+        formattedEnd={selectedAlarm?.resolvedAt ? formatDbDateTime(selectedAlarm.resolvedAt, { format: "dateTimeSeconds" }) : tDialog("dialog.end_in_progress")}
         formattedDuration={selectedAlarm?.triggeredAt ? (() => { const s = parseDbDateTime(selectedAlarm.triggeredAt); const e = selectedAlarm.resolvedAt ? parseDbDateTime(selectedAlarm.resolvedAt) : new Date(); if (!s || !e) return tDialog("dialog.na"); const m = Math.max(Math.floor((e.getTime()-s.getTime())/60000),0); const h = Math.floor(m/60); const mm=m%60; return h>0 ? `${h}h ${mm}min` : `${mm}min`; })() : tDialog("dialog.na")}
         isStatsLoading={isStatsLoading}
         alarmCount30={alarmCount30}

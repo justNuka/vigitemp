@@ -337,12 +337,12 @@ export function AlarmAcknowledgeDialog({
 
   const formattedStart = useMemo(() => {
     if (!resolvedAlarm.triggeredAt) return "-";
-    return formatDbDateTime(resolvedAlarm.triggeredAt);
+    return formatDbDateTime(resolvedAlarm.triggeredAt, { format: "dateTimeSeconds" });
   }, [resolvedAlarm.triggeredAt]);
 
   const formattedEnd = useMemo(() => {
     if (!resolvedAlarm.endedAt) return t("dialog.end_in_progress");
-    return formatDbDateTime(resolvedAlarm.endedAt);
+    return formatDbDateTime(resolvedAlarm.endedAt, { format: "dateTimeSeconds" });
   }, [resolvedAlarm.endedAt, t]);
 
   const formattedDuration = useMemo(() => {
@@ -603,7 +603,7 @@ export function AlarmAcknowledgeDialog({
                           </td>
                           <td className="px-3 py-2 font-medium">#{row.id} - {getTypeLabel(row.type)}</td>
                           <td className="px-3 py-2 text-muted-foreground">{getStatusLabel(row.status)}</td>
-                          <td className="px-3 py-2 text-muted-foreground">{row.timestamp ? formatDbDateTime(row.timestamp) : "-"}</td>
+                          <td className="px-3 py-2 text-muted-foreground">{row.timestamp ? formatDbDateTime(row.timestamp, { format: "dateTimeSeconds" }) : "-"}</td>
                           <td className="px-3 py-2 font-mono">{value}</td>
                         </tr>
                       );

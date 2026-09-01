@@ -63,7 +63,7 @@ export function DashboardClient({
   )
 
   const formatTzDateTime = useCallback((value: string | Date) => {
-    return formatDbDateTime(value, { locale: localeTag, timeZone: timezone })
+    return formatDbDateTime(value, { format: "dateTimeSeconds", locale: localeTag, timeZone: timezone })
   }, [localeTag, timezone])
 
   const handleAcknowledge = async (alarmId: string, commentValue: string) => {

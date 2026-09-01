@@ -556,7 +556,7 @@ export function MonitoringGraphTab({
                   title: (context) => {
                     const index = context?.[0]?.dataIndex
                     const dateValue = typeof index === "number" ? axisLabels[index] : ""
-                    return dateValue ? formatDbDateTime(dateValue) : ""
+                    return dateValue ? formatDbDateTime(dateValue, { format: "dateTimeSeconds" }) : ""
                   },
                   label: (context) => {
                     const index = context?.dataIndex

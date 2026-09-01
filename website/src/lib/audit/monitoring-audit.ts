@@ -64,7 +64,7 @@ export function formatMonitoringAuditValue(key: string, value: unknown) {
     if (lowered.endsWith("at") || lowered.includes("date") || lowered.includes("time")) {
       const parsed = parseDbDateTime(value)
       if (parsed && !Number.isNaN(parsed.getTime())) {
-        return formatDbDateTime(parsed)
+        return formatDbDateTime(parsed, { format: "dateTimeSeconds" })
       }
     }
 

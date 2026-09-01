@@ -746,7 +746,7 @@ function parseOptionalInteger(value: string) {
 }
 
 function formatMeasureDate(value: string) {
-  return formatDbDateTime(value, { fallback: value })
+  return formatDbDateTime(value, { format: "dateTimeSeconds", fallback: value })
 }
 
 function formatMeasureValue(value: number) {
