@@ -65,17 +65,16 @@ export function MiniChart({
     if (measurements.length < 2) return [] as string[];
     if (measurements.length > 10) {
       return [
-        formatDbDateTime(measurements[0].timestamp, { locale, dateOnly: true, withYear: false }),
+        formatDbDateTime(measurements[0].timestamp, { locale, format: "dateShort" }),
         formatDbDateTime(measurements[measurements.length - 1].timestamp, {
           locale,
-          dateOnly: true,
-          withYear: false,
+          format: "dateShort",
         }),
       ];
     }
 
     return measurements.map((m) =>
-      formatDbDateTime(m.timestamp, { locale, dateOnly: true, withYear: false }),
+      formatDbDateTime(m.timestamp, { locale, format: "dateShort" }),
     );
   }, [locale, measurements]);
 

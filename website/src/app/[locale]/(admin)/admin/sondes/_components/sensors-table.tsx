@@ -112,7 +112,7 @@ export function SensorsTable({ sensors, isLoading, selectedSensorId, onSelectSen
 
   const formatValidityDate = (value: string | Date | null) => {
     return formatDbDateTime(value, {
-      dateOnly: true,
+      format: 'date',
       locale: locale.toLowerCase().startsWith('fr') ? 'fr-FR' : locale,
     });
   };

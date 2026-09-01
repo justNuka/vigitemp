@@ -79,14 +79,14 @@ function normalizePresenceDetails(value: string | null | undefined) {
 
 function formatDateTime(value: string | null, locale: string) {
   return formatDbDateTime(value, {
-    withSeconds: false,
+    format: "dateTime",
     locale: locale === "fr" ? "fr-FR" : "en-GB",
   })
 }
 
 function formatDate(value: string | null, locale: string) {
   return formatDbDateTime(value, {
-    dateOnly: true,
+    format: "date",
     locale: locale === "fr" ? "fr-FR" : "en-GB",
   })
 }

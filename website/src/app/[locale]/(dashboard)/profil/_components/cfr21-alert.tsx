@@ -34,7 +34,7 @@ export function Cfr21Alert({ userInfo, passwordExpiry }: Props) {
           <span className="text-muted-foreground">{t('last_change_label')}</span>
           <span className="font-medium">
             {userInfo?.Date_Derniere_Modification_MDP
-              ? formatDbDateTime(userInfo.Date_Derniere_Modification_MDP, { dateOnly: true })
+              ? formatDbDateTime(userInfo.Date_Derniere_Modification_MDP, { format: 'date' })
               : t('never')}
           </span>
         </div>
@@ -69,7 +69,7 @@ export function Cfr21Alert({ userInfo, passwordExpiry }: Props) {
                 <>
                   {t('valid_until', {
                     count: passwordExpiry.daysRemaining,
-                    date: formatDbDateTime(passwordExpiry.expiryDate, { dateOnly: true }),
+                    date: formatDbDateTime(passwordExpiry.expiryDate, { format: 'date' }),
                   })}
                 </>
               )}

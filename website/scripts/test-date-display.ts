@@ -85,6 +85,49 @@ const cases: TestCase[] = [
     },
   },
   {
+    name: "formatDbDateTime supports named display formats",
+    run: () => {
+      const value = "2026-08-31 14:05:06";
+
+      assert.equal(formatDbDateTime(value, { format: "date" }), "31/08/2026");
+      assert.equal(formatDbDateTime(value, { format: "dateShort" }), "31/08");
+      assert.equal(formatDbDateTime(value, { format: "time" }), "14:05");
+      assert.equal(formatDbDateTime(value, { format: "timeSeconds" }), "14:05:06");
+      assert.equal(formatDbDateTime(value, { format: "dateTime" }), "31/08/2026 14:05");
+      assert.equal(formatDbDateTime(value, { format: "dateTimeShort" }), "31/08 14:05");
+      assert.equal(
+        formatDbDateTime(value, { format: "dateTimeSeconds" }),
+        "31/08/2026 14:05:06",
+      );
+    },
+  },
+  {
+    name: "named display format takes precedence over legacy flags",
+    run: () => {
+      assert.equal(
+        formatDbDateTime("2026-08-31 14:05:06", {
+          format: "time",
+          dateOnly: true,
+          withSeconds: true,
+          withYear: true,
+        }),
+        "14:05",
+      );
+    },
+  },
+  {
+    name: "invalid runtime display format falls back to legacy behavior",
+    run: () => {
+      assert.equal(
+        formatDbDateTime("2026-08-31 14:05:06", {
+          format: "invalid" as never,
+          withSeconds: false,
+        }),
+        "31/08/2026 14:05",
+      );
+    },
+  },
+  {
     name: "formatDbDateTime supports date-only variants",
     run: () => {
       assert.equal(
@@ -124,7 +167,7 @@ const cases: TestCase[] = [
     },
   },
   {
-    name: "formatDbDateTime forwards locale and timezone to Intl",
+    name: "formatDbDateTime forwards locale and timezone to Intl for legacy options",
     run: () => {
       const value = "2026-08-31T14:05:06.000Z";
       const expected = new Intl.DateTimeFormat("fr-FR", {
@@ -139,6 +182,31 @@ const cases: TestCase[] = [
 
       assert.equal(
         formatDbDateTime(value, { locale: "fr-FR", timeZone: "UTC", withSeconds: false }),
+        expected,
+      );
+    },
+  },
+  {
+    name: "named display formats forward locale and timezone to Intl",
+    run: () => {
+      const value = "2026-08-31T14:05:06.000Z";
+      const expected = new Intl.DateTimeFormat("en-US", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: false,
+        timeZone: "UTC",
+      }).format(new Date(value));
+
+      assert.equal(
+        formatDbDateTime(value, {
+          format: "dateTimeSeconds",
+          locale: "en-US",
+          timeZone: "UTC",
+        }),
         expected,
       );
     },

@@ -322,7 +322,7 @@ export function AlarmAnalysisClient() {
     () => [
       { label: tMonitoring("export.presentation.location"), value: selectedAlarmDetail?.locationName ?? "-" },
       { label: tMonitoring("export.presentation.sensor_serial"), value: selectedAlarmDetail?.sensorName ?? "-" },
-      { label: tMonitoring("export.presentation.selected_range"), value: dateRange ? `${formatDbDateTime(dateRange.from, { dateOnly: true })} -> ${formatDbDateTime(dateRange.to ?? dateRange.from, { dateOnly: true })}` : "-" },
+      { label: tMonitoring("export.presentation.selected_range"), value: dateRange ? `${formatDbDateTime(dateRange.from, { format: "date" })} -> ${formatDbDateTime(dateRange.to ?? dateRange.from, { format: "date" })}` : "-" },
       { label: tMonitoring("export.presentation.unit"), value: summary.unite || "-" },
       { label: tMonitoring("export.presentation.upper_threshold"), value: summary.consigneSup !== null ? `${summary.consigneSup}${summary.unite}` : "-" },
       { label: tMonitoring("export.presentation.lower_threshold"), value: summary.consigneInf !== null ? `${summary.consigneInf}${summary.unite}` : "-" },
@@ -400,7 +400,7 @@ export function AlarmAnalysisClient() {
       tMonitoring("table.columns.status"),
     ]
     const rows = orderedHistoryData.map((measure) => [
-      formatDbDateTime(measure.DateHeureMesure ?? null),
+      formatDbDateTime(measure.DateHeureMesure ?? null, { format: "dateTimeSeconds" }),
       selectedAlarmDetail?.sensorName ?? "",
       measure.Valeur == null ? "" : formatMeasureValue(measure.Valeur, null, localeTag),
       measure.Consigne_Inf == null ? "" : formatMeasureValue(measure.Consigne_Inf, null, localeTag),
@@ -430,7 +430,7 @@ export function AlarmAnalysisClient() {
     const rows = auditLogs.map((log) => [
       log.code ?? "",
       log.commentaire ?? log.label ?? "",
-      formatDbDateTime(log.timestamp ?? null),
+      formatDbDateTime(log.timestamp ?? null, { format: "dateTimeSeconds" }),
       log.user ?? "",
       log.detailsSummary ?? "",
     ])
@@ -522,7 +522,7 @@ export function AlarmAnalysisClient() {
                         <div className="flex items-start justify-between gap-3">
                           <div className="space-y-1">
                             <p className="text-sm font-semibold">#{alarm.id} - {getTypeLabel(t, alarm.type)}</p>
-                            <p className="text-xs text-muted-foreground">{formatDbDateTime(alarm.timestamp)}</p>
+                            <p className="text-xs text-muted-foreground">{formatDbDateTime(alarm.timestamp, { format: "dateTimeSeconds" })}</p>
                           </div>
                           <span className={cn(
                             "inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium",
@@ -571,11 +571,11 @@ export function AlarmAnalysisClient() {
               </div>
               <div>
                 <p className="text-xs uppercase tracking-wide text-muted-foreground">{t("dialog.start_label")}</p>
-                <p className="text-sm font-medium">{formatDbDateTime(selectedAlarmDetail?.triggeredAt ?? null)}</p>
+                <p className="text-sm font-medium">{formatDbDateTime(selectedAlarmDetail?.triggeredAt ?? null, { format: "dateTimeSeconds" })}</p>
               </div>
               <div>
                 <p className="text-xs uppercase tracking-wide text-muted-foreground">{t("dialog.end_label")}</p>
-                <p className="text-sm font-medium">{selectedAlarmDetail?.endedAt ? formatDbDateTime(selectedAlarmDetail.endedAt) : t("dialog.end_in_progress")}</p>
+                <p className="text-sm font-medium">{selectedAlarmDetail?.endedAt ? formatDbDateTime(selectedAlarmDetail.endedAt, { format: "dateTimeSeconds" }) : t("dialog.end_in_progress")}</p>
               </div>
             </CardContent>
           </Card>

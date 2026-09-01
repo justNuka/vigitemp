@@ -83,9 +83,9 @@ export function UsersTable({
         const date = row.getValue("expiry_date");
         return date
           ? formatDbDateTime(date as string, {
+              format: "date",
               locale: localeTag,
               timeZone: timezone,
-              dateOnly: true,
               fallback: t("placeholders.na"),
             })
           : t("placeholders.na");

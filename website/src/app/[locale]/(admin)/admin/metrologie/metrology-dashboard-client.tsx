@@ -25,7 +25,7 @@ export function MetrologyDashboardClient() {
 
   function formatDate(value: string | null) {
     return formatDbDateTime(value, {
-      dateOnly: true,
+      format: "date",
       locale: locale === "fr" ? "fr-FR" : "en-US",
     })
   }

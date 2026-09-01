@@ -56,9 +56,9 @@ function formatDisabledSinceLabel(
 ) {
   if (!disabledUntil) return t("grid.disabled_badge")
   const formatted = formatDbDateTime(disabledUntil, {
+    format: "dateTime",
     locale,
     timeZone: timezone,
-    withSeconds: false,
     fallback: "",
   })
   if (!formatted) return t("grid.disabled_badge")

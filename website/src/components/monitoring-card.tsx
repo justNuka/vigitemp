@@ -152,11 +152,10 @@ export default function MonitoringCard({
     const template = lastPoint ?? null
     const serializedDate = serializeDbDateTime(liveMeasurementDate) ?? ""
     const timeLabel = formatDbDateTime(serializedDate, {
-      timeOnly: true,
-      withSeconds: false,
+      format: "time",
       locale: localeTag,
     })
-    const dateLabel = formatDbDateTime(serializedDate, { withSeconds: false })
+    const dateLabel = formatDbDateTime(serializedDate, { format: "dateTime" })
     const livePoint = {
       id: `live-${idLieu}-${serializedDate}`,
       Valeur: currentValue,
@@ -297,7 +296,7 @@ export default function MonitoringCard({
       const untilDate = parseDbDateTime(surveillanceDisabledUntil)
       if (untilDate && !Number.isNaN(untilDate.getTime())) {
         return t('surveillance.disabled_until', {
-          date: formatDbDateTime(untilDate, { withSeconds: false }),
+          date: formatDbDateTime(untilDate, { format: "dateTime" }),
         })
       }
     }
@@ -305,7 +304,7 @@ export default function MonitoringCard({
     const date = parseDbDateTime(surveillanceDisabledSince)
     if (!date || Number.isNaN(date.getTime())) return t('surveillance.disabled')
     return t('surveillance.disabled_since', {
-      date: formatDbDateTime(date, { withSeconds: false }),
+      date: formatDbDateTime(date, { format: "dateTime" }),
     })
   }, [isSurveillanceActive, surveillanceDisabledSince, surveillanceDisabledUntil, t])
 
@@ -315,7 +314,7 @@ export default function MonitoringCard({
     const date = parseDbDateTime(alarmDisabledUntil)
     if (!date) return t('alarms.disabled')
     if (Number.isNaN(date.getTime())) return t('alarms.disabled')
-    return t('alarms.disabled_until', { date: formatDbDateTime(date, { withSeconds: false }) })
+    return t('alarms.disabled_until', { date: formatDbDateTime(date, { format: "dateTime" }) })
   }, [alarmDisabledUntil, isAlarmActive, t])
 
   const contentTextClassName = 'text-muted-foreground'

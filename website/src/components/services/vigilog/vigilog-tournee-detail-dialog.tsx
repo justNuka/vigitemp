@@ -34,14 +34,14 @@ ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip,
 
 function formatDateTime(value: string | null, locale: string) {
   return formatDbDateTime(value, {
-    withSeconds: false,
+    format: "dateTime",
     locale: locale === "fr" ? "fr-FR" : "en-GB",
   })
 }
 
 function formatDate(value: string | null, locale: string) {
   return formatDbDateTime(value, {
-    dateOnly: true,
+    format: "date",
     locale: locale === "fr" ? "fr-FR" : "en-GB",
   })
 }
@@ -203,8 +203,7 @@ export function VigilogTourneeDetailDialog({ open, pending = false, detail, onOp
     return {
       labels: measures.map((measure) =>
         formatDbDateTime(measure.measuredAt, {
-          timeOnly: true,
-          withSeconds: false,
+          format: "time",
           locale: locale === "fr" ? "fr-FR" : "en-GB",
         }),
       ),

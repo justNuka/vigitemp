@@ -229,8 +229,8 @@ export const GET = withAuthLogging(
               : Boolean(m.Est_Valeur_Memoire)
             : false
 
-        const dateDisplay = formatDbDateTime(dateHeure, { withSeconds: false })
-        const dateXaxis = formatDbDateTime(dateHeure, { timeOnly: true, withSeconds: false })
+        const dateDisplay = formatDbDateTime(dateHeure, { format: "dateTime" })
+        const dateXaxis = formatDbDateTime(dateHeure, { format: "time" })
         const resolvedDecimals =
           m.Nb_Decimal !== null && m.Nb_Decimal !== undefined
             ? Number(m.Nb_Decimal)
