@@ -106,16 +106,17 @@ export function buildAdjustmentReportPdf(input: AdjustmentReportInput) {
   const contentWidth = pageWidth - margin * 2
   const timeZone = process.env.VIGISENSYS_EMAIL_TIMEZONE || process.env.VIGITEMP_EMAIL_TIMEZONE || "Europe/Paris"
   const editionDate = formatDbDateTime(new Date(), {
-    dateOnly: true,
+    format: "date",
     locale: "fr-FR",
     timeZone,
   })
   const adjustmentDate = formatDbDateTime(input.adjustedAt, {
+    format: "dateTimeSeconds",
     locale: "fr-FR",
     timeZone,
   })
   const certificateDate = formatDbDateTime(input.standardCertificateDate, {
-    dateOnly: true,
+    format: "date",
     locale: "fr-FR",
     timeZone,
   })
