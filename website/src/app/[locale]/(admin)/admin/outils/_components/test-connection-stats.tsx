@@ -3,7 +3,8 @@
 import { Activity, CheckCircle2, Zap } from "lucide-react"
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { useTranslations } from 'next-intl'
+import { formatNumber } from "@/lib/number-display"
+import { useLocale, useTranslations } from 'next-intl'
 
 type TestConnectionStatsProps = {
   globalResponseRate: number
@@ -19,6 +20,7 @@ export function TestConnectionStats({
   selectedCount,
 }: TestConnectionStatsProps) {
   const t = useTranslations('toolsTestConnection.stats')
+  const locale = useLocale()
   return (
     <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
       <Card className="border-0 shadow-md">
@@ -48,7 +50,7 @@ export function TestConnectionStats({
           <div className="flex items-center gap-3">
             <Zap className="h-6 w-6 text-blue-600" />
             <div>
-              <p className="text-2xl font-bold">{lastMeasurementCount.toLocaleString()}</p>
+              <p className="text-2xl font-bold">{formatNumber(lastMeasurementCount, { locale, decimals: 0 })}</p>
               <p className="mt-1 text-xs text-muted-foreground">{t('last_7days')}</p>
             </div>
           </div>

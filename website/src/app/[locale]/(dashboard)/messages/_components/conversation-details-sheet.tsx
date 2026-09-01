@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Skeleton } from "@/components/ui/skeleton"
 import { getJson } from "@/lib/http"
+import { formatNumber } from "@/lib/number-display"
 import { getInitials, formatDate } from "../_utils"
 import { UserProfileSheet } from "./user-profile-sheet"
 import type {
@@ -32,8 +33,8 @@ type ConversationDetailsSheetProps = {
 
 function formatBytes(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+  if (bytes < 1024 * 1024) return `${formatNumber(bytes / 1024, { decimals: 1, locale: "en-US", grouping: false })} KB`
+  return `${formatNumber(bytes / (1024 * 1024), { decimals: 1, locale: "en-US", grouping: false })} MB`
 }
 
 

@@ -32,6 +32,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useLieuMeasurements } from "@/hooks/useLieuMeasurements";
 import { useLieuMeasurementsPaged } from "@/hooks/useLieuMeasurementsPaged";
 import { calculateYDomain, getMeasureSummary, sortMeasuresChronologically } from "@/lib/measurements";
+import { formatNumber } from "@/lib/number-display";
 import { cn } from "@/lib/utils";
 import type { MeasureData } from "@/lib/measurements";
 
@@ -297,8 +298,6 @@ export default function MonitoringDetailsModal({
       ? Number(initialConsigneInfPreAlarme)
       : null;
 
-  const numberFormatter = useMemo(() => new Intl.NumberFormat(localeTag), [localeTag]);
-
   const presentationRows = useMemo(() => {
     const notAvailable = t("export.defaults.not_available");
     const formatThreshold = (value: number | null) => (value === null ? notAvailable : `${value}${unite}`);
@@ -324,8 +323,8 @@ export default function MonitoringDetailsModal({
       },
       { label: t("export.presentation.rssi"), value: gsoRssi ?? notAvailable },
       { label: t("export.presentation.voltage"), value: gsoTension ?? notAvailable },
-      { label: t("export.presentation.graph_points"), value: numberFormatter.format(orderedData.length) },
-      { label: t("export.presentation.table_measurements"), value: numberFormatter.format(measurementsCount) },
+      { label: t("export.presentation.graph_points"), value: formatNumber(orderedData.length, { locale: localeTag, decimals: 0 }) },
+      { label: t("export.presentation.table_measurements"), value: formatNumber(measurementsCount, { locale: localeTag, decimals: 0 }) },
       { label: t("export.presentation.last_measure_time"), value: summary.lastDateTime || notAvailable },
       { label: t("export.presentation.last_measure_value"), value: summary.lastMeasureText || notAvailable },
     ];
@@ -338,7 +337,7 @@ export default function MonitoringDetailsModal({
     gsoTension,
     isSurveillanceActive,
     nomLieu,
-    numberFormatter,
+    localeTag,
     orderedData.length,
     orderedHistoryData.length,
     preAlarmInf,

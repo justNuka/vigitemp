@@ -19,6 +19,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { RssiBars } from "@/components/monitoring-card/rssi-bars"
 import { formatDbDateTime } from "@/lib/date-display"
+import { formatNumber } from "@/lib/number-display"
 
 type SensorType = "IN" | "IE" | "IP" | "IC" | "IH" | "EN" | "HN" | "GSP"
 type GspAction = "read" | "force-read" | "sync-config" | "read-config" | "read-memory" | "raw"
@@ -750,7 +751,9 @@ function formatMeasureDate(value: string) {
 }
 
 function formatMeasureValue(value: number) {
-  return Number.isInteger(value) ? String(value) : value.toFixed(2)
+  return Number.isInteger(value)
+    ? String(value)
+    : formatNumber(value, { decimals: 2, locale: "en-US", grouping: false })
 }
 
 function normalizeRawCommand(command: string) {
