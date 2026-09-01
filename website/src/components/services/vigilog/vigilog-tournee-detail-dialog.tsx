@@ -29,6 +29,7 @@ import {
 } from "@/components/ui/dialog"
 import { AlertTriangle } from "lucide-react"
 import { formatDbDateTime } from "@/lib/date-display"
+import { formatNumber as formatDisplayNumber } from "@/lib/number-display"
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend, Filler)
 
@@ -47,8 +48,7 @@ function formatDate(value: string | null, locale: string) {
 }
 
 function formatNumber(value: number | null) {
-  if (value == null) return "-"
-  return value.toFixed(2)
+  return formatDisplayNumber(value, { decimals: 2, locale: "en-US", grouping: false, fallback: "-" })
 }
 
 function escapeCsv(value: string | number | null | undefined) {

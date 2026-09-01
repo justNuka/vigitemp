@@ -5,6 +5,7 @@ import { jsPDF } from "jspdf"
 import autoTable from "jspdf-autotable"
 
 import { formatDbDateTime } from "@/lib/date-display"
+import { formatNumber as formatDisplayNumber } from "@/lib/number-display"
 
 export type AdjustmentReportInput = {
   adjustmentId: number
@@ -32,11 +33,12 @@ export type AdjustmentReportInput = {
 }
 
 function formatNumber(value: number | null, decimals = 6) {
-  if (value == null || !Number.isFinite(value)) return "-"
-  return new Intl.NumberFormat("fr-FR", {
-    minimumFractionDigits: 0,
-    maximumFractionDigits: Math.max(0, decimals),
-  }).format(value)
+  return formatDisplayNumber(value, {
+    locale: "fr-FR",
+    minimumDecimals: 0,
+    maximumDecimals: Math.max(0, decimals),
+    fallback: "-",
+  })
 }
 
 function formatMeasure(value: number | null, decimals: number | null) {

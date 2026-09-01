@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/select"
 import { getJson } from "@/lib/http"
 import { formatDbDateTime } from "@/lib/date-display"
+import { formatNumber } from "@/lib/number-display"
 import { useRouter } from "@/i18n/navigation"
 import { cn } from "@/lib/utils"
 
@@ -63,10 +64,11 @@ function formatAlarmValueForDisplay(value: string | null, locale: string) {
   const numericValue = Number.parseFloat(match[1].replace(",", "."))
   if (!Number.isFinite(numericValue)) return trimmed
 
-  const formatted = new Intl.NumberFormat(locale, {
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 2,
-  }).format(numericValue)
+  const formatted = formatNumber(numericValue, {
+    locale,
+    minimumDecimals: 0,
+    maximumDecimals: 2,
+  })
   const unit = match[2]?.trim()
   return unit ? `${formatted} ${unit}` : formatted
 }

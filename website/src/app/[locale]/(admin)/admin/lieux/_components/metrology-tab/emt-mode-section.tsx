@@ -3,9 +3,13 @@
 import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import { useTranslations } from 'next-intl'
+import { formatNumber } from '@/lib/number-display'
 import type { UseFormRegister } from 'react-hook-form'
 
 import type { LocationFormData } from '../location-form-types'
+
+const formatEmtNumber = (value: number) =>
+  formatNumber(value, { decimals: 4, locale: "en-US", grouping: false })
 
 interface EmtModeSectionProps {
   isExpertEdition: boolean
@@ -91,19 +95,19 @@ export function EmtModeSection({
                 ) : !formData.Prendre_En_Compte_Derive ? (
                   <>
                     <span className="font-medium">I<sub>mes</sub> = |EJ| + I<sub>etalonnage</sub></span>
-                    <div className="text-xs text-muted-foreground">{`I_mes = |${absEj}| + ${iEtalonnage} = ${(absEj + iEtalonnage).toFixed(4)}`}</div>
+                    <div className="text-xs text-muted-foreground">{`I_mes = |${absEj}| + ${iEtalonnage} = ${formatEmtNumber(absEj + iEtalonnage)}`}</div>
                   </>
                 ) : formData.Corriger_Erreur_Justesse ? (
                   <>
                     <span className="font-medium">I<sub>mes</sub> = 2 * sqrt((I<sub>et</sub>/2)<sup>2</sup> + (Derive/sqrt(3))<sup>2</sup>)</span>
                     <div className="text-xs text-muted-foreground">{`I_et = ${iEtalonnage}`}</div>
-                    <div className="text-xs text-muted-foreground">{`I_mes = ${withDerivePart.toFixed(4)}`}</div>
+                    <div className="text-xs text-muted-foreground">{`I_mes = ${formatEmtNumber(withDerivePart)}`}</div>
                   </>
                 ) : (
                   <>
                     <span className="font-medium">I<sub>mes</sub> = |EJ| + 2 * sqrt((I<sub>et</sub>/2)<sup>2</sup> + (Derive/sqrt(3))<sup>2</sup>)</span>
                     <div className="text-xs text-muted-foreground">{`I_et = ${iEtalonnage}`}</div>
-                    <div className="text-xs text-muted-foreground">{`I_mes = |${absEj}| + ${withDerivePart.toFixed(4)} = ${(absEj + withDerivePart).toFixed(4)}`}</div>
+                    <div className="text-xs text-muted-foreground">{`I_mes = |${absEj}| + ${formatEmtNumber(withDerivePart)} = ${formatEmtNumber(absEj + withDerivePart)}`}</div>
                   </>
                 )}
               </div>

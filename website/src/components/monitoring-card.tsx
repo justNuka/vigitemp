@@ -21,6 +21,7 @@ import { useLieuMeasurements } from '@/hooks/useLieuMeasurements'
 import { formatDbDateTime, parseDbDateTime, serializeDbDateTime } from '@/lib/date-display'
 import type { LieuTypeValue } from '@/lib/lieu-types'
 import { calculateYDomain, formatMeasureValue, getMeasureSummary, sortMeasuresChronologically } from '@/lib/measurements'
+import { formatNumber } from '@/lib/number-display'
 import { cn } from '@/lib/utils'
 import { fadeInUp } from '@/lib/motion-variants'
 import { markAlarmAcknowledgedInPaginatedSensorsCache } from '@/lib/surveillance-cache'
@@ -446,7 +447,7 @@ export default function MonitoringCard({
     const normalized = gsoTension.replace(',', '.').replace(/[^0-9.\-]/g, '')
     const voltage = Number.parseFloat(normalized)
     if (!Number.isFinite(voltage)) return null
-    const formattedVoltage = voltage.toFixed(2)
+    const formattedVoltage = formatNumber(voltage, { decimals: 2, locale: "en-US", grouping: false })
     if (voltage >= 2.9) return t('gso.battery_state.ok', { value: formattedVoltage })
     if (voltage >= 2.65) return t('gso.battery_state.medium', { value: formattedVoltage })
     return t('gso.battery_state.low', { value: formattedVoltage })

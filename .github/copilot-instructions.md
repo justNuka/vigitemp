@@ -30,7 +30,7 @@ Ces documents décrivent les conventions et la direction d'architecture. **Le co
 - Favoriser la componentisation et éviter les duplications sans sur-abstraire.
 - Employer le terme `sensor` (et non `probe`) pour les sondes dans le code en anglais.
 - Pour les dates MySQL/MSSQL `DATETIME`, lire impérativement les conventions de `docs/architecture/development-guidelines.md` et réutiliser `website/src/lib/date-display.ts`.
-- Pour l'affichage des dates et nombres, utiliser/améliorer les helpers canoniques paramétrables plutôt que disperser `toFixed`, `toLocaleString`, `Intl.*` ou des formats ad hoc dans les composants. Le chantier dédié est décrit dans le Lot 9A de `docs/architecture/refactor-roadmap.md`.
+- Pour l'affichage des dates et nombres, utiliser les helpers canoniques paramétrables `website/src/lib/date-display.ts` et `website/src/lib/number-display.ts` plutôt que disperser `toFixed`, `toLocaleString`, `Intl.*` ou des formats ad hoc dans les composants. Les `toFixed` techniques/machine restent séparés lorsqu'un contrat déterministe l'exige. Le chantier est décrit dans le Lot 9A de `docs/architecture/refactor-roadmap.md`.
 - Créer les branches avec un préfixe décrivant l'opération (`fix/`, `feature/`, `refactor/`, `docs/`, `chore/`, etc.) ; ne pas utiliser `agent/`.
 
 ## Vue d'ensemble du projet

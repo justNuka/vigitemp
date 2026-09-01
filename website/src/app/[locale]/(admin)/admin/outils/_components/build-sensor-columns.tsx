@@ -1,6 +1,7 @@
 import type { ColumnDef } from "@tanstack/react-table"
 import { Checkbox } from "@/components/ui/checkbox"
 import { cn } from "@/lib/utils"
+import { formatNumber } from "@/lib/number-display"
 
 import type { SensorWithSelection } from "./sensor-types"
 
@@ -82,7 +83,7 @@ export function buildSensorColumns({
         const color =
           rate >= 95 ? "text-green-600" : rate >= 80 ? "text-yellow-600" : "text-red-600"
 
-        return <div className={cn("text-right font-medium", color)}>{rate.toFixed(1)}%</div>
+        return <div className={cn("text-right font-medium", color)}>{formatNumber(rate, { decimals: 1, locale: "en-US", grouping: false })}%</div>
       },
     },
   ]

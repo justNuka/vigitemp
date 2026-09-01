@@ -1,5 +1,6 @@
 import type { AuditLog } from '@/lib/api'
 import { formatDbDateTime, parseDbDateTime } from '@/lib/date-display'
+import { formatNumber } from '@/lib/number-display'
 
 export interface AuditCode {
   Code_Journal: string
@@ -225,7 +226,7 @@ function formatFieldValue(
 
   if (typeof value === 'number') {
     if (Number.isInteger(value)) return String(value)
-    return new Intl.NumberFormat(localeTag, { maximumFractionDigits: 4 }).format(value)
+    return formatNumber(value, { locale: localeTag, maximumDecimals: 4 })
   }
 
   if (Array.isArray(value)) {

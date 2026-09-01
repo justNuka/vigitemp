@@ -142,14 +142,80 @@ Le refactor d'affichage ne doit pas modifier :
 
 Les tests DST et `serializeStoredDbDateTime` doivent rester verts à chaque étape suivante.
 
-## 5. Étapes suivantes
+## 5. Helper numérique canonique
 
-Après validation/merge de l'étape 3 :
+### Étape 4 — création et migration des formats numériques d'affichage
 
-1. créer le helper numérique canonique avec tests ;
-2. accepter une précision paramétrable (`decimals` ou min/max de décimales), la locale, le fallback et le grouping ;
-3. rechercher les `toFixed`, `toLocaleString`, `Intl.NumberFormat` locaux et concaténations numériques dans le code courant ;
-4. migrer progressivement ces usages par domaine, sans modifier la précision des valeurs métier stockées ou calculées ;
-5. décider dans un lot ultérieur si les options date legacy peuvent être supprimées après vérification des consommateurs restants.
+Branche : `refactor/number-display-helper`.
 
-Le helper numérique doit rester un helper de présentation : il ne doit jamais arrondir ou transformer une valeur de référence avant calcul ou persistance.
+Le helper générique canonique est désormais `website/src/lib/number-display.ts`. Son API est volontairement limitée à la présentation :
+
+```ts
+formatNumber(value, { decimals: 2, locale })
+formatNumber(value, { minimumDecimals: 0, maximumDecimals: 3, locale })
+formatNumber(value, { fallback: "-", grouping: false })
+```
+
+Options supportées :
+
+- `decimals` : nombre fixe de décimales, prioritaire sur min/max ;
+- `minimumDecimals` / `maximumDecimals` : plage de précision d'affichage ;
+- `locale` : locale transmise à `Intl.NumberFormat` ;
+- `fallback` : rendu de `null`, `undefined`, `NaN` ou valeur non finie ;
+- `grouping` : activation/désactivation explicite des séparateurs de milliers.
+
+Les précisions sont bornées à la plage supportée par `Intl.NumberFormat` (0 à 20 chiffres après la virgule). Sans précision explicite, le helper conserve le comportement décimal standard d'`Intl` : 0 à 3 décimales.
+
+### Wrapper métier des mesures
+
+`website/src/lib/measurements.ts::formatMeasureValue` reste le point d'entrée métier pour les mesures. Il délègue désormais au helper générique mais conserve son contrat historique :
+
+- sans `Nb_Decimal` : 0 à 2 décimales ;
+- avec `Nb_Decimal` : précision fixe, bornée à 0–10 comme auparavant ;
+- fallback vide pour une mesure absente/invalide ;
+- aucune modification de `normalizeMeasureNumber`, qui reste un helper numérique de calcul et non de présentation.
+
+### Migration des usages existants
+
+Le scan du code courant a permis de centraliser les formatages destinés à l'affichage :
+
+- aucun `new Intl.NumberFormat(...)` direct ne reste sous `website/src/` hors `number-display.ts` ;
+- aucun `.toLocaleString(...)` direct ne reste sous `website/src/` ;
+- les `toFixed(...)` purement visuels migrés conservent leur précision et, lorsque nécessaire, un format déterministe équivalent à l'ancien rendu ;
+- les formats de mesures, alarmes, métrologie UI, Surveillance, Vigilog, Hotline, statistiques et tailles de pièces jointes passent désormais par le helper canonique ou un wrapper métier.
+
+Les `toFixed(...)` restants sont intentionnels et ne sont **pas** considérés comme de la dette d'affichage tant qu'ils servent un contrat technique :
+
+- normalisation/arrondi de valeurs utilisées dans un calcul ;
+- protocole GSP et coefficients envoyés au matériel ;
+- sérialisation API/DB ou chaîne numérique déterministe ;
+- exports machine ;
+- valeurs d'inputs éditables dont le contrat exige un point et une précision déterministe.
+
+Ils ont été recensés explicitement lors de la migration afin d'éviter un remplacement global qui introduirait une locale dans un contrat machine.
+
+### Tests
+
+Commande dédiée :
+
+```bash
+pnpm test:number-display
+```
+
+Le test couvre notamment fallback, précision fixe, min/max, bornes de précision, FR/EN, zéros finaux et grouping. Validation automatisée de la branche :
+
+- `test:number-display` : 9 PASS / 0 FAIL ;
+- `test:date-display` : 17 PASS / 0 FAIL ;
+- scan de tous les formats numériques TypeScript/TSX ;
+- parse syntaxique des fichiers TypeScript/TSX modifiés.
+
+## 6. Étapes suivantes
+
+Après validation/merge de l'étape numérique :
+
+1. confirmer `pnpm exec tsc --noEmit` et `pnpm lint` dans l'environnement de développement complet ;
+2. utiliser systématiquement `number-display.ts` ou un wrapper métier existant pour tout nouveau formatage UI ;
+3. ne réexaminer un `toFixed` technique que si le contrat correspondant change, pas pour satisfaire une règle cosmétique ;
+4. décider dans un lot ultérieur si les options date legacy peuvent être supprimées après vérification des consommateurs restants.
+
+Les helpers de présentation ne doivent jamais modifier la valeur de référence utilisée pour un calcul, un échange matériel ou une persistance.

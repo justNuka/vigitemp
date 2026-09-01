@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import type { AlarmWithDetails } from '@/lib/api'
+import { formatNumber } from '@/lib/number-display'
 
 const hasConfiguredThresholds = (alarm: { sensor: AlarmWithDetails['sensor'] }): boolean => {
   const sensorWithMeta = alarm.sensor as AlarmWithDetails['sensor'] & { hasThresholds?: boolean }
@@ -17,10 +18,12 @@ const hasConfiguredThresholds = (alarm: { sensor: AlarmWithDetails['sensor'] }):
 function formatAlarmNumber(value: number | null | undefined) {
   if (value == null || !Number.isFinite(value)) return "-"
   const rounded = Math.round((value + Number.EPSILON) * 100) / 100
-  return new Intl.NumberFormat("fr-FR", {
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 2,
-  }).format(rounded)
+  return formatNumber(rounded, {
+    locale: "fr-FR",
+    minimumDecimals: 0,
+    maximumDecimals: 2,
+    fallback: "-",
+  })
 }
 
 function formatAlarmValue(value: number | null | undefined, unit: string | null | undefined) {
