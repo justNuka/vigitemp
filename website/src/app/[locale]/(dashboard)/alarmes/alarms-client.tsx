@@ -86,7 +86,7 @@ export function AlarmsClient({ alarms, statusFilter, initialLocationId = null, s
   const [alarmCount30, setAlarmCount30] = useState<number | null>(null);
   const [isStatsLoading, setIsStatsLoading] = useState(false);
   const [visibleRowCount, setVisibleRowCount] = useState<number>(0);
-  const formatTzDateTime = (value: string | Date) => formatDbDateTime(value);
+  const formatTzDateTime = (value: string | Date) => formatDbDateTime(value, { format: "dateTimeSeconds" });
   const normalizeCommentOptions = useCallback((raw: unknown): { id: number; type: string | null; text: string }[] => {
     if (!Array.isArray(raw)) return [];
     return raw
@@ -340,13 +340,13 @@ export function AlarmsClient({ alarms, statusFilter, initialLocationId = null, s
       header: t("table.columns.triggered_at"),
       meta: {
         exportLabel: t("table.columns.triggered_at"),
-        exportValue: (row: AlarmRow) => formatDbDateTime(row.triggeredAt),
+        exportValue: (row: AlarmRow) => formatDbDateTime(row.triggeredAt, { format: "dateTimeSeconds" }),
       },
       cell: ({ row }) => {
         const rawTriggeredAt = row.getValue("triggeredAt") as string | Date;
         const triggeredDate = parseDbDateTime(rawTriggeredAt);
         if (!triggeredDate) return "-";
-        return <div className="flex items-center gap-1.5 text-sm"><Clock className="h-3.5 w-3.5 text-muted-foreground" /><TooltipProvider><Tooltip><TooltipTrigger asChild><span className="cursor-help">{formatDistanceToNow(triggeredDate, { addSuffix: true, locale: fr })}</span></TooltipTrigger><TooltipContent><p className="text-xs">{formatDbDateTime(rawTriggeredAt)}</p></TooltipContent></Tooltip></TooltipProvider></div>;
+        return <div className="flex items-center gap-1.5 text-sm"><Clock className="h-3.5 w-3.5 text-muted-foreground" /><TooltipProvider><Tooltip><TooltipTrigger asChild><span className="cursor-help">{formatDistanceToNow(triggeredDate, { addSuffix: true, locale: fr })}</span></TooltipTrigger><TooltipContent><p className="text-xs">{formatDbDateTime(rawTriggeredAt, { format: "dateTimeSeconds" })}</p></TooltipContent></Tooltip></TooltipProvider></div>;
       },
     },
     {

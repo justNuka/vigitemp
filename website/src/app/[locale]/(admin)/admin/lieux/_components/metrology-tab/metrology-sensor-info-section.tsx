@@ -41,11 +41,11 @@ export function MetrologySensorInfoSection({
       <div className="grid grid-cols-3 gap-4">
         <div className="space-y-2">
           <Label>{t('labels.calibration_date')}</Label>
-          <Input disabled value={formatDbDateTime(latestAdjustment?.Date_Heure_Ajustage ?? null)} placeholder={t('placeholders.auto')} className="bg-muted" />
+          <Input disabled value={formatDbDateTime(latestAdjustment?.Date_Heure_Ajustage ?? null, { format: "dateTimeSeconds" })} placeholder={t('placeholders.auto')} className="bg-muted" />
         </div>
         <div className="space-y-2">
           <Label>{t('labels.calibration_check_date')}</Label>
-          <Input disabled value={formatDbDateTime(latestCalibration?.Date_Heure_Etalonnage ?? null)} placeholder={t('placeholders.auto')} className="bg-muted" />
+          <Input disabled value={formatDbDateTime(latestCalibration?.Date_Heure_Etalonnage ?? null, { format: "dateTimeSeconds" })} placeholder={t('placeholders.auto')} className="bg-muted" />
         </div>
         <div className="space-y-2">
           <Label>{t('labels.unit')}</Label>
@@ -57,7 +57,7 @@ export function MetrologySensorInfoSection({
           <Label>{t('labels.applied_calibration_date')}</Label>
           <Input
             disabled
-            value={formatDbDateTime(formData.Derniere_Date_Etalonnage ?? latestCalibration?.Date_Heure_Etalonnage ?? null)}
+            value={formatDbDateTime(formData.Derniere_Date_Etalonnage ?? latestCalibration?.Date_Heure_Etalonnage ?? null, { format: "dateTimeSeconds" })}
             placeholder={t('placeholders.auto')}
             className="bg-muted"
           />

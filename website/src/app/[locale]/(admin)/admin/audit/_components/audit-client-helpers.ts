@@ -54,7 +54,7 @@ export function formatDateSafe(value: string, localeTag: string, timezone?: stri
   if (!date) return null
   if (Number.isNaN(date.getTime())) return null
 
-  return formatDbDateTime(date, { locale: localeTag, timeZone: timezone })
+  return formatDbDateTime(date, { format: "dateTimeSeconds", locale: localeTag, timeZone: timezone })
 }
 
 export function parseAuditDetails(

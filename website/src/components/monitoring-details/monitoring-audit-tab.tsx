@@ -49,7 +49,7 @@ export function MonitoringAuditTab({ logs, isLoading, error, t, maxHeight = "cal
       code: log.code || "-",
       label: sanitizeMonitoringAuditText(log.label),
       dateIso: log.timestamp ?? "",
-      dateLabel: log.timestamp ? formatDbDateTime(log.timestamp) : "-",
+      dateLabel: log.timestamp ? formatDbDateTime(log.timestamp, { format: "dateTimeSeconds" }) : "-",
       user: log.user || "-",
       details: formatAuditDetails(log.detailsSummary || log.commentaire),
       detailRows: buildAuditRows(log.commentaire),

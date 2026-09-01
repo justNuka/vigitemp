@@ -160,7 +160,7 @@ export function createDashboardAlarmColumns({
                   </span>
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p className="text-xs">{formatDbDateTime(triggeredDate)}</p>
+                  <p className="text-xs">{formatDbDateTime(triggeredDate, { format: "dateTimeSeconds" })}</p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>

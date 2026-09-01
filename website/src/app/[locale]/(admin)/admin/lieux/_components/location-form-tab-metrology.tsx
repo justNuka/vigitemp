@@ -261,7 +261,7 @@ export function LocationFormTabMetrology({ isExpertEdition }: LocationFormTabMet
                 <SelectContent>
                   {calibrations.map((calibration) => (
                     <SelectItem key={calibration.Id_Etalonnage} value={String(calibration.Id_Etalonnage)}>
-                      {`${formatDbDateTime(calibration.Date_Heure_Etalonnage ?? null)} - ${calibration.Operateur ?? t('calibration.operator_unknown')}`}
+                      {`${formatDbDateTime(calibration.Date_Heure_Etalonnage ?? null, { format: "dateTimeSeconds" })} - ${calibration.Operateur ?? t('calibration.operator_unknown')}`}
                     </SelectItem>
                   ))}
                 </SelectContent>

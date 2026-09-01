@@ -75,7 +75,7 @@ export function useAuditLogs() {
       const response = await getJson<AuditLog[]>(`/api/audit?limit=50`);
       const rows: SystemLog[] = (response ?? []).map((item) => ({
         id: item.id,
-        dateHeure: formatDbDateTime(item.timestamp ?? null),
+        dateHeure: formatDbDateTime(item.timestamp ?? null, { format: "dateTimeSeconds" }),
         utilisateur: item.userDisplayName || item.userId || "-",
         action: item.action,
         details: item.details || item.locationName || "",
