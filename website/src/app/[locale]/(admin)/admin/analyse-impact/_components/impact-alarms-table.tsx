@@ -31,7 +31,7 @@ function formatDuration(startIso: string, endIso: string): string {
 }
 
 function formatDate(iso: string, locale: string): string {
-  return formatDbDateTime(iso, { locale, withSeconds: false, fallback: iso })
+  return formatDbDateTime(iso, { format: "dateTime", locale, fallback: iso })
 }
 
 function countOutOfBoundPoints(measurements: MeasureData[], zone: SimulatedZone): number {
