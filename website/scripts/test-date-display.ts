@@ -90,9 +90,11 @@ const cases: TestCase[] = [
       const value = "2026-08-31 14:05:06";
 
       assert.equal(formatDbDateTime(value, { format: "date" }), "31/08/2026");
+      assert.equal(formatDbDateTime(value, { format: "dateShort" }), "31/08");
       assert.equal(formatDbDateTime(value, { format: "time" }), "14:05");
       assert.equal(formatDbDateTime(value, { format: "timeSeconds" }), "14:05:06");
       assert.equal(formatDbDateTime(value, { format: "dateTime" }), "31/08/2026 14:05");
+      assert.equal(formatDbDateTime(value, { format: "dateTimeShort" }), "31/08 14:05");
       assert.equal(
         formatDbDateTime(value, { format: "dateTimeSeconds" }),
         "31/08/2026 14:05:06",
@@ -110,6 +112,18 @@ const cases: TestCase[] = [
           withYear: true,
         }),
         "14:05",
+      );
+    },
+  },
+  {
+    name: "invalid runtime display format falls back to legacy behavior",
+    run: () => {
+      assert.equal(
+        formatDbDateTime("2026-08-31 14:05:06", {
+          format: "invalid" as never,
+          withSeconds: false,
+        }),
+        "31/08/2026 14:05",
       );
     },
   },
