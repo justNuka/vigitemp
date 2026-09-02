@@ -168,6 +168,9 @@ export function sanitizeTelephonyConfigForAudit(config: TelephonyConfig) {
     ovhBillingAccount: config.ovhBillingAccount,
     ovhServiceName: config.ovhServiceName,
     ovhClick2CallUserId: config.ovhClick2CallUserId,
+    asteriskBaseUrl: config.asteriskBaseUrl,
+    asteriskUsername: config.asteriskUsername,
+    asteriskAppName: config.asteriskAppName,
     secretsConfigured: {
       ovhApplicationKey: Boolean(config.ovhApplicationKey),
       ovhApplicationSecret: Boolean(config.ovhApplicationSecret),
@@ -195,6 +198,14 @@ export function getTelephonyConfigMissingFields(config: TelephonyConfig): string
       ["ovhBillingAccount", config.ovhBillingAccount],
       ["ovhServiceName", config.ovhServiceName],
       ["callerId", config.callerId],
+    ].filter(([, value]) => !String(value || "").trim()).map(([key]) => key)
+  }
+
+  if (config.provider === "asterisk") {
+    return [
+      ["asteriskBaseUrl", config.asteriskBaseUrl],
+      ["asteriskUsername", config.asteriskUsername],
+      ["asteriskPassword", config.asteriskPassword],
     ].filter(([, value]) => !String(value || "").trim()).map(([key]) => key)
   }
 
