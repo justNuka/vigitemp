@@ -20,9 +20,10 @@ Pour toute nouvelle conversation ou tout chantier important :
 2. lire [`development-guidelines.md`](./development-guidelines.md) avant d'écrire du code ;
 3. lire [`refactor-roadmap.md`](./refactor-roadmap.md) pour connaître les priorités et dépendances entre chantiers ;
 4. si le sujet touche l'authentification, les sessions, le login, le SSO, Microsoft Entra, la 2FA, le passwordless ou une migration des JWT Web, lire obligatoirement [`better-auth-migration.md`](./better-auth-migration.md) ; **ce document décrit une cible planifiée, pas un état déjà implémenté** ;
-5. si le sujet touche l'ajustage, l'étalonnage, les sondes de métrologie ou `HotlineApiServer`, lire obligatoirement [`metrology-refactor.md`](./metrology-refactor.md) ;
-6. pour une API Next.js, lire également `website/docs/API_CONVENTIONS.md` ;
-7. vérifier ensuite le code actuel : la documentation décrit une direction, le code et les PR mergées restent la vérité sur l'état réellement implémenté.
+5. si le sujet touche la téléphonie, OVHcloud, Click2Call, SIP, Asterisk, les appels d'alarme, le TTS ou le DTMF, lire obligatoirement [`telephony-architecture.md`](./telephony-architecture.md) et, pour une installation OVHcloud, [`../telephony-ovh-setup.md`](../telephony-ovh-setup.md) ;
+6. si le sujet touche l'ajustage, l'étalonnage, les sondes de métrologie ou `HotlineApiServer`, lire obligatoirement [`metrology-refactor.md`](./metrology-refactor.md) ;
+7. pour une API Next.js, lire également `website/docs/API_CONVENTIONS.md` ;
+8. vérifier ensuite le code actuel : la documentation décrit une direction, le code et les PR mergées restent la vérité sur l'état réellement implémenté.
 
 ## 3. Architecture actuelle
 
@@ -146,6 +147,8 @@ Une PR de code n'est terminée que lorsque les points applicables sont couverts 
 - `docs/architecture/development-guidelines.md` — conventions de code et helpers existants à réutiliser.
 - `docs/architecture/refactor-roadmap.md` — ordre des chantiers et critères de découpage.
 - `docs/architecture/better-auth-migration.md` — architecture cible et plan détaillé de migration de l'authentification Web vers Better Auth ; **planifié, non encore implémenté tant que les PR correspondantes ne sont pas mergées**.
+- `docs/architecture/telephony-architecture.md` — architecture téléphonie : rôle de Click2Call, cible Asterisk/SIP, alarmes vocales, DTMF, TTS, sécurité et roadmap.
+- `docs/telephony-ovh-setup.md` — guide opératoire pour choisir/configurer une offre OVHcloud et renseigner VigiSensys.
 - `docs/architecture/metrology-refactor.md` — cible détaillée ajustage/étalonnage et frontière avec Hotline.
 - `website/docs/API_CONVENTIONS.md` — conventions des routes API Next.js.
 - `website/docs/backlog-retours-17-08-2026.md` — état des retours terrain d'août 2026.

@@ -15,6 +15,7 @@ import { Switch } from "@/components/ui/switch"
 import { fetchJson, postJson, putJson } from "@/lib/http"
 import { formatDbDateTime } from "@/lib/date-display"
 import { TelephonyProviderFields } from "./telephony/telephony-provider-fields"
+import { TelephonyOvhSetupGuideDialog } from "./telephony/telephony-ovh-setup-guide-dialog"
 import { buildSummary, COPY, DEFAULT_DRAFT } from "./telephony/telephony-settings-helpers"
 import type { ProviderId, TelephonyDraft } from "./telephony/telephony-settings-types"
 
@@ -123,7 +124,7 @@ export function TelephonySettingsCard() {
   return (
     <Card className="border-border/60 bg-white dark:bg-popover dark:text-popover-foreground">
       <CardHeader>
-        <div className="flex items-start justify-between gap-4">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <CardTitle className="flex items-center gap-2">
               <Phone className="h-5 w-5 text-sky-600" />
@@ -131,9 +132,12 @@ export function TelephonySettingsCard() {
             </CardTitle>
             <CardDescription>{copy.description}</CardDescription>
           </div>
-          <Badge variant="secondary" className="border border-sky-200 bg-sky-50 text-sky-700">
-            {draft.provider === "ovhcloud" ? "OVH V1" : copy.localSaved}
-          </Badge>
+          <div className="flex flex-wrap items-center gap-2">
+            <TelephonyOvhSetupGuideDialog />
+            <Badge variant="secondary" className="border border-sky-200 bg-sky-50 text-sky-700 dark:border-sky-900 dark:bg-sky-950/40 dark:text-sky-300">
+              {draft.provider === "ovhcloud" ? "OVH V1" : copy.localSaved}
+            </Badge>
+          </div>
         </div>
       </CardHeader>
       <CardContent className="space-y-6">
