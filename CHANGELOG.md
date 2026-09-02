@@ -18,8 +18,10 @@ La convention de versioning est décrite dans [`docs/versioning.md`](docs/versio
 
 ### Web
 
-- Téléphonie : ajout d'un guide OVHcloud intégré à l'administration et de documentations persistantes pour préparer une offre VoIP, récupérer les identifiants API/ligne, tester Click2Call et cadrer la cible Asterisk/SIP des futures alarmes vocales interactives.
-- Téléphonie : après validation réelle des credentials OVHcloud mais refus de Click2Call par l'offre souscrite, la trajectoire principale passe directement au PoC Asterisk TEL-3. Un bundle Asterisk/PJSIP/ARI reproductible et des tests d'administration permettent de valider un appel SIP sortant avec lecture d'un message audio local, avant toute intégration au moteur d'alarmes.
+- Téléphonie : Twilio devient le provider recommandé pour la V1 des alarmes vocales. Le PoC utilise directement l'API HTTPS Twilio pour tester les credentials puis déclencher un appel avec TTS `fr-FR`, sans SDK supplémentaire, SIP/RTP, VM Linux ni port entrant chez le client.
+- Téléphonie : ajout d'un guide Twilio client/DSI détaillant création du compte et de l'API Key, choix d'un numéro français compatible appels automatisés, sécurité, diagnostic et prérequis réseau ; la V1 requiert uniquement DNS et HTTPS TCP 443 sortant vers `api.twilio.com`.
+- Téléphonie : la roadmap privilégie une queue Voice persistante réutilisant le dispatch d'alarmes existant afin qu'une panne Internet/Twilio ne bloque jamais l'interrogation des sondes ; les callbacks/DTMF et l'acquittement restent des lots ultérieurs.
+- Téléphonie : le guide OVHcloud/Click2Call reste disponible et le provider Asterisk mergé en PR #84 est conservé comme option avancée/on-premise pour les projets qui le nécessitent, mais il n'est plus un prérequis standard de la V1.
 
 ### Base de données / seeds
 
