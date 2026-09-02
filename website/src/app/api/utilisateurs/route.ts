@@ -14,10 +14,12 @@ import { getUserAvatarMap, setUserAvatarValue } from "@/lib/user-avatar-db"
 import { getGlobalAppLanguage } from "@/lib/app-language"
 import { canUseApplicationEmail } from "@/lib/license-email"
 import { serializeDbDateTime } from "@/lib/date-display"
+import { getPasswordRulesFromDb } from "@/lib/password-rules"
+import { validatePassword } from "@/lib/password-validation"
 
 const createUserSchema = z.object({
   username: z.string().min(3, "Username must be at least 3 characters"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
+  password: z.string().min(1, "Password required"),
   nom: z.string().min(1, "Nom requis"),
   prenom: z.string().min(1, "Prénom requis"),
   email: z.union([z.literal(""), z.string().email("Email invalide")]).optional().transform((value) => value || undefined),
@@ -63,6 +65,17 @@ export const POST = withAdminLogging(async (req: NextRequest, ctx: HandlerContex
 
     const body = await req.json()
     const data = createUserSchema.parse(body)
+
+    const passwordRules = await getPasswordRulesFromDb()
+    const passwordValidation = validatePassword(data.password, passwordRules)
+    if (!passwordValidation.isValid) {
+      return apiError(
+        400,
+        "password_rules_failed",
+        "Le mot de passe ne respecte pas les règles de sécurité",
+        { details: passwordValidation.errors },
+      )
+    }
 
     const existing = await prisma.t_utilisateur.findFirst({
       where: { Login: data.username, Est_Archive: false },
@@ -169,7 +182,16 @@ export const POST = withAdminLogging(async (req: NextRequest, ctx: HandlerContex
     )
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return apiError(400, "validation_error", "Invalid input")
+      const details = error.issues.map((issue) => ({
+        path: issue.path.join("."),
+        message: issue.message,
+      }))
+      return apiError(
+        400,
+        "validation_error",
+        details[0]?.message ?? "Invalid input",
+        { details },
+      )
     }
 
     log.error("utilisateurs", "create_user_error", { error: error });
