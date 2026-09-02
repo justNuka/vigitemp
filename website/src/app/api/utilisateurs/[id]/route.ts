@@ -9,6 +9,8 @@ import { revalidateTag } from "next/cache"
 import { apiError, apiOk } from "@/lib/api-response"
 import { auditRouteDelete, auditRouteUpdate } from "@/lib/audit-route"
 import { getUserAvatarValue, setUserAvatarValue } from "@/lib/user-avatar-db"
+import { getPasswordRulesFromDb } from "@/lib/password-rules"
+import { validatePassword } from "@/lib/password-validation"
 
 const updateUserSchema = z.object({
   username: z.string().min(3).optional(),
@@ -16,7 +18,7 @@ const updateUserSchema = z.object({
   prenom: z.string().optional(),
   email: z.union([z.literal(""), z.string().email()]).optional().transform((value) => value || undefined),
   telephone: z.string().optional(),
-  password: z.string().min(6).optional(),
+  password: z.string().optional(),
   profileId: z.string().optional(),
   expiryDate: z
     .string()
@@ -70,6 +72,19 @@ export const PATCH = withAdminLogging(
       const existingUser = await prisma.t_utilisateur.findUnique({ where: { Id_Utilisateur: userId } })
       if (!existingUser) {
         return apiError(404, "not_found", "User not found")
+      }
+
+      if (data.password) {
+        const passwordRules = await getPasswordRulesFromDb()
+        const passwordValidation = validatePassword(data.password, passwordRules)
+        if (!passwordValidation.isValid) {
+          return apiError(
+            400,
+            "password_rules_failed",
+            "Le mot de passe ne respecte pas les règles de sécurité",
+            { details: passwordValidation.errors },
+          )
+        }
       }
 
       const existingAvatar = await getUserAvatarValue(userId)
@@ -173,7 +188,16 @@ export const PATCH = withAdminLogging(
       })
     } catch (error) {
       if (error instanceof z.ZodError) {
-        return apiError(400, "validation_error", "Invalid input")
+        const details = error.issues.map((issue) => ({
+          path: issue.path.join("."),
+          message: issue.message,
+        }))
+        return apiError(
+          400,
+          "validation_error",
+          details[0]?.message ?? "Invalid input",
+          { details },
+        )
       }
 
       log.error("utilisateurs", "update_user_error", { error: error });
@@ -216,4 +240,3 @@ export const DELETE = withAdminLogging(
     }
   },
 )
-
