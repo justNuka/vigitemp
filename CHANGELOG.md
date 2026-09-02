@@ -16,6 +16,10 @@ La convention de versioning est décrite dans [`docs/versioning.md`](docs/versio
 
 ## [Unreleased]
 
+### Web
+
+- Téléphonie : ajout d'un guide OVHcloud intégré à l'administration et de documentations persistantes pour préparer une offre VoIP, récupérer les identifiants API/ligne, tester Click2Call et cadrer la cible Asterisk/SIP des futures alarmes vocales interactives.
+
 ### Base de données / seeds
 
 - Nettoyage des libellés français des seeds MySQL/SQL Server : accents, fautes historiques confirmées et marqueur SemVer canonique `0.90.1`, sans changement de schéma.

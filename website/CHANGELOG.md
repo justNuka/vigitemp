@@ -15,6 +15,13 @@ Les versions suivent `MAJOR.MINOR.PATCH` sans zéros de tête. La source de vers
 - La première connexion est déterminée côté serveur à partir de `t_utilisateur.Date_Heure_Derniere_Connexion`, sans stockage navigateur ni nouvelle colonne.
 - La durée affichée reprend `CFR21 / VALIDITE_MOT_DE_PASSE_JOURS` et respecte `ACTIVATION_EXPIRATION_MOT_DE_PASSE`. Le changement forcé des mots de passe temporaires/expirés et l’avertissement existant à J-7 sont conservés.
 
+### Téléphonie
+
+- Administration > Paramètres > Téléphonie dispose désormais d'un guide OVHcloud intégré, lisible en FR/EN et adapté mobile, qui explique le choix d'offre, la récupération du Billing Account/Service Name/Caller ID, la génération des clés API AK/AS/CK, la création Click2Call et l'ordre de test recommandé.
+- Le guide distingue explicitement le rôle actuel de Click2Call (validation de ligne, appel simple/manuellement déclenché) de l'architecture cible Asterisk/SIP pour les futures alarmes vocales automatisées avec audio/TTS, DTMF et scénarios d'escalade.
+- Les documentations `docs/architecture/telephony-architecture.md` et `docs/telephony-ovh-setup.md` servent de références persistantes pour l'architecture voix et l'installation OVHcloud.
+- Aucune clé, aucun secret OVHcloud et aucun mot de passe SIP opérationnel n'est ajouté au dépôt ; le guide renvoie vers les sources officielles OVHcloud et rappelle que les offres et menus doivent être revérifiés au moment du déploiement.
+
 ### Métrologie
 
 - Ajustage : après le calcul final, l’application demande désormais si les nouveaux coefficients doivent être envoyés aux GSP. Les coefficients précédents sont restaurés par sécurité avant la décision ; un refus conserve ces anciens coefficients sur les sondes, tandis qu’une confirmation envoie la configuration normale avec les nouveaux coefficients et contrôle l’ACK `ECON`.
