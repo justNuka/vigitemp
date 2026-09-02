@@ -19,6 +19,7 @@ La convention de versioning est décrite dans [`docs/versioning.md`](docs/versio
 ### Web
 
 - Téléphonie : ajout d'un guide OVHcloud intégré à l'administration et de documentations persistantes pour préparer une offre VoIP, récupérer les identifiants API/ligne, tester Click2Call et cadrer la cible Asterisk/SIP des futures alarmes vocales interactives.
+- Téléphonie : après validation réelle des credentials OVHcloud mais refus de Click2Call par l'offre souscrite, la trajectoire principale passe directement au PoC Asterisk TEL-3. Un bundle Asterisk/PJSIP/ARI reproductible et des tests d'administration permettent de valider un appel SIP sortant avec lecture d'un message audio local, avant toute intégration au moteur d'alarmes.
 
 ### Base de données / seeds
 
@@ -52,7 +53,7 @@ Cette entrée constitue la première vue produit structurée du changelog. Elle 
 
 ### Serveur Windows — principales évolutions
 
-- Support du protocole GSP `ECON` étendu pour les coefficients métrologiques embarqués dans la sonde.
+- Support du protocole GSP `ECON` étendu pour les coefficients métrologiques embarqués dans les sondes GSP.
 - Transport `ECON` compact `a/b/c` pendant Ajustage/Étalonnage afin de respecter les contraintes du module de réception.
 - La séquence série exacte `+++` est traitée comme un bruit de transport et ne masque plus la vraie réponse GSP.
 - Le filtrage `+++` est partagé par la couche protocolaire et couvre désormais Hotline, Ajustage, Étalonnage et Surveillance.

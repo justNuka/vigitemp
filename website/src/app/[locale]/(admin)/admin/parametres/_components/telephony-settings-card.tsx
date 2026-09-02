@@ -88,6 +88,19 @@ export function TelephonySettingsCard() {
     }
   }
 
+  const testAsteriskConnection = async () => {
+    setTestingConnection(true)
+    try {
+      const result = await postJson<{ version: string | null; systemName: string | null }>("/api/admin/telephony/asterisk/test-connection", {})
+      const detail = result.version ? ` ${result.version}` : ""
+      toast.success(`${copy.providerLabel.asterisk}${detail} — ${copy.testConnection}`)
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : `${copy.providerLabel.asterisk} — ${copy.testConnection}`)
+    } finally {
+      setTestingConnection(false)
+    }
+  }
+
   const createClick2CallUser = async () => {
     setCreatingUser(true)
     try {
@@ -114,12 +127,25 @@ export function TelephonySettingsCard() {
     }
   }
 
+  const testAsteriskCall = async () => {
+    setTestingCall(true)
+    try {
+      await postJson("/api/admin/telephony/asterisk/test-call", { to: testNumber })
+      toast.success(`${copy.providerLabel.asterisk} — ${copy.testCall}: ${testNumber}`)
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : `${copy.providerLabel.asterisk} — ${copy.testCall}`)
+    } finally {
+      setTestingCall(false)
+    }
+  }
+
   const resetDraft = () => {
     setDraft(DEFAULT_DRAFT)
     setSavedAt(null)
   }
 
   const ovhActionsVisible = draft.provider === "ovhcloud"
+  const asteriskActionsVisible = draft.provider === "asterisk"
 
   return (
     <Card className="border-border/60 bg-white dark:bg-popover dark:text-popover-foreground">
@@ -196,6 +222,23 @@ export function TelephonySettingsCard() {
                     {copy.testCall}
                   </Button>
                 </div>
+              </div>
+            ) : null}
+
+            {asteriskActionsVisible ? (
+              <div className="grid gap-4 rounded-xl border border-border/60 bg-white p-4 shadow-sm dark:bg-card md:grid-cols-[1fr_auto_auto] md:items-end">
+                <div className="space-y-2">
+                  <Label>{copy.testNumber}</Label>
+                  <Input value={testNumber} onChange={(e) => setTestNumber(e.target.value)} placeholder={copy.testNumberPlaceholder} />
+                </div>
+                <Button type="button" variant="outline" onClick={testAsteriskConnection} disabled={testingConnection || saving}>
+                  {testingConnection ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                  {copy.testConnection}
+                </Button>
+                <Button type="button" onClick={testAsteriskCall} disabled={testingCall || saving || !testNumber.trim()}>
+                  {testingCall ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                  {copy.testCall}
+                </Button>
               </div>
             ) : null}
           </>

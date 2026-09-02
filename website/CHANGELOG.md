@@ -19,8 +19,12 @@ Les versions suivent `MAJOR.MINOR.PATCH` sans zéros de tête. La source de vers
 
 - Administration > Paramètres > Téléphonie dispose désormais d'un guide OVHcloud intégré, lisible en FR/EN et adapté mobile, qui explique le choix d'offre, la récupération du Billing Account/Service Name/Caller ID, la génération des clés API AK/AS/CK, la création Click2Call et l'ordre de test recommandé.
 - Le guide distingue explicitement le rôle actuel de Click2Call (validation de ligne, appel simple/manuellement déclenché) de l'architecture cible Asterisk/SIP pour les futures alarmes vocales automatisées avec audio/TTS, DTMF et scénarios d'escalade.
-- Les documentations `docs/architecture/telephony-architecture.md` et `docs/telephony-ovh-setup.md` servent de références persistantes pour l'architecture voix et l'installation OVHcloud.
-- Aucune clé, aucun secret OVHcloud et aucun mot de passe SIP opérationnel n'est ajouté au dépôt ; le guide renvoie vers les sources officielles OVHcloud et rappelle que les offres et menus doivent être revérifiés au moment du déploiement.
+- Le test terrain Click2Call a validé les credentials API OVHcloud et la création d'un utilisateur, mais l'appel a été refusé par l'offre souscrite (`Can't use this function with this offer.`) ; la trajectoire principale passe donc directement au PoC Asterisk/SIP.
+- Le provider Asterisk TEL-3 permet désormais de tester ARI depuis l'administration puis de déclencher un appel sortant vers `PJSIP/<numero>@ovh` ; après décroché, le dialplan du PoC joue un message audio local puis raccroche.
+- Un bundle reproductible `deploy/asterisk-poc/` construit Asterisk 22 avec PJSIP, ARI, G.711 et un message de test généré localement ; les credentials SIP/ARI réels restent dans un `.env` local ignoré par Git.
+- Les documentations `docs/architecture/telephony-architecture.md`, `docs/telephony-ovh-setup.md` et `docs/telephony-asterisk-poc.md` servent de références persistantes pour l'architecture voix, l'installation OVHcloud et le PoC Asterisk.
+- L'orchestration automatique des alarmes, les événements ARI temps réel, le DTMF et la qualification d'un acquittement métier restent explicitement hors du PoC TEL-3.
+- Aucune clé, aucun secret OVHcloud et aucun mot de passe SIP opérationnel n'est ajouté au dépôt ; les guides rappellent que les secrets restent hors Git et que les offres opérateur doivent être revérifiées au moment du déploiement.
 
 ### Métrologie
 

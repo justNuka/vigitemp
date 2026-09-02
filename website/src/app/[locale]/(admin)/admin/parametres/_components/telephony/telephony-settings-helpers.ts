@@ -34,8 +34,8 @@ export const DEFAULT_DRAFT: TelephonyDraft = {
 export const COPY: Record<"fr" | "en", TelephonyCopy> = {
   fr: {
     title: "Téléphonie VoIP",
-    description: "Configurez le provider voix. La V1 OVH couvre le test de connexion et le déclenchement d'appel Click2Call.",
-    warning: "La voix OVH V1 permet de déclencher un appel, pas encore de lire vocalement le détail d'alarme.",
+    description: "Configurez le provider voix. OVH Click2Call reste disponible lorsqu'il est supporté par l'offre ; Asterisk est la cible du PoC d'alarmes vocales.",
+    warning: "Le PoC Asterisk TEL-3 valide la connexion ARI, l'appel SIP sortant et un message audio local. L'orchestration automatique des alarmes et le DTMF ne sont pas encore activés.",
     frontOnly: "Configuration VoIP",
     enabled: "Activer la téléphonie",
     provider: "Fournisseur",
@@ -65,9 +65,9 @@ export const COPY: Record<"fr" | "en", TelephonyCopy> = {
     providerDesc: {
       none: "Sélectionnez un provider pour afficher la configuration correspondante.",
       twilio: "Préconfiguration UI uniquement pour l'instant.",
-      ovhcloud: "OVHcloud API Telephony + Click2Call.",
+      ovhcloud: "OVHcloud API Telephony + Click2Call. Son utilisation dépend de l'offre souscrite.",
       keyyo: "Préconfiguration UI uniquement pour l'instant.",
-      asterisk: "Préconfiguration UI uniquement pour l'instant.",
+      asterisk: "PoC TEL-3 : connexion ARI et appel sortant via la ligne SIP configurée dans Asterisk.",
     },
     placeholders: {
       secret: "secret",
@@ -117,8 +117,8 @@ export const COPY: Record<"fr" | "en", TelephonyCopy> = {
   },
   en: {
     title: "VoIP Telephony",
-    description: "Configure the voice provider. OVH V1 currently covers connection tests and Click2Call test calls.",
-    warning: "OVH voice V1 can place a call, but does not yet speak alarm details.",
+    description: "Configure the voice provider. OVH Click2Call remains available when supported by the subscribed plan; Asterisk is the target for the voice alarm PoC.",
+    warning: "The Asterisk TEL-3 PoC validates ARI connectivity, outbound SIP calls and a local audio message. Automatic alarm orchestration and DTMF are not enabled yet.",
     frontOnly: "VoIP configuration",
     enabled: "Enable telephony",
     provider: "Provider",
@@ -148,9 +148,9 @@ export const COPY: Record<"fr" | "en", TelephonyCopy> = {
     providerDesc: {
       none: "Select a provider to show the matching configuration.",
       twilio: "UI preconfiguration only for now.",
-      ovhcloud: "OVHcloud Telephony API + Click2Call.",
+      ovhcloud: "OVHcloud Telephony API + Click2Call. Availability depends on the subscribed plan.",
       keyyo: "UI preconfiguration only for now.",
-      asterisk: "UI preconfiguration only for now.",
+      asterisk: "TEL-3 PoC: ARI connectivity and outbound calls through the SIP line configured in Asterisk.",
     },
     placeholders: {
       secret: "secret",
@@ -241,6 +241,7 @@ export function buildSummary(draft: TelephonyDraft, copy: TelephonyCopy) {
         `${copy.asterisk.baseUrl}: ${draft.asteriskBaseUrl || "?"}`,
         `${copy.asterisk.username}: ${draft.asteriskUsername || "?"}`,
         `${copy.asterisk.password}: ${maskSecret(draft.asteriskPassword)}`,
+        `${copy.asterisk.appName}: ${draft.asteriskAppName || "?"}`,
       ]
     default:
       return []
