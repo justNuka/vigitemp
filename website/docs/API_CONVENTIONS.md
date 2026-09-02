@@ -23,9 +23,29 @@ Utiliser un wrapper selon le besoin métier :
 Ces wrappers garantissent journalisation et traçabilité homogènes.
 
 ## Authentification
+
+### État actuellement implémenté
+
 - Cookie principal : `auth-token`
 - Lecture de compatibilité côté serveur : `token` puis `auth-token` (voir `website/src/lib/auth.ts`)
 - Pour toute nouvelle route protégée : refuser explicitement en `401` si non authentifié.
+
+**Tant que la migration Better Auth n'est pas réellement mergée dans `dev`, ce fonctionnement legacy reste la vérité du code et doit être respecté.**
+
+### Trajectoire Better Auth planifiée
+
+La migration complète est décrite dans `docs/architecture/better-auth-migration.md`.
+
+Principes de la cible :
+
+- session Better Auth serveur à la place des access/refresh JWT Web maison ;
+- `t_utilisateur` reste la source de vérité métier ;
+- les wrappers d'API restent la frontière applicative et doivent masquer les détails du cookie/session Better Auth ;
+- aucun endpoint métier ne doit dépendre directement du nom ou du format interne du cookie Better Auth ;
+- migration progressive avec coexistence temporaire du legacy et de Better Auth sous un `basePath` distinct ;
+- autorisations, licences et audit VigiSensys restent obligatoires après authentification.
+
+Lorsqu'un lot Better Auth modifie cette convention, mettre à jour ce document dans la même PR.
 
 ## Codes HTTP à respecter
 - `200/201` : succès
@@ -42,5 +62,6 @@ Ces wrappers garantissent journalisation et traçabilité homogènes.
 - Migration progressive endpoint par endpoint, sans casser les consommateurs existants.
 
 ## Références liées
+- Architecture auth cible : `docs/architecture/better-auth-migration.md`
 - Carte des endpoints : `website/docs/API_MAP.md`
 - Notifications agent : `website/docs/NOTIFICATIONS_AGENT.md`

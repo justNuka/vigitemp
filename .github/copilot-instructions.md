@@ -7,10 +7,13 @@ Avant un développement ou un refactor significatif, lire dans cet ordre :
 1. `docs/architecture/README.md`
 2. `docs/architecture/development-guidelines.md`
 3. `docs/architecture/refactor-roadmap.md` si le sujet concerne sécurité, dette technique ou architecture
-4. `docs/architecture/metrology-refactor.md` si le sujet touche ajustage, étalonnage, lecture métrologique ou `HotlineApiServer`
-5. `website/docs/API_CONVENTIONS.md` pour toute route API Next.js
+4. `docs/architecture/better-auth-migration.md` si le sujet touche authentification, login, sessions, JWT Web, SSO, Microsoft Entra, 2FA, Magic Link, Email OTP, Passkeys ou autres méthodes d'identité
+5. `docs/architecture/metrology-refactor.md` si le sujet touche ajustage, étalonnage, lecture métrologique ou `HotlineApiServer`
+6. `website/docs/API_CONVENTIONS.md` pour toute route API Next.js
 
 Ces documents décrivent les conventions et la direction d'architecture. **Le code courant, le HEAD actuel de `dev` et les PR mergées restent la vérité sur l'état réellement implémenté.** Toujours les vérifier avant de coder et ne jamais supposer qu'un point de roadmap est encore à faire.
+
+`better-auth-migration.md` décrit une **cible planifiée**. Ne jamais écrire du code en supposant Better Auth déjà disponible tant que les PR d'implémentation correspondantes ne sont pas réellement mergées dans `dev`.
 
 ## Règles générales (obligatoires)
 - Toujours répondre en français.
@@ -54,11 +57,31 @@ import { prisma, prismaMesure, AutresSchemasSiBesoin } from "@/lib/prisma"
 ```
 
 ## Authentification et session
+
+### État actuellement implémenté
+
 - Login : `POST /api/auth/login`
 - Cookie principal : `auth-token`
 - Lecture côté API : compatibilité `token` puis `auth-token` dans `website/src/lib/auth.ts`
 - Toute route protégée renvoie `401` si non authentifié, `403` si non autorisé.
 - Toute rotation d'access token doit préserver l'échéance absolue de session ; une activité continue ne doit jamais rendre une session infinie.
+
+Tant que la migration Better Auth n'est pas mergée, **continuer à respecter le contrat legacy réel** et ne pas introduire un troisième mécanisme de session concurrent.
+
+### Cible planifiée
+
+La trajectoire Better Auth est détaillée dans `docs/architecture/better-auth-migration.md`.
+
+Principes à préserver pendant cette migration :
+
+- `t_utilisateur` reste la source de vérité métier ;
+- Better Auth gère l'identité technique et les sessions ;
+- le login historique reste possible via Username + mot de passe ;
+- profils, autorisations, groupes et licences restent VigiSensys ;
+- CFR21, mot de passe temporaire, première connexion, audit, IP/machine et `t_postes_clients` doivent être conservés ;
+- MySQL et MSSQL sont des critères bloquants ;
+- migration progressive avec coexistence temporaire, jamais big-bang ;
+- les méthodes additionnelles (2FA, Magic Link, Email OTP, Microsoft, SSO, HIBP, Passkeys) doivent rester configurables par installation.
 
 ## Conventions API (source de vérité)
 - `website/docs/API_CONVENTIONS.md`
@@ -87,7 +110,7 @@ Règles de base :
 - Logger : `website/src/lib/logger.ts`
 - Wrappers API : `website/src/lib/api-logger.ts`, `website/src/lib/api-wrappers.ts`
 - Toute mutation sensible doit être traçable (log + audit selon le modèle existant).
-- Ne jamais logger mots de passe, JWT, clés API ou secrets.
+- Ne jamais logger mots de passe, JWT, tokens de session, OTP/TOTP, backup codes, clés API, tokens OAuth ou secrets.
 
 ## Notifications agent (important)
 - Dispatch alarme : `POST /api/alarmes/dispatch` avec header `x-vigitemp-secret`
@@ -106,6 +129,7 @@ Règles de base :
 - Ajouter les clés dans les fichiers de messages appropriés (`website/src/messages/*.json`).
 - Ne pas hardcoder des chaînes utilisateur dans les composants quand un namespace i18n existe déjà.
 - Avant de créer une nouvelle primitive/composant générique, rechercher les composants partagés existants listés dans `docs/architecture/development-guidelines.md`.
+- Si Better Auth est implémenté, son plugin i18n sert uniquement aux erreurs/messages d'auth ; `next-intl` reste la source de vérité de l'UI VigiSensys.
 
 ## Commandes utiles
 ```bash
