@@ -140,7 +140,7 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.5",
-    "@react-email/preview-server": "5.2.10",
+    "@react-email/preview-server": "^5.2.10",
     "@tailwindcss/postcss": "^4.2.2",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^25.5.2",
