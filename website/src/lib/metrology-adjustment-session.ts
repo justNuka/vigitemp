@@ -516,7 +516,7 @@ async function readLatestGsoAdjustmentMeasurement(
   return {
     value,
     rawValue: null,
-    unit: row.Unite?.trim() || sensor.unit,
+    unit: sensor.unit ?? row.Unite?.trim() ?? null,
     error: value == null ? "Mesure GSO invalide" : null,
     measuredAt: Number.isNaN(measuredAt.getTime()) ? nowIso() : measuredAt.toISOString(),
   }
@@ -1106,7 +1106,7 @@ async function runOneLoop(session: AdjustmentSession) {
   }
 
   for (const sensor of session.sensors) {
-    const reading = sensor.isGso
+    const protocolReading = sensor.isGso
       ? await readLatestGsoAdjustmentMeasurement(session, sensor)
       : await readHotlineGspMeasurement({
           serial: sensor.serialNumber,
@@ -1115,7 +1115,11 @@ async function runOneLoop(session: AdjustmentSession) {
           manualModule: sensor.moduleName,
         })
 
-    if (!reading) continue
+    if (!protocolReading) continue
+    const reading = {
+      ...protocolReading,
+      unit: sensor.unit ?? protocolReading.unit,
+    }
 
     session.latestSensorReadings[sensor.id] = keepLatestValidReading(
       session.latestSensorReadings[sensor.id],

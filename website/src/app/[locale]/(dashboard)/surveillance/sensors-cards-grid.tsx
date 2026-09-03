@@ -146,6 +146,7 @@ export function SensorsCardsGrid({
                 key={sensor.id}
                 idLieu={Number.isFinite(locationId) ? locationId : Number(sensor.id)}
                 nomLieu={sensor.name ?? ""}
+                unit={sensor.unit}
                 lieuType={sensor.lieuType ?? sensor.location.lieuType ?? null}
                 siteName={sensor.location.site ?? t("grid.unknown_site")}
                 groupName={groupName}
@@ -205,4 +206,3 @@ export function SensorsCardsGrid({
     </div>
   )
 }
-

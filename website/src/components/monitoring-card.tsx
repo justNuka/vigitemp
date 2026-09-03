@@ -33,6 +33,7 @@ interface MonitoringCardProps {
   idLieu: number
   nomLieu: string
   currentValue?: number | null
+  unit?: string | null
   lastMeasurement?: Date | string | null
   sondeNumeroSerie?: string
   lieuEtat: string
@@ -80,6 +81,7 @@ export default function MonitoringCard({
   idLieu,
   nomLieu,
   currentValue = null,
+  unit = null,
   lastMeasurement = null,
   sondeNumeroSerie = '',
   lieuEtat,
@@ -161,7 +163,7 @@ export default function MonitoringCard({
       id: `live-${idLieu}-${serializedDate}`,
       Valeur: currentValue,
       Nb_Decimal: template?.Nb_Decimal ?? null,
-      Unite: template?.Unite ?? "°C",
+      Unite: template?.Unite ?? unit ?? "°C",
       DateHeureMesure: dateLabel,
       DateHeureMesureIso: serializedDate,
       DateHeureMesureXaxis: timeLabel,
@@ -193,7 +195,7 @@ export default function MonitoringCard({
     }
 
     return [...orderedData, livePoint]
-  }, [alarmType, currentValue, idLieu, liveMeasurementDate, localeTag, orderedData, sondeNumeroSerie, status])
+  }, [alarmType, currentValue, idLieu, liveMeasurementDate, localeTag, orderedData, sondeNumeroSerie, status, unit])
 
   const summary = useMemo(() => getMeasureSummary(previewData), [previewData])
   const { consigneSup, consigneInf, consigne, unite, frequence, lastMeasureText, lastDateTime, decimals, lastValue } = summary

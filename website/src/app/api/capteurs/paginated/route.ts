@@ -7,7 +7,8 @@ import { apiError, apiOk } from "@/lib/api-response"
 import { prisma, prismaMesure } from "@/lib/prisma"
 import { log } from "@/lib/logger"
 import { serializeStoredDbDateTime } from "@/lib/date-display"
-import { normalizeMeasureNumber, normalizeUnitLabel } from "@/lib/measurements"
+import { normalizeMeasureNumber } from "@/lib/measurements"
+import { resolveSensorDisplayUnit } from "@/lib/sensor-unit"
 
 const NO_STORE_HEADERS = {
   "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
@@ -277,7 +278,13 @@ export const GET = withAuthLogging(async (request: NextRequest, ctx) => {
     const locations = await prisma.t_lieu.findMany({
       where,
       include: {
-        t_sonde: { select: { Est_Sonde_GSO: true } },
+        t_sonde: {
+          select: {
+            Est_Sonde_GSO: true,
+            Sonde_Numero_Serie: true,
+            t_sonde_type: { select: { Unite: true } },
+          },
+        },
         t_site: { select: { Libelle_Site: true } },
         t_lieu_groupe: { include: { t_groupe: { select: { Id_Groupe: true, Nom_Groupe: true } } } },
       },
@@ -295,6 +302,29 @@ export const GET = withAuthLogging(async (request: NextRequest, ctx) => {
     })
 
     const locationIds = locations.map((location) => location.Id_Lieu).filter(Boolean)
+    const sensorSerials = locations
+      .map((location) => location.t_sonde?.Sonde_Numero_Serie?.trim())
+      .filter((serial): serial is string => Boolean(serial))
+    const latestAdjustments = sensorSerials.length
+      ? await prisma.t_ajustage.findMany({
+          where: { Sonde_Numero_Serie: { in: sensorSerials }, Unite: { not: null } },
+          select: {
+            Sonde_Numero_Serie: true,
+            Unite: true,
+            Date_Heure_Ajustage: true,
+            Id_Ajustage: true,
+          },
+          orderBy: [{ Date_Heure_Ajustage: "desc" }, { Id_Ajustage: "desc" }],
+        })
+      : []
+    const adjustmentUnitBySerial = new Map<string, string>()
+    for (const adjustment of latestAdjustments) {
+      const serial = adjustment.Sonde_Numero_Serie?.trim()
+      const unit = adjustment.Unite?.trim()
+      if (serial && unit && !adjustmentUnitBySerial.has(serial)) {
+        adjustmentUnitBySerial.set(serial, unit)
+      }
+    }
     const activeAlarms = locationIds.length
       ? await prisma.t_alarme.findMany({
           where: {
@@ -450,7 +480,12 @@ export const GET = withAuthLogging(async (request: NextRequest, ctx) => {
         const alarmDisabled = location.Notification_Active === false
         const surveillanceDisabled = location.Lieu_Etat === "D"
         const isGso = location.t_sonde?.Est_Sonde_GSO ?? location.Est_Lieu_GSO ?? false
-        const unit = normalizeUnitLabel(location.Derniere_Unite?.trim() || "°C")
+        const sensorSerial = location.t_sonde?.Sonde_Numero_Serie?.trim()
+        const unit = resolveSensorDisplayUnit({
+          adjustmentUnit: sensorSerial ? adjustmentUnitBySerial.get(sensorSerial) : null,
+          sensorTypeUnit: location.t_sonde?.t_sonde_type?.Unite,
+          locationUnit: location.Derniere_Unite,
+        })
         const decimals = location.Derniere_Nb_Decimal ?? null
         const minThreshold =
           location.Est_Consigne_Inf_Active === false
