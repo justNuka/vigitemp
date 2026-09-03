@@ -3,6 +3,8 @@ import { createPool } from "mysql2/promise"
 import * as Tarn from "tarn"
 import * as Tedious from "tedious"
 
+import { parseMysqlConnectionUrl } from "@/lib/mysql-connection"
+
 export type BetterAuthPocDatabaseProvider = "mysql" | "mssql"
 
 type SqlServerConnectionOptions = {
@@ -100,17 +102,14 @@ export function getBetterAuthPocDatabaseProvider(databaseUrl?: string): BetterAu
 }
 
 function createMysqlDatabase(databaseUrl: string) {
-  const normalizedUrl = databaseUrl.replace(/^mariadb:/i, "mysql:")
-  const parsed = new URL(normalizedUrl)
-  const database = decodeConnectionValue(parsed.pathname.replace(/^\//, ""))
-  if (!database) throw new Error("[better-auth-poc] MySQL database name is missing")
+  const connection = parseMysqlConnectionUrl(databaseUrl)
 
   return createPool({
-    host: parsed.hostname,
-    port: parsed.port ? Number.parseInt(parsed.port, 10) : 3306,
-    user: decodeConnectionValue(parsed.username),
-    password: decodeConnectionValue(parsed.password),
-    database,
+    host: connection.host,
+    port: connection.port,
+    user: connection.user,
+    password: connection.password,
+    database: connection.database,
     timezone: "Z",
     connectionLimit: 10,
   })
