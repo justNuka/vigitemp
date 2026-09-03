@@ -146,10 +146,6 @@ function createMssqlDatabase(databaseUrl: string) {
           },
         }),
     },
-    TYPES: {
-      ...Tedious.TYPES,
-      DateTime: Tedious.TYPES.DateTime2,
-    },
   })
 
   return {
