@@ -15,12 +15,14 @@ jobs:
       mysql:
         image: mysql:8.4
         env:
-          MYSQL_ROOT_PASSWORD: VigiSensysPocMysql2026
+          MYSQL_ROOT_PASSWORD: VigiSensysPocMysqlRoot2026
           MYSQL_DATABASE: vigisensys_auth_poc
+          MYSQL_USER: vigisensys
+          MYSQL_PASSWORD: VigiSensysPocMysql2026
         ports:
           - 3306:3306
         options: >-
-          --health-cmd="mysqladmin ping -h localhost -uroot -pVigiSensysPocMysql2026"
+          --health-cmd="mysqladmin ping -h localhost -uroot -pVigiSensysPocMysqlRoot2026"
           --health-interval=5s
           --health-timeout=5s
           --health-retries=20
@@ -29,9 +31,9 @@ jobs:
         working-directory: website
     env:
       DATABASE_PROVIDER: mysql
-      DATABASE_URL: mysql://root:VigiSensysPocMysql2026@127.0.0.1:3306/vigisensys_auth_poc
-      DATABASE_MESURES_URL: mysql://root:VigiSensysPocMysql2026@127.0.0.1:3306/vigisensys_auth_poc
-      DATABASE_CHAT_URL: mysql://root:VigiSensysPocMysql2026@127.0.0.1:3306/vigisensys_auth_poc
+      DATABASE_URL: mysql://vigisensys:VigiSensysPocMysql2026@127.0.0.1:3306/vigisensys_auth_poc
+      DATABASE_MESURES_URL: mysql://vigisensys:VigiSensysPocMysql2026@127.0.0.1:3306/vigisensys_auth_poc
+      DATABASE_CHAT_URL: mysql://vigisensys:VigiSensysPocMysql2026@127.0.0.1:3306/vigisensys_auth_poc
       BETTER_AUTH_POC_ALLOW_SCHEMA_CHANGES: "1"
     steps:
       - uses: actions/checkout@v4
