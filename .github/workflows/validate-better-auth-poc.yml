@@ -1,0 +1,110 @@
+name: Temporary Better Auth PoC validation
+
+on:
+  push:
+    branches:
+      - feature/better-auth-foundation-poc
+
+permissions:
+  contents: read
+
+jobs:
+  mysql:
+    runs-on: ubuntu-24.04
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: VigiSensysPocMysql2026
+          MYSQL_DATABASE: vigisensys_auth_poc
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h localhost -uroot -pVigiSensysPocMysql2026"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=20
+    defaults:
+      run:
+        working-directory: website
+    env:
+      DATABASE_PROVIDER: mysql
+      DATABASE_URL: mysql://root:VigiSensysPocMysql2026@127.0.0.1:3306/vigisensys_auth_poc
+      DATABASE_MESURES_URL: mysql://root:VigiSensysPocMysql2026@127.0.0.1:3306/vigisensys_auth_poc
+      DATABASE_CHAT_URL: mysql://root:VigiSensysPocMysql2026@127.0.0.1:3306/vigisensys_auth_poc
+      BETTER_AUTH_POC_ALLOW_SCHEMA_CHANGES: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Enable pnpm
+        run: corepack enable
+      - name: Install dependencies
+        run: |
+          pnpm config set dangerouslyAllowAllBuilds true
+          pnpm install --no-frozen-lockfile
+      - name: Generate Prisma MySQL
+        run: pnpm prisma:generate:mysql
+      - name: Better Auth integration test
+        run: pnpm test:better-auth-poc
+      - name: Typecheck
+        run: pnpm exec tsc --noEmit
+      - name: Lint
+        run: pnpm lint
+
+  mssql:
+    runs-on: ubuntu-24.04
+    services:
+      mssql:
+        image: mcr.microsoft.com/mssql/server:2022-latest
+        env:
+          ACCEPT_EULA: Y
+          MSSQL_SA_PASSWORD: VigiSensysPocSql2026!
+        ports:
+          - 1433:1433
+    defaults:
+      run:
+        working-directory: website
+    env:
+      DATABASE_PROVIDER: mssql
+      DATABASE_URL: sqlserver://127.0.0.1:1433;database=vigisensys_auth_poc;user=sa;password=VigiSensysPocSql2026!;encrypt=true;trustServerCertificate=true;schema=dbo
+      DATABASE_MESURES_URL: sqlserver://127.0.0.1:1433;database=vigisensys_auth_poc;user=sa;password=VigiSensysPocSql2026!;encrypt=true;trustServerCertificate=true;schema=dbo
+      DATABASE_CHAT_URL: sqlserver://127.0.0.1:1433;database=vigisensys_auth_poc;user=sa;password=VigiSensysPocSql2026!;encrypt=true;trustServerCertificate=true;schema=dbo
+      BETTER_AUTH_POC_ALLOW_SCHEMA_CHANGES: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Enable pnpm
+        run: corepack enable
+      - name: Wait for SQL Server and create disposable database
+        env:
+          MSSQL_CONTAINER_ID: ${{ job.services.mssql.id }}
+        run: |
+          set -euo pipefail
+          SQLCMD="$(docker exec "$MSSQL_CONTAINER_ID" sh -lc 'if [ -x /opt/mssql-tools18/bin/sqlcmd ]; then echo /opt/mssql-tools18/bin/sqlcmd; elif [ -x /opt/mssql-tools/bin/sqlcmd ]; then echo /opt/mssql-tools/bin/sqlcmd; fi')"
+          if [ -z "$SQLCMD" ]; then
+            echo "sqlcmd not found in SQL Server container"
+            exit 1
+          fi
+          for i in $(seq 1 30); do
+            if docker exec "$MSSQL_CONTAINER_ID" "$SQLCMD" -S localhost -U sa -P 'VigiSensysPocSql2026!' -C -Q 'SELECT 1' >/dev/null 2>&1; then
+              break
+            fi
+            sleep 2
+          done
+          docker exec "$MSSQL_CONTAINER_ID" "$SQLCMD" -S localhost -U sa -P 'VigiSensysPocSql2026!' -C -Q "IF DB_ID(N'vigisensys_auth_poc') IS NULL CREATE DATABASE vigisensys_auth_poc"
+      - name: Install dependencies
+        run: |
+          pnpm config set dangerouslyAllowAllBuilds true
+          pnpm install --no-frozen-lockfile
+      - name: Generate Prisma MSSQL
+        run: pnpm prisma:generate:mssql
+      - name: Better Auth integration test
+        run: pnpm test:better-auth-poc
+      - name: Typecheck
+        run: pnpm exec tsc --noEmit
+      - name: Lint
+        run: pnpm lint
