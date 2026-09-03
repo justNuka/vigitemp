@@ -3248,6 +3248,17 @@ CREATE TABLE `tm_journal_code` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
+-- Dumping data for table `tm_journal_code`
+--
+
+LOCK TABLES `tm_journal_code` WRITE;
+/*!40000 ALTER TABLE `tm_journal_code` DISABLE KEYS */;
+INSERT INTO `tm_journal_code` VALUES ('AACT','Association d\'un module d\'alarme'),('ACQ','Acquittement alarme'),('ACT','Activer la surveillance'),('ACTU','Reactivation de l\'utilisateur'),('AIM','Analyse d\'impact des mesures'),('AJE','Ajoute evenement manuel'),('ARC','Archivage des données'),('AS','Arret de la surveillance'),('AT','Activation de la surveillance telephonique'),('CA','Demarrage d\'un calibrage pour la sonde'),('CC','Changement sur un element'),('CDA','Changement d\'etat du datalogger'),('CF','Changement de frequence'),('CONNEXION','Connexion de l\'utilisateur'),('CR','Changement de retard d\'alarme'),('CS','Changement de sonde'),('DECONNEXION','Deconnexion de l\'utilisateur'),('DES','Desactiver la surveillance'),('DS','Demarrage de la surveillance'),('DT','Desactivation de la surveillance telephonique'),('ET','Demarrage d\'un etalonnage pour la sonde'),('FERMSURV','Fermeture de la fenètre de surveillance'),('GRPH','Ouverture d\'un graphique'),('IMP','Import de donnees'),('MDP','Changement fiche utilisateur'),('PLAN','Modification du planning'),('PS','Le gestionnaire de port serie virtuel relancé'),('SACT','Suppression du module d\'alarme associée'),('TC','Test de connexion de la sonde'),('TEL','Systeme'),('UT',''),('VLOG','Action VigiLog');
+/*!40000 ALTER TABLE `tm_journal_code` ENABLE KEYS */;
+UNLOCK TABLES;
+/*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
+
+--
 -- Table structure for table `tm_journal_commentaire_libre`
 --
 
@@ -3465,7 +3476,7 @@ CREATE TABLE `tm_mesures_gso` (
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-/*!50003 CREATE*/ /*!50003 TRIGGER `TRG_AFT_INS_MES_GSO` AFTER INSERT ON `tm_mesures_gso` FOR EACH ROW BEGIN
+/*!50003 CREATE*/ /*!50003 TRIGGER `TRG_AFT_INS_MES_GSO` AFTER INSERT ON `tm_mesures_gso` FOR EACH ROW BEGIN */
 
 IF NEW.id_capteur IN(SELECT Adresse_Sonde from v_config_lieu_sonde) AND NEW.trame IN(00000000,00000001,10000000) AND NEW.date_mesure >= NOW() - INTERVAL 192 HOUR THEN
 
