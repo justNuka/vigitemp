@@ -83,6 +83,10 @@ function isFromToChange(value: unknown): value is { from?: unknown; to?: unknown
   return Object.prototype.hasOwnProperty.call(value, "from") || Object.prototype.hasOwnProperty.call(value, "to")
 }
 
+function isGraphOpeningAudit(value: string) {
+  return /^Graphique lieu\b/i.test(value.split("{")[0]?.trim() ?? "")
+}
+
 export function buildMonitoringAuditRows(raw: string | null | undefined) {
   const sanitized = sanitizeMonitoringAuditText(raw)
   if (sanitized === "-") return [] as Array<{ label: string; value: string }>
@@ -91,12 +95,15 @@ export function buildMonitoringAuditRows(raw: string | null | undefined) {
   const jsonEnd = sanitized.lastIndexOf("}")
   if (jsonStart < 0 || jsonEnd <= jsonStart) return []
 
+  const graphOpening = isGraphOpeningAudit(sanitized)
+
   try {
     const parsed = JSON.parse(sanitized.slice(jsonStart, jsonEnd + 1)) as Record<string, unknown>
     return Object.entries(parsed)
       .filter(
         ([key, value]) =>
-          !["alarmId", "locationId", "lieuId", "acknowledgedAt"].includes(key) &&
+          !["alarmId", "locationId", "lieuId", "acknowledgedAt", "source"].includes(key) &&
+          !(graphOpening && key === "sensor") &&
           value !== null &&
           value !== undefined,
       )
@@ -123,6 +130,7 @@ export function formatMonitoringAuditSummary(value: string | null | undefined) {
   const sanitized = sanitizeMonitoringAuditText(value)
   if (sanitized === "-") return sanitized
 
+  const graphOpening = isGraphOpeningAudit(sanitized)
   const prefix = sanitized
     .split("{")[0]
     ?.split("|")
@@ -130,7 +138,8 @@ export function formatMonitoringAuditSummary(value: string | null | undefined) {
     .filter(
       (segment) =>
         segment.length > 0 &&
-        !/^(acknowledgedAt|alarmId|locationId|lieuId)\s*:/i.test(segment) &&
+        !/^(acknowledgedAt|alarmId|locationId|lieuId|source)\s*:/i.test(segment) &&
+        !(graphOpening && /^sensor\s*:/i.test(segment)) &&
         !/^IP\s*:/i.test(segment),
     )
     .join(" | ")

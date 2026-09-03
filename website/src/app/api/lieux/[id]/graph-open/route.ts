@@ -48,7 +48,7 @@ export const POST = withAuthLogging(
 
       const lieu = await prisma.t_lieu.findUnique({
         where: { Id_Lieu: lieuId },
-        select: { Id_Lieu: true, Nom_Lieu: true, Sonde_Numero_Serie: true },
+        select: { Id_Lieu: true, Nom_Lieu: true },
       });
 
       if (!lieu) {
@@ -64,10 +64,6 @@ export const POST = withAuthLogging(
         lieuId: lieu.Id_Lieu,
         resource: `Graphique lieu ${lieu.Nom_Lieu ?? lieu.Id_Lieu}`,
         resourceId: lieu.Id_Lieu,
-        changes: {
-          sensor: lieu.Sonde_Numero_Serie ?? null,
-          source: "monitoring-details",
-        },
         success: true,
       });
 

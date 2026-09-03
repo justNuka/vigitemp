@@ -29,6 +29,7 @@ type AuditRow = {
   details: string
   detailRows: Array<{ label: string; value: string }>
   comment: string | null
+  isAcknowledgement: boolean
 }
 
 function buildAuditRows(raw: string | null | undefined) {
@@ -54,6 +55,7 @@ export function MonitoringAuditTab({ logs, isLoading, error, t, maxHeight = "cal
       details: formatAuditDetails(log.detailsSummary || log.commentaire),
       detailRows: buildAuditRows(log.commentaire),
       comment: log.commentaireUtilisateur ? sanitizeMonitoringAuditText(log.commentaireUtilisateur) : null,
+      isAcknowledgement: log.code?.trim().toUpperCase() === "ACQ",
     }))
   }, [logs])
 
@@ -98,7 +100,13 @@ export function MonitoringAuditTab({ logs, isLoading, error, t, maxHeight = "cal
             </dl>
           ) : null}
           {row.original.comment ? (
-            <p className="text-xs italic text-muted-foreground">{row.original.comment}</p>
+            row.original.isAcknowledgement ? (
+              <p className="text-xs text-foreground">
+                <span className="font-medium">{t("audit.columns.label")} :</span> {row.original.comment}
+              </p>
+            ) : (
+              <p className="text-xs italic text-muted-foreground">{row.original.comment}</p>
+            )
           ) : null}
         </div>
       ),

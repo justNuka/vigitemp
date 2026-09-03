@@ -9,7 +9,7 @@
 - Branche : `feature/alarm-context-multi-location-ack`
 - PR : #86 — `feat(alarmes): afficher le contexte et limiter l'acquittement multi-lieux`
 - Base de travail finale : `dev` au commit `5845950b3134ed78943d4f2f7fcb0e05dbf7bb38`
-- Statut : PR ouverte — validation terrain à réaliser
+- Statut : mergé dans `dev`
 
 ### 1. Dashboard utilisateur — afficher Site / Groupe / Lieu / Sonde
 
@@ -158,3 +158,82 @@ Profil sans `ALARM_ACK_ACCESS` :
 - [x] aucun changement de dépendance, lockfile ou fichier métrologie parasite dans le diff de la PR ;
 - [ ] test terrain MySQL / MSSQL à prévoir pour la création idempotente de l'autorisation ;
 - [x] PR #86 ouverte vers `dev` sans merge automatique.
+
+---
+
+## Lot — humanisation de l'audit Surveillance
+
+- Branche : `fix/audit-trail-humanization`
+- PR : #87 — `fix(audit): humaniser les détails Surveillance`
+- Base : `dev` au commit `463a7b6ec90d984ba366dc9c2aa2f1b4c7bf10b3`
+- Statut : PR ouverte — validation terrain à réaliser
+
+### 4. Ouverture du graphique — masquer les identifiants techniques
+
+#### Retour terrain
+
+Dans `Surveillance → détail d'une sonde → Audit`, les événements `GRPH` d'ouverture du graphique affichaient encore des métadonnées destinées au code :
+
+```text
+Graphique lieu <lieu> | sensor: <serie> | source: monitoring-details
+```
+
+Le tableau de détail affichait également les lignes `sensor` et `source`.
+
+#### Modification
+
+- le formatter de l'audit Surveillance masque `source` et le champ technique `sensor` lorsqu'il s'agit d'une ouverture de graphique ;
+- le correctif s'applique aussi aux événements `GRPH` déjà présents en base, sans migration de données ;
+- les nouveaux événements `GRPH` n'enregistrent plus `sensor` ni `source: monitoring-details` dans `changes` ;
+- l'information métier utile reste le libellé `Graphique lieu <nom du lieu>`.
+
+Principaux fichiers :
+
+- `website/src/lib/audit/monitoring-audit.ts`
+- `website/src/app/api/lieux/[id]/graph-open/route.ts`
+
+#### Validation terrain
+
+- [ ] une ancienne ligne `GRPH` n'affiche plus `sensor` ;
+- [ ] une ancienne ligne `GRPH` n'affiche plus `source` / `monitoring-details` ;
+- [ ] une nouvelle ouverture du graphique crée un audit lisible sans métadonnée technique ;
+- [ ] le lieu reste clairement identifiable.
+
+### 5. Acquittement — afficher clairement le commentaire utilisateur
+
+#### Retour terrain
+
+Pour un événement `ACQ`, le commentaire saisi lors de l'acquittement était affiché seul, en petit texte italique sous le lieu.
+
+#### Modification
+
+Pour les événements `ACQ`, l'onglet Audit affiche désormais :
+
+```text
+Commentaire : <commentaire saisi>
+```
+
+Le texte est affiché normalement, sans italique, sous les informations du lieu. Les commentaires des autres types d'audit conservent leur rendu existant.
+
+Le libellé réutilise la traduction existante de la colonne Commentaire, afin de conserver le comportement FR/EN sans ajouter de chaîne codée en dur.
+
+Principal fichier :
+
+- `website/src/components/monitoring-details/monitoring-audit-tab.tsx`
+
+#### Validation terrain
+
+- [ ] acquitter une alarme avec un commentaire ;
+- [ ] vérifier que l'événement `ACQ` affiche `Commentaire : <texte>` ;
+- [ ] vérifier que le commentaire n'est plus en italique ;
+- [ ] vérifier qu'un acquittement sans commentaire n'ajoute pas de ligne vide ;
+- [ ] vérifier que les autres événements d'audit conservent leur rendu habituel.
+
+#### Validation technique
+
+- [x] génération Prisma MySQL ;
+- [x] TypeScript `tsc --noEmit` ;
+- [x] ESLint : 0 erreur ; warnings globaux préexistants uniquement ;
+- [x] contrôle i18n exécuté : échec uniquement sur les 15 chaînes/symboles préexistants de `calibration-workflow-client.tsx`, aucune nouvelle remontée liée à l'audit ;
+- [x] workflow de validation temporaire supprimé avant PR ;
+- [x] PR #87 ouverte vers `dev` sans merge automatique.
