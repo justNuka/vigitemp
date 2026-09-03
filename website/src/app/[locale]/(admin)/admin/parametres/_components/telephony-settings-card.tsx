@@ -16,6 +16,7 @@ import { fetchJson, postJson, putJson } from "@/lib/http"
 import { formatDbDateTime } from "@/lib/date-display"
 import { TelephonyProviderFields } from "./telephony/telephony-provider-fields"
 import { TelephonyOvhSetupGuideDialog } from "./telephony/telephony-ovh-setup-guide-dialog"
+import { TelephonyTwilioSetupGuideDialog } from "./telephony/telephony-twilio-setup-guide-dialog"
 import { buildSummary, COPY, DEFAULT_DRAFT } from "./telephony/telephony-settings-helpers"
 import type { ProviderId, TelephonyDraft } from "./telephony/telephony-settings-types"
 
@@ -76,13 +77,25 @@ export function TelephonySettingsCard() {
     }
   }
 
-  const testConnection = async () => {
+  const testOvhConnection = async () => {
     setTestingConnection(true)
     try {
       const result = await postJson<{ click2CallUsers: Array<{ id: number; login: string }> }>("/api/admin/telephony/ovh/test-connection", {})
       toast.success(`Connexion OVH OK (${result.click2CallUsers.length} utilisateur(s) Click2Call)`)
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Test de connexion OVH impossible")
+    } finally {
+      setTestingConnection(false)
+    }
+  }
+
+  const testTwilioConnection = async () => {
+    setTestingConnection(true)
+    try {
+      await postJson("/api/admin/telephony/twilio/test-connection", {})
+      toast.success(`${copy.providerLabel.twilio} — ${copy.testConnection}`)
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : `${copy.providerLabel.twilio} — ${copy.testConnection}`)
     } finally {
       setTestingConnection(false)
     }
@@ -115,13 +128,26 @@ export function TelephonySettingsCard() {
     }
   }
 
-  const testCall = async () => {
+  const testOvhCall = async () => {
     setTestingCall(true)
     try {
       await postJson("/api/admin/telephony/ovh/test-call", { to: testNumber })
       toast.success(`Appel de test lancé vers ${testNumber}`)
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Impossible de lancer l'appel de test")
+    } finally {
+      setTestingCall(false)
+    }
+  }
+
+  const testTwilioCall = async () => {
+    setTestingCall(true)
+    try {
+      const result = await postJson<{ sid: string | null; status: string | null }>("/api/admin/telephony/twilio/test-call", { to: testNumber })
+      const callId = result.sid ? ` (${result.sid})` : ""
+      toast.success(`${copy.providerLabel.twilio} — ${copy.testCall}: ${testNumber}${callId}`)
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : `${copy.providerLabel.twilio} — ${copy.testCall}`)
     } finally {
       setTestingCall(false)
     }
@@ -144,8 +170,17 @@ export function TelephonySettingsCard() {
     setSavedAt(null)
   }
 
+  const twilioActionsVisible = draft.provider === "twilio"
   const ovhActionsVisible = draft.provider === "ovhcloud"
   const asteriskActionsVisible = draft.provider === "asterisk"
+
+  const providerBadge = draft.provider === "twilio"
+    ? "Twilio V1"
+    : draft.provider === "ovhcloud"
+      ? "OVH"
+      : draft.provider === "asterisk"
+        ? "Asterisk"
+        : copy.localSaved
 
   return (
     <Card className="border-border/60 bg-white dark:bg-popover dark:text-popover-foreground">
@@ -159,9 +194,10 @@ export function TelephonySettingsCard() {
             <CardDescription>{copy.description}</CardDescription>
           </div>
           <div className="flex flex-wrap items-center gap-2">
+            <TelephonyTwilioSetupGuideDialog />
             <TelephonyOvhSetupGuideDialog />
             <Badge variant="secondary" className="border border-sky-200 bg-sky-50 text-sky-700 dark:border-sky-900 dark:bg-sky-950/40 dark:text-sky-300">
-              {draft.provider === "ovhcloud" ? "OVH V1" : copy.localSaved}
+              {providerBadge}
             </Badge>
           </div>
         </div>
@@ -202,13 +238,30 @@ export function TelephonySettingsCard() {
           <>
             <TelephonyProviderFields draft={draft} copy={copy} summary={summary} setField={setField} />
 
+            {twilioActionsVisible ? (
+              <div className="grid gap-4 rounded-xl border border-border/60 bg-white p-4 shadow-sm dark:bg-card md:grid-cols-[1fr_auto_auto] md:items-end">
+                <div className="space-y-2">
+                  <Label>{copy.testNumber}</Label>
+                  <Input value={testNumber} onChange={(e) => setTestNumber(e.target.value)} placeholder={copy.testNumberPlaceholder} />
+                </div>
+                <Button type="button" variant="outline" onClick={testTwilioConnection} disabled={testingConnection || saving}>
+                  {testingConnection ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                  {copy.testConnection}
+                </Button>
+                <Button type="button" onClick={testTwilioCall} disabled={testingCall || saving || !testNumber.trim()}>
+                  {testingCall ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                  {copy.testCall}
+                </Button>
+              </div>
+            ) : null}
+
             {ovhActionsVisible ? (
               <div className="grid gap-4 rounded-xl border border-border/60 bg-white p-4 shadow-sm dark:bg-card md:grid-cols-[1fr_auto_auto] md:items-end">
                 <div className="space-y-2">
                   <Label>{copy.testNumber}</Label>
                   <Input value={testNumber} onChange={(e) => setTestNumber(e.target.value)} placeholder={copy.testNumberPlaceholder} />
                 </div>
-                <Button type="button" variant="outline" onClick={testConnection} disabled={testingConnection || saving}>
+                <Button type="button" variant="outline" onClick={testOvhConnection} disabled={testingConnection || saving}>
                   {testingConnection ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                   {copy.testConnection}
                 </Button>
@@ -217,7 +270,7 @@ export function TelephonySettingsCard() {
                   {copy.createClick2CallUser}
                 </Button>
                 <div className="md:col-span-3 flex justify-end">
-                  <Button type="button" onClick={testCall} disabled={testingCall || saving || !testNumber.trim()}>
+                  <Button type="button" onClick={testOvhCall} disabled={testingCall || saving || !testNumber.trim()}>
                     {testingCall ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                     {copy.testCall}
                   </Button>

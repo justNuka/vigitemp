@@ -2,32 +2,28 @@
 
 > Statut : architecture cible et plan de validation.
 >
-> Baseline fonctionnelle vérifiée : `dev` au 02/09/2026. Le code actuel sait configurer plusieurs providers et dispose d'une première implémentation OVHcloud basée sur l'API Telephony / Click2Call. Cette documentation ne signifie pas que l'orchestration complète d'alarmes vocales est déjà implémentée.
+> Baseline fonctionnelle vérifiée : `dev` après merge de la PR #84, au 02/09/2026.
+>
+> Cette documentation décrit la direction produit. L'orchestration complète des appels d'alarme n'est pas encore implémentée tant que les lots Twilio/queue correspondants ne sont pas mergés.
 
 ## 1. Objectif
 
-La téléphonie VigiSensys doit pouvoir évoluer d'un simple appel manuel/test vers un vrai canal d'alarme vocal industriel, tout en conservant les contraintes du produit :
+La téléphonie VigiSensys doit devenir un canal d'alarme supplémentaire, au même niveau que les autres notifications, sans transformer VigiSensys en PBX ou en implémentation SIP maison.
 
-- déploiement on-premise ;
-- fonctionnement fiable et auditable ;
-- compatibilité avec plusieurs opérateurs/providers ;
-- secrets protégés ;
-- pas de réimplémentation maison du protocole SIP/RTP ;
-- possibilité à terme de lire un message d'alarme, gérer du DTMF et des scénarios d'escalade ;
-- aucune confusion entre « appel reçu » et « acquittement métier » sans règle d'identification explicite.
+Principes :
 
-## 2. État actuel du dépôt
+- VigiSensys reste on-premise ;
+- le fournisseur de voix porte la complexité téléphonique ;
+- la détection des alarmes ne doit jamais être bloquée par un appel ;
+- chaque client doit pouvoir posséder son propre compte/fournisseur et sa propre facturation ;
+- les secrets restent protégés ;
+- la V1 doit rester simple à installer sur les VM Windows existantes ;
+- les scénarios futurs DTMF/escalade restent possibles ;
+- une confirmation téléphonique ne devient jamais un acquittement réglementaire sans règle métier/audit explicite.
 
-Les briques principales se trouvent dans :
+## 2. État réel du dépôt
 
-- `website/src/lib/telephony/config.ts` : configuration commune et stockage des secrets ;
-- `website/src/lib/telephony/ovh-provider.ts` : provider OVHcloud Click2Call ;
-- `website/src/app/api/admin/telephony/ovh/test-connection/route.ts` : test des credentials et de la ligne ;
-- `website/src/app/api/admin/telephony/ovh/click2call-users/route.ts` : liste/création d'identifiants Click2Call ;
-- `website/src/app/api/admin/telephony/ovh/test-call/route.ts` : appel de test ;
-- `website/src/app/[locale]/(admin)/admin/parametres/_components/telephony-settings-card.tsx` : configuration dans l'administration.
-
-Les providers déclarés actuellement sont :
+Providers déclarés :
 
 - `none` ;
 - `twilio` ;
@@ -35,478 +31,573 @@ Les providers déclarés actuellement sont :
 - `keyyo` ;
 - `asterisk`.
 
-À la date de cette documentation, OVHcloud est le provider réellement câblé pour un test de connexion et un appel Click2Call. Les autres providers sont surtout préconfigurés côté interface/configuration.
+Briques déjà présentes :
 
-## 3. Deux usages différents à ne pas mélanger
+- `website/src/lib/telephony/config.ts` : configuration commune et stockage chiffré des secrets ;
+- provider OVHcloud Click2Call ;
+- provider Asterisk ARI / PoC TEL-3 ;
+- interface Administration > Paramètres > Téléphonie ;
+- préconfiguration Twilio (Account SID, API Key, Auth Token, From number) ;
+- `AlarmWebNotifier.cs` côté serveur C# ;
+- `/api/alarmes/dispatch` côté Web ;
+- queue de notifications email existante, utile comme modèle de résilience.
 
-### 3.1 Click2Call
+Retours terrain/PoC :
 
-Le Click2Call OVHcloud met en relation deux interlocuteurs.
+1. OVH API : authentification AK/AS/CK validée ;
+2. création d'un utilisateur Click2Call validée ;
+3. appel Click2Call réel refusé par l'offre testée avec `Can't use this function with this offer.` ;
+4. un PoC Asterisk reproductible a été mergé en PR #84 ;
+5. l'obligation d'une infrastructure Linux/Asterisk supplémentaire est considérée trop lourde comme prérequis standard pour la majorité des clients VigiSensys ;
+6. la direction recommandée V1 devient donc **Twilio Programmable Voice via API HTTPS**.
 
-Flux simplifié :
-
-```text
-VigiSensys
-   │ HTTPS / API OVHcloud
-   ▼
-OVH Click2Call
-   │
-   ├─ fait sonner la ligne SIP OVH
-   │
-   └─ après prise de ligne, appelle le destinataire
-```
-
-Cas adaptés :
-
-- test rapide de la ligne ;
-- validation des credentials API OVHcloud ;
-- appels manuels depuis une interface ;
-- fonction « appeler ce contact » ;
-- intégration simple ne nécessitant pas de contrôle audio.
-
-Avantages :
-
-- très simple à intégrer ;
-- pas de gestion SIP/RTP côté VigiSensys ;
-- API OVHcloud déjà implémentée dans le dépôt ;
-- excellent outil de validation initiale.
-
-Limites :
-
-- VigiSensys n'est pas directement l'interlocuteur audio ;
-- pas de lecture native d'un message d'alarme généré par VigiSensys ;
-- pas de maîtrise fine du flux média ;
-- DTMF et scénarios vocaux avancés non adaptés au besoin cible ;
-- ne constitue pas à lui seul une architecture complète d'alarme vocale automatique.
-
-Conclusion : **Click2Call est conservé comme provider simple et comme première étape de validation, mais n'est pas la cible principale pour les alarmes vocales automatiques.**
-
-## 4. Architecture cible recommandée pour les alarmes vocales
-
-La cible recommandée est de déléguer la téléphonie bas niveau à un IPBX, typiquement Asterisk.
+## 3. Architecture recommandée V1 — Twilio
 
 ```text
-                 VigiSensys
-                     │
-          API locale / ARI / orchestration
-                     │
-                     ▼
-                  Asterisk
-                     │
-                  SIP / RTP
-                     │
-                     ▼
-                  OVHcloud
-                     │
-                     ▼
-            réseau téléphonique
-                     │
-                     ▼
-              destinataire
+Sondes
+  │
+  ▼
+Vigitemp Serveur C#
+  │
+  │ événement d'alarme
+  ▼
+VigiSensys Web
+  │
+  ▼
+queue de notifications VOICE
+  │
+  │ HTTPS sortant TCP 443
+  ▼
+Twilio du client
+  │
+  ├── appel PSTN
+  └── TTS / TwiML
+        │
+        ▼
+Téléphone destinataire
 ```
 
-### Pourquoi Asterisk
+### Pourquoi Twilio devient le provider recommandé
 
-Asterisk prend en charge les sujets qui ne doivent pas être réimplémentés dans VigiSensys :
+Pour le client standard :
 
-- enregistrement SIP ;
-- appels sortants/entrants ;
-- SDP ;
-- RTP/audio ;
-- codecs ;
-- DTMF ;
-- états d'appel ;
-- temporisations et raccrochage ;
-- routage ;
-- files/scénarios ;
-- gestion de plusieurs lignes/trunks.
+- pas de VM Linux supplémentaire ;
+- pas d'Asterisk/FreePBX ;
+- pas de SIP ;
+- pas de RTP ;
+- pas de NAT téléphonie ;
+- pas de port entrant ;
+- pas d'IP publique dédiée ;
+- pas de driver ou softphone ;
+- seulement HTTPS sortant depuis le serveur VigiSensys.
 
-VigiSensys doit rester responsable de la logique métier :
+Twilio prend en charge :
 
-- quelle alarme déclenche un appel ;
-- quel destinataire appeler ;
-- quel message jouer ;
-- combien de tentatives ;
-- qui est ensuite contacté ;
-- comment tracer le résultat ;
-- ce qu'une touche DTMF signifie métier.
+- l'établissement de l'appel ;
+- le réseau téléphonique ;
+- le TTS ;
+- les statuts d'appel ;
+- le DTMF/TwiML dans les futures versions ;
+- la capacité et les limites opérateur associées au compte.
 
-## 5. Ligne VoIP classique ou SIP Trunk OVHcloud
+VigiSensys reste responsable de :
 
-Les offres OVHcloud évoluent. Toujours vérifier le catalogue au moment de l'installation.
+- décider quelle alarme déclenche un appel ;
+- sélectionner les destinataires ;
+- construire le message ;
+- gérer la file, les retries et l'escalade ;
+- journaliser les résultats ;
+- appliquer les règles métier d'acquittement.
 
-### Ligne VoIP classique
+## 4. Modèle commercial recommandé
 
-Adaptée pour :
-
-- première intégration ;
-- Click2Call ;
-- softphone/téléphone SIP ;
-- PoC Asterisk avec une seule ligne ;
-- faible besoin de simultanéité.
-
-Au 02/09/2026, le catalogue OVHcloud France affiche notamment :
-
-- Découverte ;
-- Entreprise ;
-- Entreprise+.
-
-Les offres Entreprise et Entreprise+ annoncent Click2Call dans leurs fonctionnalités. L'offre Découverte ne l'annonce pas dans la comparaison courante.
-
-### SIP Trunk
-
-À envisager si VigiSensys évolue vers :
-
-- Asterisk/IPBX comme composant permanent ;
-- plusieurs appels simultanés ;
-- plusieurs numéros ;
-- montée en charge ;
-- besoin de canaux clairement dimensionnés ;
-- architecture téléphonique plus centralisée.
-
-Le SIP Trunk n'est pas obligatoire pour le premier PoC Asterisk : une ligne SIP classique peut suffire pour valider le principe.
-
-## 6. Données OVHcloud utiles selon le mode
-
-### 6.1 Pour Click2Call API
-
-Nécessaire :
-
-- endpoint OVHcloud, généralement `ovh-eu` pour un compte européen ;
-- Application Key (AK) ;
-- Application Secret (AS) ;
-- Consumer Key (CK) ;
-- billing account / groupe de téléphonie ;
-- service name / ligne SIP ;
-- caller ID / calling number ;
-- identifiant Click2Call (ID) ;
-- login/mot de passe Click2Call uniquement pour créer ou administrer cet identifiant.
-
-Non nécessaire pour l'appel Click2Call actuel :
-
-- mot de passe SIP ;
-- registrar SIP ;
-- proxy SIP sortant ;
-- codec SIP.
-
-### 6.2 Pour Asterisk
-
-Nécessaire ou potentiellement nécessaire selon la configuration opérateur :
-
-- login SIP ;
-- authorization username ;
-- mot de passe SIP ;
-- registrar/domaine SIP ;
-- proxy sortant ;
-- codecs autorisés ;
-- numéro/ligne ;
-- paramètres NAT/réseau applicables ;
-- éventuellement SIP Trunk et nombre de canaux si l'installation est dimensionnée ainsi.
-
-## 7. Stratégie de sécurité
-
-### 7.1 Secrets OVHcloud
-
-Ne jamais :
-
-- committer AK/AS/CK ;
-- copier AS/CK dans une issue ou PR ;
-- mettre ces valeurs dans des logs ;
-- les envoyer dans une capture ou un canal de discussion non prévu pour les secrets.
-
-VigiSensys stocke déjà les valeurs sensibles de téléphonie via le mécanisme `secret-crypto`.
-
-### 7.2 Droits API
-
-Pour un premier test, des droits limités à :
+Chaque installation utilise le **compte Twilio du client**.
 
 ```text
-GET  /telephony/*
-POST /telephony/*
+Client
+└── Twilio
+    ├── compte
+    ├── numéro
+    ├── API Key
+    └── facturation
 ```
 
-sont simples à mettre en place.
+MC2 ne doit pas devenir revendeur de minutes par défaut.
 
-En production, réduire autant que possible aux routes nécessaires à la ligne/groupe concernés.
+Bénéfices :
 
-### 7.3 Compte Click2Call
+- facturation directe au client ;
+- séparation des données/comptes ;
+- révocation/rotation indépendantes ;
+- pas de partage de quota entre clients ;
+- départ/réversibilité plus simples.
 
-Utiliser un compte dédié à VigiSensys, avec un mot de passe différent du mot de passe SIP et des comptes humains.
+## 5. Réseau client — V1
 
-### 7.4 Asterisk
+Le guide opératoire canonique est :
 
-Si Asterisk est ajouté :
+- [`../telephony-twilio-setup.md`](../telephony-twilio-setup.md)
 
-- ARI ne doit pas être exposé publiquement ;
-- privilégier une communication locale/LAN contrôlée ;
-- protéger ARI par credentials dédiés ;
-- limiter les flux SIP/RTP au strict besoin ;
-- documenter les règles firewall/NAT propres à l'installation ;
-- ne pas inclure de mot de passe SIP dans les logs applicatifs.
-
-## 8. Architecture applicative cible
-
-L'orchestration voix ne doit pas être codée directement dans une route HTTP ou dans le composant React d'administration.
-
-Cible conceptuelle :
+Pour la V1 :
 
 ```text
-Alarm / notification event
-          │
-          ▼
-NotificationDispatcher
-          │
-          ├── email
-          ├── agent Windows
-          ├── SMS
-          └── voice
-                │
-                ▼
-          VoiceNotificationService
-                │
-        ┌───────┴────────┐
-        ▼                ▼
-OVH Click2Call      AsteriskProvider
-(simple/manual)     (alarme avancée)
+sortant HTTPS TCP 443 → api.twilio.com
 ```
 
-Le provider ne décide pas :
+Aucun flux entrant n'est nécessaire.
 
-- qui appeler ;
-- si l'alarme est critique ;
-- si une nouvelle tentative doit être lancée ;
-- si l'alarme est acquittée.
+Ne pas demander au client pour Twilio V1 :
 
-Il exécute uniquement une opération téléphonique demandée par la couche métier.
+- UDP 5060 ;
+- RTP ;
+- port forwarding ;
+- WebSocket public ;
+- IP publique ;
+- VM Linux.
 
-## 9. Contrat provider cible
+Les IP REST Twilio étant dynamiques, préférer une règle FQDN à une allowlist IP figée.
 
-Le code réel sera défini quand le besoin sera implémenté. Une direction possible :
+## 6. France — numérotation réglementaire
+
+Le choix du numéro ne doit pas être traité comme un simple détail d'UI.
+
+Au 02/09/2026, les règles Twilio France indiquent que les numéros classiques locaux/mobile/nationaux ne sont pas tous autorisés pour `Automated Outbound Calling`.
+
+Twilio documente le type **Verified Polyvalent / NPV** pour cet usage, avec notamment des préfixes dédiés à la date de vérification.
+
+Règle produit :
+
+- ne jamais coder en dur « n'importe quel +33 fonctionne » ;
+- guider le client vers un numéro explicitement autorisé pour l'appel automatisé ;
+- revalider la réglementation/catalogue à chaque installation ;
+- conserver les informations de conformité/KYC dans le périmètre Twilio/client, pas dans le code VigiSensys.
+
+## 7. Authentification Twilio
+
+Configuration recommandée :
+
+```text
+Account SID
+API Key SID
+API Key Secret
+Twilio From Number
+```
+
+Préférer une API Key dédiée à VigiSensys plutôt que l'Auth Token principal.
+
+Le code conserve le mode Auth Token pour compatibilité/test.
+
+Après validation :
+
+- préférer une Restricted API Key lorsque possible ;
+- accorder uniquement les permissions Voice/Calls nécessaires ;
+- rotation/révocation sans impact sur les autres applications du compte.
+
+Les secrets restent stockés via `secret-crypto`.
+
+## 8. PoC Twilio sans webhook
+
+Le premier lot utilise le paramètre `Twiml` inline de la Calls API.
+
+Exemple conceptuel :
+
+```xml
+<Response>
+  <Say language="fr-FR">
+    Ceci est un appel de test VigiSensys.
+  </Say>
+</Response>
+```
+
+Conséquence :
+
+- Twilio n'appelle aucune URL publique VigiSensys pour lire le message ;
+- aucune ouverture Internet entrante client ;
+- aucune infrastructure MC2 publique nécessaire pour la V1.
+
+## 9. Architecture applicative — ne pas appeler Twilio depuis la boucle de mesure
+
+À éviter :
+
+```text
+Thread d'interrogation / calcul alarme
+       │
+       └── appel HTTP Twilio bloquant
+```
+
+Cible :
+
+```text
+Alarme détectée
+       │
+       ▼
+AlarmWebNotifier / dispatch existant
+       │
+       ▼
+notification VOICE persistée en BDD
+       │
+       ▼
+worker / processor de notifications
+       │
+       ▼
+VoiceNotificationService
+       │
+       ▼
+TwilioVoiceProvider
+```
+
+Le serveur C# signale l'événement ; il ne doit pas porter les retries Twilio dans la boucle matérielle.
+
+Le modèle de queue email existant doit être étudié/réutilisé plutôt que créer une deuxième infrastructure de queue sans raison.
+
+## 10. Contrat provider cible
+
+Le provider exécute une demande téléphonique ; il ne contient pas les règles d'escalade.
+
+Direction :
 
 ```ts
 interface VoiceProvider {
   healthCheck(): Promise<VoiceProviderHealth>
   placeCall(request: VoiceCallRequest): Promise<VoiceCallHandle>
-  hangup(callId: string): Promise<void>
+  getCallStatus(callId: string): Promise<VoiceCallStatus>
+  cancelCall?(callId: string): Promise<void>
 }
 ```
 
-Pour un provider avancé :
+Capacités additionnelles futures :
 
 ```ts
 interface InteractiveVoiceProvider extends VoiceProvider {
-  playAudio(callId: string, audio: AudioSource): Promise<void>
-  collectDtmf(callId: string, options: DtmfOptions): Promise<DtmfResult>
+  // callbacks / DTMF / playback interactif selon provider
 }
 ```
 
-Éviter de forcer Click2Call à implémenter des capacités qu'il n'a pas. La capacité interactive peut rester spécifique à Asterisk/Twilio si besoin.
+Ne pas forcer OVH Click2Call à simuler des capacités qu'il n'a pas.
 
-## 10. Message vocal
+## 11. Construction du message vocal
 
-### 10.1 Objectif
-
-Exemple :
+Exemple cible :
 
 ```text
 VigiSensys.
 Alarme température haute.
 Site Clermont.
-Chambre froide 3.
-Valeur actuelle : douze virgule quatre degrés.
+Lieu Chambre froide numéro 3.
+Valeur actuelle : neuf virgule quatre degrés.
+Seuil maximum : huit degrés.
 ```
 
-### 10.2 TTS
+Le message doit être construit côté métier VigiSensys à partir de données structurées.
 
-Pour respecter l'orientation on-premise, étudier en priorité :
+À prévoir :
 
-- un moteur TTS local/offline ;
-- cache des phrases générées si pertinent ;
-- génération déterministe et testable ;
 - FR/EN ;
-- gestion correcte des unités et nombres.
+- unités ;
+- nombres/décimales ;
+- noms de site/lieu/sonde ;
+- type d'alarme ;
+- valeur et seuil ;
+- limite de longueur ;
+- données éventuellement sensibles à ne pas vocaliser selon client.
 
-Une solution cloud TTS peut rester optionnelle pour certains clients, mais ne doit pas devenir une dépendance obligatoire du cœur de supervision sans décision produit explicite.
+Le provider Twilio ne doit pas connaître la façon de calculer un seuil ou le sens d'une alarme.
 
-### 10.3 Audio statique
+## 12. État des appels sans webhook — V1
 
-Les phrases fixes peuvent aussi être préenregistrées, mais cette approche est vite limitée par les noms de lieux, valeurs et unités dynamiques.
+La création d'un appel retourne un `Call SID`.
 
-## 11. DTMF et acquittement
+La première version métier peut utiliser du polling :
 
-Exemple d'UX future :
+```text
+queued
+ringing
+in-progress
+completed
+busy
+failed
+no-answer
+canceled
+```
+
+Cela suffit pour :
+
+- historiser le résultat ;
+- décider d'un retry ;
+- décider de passer au destinataire suivant ;
+- éviter une infrastructure publique prématurée.
+
+Pour les événements temps réel à grande échelle, les callbacks Twilio restent la cible future.
+
+## 13. Queue et résilience
+
+La queue doit être persistante.
+
+Propriétés minimales d'une notification Voice :
+
+- identifiant ;
+- alarme ;
+- destinataire ;
+- provider ;
+- statut ;
+- compteur de tentative ;
+- prochaine tentative ;
+- Call SID provider ;
+- erreur provider normalisée ;
+- date de création/début/fin ;
+- snapshot du message ou données nécessaires à sa reconstruction.
+
+Règles :
+
+- une panne Internet/Twilio ne bloque pas l'interrogation ;
+- retries bornés ;
+- backoff ;
+- pas de boucle d'appels infinie ;
+- idempotence/déduplication ;
+- priorité possible pour alarmes critiques ;
+- quota/simultanéité contrôlés ;
+- logs sans secrets.
+
+## 14. Contacts et stratégie métier
+
+À terme, le lieu/configuration d'alarme pourra définir :
+
+```text
+Téléphonie activée : oui/non
+Contacts :
+  1. astreinte
+  2. responsable
+  3. direction
+Stratégie :
+  - tous les contacts
+  - séquentiel
+  - séquentiel jusqu'à confirmation
+```
+
+Ces règles appartiennent à VigiSensys, pas à Twilio.
+
+Le champ existant `Est_Via_Telephone` doit être réexaminé avec les modèles lieu/alarme avant implémentation afin de réutiliser l'existant proprement.
+
+## 15. DTMF et acquittement — hors V1
+
+Future UX possible :
 
 ```text
 Appuyez sur 1 pour confirmer la réception.
 Appuyez sur 2 pour réécouter.
 ```
 
-Important : **« confirmer la réception » et « acquitter une alarme » ne sont pas forcément la même action métier.**
+Twilio `<Gather>` nécessite une action/callback public.
 
-Avant d'autoriser un vrai acquittement depuis le téléphone, définir :
-
-- comment identifier l'utilisateur ;
-- si le numéro appelé suffit comme identité ;
-- s'il faut un PIN/code personnel ;
-- quelles informations doivent être inscrites dans l'audit ;
-- comment cela interagit avec CFR21 et les signatures électroniques éventuelles ;
-- le comportement en cas de numéro transféré ou de messagerie vocale.
-
-Tant que ces règles ne sont pas validées, un DTMF doit être traité au maximum comme un statut de livraison/réception et non comme un acquittement réglementaire.
-
-## 12. Escalade d'alarme
-
-Cible future possible :
+Comme les installations VigiSensys ne doivent pas être exposées directement sur Internet, la cible devra être conçue séparément, potentiellement :
 
 ```text
-Alarme critique
-   │
-   ├─ appel opérateur A
-   │     ├─ confirmation → stop
-   │     └─ échec/timeout
-   │
-   ├─ appel opérateur B
-   │     ├─ confirmation → stop
-   │     └─ échec/timeout
-   │
-   └─ appel responsable / astreinte
+Twilio
+  │ webhook HTTPS signé
+  ▼
+relay public MC2 minimal
+  │
+  │ canal initié depuis le client
+  ▼
+VigiSensys on-premise
 ```
 
-Les règles d'escalade doivent être configurables et auditables. Elles ne doivent pas être encodées en dur dans le provider téléphonique.
+Avant toute implémentation :
 
-## 13. États à journaliser
+- validation `X-Twilio-Signature` ;
+- anti-replay ;
+- association Call SID/alarme/contact ;
+- confidentialité ;
+- haute disponibilité du relay ;
+- responsabilité contractuelle ;
+- règles CFR21/audit.
 
-Pour un canal voix industriel, viser des statuts explicites :
+**Une touche DTMF n'est pas automatiquement un acquittement réglementaire.**
 
-- queued ;
-- provider_requested ;
-- ringing ;
-- answered ;
-- audio_playing ;
-- dtmf_received ;
-- completed ;
-- busy ;
-- no_answer ;
-- rejected ;
-- provider_error ;
-- cancelled.
+## 16. Positionnement des autres providers
 
-Ne pas affirmer qu'un appel a été « reçu » uniquement parce que la requête API de création d'appel a répondu 200.
+### Twilio
 
-## 14. Simultanéité et capacité
+**Provider recommandé V1** pour les installations disposant d'Internet sortant.
 
-La capacité dépend de l'offre opérateur et du nombre de canaux/appels simultanés autorisés.
+Usage :
 
-À prévoir :
+- alarmes vocales automatisées ;
+- TTS ;
+- statuts ;
+- future interactivité.
 
-- file d'attente si toutes les ressources voix sont occupées ;
-- priorité des alarmes critiques ;
-- limite de tentatives ;
-- protection contre une boucle d'appels ;
-- métriques de saturation ;
-- comportement lorsque le fournisseur téléphonique ou Internet est indisponible.
+### Asterisk
 
-## 15. Résilience
+**Provider avancé/on-premise optionnel**.
 
-La téléphonie ne doit pas devenir l'unique canal d'alarme sauf exigence projet explicite.
+Utile lorsque :
 
-Une panne :
+- le client possède déjà un IPBX/SIP ;
+- une exigence projet impose une téléphonie locale ;
+- Twilio/cloud n'est pas acceptable ;
+- une intégration téléphonique spécifique justifie l'infrastructure.
+
+Le PoC TEL-3 mergé reste valable et n'est pas supprimé.
+
+### OVHcloud Click2Call
+
+**Provider simple/manual/legacy**.
+
+Peut rester utile si :
+
+- offre compatible ;
+- besoin de mise en relation simple ;
+- appel manuel ;
+- pas de TTS/interactivité avancée.
+
+Ne pas le considérer comme équivalent à Twilio Programmable Voice.
+
+### Keyyo
+
+Préconfiguration uniquement tant qu'une implémentation réelle n'est pas ajoutée.
+
+## 17. Sécurité
+
+Règles communes :
+
+- aucun secret dans Git ;
+- aucun secret dans les changelogs/docs ;
+- aucun secret dans les logs ;
+- credentials dédiés par client/provider ;
+- rotation possible ;
+- moindre privilège ;
+- audit des changements de configuration ;
+- test de connexion réservé à l'administration.
+
+Twilio :
+
+- API Key dédiée ;
+- Secret chiffré ;
+- budget/usage alerts côté client ;
+- permissions Voice limitées après PoC.
+
+Asterisk :
+
+- ARI limité au LAN ;
+- mot de passe SIP hors VigiSensys si possible ;
+- SIP/RTP filtrés.
+
+## 18. Disponibilité et dépendance Internet
+
+Twilio introduit une dépendance à :
 
 - Internet ;
-- OVHcloud ;
-- Asterisk ;
-- SIP ;
-- ligne opérateur ;
+- Twilio ;
+- réseau téléphonique.
 
-ne doit pas empêcher les autres canaux disponibles (Agent, email, SMS, etc.) de fonctionner.
+La téléphonie ne doit donc pas être l'unique canal par défaut.
 
-## 16. Roadmap proposée
+Une panne voix ne doit pas bloquer :
 
-### TEL-0 — Documentation et onboarding OVH
+- email ;
+- Agent Windows ;
+- Teams ;
+- autres mécanismes d'alarme.
 
-- document d'architecture ;
-- guide opérateur OVHcloud ;
-- aide embarquée dans Administration > Téléphonie.
+L'UI devra présenter clairement un échec du canal voix sans transformer l'alarme métier en échec global.
 
-### TEL-1 — Validation réelle OVH Click2Call
+## 19. Roadmap révisée
 
-- générer AK/AS/CK ;
-- configurer billingAccount/serviceName ;
+### TEL-0 — Documentation/provider framework
+
+Fait :
+
+- configuration multi-provider ;
+- guide OVH ;
+- architecture téléphonie.
+
+### TEL-1 — OVH Click2Call réel
+
+Partiellement validé :
+
+- API credentials OK ;
+- user Click2Call créé ;
+- offre testée incompatible avec l'appel.
+
+Pas prioritaire pour la V1.
+
+### TEL-3 — Asterisk SIP/ARI
+
+PoC mergé en PR #84.
+
+Statut : provider avancé optionnel, pas prérequis client standard.
+
+### TEL-TW-1 — PoC Twilio standalone
+
+Objectif :
+
+- documentation client/DSI ;
 - test connexion ;
-- créer/lister l'utilisateur Click2Call ;
-- appel test ;
-- vérifier caller ID et facturation ;
-- documenter les erreurs réelles OVH rencontrées.
+- appel de test ;
+- TTS `fr-FR` inline ;
+- Call SID ;
+- aucun webhook ;
+- aucun SDK/dépendance supplémentaire.
 
-### TEL-2 — Durcissement du provider OVH
+### TEL-TW-2 — Queue Voice
 
-Après retour du test réel :
+- réutiliser l'architecture de dispatch existante ;
+- persistance BDD ;
+- worker ;
+- polling des Call SID ;
+- retries ;
+- déduplication ;
+- historique.
 
-- normalisation des numéros si nécessaire ;
-- messages d'erreur plus lisibles ;
-- sélection d'un utilisateur Click2Call existant si utile ;
-- tests automatisés sur la signature et la validation de configuration ;
-- limitation fine des permissions API documentées.
+### TEL-TW-3 — Configuration métier
 
-### TEL-3 — PoC Asterisk + ligne SIP OVH
+- contacts par lieu/alarme ;
+- `Est_Via_Telephone` ;
+- stratégie séquentielle/parallèle ;
+- message dynamique ;
+- horaires ;
+- permissions/licence si applicable.
 
-Critères de succès :
+### TEL-TW-4 — Callbacks / DTMF
 
-1. Asterisk s'enregistre correctement auprès d'OVH ;
-2. VigiSensys déclenche un appel via ARI ;
-3. un téléphone externe sonne ;
-4. lecture d'un fichier audio de test ;
-5. réception d'une touche DTMF ;
-6. journalisation complète du résultat.
+- relay public si retenu ;
+- signature Twilio ;
+- temps réel ;
+- touche 1 / réécoute.
 
-### TEL-4 — VoiceNotificationService
+### TEL-TW-5 — Escalade et acquittement
 
-- service applicatif dédié ;
-- mapping alarmes/destinataires ;
-- génération du message ;
-- TTS ou audio ;
-- timeouts et retries ;
-- livraison/audit.
+- identité ;
+- audit ;
+- CFR21 ;
+- règles d'escalade ;
+- tests de non-régression.
 
-### TEL-5 — Escalade et réception DTMF
+## 20. Definition of Done du PoC Twilio
 
-- scénarios d'astreinte ;
-- politiques de confirmation ;
-- décision séparée sur l'acquittement métier.
+Avant de poursuivre TEL-TW-2 :
 
-### TEL-6 — Industrialisation
+- [ ] compte de test réel ;
+- [ ] contraintes Trial/production comprises ;
+- [ ] règle France/numéro vérifiée ;
+- [ ] HTTPS 443 depuis une VM Windows VigiSensys ;
+- [ ] API Key dédiée ;
+- [ ] test connexion OK ;
+- [ ] appel sortant OK ;
+- [ ] TTS français entendu ;
+- [ ] Call SID récupéré ;
+- [ ] aucun port entrant ;
+- [ ] aucun secret loggé ;
+- [ ] tarif réel d'un appel mesuré ;
+- [ ] comportement proxy/firewall client documenté ;
+- [ ] limites CPS/simultanéité du compte identifiées avant dimensionnement.
 
-- MySQL + SQL Server ;
-- installateur ;
-- sauvegarde/restauration config ;
-- monitoring ;
-- sécurité réseau ;
-- documentation client ;
-- tests de charge/simultanéité ;
-- validation terrain.
+## 21. Documents canoniques
 
-## 17. Checklist avant une PR téléphonie
+- `docs/architecture/telephony-architecture.md` — décision d'architecture et roadmap.
+- `docs/telephony-twilio-setup.md` — onboarding client/DSI Twilio.
+- `docs/telephony-ovh-setup.md` — provider OVHcloud/Click2Call.
+- `docs/telephony-asterisk-poc.md` — provider avancé Asterisk/SIP.
 
-- [ ] vérifier le HEAD courant de `dev` ;
-- [ ] lire cette documentation ;
-- [ ] vérifier l'implémentation réelle du provider ;
-- [ ] aucun secret dans Git/logs ;
-- [ ] droits API minimaux ;
-- [ ] test avec numéros non facturés/maîtrisés si possible ;
-- [ ] ne pas changer les règles d'acquittement sans validation métier ;
-- [ ] ne pas implémenter SIP/RTP directement dans VigiSensys ;
-- [ ] vérifier FR/EN ;
-- [ ] documenter les prérequis réseau ;
-- [ ] vérifier l'effet sur les autres canaux de notification.
-
-## 18. Références OVHcloud vérifiées le 02/09/2026
-
-Documentation officielle :
-
-- offres VoIP : https://www.ovhcloud.com/fr/phone/voip/
-- SIP Trunk : https://www.ovhcloud.com/fr/phone/sip-trunk/
-- Click2Call : https://docs.ovhcloud.com/fr/guides/web-cloud/phone-and-fax/voip/configurer-utiliser-click2call
-- premiers pas API / AK-AS-CK : https://docs.ovhcloud.com/fr/guides/manage-and-operate/api/first-steps
-- FAQ VoIP : https://docs.ovhcloud.com/fr/guides/web-cloud/phone-and-fax/voip/faq-voip
-
-Les noms de menus, tarifs et fonctionnalités commerciales peuvent évoluer. Pour une installation client, toujours recouper avec le catalogue OVHcloud au moment du déploiement.
+Toute évolution importante de la stratégie téléphonie doit mettre à jour ce document dans la même PR.

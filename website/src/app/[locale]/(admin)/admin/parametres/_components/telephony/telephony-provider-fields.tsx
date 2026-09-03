@@ -62,7 +62,7 @@ function TwilioFields({ draft, copy, setField }: { draft: TelephonyDraft; copy: 
       </div>
       <div className="grid gap-4 md:grid-cols-2">
         <Field label={copy.twilio.accountSid} value={draft.twilioAccountSid} onChange={(value) => setField("twilioAccountSid", value)} placeholder="ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" />
-        <Field label={copy.twilio.fromNumber} value={draft.twilioFromNumber} onChange={(value) => setField("twilioFromNumber", value)} placeholder="+33123456789" />
+        <Field label={copy.twilio.fromNumber} value={draft.twilioFromNumber} onChange={(value) => setField("twilioFromNumber", value)} placeholder="+3316229XXXX" />
         {draft.twilioAuthMode === "api_key" ? (
           <>
             <Field label={copy.twilio.apiKeySid} value={draft.twilioApiKeySid} onChange={(value) => setField("twilioApiKeySid", value)} placeholder="SKxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" />

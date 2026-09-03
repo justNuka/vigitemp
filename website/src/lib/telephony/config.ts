@@ -190,6 +190,23 @@ export function sanitizeTelephonyConfigForAudit(config: TelephonyConfig) {
 export function getTelephonyConfigMissingFields(config: TelephonyConfig): string[] {
   if (!config.enabled) return []
 
+  if (config.provider === "twilio") {
+    const common = [
+      ["twilioAccountSid", config.twilioAccountSid],
+      ["twilioFromNumber", config.twilioFromNumber],
+    ]
+    const auth = config.twilioAuthMode === "api_key"
+      ? [
+          ["twilioApiKeySid", config.twilioApiKeySid],
+          ["twilioApiKeySecret", config.twilioApiKeySecret],
+        ]
+      : [["twilioAuthToken", config.twilioAuthToken]]
+
+    return [...common, ...auth]
+      .filter(([, value]) => !String(value || "").trim())
+      .map(([key]) => key)
+  }
+
   if (config.provider === "ovhcloud") {
     return [
       ["ovhApplicationKey", config.ovhApplicationKey],
