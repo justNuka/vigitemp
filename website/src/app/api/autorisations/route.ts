@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma"
 import { withAuthorizationLogging } from "@/lib/api-wrappers"
 import { apiError, apiOk } from "@/lib/api-response"
 import { log } from "@/lib/logger"
+import { ensureApplicationAuthorizations } from "@/lib/application-authorizations"
 import {
   isAdminDomainCode,
   isMetrologieDomainCode,
@@ -16,6 +17,8 @@ import {
  */
 export const GET = withAuthorizationLogging("GERER_PROFIL", async (_req: NextRequest) => {
   try {
+    await ensureApplicationAuthorizations()
+
     const authorizations = await prisma.t_autorisation.findMany({
       orderBy: { Code_Autorisation: "asc" },
     })

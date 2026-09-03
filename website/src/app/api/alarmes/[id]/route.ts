@@ -63,6 +63,16 @@ export const GET = withAuthLogging(
               Consigne_Inf: true,
               Tolerance_Surveillance_Sup: true,
               Tolerance_Surveillance_Inf: true,
+              t_site: {
+                select: { Libelle_Site: true },
+              },
+              t_lieu_groupe: {
+                select: {
+                  t_groupe: {
+                    select: { Id_Groupe: true, Nom_Groupe: true },
+                  },
+                },
+              },
             },
           },
         },
@@ -74,10 +84,16 @@ export const GET = withAuthLogging(
 
       const hasConfiguredThresholds =
         alarm.t_lieu?.Consigne_Sup !== null || alarm.t_lieu?.Consigne_Inf !== null
+      const groups = (alarm.t_lieu?.t_lieu_groupe ?? [])
+        .map((link) => link.t_groupe)
+        .filter((group): group is NonNullable<typeof group> => Boolean(group))
+        .sort((a, b) => (a.Nom_Groupe ?? "").localeCompare(b.Nom_Groupe ?? "", "fr", { sensitivity: "base", numeric: true }))
 
       return apiOk({
         id: alarm.Id_Alarme,
         locationId: alarm.Id_Lieu,
+        siteName: alarm.t_lieu?.t_site?.Libelle_Site || null,
+        groupNames: groups.map((group) => group.Nom_Groupe?.trim()).filter((name): name is string => Boolean(name)),
         locationName: alarm.t_lieu?.Nom_Lieu || null,
         sensorName: alarm.t_lieu?.Sonde_Numero_Serie || alarm.t_lieu?.Nom_Lieu || null,
         type: mapAlarmType(alarm.Type),
