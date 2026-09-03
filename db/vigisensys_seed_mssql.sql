@@ -2555,37 +2555,58 @@ ON target.Type_Etalon = source.Type_Etalon
 WHEN MATCHED THEN UPDATE SET Nom = source.Nom, Descriptif = source.Descriptif, Est_Saisie_Module = source.Est_Saisie_Module, Est_Sonde_Externe = source.Est_Sonde_Externe, Resolution = source.Resolution
 WHEN NOT MATCHED THEN INSERT (Type_Etalon, Nom, Descriptif, Est_Saisie_Module, Est_Sonde_Externe, Resolution) VALUES (source.Type_Etalon, source.Nom, source.Descriptif, source.Est_Saisie_Module, source.Est_Sonde_Externe, source.Resolution);
 GO
-DECLARE @BootstrapAuth TABLE (Code NVARCHAR(50), Libelle NVARCHAR(100));
-INSERT INTO @BootstrapAuth (Code, Libelle) VALUES
-(N'ACCES_DASHBOARD_UTILISATEUR',N'Accès dashboard utilisateur'),
-(N'ACCES_TABLEAU_BORD_UTILISATEUR',N'Accès tableau de bord utilisateur'),
-(N'ACCES_DASHBOARD_USER',N'Accès dashboard user'),
-(N'ACCES_SURVEILLANCE',N'Accès surveillance'),
-(N'LIEU_VISUALISER',N'Visualiser les lieux'),
-(N'ALARMES_GERER',N'Gérer les alarmes'),
-(N'ACCES_DASHBOARD_ADMIN',N'Accès dashboard admin'),
-(N'ACCES_TABLEAU_BORD_ADMIN',N'Accès tableau de bord admin'),
-(N'ACCES_ADMIN',N'Accès admin'),
-(N'ACCES_PARAMETRAGE_GENERAL',N'Accès paramétrage général'),
-(N'PARAMETRAGE_GENERAL',N'Paramétrage général'),
-(N'GERER_PROFIL',N'Gérer les profils'),
-(N'PARAMETRES_GERER',N'Gérer les paramètres'),
-(N'ACQUITTER_ALARME',N'Acquitter alarme'),
-(N'ACCES_ACQUITTEMENT_ALARME',N'Accès acquittement alarme'),
-(N'DESACTIVER_LIEU',N'Désactiver lieu'),
-(N'ACCES_DESACTIVATION_LIEU',N'Accès désactivation lieu'),
-(N'LIEU_ACTIV_DESACT',N'Activer/désactiver lieu'),
-(N'PARAMETRER_LIEU',N'Paramétrer lieu'),
-(N'ACCES_PARAMETRAGE_LIEU',N'Accès paramétrage lieu'),
-(N'LIEU_GERER',N'Gérer les lieux'),
-(N'PARAMETRAGE_MATERIEL',N'Paramétrage matériel'),
-(N'ACCES_PARAMETRAGE_MATERIEL',N'Accès paramétrage matériel'),
-(N'ACCES_METROLOGIE',N'Accès métrologie'),
-(N'ACCES_CONVERSATION',N'Accès conversation'),
-(N'MODULE_CONVERSATION',N'Module conversation'),
-(N'REALISER_AJUSTAGE_ETALONNAGE',N'Réaliser ajustage étalonnage'),
-(N'ACCES_AJUSTAGE_ETALONNAGE',N'Accès ajustage étalonnage');
-INSERT INTO dbo.t_autorisation (Code_Autorisation, Libelle_Autorisation, Commentaire) SELECT Code, Libelle, Libelle FROM @BootstrapAuth a WHERE NOT EXISTS (SELECT 1 FROM dbo.t_autorisation x WHERE x.Code_Autorisation = a.Code);
+DECLARE @BootstrapAuth TABLE (
+    Code NVARCHAR(50),
+    Libelle NVARCHAR(100),
+    Commentaire NVARCHAR(255)
+);
+
+INSERT INTO @BootstrapAuth (Code, Libelle, Commentaire) VALUES
+(N'ACCES_DASHBOARD_UTILISATEUR',N'Accès dashboard utilisateur',N'Accès dashboard utilisateur'),
+(N'ACCES_TABLEAU_BORD_UTILISATEUR',N'Accès tableau de bord utilisateur',N'Accès tableau de bord utilisateur'),
+(N'ACCES_DASHBOARD_USER',N'Accès dashboard user',N'Accès dashboard user'),
+(N'ACCES_SURVEILLANCE',N'Accès surveillance',N'Accès surveillance'),
+(N'LIEU_VISUALISER',N'Visualiser les lieux',N'Visualiser les lieux'),
+(N'ALARMES_GERER',N'Gérer les alarmes',N'Gérer les alarmes'),
+(N'ACCES_DASHBOARD_ADMIN',N'Accès dashboard admin',N'Accès dashboard admin'),
+(N'ACCES_TABLEAU_BORD_ADMIN',N'Accès tableau de bord admin',N'Accès tableau de bord admin'),
+(N'ACCES_ADMIN',N'Accès admin',N'Accès admin'),
+(N'ACCES_PARAMETRAGE_GENERAL',N'Accès paramétrage général',N'Accès paramétrage général'),
+(N'PARAMETRAGE_GENERAL',N'Paramétrage général',N'Paramétrage général'),
+(N'GERER_PROFIL',N'Gérer les profils',N'Gérer les profils'),
+(N'PARAMETRES_GERER',N'Gérer les paramètres',N'Gérer les paramètres'),
+(N'ACQUITTER_ALARME',N'Acquitter alarme',N'Acquitter alarme'),
+(N'ACCES_ACQUITTEMENT_ALARME',N'Accès acquittement alarme',N'Accès acquittement alarme'),
+(N'DESACTIVER_LIEU',N'Désactiver lieu',N'Désactiver lieu'),
+(N'ACCES_DESACTIVATION_LIEU',N'Accès désactivation lieu',N'Accès désactivation lieu'),
+(N'LIEU_ACTIV_DESACT',N'Activer/désactiver lieu',N'Activer/désactiver lieu'),
+(N'PARAMETRER_LIEU',N'Paramétrer lieu',N'Paramétrer lieu'),
+(N'ACCES_PARAMETRAGE_LIEU',N'Accès paramétrage lieu',N'Accès paramétrage lieu'),
+(N'LIEU_GERER',N'Gérer les lieux',N'Gérer les lieux'),
+(N'PARAMETRAGE_MATERIEL',N'Paramétrage matériel',N'Paramétrage matériel'),
+(N'ACCES_PARAMETRAGE_MATERIEL',N'Accès paramétrage matériel',N'Accès paramétrage matériel'),
+(N'ACCES_METROLOGIE',N'Accès métrologie',N'Accès métrologie'),
+(N'ACCES_CONVERSATION',N'Accès conversation',N'Accès conversation'),
+(N'MODULE_CONVERSATION',N'Module conversation',N'Module conversation'),
+(N'REALISER_AJUSTAGE_ETALONNAGE',N'Réaliser ajustage étalonnage',N'Réaliser ajustage étalonnage'),
+(N'ACCES_AJUSTAGE_ETALONNAGE',N'Accès ajustage étalonnage',N'Accès ajustage étalonnage'),
+(N'ACQUITTER_ALARMES_MULTI_LIEUX',N'Acquitter plusieurs lieux',N'Acquitter des alarmes sur plusieurs lieux');
+
+INSERT INTO dbo.t_autorisation (
+    Code_Autorisation,
+    Libelle_Autorisation,
+    Commentaire
+)
+SELECT
+    Code,
+    Libelle,
+    Commentaire
+FROM @BootstrapAuth a
+WHERE NOT EXISTS (
+    SELECT 1
+    FROM dbo.t_autorisation x
+    WHERE x.Code_Autorisation = a.Code
+);
 GO
 DECLARE @AdminProfilId INT = (SELECT TOP 1 Id_Profil FROM dbo.t_profil WHERE Profil_Utilisateur = N'Administrateurs');
 INSERT INTO dbo.t_liaison_profil_autorisation (Id_Profil, Id_Autorisation) SELECT @AdminProfilId, a.Id_Autorisation FROM dbo.t_autorisation a WHERE @AdminProfilId IS NOT NULL AND NOT EXISTS (SELECT 1 FROM dbo.t_liaison_profil_autorisation l WHERE l.Id_Profil = @AdminProfilId AND l.Id_Autorisation = a.Id_Autorisation);
