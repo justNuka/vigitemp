@@ -4,6 +4,7 @@ import { PrismaMssql } from "@prisma/adapter-mssql"
 
 import { PrismaClient } from "../generated/@prisma-db-main/client"
 import { PrismaClient as PrismaMesureClient } from "../generated/@prisma-db-mesures/client"
+import { parseMysqlConnectionUrl } from "./mysql-connection"
 
 type GlobalPrismaState = {
   prisma?: PrismaClient
@@ -32,8 +33,20 @@ function shouldUseMssql(url: string): boolean {
   return provider === "mssql" || provider === "sqlserver" || isMssqlUrl(url)
 }
 
+function createMysqlAdapter(url: string) {
+  const connection = parseMysqlConnectionUrl(url)
+  return new PrismaMariaDb({
+    host: connection.host,
+    port: connection.port,
+    user: connection.user,
+    password: connection.password,
+    database: connection.database,
+    allowPublicKeyRetrieval: connection.allowPublicKeyRetrieval,
+  })
+}
+
 function createAdapter(url: string) {
-  return shouldUseMssql(url) ? new PrismaMssql(url) : new PrismaMariaDb(url)
+  return shouldUseMssql(url) ? new PrismaMssql(url) : createMysqlAdapter(url)
 }
 
 const mainAdapter = createAdapter(mainDbUrl)
@@ -70,5 +83,4 @@ export const prismaMesure = new Proxy({} as PrismaMesureClient, {
     return (getPrismaMesureClient() as any)[prop]
   },
 })
-
 
