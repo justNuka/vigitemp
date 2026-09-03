@@ -5,6 +5,7 @@ import { getTranslations } from "next-intl/server";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DashboardClient } from "./dashboard-client";
 import { DashboardHeader } from "./dashboard-header";
+import { ServerAlarmHierarchy } from "./server-alarm-hierarchy";
 import {
   ServerActiveAlarms,
   ServerActiveAlarmTypeCounts,
@@ -50,6 +51,8 @@ export default async function DashboardPage({
       ServerAlarmTrendCount(),
     ]);
 
+  const alarmHierarchy = await ServerAlarmHierarchy(activeAlarms.map((alarm) => alarm.locationId));
+
   return (
     <div className="flex flex-col min-h-full dashboard-light">
       <DashboardHeader stats={stats} />
@@ -59,6 +62,7 @@ export default async function DashboardPage({
         <DashboardClient
           criticalSensors={criticalSensors}
           activeAlarms={activeAlarms}
+          alarmHierarchy={alarmHierarchy}
           alarmTypeCounts={alarmTypeCounts}
           sensorOverview={sensorOverview}
           totalActiveAlarms={stats.activeAlarms}

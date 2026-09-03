@@ -17,11 +17,13 @@ import { staggerContainer, fadeInUp } from "@/lib/motion-variants"
 import { DashboardActiveAlarmsSection } from "./_components/dashboard/dashboard-active-alarms-section"
 import { createDashboardAlarmColumns, buildAlarmRows } from "./_components/dashboard/dashboard-alarm-columns"
 import { DashboardTrendSection } from "./_components/dashboard/dashboard-trend-section"
+import type { DashboardAlarmHierarchy } from "./server-alarm-hierarchy"
 import type { DashboardAlarmTypeCounts } from "./server-dashboard"
 
 interface DashboardClientProps {
   criticalSensors: SensorWithLocation[]
   activeAlarms: AlarmWithDetails[]
+  alarmHierarchy: DashboardAlarmHierarchy
   alarmTypeCounts: DashboardAlarmTypeCounts
   sensorOverview: SensorWithLocation[]
   totalActiveAlarms: number
@@ -32,6 +34,7 @@ interface DashboardClientProps {
 export function DashboardClient({
   criticalSensors: _criticalSensors,
   activeAlarms,
+  alarmHierarchy,
   alarmTypeCounts,
   sensorOverview: _sensorOverview,
   totalActiveAlarms,
@@ -52,9 +55,32 @@ export function DashboardClient({
   const [selectedAlarm, setSelectedAlarm] = useState<AlarmWithDetails | null>(null)
   const [isAcknowledging] = useState(false)
 
+  const contextualizedAlarms = useMemo(
+    () => activeAlarms.map((alarm) => {
+      const hierarchy = alarmHierarchy[alarm.locationId]
+      if (!hierarchy) return alarm
+
+      return {
+        ...alarm,
+        sensor: {
+          ...alarm.sensor,
+          name: hierarchy.sensorName ?? alarm.sensor.name,
+        },
+        location: {
+          ...alarm.location,
+          name: hierarchy.locationName ?? alarm.location.name,
+          site: hierarchy.siteName ?? alarm.location.site,
+          groupNames: hierarchy.groupNames,
+          sondeNumeroSerie: hierarchy.sensorName ?? alarm.location.sondeNumeroSerie,
+        },
+      }
+    }),
+    [activeAlarms, alarmHierarchy],
+  )
+
   const localAlarms = useMemo(
-    () => activeAlarms.filter((alarm) => !locallyAcknowledgedIds.has(alarm.id)),
-    [activeAlarms, locallyAcknowledgedIds],
+    () => contextualizedAlarms.filter((alarm) => !locallyAcknowledgedIds.has(alarm.id)),
+    [contextualizedAlarms, locallyAcknowledgedIds],
   )
 
   const activeCount = useMemo(
@@ -150,6 +176,8 @@ export function DashboardClient({
               ? {
                   id: selectedAlarm.id,
                   locationId: selectedAlarm.locationId,
+                  siteName: selectedAlarm.location.site ?? null,
+                  groupNames: selectedAlarm.location.groupNames ?? [],
                   locationName: selectedAlarm.location.name,
                   sensorName: selectedAlarm.sensor.name,
                   type: selectedAlarm.type,
