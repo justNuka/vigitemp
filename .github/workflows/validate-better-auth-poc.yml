@@ -1,4 +1,4 @@
-name: Temporary Better Auth PoC validation
+name: Temporary BA-1 documentation finalization
 
 on:
   push:
@@ -6,107 +6,93 @@ on:
       - feature/better-auth-foundation-poc
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
-  mysql:
+  documentation:
     runs-on: ubuntu-24.04
-    services:
-      mysql:
-        image: mysql:8.0.44
-        env:
-          MYSQL_ROOT_PASSWORD: VigiSensysPocMysqlRoot2026
-          MYSQL_DATABASE: vigisensys_auth_poc
-          MYSQL_USER: vigisensys
-          MYSQL_PASSWORD: VigiSensysPocMysql2026
-        ports:
-          - 3306:3306
-        options: >-
-          --health-cmd="mysqladmin ping -h localhost -uroot -pVigiSensysPocMysqlRoot2026"
-          --health-interval=5s
-          --health-timeout=5s
-          --health-retries=20
-    defaults:
-      run:
-        working-directory: website
-    env:
-      DATABASE_PROVIDER: mysql
-      DATABASE_URL: mysql://vigisensys:VigiSensysPocMysql2026@127.0.0.1:3306/vigisensys_auth_poc?allowPublicKeyRetrieval=true
-      DATABASE_MESURES_URL: mysql://vigisensys:VigiSensysPocMysql2026@127.0.0.1:3306/vigisensys_auth_poc?allowPublicKeyRetrieval=true
-      DATABASE_CHAT_URL: mysql://vigisensys:VigiSensysPocMysql2026@127.0.0.1:3306/vigisensys_auth_poc?allowPublicKeyRetrieval=true
-      BETTER_AUTH_POC_ALLOW_SCHEMA_CHANGES: "1"
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 24
-      - name: Enable pnpm
-        run: corepack enable
-      - name: Install dependencies
+      - name: Record BA-1 result in architecture documentation
         run: |
-          pnpm config set dangerouslyAllowAllBuilds true
-          pnpm install --frozen-lockfile
-      - name: Generate Prisma MySQL
-        run: pnpm prisma:generate:mysql
-      - name: Better Auth integration test
-        run: pnpm test:better-auth-poc
-      - name: Typecheck
-        run: pnpm exec tsc --noEmit
-      - name: Lint
-        run: pnpm lint
+          python - <<'PY'
+          from pathlib import Path
 
-  mssql:
-    runs-on: ubuntu-24.04
-    services:
-      mssql:
-        image: mcr.microsoft.com/mssql/server:2022-latest
-        env:
-          ACCEPT_EULA: Y
-          MSSQL_SA_PASSWORD: VigiSensysPocSql2026!
-        ports:
-          - 1433:1433
-    defaults:
-      run:
-        working-directory: website
-    env:
-      DATABASE_PROVIDER: mssql
-      DATABASE_URL: sqlserver://127.0.0.1:1433;database=vigisensys_auth_poc;user=sa;password=VigiSensysPocSql2026!;encrypt=true;trustServerCertificate=true;schema=dbo
-      DATABASE_MESURES_URL: sqlserver://127.0.0.1:1433;database=vigisensys_auth_poc;user=sa;password=VigiSensysPocSql2026!;encrypt=true;trustServerCertificate=true;schema=dbo
-      DATABASE_CHAT_URL: sqlserver://127.0.0.1:1433;database=vigisensys_auth_poc;user=sa;password=VigiSensysPocSql2026!;encrypt=true;trustServerCertificate=true;schema=dbo
-      BETTER_AUTH_POC_ALLOW_SCHEMA_CHANGES: "1"
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 24
-      - name: Enable pnpm
-        run: corepack enable
-      - name: Wait for SQL Server and create disposable database
-        env:
-          MSSQL_CONTAINER_ID: ${{ job.services.mssql.id }}
-        run: |
-          set -euo pipefail
-          SQLCMD="$(docker exec "$MSSQL_CONTAINER_ID" sh -lc 'if [ -x /opt/mssql-tools18/bin/sqlcmd ]; then echo /opt/mssql-tools18/bin/sqlcmd; elif [ -x /opt/mssql-tools/bin/sqlcmd ]; then echo /opt/mssql-tools/bin/sqlcmd; fi')"
-          if [ -z "$SQLCMD" ]; then
-            echo "sqlcmd not found in SQL Server container"
-            exit 1
+          path = Path("docs/architecture/better-auth-migration.md")
+          text = path.read_text(encoding="utf-8")
+          heading = "#### État BA-1 — 03/09/2026"
+
+          if heading in text:
+              print("BA-1 status already documented")
+              raise SystemExit(0)
+
+          criterion = "Critère Go/No-Go : Better Auth doit fonctionner de façon identique sur les deux providers et permettre le mapping d'un utilisateur existant."
+          marker = criterion + "\n\n### Lot BA-2 — schéma versionné + provisioning/migration"
+          if marker not in text:
+              raise SystemExit("BA-1 documentation marker not found")
+
+          status = r'''
+
+#### État BA-1 — 03/09/2026
+
+Statut : **Go technique validé — PR #88 en revue**.
+
+Branche : `feature/better-auth-foundation-poc`.
+
+Implémentation réalisée :
+
+- Better Auth `1.7.2`, version stable `latest` revérifiée au démarrage effectif du PoC ;
+- handler temporaire `/api/auth-v2/[...all]`, désactivé par défaut avec `BETTER_AUTH_POC_ENABLED` ;
+- tables isolées `t_auth_poc_user`, `t_auth_poc_session`, `t_auth_poc_account` et `t_auth_poc_verification` ;
+- plugin Username sans normalisation afin de préserver les logins historiques ;
+- bcrypt pour le provider credentials ;
+- mapping explicite `vigisensysUserId` vers un `t_utilisateur` existant et non archivé ;
+- session serveur d'une durée absolue de 24 h, sans sliding refresh ni cookie cache ;
+- révocation serveur validée au logout ;
+- couche DB PoC compatible MySQL via `mysql2` et MSSQL via Kysely `MssqlDialect` / `tedious` / `tarn` ;
+- test d'intégration destructif protégé par un garde-fou imposant une base jetable PoC/test/CI.
+
+Un défaut latent de l'initialisation Prisma 7 MySQL a également été mis en évidence pendant le PoC : `PrismaMariaDb` recevait directement l'URL de connexion. Le helper central construit désormais explicitement la configuration de l'adapter depuis l'URL VigiSensys et respecte `allowPublicKeyRetrieval`, déjà présent dans les URLs générées par l'installeur Web.
+
+Validation automatisée finale, avec lockfile figé :
+
+- MySQL `8.0.44` : `pnpm install --frozen-lockfile`, génération Prisma MySQL, `pnpm test:better-auth-poc`, `tsc --noEmit`, ESLint — **OK** ;
+- SQL Server `2022` : `pnpm install --frozen-lockfile`, génération Prisma MSSQL, `pnpm test:better-auth-poc`, `tsc --noEmit`, ESLint — **OK** ;
+- run GitHub Actions de référence : `33763894690`.
+
+Principaux fichiers :
+
+- `website/src/lib/better-auth/poc/auth.ts` ;
+- `website/src/lib/better-auth/poc/database.ts` ;
+- `website/src/lib/better-auth/poc/vigisensys-identity.ts` ;
+- `website/src/app/api/auth-v2/[...all]/route.ts` ;
+- `website/scripts/test-better-auth-poc.ts` ;
+- `website/src/lib/mysql-connection.ts` ;
+- `website/src/lib/prisma.ts` ;
+- `website/package.json` / `website/pnpm-lock.yaml`.
+
+Non-régression / limites volontaires du lot :
+
+- aucun remplacement du login de production ;
+- aucun changement des cookies/JWT legacy ;
+- aucun schéma final Better Auth dans les seeds ou migrations client ;
+- aucune modification des règles CFR21, licence, permissions, profils ou groupes ;
+- aucun plugin 2FA, Magic Link, Email OTP, Microsoft ou SSO activé à ce stade.
+
+Après merge de la PR #88, le prochain lot est BA-2. Il devra repartir du nouveau HEAD réel de `dev` et versionner le schéma final ainsi que le provisioning/migration des comptes historiques.
+'''
+
+          text = text.replace(marker, criterion + status + "\n\n### Lot BA-2 — schéma versionné + provisioning/migration", 1)
+          path.write_text(text, encoding="utf-8")
+          PY
+
+          if git diff --quiet -- docs/architecture/better-auth-migration.md; then
+            echo "No documentation change required"
+            exit 0
           fi
-          for i in $(seq 1 30); do
-            if docker exec "$MSSQL_CONTAINER_ID" "$SQLCMD" -S localhost -U sa -P 'VigiSensysPocSql2026!' -C -Q 'SELECT 1' >/dev/null 2>&1; then
-              break
-            fi
-            sleep 2
-          done
-          docker exec "$MSSQL_CONTAINER_ID" "$SQLCMD" -S localhost -U sa -P 'VigiSensysPocSql2026!' -C -Q "IF DB_ID(N'vigisensys_auth_poc') IS NULL CREATE DATABASE vigisensys_auth_poc"
-      - name: Install dependencies
-        run: |
-          pnpm config set dangerouslyAllowAllBuilds true
-          pnpm install --frozen-lockfile
-      - name: Generate Prisma MSSQL
-        run: pnpm prisma:generate:mssql
-      - name: Better Auth integration test
-        run: pnpm test:better-auth-poc
-      - name: Typecheck
-        run: pnpm exec tsc --noEmit
-      - name: Lint
-        run: pnpm lint
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/architecture/better-auth-migration.md
+          git commit -m "docs(auth): consigner le résultat du PoC BA-1"
+          git push origin "HEAD:${GITHUB_REF_NAME}"
