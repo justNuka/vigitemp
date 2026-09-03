@@ -17,14 +17,17 @@ Les versions suivent `MAJOR.MINOR.PATCH` sans zéros de tête. La source de vers
 
 ### Téléphonie
 
-- Administration > Paramètres > Téléphonie dispose désormais d'un guide OVHcloud intégré, lisible en FR/EN et adapté mobile, qui explique le choix d'offre, la récupération du Billing Account/Service Name/Caller ID, la génération des clés API AK/AS/CK, la création Click2Call et l'ordre de test recommandé.
-- Le guide distingue explicitement le rôle actuel de Click2Call (validation de ligne, appel simple/manuellement déclenché) de l'architecture cible Asterisk/SIP pour les futures alarmes vocales automatisées avec audio/TTS, DTMF et scénarios d'escalade.
-- Le test terrain Click2Call a validé les credentials API OVHcloud et la création d'un utilisateur, mais l'appel a été refusé par l'offre souscrite (`Can't use this function with this offer.`) ; la trajectoire principale passe donc directement au PoC Asterisk/SIP.
-- Le provider Asterisk TEL-3 permet désormais de tester ARI depuis l'administration puis de déclencher un appel sortant vers `PJSIP/<numero>@ovh` ; après décroché, le dialplan du PoC joue un message audio local puis raccroche.
-- Un bundle reproductible `deploy/asterisk-poc/` construit Asterisk 22 avec PJSIP, ARI, G.711 et un message de test généré localement ; les credentials SIP/ARI réels restent dans un `.env` local ignoré par Git.
-- Les documentations `docs/architecture/telephony-architecture.md`, `docs/telephony-ovh-setup.md` et `docs/telephony-asterisk-poc.md` servent de références persistantes pour l'architecture voix, l'installation OVHcloud et le PoC Asterisk.
-- L'orchestration automatique des alarmes, les événements ARI temps réel, le DTMF et la qualification d'un acquittement métier restent explicitement hors du PoC TEL-3.
-- Aucune clé, aucun secret OVHcloud et aucun mot de passe SIP opérationnel n'est ajouté au dépôt ; les guides rappellent que les secrets restent hors Git et que les offres opérateur doivent être revérifiées au moment du déploiement.
+- Twilio devient le provider recommandé pour la V1 des alarmes vocales : le serveur VigiSensys utilise uniquement l'API REST HTTPS sortante, sans SIP/RTP, VM Linux, Asterisk ni port entrant requis chez le client standard.
+- Le provider `TwilioVoiceProvider` utilise directement la Calls API sans ajouter de SDK/dépendance Web ; il prend en charge API Key SID + Secret (recommandé) ou Account SID + Auth Token, le test de connexion et un appel de test avec TwiML inline/TTS `fr-FR`.
+- Le bouton **Tester la connexion** valide DNS/HTTPS/authentification et accès à la collection Calls ; **Tester l'appel** appelle un numéro E.164 et retourne le Call SID Twilio pour faciliter le diagnostic et préparer le futur suivi de statut.
+- La configuration Twilio impose désormais les champs requis selon le mode d'authentification et continue de chiffrer API Key Secret / Auth Token avec le mécanisme `secret-crypto` existant.
+- Administration > Paramètres > Téléphonie dispose d'un guide Twilio FR/EN complet couvrant compte client, Trial/production, API Keys, numérotation française compatible appels automatisés, sécurité, tests et diagnostic.
+- Le guide Twilio contient une section DSI directement transmissible au client : DNS, HTTPS TCP 443 sortant vers `api.twilio.com`, TLS 1.2/1.3, proxy/inspection TLS et préférence pour le filtrage FQDN ; il rappelle qu'aucun flux entrant, SIP 5060, RTP, NAT ou IP publique dédiée n'est nécessaire en V1.
+- La documentation `docs/telephony-twilio-setup.md` devient le guide opératoire de référence pour la V1 ; `docs/architecture/telephony-architecture.md` positionne Asterisk comme provider avancé/on-premise optionnel et OVH Click2Call comme provider simple dépendant de l'offre.
+- Le branchement automatique au moteur d'alarmes, la queue Voice persistante, le polling des Call SID, les contacts/escalades, les callbacks et le DTMF restent hors de ce premier lot et sont prévus en TEL-TW-2 à TEL-TW-5.
+- Le guide OVHcloud intégré reste disponible pour les installations utilisant OVH ; le test terrain Click2Call a validé les credentials API et la création d'un utilisateur, mais l'appel a été refusé par l'offre testée (`Can't use this function with this offer.`).
+- Le provider Asterisk TEL-3 mergé en PR #84 reste disponible pour les projets nécessitant une téléphonie SIP/on-premise ; son PoC permet de tester ARI puis un appel sortant avec message audio local.
+- Aucune clé ou secret Twilio/OVHcloud/SIP opérationnel n'est ajouté au dépôt.
 
 ### Métrologie
 
