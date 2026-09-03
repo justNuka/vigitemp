@@ -31,9 +31,9 @@ jobs:
         working-directory: website
     env:
       DATABASE_PROVIDER: mysql
-      DATABASE_URL: mysql://vigisensys:VigiSensysPocMysql2026@127.0.0.1:3306/vigisensys_auth_poc
-      DATABASE_MESURES_URL: mysql://vigisensys:VigiSensysPocMysql2026@127.0.0.1:3306/vigisensys_auth_poc
-      DATABASE_CHAT_URL: mysql://vigisensys:VigiSensysPocMysql2026@127.0.0.1:3306/vigisensys_auth_poc
+      DATABASE_URL: mysql://vigisensys:VigiSensysPocMysql2026@127.0.0.1:3306/vigisensys_auth_poc?allowPublicKeyRetrieval=true
+      DATABASE_MESURES_URL: mysql://vigisensys:VigiSensysPocMysql2026@127.0.0.1:3306/vigisensys_auth_poc?allowPublicKeyRetrieval=true
+      DATABASE_CHAT_URL: mysql://vigisensys:VigiSensysPocMysql2026@127.0.0.1:3306/vigisensys_auth_poc?allowPublicKeyRetrieval=true
       BETTER_AUTH_POC_ALLOW_SCHEMA_CHANGES: "1"
     steps:
       - uses: actions/checkout@v4
