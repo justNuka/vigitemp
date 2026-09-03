@@ -99,10 +99,14 @@ export function createDashboardAlarmColumns({
       header: t("table.columns.location_sensor"),
       cell: ({ row }) => {
         const alarm = row.original
+        const siteName = alarm.location.site?.trim() || "-"
+        const groupNames = alarm.location.groupNames?.filter(Boolean) ?? []
         return (
-          <div className="min-w-0">
-            <p className="font-medium truncate">{alarm.location.name}</p>
-            <p className="text-sm text-muted-foreground truncate">{alarm.sensor.name}</p>
+          <div className="min-w-0 space-y-0.5">
+            <p className="truncate text-xs font-medium text-muted-foreground">{siteName}</p>
+            <p className="truncate text-xs text-muted-foreground">{groupNames.length > 0 ? groupNames.join(" / ") : "-"}</p>
+            <p className="truncate font-medium">{alarm.location.name}</p>
+            <p className="truncate text-sm text-muted-foreground">{alarm.sensor.name}</p>
           </div>
         )
       },
