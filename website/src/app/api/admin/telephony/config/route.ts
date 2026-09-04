@@ -3,6 +3,7 @@ import { NextRequest } from "next/server"
 import { withAdminLogging, type HandlerContext } from "@/lib/api-wrappers"
 import { getRequestContext } from "@/lib/api-logger"
 import { apiError, apiOk } from "@/lib/api-response"
+import { requireTelephonyLicense } from "@/lib/license-guards"
 import { log } from "@/lib/logger"
 import {
   getTelephonyConfig,
@@ -13,6 +14,9 @@ import {
 } from "@/lib/telephony/config"
 
 export const GET = withAdminLogging(async (_req: NextRequest) => {
+  const licenseError = await requireTelephonyLicense()
+  if (licenseError) return licenseError
+
   try {
     const config = await getTelephonyConfig()
     return apiOk(config)
@@ -22,6 +26,9 @@ export const GET = withAdminLogging(async (_req: NextRequest) => {
 })
 
 export const PUT = withAdminLogging(async (req: NextRequest, ctx: HandlerContext) => {
+  const licenseError = await requireTelephonyLicense()
+  if (licenseError) return licenseError
+
   try {
     const { ip } = getRequestContext(req)
     const config = (await req.json()) as TelephonyConfig
