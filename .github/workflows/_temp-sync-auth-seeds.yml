@@ -1,0 +1,264 @@
+name: Temporary seed sync
+
+on:
+  push:
+    branches:
+      - fix/license-telephony-seed-readiness
+
+permissions:
+  contents: write
+
+jobs:
+  sync-seeds:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/license-telephony-seed-readiness
+          fetch-depth: 0
+
+      - name: Add Better Auth preparation to both seeds
+        shell: bash
+        run: |
+          python3 <<'PY'
+          from pathlib import Path
+
+          mysql_path = Path('db/vigisensys_seed.sql')
+          mssql_path = Path('db/vigisensys_seed_mssql.sql')
+
+          mysql = mysql_path.read_text(encoding='utf-8')
+          mssql = mssql_path.read_text(encoding='utf-8')
+
+          mysql_auth = r'''
+          -- =====================================================================
+          -- Better Auth - schema preparatoire (runtime legacy conserve)
+          -- =====================================================================
+          -- Ces tables preparent BA-2 sans activer Better Auth dans l'application.
+          -- t_utilisateur reste l'identite metier de reference.
+          DROP TABLE IF EXISTS `t_auth_session`;
+          DROP TABLE IF EXISTS `t_auth_account`;
+          DROP TABLE IF EXISTS `t_auth_verification`;
+          DROP TABLE IF EXISTS `t_auth_user`;
+
+          CREATE TABLE `t_auth_user` (
+            `id` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+            `name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+            `email` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+            `emailVerified` tinyint(1) NOT NULL DEFAULT '0',
+            `image` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+            `createdAt` datetime NOT NULL,
+            `updatedAt` datetime NOT NULL,
+            `username` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+            `displayUsername` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+            `vigisensysUserId` int DEFAULT NULL,
+            PRIMARY KEY (`id`),
+            UNIQUE KEY `UK_t_auth_user_email` (`email`),
+            UNIQUE KEY `UK_t_auth_user_username` (`username`),
+            UNIQUE KEY `UK_t_auth_user_vigisensys_user` (`vigisensysUserId`),
+            CONSTRAINT `FK_t_auth_user_vigisensys_user` FOREIGN KEY (`vigisensysUserId`) REFERENCES `t_utilisateur` (`Id_Utilisateur`) ON DELETE CASCADE ON UPDATE CASCADE
+          ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+          CREATE TABLE `t_auth_session` (
+            `id` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+            `expiresAt` datetime NOT NULL,
+            `token` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+            `createdAt` datetime NOT NULL,
+            `updatedAt` datetime NOT NULL,
+            `ipAddress` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+            `userAgent` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+            `userId` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+            PRIMARY KEY (`id`),
+            UNIQUE KEY `UK_t_auth_session_token` (`token`),
+            KEY `IDX_t_auth_session_user` (`userId`),
+            CONSTRAINT `FK_t_auth_session_user` FOREIGN KEY (`userId`) REFERENCES `t_auth_user` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+          ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+          CREATE TABLE `t_auth_account` (
+            `id` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+            `accountId` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+            `providerId` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+            `userId` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+            `accessToken` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+            `refreshToken` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+            `idToken` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+            `accessTokenExpiresAt` datetime DEFAULT NULL,
+            `refreshTokenExpiresAt` datetime DEFAULT NULL,
+            `scope` varchar(1024) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+            `password` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+            `createdAt` datetime NOT NULL,
+            `updatedAt` datetime NOT NULL,
+            PRIMARY KEY (`id`),
+            UNIQUE KEY `UK_t_auth_account_provider_account` (`providerId`,`accountId`),
+            KEY `IDX_t_auth_account_user` (`userId`),
+            CONSTRAINT `FK_t_auth_account_user` FOREIGN KEY (`userId`) REFERENCES `t_auth_user` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+          ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+          CREATE TABLE `t_auth_verification` (
+            `id` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+            `identifier` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+            `value` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+            `expiresAt` datetime NOT NULL,
+            `createdAt` datetime NOT NULL,
+            `updatedAt` datetime NOT NULL,
+            PRIMARY KEY (`id`),
+            KEY `IDX_t_auth_verification_identifier` (`identifier`)
+          ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+          '''.strip() + '\n\n'
+
+          mssql_auth = r'''
+          -- =====================================================================
+          -- Better Auth - schema preparatoire (runtime legacy conserve)
+          -- =====================================================================
+          -- Ces tables preparent BA-2 sans activer Better Auth dans l'application.
+          -- Conformement a ce seed SQL Server, les FK ne sont pas materialisees ici.
+          -- t_utilisateur reste l'identite metier de reference.
+          IF OBJECT_ID(N'dbo.t_auth_user', N'U') IS NULL
+          BEGIN
+            CREATE TABLE dbo.[t_auth_user] (
+              [id] VARCHAR(255) NOT NULL,
+              [name] NVARCHAR(255) NOT NULL,
+              [email] NVARCHAR(255) NOT NULL,
+              [emailVerified] BIT NOT NULL DEFAULT(0),
+              [image] NVARCHAR(MAX) NULL,
+              [createdAt] DATETIME2 NOT NULL,
+              [updatedAt] DATETIME2 NOT NULL,
+              [username] NVARCHAR(255) NULL,
+              [displayUsername] NVARCHAR(255) NULL,
+              [vigisensysUserId] INT NULL,
+              CONSTRAINT [PK_t_auth_user] PRIMARY KEY ([id])
+            );
+          END;
+          GO
+          IF OBJECT_ID(N'dbo.t_auth_user', N'U') IS NOT NULL
+          AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_auth_user') AND name=N'UK_t_auth_user_email')
+            CREATE UNIQUE INDEX [UK_t_auth_user_email] ON dbo.[t_auth_user] ([email]);
+          GO
+          IF OBJECT_ID(N'dbo.t_auth_user', N'U') IS NOT NULL
+          AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_auth_user') AND name=N'UK_t_auth_user_username')
+            CREATE UNIQUE INDEX [UK_t_auth_user_username] ON dbo.[t_auth_user] ([username]) WHERE [username] IS NOT NULL;
+          GO
+          IF OBJECT_ID(N'dbo.t_auth_user', N'U') IS NOT NULL
+          AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_auth_user') AND name=N'UK_t_auth_user_vigisensys_user')
+            CREATE UNIQUE INDEX [UK_t_auth_user_vigisensys_user] ON dbo.[t_auth_user] ([vigisensysUserId]) WHERE [vigisensysUserId] IS NOT NULL;
+          GO
+
+          IF OBJECT_ID(N'dbo.t_auth_session', N'U') IS NULL
+          BEGIN
+            CREATE TABLE dbo.[t_auth_session] (
+              [id] VARCHAR(255) NOT NULL,
+              [expiresAt] DATETIME2 NOT NULL,
+              [token] VARCHAR(255) NOT NULL,
+              [createdAt] DATETIME2 NOT NULL,
+              [updatedAt] DATETIME2 NOT NULL,
+              [ipAddress] VARCHAR(64) NULL,
+              [userAgent] NVARCHAR(512) NULL,
+              [userId] VARCHAR(255) NOT NULL,
+              CONSTRAINT [PK_t_auth_session] PRIMARY KEY ([id])
+            );
+          END;
+          GO
+          IF OBJECT_ID(N'dbo.t_auth_session', N'U') IS NOT NULL
+          AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_auth_session') AND name=N'UK_t_auth_session_token')
+            CREATE UNIQUE INDEX [UK_t_auth_session_token] ON dbo.[t_auth_session] ([token]);
+          GO
+          IF OBJECT_ID(N'dbo.t_auth_session', N'U') IS NOT NULL
+          AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_auth_session') AND name=N'IDX_t_auth_session_user')
+            CREATE INDEX [IDX_t_auth_session_user] ON dbo.[t_auth_session] ([userId]);
+          GO
+
+          IF OBJECT_ID(N'dbo.t_auth_account', N'U') IS NULL
+          BEGIN
+            CREATE TABLE dbo.[t_auth_account] (
+              [id] VARCHAR(255) NOT NULL,
+              [accountId] VARCHAR(255) NOT NULL,
+              [providerId] VARCHAR(255) NOT NULL,
+              [userId] VARCHAR(255) NOT NULL,
+              [accessToken] NVARCHAR(MAX) NULL,
+              [refreshToken] NVARCHAR(MAX) NULL,
+              [idToken] NVARCHAR(MAX) NULL,
+              [accessTokenExpiresAt] DATETIME2 NULL,
+              [refreshTokenExpiresAt] DATETIME2 NULL,
+              [scope] NVARCHAR(1024) NULL,
+              [password] VARCHAR(255) NULL,
+              [createdAt] DATETIME2 NOT NULL,
+              [updatedAt] DATETIME2 NOT NULL,
+              CONSTRAINT [PK_t_auth_account] PRIMARY KEY ([id])
+            );
+          END;
+          GO
+          IF OBJECT_ID(N'dbo.t_auth_account', N'U') IS NOT NULL
+          AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_auth_account') AND name=N'UK_t_auth_account_provider_account')
+            CREATE UNIQUE INDEX [UK_t_auth_account_provider_account] ON dbo.[t_auth_account] ([providerId], [accountId]);
+          GO
+          IF OBJECT_ID(N'dbo.t_auth_account', N'U') IS NOT NULL
+          AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_auth_account') AND name=N'IDX_t_auth_account_user')
+            CREATE INDEX [IDX_t_auth_account_user] ON dbo.[t_auth_account] ([userId]);
+          GO
+
+          IF OBJECT_ID(N'dbo.t_auth_verification', N'U') IS NULL
+          BEGIN
+            CREATE TABLE dbo.[t_auth_verification] (
+              [id] VARCHAR(255) NOT NULL,
+              [identifier] NVARCHAR(255) NOT NULL,
+              [value] NVARCHAR(MAX) NOT NULL,
+              [expiresAt] DATETIME2 NOT NULL,
+              [createdAt] DATETIME2 NOT NULL,
+              [updatedAt] DATETIME2 NOT NULL,
+              CONSTRAINT [PK_t_auth_verification] PRIMARY KEY ([id])
+            );
+          END;
+          GO
+          IF OBJECT_ID(N'dbo.t_auth_verification', N'U') IS NOT NULL
+          AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_auth_verification') AND name=N'IDX_t_auth_verification_identifier')
+            CREATE INDEX [IDX_t_auth_verification_identifier] ON dbo.[t_auth_verification] ([identifier]);
+          GO
+          '''.strip() + '\n\n'
+
+          mysql_marker = "CREATE DATABASE  IF NOT EXISTS `vigi_mesures`"
+          mssql_marker = "IF DB_ID(N'vigi_mesures') IS NULL"
+
+          if 'CREATE TABLE `t_auth_user`' not in mysql:
+              if mysql_marker not in mysql:
+                  raise SystemExit('MySQL insertion marker not found')
+              mysql = mysql.replace(mysql_marker, mysql_auth + mysql_marker, 1)
+
+          if 'CONSTRAINT [PK_t_auth_user]' not in mssql:
+              if mssql_marker not in mssql:
+                  raise SystemExit('MSSQL insertion marker not found')
+              mssql = mssql.replace(mssql_marker, mssql_auth + mssql_marker, 1)
+
+          mysql = mysql.replace('-- Version produit / seed : 0.90.1', '-- Version produit / seed : 0.90.2', 1)
+          mysql = mysql.replace("VALUES ('VERSION', 'SCHEMA_VERSION', '0.90.1',", "VALUES ('VERSION', 'SCHEMA_VERSION', '0.90.2',", 1)
+          mssql = mssql.replace('-- Version produit / seed : 0.90.1', '-- Version produit / seed : 0.90.2', 1)
+          mssql = mssql.replace("(N'VERSION',N'SCHEMA_VERSION',N'0.90.1',", "(N'VERSION',N'SCHEMA_VERSION',N'0.90.2',", 1)
+
+          mysql_path.write_text(mysql, encoding='utf-8', newline='\n')
+          mssql_path.write_text(mssql, encoding='utf-8', newline='\n')
+          PY
+
+      - name: Validate seed markers
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          for path in ('db/vigisensys_seed.sql', 'db/vigisensys_seed_mssql.sql'):
+              text = Path(path).read_text(encoding='utf-8')
+              for table in ('t_auth_user', 't_auth_session', 't_auth_account', 't_auth_verification'):
+                  if table not in text:
+                      raise SystemExit(f'{path}: missing {table}')
+              if '0.90.1' in text.splitlines()[0:10]:
+                  raise SystemExit(f'{path}: stale header version')
+          PY
+
+      - name: Commit synchronized seeds
+        shell: bash
+        run: |
+          if git diff --quiet -- db/vigisensys_seed.sql db/vigisensys_seed_mssql.sql; then
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add db/vigisensys_seed.sql db/vigisensys_seed_mssql.sql
+          git commit -m "chore(db): prepare Better Auth schema in seeds"
+          git push origin HEAD:fix/license-telephony-seed-readiness
