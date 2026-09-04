@@ -6,7 +6,34 @@ Pour la vue synthétique d'une livraison complète, voir [`../CHANGELOG.md`](../
 
 Le numéro indiqué ici correspond à la révision VigiSensys du bootstrap/seed. Il ne s'agit pas de la version du moteur MySQL ou SQL Server.
 
+## Règle de maintenance des évolutions BDD
+
+À partir de la révision `0.90.2`, toute modification de schéma doit être documentée ici avec les objets réellement modifiés.
+
+Pour chaque version BDD :
+
+- les seeds MySQL et SQL Server doivent rester à jour pour les nouvelles installations ;
+- les installations existantes doivent disposer des scripts `db/migrations/<version>/mysql.sql` et `db/migrations/<version>/mssql.sql` ;
+- le changelog doit citer explicitement chaque table et chaque colonne ajoutée, modifiée ou supprimée ;
+- pour une colonne ajoutée à une table existante, préciser au minimum le type par moteur, la nullabilité et la valeur par défaut ;
+- pour une nouvelle table, lister toutes les colonnes créées ;
+- `SCHEMA_VERSION` ne doit être mis à jour par une migration qu'après les modifications de schéma de la version concernée.
+
+La procédure complète d'upgrade des installations existantes est documentée dans [`migrations/README.md`](migrations/README.md).
+
 ## [Unreleased]
+
+### Objets et colonnes ajoutés — schéma 0.90.2
+
+| Table | Évolution | Colonnes ajoutées / définition |
+| --- | --- | --- |
+| `t_ajustage` | Colonne ajoutée | `Coeffs_Modifies_Depuis_Derniere_Mesure` — MySQL `tinyint(1) NOT NULL DEFAULT 0` ; SQL Server `bit NOT NULL DEFAULT 0` |
+| `t_auth_user` | Nouvelle table | `id`, `name`, `email`, `emailVerified`, `image`, `createdAt`, `updatedAt`, `username`, `displayUsername`, `vigisensysUserId` |
+| `t_auth_session` | Nouvelle table | `id`, `expiresAt`, `token`, `createdAt`, `updatedAt`, `ipAddress`, `userAgent`, `userId` |
+| `t_auth_account` | Nouvelle table | `id`, `accountId`, `providerId`, `userId`, `accessToken`, `refreshToken`, `idToken`, `accessTokenExpiresAt`, `refreshTokenExpiresAt`, `scope`, `password`, `createdAt`, `updatedAt` |
+| `t_auth_verification` | Nouvelle table | `id`, `identifier`, `value`, `expiresAt`, `createdAt`, `updatedAt` |
+
+Les quatre tables `t_auth_*` sont uniquement préparatoires dans cette version : Better Auth n'est pas réactivé dans le runtime.
 
 ### Préparation Better Auth / release 0.90.2
 
@@ -16,7 +43,18 @@ Le numéro indiqué ici correspond à la révision VigiSensys du bootstrap/seed.
 - Aucun objet temporaire `t_auth_poc_*` n'est introduit dans les seeds client.
 - Aucun compte Better Auth n'est provisionné par le seed et aucun runtime Better Auth n'est réactivé : l'authentification legacy reste la seule authentification active dans ce lot.
 - MySQL matérialise les relations Better Auth avec les clés étrangères adaptées ; SQL Server conserve la convention du seed existant qui ne matérialise pas les FK MySQL afin d'éviter les chemins de cascade incompatibles.
-- La colonne métrologie `t_ajustage.Coeffs_Modifies_Depuis_Derniere_Mesure`, déjà présente dans les deux seeds avant ce lot, a été vérifiée et conservée sans duplication.
+- La colonne métrologie `t_ajustage.Coeffs_Modifies_Depuis_Derniere_Mesure`, déjà présente dans les deux seeds avant ce lot de release readiness, a été vérifiée et conservée sans duplication.
+
+### Migrations d'installations existantes
+
+Le dossier `db/migrations/` devient la source de vérité pour les mises à niveau de bases déjà installées.
+
+Pour passer d'une base `0.90.1` à `0.90.2` :
+
+- MySQL : `db/migrations/0.90.2/mysql.sql` ;
+- SQL Server : `db/migrations/0.90.2/mssql.sql`.
+
+Ces scripts regroupent l'ensemble des changements de schéma `0.90.2` : colonne métrologie, tables préparatoires Better Auth et mise à jour finale de `SCHEMA_VERSION`.
 
 ### Qualité des données de seed
 
@@ -31,12 +69,13 @@ Le numéro indiqué ici correspond à la révision VigiSensys du bootstrap/seed.
 - La colonne est un booléen non nul, à `0` par défaut, disponible en MySQL et SQL Server.
 - Ce drapeau devient la source de synchronisation des coefficients A/B/C des parcours Ajustage / Étalonnage, y compris lorsqu'une sonde n'est affectée à aucun `t_lieu`.
 - `t_lieu.Infos_Modifiees_Depuis_Derniere_Mesure` reste réservé au mécanisme normal de configuration de Surveillance.
-- Les scripts de migration sont idempotents et doivent être appliqués avant d'utiliser la nouvelle synchronisation des coefficients.
+- Les scripts de migration sont idempotents autant que raisonnablement possible et doivent être appliqués avant d'utiliser la nouvelle synchronisation des coefficients.
 
 ### Références
 
-- `db/migrations/0.90.2_metrology_adjustment_coeff_dirty_mysql.sql`
-- `db/migrations/0.90.2_metrology_adjustment_coeff_dirty_mssql.sql`
+- `db/migrations/README.md`
+- `db/migrations/0.90.2/mysql.sql`
+- `db/migrations/0.90.2/mssql.sql`
 
 ## [0.90.1] — baseline de référence au 2026-08-27
 
