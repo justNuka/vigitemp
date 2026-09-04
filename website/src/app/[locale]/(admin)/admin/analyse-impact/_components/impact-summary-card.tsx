@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { emtModeFromDb } from "@/lib/emt"
+import { formatNumber } from "@/lib/number-display"
 import type { SelectedLieu } from "../impact-analysis-client"
 
 const EMT_MODE_TO_KEY: Record<string, "quart" | "manuel" | "uncertainties" | "sansObjet"> = {
@@ -85,7 +86,7 @@ export function ImpactSummaryCard({
             </div>
             <div className="flex justify-between">
               <dt className="text-muted-foreground">{t("summary.measureCount")}</dt>
-              <dd className="font-medium">{measureCount.toLocaleString(locale)}</dd>
+              <dd className="font-medium">{formatNumber(measureCount, { locale, decimals: 0 })}</dd>
             </div>
           </dl>
         </CardContent>

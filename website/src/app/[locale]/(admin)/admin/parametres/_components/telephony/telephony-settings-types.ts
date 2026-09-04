@@ -37,6 +37,9 @@ export type TelephonyCopy = {
   description: string
   warning: string
   frontOnly: string
+  licenseLockedTitle: string
+  licenseLockedDescription: string
+  recommendedProviderBadge: string
   enabled: string
   provider: string
   callerId: string

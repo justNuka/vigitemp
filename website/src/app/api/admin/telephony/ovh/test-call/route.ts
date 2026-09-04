@@ -2,10 +2,14 @@ import { NextRequest } from "next/server"
 
 import { withAdminLogging } from "@/lib/api-wrappers"
 import { apiError, apiOk } from "@/lib/api-response"
+import { requireTelephonyLicense } from "@/lib/license-guards"
 import { getTelephonyConfig } from "@/lib/telephony/config"
 import { OvhVoipProvider } from "@/lib/telephony/ovh-provider"
 
 export const POST = withAdminLogging(async (req: NextRequest) => {
+  const licenseError = await requireTelephonyLicense()
+  if (licenseError) return licenseError
+
   try {
     const body = (await req.json()) as { to?: string }
     const to = body.to?.trim() || ""

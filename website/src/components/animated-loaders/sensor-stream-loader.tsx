@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useMemo } from "react";
 import { motion, AnimatePresence } from "motion/react";
+import { formatNumber } from "@/lib/number-display";
 
 interface SensorStreamLoaderProps {
   /** Main status text displayed at the top */
@@ -70,7 +71,8 @@ function generateRandomValue(index: number): string {
   ];
   const [min, max] = ranges[index % ranges.length];
   const val = min + deterministicFraction(index + 1) * (max - min);
-  return val < 10 ? val.toFixed(2) : val < 100 ? val.toFixed(1) : val.toFixed(0);
+  const decimals = val < 10 ? 2 : val < 100 ? 1 : 0;
+  return formatNumber(val, { decimals, locale: "en-US", grouping: false });
 }
 
 export default function SensorStreamLoader({

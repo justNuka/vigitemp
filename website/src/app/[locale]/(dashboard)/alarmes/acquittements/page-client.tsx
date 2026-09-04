@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/select"
 import { getJson } from "@/lib/http"
 import { formatDbDateTime } from "@/lib/date-display"
+import { formatNumber } from "@/lib/number-display"
 import { useRouter } from "@/i18n/navigation"
 import { cn } from "@/lib/utils"
 
@@ -63,10 +64,11 @@ function formatAlarmValueForDisplay(value: string | null, locale: string) {
   const numericValue = Number.parseFloat(match[1].replace(",", "."))
   if (!Number.isFinite(numericValue)) return trimmed
 
-  const formatted = new Intl.NumberFormat(locale, {
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 2,
-  }).format(numericValue)
+  const formatted = formatNumber(numericValue, {
+    locale,
+    minimumDecimals: 0,
+    maximumDecimals: 2,
+  })
   const unit = match[2]?.trim()
   return unit ? `${formatted} ${unit}` : formatted
 }
@@ -189,9 +191,9 @@ export function AlarmAcknowledgmentHistoryClient() {
         header: t("table.columns.acknowledgedAt"),
         meta: {
           exportLabel: t("table.columns.acknowledgedAt"),
-          exportValue: (row: AckHistoryItem) => row.acknowledgedAt ? formatDbDateTime(row.acknowledgedAt) : "-",
+          exportValue: (row: AckHistoryItem) => row.acknowledgedAt ? formatDbDateTime(row.acknowledgedAt, { format: "dateTimeSeconds" }) : "-",
         },
-        cell: ({ row }) => row.original.acknowledgedAt ? formatDbDateTime(row.original.acknowledgedAt) : "-",
+        cell: ({ row }) => row.original.acknowledgedAt ? formatDbDateTime(row.original.acknowledgedAt, { format: "dateTimeSeconds" }) : "-",
       },
       {
         accessorKey: "acknowledgedBy",
@@ -256,19 +258,19 @@ export function AlarmAcknowledgmentHistoryClient() {
         meta: {
           exportLabel: t("table.columns.period"),
           exportValue: (row: AckHistoryItem) => [
-            `${t("table.period.start")} ${row.triggeredAt ? formatDbDateTime(row.triggeredAt) : "-"}`,
-            `${t("table.period.end")} ${row.endedAt ? formatDbDateTime(row.endedAt) : "-"}`,
+            `${t("table.period.start")} ${row.triggeredAt ? formatDbDateTime(row.triggeredAt, { format: "dateTimeSeconds" }) : "-"}`,
+            `${t("table.period.end")} ${row.endedAt ? formatDbDateTime(row.endedAt, { format: "dateTimeSeconds" }) : "-"}`,
           ].join(" / "),
         },
         cell: ({ row }) => (
           <div className="space-y-1 text-xs">
             <div>
               <span className="text-muted-foreground">{t("table.period.start")} </span>
-              <span>{row.original.triggeredAt ? formatDbDateTime(row.original.triggeredAt) : "-"}</span>
+              <span>{row.original.triggeredAt ? formatDbDateTime(row.original.triggeredAt, { format: "dateTimeSeconds" }) : "-"}</span>
             </div>
             <div>
               <span className="text-muted-foreground">{t("table.period.end")} </span>
-              <span>{row.original.endedAt ? formatDbDateTime(row.original.endedAt) : "-"}</span>
+              <span>{row.original.endedAt ? formatDbDateTime(row.original.endedAt, { format: "dateTimeSeconds" }) : "-"}</span>
             </div>
           </div>
         ),

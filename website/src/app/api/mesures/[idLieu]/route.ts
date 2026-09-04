@@ -13,12 +13,7 @@ import { getGlobalNonResponseDefault } from "@/lib/non-response-preference"
 import { canUserAccessLieu } from "@/lib/location-access-scope"
 import { log } from "@/lib/logger"
 import { normalizeMeasureNumber } from "@/lib/measurements"
-
-function normalizeDisplayUnit(unit: string | null | undefined): string {
-  const normalized = unit?.trim()
-  if (!normalized) return "°C"
-  return normalized.toUpperCase() === "C" ? "°C" : normalized
-}
+import { resolveSensorDisplayUnit } from "@/lib/sensor-unit"
 
 export const GET = withAuthLogging(
   async (req: NextRequest, ctx: HandlerContext, { params }: { params: Promise<{ idLieu: string }> }) => {
@@ -169,6 +164,11 @@ export const GET = withAuthLogging(
             Type_Lieu: true,
             Derniere_Unite: true,
             Sonde_Numero_Serie: true,
+            t_sonde: {
+              select: {
+                t_sonde_type: { select: { Unite: true } },
+              },
+            },
             Est_Consigne_Sup_Active: true,
             Est_Consigne_Inf_Active: true,
           },
@@ -185,19 +185,26 @@ export const GET = withAuthLogging(
 
       const measurements = primaryMeasurements
 
-      const calibration = lieu?.Sonde_Numero_Serie
-        ? await prisma.t_etalonnage.findFirst({
-            where: {
-              Sonde_Numero_Serie: lieu.Sonde_Numero_Serie,
-              Unite: { not: null },
-            },
-            orderBy: [
-              { Date_Heure_Etalonnage: "desc" },
-              { Id_Etalonnage: "desc" },
-            ],
-            select: { Unite: true },
-          })
-        : null
+      const [adjustment, calibration] = lieu?.Sonde_Numero_Serie
+        ? await Promise.all([
+            prisma.t_ajustage.findFirst({
+              where: {
+                Sonde_Numero_Serie: lieu.Sonde_Numero_Serie,
+                Unite: { not: null },
+              },
+              orderBy: [{ Date_Heure_Ajustage: "desc" }, { Id_Ajustage: "desc" }],
+              select: { Unite: true },
+            }),
+            prisma.t_etalonnage.findFirst({
+              where: {
+                Sonde_Numero_Serie: lieu.Sonde_Numero_Serie,
+                Unite: { not: null },
+              },
+              orderBy: [{ Date_Heure_Etalonnage: "desc" }, { Id_Etalonnage: "desc" }],
+              select: { Unite: true },
+            }),
+          ])
+        : [null, null]
 
             const consigneSupLieu =
         lieu?.Est_Consigne_Sup_Active === false
@@ -229,8 +236,8 @@ export const GET = withAuthLogging(
               : Boolean(m.Est_Valeur_Memoire)
             : false
 
-        const dateDisplay = formatDbDateTime(dateHeure, { withSeconds: false })
-        const dateXaxis = formatDbDateTime(dateHeure, { timeOnly: true, withSeconds: false })
+        const dateDisplay = formatDbDateTime(dateHeure, { format: "dateTime" })
+        const dateXaxis = formatDbDateTime(dateHeure, { format: "time" })
         const resolvedDecimals =
           m.Nb_Decimal !== null && m.Nb_Decimal !== undefined
             ? Number(m.Nb_Decimal)
@@ -245,7 +252,13 @@ export const GET = withAuthLogging(
               ? null
               : normalizeMeasureNumber(parseFloat(m.Valeur.toString()), resolvedDecimals ?? 2),
           Nb_Decimal: resolvedDecimals,
-          Unite: normalizeDisplayUnit(calibration?.Unite ?? lieu?.Derniere_Unite ?? m.Unite),
+          Unite: resolveSensorDisplayUnit({
+            adjustmentUnit: adjustment?.Unite,
+            sensorTypeUnit: lieu?.t_sonde?.t_sonde_type?.Unite,
+            calibrationUnit: calibration?.Unite,
+            locationUnit: lieu?.Derniere_Unite,
+            measurementUnit: m.Unite,
+          }),
           DateHeureMesure: dateDisplay,
           DateHeureMesureIso: dateHeure,
           DateHeureMesureXaxis: dateXaxis,

@@ -1,0 +1,17 @@
+[general]
+static=yes
+writeprotect=yes
+clearglobalvars=no
+
+[globals]
+
+[vigisensys-test]
+exten => s,1,NoOp(VigiSensys Asterisk test call)
+ same => n,Answer()
+ same => n,Wait(1)
+ same => n,Playback(custom/vigisensys-test)
+ same => n,Hangup()
+
+[from-ovh]
+exten => _X!,1,NoOp(Inbound OVH call ignored by TEL-3 PoC)
+ same => n,Hangup()

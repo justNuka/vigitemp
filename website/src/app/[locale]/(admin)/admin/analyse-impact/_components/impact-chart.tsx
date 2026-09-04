@@ -167,7 +167,6 @@ export function ImpactChart({
   const chartRef = useRef<ChartJS<"line"> | null>(null)
   const [zoomBounds, setZoomBounds] = useState<ZoomBounds | null>(null)
 
-  // Register zoom plugin dynamically (same pattern as monitoring-details-modal)
   useEffect(() => {
     if (isImpactChartZoomPluginRegistered) return
     let cancelled = false
@@ -185,7 +184,6 @@ export function ImpactChart({
     }
   }, [])
 
-  // Notify parent when chart is ready
   useEffect(() => {
     if (chartRef.current && onChartReady) {
       onChartReady(chartRef.current)
@@ -292,9 +290,8 @@ export function ImpactChart({
               const label = labels[index]
               if (!label) return ""
               return formatDbDateTime(label, {
+                format: "dateTimeShort",
                 locale: localeTag,
-                withSeconds: false,
-                withYear: false,
                 fallback: label,
               })
             },
@@ -310,9 +307,8 @@ export function ImpactChart({
               const label = labels[index]
               if (!label) return ""
               return formatDbDateTime(label, {
+                format: "dateTimeShort",
                 locale: localeTag,
-                withSeconds: false,
-                withYear: false,
                 fallback: label,
               })
             },
@@ -339,8 +335,8 @@ export function ImpactChart({
             const label = items[0]?.label
             if (!label) return ""
             return formatDbDateTime(label, {
+              format: "dateTime",
               locale: localeTag,
-              withSeconds: false,
               fallback: label,
             })
           },
@@ -359,7 +355,6 @@ export function ImpactChart({
           onPanComplete: ({ chart }: { chart: ChartJS<"line"> }) => captureZoomBounds(chart),
         },
         zoom: {
-          // Drag désactivé : le glissement est réservé au pan
           drag: { enabled: false },
           wheel: { enabled: true },
           pinch: { enabled: true },

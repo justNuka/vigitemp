@@ -1,11 +1,20 @@
 -- =====================================================================
 -- BOOTSTRAP SQL SERVER VigiSensys
--- Version produit / seed : 0.90.1
+-- Version produit / seed : 0.90.2
 -- DDL traduit depuis le dump schema courant MySQL du 2026-08-25.
 -- Les FK MySQL ne sont pas reproduites: SQL Server ne prend pas en
 -- charge ON UPDATE CASCADE et refuse certains chemins de cascade multiples.
 -- Colonnes, cles primaires, unicites et index sont conserves.
 -- =====================================================================
+
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+SET ANSI_PADDING ON;
+SET ANSI_WARNINGS ON;
+SET ARITHABORT ON;
+SET CONCAT_NULL_YIELDS_NULL ON;
+SET NUMERIC_ROUNDABORT OFF;
+GO
 
 IF DB_ID(N'vigi_chat') IS NULL
 BEGIN
@@ -1751,6 +1760,113 @@ AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_vigi
   CREATE INDEX [FK_t_vigilog_usage_ponctuel_logger] ON dbo.[t_vigilog_usage_ponctuel] ([Id_VigiLog]);
 GO
 
+-- =====================================================================
+-- Better Auth - schema preparatoire (runtime legacy conserve)
+-- =====================================================================
+-- Ces tables preparent BA-2 sans activer Better Auth dans l'application.
+-- Conformement a ce seed SQL Server, les FK ne sont pas materialisees ici.
+-- t_utilisateur reste l'identite metier de reference.
+IF OBJECT_ID(N'dbo.t_auth_user', N'U') IS NULL
+BEGIN
+  CREATE TABLE dbo.[t_auth_user] (
+    [id] VARCHAR(255) NOT NULL,
+    [name] NVARCHAR(255) NOT NULL,
+    [email] NVARCHAR(255) NOT NULL,
+    [emailVerified] BIT NOT NULL DEFAULT(0),
+    [image] NVARCHAR(MAX) NULL,
+    [createdAt] DATETIME2 NOT NULL,
+    [updatedAt] DATETIME2 NOT NULL,
+    [username] NVARCHAR(255) NULL,
+    [displayUsername] NVARCHAR(255) NULL,
+    [vigisensysUserId] INT NULL,
+    CONSTRAINT [PK_t_auth_user] PRIMARY KEY ([id])
+  );
+END;
+GO
+IF OBJECT_ID(N'dbo.t_auth_user', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_auth_user') AND name=N'UK_t_auth_user_email')
+  CREATE UNIQUE INDEX [UK_t_auth_user_email] ON dbo.[t_auth_user] ([email]);
+GO
+IF OBJECT_ID(N'dbo.t_auth_user', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_auth_user') AND name=N'UK_t_auth_user_username')
+  CREATE UNIQUE INDEX [UK_t_auth_user_username] ON dbo.[t_auth_user] ([username]) WHERE [username] IS NOT NULL;
+GO
+IF OBJECT_ID(N'dbo.t_auth_user', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_auth_user') AND name=N'UK_t_auth_user_vigisensys_user')
+  CREATE UNIQUE INDEX [UK_t_auth_user_vigisensys_user] ON dbo.[t_auth_user] ([vigisensysUserId]) WHERE [vigisensysUserId] IS NOT NULL;
+GO
+
+IF OBJECT_ID(N'dbo.t_auth_session', N'U') IS NULL
+BEGIN
+  CREATE TABLE dbo.[t_auth_session] (
+    [id] VARCHAR(255) NOT NULL,
+    [expiresAt] DATETIME2 NOT NULL,
+    [token] VARCHAR(255) NOT NULL,
+    [createdAt] DATETIME2 NOT NULL,
+    [updatedAt] DATETIME2 NOT NULL,
+    [ipAddress] VARCHAR(64) NULL,
+    [userAgent] NVARCHAR(512) NULL,
+    [userId] VARCHAR(255) NOT NULL,
+    CONSTRAINT [PK_t_auth_session] PRIMARY KEY ([id])
+  );
+END;
+GO
+IF OBJECT_ID(N'dbo.t_auth_session', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_auth_session') AND name=N'UK_t_auth_session_token')
+  CREATE UNIQUE INDEX [UK_t_auth_session_token] ON dbo.[t_auth_session] ([token]);
+GO
+IF OBJECT_ID(N'dbo.t_auth_session', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_auth_session') AND name=N'IDX_t_auth_session_user')
+  CREATE INDEX [IDX_t_auth_session_user] ON dbo.[t_auth_session] ([userId]);
+GO
+
+IF OBJECT_ID(N'dbo.t_auth_account', N'U') IS NULL
+BEGIN
+  CREATE TABLE dbo.[t_auth_account] (
+    [id] VARCHAR(255) NOT NULL,
+    [accountId] VARCHAR(255) NOT NULL,
+    [providerId] VARCHAR(255) NOT NULL,
+    [userId] VARCHAR(255) NOT NULL,
+    [accessToken] NVARCHAR(MAX) NULL,
+    [refreshToken] NVARCHAR(MAX) NULL,
+    [idToken] NVARCHAR(MAX) NULL,
+    [accessTokenExpiresAt] DATETIME2 NULL,
+    [refreshTokenExpiresAt] DATETIME2 NULL,
+    [scope] NVARCHAR(1024) NULL,
+    [password] VARCHAR(255) NULL,
+    [createdAt] DATETIME2 NOT NULL,
+    [updatedAt] DATETIME2 NOT NULL,
+    CONSTRAINT [PK_t_auth_account] PRIMARY KEY ([id])
+  );
+END;
+GO
+IF OBJECT_ID(N'dbo.t_auth_account', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_auth_account') AND name=N'UK_t_auth_account_provider_account')
+  CREATE UNIQUE INDEX [UK_t_auth_account_provider_account] ON dbo.[t_auth_account] ([providerId], [accountId]);
+GO
+IF OBJECT_ID(N'dbo.t_auth_account', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_auth_account') AND name=N'IDX_t_auth_account_user')
+  CREATE INDEX [IDX_t_auth_account_user] ON dbo.[t_auth_account] ([userId]);
+GO
+
+IF OBJECT_ID(N'dbo.t_auth_verification', N'U') IS NULL
+BEGIN
+  CREATE TABLE dbo.[t_auth_verification] (
+    [id] VARCHAR(255) NOT NULL,
+    [identifier] NVARCHAR(255) NOT NULL,
+    [value] NVARCHAR(MAX) NOT NULL,
+    [expiresAt] DATETIME2 NOT NULL,
+    [createdAt] DATETIME2 NOT NULL,
+    [updatedAt] DATETIME2 NOT NULL,
+    CONSTRAINT [PK_t_auth_verification] PRIMARY KEY ([id])
+  );
+END;
+GO
+IF OBJECT_ID(N'dbo.t_auth_verification', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_auth_verification') AND name=N'IDX_t_auth_verification_identifier')
+  CREATE INDEX [IDX_t_auth_verification_identifier] ON dbo.[t_auth_verification] ([identifier]);
+GO
+
 IF DB_ID(N'vigi_mesures') IS NULL
 BEGIN
   CREATE DATABASE [vigi_mesures];
@@ -1867,6 +1983,41 @@ BEGIN
   );
 END;
 GO
+
+INSERT INTO [tm_journal_code] ([Code_Journal], [Commentaire])
+VALUES
+    ('AACT', 'Association d''un module d''alarme'),
+    ('ACQ', 'Acquittement alarme'),
+    ('ACT', 'Activer la surveillance'),
+    ('ACTU', 'Reactivation de l''utilisateur'),
+    ('AIM', 'Analyse d''impact des mesures'),
+    ('AJE', 'Ajoute evenement manuel'),
+    ('ARC', 'Archivage des données'),
+    ('AS', 'Arret de la surveillance'),
+    ('AT', 'Activation de la surveillance telephonique'),
+    ('CA', 'Demarrage d''un calibrage pour la sonde'),
+    ('CC', 'Changement sur un element'),
+    ('CDA', 'Changement d''etat du datalogger'),
+    ('CF', 'Changement de frequence'),
+    ('CONNEXION', 'Connexion de l''utilisateur'),
+    ('CR', 'Changement de retard d''alarme'),
+    ('CS', 'Changement de sonde'),
+    ('DECONNEXION', 'Deconnexion de l''utilisateur'),
+    ('DES', 'Desactiver la surveillance'),
+    ('DS', 'Demarrage de la surveillance'),
+    ('DT', 'Desactivation de la surveillance telephonique'),
+    ('ET', 'Demarrage d''un etalonnage pour la sonde'),
+    ('FERMSURV', 'Fermeture de la fenètre de surveillance'),
+    ('GRPH', 'Ouverture d''un graphique'),
+    ('IMP', 'Import de donnees'),
+    ('MDP', 'Changement fiche utilisateur'),
+    ('PLAN', 'Modification du planning'),
+    ('PS', 'Le gestionnaire de port serie virtuel relancé'),
+    ('SACT', 'Suppression du module d''alarme associée'),
+    ('TC', 'Test de connexion de la sonde'),
+    ('TEL', 'Systeme'),
+    ('UT', ''),
+    ('VLOG', 'Action VigiLog');
 
 IF OBJECT_ID(N'dbo.tm_journal_commentaire_libre', N'U') IS NULL
 BEGIN
@@ -2520,37 +2671,58 @@ ON target.Type_Etalon = source.Type_Etalon
 WHEN MATCHED THEN UPDATE SET Nom = source.Nom, Descriptif = source.Descriptif, Est_Saisie_Module = source.Est_Saisie_Module, Est_Sonde_Externe = source.Est_Sonde_Externe, Resolution = source.Resolution
 WHEN NOT MATCHED THEN INSERT (Type_Etalon, Nom, Descriptif, Est_Saisie_Module, Est_Sonde_Externe, Resolution) VALUES (source.Type_Etalon, source.Nom, source.Descriptif, source.Est_Saisie_Module, source.Est_Sonde_Externe, source.Resolution);
 GO
-DECLARE @BootstrapAuth TABLE (Code NVARCHAR(50), Libelle NVARCHAR(100));
-INSERT INTO @BootstrapAuth (Code, Libelle) VALUES
-(N'ACCES_DASHBOARD_UTILISATEUR',N'Accès dashboard utilisateur'),
-(N'ACCES_TABLEAU_BORD_UTILISATEUR',N'Accès tableau de bord utilisateur'),
-(N'ACCES_DASHBOARD_USER',N'Accès dashboard user'),
-(N'ACCES_SURVEILLANCE',N'Accès surveillance'),
-(N'LIEU_VISUALISER',N'Visualiser les lieux'),
-(N'ALARMES_GERER',N'Gérer les alarmes'),
-(N'ACCES_DASHBOARD_ADMIN',N'Accès dashboard admin'),
-(N'ACCES_TABLEAU_BORD_ADMIN',N'Accès tableau de bord admin'),
-(N'ACCES_ADMIN',N'Accès admin'),
-(N'ACCES_PARAMETRAGE_GENERAL',N'Accès paramétrage général'),
-(N'PARAMETRAGE_GENERAL',N'Paramétrage général'),
-(N'GERER_PROFIL',N'Gérer les profils'),
-(N'PARAMETRES_GERER',N'Gérer les paramètres'),
-(N'ACQUITTER_ALARME',N'Acquitter alarme'),
-(N'ACCES_ACQUITTEMENT_ALARME',N'Accès acquittement alarme'),
-(N'DESACTIVER_LIEU',N'Désactiver lieu'),
-(N'ACCES_DESACTIVATION_LIEU',N'Accès désactivation lieu'),
-(N'LIEU_ACTIV_DESACT',N'Activer/désactiver lieu'),
-(N'PARAMETRER_LIEU',N'Paramétrer lieu'),
-(N'ACCES_PARAMETRAGE_LIEU',N'Accès paramétrage lieu'),
-(N'LIEU_GERER',N'Gérer les lieux'),
-(N'PARAMETRAGE_MATERIEL',N'Paramétrage matériel'),
-(N'ACCES_PARAMETRAGE_MATERIEL',N'Accès paramétrage matériel'),
-(N'ACCES_METROLOGIE',N'Accès métrologie'),
-(N'ACCES_CONVERSATION',N'Accès conversation'),
-(N'MODULE_CONVERSATION',N'Module conversation'),
-(N'REALISER_AJUSTAGE_ETALONNAGE',N'Réaliser ajustage étalonnage'),
-(N'ACCES_AJUSTAGE_ETALONNAGE',N'Accès ajustage étalonnage');
-INSERT INTO dbo.t_autorisation (Code_Autorisation, Libelle_Autorisation, Commentaire) SELECT Code, Libelle, Libelle FROM @BootstrapAuth a WHERE NOT EXISTS (SELECT 1 FROM dbo.t_autorisation x WHERE x.Code_Autorisation = a.Code);
+DECLARE @BootstrapAuth TABLE (
+    Code NVARCHAR(50),
+    Libelle NVARCHAR(100),
+    Commentaire NVARCHAR(255)
+);
+
+INSERT INTO @BootstrapAuth (Code, Libelle, Commentaire) VALUES
+(N'ACCES_DASHBOARD_UTILISATEUR',N'Accès dashboard utilisateur',N'Accès dashboard utilisateur'),
+(N'ACCES_TABLEAU_BORD_UTILISATEUR',N'Accès tableau de bord utilisateur',N'Accès tableau de bord utilisateur'),
+(N'ACCES_DASHBOARD_USER',N'Accès dashboard user',N'Accès dashboard user'),
+(N'ACCES_SURVEILLANCE',N'Accès surveillance',N'Accès surveillance'),
+(N'LIEU_VISUALISER',N'Visualiser les lieux',N'Visualiser les lieux'),
+(N'ALARMES_GERER',N'Gérer les alarmes',N'Gérer les alarmes'),
+(N'ACCES_DASHBOARD_ADMIN',N'Accès dashboard admin',N'Accès dashboard admin'),
+(N'ACCES_TABLEAU_BORD_ADMIN',N'Accès tableau de bord admin',N'Accès tableau de bord admin'),
+(N'ACCES_ADMIN',N'Accès admin',N'Accès admin'),
+(N'ACCES_PARAMETRAGE_GENERAL',N'Accès paramétrage général',N'Accès paramétrage général'),
+(N'PARAMETRAGE_GENERAL',N'Paramétrage général',N'Paramétrage général'),
+(N'GERER_PROFIL',N'Gérer les profils',N'Gérer les profils'),
+(N'PARAMETRES_GERER',N'Gérer les paramètres',N'Gérer les paramètres'),
+(N'ACQUITTER_ALARME',N'Acquitter alarme',N'Acquitter alarme'),
+(N'ACCES_ACQUITTEMENT_ALARME',N'Accès acquittement alarme',N'Accès acquittement alarme'),
+(N'DESACTIVER_LIEU',N'Désactiver lieu',N'Désactiver lieu'),
+(N'ACCES_DESACTIVATION_LIEU',N'Accès désactivation lieu',N'Accès désactivation lieu'),
+(N'LIEU_ACTIV_DESACT',N'Activer/désactiver lieu',N'Activer/désactiver lieu'),
+(N'PARAMETRER_LIEU',N'Paramétrer lieu',N'Paramétrer lieu'),
+(N'ACCES_PARAMETRAGE_LIEU',N'Accès paramétrage lieu',N'Accès paramétrage lieu'),
+(N'LIEU_GERER',N'Gérer les lieux',N'Gérer les lieux'),
+(N'PARAMETRAGE_MATERIEL',N'Paramétrage matériel',N'Paramétrage matériel'),
+(N'ACCES_PARAMETRAGE_MATERIEL',N'Accès paramétrage matériel',N'Accès paramétrage matériel'),
+(N'ACCES_METROLOGIE',N'Accès métrologie',N'Accès métrologie'),
+(N'ACCES_CONVERSATION',N'Accès conversation',N'Accès conversation'),
+(N'MODULE_CONVERSATION',N'Module conversation',N'Module conversation'),
+(N'REALISER_AJUSTAGE_ETALONNAGE',N'Réaliser ajustage étalonnage',N'Réaliser ajustage étalonnage'),
+(N'ACCES_AJUSTAGE_ETALONNAGE',N'Accès ajustage étalonnage',N'Accès ajustage étalonnage'),
+(N'ACQUITTER_ALARMES_MULTI_LIEUX',N'Acquitter plusieurs lieux',N'Acquitter des alarmes sur plusieurs lieux');
+
+INSERT INTO dbo.t_autorisation (
+    Code_Autorisation,
+    Libelle_Autorisation,
+    Commentaire
+)
+SELECT
+    Code,
+    Libelle,
+    Commentaire
+FROM @BootstrapAuth a
+WHERE NOT EXISTS (
+    SELECT 1
+    FROM dbo.t_autorisation x
+    WHERE x.Code_Autorisation = a.Code
+);
 GO
 DECLARE @AdminProfilId INT = (SELECT TOP 1 Id_Profil FROM dbo.t_profil WHERE Profil_Utilisateur = N'Administrateurs');
 INSERT INTO dbo.t_liaison_profil_autorisation (Id_Profil, Id_Autorisation) SELECT @AdminProfilId, a.Id_Autorisation FROM dbo.t_autorisation a WHERE @AdminProfilId IS NOT NULL AND NOT EXISTS (SELECT 1 FROM dbo.t_liaison_profil_autorisation l WHERE l.Id_Profil = @AdminProfilId AND l.Id_Autorisation = a.Id_Autorisation);
@@ -2643,7 +2815,7 @@ DECLARE @RecentParams TABLE (
 );
 
 INSERT INTO @RecentParams (Section, Mot_Cle, Valeur, Commentaire) VALUES
-(N'VERSION',N'SCHEMA_VERSION',N'0.90.1',N'Version produit commune des seeds MySQL et SQL Server'),
+(N'VERSION',N'SCHEMA_VERSION',N'0.90.2',N'Version produit commune des seeds MySQL et SQL Server'),
 (N'GENERAL',N'TIMEZONE',N'Europe/Paris',N'Fuseau horaire par defaut'),
 (N'DASHBOARD',N'AUDIT_GRAPH_OPENINGS',N'false',N'Activer l audit trail a l ouverture des graphiques'),
 (N'DASHBOARD',N'ETALONNAGE_WARNING_DAYS',N'90',N'Délai alerte validité étalonnage en jours'),

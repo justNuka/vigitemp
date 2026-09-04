@@ -150,7 +150,7 @@ export function AuditClient({ logs: initialLogs }: Props) {
         if (!timestamp || Number.isNaN(timestamp.getTime())) return t("table.empty_value");
         return (
           <span className="font-mono text-sm whitespace-nowrap">
-            {formatDbDateTime(timestamp, { locale: localeTag, timeZone: timezone })}
+            {formatDbDateTime(timestamp, { format: "dateTimeSeconds", locale: localeTag, timeZone: timezone })}
           </span>
         );
       },

@@ -8,6 +8,15 @@ Le numéro indiqué ici correspond à la révision VigiSensys du bootstrap/seed.
 
 ## [Unreleased]
 
+### Préparation Better Auth / release 0.90.2
+
+- Alignement du marqueur `SCHEMA_VERSION` et des en-têtes des seeds MySQL / SQL Server sur `0.90.2`, version applicative courante.
+- Ajout dans les deux seeds des tables finales de préparation Better Auth : `t_auth_user`, `t_auth_session`, `t_auth_account` et `t_auth_verification`.
+- Le schéma reprend les champs validés lors du PoC BA-1 (Better Auth `1.7.2`), notamment `username`, `displayUsername` et le mapping métier `vigisensysUserId` vers `t_utilisateur`.
+- Aucun objet temporaire `t_auth_poc_*` n'est introduit dans les seeds client.
+- Aucun compte Better Auth n'est provisionné par le seed et aucun runtime Better Auth n'est réactivé : l'authentification legacy reste la seule authentification active dans ce lot.
+- MySQL matérialise les relations Better Auth avec les clés étrangères adaptées ; SQL Server conserve la convention du seed existant qui ne matérialise pas les FK MySQL afin d'éviter les chemins de cascade incompatibles.
+- La colonne métrologie `t_ajustage.Coeffs_Modifies_Depuis_Derniere_Mesure`, déjà présente dans les deux seeds avant ce lot, a été vérifiée et conservée sans duplication.
 
 ### Qualité des données de seed
 

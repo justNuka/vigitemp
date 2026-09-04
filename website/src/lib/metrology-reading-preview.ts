@@ -94,7 +94,7 @@ async function readGsp(
       serialNumber: sensor.serialNumber,
       value: success ? asFiniteNumber(raw?.Value) : null,
       rawValue: raw?.RawValue == null ? null : String(raw.RawValue),
-      unit: raw?.Unit == null ? sensor.unit : String(raw.Unit),
+      unit: sensor.unit ?? (raw?.Unit == null ? null : String(raw.Unit)),
       measuredAt,
       source: "GSP",
       error: success ? null : String(raw?.Error ?? raw?.error ?? payload?.message ?? "Lecture impossible"),
@@ -176,7 +176,7 @@ async function readGso(
     serialNumber: sensor.serialNumber,
     value,
     rawValue: row?.Valeur_Brute == null ? null : String(row.Valeur_Brute),
-    unit: row?.Unite?.trim() || sensor.unit,
+    unit: sensor.unit ?? row?.Unite?.trim() ?? null,
     measuredAt: measuredAt ?? new Date().toISOString(),
     source: "GSO",
     error: row ? (value == null ? "Mesure GSO invalide" : null) : "En attente d'une nouvelle mesure metrologique",
@@ -210,6 +210,29 @@ export async function readMetrologySensorsPreview(
       })
     : []
   const modulesById = new Map(modules.map((module) => [module.Id_Module, module]))
+  const serialNumbers = rows
+    .map((row) => row.Sonde_Numero_Serie?.trim())
+    .filter((serial): serial is string => Boolean(serial))
+  const latestAdjustments = serialNumbers.length
+    ? await prisma.t_ajustage.findMany({
+        where: { Sonde_Numero_Serie: { in: serialNumbers }, Unite: { not: null } },
+        select: {
+          Sonde_Numero_Serie: true,
+          Unite: true,
+          Date_Heure_Ajustage: true,
+          Id_Ajustage: true,
+        },
+        orderBy: [{ Date_Heure_Ajustage: "desc" }, { Id_Ajustage: "desc" }],
+      })
+    : []
+  const adjustmentUnitBySerial = new Map<string, string>()
+  for (const adjustment of latestAdjustments) {
+    const serial = adjustment.Sonde_Numero_Serie?.trim()
+    const unit = adjustment.Unite?.trim()
+    if (serial && unit && !adjustmentUnitBySerial.has(serial)) {
+      adjustmentUnitBySerial.set(serial, unit)
+    }
+  }
   const readings: Record<number, MetrologyPreviewReading> = {}
 
   // Sequential reads let the C# server serialize access to shared COM ports.
@@ -221,7 +244,7 @@ export async function readMetrologySensorsPreview(
       id: row.Id_Sonde,
       serialNumber,
       address: row.Adresse_Sonde,
-      unit: row.t_sonde_type?.Unite?.trim() || null,
+      unit: adjustmentUnitBySerial.get(serialNumber) ?? row.t_sonde_type?.Unite?.trim() ?? null,
       moduleName: moduleRow?.Module_Numero_Serie ?? moduleRow?.Emplacement ?? null,
       modulePort: moduleRow?.Port_Serie ?? null,
     }

@@ -1,20 +1,90 @@
 export type DbDateInput = string | number | Date | null | undefined;
 
-type FormatOptions = {
+export type DateDisplayFormat =
+  | "date"
+  | "dateShort"
+  | "time"
+  | "timeSeconds"
+  | "dateTime"
+  | "dateTimeShort"
+  | "dateTimeSeconds";
+
+export type DateDisplayOptions = {
+  /**
+   * Preferred display preset for new call sites.
+   * When provided, it takes precedence over the legacy boolean options below.
+   */
+  format?: DateDisplayFormat;
+  fallback?: string;
+  locale?: string | string[];
+  timeZone?: string;
+  /** @deprecated Prefer a named `format`. */
   withSeconds?: boolean;
+  /** @deprecated Prefer `format: "dateShort" | "dateTimeShort"`, or `formatDbDateTimeIntl` for custom date parts. */
   withYear?: boolean;
+  /** @deprecated Prefer `format: "date" | "dateShort"`. */
   dateOnly?: boolean;
+  /** @deprecated Prefer `format: "time" | "timeSeconds"`. */
   timeOnly?: boolean;
+};
+
+export type DateDisplayIntlOptions = {
+  intl: Intl.DateTimeFormatOptions;
   fallback?: string;
   locale?: string | string[];
   timeZone?: string;
 };
 
-type IntlFormatOptions = {
-  intl: Intl.DateTimeFormatOptions;
-  fallback?: string;
-  locale?: string | string[];
-  timeZone?: string;
+type ResolvedDateDisplayFormat = {
+  includeDate: boolean;
+  includeTime: boolean;
+  includeSeconds: boolean;
+  includeYear: boolean;
+};
+
+const DATE_DISPLAY_FORMATS: Record<DateDisplayFormat, ResolvedDateDisplayFormat> = {
+  date: {
+    includeDate: true,
+    includeTime: false,
+    includeSeconds: false,
+    includeYear: true,
+  },
+  dateShort: {
+    includeDate: true,
+    includeTime: false,
+    includeSeconds: false,
+    includeYear: false,
+  },
+  time: {
+    includeDate: false,
+    includeTime: true,
+    includeSeconds: false,
+    includeYear: false,
+  },
+  timeSeconds: {
+    includeDate: false,
+    includeTime: true,
+    includeSeconds: true,
+    includeYear: false,
+  },
+  dateTime: {
+    includeDate: true,
+    includeTime: true,
+    includeSeconds: false,
+    includeYear: true,
+  },
+  dateTimeShort: {
+    includeDate: true,
+    includeTime: true,
+    includeSeconds: false,
+    includeYear: false,
+  },
+  dateTimeSeconds: {
+    includeDate: true,
+    includeTime: true,
+    includeSeconds: true,
+    includeYear: true,
+  },
 };
 
 const pad2 = (value: number) => String(value).padStart(2, "0");
@@ -110,16 +180,105 @@ const maybeAlreadyFormatted = (value: string) => {
   return null;
 };
 
-export function formatDbDateTime(value: DbDateInput, options: FormatOptions = {}): string {
+const resolveLegacyDisplayFormat = (options: DateDisplayOptions): ResolvedDateDisplayFormat => {
   const {
     withSeconds = true,
     withYear = true,
     dateOnly = false,
     timeOnly = false,
-    fallback = "-",
-    locale,
-    timeZone,
   } = options;
+
+  // Keep the historical precedence: dateOnly wins when both flags are true.
+  if (dateOnly) {
+    return {
+      includeDate: true,
+      includeTime: false,
+      includeSeconds: false,
+      includeYear: withYear,
+    };
+  }
+
+  if (timeOnly) {
+    return {
+      includeDate: false,
+      includeTime: true,
+      includeSeconds: withSeconds,
+      includeYear: false,
+    };
+  }
+
+  return {
+    includeDate: true,
+    includeTime: true,
+    includeSeconds: withSeconds,
+    includeYear: withYear,
+  };
+};
+
+const resolveDisplayFormat = (options: DateDisplayOptions): ResolvedDateDisplayFormat => {
+  if (options.format) {
+    const resolved = DATE_DISPLAY_FORMATS[options.format];
+    if (resolved) return resolved;
+  }
+
+  return resolveLegacyDisplayFormat(options);
+};
+
+const buildIntlDateTimeOptions = (
+  format: ResolvedDateDisplayFormat,
+  timeZone?: string,
+): Intl.DateTimeFormatOptions => {
+  const options: Intl.DateTimeFormatOptions = {};
+
+  if (format.includeDate) {
+    options.day = "2-digit";
+    options.month = "2-digit";
+    if (format.includeYear) {
+      options.year = "numeric";
+    }
+  }
+
+  if (format.includeTime) {
+    options.hour = "2-digit";
+    options.minute = "2-digit";
+    options.hour12 = false;
+    if (format.includeSeconds) {
+      options.second = "2-digit";
+    }
+  }
+
+  if (timeZone) {
+    options.timeZone = timeZone;
+  }
+
+  return options;
+};
+
+const formatLocalDateTime = (date: Date, format: ResolvedDateDisplayFormat): string => {
+  const day = pad2(date.getDate());
+  const month = pad2(date.getMonth() + 1);
+  const year = date.getFullYear();
+  const hours = pad2(date.getHours());
+  const minutes = pad2(date.getMinutes());
+  const seconds = pad2(date.getSeconds());
+
+  const datePart = format.includeDate
+    ? format.includeYear
+      ? `${day}/${month}/${year}`
+      : `${day}/${month}`
+    : "";
+  const timePart = format.includeTime
+    ? format.includeSeconds
+      ? `${hours}:${minutes}:${seconds}`
+      : `${hours}:${minutes}`
+    : "";
+
+  if (datePart && timePart) return `${datePart} ${timePart}`;
+  return datePart || timePart;
+};
+
+export function formatDbDateTime(value: DbDateInput, options: DateDisplayOptions = {}): string {
+  const { fallback = "-", locale, timeZone } = options;
 
   if (typeof value === "string") {
     const direct = maybeAlreadyFormatted(value);
@@ -129,74 +288,19 @@ export function formatDbDateTime(value: DbDateInput, options: FormatOptions = {}
   const date = parseDbDateTime(value);
   if (!date) return fallback;
 
-  const day = pad2(date.getDate());
-  const month = pad2(date.getMonth() + 1);
-  const year = date.getFullYear();
-  const hours = pad2(date.getHours());
-  const minutes = pad2(date.getMinutes());
-  const seconds = pad2(date.getSeconds());
+  const resolvedFormat = resolveDisplayFormat(options);
 
   if (locale || timeZone) {
-    if (dateOnly) {
-      const dateOptions: Intl.DateTimeFormatOptions = {
-        day: "2-digit",
-        month: "2-digit",
-        ...(withYear ? { year: "numeric" as const } : {}),
-      };
-
-      if (timeZone) {
-        dateOptions.timeZone = timeZone;
-      }
-
-      return new Intl.DateTimeFormat(locale, dateOptions).format(date);
-    }
-
-    if (timeOnly) {
-      const timeOptions: Intl.DateTimeFormatOptions = {
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: false,
-      };
-
-      if (withSeconds) {
-        timeOptions.second = "2-digit";
-      }
-
-      if (timeZone) {
-        timeOptions.timeZone = timeZone;
-      }
-
-      return new Intl.DateTimeFormat(locale, timeOptions).format(date);
-    }
-
-    const dateTimeOptions: Intl.DateTimeFormatOptions = {
-      day: "2-digit",
-      month: "2-digit",
-      ...(withYear ? { year: "numeric" as const } : {}),
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: false,
-    };
-
-    if (withSeconds) {
-      dateTimeOptions.second = "2-digit";
-    }
-
-    if (timeZone) {
-      dateTimeOptions.timeZone = timeZone;
-    }
-
-    return new Intl.DateTimeFormat(locale, dateTimeOptions).format(date);
+    return new Intl.DateTimeFormat(
+      locale,
+      buildIntlDateTimeOptions(resolvedFormat, timeZone),
+    ).format(date);
   }
 
-  if (dateOnly) return withYear ? `${day}/${month}/${year}` : `${day}/${month}`;
-  if (timeOnly) return withSeconds ? `${hours}:${minutes}:${seconds}` : `${hours}:${minutes}`;
-
-  const time = withSeconds ? `${hours}:${minutes}:${seconds}` : `${hours}:${minutes}`;
-  return withYear ? `${day}/${month}/${year} ${time}` : `${day}/${month} ${time}`;
+  return formatLocalDateTime(date, resolvedFormat);
 }
 
-export function formatDbDateTimeIntl(value: DbDateInput, options: IntlFormatOptions): string {
+export function formatDbDateTimeIntl(value: DbDateInput, options: DateDisplayIntlOptions): string {
   const { intl, fallback = "-", locale, timeZone } = options;
   const date = parseDbDateTime(value);
   if (!date) return fallback;

@@ -53,8 +53,8 @@ Toujours vérifier ensuite le code courant, les helpers existants et les PR réc
 
 ### Dates et nombres
 
-- `website/src/lib/date-display.ts` est le helper date canonique actuel.
-- Le Lot 9A de `docs/architecture/refactor-roadmap.md` prévoit de rendre ses formats/presets plus explicites et de créer un helper numérique canonique paramétrable.
+- `website/src/lib/date-display.ts` est le helper date canonique ; utiliser ses presets explicites.
+- `website/src/lib/number-display.ts` est le helper numérique canonique paramétrable ; `formatMeasureValue` reste le wrapper métier partagé pour les mesures.
 
 Ne jamais traiter un `DATETIME` historique Prisma comme un instant UTC sans vérifier sa sémantique. Utiliser notamment `serializeStoredDbDateTime` lorsque la valeur stockée représente une heure locale sans fuseau.
 
@@ -63,7 +63,7 @@ Pour l'affichage :
 - ne pas disperser de nouveaux `toFixed(...)`, `toLocaleString(...)` ou `Intl.*` directement dans les composants si le besoin peut être porté par un helper commun ;
 - le format de date doit être un paramètre/preset du helper, sans modifier la sémantique de parsing ou stockage ;
 - le nombre de décimales d'un float doit être un paramètre du contexte, pas une constante globale ;
-- utiliser `Intl.NumberFormat` pour la présentation localisée lorsque le helper numérique sera créé ;
+- utiliser `number-display.ts` pour la présentation numérique localisée ; réserver `toFixed` aux contrats techniques/machine explicitement justifiés ;
 - ne jamais arrondir la valeur métier/persistée uniquement pour répondre à un besoin d'affichage.
 
 ### UI partagée

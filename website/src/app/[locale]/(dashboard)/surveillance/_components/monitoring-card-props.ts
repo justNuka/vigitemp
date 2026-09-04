@@ -29,6 +29,7 @@ export function buildMonitoringCardProps(
   return {
     idLieu: Number.isFinite(locationId) ? locationId : Number(sensor.id),
     nomLieu: sensor.name ?? "",
+    unit: sensor.unit,
     currentValue: sensor.currentValue ?? null,
     lastMeasurement: sensor.lastMeasurement ?? null,
     lieuType: sensor.lieuType ?? sensor.location.lieuType ?? null,

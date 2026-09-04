@@ -21,6 +21,7 @@ import { useLieuMeasurements } from '@/hooks/useLieuMeasurements'
 import { formatDbDateTime, parseDbDateTime, serializeDbDateTime } from '@/lib/date-display'
 import type { LieuTypeValue } from '@/lib/lieu-types'
 import { calculateYDomain, formatMeasureValue, getMeasureSummary, sortMeasuresChronologically } from '@/lib/measurements'
+import { formatNumber } from '@/lib/number-display'
 import { cn } from '@/lib/utils'
 import { fadeInUp } from '@/lib/motion-variants'
 import { markAlarmAcknowledgedInPaginatedSensorsCache } from '@/lib/surveillance-cache'
@@ -32,6 +33,7 @@ interface MonitoringCardProps {
   idLieu: number
   nomLieu: string
   currentValue?: number | null
+  unit?: string | null
   lastMeasurement?: Date | string | null
   sondeNumeroSerie?: string
   lieuEtat: string
@@ -79,6 +81,7 @@ export default function MonitoringCard({
   idLieu,
   nomLieu,
   currentValue = null,
+  unit = null,
   lastMeasurement = null,
   sondeNumeroSerie = '',
   lieuEtat,
@@ -152,16 +155,15 @@ export default function MonitoringCard({
     const template = lastPoint ?? null
     const serializedDate = serializeDbDateTime(liveMeasurementDate) ?? ""
     const timeLabel = formatDbDateTime(serializedDate, {
-      timeOnly: true,
-      withSeconds: false,
+      format: "time",
       locale: localeTag,
     })
-    const dateLabel = formatDbDateTime(serializedDate, { withSeconds: false })
+    const dateLabel = formatDbDateTime(serializedDate, { format: "dateTime" })
     const livePoint = {
       id: `live-${idLieu}-${serializedDate}`,
       Valeur: currentValue,
       Nb_Decimal: template?.Nb_Decimal ?? null,
-      Unite: template?.Unite ?? "°C",
+      Unite: template?.Unite ?? unit ?? "°C",
       DateHeureMesure: dateLabel,
       DateHeureMesureIso: serializedDate,
       DateHeureMesureXaxis: timeLabel,
@@ -193,7 +195,7 @@ export default function MonitoringCard({
     }
 
     return [...orderedData, livePoint]
-  }, [alarmType, currentValue, idLieu, liveMeasurementDate, localeTag, orderedData, sondeNumeroSerie, status])
+  }, [alarmType, currentValue, idLieu, liveMeasurementDate, localeTag, orderedData, sondeNumeroSerie, status, unit])
 
   const summary = useMemo(() => getMeasureSummary(previewData), [previewData])
   const { consigneSup, consigneInf, consigne, unite, frequence, lastMeasureText, lastDateTime, decimals, lastValue } = summary
@@ -297,7 +299,7 @@ export default function MonitoringCard({
       const untilDate = parseDbDateTime(surveillanceDisabledUntil)
       if (untilDate && !Number.isNaN(untilDate.getTime())) {
         return t('surveillance.disabled_until', {
-          date: formatDbDateTime(untilDate, { withSeconds: false }),
+          date: formatDbDateTime(untilDate, { format: "dateTime" }),
         })
       }
     }
@@ -305,7 +307,7 @@ export default function MonitoringCard({
     const date = parseDbDateTime(surveillanceDisabledSince)
     if (!date || Number.isNaN(date.getTime())) return t('surveillance.disabled')
     return t('surveillance.disabled_since', {
-      date: formatDbDateTime(date, { withSeconds: false }),
+      date: formatDbDateTime(date, { format: "dateTime" }),
     })
   }, [isSurveillanceActive, surveillanceDisabledSince, surveillanceDisabledUntil, t])
 
@@ -315,7 +317,7 @@ export default function MonitoringCard({
     const date = parseDbDateTime(alarmDisabledUntil)
     if (!date) return t('alarms.disabled')
     if (Number.isNaN(date.getTime())) return t('alarms.disabled')
-    return t('alarms.disabled_until', { date: formatDbDateTime(date, { withSeconds: false }) })
+    return t('alarms.disabled_until', { date: formatDbDateTime(date, { format: "dateTime" }) })
   }, [alarmDisabledUntil, isAlarmActive, t])
 
   const contentTextClassName = 'text-muted-foreground'
@@ -447,7 +449,7 @@ export default function MonitoringCard({
     const normalized = gsoTension.replace(',', '.').replace(/[^0-9.\-]/g, '')
     const voltage = Number.parseFloat(normalized)
     if (!Number.isFinite(voltage)) return null
-    const formattedVoltage = voltage.toFixed(2)
+    const formattedVoltage = formatNumber(voltage, { decimals: 2, locale: "en-US", grouping: false })
     if (voltage >= 2.9) return t('gso.battery_state.ok', { value: formattedVoltage })
     if (voltage >= 2.65) return t('gso.battery_state.medium', { value: formattedVoltage })
     return t('gso.battery_state.low', { value: formattedVoltage })

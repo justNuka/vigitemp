@@ -5,6 +5,7 @@ import { CheckCircle2, PowerOff } from "lucide-react";
 import { TanStackTable } from '@/components/data-table/tanstack-table';
 import { Badge } from '@/components/ui/badge';
 import { getTypeIcon } from '@/lib/lieu-types';
+import { formatNumber } from '@/lib/number-display';
 import type { LocationRow } from '@/hooks/useLocations';
 import { useTranslations } from 'next-intl';
 
@@ -44,9 +45,7 @@ type LocationsTableProps = {
 };
 
 function formatFrequencyMinutes(value: number) {
-  return new Intl.NumberFormat('fr-FR', {
-    maximumFractionDigits: 2,
-  }).format(value);
+  return formatNumber(value, { locale: 'fr-FR', maximumDecimals: 2 });
 }
 
 export function LocationsTable({

@@ -1,4 +1,5 @@
 import { formatDbDateTime, parseDbDateTime } from "@/lib/date-display"
+import { formatNumber } from "@/lib/number-display"
 
 export type MeasureData = {
   id: string
@@ -61,27 +62,30 @@ export function formatMeasureValue(
   decimals?: number | null,
   locale = "fr-FR",
 ): string {
-  if (value === null || value === undefined || Number.isNaN(value)) return ""
+  if (value === null || value === undefined || !Number.isFinite(value)) return ""
 
-  if (decimals === null || decimals === undefined || Number.isNaN(decimals)) {
-    return new Intl.NumberFormat(locale, {
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 2,
-    }).format(value)
+  if (decimals === null || decimals === undefined || !Number.isFinite(decimals)) {
+    return formatNumber(value, {
+      locale,
+      minimumDecimals: 0,
+      maximumDecimals: 2,
+      fallback: "",
+    })
   }
 
   const fractionDigits = Math.max(0, Math.min(10, Math.trunc(decimals)))
-  return new Intl.NumberFormat(locale, {
-    minimumFractionDigits: fractionDigits,
-    maximumFractionDigits: fractionDigits,
-  }).format(value)
+  return formatNumber(value, {
+    locale,
+    decimals: fractionDigits,
+    fallback: "",
+  })
 }
 
 export function normalizeMeasureNumber(
   value: number | null | undefined,
   decimals = 2,
 ): number | null {
-  if (value === null || value === undefined || Number.isNaN(value) || !Number.isFinite(value)) {
+  if (value === null || value === undefined || !Number.isFinite(value)) {
     return null
   }
 
@@ -108,7 +112,7 @@ export function getMeasureSummary(
   const lastMeasureText = lastWithValue ? `${formattedValue}${normalizeUnitLabel(lastWithValue.Unite || unite)}` : "N/A"
   const lastDateTime = last
     ? formatDbDateTime(last.DateHeureMesureIso ?? last.DateHeureMesure, {
-        withSeconds: false,
+        format: "dateTime",
         fallback: "",
       })
     : ""
@@ -193,10 +197,10 @@ export function formatTimeAxisLabel(
 
   if (spanMs >= 24 * 60 * 60 * 1000) {
     return [
-      formatDbDateTime(date, { dateOnly: true, withYear: false, locale }),
-      formatDbDateTime(date, { timeOnly: true, withSeconds: false, locale }),
+      formatDbDateTime(date, { format: "dateShort", locale }),
+      formatDbDateTime(date, { format: "time", locale }),
     ]
   }
 
-  return formatDbDateTime(date, { timeOnly: true, withSeconds: false, locale })
+  return formatDbDateTime(date, { format: "time", locale })
 }

@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { useMetrologyDashboard, type MetrologyDashboardRow } from "@/hooks/useMetrologyDashboard"
 import { formatDbDateTime } from "@/lib/date-display"
+import { formatNumber as formatDisplayNumber } from "@/lib/number-display"
 
 export function MetrologyDashboardClient() {
   const t = useTranslations("metrologyAdmin.dashboard")
@@ -19,13 +20,16 @@ export function MetrologyDashboardClient() {
   const { data, isLoading } = useMetrologyDashboard()
 
   function formatNumber(value: number | null) {
-    if (value == null) return "-"
-    return new Intl.NumberFormat(locale === "fr" ? "fr-FR" : "en-US", { maximumFractionDigits: 2 }).format(value)
+    return formatDisplayNumber(value, {
+      locale: locale === "fr" ? "fr-FR" : "en-US",
+      maximumDecimals: 2,
+      fallback: "-",
+    })
   }
 
   function formatDate(value: string | null) {
     return formatDbDateTime(value, {
-      dateOnly: true,
+      format: "date",
       locale: locale === "fr" ? "fr-FR" : "en-US",
     })
   }

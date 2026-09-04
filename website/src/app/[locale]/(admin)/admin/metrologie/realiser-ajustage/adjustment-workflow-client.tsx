@@ -567,9 +567,9 @@ export function AdjustmentWorkflowClient() {
           const sensorDateTime = formatDbDateTime(
             readGspFrameField(reading.rawValue, "DateHeure") ?? reading.measuredAt,
             {
+              format: "dateTimeSeconds",
               locale: localeTag,
               timeZone: "Europe/Paris",
-              withSeconds: true,
             },
           )
           const measurement = formatMeasureValue(

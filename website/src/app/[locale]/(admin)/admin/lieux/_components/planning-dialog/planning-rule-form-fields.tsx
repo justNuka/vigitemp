@@ -6,8 +6,12 @@ import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/comp
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { formatNumber } from "@/lib/number-display"
 
 import type { JourOption, PlanningRegleFormValues } from "./planning-rule-form-helpers"
+
+const formatEmtNumber = (value: number) =>
+  formatNumber(value, { decimals: 4, locale: "en-US", grouping: false })
 
 type NumericPlanningRuleFieldName =
   | "Consigne"
@@ -245,7 +249,7 @@ export function PlanningRuleEmtSummary({
         </span>
         {emtPreview.emtSonde !== null ? (
           <span>
-            {tDialog("emtSonde")}: <span className="text-foreground font-medium">{emtPreview.emtSonde.toFixed(4)}</span>
+            {tDialog("emtSonde")}: <span className="text-foreground font-medium">{formatEmtNumber(emtPreview.emtSonde)}</span>
           </span>
         ) : null}
         <span>
@@ -257,10 +261,10 @@ export function PlanningRuleEmtSummary({
       </div>
       <div className="border-t pt-2 flex flex-wrap gap-x-6 gap-y-1">
         <span className="text-muted-foreground">
-          {tDialog("emtToleranceSup")}: <span className="text-foreground font-medium">{emtPreview.toleranceSup !== null ? emtPreview.toleranceSup.toFixed(4) : tDialog("emtNotCalculable")}</span>
+          {tDialog("emtToleranceSup")}: <span className="text-foreground font-medium">{emtPreview.toleranceSup !== null ? formatEmtNumber(emtPreview.toleranceSup) : tDialog("emtNotCalculable")}</span>
         </span>
         <span className="text-muted-foreground">
-          {tDialog("emtToleranceInf")}: <span className="text-foreground font-medium">{emtPreview.toleranceInf !== null ? emtPreview.toleranceInf.toFixed(4) : tDialog("emtNotCalculable")}</span>
+          {tDialog("emtToleranceInf")}: <span className="text-foreground font-medium">{emtPreview.toleranceInf !== null ? formatEmtNumber(emtPreview.toleranceInf) : tDialog("emtNotCalculable")}</span>
         </span>
       </div>
     </div>

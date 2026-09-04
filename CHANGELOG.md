@@ -16,9 +16,19 @@ La convention de versioning est décrite dans [`docs/versioning.md`](docs/versio
 
 ## [Unreleased]
 
+### Web
+
+- Téléphonie : Twilio devient le provider recommandé pour la V1 des alarmes vocales. Le PoC utilise directement l'API HTTPS Twilio pour tester les credentials puis déclencher un appel avec TTS `fr-FR`, sans SDK supplémentaire, SIP/RTP, VM Linux ni port entrant chez le client.
+- Téléphonie : ajout d'un guide Twilio client/DSI détaillant création du compte et de l'API Key, choix d'un numéro français compatible appels automatisés, sécurité, diagnostic et prérequis réseau ; la V1 requiert uniquement DNS et HTTPS TCP 443 sortant vers `api.twilio.com`.
+- Téléphonie : la roadmap privilégie une queue Voice persistante réutilisant le dispatch d'alarmes existant afin qu'une panne Internet/Twilio ne bloque jamais l'interrogation des sondes ; les callbacks/DTMF et l'acquittement restent des lots ultérieurs.
+- Téléphonie : le guide OVHcloud/Click2Call reste disponible et le provider Asterisk mergé en PR #84 est conservé comme option avancée/on-premise pour les projets qui le nécessitent, mais il n'est plus un prérequis standard de la V1.
+- Licence téléphonie : l'accès à la configuration et aux tests providers dépend désormais explicitement de l'option contractuelle `telephonie`, avec garde serveur `403` et carte verrouillée côté Administration lorsque l'option est absente.
+
 ### Base de données / seeds
 
-- Nettoyage des libellés français des seeds MySQL/SQL Server : accents, fautes historiques confirmées et marqueur SemVer canonique `0.90.1`, sans changement de schéma.
+- Révision de bootstrap `0.90.2` pour les seeds MySQL et SQL Server, avec préparation des tables finales Better Auth (`t_auth_user`, `t_auth_session`, `t_auth_account`, `t_auth_verification`) sans réactivation du runtime Better Auth.
+- Les seeds complets `0.90.2` ont été validés sur bases vierges MySQL 8.0 et SQL Server 2022, avec conservation de la colonne métrologie `t_ajustage.Coeffs_Modifies_Depuis_Derniere_Mesure`.
+- Nettoyage des libellés français des seeds MySQL/SQL Server : accents, fautes historiques confirmées et marqueur SemVer canonique `0.90.1`, sans changement de schéma pour ce sous-lot historique.
 
 ## État intégré — 2026-08-27
 
@@ -48,7 +58,7 @@ Cette entrée constitue la première vue produit structurée du changelog. Elle 
 
 ### Serveur Windows — principales évolutions
 
-- Support du protocole GSP `ECON` étendu pour les coefficients métrologiques embarqués dans la sonde.
+- Support du protocole GSP `ECON` étendu pour les coefficients métrologiques embarqués dans les sondes GSP.
 - Transport `ECON` compact `a/b/c` pendant Ajustage/Étalonnage afin de respecter les contraintes du module de réception.
 - La séquence série exacte `+++` est traitée comme un bruit de transport et ne masque plus la vraie réponse GSP.
 - Le filtrage `+++` est partagé par la couche protocolaire et couvre désormais Hotline, Ajustage, Étalonnage et Surveillance.

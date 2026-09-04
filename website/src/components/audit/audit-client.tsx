@@ -79,7 +79,11 @@ function formatDateSafe(value: string, localeTag: string, timezone?: string): st
   if (Number.isNaN(date.getTime())) {
     return null;
   }
-  return formatDbDateTime(date, { locale: localeTag, timeZone: timezone });
+  return formatDbDateTime(date, {
+    format: "dateTimeSeconds",
+    locale: localeTag,
+    timeZone: timezone,
+  });
 }
 
 function parseAuditDetails(
@@ -244,7 +248,11 @@ export function AuditClient({ logs }: Props) {
         if (!timestamp || Number.isNaN(timestamp.getTime())) return t("table.empty_value");
         return (
           <span className="font-mono text-sm whitespace-nowrap">
-            {formatDbDateTime(timestamp, { locale: localeTag, timeZone: timezone })}
+            {formatDbDateTime(timestamp, {
+              format: "dateTimeSeconds",
+              locale: localeTag,
+              timeZone: timezone,
+            })}
           </span>
         );
       },

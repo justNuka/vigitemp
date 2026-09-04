@@ -77,7 +77,7 @@ export function MonitoringTableTab({
       id: measure.id,
       dateIso: measure.DateHeureMesureIso ?? measure.DateHeureMesure,
       dateLabel: formatDbDateTime(measure.DateHeureMesureIso ?? measure.DateHeureMesure, {
-        withSeconds: true,
+        format: "dateTimeSeconds",
       }),
       sensorSerial: sondeNumeroSerie,
       value: measure.Valeur,

@@ -264,11 +264,11 @@ Ce chantier est volontairement placé dans les fondations Web, après l'installa
 
 #### État actuel
 
-- `website/src/lib/date-display.ts` est déjà le helper date canonique et accepte plusieurs paramètres (`withSeconds`, `withYear`, `dateOnly`, `timeOnly`, `locale`, `timeZone`) ;
-- `formatDbDateTimeIntl` permet déjà de transmettre des `Intl.DateTimeFormatOptions` ;
+- `website/src/lib/date-display.ts` est le helper date canonique ; ses presets nommés et la migration des appels applicatifs ont été réalisés via les PR #78 et #79, après caractérisation en #77 ;
+- `formatDbDateTimeIntl` reste disponible pour les besoins non couverts par les presets ;
 - il ne faut donc pas créer un deuxième moteur de dates ;
-- aucun helper numérique canonique comparable n'a été identifié dans `website/src/lib/` à la vérification du 31/08/2026 ;
-- le code historique contient des formatages numériques locaux, notamment des usages de `toFixed(...)`, qui devront être migrés progressivement après vérification du code courant.
+- `website/src/lib/number-display.ts` est le helper numérique canonique introduit sur `refactor/number-display-helper` ;
+- les formats UI `Intl.NumberFormat` / `toLocaleString` ont été centralisés, tandis que les `toFixed(...)` techniques restent volontairement séparés lorsqu'ils participent à un calcul, un protocole, une sérialisation ou un format machine.
 
 #### Cible dates
 
@@ -300,13 +300,13 @@ La précision ne doit pas devenir une constante universelle. Une température, u
 
 #### Migration
 
-1. écrire les tests du helper date actuel avant de modifier son contrat ;
-2. définir les presets/paramètres cibles ;
-3. migrer quelques usages représentatifs et conserver la compatibilité des anciens appels ;
-4. créer le helper numérique avec tests ;
-5. rechercher les `toFixed`, `toLocaleString`, `Intl.NumberFormat` locaux et autres formatages manuels ;
-6. migrer par domaine/composant, pas via une PR géante de remplacement aveugle ;
-7. supprimer les anciens chemins uniquement lorsque plus aucun appel utile ne dépend d'eux.
+1. ✅ caractériser le helper date avant modification — PR #77 ;
+2. ✅ définir et implémenter les presets date — PR #78 ;
+3. ✅ migrer tous les appels applicatifs date vers un format explicite — PR #79 ;
+4. ✅ créer `number-display.ts` avec tests — `refactor/number-display-helper` ;
+5. ✅ recenser `toFixed`, `toLocaleString`, `Intl.NumberFormat` et distinguer affichage vs contrat technique ;
+6. ✅ migrer les usages d'affichage vers le helper canonique sans toucher aux valeurs métier ;
+7. ⏳ supprimer les compatibilités date legacy uniquement lorsqu'aucun consommateur utile n'en dépend plus.
 
 #### Tests obligatoires
 

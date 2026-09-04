@@ -1,4 +1,4 @@
--- Version produit / seed : 0.90.1
+-- Version produit / seed : 0.90.2
 -- DDL synchronise sur le dump schema courant du 2026-08-25.
 -- Les DEFINER et compteurs AUTO_INCREMENT de production sont volontairement retires.
 
@@ -3108,23 +3108,6 @@ END */ ;;
 DELIMITER ;
 /*!50106 SET TIME_ZONE= @save_time_zone */ ;
 
---
--- Final view structure for view `v_tm_mesures_dernier`
---
-
-/*!50001 DROP VIEW IF EXISTS `v_tm_mesures_dernier`*/;
-/*!50001 SET @saved_cs_client          = @@character_set_client */;
-/*!50001 SET @saved_cs_results         = @@character_set_results */;
-/*!50001 SET @saved_col_connection     = @@collation_connection */;
-/*!50001 SET character_set_client      = utf8mb4 */;
-/*!50001 SET character_set_results     = utf8mb4 */;
-/*!50001 SET collation_connection      = utf8mb4_0900_ai_ci */;
-/*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 SQL SECURITY INVOKER */
-/*!50001 VIEW `v_tm_mesures_dernier` AS select `l`.`Id_Lieu` AS `Id_Lieu`,`l`.`Sonde_Numero_Serie` AS `Sonde_Numero_Serie`,`l`.`Adresse_Sonde` AS `Adresse_Sonde`,`l`.`Nom_Lieu` AS `Nom_Lieu`,`l`.`Id_Alarme` AS `Id_Alarme`,`l`.`Est_Lieu_En_Alarme` AS `Alarme_en_cours`,`m`.`Valeur` AS `Dernier_Releve`,`m`.`Unite` AS `Unite`,`m`.`Date_Heure_Mesure` AS `Date_Heure_Mesure`,`m`.`COM_sonde` AS `COM_Lecture`,`m`.`Rssi` AS `Signal_Radio`,`m`.`Tension` AS `Tension_Piles`,left(`l`.`Adresse_Sonde`,(length(`l`.`Adresse_Sonde`) - 2)) AS `GSO_SN` from (`t_lieu` `l` left join `vigi_mesures`.`tm_mesures` `m` on(((`m`.`Id_Lieu` = `l`.`Id_Lieu`) and (`m`.`Date_Heure_Mesure` = (select `m2`.`Date_Heure_Mesure` from `vigi_mesures`.`tm_mesures` `m2` where (`m2`.`Id_Lieu` = `l`.`Id_Lieu`) order by `m2`.`Date_Heure_Mesure` desc limit 1))))) where ((`l`.`Lieu_Etat` = 'S') and (`l`.`Est_Lieu_GSO` = 1)) */;
-/*!50001 SET character_set_client      = @saved_cs_client */;
-/*!50001 SET character_set_results     = @saved_cs_results */;
-/*!50001 SET collation_connection      = @saved_col_connection */;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
@@ -3135,6 +3118,80 @@ DELIMITER ;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
+
+-- =====================================================================
+-- Better Auth - schema preparatoire (runtime legacy conserve)
+-- =====================================================================
+-- Ces tables preparent BA-2 sans activer Better Auth dans l'application.
+-- t_utilisateur reste l'identite metier de reference.
+DROP TABLE IF EXISTS `t_auth_session`;
+DROP TABLE IF EXISTS `t_auth_account`;
+DROP TABLE IF EXISTS `t_auth_verification`;
+DROP TABLE IF EXISTS `t_auth_user`;
+
+CREATE TABLE `t_auth_user` (
+  `id` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `email` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `emailVerified` tinyint(1) NOT NULL DEFAULT '0',
+  `image` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `createdAt` datetime NOT NULL,
+  `updatedAt` datetime NOT NULL,
+  `username` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `displayUsername` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `vigisensysUserId` int DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `UK_t_auth_user_email` (`email`),
+  UNIQUE KEY `UK_t_auth_user_username` (`username`),
+  UNIQUE KEY `UK_t_auth_user_vigisensys_user` (`vigisensysUserId`),
+  CONSTRAINT `FK_t_auth_user_vigisensys_user` FOREIGN KEY (`vigisensysUserId`) REFERENCES `t_utilisateur` (`Id_Utilisateur`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `t_auth_session` (
+  `id` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `expiresAt` datetime NOT NULL,
+  `token` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `createdAt` datetime NOT NULL,
+  `updatedAt` datetime NOT NULL,
+  `ipAddress` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `userAgent` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `userId` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `UK_t_auth_session_token` (`token`),
+  KEY `IDX_t_auth_session_user` (`userId`),
+  CONSTRAINT `FK_t_auth_session_user` FOREIGN KEY (`userId`) REFERENCES `t_auth_user` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `t_auth_account` (
+  `id` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `accountId` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `providerId` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `userId` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `accessToken` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `refreshToken` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `idToken` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `accessTokenExpiresAt` datetime DEFAULT NULL,
+  `refreshTokenExpiresAt` datetime DEFAULT NULL,
+  `scope` varchar(1024) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `password` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `createdAt` datetime NOT NULL,
+  `updatedAt` datetime NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `UK_t_auth_account_provider_account` (`providerId`,`accountId`),
+  KEY `IDX_t_auth_account_user` (`userId`),
+  CONSTRAINT `FK_t_auth_account_user` FOREIGN KEY (`userId`) REFERENCES `t_auth_user` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `t_auth_verification` (
+  `id` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `identifier` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `value` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `expiresAt` datetime NOT NULL,
+  `createdAt` datetime NOT NULL,
+  `updatedAt` datetime NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `IDX_t_auth_verification_identifier` (`identifier`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE DATABASE  IF NOT EXISTS `vigi_mesures` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci */ /*!80016 DEFAULT ENCRYPTION='N' */;
 USE `vigi_mesures`;
@@ -3246,6 +3303,17 @@ CREATE TABLE `tm_journal_code` (
   PRIMARY KEY (`Code_Journal`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `tm_journal_code`
+--
+
+LOCK TABLES `tm_journal_code` WRITE;
+/*!40000 ALTER TABLE `tm_journal_code` DISABLE KEYS */;
+INSERT INTO `tm_journal_code` VALUES ('AACT','Association d\'un module d\'alarme'),('ACQ','Acquittement alarme'),('ACT','Activer la surveillance'),('ACTU','Reactivation de l\'utilisateur'),('AIM','Analyse d\'impact des mesures'),('AJE','Ajoute evenement manuel'),('ARC','Archivage des données'),('AS','Arret de la surveillance'),('AT','Activation de la surveillance telephonique'),('CA','Demarrage d\'un calibrage pour la sonde'),('CC','Changement sur un element'),('CDA','Changement d\'etat du datalogger'),('CF','Changement de frequence'),('CONNEXION','Connexion de l\'utilisateur'),('CR','Changement de retard d\'alarme'),('CS','Changement de sonde'),('DECONNEXION','Deconnexion de l\'utilisateur'),('DES','Desactiver la surveillance'),('DS','Demarrage de la surveillance'),('DT','Desactivation de la surveillance telephonique'),('ET','Demarrage d\'un etalonnage pour la sonde'),('FERMSURV','Fermeture de la fenètre de surveillance'),('GRPH','Ouverture d\'un graphique'),('IMP','Import de donnees'),('MDP','Changement fiche utilisateur'),('PLAN','Modification du planning'),('PS','Le gestionnaire de port serie virtuel relancé'),('SACT','Suppression du module d\'alarme associée'),('TC','Test de connexion de la sonde'),('TEL','Systeme'),('UT',''),('VLOG','Action VigiLog');
+/*!40000 ALTER TABLE `tm_journal_code` ENABLE KEYS */;
+UNLOCK TABLES;
+/*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 --
 -- Table structure for table `tm_journal_commentaire_libre`
@@ -4965,7 +5033,8 @@ VALUES
   ('ACCES_CONVERSATION','Accès conversation','Accès conversation'),
   ('MODULE_CONVERSATION','Module conversation','Module conversation'),
   ('REALISER_AJUSTAGE_ETALONNAGE','Réaliser ajustage étalonnage','Réaliser ajustage étalonnage'),
-  ('ACCES_AJUSTAGE_ETALONNAGE','Accès ajustage étalonnage','Accès ajustage étalonnage');
+  ('ACCES_AJUSTAGE_ETALONNAGE','Accès ajustage étalonnage','Accès ajustage étalonnage'),
+  ('ACQUITTER_ALARMES_MULTI_LIEUX','Acquitter plusieurs lieux','Acquitter des alarmes sur plusieurs lieux');
 INSERT INTO `t_etalon_type` VALUES ('ES','VigiTemp Type ES','Sonde étalon radio type E',1,0,0.05),('EX','Externe','Sonde externe',1,1,0),('SEF','VigiTemp Type SEF','Sonde étalon filaire ou filaire/radio avec prise RJ45',1,0,0.02),('SPET','Sonde étalon platine','Sonde étalon GSP platine',1,0,0.02);
 INSERT INTO `t_module_type` VALUES (1,'BIN','Boîtier filaire avec prise DB9 (port série)',0),(2,'BIR (filaire)','Boîtier réseau filaire avec prise RJ45 (prise réseau)',1),(3,'BTR','Boîtier radio avec prise DB9 (port série)',0),(4,'BIR (radio)','Boîtier réseau radio avec prise RJ45 (port série)',1),(5,'CORONIS','Boîtier radio CORONIS avec prise DB9 (port série)',0),(6,'MRH','Boîtier MRH',0),(7,'ITR','Module port série',0),(8,'IETH','Module ethernet',0);
 INSERT INTO `t_parametre` (`Section`, `Mot_Cle`, `Valeur`, `Commentaire`) VALUES ('CFR21','ACTIVATION_EXPIRATION_MOT_DE_PASSE','true','Activer l\'expiration des mots de passe (CFR21)'),('CFR21','ACTIVATION_NORME_CFR21','1','Activer la conformité CFR21 (saisie des configurations)'),('CFR21','EVENEMENTS','1','Activation des événements'),('CFR21','JOURS_VALIDITE_MOT_DE_PASSE','90',NULL),('CFR21','MOT_DE_PASSE_PERMANENT','1','Le mot de passe ne peut pas être changé par l\'utilisateur'),('CFR21','MOT_DE_PASSE_REUTILISABLE','0','L\'utilisateur ne peut pas réutiliser un ancien mot de passe'),('CFR21','NOMBRE_TENTATIVES_MOT_DE_PASSE','3','Nombre de tentatives autorisées avant verrouillage du compte'),('CFR21','REACTIVATION_ALARME_SONORE','500','Délai de réactivation de l\'alarme sonore en millisecondes'),('CFR21','SECURITE','0','Mode sécurité renforcé'),('CFR21','TEMPS_DECONNEXION_MINUTES','20','Temps d\'inactivité avant deconnexion automatique en minutes'),('CFR21','VALIDITE_MOT_DE_PASSE_JOURS','90','Durée de validité du mot de passe en jours'),('SECURITE_EMAIL','SMTP_ACTIVATION','true','Activer l\'envoi d\'emails'),('SECURITE_EMAIL','SMTP_EXPEDITEUR','','Adresse email expéditeur (doit correspondre au domaine SMTP)'),('SECURITE_EMAIL','SMTP_MOT_DE_PASSE','','Mot de passe SMTP'),('SECURITE_EMAIL','SMTP_PORT','587','Port SMTP (587 pour TLS, 465 pour SSL)'),('SECURITE_EMAIL','SMTP_SERVEUR','','Serveur SMTP pour l\'envoi d\'emails'),('SECURITE_EMAIL','SMTP_UTILISATEUR','','Utilisateur SMTP'),('SECURITE_MOT_DE_PASSE','LONGUEUR_MINIMALE','8','Longueur minimale du mot de passe'),('SECURITE_MOT_DE_PASSE','MIN_CARACTERES_SPECIAUX','1','Nombre minimum de caractères spéciaux'),('SECURITE_MOT_DE_PASSE','MIN_CHIFFRES','1','Nombre minimum de chiffres'),('SECURITE_MOT_DE_PASSE','MIN_LETTRES_MAJUSCULES','1','Nombre minimum de majuscules'),('SECURITE_MOT_DE_PASSE','MIN_LETTRES_MINUSCULES','1','Nombre minimum de minuscules');
@@ -5014,7 +5083,7 @@ INSERT INTO `t_utilisateur` (Login, Mot_De_Passe, Est_Archive, Profil_Utilisateu
 SET FOREIGN_KEY_CHECKS=1;
 
 INSERT INTO `t_parametre` (`Section`, `Mot_Cle`, `Valeur`, `Commentaire`)
-VALUES ('VERSION', 'SCHEMA_VERSION', '0.90.1', 'Version produit commune des seeds MySQL et SQL Server')
+VALUES ('VERSION', 'SCHEMA_VERSION', '0.90.2', 'Version produit commune des seeds MySQL et SQL Server')
 ON DUPLICATE KEY UPDATE
   `Valeur` = VALUES(`Valeur`),
   `Commentaire` = VALUES(`Commentaire`);
@@ -5182,3 +5251,24 @@ INSERT INTO `t_parametre` (`Section`,`Mot_Cle`,`Valeur`,`Commentaire`) VALUES
 ON DUPLICATE KEY UPDATE
   `Valeur` = VALUES(`Valeur`),
   `Commentaire` = VALUES(`Commentaire`);
+
+-- Deferred fresh-install view: v_tm_mesures_dernier
+USE `vigi_main`;
+--
+-- Final view structure for view `v_tm_mesures_dernier`
+--
+
+/*!50001 DROP VIEW IF EXISTS `v_tm_mesures_dernier`*/;
+/*!50001 SET @saved_cs_client          = @@character_set_client */;
+/*!50001 SET @saved_cs_results         = @@character_set_results */;
+/*!50001 SET @saved_col_connection     = @@collation_connection */;
+/*!50001 SET character_set_client      = utf8mb4 */;
+/*!50001 SET character_set_results     = utf8mb4 */;
+/*!50001 SET collation_connection      = utf8mb4_0900_ai_ci */;
+/*!50001 CREATE ALGORITHM=UNDEFINED */
+/*!50013 SQL SECURITY INVOKER */
+/*!50001 VIEW `v_tm_mesures_dernier` AS select `l`.`Id_Lieu` AS `Id_Lieu`,`l`.`Sonde_Numero_Serie` AS `Sonde_Numero_Serie`,`l`.`Adresse_Sonde` AS `Adresse_Sonde`,`l`.`Nom_Lieu` AS `Nom_Lieu`,`l`.`Id_Alarme` AS `Id_Alarme`,`l`.`Est_Lieu_En_Alarme` AS `Alarme_en_cours`,`m`.`Valeur` AS `Dernier_Releve`,`m`.`Unite` AS `Unite`,`m`.`Date_Heure_Mesure` AS `Date_Heure_Mesure`,`m`.`COM_sonde` AS `COM_Lecture`,`m`.`Rssi` AS `Signal_Radio`,`m`.`Tension` AS `Tension_Piles`,left(`l`.`Adresse_Sonde`,(length(`l`.`Adresse_Sonde`) - 2)) AS `GSO_SN` from (`t_lieu` `l` left join `vigi_mesures`.`tm_mesures` `m` on(((`m`.`Id_Lieu` = `l`.`Id_Lieu`) and (`m`.`Date_Heure_Mesure` = (select `m2`.`Date_Heure_Mesure` from `vigi_mesures`.`tm_mesures` `m2` where (`m2`.`Id_Lieu` = `l`.`Id_Lieu`) order by `m2`.`Date_Heure_Mesure` desc limit 1))))) where ((`l`.`Lieu_Etat` = 'S') and (`l`.`Est_Lieu_GSO` = 1)) */;
+/*!50001 SET character_set_client      = @saved_cs_client */;
+/*!50001 SET character_set_results     = @saved_cs_results */;
+/*!50001 SET collation_connection      = @saved_col_connection */;
+

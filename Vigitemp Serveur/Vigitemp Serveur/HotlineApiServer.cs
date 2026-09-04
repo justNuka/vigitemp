@@ -26,6 +26,7 @@ namespace Vigitemp_Serveur
         private const int MetrologyPortPollMs = 250;
         private const int DefaultGspPostWriteDelayMs = 150;
         private const int MetrologyConfigurationCommandDelayMs = 500;
+        private const int DefaultMetrologyInterrogationGapMs = 1000;
         private const int DefaultMetrologyPortQueueTimeoutMs = 30 * 60 * 1000;
 
         private HttpListener _listener;
@@ -823,6 +824,19 @@ namespace Vigitemp_Serveur
                 {
                     try
                     {
+                        if (metrologyOperation && IsMetrologyReadAction(request.Action))
+                        {
+                            var interrogationGapMs = Math.Max(
+                                0,
+                                GetIntSetting(
+                                    "VigiSensys.Hotline.MetrologyInterrogationGapMs",
+                                    DefaultMetrologyInterrogationGapMs));
+                            if (interrogationGapMs > 0)
+                            {
+                                Thread.Sleep(interrogationGapMs);
+                            }
+                        }
+
                         namedMutex.ReleaseMutex();
                         LogHotlineDetailed($"{logPrefix}[LOCK] status=released port={portName}; serial={request.Serial}; action={request.Action}");
                     }

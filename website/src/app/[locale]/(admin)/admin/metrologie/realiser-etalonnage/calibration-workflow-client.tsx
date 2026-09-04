@@ -543,7 +543,7 @@ export function CalibrationWorkflowClient() {
                       </div>
                       <div className="flex items-center gap-2 text-sm">
                         <Clock3 className="h-4 w-4" />
-                        {formatDbDateTime(session?.startedAt || new Date())}
+                        {formatDbDateTime(session?.startedAt || new Date(), { format: "dateTimeSeconds" })}
                       </div>
                     </CardContent>
                   </Card>
@@ -753,7 +753,7 @@ export function CalibrationWorkflowClient() {
                             </TableCell>
                             <TableCell className="py-5 text-sky-900 dark:text-sky-100">
                               {displayedStandardReading
-                                ? formatDbDateTime(displayedStandardReading.measuredAt)
+                                ? formatDbDateTime(displayedStandardReading.measuredAt, { format: "dateTimeSeconds" })
                                 : "-"}
                             </TableCell>
                             <TableCell className="py-5 text-sky-900 dark:text-sky-100">
@@ -781,7 +781,7 @@ export function CalibrationWorkflowClient() {
                                 <TableCell>{sensor.locationName || t("workflow.selection.unassigned")}</TableCell>
                                 <TableCell>{sensor.moduleName || "-"}</TableCell>
                                 <TableCell>{formatCampaignValue(reading?.value, reading?.unit)}</TableCell>
-                                <TableCell>{reading ? formatDbDateTime(reading.measuredAt) : "-"}</TableCell>
+                                <TableCell>{reading ? formatDbDateTime(reading.measuredAt, { format: "dateTimeSeconds" }) : "-"}</TableCell>
                                 <TableCell>{session?.readingCounts[sensor.id] ?? 0}</TableCell>
                                 <TableCell>
                                   {reading?.error

@@ -158,7 +158,7 @@ export default function AdminDashboard() {
   ) : undefined
 
   const latestAckRaw = acknowledgmentsQuery.data?.data?.[0]?.dateHeure || null
-  const latestAck = latestAckRaw ? formatDbDateTime(latestAckRaw) : "-"
+  const latestAck = latestAckRaw ? formatDbDateTime(latestAckRaw, { format: "dateTimeSeconds" }) : "-"
   const latestAuditAction = systemLogsQuery.data?.data?.[0]?.action || "-"
   const latestConnectedUsers = connectedUsersQuery.data?.data?.slice(0, 3) ?? []
   const latestConnectedLabel =

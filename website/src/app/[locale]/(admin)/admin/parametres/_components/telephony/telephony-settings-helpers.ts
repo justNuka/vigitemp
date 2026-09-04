@@ -33,10 +33,13 @@ export const DEFAULT_DRAFT: TelephonyDraft = {
 
 export const COPY: Record<"fr" | "en", TelephonyCopy> = {
   fr: {
-    title: "Téléphonie VoIP",
-    description: "Configurez le provider voix. La V1 OVH couvre le test de connexion et le déclenchement d'appel Click2Call.",
-    warning: "La voix OVH V1 permet de déclencher un appel, pas encore de lire vocalement le détail d'alarme.",
-    frontOnly: "Configuration VoIP",
+    title: "Téléphonie",
+    description: "Configurez le canal voix. Twilio est recommandé pour la V1 ; OVHcloud et Asterisk restent disponibles pour des besoins spécifiques.",
+    warning: "La V1 Twilio déclenche un appel sortant et lit un message TTS en français via HTTPS uniquement. Le moteur d'alarmes, l'escalade, les callbacks et le DTMF seront branchés dans des lots séparés après validation du PoC.",
+    frontOnly: "Configuration téléphonie",
+    licenseLockedTitle: "Fonctionnalité non disponible avec votre licence",
+    licenseLockedDescription: "L’option téléphonie doit être activée dans la licence VigiSensys pour configurer ou utiliser les appels vocaux.",
+    recommendedProviderBadge: "Twilio V1",
     enabled: "Activer la téléphonie",
     provider: "Fournisseur",
     callerId: "Numéro présenté / Caller ID",
@@ -45,7 +48,7 @@ export const COPY: Record<"fr" | "en", TelephonyCopy> = {
     authMethod: "Méthode d'authentification",
     saveLocal: "Enregistrer localement",
     reset: "Réinitialiser",
-    localSaved: "Configuration VoIP",
+    localSaved: "Configuration téléphonie",
     summary: "Résumé",
     emptySummary: "Aucun paramètre saisi pour le moment.",
     saveServer: "Enregistrer",
@@ -64,10 +67,10 @@ export const COPY: Record<"fr" | "en", TelephonyCopy> = {
     },
     providerDesc: {
       none: "Sélectionnez un provider pour afficher la configuration correspondante.",
-      twilio: "Préconfiguration UI uniquement pour l'instant.",
-      ovhcloud: "OVHcloud API Telephony + Click2Call.",
+      twilio: "Provider recommandé V1 : appel sortant + TTS via l'API HTTPS Twilio, sans SIP/RTP ni port entrant côté client.",
+      ovhcloud: "OVHcloud API Telephony + Click2Call. Son utilisation dépend de l'offre souscrite et ne fournit pas le même contrôle vocal que Twilio/Asterisk.",
       keyyo: "Préconfiguration UI uniquement pour l'instant.",
-      asterisk: "Préconfiguration UI uniquement pour l'instant.",
+      asterisk: "Provider avancé/on-premise : connexion ARI et appel sortant via une infrastructure SIP Asterisk séparée.",
     },
     placeholders: {
       secret: "secret",
@@ -82,7 +85,7 @@ export const COPY: Record<"fr" | "en", TelephonyCopy> = {
       click2CallUserId: "id utilisateur Click2Call",
     },
     twilio: {
-      apiKey: "API Key SID + Secret",
+      apiKey: "API Key SID + Secret (recommandé)",
       authToken: "Account SID + Auth Token",
       accountSid: "Account SID",
       apiKeySid: "API Key SID",
@@ -116,10 +119,13 @@ export const COPY: Record<"fr" | "en", TelephonyCopy> = {
     },
   },
   en: {
-    title: "VoIP Telephony",
-    description: "Configure the voice provider. OVH V1 currently covers connection tests and Click2Call test calls.",
-    warning: "OVH voice V1 can place a call, but does not yet speak alarm details.",
-    frontOnly: "VoIP configuration",
+    title: "Telephony",
+    description: "Configure the voice channel. Twilio is recommended for V1; OVHcloud and Asterisk remain available for specific requirements.",
+    warning: "Twilio V1 places an outbound call and reads a French TTS message using HTTPS only. Alarm orchestration, escalation, callbacks and DTMF will be connected in separate lots after the PoC is validated.",
+    frontOnly: "Telephony configuration",
+    licenseLockedTitle: "Feature not available with your license",
+    licenseLockedDescription: "The telephony option must be enabled in the VigiSensys license to configure or use voice calls.",
+    recommendedProviderBadge: "Twilio V1",
     enabled: "Enable telephony",
     provider: "Provider",
     callerId: "Caller ID",
@@ -128,7 +134,7 @@ export const COPY: Record<"fr" | "en", TelephonyCopy> = {
     authMethod: "Authentication method",
     saveLocal: "Save locally",
     reset: "Reset",
-    localSaved: "VoIP configuration",
+    localSaved: "Telephony configuration",
     summary: "Summary",
     emptySummary: "No parameters entered yet.",
     saveServer: "Save",
@@ -147,10 +153,10 @@ export const COPY: Record<"fr" | "en", TelephonyCopy> = {
     },
     providerDesc: {
       none: "Select a provider to show the matching configuration.",
-      twilio: "UI preconfiguration only for now.",
-      ovhcloud: "OVHcloud Telephony API + Click2Call.",
+      twilio: "Recommended V1 provider: outbound call + TTS through Twilio HTTPS API, with no SIP/RTP or inbound customer port.",
+      ovhcloud: "OVHcloud Telephony API + Click2Call. Availability depends on the subscribed plan and provides less voice control than Twilio/Asterisk.",
       keyyo: "UI preconfiguration only for now.",
-      asterisk: "UI preconfiguration only for now.",
+      asterisk: "Advanced/on-premise provider: ARI connectivity and outbound calls through a separate Asterisk SIP infrastructure.",
     },
     placeholders: {
       secret: "secret",
@@ -165,7 +171,7 @@ export const COPY: Record<"fr" | "en", TelephonyCopy> = {
       click2CallUserId: "Click2Call user id",
     },
     twilio: {
-      apiKey: "API Key SID + Secret",
+      apiKey: "API Key SID + Secret (recommended)",
       authToken: "Account SID + Auth Token",
       accountSid: "Account SID",
       apiKeySid: "API Key SID",
@@ -214,10 +220,12 @@ export function buildSummary(draft: TelephonyDraft, copy: TelephonyCopy) {
             `${copy.twilio.accountSid}: ${draft.twilioAccountSid || "?"}`,
             `${copy.twilio.apiKeySid}: ${draft.twilioApiKeySid || "?"}`,
             `${copy.twilio.apiKeySecret}: ${maskSecret(draft.twilioApiKeySecret)}`,
+            `${copy.twilio.fromNumber}: ${draft.twilioFromNumber || "?"}`,
           ]
         : [
             `${copy.twilio.accountSid}: ${draft.twilioAccountSid || "?"}`,
             `${copy.twilio.authTokenField}: ${maskSecret(draft.twilioAuthToken)}`,
+            `${copy.twilio.fromNumber}: ${draft.twilioFromNumber || "?"}`,
           ]
     case "ovhcloud":
       return [
@@ -241,6 +249,7 @@ export function buildSummary(draft: TelephonyDraft, copy: TelephonyCopy) {
         `${copy.asterisk.baseUrl}: ${draft.asteriskBaseUrl || "?"}`,
         `${copy.asterisk.username}: ${draft.asteriskUsername || "?"}`,
         `${copy.asterisk.password}: ${maskSecret(draft.asteriskPassword)}`,
+        `${copy.asterisk.appName}: ${draft.asteriskAppName || "?"}`,
       ]
     default:
       return []

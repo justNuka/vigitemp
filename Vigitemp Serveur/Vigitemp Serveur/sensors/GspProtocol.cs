@@ -551,16 +551,10 @@ namespace Vigitemp_Serveur.sensors
             out double coeffC,
             out bool multipoint)
         {
-            var coeffX2 = 0d;
-            if (metrology != null && metrology.HasAjustage)
-            {
-                if (!GspExpectedConfigurationReader.TryGetByIdLieu(metrology.IdLieu, out var expected))
-                {
-                    throw new InvalidOperationException("Impossible de lire Coeff_X2 avant la synchronisation ECON GSP.");
-                }
-
-                coeffX2 = expected.CoeffX2;
-            }
+            // The metrology provider loads these values from the latest t_ajustage
+            // row for the probe serial number. A location lookup is neither needed
+            // nor reliable for probes that are not currently assigned to a location.
+            var coeffX2 = metrology?.CoeffX2 ?? 0d;
 
             multipoint = Math.Abs(coeffX2) > ComparisonTolerance;
             coeffA = multipoint ? coeffX2 : (metrology?.CoeffX ?? 1d);

@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import type { Measurement } from "@/lib/api";
 import { useLocale, useTranslations } from "next-intl";
 import { formatDbDateTime } from "@/lib/date-display";
+import { formatNumber } from "@/lib/number-display";
 
 interface MiniChartProps {
   measurements: Measurement[];
@@ -65,17 +66,16 @@ export function MiniChart({
     if (measurements.length < 2) return [] as string[];
     if (measurements.length > 10) {
       return [
-        formatDbDateTime(measurements[0].timestamp, { locale, dateOnly: true, withYear: false }),
+        formatDbDateTime(measurements[0].timestamp, { locale, format: "dateShort" }),
         formatDbDateTime(measurements[measurements.length - 1].timestamp, {
           locale,
-          dateOnly: true,
-          withYear: false,
+          format: "dateShort",
         }),
       ];
     }
 
     return measurements.map((m) =>
-      formatDbDateTime(m.timestamp, { locale, dateOnly: true, withYear: false }),
+      formatDbDateTime(m.timestamp, { locale, format: "dateShort" }),
     );
   }, [locale, measurements]);
 
@@ -96,7 +96,7 @@ export function MiniChart({
   const { points, pathData, areaPath, displayMin, displayMax, displayRange } = chartData;
   const formatScaleValue = (value: number) => {
     if (Number.isInteger(value)) return String(value)
-    return value.toFixed(1)
+    return formatNumber(value, { decimals: 1, locale: "en-US", grouping: false })
   }
   const showDenseLabels = xLabels.length > 2;
   const hasXLabels = xLabels.length > 0;

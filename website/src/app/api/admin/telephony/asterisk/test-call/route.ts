@@ -1,0 +1,37 @@
+import { NextRequest } from "next/server"
+
+import { withAdminLogging } from "@/lib/api-wrappers"
+import { apiError, apiOk } from "@/lib/api-response"
+import { requireTelephonyLicense } from "@/lib/license-guards"
+import { AsteriskAriProvider } from "@/lib/telephony/asterisk-provider"
+import { getTelephonyConfig } from "@/lib/telephony/config"
+
+export const POST = withAdminLogging(async (req: NextRequest) => {
+  const licenseError = await requireTelephonyLicense()
+  if (licenseError) return licenseError
+
+  try {
+    const body = (await req.json()) as { to?: string }
+    const to = body.to?.trim() || ""
+
+    if (!to) {
+      return apiError(400, "telephony_test_number_missing", "Numero de test requis")
+    }
+
+    const config = await getTelephonyConfig()
+    if (config.provider !== "asterisk") {
+      return apiError(400, "telephony_provider_invalid", "Le provider courant n'est pas Asterisk")
+    }
+
+    const provider = new AsteriskAriProvider(config)
+    const validation = provider.validateConfig()
+    if (!validation.ok) {
+      return apiError(400, "telephony_config_invalid", `Champs requis manquants: ${validation.missing.join(", ")}`)
+    }
+
+    const result = await provider.triggerTestCall(to)
+    return apiOk(result)
+  } catch (error) {
+    return apiError(500, "telephony_asterisk_test_call_failed", error instanceof Error ? error.message : "Erreur serveur")
+  }
+})

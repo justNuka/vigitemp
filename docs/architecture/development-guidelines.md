@@ -194,9 +194,9 @@ Le refactor doit ajouter des tests couvrant au minimum : formats/presets support
 
 ### 3.5 Formatage des nombres et valeurs flottantes
 
-À la baseline du 31/08/2026, aucun helper de formatage numérique canonique équivalent à `date-display.ts` n'est présent dans `website/src/lib/`. Le formatage de valeurs flottantes ne doit donc pas continuer à se disperser sous forme de `toFixed(...)`, concaténations ou règles locales différentes selon les composants.
+Depuis le Lot 9A, `website/src/lib/number-display.ts` est le helper canonique de présentation numérique. Ne pas créer un second moteur de formatage local dans un composant ou une feature : réutiliser `formatNumber` ou un wrapper métier existant comme `formatMeasureValue`.
 
-Créer lors du chantier un helper canonique de présentation numérique, par exemple `website/src/lib/number-display.ts` ou `number-format.ts` — le nom exact doit être choisi après une dernière recherche dans le code courant.
+Le helper est réservé à la **présentation**. Les formats techniques déterministes, arrondis de calcul, protocoles matériels, sérialisations DB/API et exports machine peuvent conserver une logique dédiée lorsque leur contrat l'exige.
 
 L'API doit être paramétrable et rester simple. Elle doit permettre au minimum :
 
@@ -206,12 +206,15 @@ L'API doit être paramétrable et rester simple. Elle doit permettre au minimum 
 - de définir un fallback pour `null`, `undefined`, `NaN` ou valeur invalide ;
 - de contrôler le séparateur de milliers/grouping lorsque le contexte le nécessite.
 
-Exemple conceptuel :
+API canonique :
 
 ```ts
 formatNumber(value, { decimals: 2, locale })
 formatNumber(value, { minimumDecimals: 0, maximumDecimals: 3, locale })
+formatNumber(value, { fallback: "-", grouping: false })
 ```
+
+Pour les mesures, conserver `formatMeasureValue(value, decimals, locale)` comme wrapper métier : il applique la précision de la sonde sans modifier la valeur brute.
 
 L'implémentation doit privilégier `Intl.NumberFormat` pour l'affichage localisé plutôt que `toFixed()` dans l'UI. `toFixed()` peut rester pertinent pour un format technique/machine explicitement défini, mais ne doit pas devenir la convention d'affichage utilisateur.
 
@@ -222,6 +225,8 @@ Règles importantes :
 - ne pas concaténer l'unité dans tous les composants si un besoin partagé `formatMeasurement` apparaît, mais ne pas créer ce helper spécialisé avant d'avoir plusieurs usages réels ;
 - les exports machine/CSV ne doivent pas hériter aveuglément de la locale de l'UI si leur contrat exige un séparateur ou une précision déterministe ;
 - pour les mesures, coefficients et calculs métrologiques, la précision d'affichage doit être un paramètre du contexte et non une constante globale supposée correcte pour tous les types de sonde.
+
+Commande dédiée : `pnpm test:number-display`.
 
 Tests minimum du helper numérique :
 

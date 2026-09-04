@@ -232,7 +232,7 @@ export function AccountInfoCard({ userInfo }: Props) {
               type="text"
               value={
                 userInfo?.Date_Creation
-                  ? formatDbDateTime(userInfo.Date_Creation, { dateOnly: true })
+                  ? formatDbDateTime(userInfo.Date_Creation, { format: 'date' })
                   : ''
               }
               readOnly

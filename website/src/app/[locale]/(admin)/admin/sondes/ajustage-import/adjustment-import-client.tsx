@@ -52,7 +52,7 @@ type ModuleAssignment = {
 const COMMON_UNIT_OPTIONS = ["\u00B0C", "C", "%", "Pa", "hPa", "bar", "mbar", "ppm", "lux", "V", "mA"];
 
 const formatDateTime = (value: string | Date | null | undefined, locale: string) => {
-  return formatDbDateTime(value, { locale, fallback: "" }) || null;
+  return formatDbDateTime(value, { format: "dateTimeSeconds", locale, fallback: "" }) || null;
 };
 
 export function AdjustmentImportClient() {

@@ -230,7 +230,7 @@ export function CurvesOverlayModal({ open, onOpenChange, locations }: Props) {
         const value = dataset.data[rowIndex]
         return value === null || value === undefined ? "" : formatMeasureValue(value, null, localeTag)
       })
-      return [formatDbDateTime(label, { locale: localeTag, fallback: label }), ...values]
+      return [formatDbDateTime(label, { format: "dateTimeSeconds", locale: localeTag, fallback: label }), ...values]
     })
 
     const escapeCell = (value: string) => {
@@ -266,7 +266,7 @@ export function CurvesOverlayModal({ open, onOpenChange, locations }: Props) {
         </head>
         <body>
           <h2>${t("overlay.title")}</h2>
-          <div class="meta">${formatDbDateTime(new Date(), { locale: localeTag })}</div>
+          <div class="meta">${formatDbDateTime(new Date(), { format: "dateTimeSeconds", locale: localeTag })}</div>
           <img src="${imageDataUrl}" alt="overlay" />
         </body>
       </html>

@@ -322,6 +322,29 @@ async function loadManagedSensors(selectedIds: number[]) {
       })
     : []
   const modulesById = new Map(modules.map((moduleRow) => [moduleRow.Id_Module, moduleRow]))
+  const serialNumbers = rows
+    .map((row) => row.Sonde_Numero_Serie?.trim())
+    .filter((serial): serial is string => Boolean(serial))
+  const latestAdjustments = serialNumbers.length
+    ? await prisma.t_ajustage.findMany({
+        where: { Sonde_Numero_Serie: { in: serialNumbers }, Unite: { not: null } },
+        select: {
+          Sonde_Numero_Serie: true,
+          Unite: true,
+          Date_Heure_Ajustage: true,
+          Id_Ajustage: true,
+        },
+        orderBy: [{ Date_Heure_Ajustage: "desc" }, { Id_Ajustage: "desc" }],
+      })
+    : []
+  const adjustmentUnitBySerial = new Map<string, string>()
+  for (const adjustment of latestAdjustments) {
+    const serial = adjustment.Sonde_Numero_Serie?.trim()
+    const unit = adjustment.Unite?.trim()
+    if (serial && unit && !adjustmentUnitBySerial.has(serial)) {
+      adjustmentUnitBySerial.set(serial, unit)
+    }
+  }
 
   return rows.map((row): ManagedCalibrationSensor => {
     const serial = row.Sonde_Numero_Serie?.trim()
@@ -342,7 +365,7 @@ async function loadManagedSensors(selectedIds: number[]) {
       serialNumber: serial,
       locationId: firstLocation?.Id_Lieu ?? null,
       locationName: firstLocation?.Nom_Lieu ?? null,
-      unit: row.t_sonde_type?.Unite?.trim() || null,
+      unit: adjustmentUnitBySerial.get(serial) ?? row.t_sonde_type?.Unite?.trim() ?? null,
       moduleId: row.Id_Module,
       moduleName: moduleRow?.Module_Numero_Serie ?? moduleRow?.Emplacement ?? null,
       modulePort: moduleRow?.Port_Serie ?? null,
@@ -499,7 +522,7 @@ async function readGspMeasurement(target: CalibrationReadTarget): Promise<Calibr
       return {
         value: null,
         rawValue: raw?.RawValue == null ? null : String(raw.RawValue),
-        unit: raw?.Unit == null ? target.unit : String(raw.Unit),
+        unit: target.unit ?? (raw?.Unit == null ? null : String(raw.Unit)),
         measuredAt,
         source: "GSP",
         error: String(raw?.Error ?? raw?.error ?? payload?.message ?? "Lecture impossible"),
@@ -508,7 +531,7 @@ async function readGspMeasurement(target: CalibrationReadTarget): Promise<Calibr
     return {
       value: asFiniteNumber(raw?.Value),
       rawValue: raw?.RawValue == null ? null : String(raw.RawValue),
-      unit: raw?.Unit == null ? target.unit : String(raw.Unit),
+      unit: target.unit ?? (raw?.Unit == null ? null : String(raw.Unit)),
       measuredAt,
       source: "GSP",
       error: null,
@@ -577,7 +600,7 @@ async function readLatestGsoMeasurement(
   return {
     value,
     rawValue: row.Valeur_Brute == null ? null : String(row.Valeur_Brute),
-    unit: row.Unite?.trim() || sensor.unit,
+    unit: sensor.unit ?? row.Unite?.trim() ?? null,
     measuredAt: measuredAt ?? nowIso(),
     source: "GSO",
     error: value == null ? "Mesure GSO invalide" : null,

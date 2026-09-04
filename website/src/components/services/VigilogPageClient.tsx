@@ -53,6 +53,7 @@ import { useSitesSimple } from "@/hooks/useSites"
 import { useToast } from "@/hooks/use-toast"
 import { getJson, patchJson, postJson } from "@/lib/http"
 import { formatDbDateTime } from "@/lib/date-display"
+import { formatNumber as formatDisplayNumber } from "@/lib/number-display"
 import type { VigilogAgentConfigureResponse } from "@/lib/vigilog-agent"
 import {
   clearVigilogAgent,
@@ -79,21 +80,20 @@ function normalizePresenceDetails(value: string | null | undefined) {
 
 function formatDateTime(value: string | null, locale: string) {
   return formatDbDateTime(value, {
-    withSeconds: false,
+    format: "dateTime",
     locale: locale === "fr" ? "fr-FR" : "en-GB",
   })
 }
 
 function formatDate(value: string | null, locale: string) {
   return formatDbDateTime(value, {
-    dateOnly: true,
+    format: "date",
     locale: locale === "fr" ? "fr-FR" : "en-GB",
   })
 }
 
 function formatNumber(value: number | null) {
-  if (value == null) return "-"
-  return value.toFixed(2)
+  return formatDisplayNumber(value, { decimals: 2, locale: "en-US", grouping: false, fallback: "-" })
 }
 
 function formatDuration(totalSeconds: number) {

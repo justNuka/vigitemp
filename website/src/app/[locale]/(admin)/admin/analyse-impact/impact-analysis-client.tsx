@@ -233,7 +233,7 @@ export function ImpactAnalysisClient() {
 
     doc.setFont("helvetica", "normal")
     doc.setFontSize(10)
-    doc.text(`${lieu.nom} - ${formatDbDateTime(new Date(), { locale: locale === "fr" ? "fr-FR" : locale })}`, margin, y)
+    doc.text(`${lieu.nom} - ${formatDbDateTime(new Date(), { format: "dateTimeSeconds", locale: locale === "fr" ? "fr-FR" : locale })}`, margin, y)
     y += 10
 
     doc.setFontSize(11)
@@ -260,8 +260,8 @@ export function ImpactAnalysisClient() {
     doc.setFont("helvetica", "normal")
 
     for (const alarm of realAlarms.slice(0, 10)) {
-      const start = formatDbDateTime(alarm.Date_Heure_Debut, { locale: locale === "fr" ? "fr-FR" : locale })
-      const end = formatDbDateTime(alarm.Date_Heure_Fin, { locale: locale === "fr" ? "fr-FR" : locale })
+      const start = formatDbDateTime(alarm.Date_Heure_Debut, { format: "dateTimeSeconds", locale: locale === "fr" ? "fr-FR" : locale })
+      const end = formatDbDateTime(alarm.Date_Heure_Fin, { format: "dateTimeSeconds", locale: locale === "fr" ? "fr-FR" : locale })
       doc.text(`${alarm.Type ?? "-"} | ${start} -> ${end}`, margin, y)
       y += 5
       if (y > 280) break

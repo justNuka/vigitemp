@@ -5,6 +5,7 @@ import { jsPDF } from "jspdf"
 import autoTable from "jspdf-autotable"
 
 import { formatDbDateTime } from "@/lib/date-display"
+import { formatNumber as formatDisplayNumber } from "@/lib/number-display"
 
 export type AdjustmentReportInput = {
   adjustmentId: number
@@ -32,11 +33,12 @@ export type AdjustmentReportInput = {
 }
 
 function formatNumber(value: number | null, decimals = 6) {
-  if (value == null || !Number.isFinite(value)) return "-"
-  return new Intl.NumberFormat("fr-FR", {
-    minimumFractionDigits: 0,
-    maximumFractionDigits: Math.max(0, decimals),
-  }).format(value)
+  return formatDisplayNumber(value, {
+    locale: "fr-FR",
+    minimumDecimals: 0,
+    maximumDecimals: Math.max(0, decimals),
+    fallback: "-",
+  })
 }
 
 function formatMeasure(value: number | null, decimals: number | null) {
@@ -106,16 +108,17 @@ export function buildAdjustmentReportPdf(input: AdjustmentReportInput) {
   const contentWidth = pageWidth - margin * 2
   const timeZone = process.env.VIGISENSYS_EMAIL_TIMEZONE || process.env.VIGITEMP_EMAIL_TIMEZONE || "Europe/Paris"
   const editionDate = formatDbDateTime(new Date(), {
-    dateOnly: true,
+    format: "date",
     locale: "fr-FR",
     timeZone,
   })
   const adjustmentDate = formatDbDateTime(input.adjustedAt, {
+    format: "dateTimeSeconds",
     locale: "fr-FR",
     timeZone,
   })
   const certificateDate = formatDbDateTime(input.standardCertificateDate, {
-    dateOnly: true,
+    format: "date",
     locale: "fr-FR",
     timeZone,
   })

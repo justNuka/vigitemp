@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import { useTranslations } from "next-intl"
 import { Download, FileSpreadsheet, FileText, FileType2, ImageIcon } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { formatNumber } from "@/lib/number-display"
 import type { Attachment } from "./_types"
 
 type Props = {
@@ -19,8 +20,8 @@ type SpreadsheetPreview = {
 
 function formatSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+  if (bytes < 1024 * 1024) return `${formatNumber(bytes / 1024, { decimals: 1, locale: "en-US", grouping: false })} KB`
+  return `${formatNumber(bytes / (1024 * 1024), { decimals: 1, locale: "en-US", grouping: false })} MB`
 }
 
 function getExtension(fileName: string): string {
