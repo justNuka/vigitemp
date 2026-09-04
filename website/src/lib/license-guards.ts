@@ -6,7 +6,7 @@ import {
   withAuthorizationLogging,
   type ApiHandler,
 } from "@/lib/api-wrappers";
-import { isOneOrHigher, isStandardOrExpert } from "@/lib/license-access";
+import { hasLicenseOption, isOneOrHigher, isStandardOrExpert } from "@/lib/license-access";
 import { validateLicense } from "@/lib/license-server";
 
 export type { HandlerContext } from "@/lib/api-wrappers";
@@ -37,6 +37,24 @@ export async function requireOneOrHigherLicense(): Promise<NextResponse | null> 
   }
 
   return null;
+}
+
+export async function requireLicenseOption(option: string): Promise<NextResponse | null> {
+  const license = await validateLicense();
+
+  if (!license.ok) {
+    return apiError(403, "license_invalid", "Licence invalide");
+  }
+
+  if (!hasLicenseOption(license, option)) {
+    return apiError(403, "license_option_forbidden", "Fonctionnalite non disponible avec votre licence");
+  }
+
+  return null;
+}
+
+export async function requireTelephonyLicense(): Promise<NextResponse | null> {
+  return requireLicenseOption("telephonie");
 }
 
 export async function requireStandardOrExpertIfFieldsUsed(
