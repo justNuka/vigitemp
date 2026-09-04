@@ -1,4 +1,4 @@
--- Version produit / seed : 0.90.1
+-- Version produit / seed : 0.90.2
 -- DDL synchronise sur le dump schema courant du 2026-08-25.
 -- Les DEFINER et compteurs AUTO_INCREMENT de production sont volontairement retires.
 
@@ -3136,6 +3136,80 @@ DELIMITER ;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
 
+-- =====================================================================
+-- Better Auth - schema preparatoire (runtime legacy conserve)
+-- =====================================================================
+-- Ces tables preparent BA-2 sans activer Better Auth dans l'application.
+-- t_utilisateur reste l'identite metier de reference.
+DROP TABLE IF EXISTS `t_auth_session`;
+DROP TABLE IF EXISTS `t_auth_account`;
+DROP TABLE IF EXISTS `t_auth_verification`;
+DROP TABLE IF EXISTS `t_auth_user`;
+
+CREATE TABLE `t_auth_user` (
+  `id` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `email` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `emailVerified` tinyint(1) NOT NULL DEFAULT '0',
+  `image` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `createdAt` datetime NOT NULL,
+  `updatedAt` datetime NOT NULL,
+  `username` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `displayUsername` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `vigisensysUserId` int DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `UK_t_auth_user_email` (`email`),
+  UNIQUE KEY `UK_t_auth_user_username` (`username`),
+  UNIQUE KEY `UK_t_auth_user_vigisensys_user` (`vigisensysUserId`),
+  CONSTRAINT `FK_t_auth_user_vigisensys_user` FOREIGN KEY (`vigisensysUserId`) REFERENCES `t_utilisateur` (`Id_Utilisateur`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `t_auth_session` (
+  `id` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `expiresAt` datetime NOT NULL,
+  `token` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `createdAt` datetime NOT NULL,
+  `updatedAt` datetime NOT NULL,
+  `ipAddress` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `userAgent` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `userId` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `UK_t_auth_session_token` (`token`),
+  KEY `IDX_t_auth_session_user` (`userId`),
+  CONSTRAINT `FK_t_auth_session_user` FOREIGN KEY (`userId`) REFERENCES `t_auth_user` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `t_auth_account` (
+  `id` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `accountId` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `providerId` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `userId` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `accessToken` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `refreshToken` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `idToken` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `accessTokenExpiresAt` datetime DEFAULT NULL,
+  `refreshTokenExpiresAt` datetime DEFAULT NULL,
+  `scope` varchar(1024) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `password` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `createdAt` datetime NOT NULL,
+  `updatedAt` datetime NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `UK_t_auth_account_provider_account` (`providerId`,`accountId`),
+  KEY `IDX_t_auth_account_user` (`userId`),
+  CONSTRAINT `FK_t_auth_account_user` FOREIGN KEY (`userId`) REFERENCES `t_auth_user` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `t_auth_verification` (
+  `id` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `identifier` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `value` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `expiresAt` datetime NOT NULL,
+  `createdAt` datetime NOT NULL,
+  `updatedAt` datetime NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `IDX_t_auth_verification_identifier` (`identifier`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 CREATE DATABASE  IF NOT EXISTS `vigi_mesures` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci */ /*!80016 DEFAULT ENCRYPTION='N' */;
 USE `vigi_mesures`;
 -- MySQL dump 10.13  Distrib 8.0.44, for Win64 (x86_64)
@@ -5026,7 +5100,7 @@ INSERT INTO `t_utilisateur` (Login, Mot_De_Passe, Est_Archive, Profil_Utilisateu
 SET FOREIGN_KEY_CHECKS=1;
 
 INSERT INTO `t_parametre` (`Section`, `Mot_Cle`, `Valeur`, `Commentaire`)
-VALUES ('VERSION', 'SCHEMA_VERSION', '0.90.1', 'Version produit commune des seeds MySQL et SQL Server')
+VALUES ('VERSION', 'SCHEMA_VERSION', '0.90.2', 'Version produit commune des seeds MySQL et SQL Server')
 ON DUPLICATE KEY UPDATE
   `Valeur` = VALUES(`Valeur`),
   `Commentaire` = VALUES(`Commentaire`);
