@@ -237,3 +237,18 @@ Principal fichier :
 - [x] contrôle i18n exécuté : échec uniquement sur les 15 chaînes/symboles préexistants de `calibration-workflow-client.tsx`, aucune nouvelle remontée liée à l'audit ;
 - [x] workflow de validation temporaire supprimé avant PR ;
 - [x] PR #87 ouverte vers `dev` sans merge automatique.
+
+---
+
+## Idée — cards de services sur le Dashboard admin
+
+**Statut : `A_FAIRE` — idée UI à planifier**
+
+Ajouter sur le Dashboard admin des cards synthétiques pour les services optionnels/configurables, en commençant par :
+
+- **Mailing** : état activé/désactivé, configuration SMTP disponible, accès rapide aux paramètres de mailing ; ne jamais afficher de secret dans la card.
+- **Téléphonie** : état activé/désactivé, provider configuré lorsque pertinent, accès rapide aux paramètres de téléphonie.
+
+Pour la Téléphonie, respecter le contrat de licence : si l'option `telephonie` n'est pas présente, la card peut rester visible afin de montrer la fonctionnalité disponible dans VigiSensys, mais doit utiliser le même principe de verrouillage visuel que les paramètres (voile/flou progressif + message de fonctionnalité non disponible avec la licence) et ne proposer aucune action utilisable.
+
+Prévoir si possible un composant de card générique/réutilisable pour pouvoir ajouter plus tard d'autres services sans dupliquer la structure du Dashboard admin.
