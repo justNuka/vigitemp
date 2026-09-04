@@ -143,9 +143,18 @@ export function TelephonySettingsCard() {
   const testTwilioCall = async () => {
     setTestingCall(true)
     try {
-      const result = await postJson<{ sid: string | null; status: string | null }>("/api/admin/telephony/twilio/test-call", { to: testNumber })
+      const result = await postJson<{
+        sid: string | null
+        status: string | null
+        testMode?: "vigisensys_tts" | "twilio_trial_template"
+      }>("/api/admin/telephony/twilio/test-call", { to: testNumber })
       const callId = result.sid ? ` (${result.sid})` : ""
-      toast.success(`${copy.providerLabel.twilio} — ${copy.testCall}: ${testNumber}${callId}`)
+
+      if (result.testMode === "twilio_trial_template") {
+        toast.success(`${copy.testCallTrialTemplate}${callId}`, { duration: 8_000 })
+      } else {
+        toast.success(`${copy.providerLabel.twilio} — ${copy.testCall}: ${testNumber}${callId}`)
+      }
     } catch (error) {
       toast.error(error instanceof Error ? error.message : `${copy.providerLabel.twilio} — ${copy.testCall}`)
     } finally {
