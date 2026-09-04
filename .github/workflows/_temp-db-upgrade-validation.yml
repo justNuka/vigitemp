@@ -21,7 +21,7 @@ jobs:
             -p 3306:3306 \
             mysql:8.0
           for i in {1..60}; do
-            if docker exec vigisensys-mysql mysqladmin ping -uroot -pvigisensys_test --silent; then
+            if docker exec vigisensys-mysql mysql -uroot -pvigisensys_test -e "SELECT 1" >/dev/null 2>&1; then
               exit 0
             fi
             sleep 2
@@ -124,6 +124,6 @@ jobs:
 
       - name: Verify SQL Server schema
         run: |
-          result=$(docker exec vigisensys-mssql "$SQLCMD_PATH" -S localhost -U sa -P 'VigiSensys_Test!2026' -C -h -1 -W -Q "SET NOCOUNT ON; USE [vigi_main]; SELECT CONCAT(CASE WHEN COL_LENGTH('dbo.t_ajustage','Coeffs_Modifies_Depuis_Derniere_Mesure') IS NULL THEN 0 ELSE 1 END, '|', (SELECT COUNT(*) FROM sys.tables WHERE name IN ('t_auth_user','t_auth_session','t_auth_account','t_auth_verification')), '|', (SELECT Valeur FROM dbo.t_parametre WHERE Section='VERSION' AND Mot_Cle='SCHEMA_VERSION'));" | tr -d '\r' | xargs)
+          result=$(docker exec vigisensys-mssql "$SQLCMD_PATH" -S localhost -U sa -P 'VigiSensys_Test!2026' -C -d vigi_main -h -1 -W -Q "SET NOCOUNT ON; SELECT CONCAT(CASE WHEN COL_LENGTH('dbo.t_ajustage','Coeffs_Modifies_Depuis_Derniere_Mesure') IS NULL THEN 0 ELSE 1 END, '|', (SELECT COUNT(*) FROM sys.tables WHERE name IN ('t_auth_user','t_auth_session','t_auth_account','t_auth_verification')), '|', (SELECT Valeur FROM dbo.t_parametre WHERE Section='VERSION' AND Mot_Cle='SCHEMA_VERSION'));" | tr -d '\r' | grep -E '^[[:space:]]*[0-9]+\|[0-9]+\|[0-9]+\.[0-9]+\.[0-9]+[[:space:]]*$' | tail -1 | xargs)
           echo "$result"
           test "$result" = "1|4|0.90.2"
