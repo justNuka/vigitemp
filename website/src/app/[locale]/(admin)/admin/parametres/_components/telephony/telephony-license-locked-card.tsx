@@ -15,16 +15,10 @@ import { COPY } from "./telephony-settings-helpers"
 export function TelephonyLicenseLockedCard() {
   const locale = useLocale()
   const copy = COPY[locale === "en" ? "en" : "fr"]
-  const isEnglish = locale === "en"
-
   return (
     <LicenseFeatureLock
-      title={isEnglish ? "Feature not available with your license" : "Fonctionnalité non disponible avec votre licence"}
-      description={
-        isEnglish
-          ? "The telephony option must be enabled in the VigiSensys license to configure or use voice calls."
-          : "L’option téléphonie doit être activée dans la licence VigiSensys pour configurer ou utiliser les appels vocaux."
-      }
+      title={copy.licenseLockedTitle}
+      description={copy.licenseLockedDescription}
     >
       <Card className="min-h-[430px] border-border/60 bg-white dark:bg-popover dark:text-popover-foreground">
         <CardHeader>
@@ -37,7 +31,7 @@ export function TelephonyLicenseLockedCard() {
               <CardDescription>{copy.description}</CardDescription>
             </div>
             <Badge variant="secondary" className="border border-sky-200 bg-sky-50 text-sky-700 dark:border-sky-900 dark:bg-sky-950/40 dark:text-sky-300">
-              Twilio V1
+              {copy.recommendedProviderBadge}
             </Badge>
           </div>
         </CardHeader>
