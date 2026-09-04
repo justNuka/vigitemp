@@ -1,0 +1,44 @@
+name: Temp Twilio trial validation
+
+on:
+  push:
+    branches:
+      - fix/telephony-twilio-trial-call
+    paths:
+      - website/src/lib/telephony/twilio-provider.ts
+      - website/src/app/**/telephony-settings-card.tsx
+      - website/src/app/**/telephony-settings-helpers.ts
+      - website/src/app/**/telephony-settings-types.ts
+      - website/scripts/test-twilio-provider.ts
+      - .github/workflows/_temp-twilio-trial-validation.yml
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: website
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: website/pnpm-lock.yaml
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Twilio provider regression test
+        run: pnpm exec tsx scripts/test-twilio-provider.ts
+      - name: TypeScript
+        run: pnpm exec tsc --noEmit
+      - name: ESLint changed files
+        run: >-
+          pnpm exec eslint
+          src/lib/telephony/twilio-provider.ts
+          'src/app/[locale]/(admin)/admin/parametres/_components/telephony-settings-card.tsx'
+          'src/app/[locale]/(admin)/admin/parametres/_components/telephony/telephony-settings-helpers.ts'
+          'src/app/[locale]/(admin)/admin/parametres/_components/telephony/telephony-settings-types.ts'
+          scripts/test-twilio-provider.ts
