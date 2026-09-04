@@ -2,10 +2,14 @@ import { NextRequest } from "next/server"
 
 import { withAdminLogging } from "@/lib/api-wrappers"
 import { apiError, apiOk } from "@/lib/api-response"
+import { requireTelephonyLicense } from "@/lib/license-guards"
 import { getTelephonyConfig, saveTelephonyConfig } from "@/lib/telephony/config"
 import { OvhVoipProvider } from "@/lib/telephony/ovh-provider"
 
 export const GET = withAdminLogging(async (_req: NextRequest) => {
+  const licenseError = await requireTelephonyLicense()
+  if (licenseError) return licenseError
+
   try {
     const config = await getTelephonyConfig()
     if (config.provider !== "ovhcloud") {
@@ -21,6 +25,9 @@ export const GET = withAdminLogging(async (_req: NextRequest) => {
 })
 
 export const POST = withAdminLogging(async (_req: NextRequest) => {
+  const licenseError = await requireTelephonyLicense()
+  if (licenseError) return licenseError
+
   try {
     const config = await getTelephonyConfig()
     if (config.provider !== "ovhcloud") {
