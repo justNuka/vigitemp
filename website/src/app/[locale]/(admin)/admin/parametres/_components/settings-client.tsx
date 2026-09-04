@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
 import { useLicense } from "@/components/license/license-provider";
-import { isStandardOrExpert } from "@/lib/license-access";
+import { hasLicenseOption, isStandardOrExpert } from "@/lib/license-access";
 
 import { AutoLockSettingsCard } from "./auto-lock-settings-card";
 import { GeneralSettingsCard } from "./general-settings-card";
@@ -15,6 +15,7 @@ import { NonResponseAutoAckSettingsCard } from "./non-response-auto-ack-settings
 import { PasswordPolicyCard } from "./password-policy-card";
 import { SMTPConfigModal } from "./smtp-config-modal";
 import { SmtpSettingsCard } from "./smtp-settings-card";
+import { TelephonyLicenseLockedCard } from "./telephony/telephony-license-locked-card";
 import { TelephonySettingsCard } from "./telephony-settings-card";
 import { TimezoneSettingsCard } from "./timezone-settings-card";
 import { useSettingsEditor } from "./use-settings-editor";
@@ -71,6 +72,7 @@ export function SettingsClient({ settings: initialSettings }: Props) {
   const t = useTranslations("adminSettings");
   const { license } = useLicense();
   const canEditSurveillanceRefresh = isStandardOrExpert(license);
+  const canUseTelephony = hasLicenseOption(license, "telephonie");
   const [smtpModalOpen, setSmtpModalOpen] = useState(false);
   const { settings, loadingKeys, hasPendingChanges, setDraftValue, toggleDraft, discardChanges, saveChanges } =
     useSettingsEditor(initialSettings);
@@ -144,7 +146,7 @@ export function SettingsClient({ settings: initialSettings }: Props) {
       ) : null}
 
       <SmtpSettingsCard onOpenSmtpModal={() => setSmtpModalOpen(true)} />
-      <TelephonySettingsCard />
+      {canUseTelephony ? <TelephonySettingsCard /> : <TelephonyLicenseLockedCard />}
       <SMTPConfigModal open={smtpModalOpen} onOpenChange={setSmtpModalOpen} />
     </main>
   );

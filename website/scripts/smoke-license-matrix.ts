@@ -1,4 +1,3 @@
-
 type Edition = "pack" | "one" | "standard" | "expert";
 
 type SmokeCase = {
@@ -68,6 +67,14 @@ function normalizeEdition(input: unknown): Edition {
     return value;
   }
   return "one";
+}
+
+function normalizeLicenseOptions(input: unknown): string[] {
+  if (!Array.isArray(input)) return [];
+  return input
+    .filter((value): value is string => typeof value === "string")
+    .map((value) => value.trim().toLowerCase())
+    .filter(Boolean);
 }
 
 function resolveOptions(): CliOptions {
@@ -234,10 +241,18 @@ async function main() {
     { method: "GET", headers: { cookie } },
     options.timeoutMs,
   );
-  const licenseJson = (await licenseResponse.json()) as { ok?: boolean; edition?: string; reason?: string };
+  const licenseJson = (await licenseResponse.json()) as {
+    ok?: boolean;
+    edition?: string;
+    options?: unknown;
+    reason?: string;
+  };
   const edition = normalizeEdition(licenseJson.edition);
+  const licenseOptions = normalizeLicenseOptions(licenseJson.options);
+  const hasTelephony = licenseOptions.includes("telephonie");
 
   console.log(`Edition detectee: ${edition}`);
+  console.log(`Options detectees: ${licenseOptions.length > 0 ? licenseOptions.join(", ") : "aucune"}`);
   if (!licenseJson.ok) {
     console.log(`Warning licence: ${licenseJson.reason ?? "unknown"}`);
   }
@@ -278,6 +293,28 @@ async function main() {
       console.log(`  note: ${testCase.note}`);
     }
   }
+
+  const telephonyResponse = await fetchWithTimeout(
+    `${options.baseUrl}/api/admin/telephony/config`,
+    { method: "GET", headers: { cookie } },
+    options.timeoutMs,
+  );
+  const telephonyExpected = hasTelephony ? [200] : [403];
+  if (telephonyExpected.includes(telephonyResponse.status)) {
+    passed++;
+    console.log(
+      `PASS ${"telephony-license".padEnd(20)} status=${telephonyResponse.status} expected=${telephonyExpected.join("|")}`,
+    );
+  } else {
+    failed++;
+    const sample = (await telephonyResponse.text()).slice(0, 240).replace(/\s+/g, " ");
+    console.log(
+      `FAIL ${"telephony-license".padEnd(20)} status=${telephonyResponse.status} expected=${telephonyExpected.join("|")} body="${sample}"`,
+    );
+  }
+  console.log(
+    `  note: telephonie ${hasTelephony ? "activee" : "absente"} dans la licence; l'API admin doit suivre l'option independamment de l'edition`,
+  );
 
   console.log("\n--- Resultat ---");
   console.log(`Edition: ${edition}`);

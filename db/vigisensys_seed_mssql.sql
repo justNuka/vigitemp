@@ -1,11 +1,20 @@
 -- =====================================================================
 -- BOOTSTRAP SQL SERVER VigiSensys
--- Version produit / seed : 0.90.1
+-- Version produit / seed : 0.90.2
 -- DDL traduit depuis le dump schema courant MySQL du 2026-08-25.
 -- Les FK MySQL ne sont pas reproduites: SQL Server ne prend pas en
 -- charge ON UPDATE CASCADE et refuse certains chemins de cascade multiples.
 -- Colonnes, cles primaires, unicites et index sont conserves.
 -- =====================================================================
+
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+SET ANSI_PADDING ON;
+SET ANSI_WARNINGS ON;
+SET ARITHABORT ON;
+SET CONCAT_NULL_YIELDS_NULL ON;
+SET NUMERIC_ROUNDABORT OFF;
+GO
 
 IF DB_ID(N'vigi_chat') IS NULL
 BEGIN
@@ -1751,6 +1760,113 @@ AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_vigi
   CREATE INDEX [FK_t_vigilog_usage_ponctuel_logger] ON dbo.[t_vigilog_usage_ponctuel] ([Id_VigiLog]);
 GO
 
+-- =====================================================================
+-- Better Auth - schema preparatoire (runtime legacy conserve)
+-- =====================================================================
+-- Ces tables preparent BA-2 sans activer Better Auth dans l'application.
+-- Conformement a ce seed SQL Server, les FK ne sont pas materialisees ici.
+-- t_utilisateur reste l'identite metier de reference.
+IF OBJECT_ID(N'dbo.t_auth_user', N'U') IS NULL
+BEGIN
+  CREATE TABLE dbo.[t_auth_user] (
+    [id] VARCHAR(255) NOT NULL,
+    [name] NVARCHAR(255) NOT NULL,
+    [email] NVARCHAR(255) NOT NULL,
+    [emailVerified] BIT NOT NULL DEFAULT(0),
+    [image] NVARCHAR(MAX) NULL,
+    [createdAt] DATETIME2 NOT NULL,
+    [updatedAt] DATETIME2 NOT NULL,
+    [username] NVARCHAR(255) NULL,
+    [displayUsername] NVARCHAR(255) NULL,
+    [vigisensysUserId] INT NULL,
+    CONSTRAINT [PK_t_auth_user] PRIMARY KEY ([id])
+  );
+END;
+GO
+IF OBJECT_ID(N'dbo.t_auth_user', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_auth_user') AND name=N'UK_t_auth_user_email')
+  CREATE UNIQUE INDEX [UK_t_auth_user_email] ON dbo.[t_auth_user] ([email]);
+GO
+IF OBJECT_ID(N'dbo.t_auth_user', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_auth_user') AND name=N'UK_t_auth_user_username')
+  CREATE UNIQUE INDEX [UK_t_auth_user_username] ON dbo.[t_auth_user] ([username]) WHERE [username] IS NOT NULL;
+GO
+IF OBJECT_ID(N'dbo.t_auth_user', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_auth_user') AND name=N'UK_t_auth_user_vigisensys_user')
+  CREATE UNIQUE INDEX [UK_t_auth_user_vigisensys_user] ON dbo.[t_auth_user] ([vigisensysUserId]) WHERE [vigisensysUserId] IS NOT NULL;
+GO
+
+IF OBJECT_ID(N'dbo.t_auth_session', N'U') IS NULL
+BEGIN
+  CREATE TABLE dbo.[t_auth_session] (
+    [id] VARCHAR(255) NOT NULL,
+    [expiresAt] DATETIME2 NOT NULL,
+    [token] VARCHAR(255) NOT NULL,
+    [createdAt] DATETIME2 NOT NULL,
+    [updatedAt] DATETIME2 NOT NULL,
+    [ipAddress] VARCHAR(64) NULL,
+    [userAgent] NVARCHAR(512) NULL,
+    [userId] VARCHAR(255) NOT NULL,
+    CONSTRAINT [PK_t_auth_session] PRIMARY KEY ([id])
+  );
+END;
+GO
+IF OBJECT_ID(N'dbo.t_auth_session', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_auth_session') AND name=N'UK_t_auth_session_token')
+  CREATE UNIQUE INDEX [UK_t_auth_session_token] ON dbo.[t_auth_session] ([token]);
+GO
+IF OBJECT_ID(N'dbo.t_auth_session', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_auth_session') AND name=N'IDX_t_auth_session_user')
+  CREATE INDEX [IDX_t_auth_session_user] ON dbo.[t_auth_session] ([userId]);
+GO
+
+IF OBJECT_ID(N'dbo.t_auth_account', N'U') IS NULL
+BEGIN
+  CREATE TABLE dbo.[t_auth_account] (
+    [id] VARCHAR(255) NOT NULL,
+    [accountId] VARCHAR(255) NOT NULL,
+    [providerId] VARCHAR(255) NOT NULL,
+    [userId] VARCHAR(255) NOT NULL,
+    [accessToken] NVARCHAR(MAX) NULL,
+    [refreshToken] NVARCHAR(MAX) NULL,
+    [idToken] NVARCHAR(MAX) NULL,
+    [accessTokenExpiresAt] DATETIME2 NULL,
+    [refreshTokenExpiresAt] DATETIME2 NULL,
+    [scope] NVARCHAR(1024) NULL,
+    [password] VARCHAR(255) NULL,
+    [createdAt] DATETIME2 NOT NULL,
+    [updatedAt] DATETIME2 NOT NULL,
+    CONSTRAINT [PK_t_auth_account] PRIMARY KEY ([id])
+  );
+END;
+GO
+IF OBJECT_ID(N'dbo.t_auth_account', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_auth_account') AND name=N'UK_t_auth_account_provider_account')
+  CREATE UNIQUE INDEX [UK_t_auth_account_provider_account] ON dbo.[t_auth_account] ([providerId], [accountId]);
+GO
+IF OBJECT_ID(N'dbo.t_auth_account', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_auth_account') AND name=N'IDX_t_auth_account_user')
+  CREATE INDEX [IDX_t_auth_account_user] ON dbo.[t_auth_account] ([userId]);
+GO
+
+IF OBJECT_ID(N'dbo.t_auth_verification', N'U') IS NULL
+BEGIN
+  CREATE TABLE dbo.[t_auth_verification] (
+    [id] VARCHAR(255) NOT NULL,
+    [identifier] NVARCHAR(255) NOT NULL,
+    [value] NVARCHAR(MAX) NOT NULL,
+    [expiresAt] DATETIME2 NOT NULL,
+    [createdAt] DATETIME2 NOT NULL,
+    [updatedAt] DATETIME2 NOT NULL,
+    CONSTRAINT [PK_t_auth_verification] PRIMARY KEY ([id])
+  );
+END;
+GO
+IF OBJECT_ID(N'dbo.t_auth_verification', N'U') IS NOT NULL
+AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_auth_verification') AND name=N'IDX_t_auth_verification_identifier')
+  CREATE INDEX [IDX_t_auth_verification_identifier] ON dbo.[t_auth_verification] ([identifier]);
+GO
+
 IF DB_ID(N'vigi_mesures') IS NULL
 BEGIN
   CREATE DATABASE [vigi_mesures];
@@ -2699,7 +2815,7 @@ DECLARE @RecentParams TABLE (
 );
 
 INSERT INTO @RecentParams (Section, Mot_Cle, Valeur, Commentaire) VALUES
-(N'VERSION',N'SCHEMA_VERSION',N'0.90.1',N'Version produit commune des seeds MySQL et SQL Server'),
+(N'VERSION',N'SCHEMA_VERSION',N'0.90.2',N'Version produit commune des seeds MySQL et SQL Server'),
 (N'GENERAL',N'TIMEZONE',N'Europe/Paris',N'Fuseau horaire par defaut'),
 (N'DASHBOARD',N'AUDIT_GRAPH_OPENINGS',N'false',N'Activer l audit trail a l ouverture des graphiques'),
 (N'DASHBOARD',N'ETALONNAGE_WARNING_DAYS',N'90',N'Délai alerte validité étalonnage en jours'),

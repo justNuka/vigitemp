@@ -2,10 +2,14 @@ import { NextRequest } from "next/server"
 
 import { withAdminLogging } from "@/lib/api-wrappers"
 import { apiError, apiOk } from "@/lib/api-response"
+import { requireTelephonyLicense } from "@/lib/license-guards"
 import { AsteriskAriProvider } from "@/lib/telephony/asterisk-provider"
 import { getTelephonyConfig } from "@/lib/telephony/config"
 
 export const POST = withAdminLogging(async (_req: NextRequest) => {
+  const licenseError = await requireTelephonyLicense()
+  if (licenseError) return licenseError
+
   try {
     const config = await getTelephonyConfig()
     if (config.provider !== "asterisk") {

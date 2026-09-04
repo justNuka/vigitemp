@@ -1,6 +1,9 @@
 ﻿export type LicenseEdition = "pack" | "one" | "standard" | "expert";
 
-type LicenseLike = { edition?: string | null } | string | null | undefined;
+export type LicenseLike = {
+  edition?: string | null;
+  options?: string[] | null;
+} | string | null | undefined;
 
 const KNOWN_EDITIONS: readonly LicenseEdition[] = ["pack", "one", "standard", "expert"] as const;
 
@@ -8,6 +11,12 @@ export function getLicenseEdition(input: LicenseLike, fallback: LicenseEdition =
   const raw = typeof input === "string" ? input : input?.edition;
   const normalized = (raw ?? "").trim().toLowerCase();
   return (KNOWN_EDITIONS as readonly string[]).includes(normalized) ? (normalized as LicenseEdition) : fallback;
+}
+
+export function hasLicenseOption(input: LicenseLike, option: string): boolean {
+  if (!input || typeof input === "string") return false;
+  const normalizedOption = option.trim().toLowerCase();
+  return (input.options ?? []).some((value) => value.trim().toLowerCase() === normalizedOption);
 }
 
 export function isPack(input: LicenseLike): boolean {
