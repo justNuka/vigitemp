@@ -1,0 +1,41 @@
+name: Temporary MySQL trigger seed fix
+
+on:
+  push:
+    branches:
+      - fix/license-telephony-seed-readiness
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/license-telephony-seed-readiness
+          fetch-depth: 0
+      - name: Fix malformed executable comment around GSO trigger
+        run: |
+          python3 <<'PY'
+          from pathlib import Path
+          path = Path('db/vigisensys_seed.sql')
+          text = path.read_text(encoding='utf-8')
+          bad = '/*!50003 TRIGGER `TRG_AFT_INS_MES_GSO` AFTER INSERT ON `tm_mesures_gso` FOR EACH ROW BEGIN */'
+          good = '/*!50003 TRIGGER `TRG_AFT_INS_MES_GSO` AFTER INSERT ON `tm_mesures_gso` FOR EACH ROW BEGIN'
+          if bad not in text:
+              raise SystemExit('Expected malformed trigger marker not found')
+          if text.count(bad) != 1:
+              raise SystemExit('Malformed trigger marker count is not exactly one')
+          text = text.replace(bad, good, 1)
+          path.write_text(text, encoding='utf-8', newline='\n')
+          PY
+      - name: Commit fix
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add db/vigisensys_seed.sql
+          git commit -m "fix(db): repair MySQL GSO trigger dump syntax"
+          git push origin HEAD:fix/license-telephony-seed-readiness
