@@ -7,6 +7,15 @@
 -- Colonnes, cles primaires, unicites et index sont conserves.
 -- =====================================================================
 
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+SET ANSI_PADDING ON;
+SET ANSI_WARNINGS ON;
+SET ARITHABORT ON;
+SET CONCAT_NULL_YIELDS_NULL ON;
+SET NUMERIC_ROUNDABORT OFF;
+GO
+
 IF DB_ID(N'vigi_chat') IS NULL
 BEGIN
   CREATE DATABASE [vigi_chat];

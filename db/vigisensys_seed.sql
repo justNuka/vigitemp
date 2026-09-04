@@ -3108,23 +3108,6 @@ END */ ;;
 DELIMITER ;
 /*!50106 SET TIME_ZONE= @save_time_zone */ ;
 
---
--- Final view structure for view `v_tm_mesures_dernier`
---
-
-/*!50001 DROP VIEW IF EXISTS `v_tm_mesures_dernier`*/;
-/*!50001 SET @saved_cs_client          = @@character_set_client */;
-/*!50001 SET @saved_cs_results         = @@character_set_results */;
-/*!50001 SET @saved_col_connection     = @@collation_connection */;
-/*!50001 SET character_set_client      = utf8mb4 */;
-/*!50001 SET character_set_results     = utf8mb4 */;
-/*!50001 SET collation_connection      = utf8mb4_0900_ai_ci */;
-/*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 SQL SECURITY INVOKER */
-/*!50001 VIEW `v_tm_mesures_dernier` AS select `l`.`Id_Lieu` AS `Id_Lieu`,`l`.`Sonde_Numero_Serie` AS `Sonde_Numero_Serie`,`l`.`Adresse_Sonde` AS `Adresse_Sonde`,`l`.`Nom_Lieu` AS `Nom_Lieu`,`l`.`Id_Alarme` AS `Id_Alarme`,`l`.`Est_Lieu_En_Alarme` AS `Alarme_en_cours`,`m`.`Valeur` AS `Dernier_Releve`,`m`.`Unite` AS `Unite`,`m`.`Date_Heure_Mesure` AS `Date_Heure_Mesure`,`m`.`COM_sonde` AS `COM_Lecture`,`m`.`Rssi` AS `Signal_Radio`,`m`.`Tension` AS `Tension_Piles`,left(`l`.`Adresse_Sonde`,(length(`l`.`Adresse_Sonde`) - 2)) AS `GSO_SN` from (`t_lieu` `l` left join `vigi_mesures`.`tm_mesures` `m` on(((`m`.`Id_Lieu` = `l`.`Id_Lieu`) and (`m`.`Date_Heure_Mesure` = (select `m2`.`Date_Heure_Mesure` from `vigi_mesures`.`tm_mesures` `m2` where (`m2`.`Id_Lieu` = `l`.`Id_Lieu`) order by `m2`.`Date_Heure_Mesure` desc limit 1))))) where ((`l`.`Lieu_Etat` = 'S') and (`l`.`Est_Lieu_GSO` = 1)) */;
-/*!50001 SET character_set_client      = @saved_cs_client */;
-/*!50001 SET character_set_results     = @saved_cs_results */;
-/*!50001 SET collation_connection      = @saved_col_connection */;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
@@ -5268,3 +5251,24 @@ INSERT INTO `t_parametre` (`Section`,`Mot_Cle`,`Valeur`,`Commentaire`) VALUES
 ON DUPLICATE KEY UPDATE
   `Valeur` = VALUES(`Valeur`),
   `Commentaire` = VALUES(`Commentaire`);
+
+-- Deferred fresh-install view: v_tm_mesures_dernier
+USE `vigi_main`;
+--
+-- Final view structure for view `v_tm_mesures_dernier`
+--
+
+/*!50001 DROP VIEW IF EXISTS `v_tm_mesures_dernier`*/;
+/*!50001 SET @saved_cs_client          = @@character_set_client */;
+/*!50001 SET @saved_cs_results         = @@character_set_results */;
+/*!50001 SET @saved_col_connection     = @@collation_connection */;
+/*!50001 SET character_set_client      = utf8mb4 */;
+/*!50001 SET character_set_results     = utf8mb4 */;
+/*!50001 SET collation_connection      = utf8mb4_0900_ai_ci */;
+/*!50001 CREATE ALGORITHM=UNDEFINED */
+/*!50013 SQL SECURITY INVOKER */
+/*!50001 VIEW `v_tm_mesures_dernier` AS select `l`.`Id_Lieu` AS `Id_Lieu`,`l`.`Sonde_Numero_Serie` AS `Sonde_Numero_Serie`,`l`.`Adresse_Sonde` AS `Adresse_Sonde`,`l`.`Nom_Lieu` AS `Nom_Lieu`,`l`.`Id_Alarme` AS `Id_Alarme`,`l`.`Est_Lieu_En_Alarme` AS `Alarme_en_cours`,`m`.`Valeur` AS `Dernier_Releve`,`m`.`Unite` AS `Unite`,`m`.`Date_Heure_Mesure` AS `Date_Heure_Mesure`,`m`.`COM_sonde` AS `COM_Lecture`,`m`.`Rssi` AS `Signal_Radio`,`m`.`Tension` AS `Tension_Piles`,left(`l`.`Adresse_Sonde`,(length(`l`.`Adresse_Sonde`) - 2)) AS `GSO_SN` from (`t_lieu` `l` left join `vigi_mesures`.`tm_mesures` `m` on(((`m`.`Id_Lieu` = `l`.`Id_Lieu`) and (`m`.`Date_Heure_Mesure` = (select `m2`.`Date_Heure_Mesure` from `vigi_mesures`.`tm_mesures` `m2` where (`m2`.`Id_Lieu` = `l`.`Id_Lieu`) order by `m2`.`Date_Heure_Mesure` desc limit 1))))) where ((`l`.`Lieu_Etat` = 'S') and (`l`.`Est_Lieu_GSO` = 1)) */;
+/*!50001 SET character_set_client      = @saved_cs_client */;
+/*!50001 SET character_set_results     = @saved_cs_results */;
+/*!50001 SET collation_connection      = @saved_col_connection */;
+
