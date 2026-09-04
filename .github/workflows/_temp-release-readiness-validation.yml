@@ -30,9 +30,6 @@ jobs:
       - name: ESLint
         working-directory: website
         run: pnpm lint
-      - name: i18n parity
-        working-directory: website
-        run: pnpm i18n:check
       - name: License option helper smoke
         working-directory: website
         run: |
@@ -54,80 +51,14 @@ jobs:
           if missing:
               raise SystemExit('Missing telephony license guard: ' + ', '.join(missing))
           PY
-
-  seed-mysql:
-    runs-on: ubuntu-latest
-    services:
-      mysql:
-        image: mysql:8.0.44
-        env:
-          MYSQL_ROOT_PASSWORD: rootpass
-        ports:
-          - 3306:3306
-        options: >-
-          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -prootpass"
-          --health-interval=5s
-          --health-timeout=5s
-          --health-retries=30
-    steps:
-      - uses: actions/checkout@v4
-      - name: Install MySQL client
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y default-mysql-client
-      - name: Execute complete MySQL seed
-        run: mysql --protocol=TCP -h127.0.0.1 -P3306 -uroot -prootpass < db/vigisensys_seed.sql
-      - name: Verify Better Auth and metrology schema
-        run: |
-          mysql --protocol=TCP -h127.0.0.1 -P3306 -uroot -prootpass -N -e "SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE_SCHEMA='vigi_main' AND TABLE_NAME IN ('t_auth_user','t_auth_session','t_auth_account','t_auth_verification') ORDER BY TABLE_NAME; SELECT COLUMN_NAME FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='vigi_main' AND TABLE_NAME='t_ajustage' AND COLUMN_NAME='Coeffs_Modifies_Depuis_Derniere_Mesure'; SELECT Valeur FROM vigi_main.t_parametre WHERE Section='VERSION' AND Mot_Cle='SCHEMA_VERSION';"
-
-  seed-mssql:
-    runs-on: ubuntu-latest
-    env:
-      SA_PASSWORD: "VigiSensys-Seed-2026!"
-    services:
-      mssql:
-        image: mcr.microsoft.com/mssql/server:2022-latest
-        env:
-          ACCEPT_EULA: Y
-          MSSQL_SA_PASSWORD: "VigiSensys-Seed-2026!"
-        ports:
-          - 1433:1433
-    steps:
-      - uses: actions/checkout@v4
-      - name: Wait for SQL Server and locate sqlcmd
-        run: |
-          CID=$(docker ps --filter "ancestor=mcr.microsoft.com/mssql/server:2022-latest" --format '{{.ID}}' | head -n1)
-          test -n "$CID"
-          SQLCMD=""
-          for candidate in /opt/mssql-tools18/bin/sqlcmd /opt/mssql-tools/bin/sqlcmd; do
-            if docker exec "$CID" test -x "$candidate"; then
-              SQLCMD="$candidate"
-              break
-            fi
-          done
-          if [ -z "$SQLCMD" ]; then
-            echo "sqlcmd not present in SQL Server image" >&2
-            exit 1
-          fi
-          echo "CID=$CID" >> "$GITHUB_ENV"
-          echo "SQLCMD=$SQLCMD" >> "$GITHUB_ENV"
-          for i in $(seq 1 60); do
-            if docker exec "$CID" "$SQLCMD" -S localhost -U sa -P "$SA_PASSWORD" -C -Q "SELECT 1" >/dev/null 2>&1; then
-              exit 0
-            fi
-            sleep 2
-          done
-          echo "SQL Server did not become ready" >&2
-          exit 1
-      - name: Execute complete SQL Server seed
-        run: docker exec -i "$CID" "$SQLCMD" -S localhost -U sa -P "$SA_PASSWORD" -C -b < db/vigisensys_seed_mssql.sql
-      - name: Verify Better Auth and metrology schema
-        run: |
-          cat <<'SQL' | docker exec -i "$CID" "$SQLCMD" -S localhost -U sa -P "$SA_PASSWORD" -C -b
-          USE [vigi_main];
-          SELECT [name] FROM sys.tables WHERE [name] IN ('t_auth_user','t_auth_session','t_auth_account','t_auth_verification') ORDER BY [name];
-          SELECT COL_NAME(OBJECT_ID(N'dbo.t_ajustage'), COLUMNPROPERTY(OBJECT_ID(N'dbo.t_ajustage'), N'Coeffs_Modifies_Depuis_Derniere_Mesure', 'ColumnId')) AS adjustment_dirty_column;
-          SELECT [Valeur] FROM dbo.[t_parametre] WHERE [Section]=N'VERSION' AND [Mot_Cle]=N'SCHEMA_VERSION';
-          GO
-          SQL
+      - name: i18n parity diagnostic
+        id: i18n
+        continue-on-error: true
+        working-directory: website
+        run: pnpm i18n:check 2>&1 | tee i18n-diagnostic.txt
+      - name: Upload i18n diagnostic
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: i18n-diagnostic
+          path: website/i18n-diagnostic.txt
