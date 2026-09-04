@@ -30,6 +30,8 @@ jobs:
           cache-dependency-path: website/pnpm-lock.yaml
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+      - name: Generate Prisma clients
+        run: pnpm prisma:generate:mysql
       - name: Twilio provider regression test
         run: pnpm exec tsx scripts/test-twilio-provider.ts
       - name: TypeScript
