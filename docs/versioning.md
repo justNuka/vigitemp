@@ -220,6 +220,26 @@ Ce numéro :
 
 Les seeds historiques `0.90.001` correspondent canoniquement à `0.90.1`.
 
+Pour les installations déjà existantes, les scripts de mise à niveau sont versionnés sous :
+
+```text
+db/migrations/<version>/mysql.sql
+db/migrations/<version>/mssql.sql
+```
+
+La procédure et les règles détaillées sont décrites dans `db/migrations/README.md`.
+
+Toute évolution de schéma BDD doit maintenir ensemble :
+
+- le seed MySQL ;
+- le seed SQL Server ;
+- les scripts de migration MySQL et SQL Server de la version cible ;
+- `db/CHANGELOG.md`.
+
+Le changelog BDD doit citer explicitement les **tables et colonnes ajoutées, modifiées ou supprimées**. Pour une colonne ajoutée à une table existante, il précise au minimum le nom exact, le type MySQL, le type SQL Server, la nullabilité et la valeur par défaut. Pour une nouvelle table, il liste toutes les colonnes créées.
+
+Une migration d'installation existante doit préserver les données, être idempotente autant que raisonnablement possible et ne mettre à jour `VERSION / SCHEMA_VERSION` qu'après l'application réussie des changements de la version.
+
 ### Fichiers de licence
 
 Les fichiers `.vtlic` sont des données générées, pas des releases logicielles autonomes. Ils ne reçoivent pas de numéro SemVer propre.
