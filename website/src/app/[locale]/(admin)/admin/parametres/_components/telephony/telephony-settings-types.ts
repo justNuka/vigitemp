@@ -55,6 +55,7 @@ export type TelephonyCopy = {
   testConnection: string
   createClick2CallUser: string
   testCall: string
+  testCallTrialTemplate: string
   testNumber: string
   testNumberPlaceholder: string
   userCreated: string
