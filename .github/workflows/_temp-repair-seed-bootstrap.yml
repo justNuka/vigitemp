@@ -1,0 +1,97 @@
+name: Temporary seed bootstrap repair
+
+on:
+  push:
+    branches:
+      - fix/license-telephony-seed-readiness
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/license-telephony-seed-readiness
+          fetch-depth: 0
+
+      - name: Repair fresh-install seed ordering and SQL Server session options
+        shell: bash
+        run: |
+          python3 <<'PY'
+          from pathlib import Path
+
+          mysql_path = Path('db/vigisensys_seed.sql')
+          mssql_path = Path('db/vigisensys_seed_mssql.sql')
+
+          mysql = mysql_path.read_text(encoding='utf-8')
+          mssql = mssql_path.read_text(encoding='utf-8')
+
+          # MySQL: v_tm_mesures_dernier references vigi_mesures.tm_mesures.
+          # On a fresh server the referenced database/table do not exist yet at
+          # the original dump location, so defer this single cross-DB view until
+          # all vigi_mesures objects have been created.
+          start_marker = "--\n-- Final view structure for view `v_tm_mesures_dernier`\n--\n"
+          end_marker = "/*!50001 SET collation_connection      = @saved_col_connection */;\n"
+          deferred_marker = "-- Deferred fresh-install view: v_tm_mesures_dernier\n"
+
+          if deferred_marker not in mysql:
+              start = mysql.find(start_marker)
+              if start < 0:
+                  raise SystemExit('MySQL v_tm_mesures_dernier start marker not found')
+              end = mysql.find(end_marker, start)
+              if end < 0:
+                  raise SystemExit('MySQL v_tm_mesures_dernier end marker not found')
+              end += len(end_marker)
+              block = mysql[start:end]
+              mysql = mysql[:start] + mysql[end:]
+              mysql = mysql.rstrip() + "\n\n" + deferred_marker + "USE `vigi_main`;\n" + block + "\n"
+
+          # SQL Server: filtered indexes require deterministic SET options.
+          required_sets = """SET ANSI_NULLS ON;\nSET QUOTED_IDENTIFIER ON;\nSET ANSI_PADDING ON;\nSET ANSI_WARNINGS ON;\nSET ARITHABORT ON;\nSET CONCAT_NULL_YIELDS_NULL ON;\nSET NUMERIC_ROUNDABORT OFF;\nGO\n\n"""
+          if "SET NUMERIC_ROUNDABORT OFF;" not in mssql[:1500]:
+              header_end = mssql.find("IF DB_ID(N'vigi_chat') IS NULL")
+              if header_end < 0:
+                  raise SystemExit('MSSQL bootstrap marker not found')
+              mssql = mssql[:header_end] + required_sets + mssql[header_end:]
+
+          mysql_path.write_text(mysql, encoding='utf-8', newline='\n')
+          mssql_path.write_text(mssql, encoding='utf-8', newline='\n')
+          PY
+
+      - name: Validate repair markers
+        shell: bash
+        run: |
+          python3 <<'PY'
+          from pathlib import Path
+          mysql = Path('db/vigisensys_seed.sql').read_text(encoding='utf-8')
+          mssql = Path('db/vigisensys_seed_mssql.sql').read_text(encoding='utf-8')
+          if mysql.count('Deferred fresh-install view: v_tm_mesures_dernier') != 1:
+              raise SystemExit('Deferred MySQL view marker missing/duplicated')
+          create_measure_db = mysql.find('CREATE DATABASE  IF NOT EXISTS `vigi_mesures`')
+          deferred_view = mysql.find('Deferred fresh-install view: v_tm_mesures_dernier')
+          if create_measure_db < 0 or deferred_view < create_measure_db:
+              raise SystemExit('MySQL cross-DB view is still before vigi_mesures creation')
+          for option in (
+              'SET ANSI_NULLS ON;', 'SET QUOTED_IDENTIFIER ON;', 'SET ANSI_PADDING ON;',
+              'SET ANSI_WARNINGS ON;', 'SET ARITHABORT ON;',
+              'SET CONCAT_NULL_YIELDS_NULL ON;', 'SET NUMERIC_ROUNDABORT OFF;'
+          ):
+              if option not in mssql[:2000]:
+                  raise SystemExit(f'MSSQL missing required session option: {option}')
+          PY
+
+      - name: Commit seed bootstrap fixes
+        shell: bash
+        run: |
+          if git diff --quiet -- db/vigisensys_seed.sql db/vigisensys_seed_mssql.sql; then
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add db/vigisensys_seed.sql db/vigisensys_seed_mssql.sql
+          git commit -m "fix(db): make fresh seed bootstrap self-contained"
+          git push origin HEAD:fix/license-telephony-seed-readiness
