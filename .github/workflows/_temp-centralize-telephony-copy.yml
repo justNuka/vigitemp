@@ -1,0 +1,61 @@
+name: Temporary telephony copy cleanup
+
+on:
+  push:
+    branches:
+      - fix/license-telephony-seed-readiness
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/license-telephony-seed-readiness
+          fetch-depth: 0
+      - name: Centralize locked telephony copy
+        run: |
+          python3 <<'PY'
+          from pathlib import Path
+
+          helpers_path = Path('website/src/app/[locale]/(admin)/admin/parametres/_components/telephony/telephony-settings-helpers.ts')
+          locked_path = Path('website/src/app/[locale]/(admin)/admin/parametres/_components/telephony/telephony-license-locked-card.tsx')
+
+          helpers = helpers_path.read_text(encoding='utf-8')
+          helpers = helpers.replace(
+              '    frontOnly: "Configuration téléphonie",\n    enabled: "Activer la téléphonie",',
+              '    frontOnly: "Configuration téléphonie",\n    licenseLockedTitle: "Fonctionnalité non disponible avec votre licence",\n    licenseLockedDescription: "L’option téléphonie doit être activée dans la licence VigiSensys pour configurer ou utiliser les appels vocaux.",\n    recommendedProviderBadge: "Twilio V1",\n    enabled: "Activer la téléphonie",',
+              1,
+          )
+          helpers = helpers.replace(
+              '    frontOnly: "Telephony configuration",\n    enabled: "Enable telephony",',
+              '    frontOnly: "Telephony configuration",\n    licenseLockedTitle: "Feature not available with your license",\n    licenseLockedDescription: "The telephony option must be enabled in the VigiSensys license to configure or use voice calls.",\n    recommendedProviderBadge: "Twilio V1",\n    enabled: "Enable telephony",',
+              1,
+          )
+          if helpers.count('licenseLockedTitle:') != 2 or helpers.count('recommendedProviderBadge:') != 2:
+              raise SystemExit('Could not add both FR/EN locked telephony copy entries')
+          helpers_path.write_text(helpers, encoding='utf-8', newline='\n')
+
+          locked = locked_path.read_text(encoding='utf-8')
+          locked = locked.replace('  const isEnglish = locale === "en"\n\n', '', 1)
+          old_gate = '''    <LicenseFeatureLock\n      title={isEnglish ? "Feature not available with your license" : "Fonctionnalité non disponible avec votre licence"}\n      description={\n        isEnglish\n          ? "The telephony option must be enabled in the VigiSensys license to configure or use voice calls."\n          : "L’option téléphonie doit être activée dans la licence VigiSensys pour configurer ou utiliser les appels vocaux."\n      }\n    >'''
+          new_gate = '''    <LicenseFeatureLock\n      title={copy.licenseLockedTitle}\n      description={copy.licenseLockedDescription}\n    >'''
+          if old_gate not in locked:
+              raise SystemExit('Locked gate block not found')
+          locked = locked.replace(old_gate, new_gate, 1)
+          if '              Twilio V1\n' not in locked:
+              raise SystemExit('Twilio badge literal not found')
+          locked = locked.replace('              Twilio V1\n', '              {copy.recommendedProviderBadge}\n', 1)
+          locked_path.write_text(locked, encoding='utf-8', newline='\n')
+          PY
+      - name: Commit cleanup
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add website/src/app/[locale]/\(admin\)/admin/parametres/_components/telephony/telephony-settings-helpers.ts website/src/app/[locale]/\(admin\)/admin/parametres/_components/telephony/telephony-license-locked-card.tsx
+          git commit -m "refactor(telephony): reuse localized copy for license lock"
+          git push origin HEAD:fix/license-telephony-seed-readiness
