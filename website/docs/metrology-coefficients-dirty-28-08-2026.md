@@ -28,12 +28,12 @@ Ajout de la colonne :
 
 Type : booléen non nul, valeur par défaut `0`.
 
-Migrations idempotentes :
+Migration `0.90.2` des installations existantes :
 
-- MySQL : `db/migrations/0.90.2_metrology_adjustment_coeff_dirty_mysql.sql` ;
-- SQL Server : `db/migrations/0.90.2_metrology_adjustment_coeff_dirty_mssql.sql`.
+- MySQL : `db/migrations/0.90.2/mysql.sql` ;
+- SQL Server : `db/migrations/0.90.2/mssql.sql`.
 
-La migration doit être appliquée avant de valider de nouveaux coefficients avec ce lot.
+Ces scripts sont les scripts d'upgrade complets de la révision BDD `0.90.2` et incluent donc également les autres objets de schéma ajoutés par cette version. La migration doit être appliquée avant de valider de nouveaux coefficients avec ce lot.
 
 ### Web
 
@@ -68,8 +68,9 @@ Si le Serveur est démarré avant application de la migration, le décorateur re
 
 ### BDD
 
-- `db/migrations/0.90.2_metrology_adjustment_coeff_dirty_mysql.sql`
-- `db/migrations/0.90.2_metrology_adjustment_coeff_dirty_mssql.sql`
+- `db/migrations/0.90.2/mysql.sql`
+- `db/migrations/0.90.2/mssql.sql`
+- `db/migrations/README.md`
 - `db/CHANGELOG.md`
 
 ### Web
