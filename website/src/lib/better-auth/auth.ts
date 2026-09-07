@@ -10,7 +10,8 @@ import {
 } from "@/lib/better-auth/vigisensys-identity"
 
 export const BETTER_AUTH_BASE_PATH = "/api/auth-v2"
-export const BETTER_AUTH_SESSION_MAX_AGE_SECONDS = 60 * 60 * 24
+export const BETTER_AUTH_SESSION_MAX_AGE_SECONDS = 60 * 60
+export const BETTER_AUTH_SESSION_UPDATE_AGE_SECONDS = 5 * 60
 export const BETTER_AUTH_BCRYPT_ROUNDS = 10
 
 const TRUE_VALUES = new Set(["1", "true", "yes", "on"])
@@ -27,6 +28,8 @@ export type CreateVigiSensysBetterAuthOptions = {
   databaseUrl?: string
   secret?: string
   resolveBusinessIdentity?: VigiSensysBusinessIdentityResolver
+  sessionMaxAgeSeconds?: number
+  sessionUpdateAgeSeconds?: number
 }
 
 function requireBetterAuthSecret(explicitSecret?: string) {
@@ -82,6 +85,17 @@ export function createVigiSensysBetterAuth(options: CreateVigiSensysBetterAuthOp
   const resolveBusinessIdentity =
     options.resolveBusinessIdentity ?? resolveVigiSensysBusinessIdentity
   const baseURL = getBetterAuthBaseUrl(options.baseURL)
+  const sessionMaxAgeSeconds =
+    options.sessionMaxAgeSeconds ?? BETTER_AUTH_SESSION_MAX_AGE_SECONDS
+  const sessionUpdateAgeSeconds =
+    options.sessionUpdateAgeSeconds ?? BETTER_AUTH_SESSION_UPDATE_AGE_SECONDS
+
+  if (sessionMaxAgeSeconds <= 0 || sessionUpdateAgeSeconds <= 0) {
+    throw new Error("[better-auth] Session durations must be positive")
+  }
+  if (sessionUpdateAgeSeconds >= sessionMaxAgeSeconds) {
+    throw new Error("[better-auth] Session update age must be lower than session max age")
+  }
 
   return betterAuth({
     appName: "VigiSensys",
@@ -110,8 +124,9 @@ export function createVigiSensysBetterAuth(options: CreateVigiSensysBetterAuthOp
     },
     session: {
       modelName: "t_auth_session",
-      expiresIn: BETTER_AUTH_SESSION_MAX_AGE_SECONDS,
-      disableSessionRefresh: true,
+      expiresIn: sessionMaxAgeSeconds,
+      updateAge: sessionUpdateAgeSeconds,
+      disableSessionRefresh: false,
       cookieCache: {
         enabled: false,
       },
@@ -124,6 +139,9 @@ export function createVigiSensysBetterAuth(options: CreateVigiSensysBetterAuthOp
     },
     advanced: {
       cookiePrefix: "vigisensys-auth-v2",
+      database: {
+        validateSchema: true,
+      },
     },
     hooks: {
       before: createAuthMiddleware(async (ctx) => {
