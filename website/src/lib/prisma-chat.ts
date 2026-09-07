@@ -23,8 +23,6 @@ function requireEnv(name: "DATABASE_CHAT_URL"): string {
   return value
 }
 
-const chatDbUrl = requireEnv("DATABASE_CHAT_URL")
-
 function createMysqlAdapter(url: string) {
   const connection = parseMysqlConnectionUrl(url)
   return new PrismaMariaDb({
@@ -52,15 +50,16 @@ function createMssqlAdapter(url: string) {
   })
 }
 
-const chatAdapter =
-  detectDatabaseProvider(chatDbUrl) === "mssql"
-    ? createMssqlAdapter(chatDbUrl)
-    : createMysqlAdapter(chatDbUrl)
+function createAdapter(url: string) {
+  return detectDatabaseProvider(url) === "mssql"
+    ? createMssqlAdapter(url)
+    : createMysqlAdapter(url)
+}
 
 function getPrismaChatClient(): PrismaClient {
   if (!globalForPrismaChat.prismaChat) {
     globalForPrismaChat.prismaChat = new PrismaClient({
-      adapter: chatAdapter,
+      adapter: createAdapter(requireEnv("DATABASE_CHAT_URL")),
       log: process.env.NODE_ENV === "development" ? ["error", "warn"] : ["error"],
     })
   }
