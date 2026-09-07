@@ -4,9 +4,6 @@ import { apiError, apiOk } from "@/lib/api-response"
 import { getVigiSensysBetterAuth, isBetterAuthRuntimeEnabled } from "@/lib/better-auth/auth"
 import { appendBetterAuthResponseHeaders } from "@/lib/better-auth/response-headers"
 
-export const runtime = "nodejs"
-export const dynamic = "force-dynamic"
-
 export async function POST(req: NextRequest) {
   if (!isBetterAuthRuntimeEnabled()) {
     return apiOk({ success: true, engine: "legacy" as const })
