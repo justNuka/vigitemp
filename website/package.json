@@ -103,7 +103,7 @@
     "jsonwebtoken": "^9.0.3",
     "jspdf": "^4.2.1",
     "jspdf-autotable": "^5.0.7",
-    "kysely": "0.28.8",
+    "kysely": "0.28.17",
     "lucide-react": "^1.8.0",
     "motion": "^12.38.0",
     "mysql2": "^3.21.0",
