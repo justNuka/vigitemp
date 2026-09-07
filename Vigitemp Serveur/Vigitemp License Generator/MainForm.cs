@@ -129,12 +129,12 @@ namespace Vigitemp_License_Generator
             inputGroup.Controls.Add(inputTable);
 
             _txtCustomerId = new TextBox { Width = 240 };
-            SetCueBanner(_txtCustomerId, "X9999999");
+            SetCueBanner(_txtCustomerId, "C9999999");
             AddRowWithInfo(
                 inputTable,
                 "Numéro client",
                 _txtCustomerId,
-                "Format requis : X9999999 (lettre X + 7 chiffres).\nExemple : X1234567.\nRemplacer l'exemple par le vrai numéro client."
+                "Format requis : C9999999 (lettre C + 7 chiffres).\nExemple : C1234567.\nRemplacer l'exemple par le vrai numéro client."
             );
 
             _cmbEdition = new ComboBox { DropDownStyle = ComboBoxStyle.DropDownList, Width = 240 };
@@ -596,9 +596,9 @@ namespace Vigitemp_License_Generator
             }
 
             var customerId = _txtCustomerId.Text.Trim();
-            if (!Regex.IsMatch(customerId, "^X\\d{7}$"))
+            if (!Regex.IsMatch(customerId, "^C\\d{7}$"))
             {
-                MessageBox.Show("Format numéro client invalide (X9999999).", "Erreur", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show("Format numéro client invalide (C9999999).", "Erreur", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
 
@@ -631,12 +631,6 @@ namespace Vigitemp_License_Generator
             foreach (var item in _clbOptions.CheckedItems)
             {
                 var option = item.ToString();
-                if (!string.Equals(edition, "pack", StringComparison.OrdinalIgnoreCase)
-                    && string.Equals(option, "mail", StringComparison.OrdinalIgnoreCase))
-                {
-                    continue;
-                }
-
                 options.Add(option);
             }
 
@@ -801,14 +795,6 @@ namespace Vigitemp_License_Generator
                 return;
             }
 
-            for (var index = 0; index < _clbOptions.Items.Count; index++)
-            {
-                var option = _clbOptions.Items[index]?.ToString();
-                if (string.Equals(option, "mail", StringComparison.OrdinalIgnoreCase) && !isPack)
-                {
-                    _clbOptions.SetItemChecked(index, false);
-                }
-            }
         }
         private static byte[] SignEd25519(AsymmetricKeyParameter privateKey, byte[] data)
         {
