@@ -25,9 +25,6 @@ function requireEnv(name: "DATABASE_URL" | "DATABASE_MESURES_URL"): string {
   return value
 }
 
-const mainDbUrl = requireEnv("DATABASE_URL")
-const mesuresDbUrl = requireEnv("DATABASE_MESURES_URL")
-
 function createMysqlAdapter(url: string) {
   const connection = parseMysqlConnectionUrl(url)
   return new PrismaMariaDb({
@@ -61,13 +58,10 @@ function createAdapter(url: string) {
     : createMysqlAdapter(url)
 }
 
-const mainAdapter = createAdapter(mainDbUrl)
-const mesureAdapter = createAdapter(mesuresDbUrl)
-
 function getPrismaClient() {
   if (!globalForPrisma.prisma) {
     globalForPrisma.prisma = new PrismaClient({
-      adapter: mainAdapter,
+      adapter: createAdapter(requireEnv("DATABASE_URL")),
       log: process.env.NODE_ENV === "development" ? ["error", "warn"] : ["error"],
     })
   }
@@ -77,7 +71,7 @@ function getPrismaClient() {
 function getPrismaMesureClient() {
   if (!globalForPrisma.prismaMesure) {
     globalForPrisma.prismaMesure = new PrismaMesureClient({
-      adapter: mesureAdapter,
+      adapter: createAdapter(requireEnv("DATABASE_MESURES_URL")),
       log: process.env.NODE_ENV === "development" ? ["error", "warn"] : ["error"],
     })
   }
