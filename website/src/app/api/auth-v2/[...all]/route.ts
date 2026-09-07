@@ -6,9 +6,6 @@ import {
 } from "@/lib/better-auth/auth"
 import { log } from "@/lib/logger"
 
-export const runtime = "nodejs"
-export const dynamic = "force-dynamic"
-
 const TRUE_VALUES = new Set(["1", "true", "yes", "on"])
 
 function isBetterAuthPublicApiEnabled() {
