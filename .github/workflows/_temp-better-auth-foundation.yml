@@ -6,7 +6,7 @@ on:
       - feature/better-auth-refactor
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   static-checks:
@@ -129,17 +129,7 @@ jobs:
           DATABASE_PROVIDER: mysql
           DATABASE_URL: mysql://root:vigisensys_test@127.0.0.1:3306/vigi_main
           DATABASE_MESURES_URL: mysql://root:vigisensys_test@127.0.0.1:3306/vigi_main
-        run: |
-          set -o pipefail
-          pnpm test:better-auth-foundation 2>&1 | tee better-auth-mysql.log
-
-      - name: Upload MySQL Better Auth diagnostic
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: better-auth-mysql-diagnostic
-          path: website/better-auth-mysql.log
-          if-no-files-found: ignore
+        run: pnpm test:better-auth-foundation
 
   mssql-foundation:
     runs-on: ubuntu-latest
@@ -147,6 +137,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: feature/better-auth-refactor
+          fetch-depth: 0
 
       - uses: pnpm/action-setup@v4
         with:
@@ -221,6 +212,8 @@ jobs:
         run: pnpm prisma:generate:mssql
 
       - name: Exercise Better Auth on final SQL Server schema
+        id: mssql_auth_test
+        continue-on-error: true
         working-directory: website
         env:
           CI: "true"
@@ -233,10 +226,17 @@ jobs:
           set -o pipefail
           pnpm test:better-auth-foundation 2>&1 | tee better-auth-mssql.log
 
-      - name: Upload SQL Server Better Auth diagnostic
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: better-auth-mssql-diagnostic
-          path: website/better-auth-mssql.log
-          if-no-files-found: ignore
+      - name: Persist SQL Server diagnostic
+        if: steps.mssql_auth_test.outcome == 'failure'
+        run: |
+          mkdir -p .github/diagnostics
+          cp website/better-auth-mssql.log .github/diagnostics/better-auth-mssql.log
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .github/diagnostics/better-auth-mssql.log
+          git commit -m "chore(auth): persist mssql diagnostic [skip ci]"
+          git push origin HEAD:feature/better-auth-refactor
+
+      - name: Fail when SQL Server validation failed
+        if: steps.mssql_auth_test.outcome == 'failure'
+        run: exit 1
