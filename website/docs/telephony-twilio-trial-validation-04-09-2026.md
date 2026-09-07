@@ -124,6 +124,38 @@ Le TTS VigiSensys personnalisé via `Twiml` inline reste à valider sur un compt
 - [x] vérifier la réception de l'appel via le template TTS Twilio ;
 - [ ] après passage sur un compte complet, vérifier que le test revient automatiquement sur `vigisensys_tts` et lit le message VigiSensys personnalisé.
 
+## Suite production — décision reportée
+
+La prochaine étape commerciale n'est pas lancée immédiatement : le responsable concerné est absent quelques jours.
+
+La cible technique documentée à reprendre à son retour est :
+
+```text
+Compte Twilio du client
++ Programmable Voice
++ Pay-as-you-go
++ numéro France autorisé pour Automated Outbound Calling
+```
+
+Pour la France, le type **Verified Polyvalent / NPV** est actuellement la piste recommandée à revalider au moment de la commande.
+
+Le scénario métier cible inclut également :
+
+- un ou plusieurs contacts par lieu ;
+- message TTS dynamique selon l'alarme ;
+- stratégie d'appel séquentielle ou parallèle ;
+- saisie DTMF via Twilio `<Gather>` ;
+- récupération du code côté VigiSensys ;
+- validation des permissions/règles d'acquittement ;
+- réponse vocale de confirmation ou d'erreur ;
+- audit complet.
+
+L'interactivité DTMF nécessite une URL HTTPS joignable par Twilio. La VM VigiSensys on-premise ne doit pas être exposée directement : un relais public minimal, Twilio Functions ou une combinaison des deux doit être choisi avant implémentation.
+
+Le cadrage détaillé est conservé dans :
+
+- `docs/telephony-twilio-production-interactive.md`
+
 ## Fichiers principaux
 
 - `website/src/lib/telephony/twilio-provider.ts`
@@ -132,3 +164,4 @@ Le TTS VigiSensys personnalisé via `Twiml` inline reste à valider sur un compt
 - `website/src/app/[locale]/(admin)/admin/parametres/_components/telephony/telephony-settings-types.ts`
 - `website/scripts/test-twilio-provider.ts`
 - `website/CHANGELOG.md`
+- `docs/telephony-twilio-production-interactive.md`
