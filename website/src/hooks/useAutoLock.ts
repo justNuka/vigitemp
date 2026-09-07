@@ -13,6 +13,7 @@ interface AutoLockConfig {
 
 const DEFAULT_DURATION = 15; // 15 minutes par défaut
 const AUTO_LOCK_CONFIG_EVENT = "vigitemp:auto-lock-config-changed";
+const SESSION_TOUCH_INTERVAL_MS = 4 * 60 * 1000;
 
 export function useAutoLock() {
   const pathname = usePathname();
@@ -25,6 +26,8 @@ export function useAutoLock() {
 
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const configRef = useRef<AutoLockConfig | null>(null);
+  const lastSessionTouchAtRef = useRef(0);
+  const sessionTouchInFlightRef = useRef(false);
 
   // Charger la config depuis le cache local. La base reste la source de vérité,
   // mais ce cache évite de retomber à 15 min pendant le chargement initial.
@@ -43,6 +46,32 @@ export function useAutoLock() {
     }
 
     return { enabled: true, duration: DEFAULT_DURATION };
+  }, []);
+
+  const touchSession = useCallback(async (force = false) => {
+    if (typeof window === "undefined" || sessionTouchInFlightRef.current) return;
+
+    const now = Date.now();
+    if (!force && now - lastSessionTouchAtRef.current < SESSION_TOUCH_INTERVAL_MS) return;
+
+    lastSessionTouchAtRef.current = now;
+    sessionTouchInFlightRef.current = true;
+
+    try {
+      await fetchJson<{ success: true; engine: "legacy" | "better-auth"; expiresAt?: string }>(
+        "/api/auth/session-touch",
+        {
+          method: "POST",
+          credentials: "include",
+        },
+      );
+    } catch (error) {
+      // Le helper HTTP central traite déjà un 401 en redirigeant vers la connexion.
+      // Les autres erreurs ne doivent pas interrompre l'activité utilisateur.
+      console.error("Erreur lors du rafraîchissement de la session:", error);
+    } finally {
+      sessionTouchInFlightRef.current = false;
+    }
   }, []);
 
   // Fonction de logout automatique
@@ -100,6 +129,11 @@ export function useAutoLock() {
     }, timeoutDuration);
   }, [loadConfig, handleLogout, isMetrologyOperationPage]);
 
+  const handleUserActivity = useCallback(() => {
+    resetTimer();
+    void touchSession();
+  }, [resetTimer, touchSession]);
+
   const refreshConfigFromApi = useCallback(async () => {
     try {
       const config = await fetchJson<AutoLockConfig>("/api/parametres/auto-lock", {
@@ -132,7 +166,7 @@ export function useAutoLock() {
 
     // Ajouter les listeners
     events.forEach((event) => {
-      document.addEventListener(event, resetTimer, true);
+      document.addEventListener(event, handleUserActivity, true);
     });
 
     // Écouter les changements de config dans localStorage (pour synchroniser entre onglets)
@@ -162,12 +196,27 @@ export function useAutoLock() {
         clearTimeout(timeoutRef.current);
       }
       events.forEach((event) => {
-        document.removeEventListener(event, resetTimer, true);
+        document.removeEventListener(event, handleUserActivity, true);
       });
       window.removeEventListener("storage", handleStorageChange);
       window.removeEventListener(AUTO_LOCK_CONFIG_EVENT, handleConfigChange);
     };
-  }, [loadConfig, refreshConfigFromApi, resetTimer]);
+  }, [handleUserActivity, loadConfig, refreshConfigFromApi, resetTimer]);
+
+  // Les opérations de métrologie neutralisent volontairement l'auto-lock. Il faut donc
+  // maintenir la session serveur vivante même si l'opérateur ne touche pas l'interface.
+  useEffect(() => {
+    if (!isMetrologyOperationPage) return;
+
+    void touchSession(true);
+    const interval = window.setInterval(() => {
+      void touchSession(true);
+    }, SESSION_TOUCH_INTERVAL_MS);
+
+    return () => {
+      window.clearInterval(interval);
+    };
+  }, [isMetrologyOperationPage, touchSession]);
 
   // Fonction pour mettre à jour la config (utilisée dans les settings)
   const updateConfig = useCallback(
