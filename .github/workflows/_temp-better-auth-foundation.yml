@@ -46,8 +46,16 @@ jobs:
           src/lib/prisma.ts
           src/lib/prisma-chat.ts
           src/lib/better-auth/auth.ts
+          src/lib/better-auth/credentials.ts
           src/lib/better-auth/database.ts
+          src/lib/better-auth/response-headers.ts
+          src/lib/better-auth/session.ts
           src/lib/better-auth/vigisensys-identity.ts
+          src/hooks/useAutoLock.ts
+          src/app/api/auth/login/route.ts
+          src/app/api/auth/logout/route.ts
+          src/app/api/auth/logout-auto/route.ts
+          src/app/api/auth/session-touch/route.ts
           src/app/api/auth-v2/[...all]/route.ts
           scripts/test-better-auth-foundation.ts
 
