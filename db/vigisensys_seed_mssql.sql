@@ -2727,8 +2727,8 @@ GO
 DECLARE @AdminProfilId INT = (SELECT TOP 1 Id_Profil FROM dbo.t_profil WHERE Profil_Utilisateur = N'Administrateurs');
 INSERT INTO dbo.t_liaison_profil_autorisation (Id_Profil, Id_Autorisation) SELECT @AdminProfilId, a.Id_Autorisation FROM dbo.t_autorisation a WHERE @AdminProfilId IS NOT NULL AND NOT EXISTS (SELECT 1 FROM dbo.t_liaison_profil_autorisation l WHERE l.Id_Profil = @AdminProfilId AND l.Id_Autorisation = a.Id_Autorisation);
 GO
-IF NOT EXISTS (SELECT 1 FROM dbo.t_utilisateur WHERE Login = N'admin') INSERT INTO dbo.t_utilisateur (Login, Mot_De_Passe, Est_Archive, Profil_Utilisateur, Est_Mot_De_Passe_Temporaire, Date_Creation, Date_Derniere_Modification_MDP) VALUES (N'admin', N'$2b$10$PkfaBJ2yztneolPwfIcaI.QX5ppoeMa5e1rDA2hspODHvQSYFSn6W', 0, N'Administrateurs', 1, CAST(GETDATE() AS DATE), GETDATE());
-ELSE UPDATE dbo.t_utilisateur SET Mot_De_Passe = N'$2b$10$PkfaBJ2yztneolPwfIcaI.QX5ppoeMa5e1rDA2hspODHvQSYFSn6W', Est_Mot_De_Passe_Temporaire = 1, Profil_Utilisateur = COALESCE(Profil_Utilisateur, N'Administrateurs'), Est_Archive = 0 WHERE Login = N'admin' AND (Mot_De_Passe IS NULL OR Est_Mot_De_Passe_Temporaire = 1);
+IF NOT EXISTS (SELECT 1 FROM dbo.t_utilisateur WHERE Login = N'admin') INSERT INTO dbo.t_utilisateur (Login, Mot_De_Passe, Est_Archive, Profil_Utilisateur, Est_Mot_De_Passe_Temporaire, Date_Creation, Date_Derniere_Modification_MDP) VALUES (N'admin', N'$2b$10$T.LiYgCAdm3FVYteRBfFFucmrl5PqcqdGxr2sdcseukhGylhM2oKe', 0, N'Administrateurs', 1, CAST(GETDATE() AS DATE), GETDATE());
+ELSE UPDATE dbo.t_utilisateur SET Mot_De_Passe = N'$2b$10$T.LiYgCAdm3FVYteRBfFFucmrl5PqcqdGxr2sdcseukhGylhM2oKe', Est_Mot_De_Passe_Temporaire = 1, Profil_Utilisateur = COALESCE(Profil_Utilisateur, N'Administrateurs'), Est_Archive = 0 WHERE Login = N'admin' AND (Mot_De_Passe IS NULL OR Est_Mot_De_Passe_Temporaire = 1);
 GO
 
 USE [vigi_main];

@@ -5079,7 +5079,7 @@ INSERT INTO `t_sonde_type` (`Id_Sonde_Type`,`Sonde_Type`,`Libelle_Sonde_Type`,`E
 (33,'SPFB','Gemsense Pro filaire numérique blanc',0,0,'GSP',NULL),
 (34,'SPFG','Gemsense Pro filaire numérique gris',0,0,'GSP',NULL),
 (35,'SPFP','Gemsense Pro filaire platine',0,0,'GSP',NULL);
-INSERT INTO `t_utilisateur` (Login, Mot_De_Passe, Est_Archive, Profil_Utilisateur, Est_Mot_De_Passe_Temporaire, Date_Creation, Date_Derniere_Modification_MDP) VALUES ('admin', '$2b$10$PkfaBJ2yztneolPwfIcaI.QX5ppoeMa5e1rDA2hspODHvQSYFSn6W', 0, 'Administrateurs', 1, NOW(), NOW());
+INSERT INTO `t_utilisateur` (Login, Mot_De_Passe, Est_Archive, Profil_Utilisateur, Est_Mot_De_Passe_Temporaire, Date_Creation, Date_Derniere_Modification_MDP) VALUES ('admin', '$2b$10$T.LiYgCAdm3FVYteRBfFFucmrl5PqcqdGxr2sdcseukhGylhM2oKe', 0, 'Administrateurs', 1, NOW(), NOW());
 SET FOREIGN_KEY_CHECKS=1;
 
 INSERT INTO `t_parametre` (`Section`, `Mot_Cle`, `Valeur`, `Commentaire`)
