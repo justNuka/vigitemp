@@ -3,7 +3,7 @@ name: TEMP Better Auth foundation
 on:
   push:
     branches:
-      - feature/better-auth-runtime-foundation
+      - feature/better-auth-refactor
 
 permissions:
   contents: read
@@ -14,7 +14,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: feature/better-auth-runtime-foundation
+          ref: feature/better-auth-refactor
 
       - uses: pnpm/action-setup@v4
         with:
@@ -53,7 +53,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: feature/better-auth-runtime-foundation
+          ref: feature/better-auth-refactor
 
       - uses: pnpm/action-setup@v4
         with:
@@ -129,14 +129,24 @@ jobs:
           DATABASE_PROVIDER: mysql
           DATABASE_URL: mysql://root:vigisensys_test@127.0.0.1:3306/vigi_main
           DATABASE_MESURES_URL: mysql://root:vigisensys_test@127.0.0.1:3306/vigi_main
-        run: pnpm test:better-auth-foundation
+        run: |
+          set -o pipefail
+          pnpm test:better-auth-foundation 2>&1 | tee better-auth-mysql.log
+
+      - name: Upload MySQL Better Auth diagnostic
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: better-auth-mysql-diagnostic
+          path: website/better-auth-mysql.log
+          if-no-files-found: ignore
 
   mssql-foundation:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: feature/better-auth-runtime-foundation
+          ref: feature/better-auth-refactor
 
       - uses: pnpm/action-setup@v4
         with:
@@ -219,4 +229,14 @@ jobs:
           DATABASE_PROVIDER: mssql
           DATABASE_URL: "sqlserver://127.0.0.1:1433;database=vigi_main;user=sa;password=VigiSensys_Test%212026;encrypt=true;trustServerCertificate=true"
           DATABASE_MESURES_URL: "sqlserver://127.0.0.1:1433;database=vigi_main;user=sa;password=VigiSensys_Test%212026;encrypt=true;trustServerCertificate=true"
-        run: pnpm test:better-auth-foundation
+        run: |
+          set -o pipefail
+          pnpm test:better-auth-foundation 2>&1 | tee better-auth-mssql.log
+
+      - name: Upload SQL Server Better Auth diagnostic
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: better-auth-mssql-diagnostic
+          path: website/better-auth-mssql.log
+          if-no-files-found: ignore
