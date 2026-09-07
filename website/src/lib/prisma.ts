@@ -4,6 +4,11 @@ import { PrismaMssql } from "@prisma/adapter-mssql"
 
 import { PrismaClient } from "../generated/@prisma-db-main/client"
 import { PrismaClient as PrismaMesureClient } from "../generated/@prisma-db-mesures/client"
+import {
+  detectDatabaseProvider,
+  parseMysqlConnectionUrl,
+  parseSqlServerConnectionUrl,
+} from "./database-connection"
 
 type GlobalPrismaState = {
   prisma?: PrismaClient
@@ -23,17 +28,37 @@ function requireEnv(name: "DATABASE_URL" | "DATABASE_MESURES_URL"): string {
 const mainDbUrl = requireEnv("DATABASE_URL")
 const mesuresDbUrl = requireEnv("DATABASE_MESURES_URL")
 
-function isMssqlUrl(url: string): boolean {
-  return url.trim().toLowerCase().startsWith("sqlserver://")
+function createMysqlAdapter(url: string) {
+  const connection = parseMysqlConnectionUrl(url)
+  return new PrismaMariaDb({
+    host: connection.host,
+    port: connection.port,
+    user: connection.user,
+    password: connection.password,
+    database: connection.database,
+    allowPublicKeyRetrieval: connection.allowPublicKeyRetrieval,
+  })
 }
 
-function shouldUseMssql(url: string): boolean {
-  const provider = process.env.DATABASE_PROVIDER?.trim().toLowerCase()
-  return provider === "mssql" || provider === "sqlserver" || isMssqlUrl(url)
+function createMssqlAdapter(url: string) {
+  const connection = parseSqlServerConnectionUrl(url)
+  return new PrismaMssql({
+    server: connection.server,
+    port: connection.port,
+    database: connection.database,
+    user: connection.user,
+    password: connection.password,
+    options: {
+      encrypt: connection.encrypt,
+      trustServerCertificate: connection.trustServerCertificate,
+    },
+  })
 }
 
 function createAdapter(url: string) {
-  return shouldUseMssql(url) ? new PrismaMssql(url) : new PrismaMariaDb(url)
+  return detectDatabaseProvider(url) === "mssql"
+    ? createMssqlAdapter(url)
+    : createMysqlAdapter(url)
 }
 
 const mainAdapter = createAdapter(mainDbUrl)
@@ -70,5 +95,3 @@ export const prismaMesure = new Proxy({} as PrismaMesureClient, {
     return (getPrismaMesureClient() as any)[prop]
   },
 })
-
-
