@@ -80,6 +80,14 @@ jobs:
           $disabledContent = Get-Content -Raw -Path $testEnv
           if ($disabledContent -notmatch '(?m)^BETTER_AUTH_ENABLED=false$') { throw "disable flag missing" }
 
+      - name: Production Next standalone build
+        working-directory: website
+        env:
+          VIGITEMP_SKIP_DB_ON_BUILD: "1"
+          VIGITEMP_LOGS_DIR: /tmp/vigisensys-build-logs
+          NEXT_DISABLE_TURBOPACK: "1"
+        run: pnpm build
+
   mysql-foundation:
     runs-on: ubuntu-latest
     steps:
