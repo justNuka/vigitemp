@@ -59,6 +59,27 @@ jobs:
           src/app/api/auth-v2/[...all]/route.ts
           scripts/test-better-auth-foundation.ts
 
+      - name: PowerShell Better Auth configuration helper
+        working-directory: website
+        shell: pwsh
+        run: |
+          $testEnv = Join-Path $env:RUNNER_TEMP "better-auth-test.env"
+          @(
+            'NEXT_PUBLIC_APP_URL="https://vigisensys.test"'
+            'DATABASE_PROVIDER="mysql"'
+          ) | Set-Content -Path $testEnv -Encoding utf8
+
+          ./scripts/configure-better-auth.ps1 -EnvPath $testEnv -BaseUrl "https://vigisensys.test/path"
+          $content = Get-Content -Raw -Path $testEnv
+          if ($content -notmatch '(?m)^BETTER_AUTH_ENABLED=true$') { throw "BETTER_AUTH_ENABLED missing" }
+          if ($content -notmatch '(?m)^BETTER_AUTH_PUBLIC_API_ENABLED=false$') { throw "public API guard missing" }
+          if ($content -notmatch '(?m)^BETTER_AUTH_SECRET="[^"]{32,}"$') { throw "Better Auth secret missing/too short" }
+          if ($content -notmatch '(?m)^BETTER_AUTH_URL="https://vigisensys\.test"$') { throw "Better Auth URL not normalized" }
+
+          ./scripts/configure-better-auth.ps1 -EnvPath $testEnv -Disable
+          $disabledContent = Get-Content -Raw -Path $testEnv
+          if ($disabledContent -notmatch '(?m)^BETTER_AUTH_ENABLED=false$') { throw "disable flag missing" }
+
   mysql-foundation:
     runs-on: ubuntu-latest
     steps:
