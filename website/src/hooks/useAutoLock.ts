@@ -13,6 +13,8 @@ interface AutoLockConfig {
 
 const DEFAULT_DURATION = 15; // 15 minutes par défaut
 const AUTO_LOCK_CONFIG_EVENT = "vigitemp:auto-lock-config-changed";
+const SHARED_ACTIVITY_STORAGE_KEY = "vigisensys:last-user-activity";
+const SHARED_ACTIVITY_WRITE_INTERVAL_MS = 5_000;
 const SESSION_TOUCH_INTERVAL_MS = 4 * 60 * 1000;
 
 export function useAutoLock() {
@@ -28,6 +30,7 @@ export function useAutoLock() {
   const configRef = useRef<AutoLockConfig | null>(null);
   const lastSessionTouchAtRef = useRef(0);
   const sessionTouchInFlightRef = useRef(false);
+  const lastSharedActivityWriteAtRef = useRef(0);
 
   // Charger la config depuis le cache local. La base reste la source de vérité,
   // mais ce cache évite de retomber à 15 min pendant le chargement initial.
@@ -46,6 +49,25 @@ export function useAutoLock() {
     }
 
     return { enabled: true, duration: DEFAULT_DURATION };
+  }, []);
+
+  const recordSharedActivity = useCallback((force = false) => {
+    if (typeof window === "undefined") return;
+
+    const now = Date.now();
+    if (
+      !force &&
+      now - lastSharedActivityWriteAtRef.current < SHARED_ACTIVITY_WRITE_INTERVAL_MS
+    ) {
+      return;
+    }
+
+    lastSharedActivityWriteAtRef.current = now;
+    try {
+      localStorage.setItem(SHARED_ACTIVITY_STORAGE_KEY, String(now));
+    } catch {
+      // L'auto-lock doit continuer de fonctionner même si le stockage local est indisponible.
+    }
   }, []);
 
   const touchSession = useCallback(async (force = false) => {
@@ -130,9 +152,10 @@ export function useAutoLock() {
   }, [loadConfig, handleLogout, isMetrologyOperationPage]);
 
   const handleUserActivity = useCallback(() => {
+    recordSharedActivity();
     resetTimer();
     void touchSession();
-  }, [resetTimer, touchSession]);
+  }, [recordSharedActivity, resetTimer, touchSession]);
 
   const refreshConfigFromApi = useCallback(async () => {
     try {
@@ -158,9 +181,10 @@ export function useAutoLock() {
     configRef.current = config;
 
     // Événements qui indiquent une activité
-    const events = ["mousedown", "mousemove", "keypress", "scroll", "touchstart", "click"];
+    const events = ["mousedown", "mousemove", "keydown", "scroll", "touchstart", "click"];
 
-    // Démarrer le timer initial
+    // Ouvrir/rafraîchir une page authentifiée constitue une activité de la session.
+    recordSharedActivity(true);
     resetTimer();
     void refreshConfigFromApi();
 
@@ -169,11 +193,18 @@ export function useAutoLock() {
       document.addEventListener(event, handleUserActivity, true);
     });
 
-    // Écouter les changements de config dans localStorage (pour synchroniser entre onglets)
+    // Synchroniser configuration et activité entre tous les onglets du même navigateur.
+    // Sans cela, un onglet oublié pourrait révoquer la session partagée pendant que
+    // l'utilisateur travaille activement dans un autre onglet.
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === "autoLockConfig") {
         const newConfig = loadConfig();
         configRef.current = newConfig;
+        resetTimer();
+        return;
+      }
+
+      if (e.key === SHARED_ACTIVITY_STORAGE_KEY && e.newValue) {
         resetTimer();
       }
     };
@@ -201,7 +232,13 @@ export function useAutoLock() {
       window.removeEventListener("storage", handleStorageChange);
       window.removeEventListener(AUTO_LOCK_CONFIG_EVENT, handleConfigChange);
     };
-  }, [handleUserActivity, loadConfig, refreshConfigFromApi, resetTimer]);
+  }, [
+    handleUserActivity,
+    loadConfig,
+    recordSharedActivity,
+    refreshConfigFromApi,
+    resetTimer,
+  ]);
 
   // Les opérations de métrologie neutralisent volontairement l'auto-lock. Il faut donc
   // maintenir la session serveur vivante même si l'opérateur ne touche pas l'interface.
