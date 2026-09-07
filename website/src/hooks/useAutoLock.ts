@@ -15,6 +15,7 @@ const DEFAULT_DURATION = 15; // 15 minutes par défaut
 const AUTO_LOCK_CONFIG_EVENT = "vigitemp:auto-lock-config-changed";
 const SHARED_ACTIVITY_STORAGE_KEY = "vigisensys:last-user-activity";
 const SHARED_ACTIVITY_WRITE_INTERVAL_MS = 5_000;
+const METROLOGY_ACTIVITY_HEARTBEAT_MS = 30_000;
 const SESSION_TOUCH_INTERVAL_MS = 4 * 60 * 1000;
 
 export function useAutoLock() {
@@ -240,20 +241,28 @@ export function useAutoLock() {
     resetTimer,
   ]);
 
-  // Les opérations de métrologie neutralisent volontairement l'auto-lock. Il faut donc
-  // maintenir la session serveur vivante même si l'opérateur ne touche pas l'interface.
+  // Les opérations de métrologie neutralisent volontairement l'auto-lock. Le heartbeat
+  // navigateur protège aussi les autres onglets VigiSensys : aucun onglet oublié ne doit
+  // pouvoir révoquer la session pendant qu'un ajustage/étalonnage est en cours.
   useEffect(() => {
     if (!isMetrologyOperationPage) return;
 
+    recordSharedActivity(true);
     void touchSession(true);
-    const interval = window.setInterval(() => {
+
+    const activityInterval = window.setInterval(() => {
+      recordSharedActivity(true);
+    }, METROLOGY_ACTIVITY_HEARTBEAT_MS);
+
+    const sessionInterval = window.setInterval(() => {
       void touchSession(true);
     }, SESSION_TOUCH_INTERVAL_MS);
 
     return () => {
-      window.clearInterval(interval);
+      window.clearInterval(activityInterval);
+      window.clearInterval(sessionInterval);
     };
-  }, [isMetrologyOperationPage, touchSession]);
+  }, [isMetrologyOperationPage, recordSharedActivity, touchSession]);
 
   // Fonction pour mettre à jour la config (utilisée dans les settings)
   const updateConfig = useCallback(
