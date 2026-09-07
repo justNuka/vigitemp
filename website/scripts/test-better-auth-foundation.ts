@@ -80,32 +80,57 @@ async function seedBusinessUser() {
     await betterAuthPassword.verify({ hash: legacyHash, password: TEST_PASSWORD }),
     true,
   )
+  assert.equal(
+    await betterAuthPassword.verify({ hash: legacyHash, password: "wrong-password" }),
+    false,
+  )
 
-  await prisma.t_utilisateur.create({
-    data: {
-      Id_Utilisateur: TEST_USER_ID,
-      Login: TEST_LOGIN,
-      Mot_De_Passe: legacyHash,
-      Adresse_Email: TEST_EMAIL,
-      Est_Archive: false,
-    },
-  })
-
-  return legacyHash
+  await prisma.$executeRaw`
+    INSERT INTO t_utilisateur (
+      Id_Utilisateur,
+      Login,
+      Mot_De_Passe,
+      Adresse_Email,
+      Est_Archive
+    ) VALUES (
+      ${TEST_USER_ID},
+      ${TEST_LOGIN},
+      ${legacyHash},
+      ${TEST_EMAIL},
+      ${0}
+    )
+  `
 }
 
 function buildCookieHeader(headers: Headers) {
-  const rawSetCookies =
-    typeof headers.getSetCookie === "function"
-      ? headers.getSetCookie()
-      : headers.get("set-cookie")
-        ? [headers.get("set-cookie") as string]
-        : []
-
-  return rawSetCookies
-    .map((value) => value.split(";", 1)[0])
+  return headers
+    .getSetCookie()
+    .map((cookie) => cookie.split(";", 1)[0])
     .filter(Boolean)
     .join("; ")
+}
+
+async function assertUnknownProvisioningIsRejected(
+  auth: ReturnType<typeof createVigiSensysBetterAuth>,
+) {
+  let rejected = false
+  try {
+    await auth.api.signUpEmail({
+      body: {
+        email: "unknown-foundation@vigisensys.test",
+        name: "Unknown Foundation User",
+        password: TEST_PASSWORD,
+        username: "Unknown.Foundation",
+      },
+    })
+  } catch {
+    rejected = true
+  }
+  assert.equal(
+    rejected,
+    true,
+    "Provisioning must reject identities without an active VigiSensys business user",
+  )
 }
 
 async function run() {
@@ -114,12 +139,14 @@ async function run() {
   console.log(
     `[better-auth-foundation] production-session maxAge=${BETTER_AUTH_SESSION_MAX_AGE_SECONDS}s updateAge=${BETTER_AUTH_SESSION_UPDATE_AGE_SECONDS}s`,
   )
+  assert.equal(BETTER_AUTH_SESSION_MAX_AGE_SECONDS, 60 * 60)
+  assert.ok(BETTER_AUTH_SESSION_UPDATE_AGE_SECONDS < BETTER_AUTH_SESSION_MAX_AGE_SECONDS)
+
+  await cleanupTestIdentity()
 
   try {
-    await cleanupTestIdentity()
-
     console.log("[better-auth-foundation] stage=seed-business-user")
-    const legacyHash = await seedBusinessUser()
+    await seedBusinessUser()
 
     console.log("[better-auth-foundation] stage=create-auth")
     const auth = createVigiSensysBetterAuth({
@@ -132,48 +159,35 @@ async function run() {
     })
 
     console.log("[better-auth-foundation] stage=reject-unknown-provisioning")
-    await assert.rejects(
-      () =>
-        auth.api.signUpEmail({
-          body: {
-            email: "unknown-better-auth@vigisensys.test",
-            password: TEST_PASSWORD,
-            name: "Unknown Better Auth",
-            username: "Unknown.BetterAuth",
-          },
-        }),
-      /VigiSensys account mapping failed/,
-    )
+    await assertUnknownProvisioningIsRejected(auth)
 
     console.log("[better-auth-foundation] stage=signup")
-    await auth.api.signUpEmail({
+    const signup = await auth.api.signUpEmail({
       body: {
         email: TEST_EMAIL,
-        password: TEST_PASSWORD,
         name: "Better Auth Foundation",
+        password: TEST_PASSWORD,
         username: TEST_LOGIN,
       },
     })
 
-    console.log("[better-auth-foundation] stage=verify-persistence")
-    const users = await prisma.$queryRawUnsafe<
-      Array<{
-        id: string
-        username: string | null
-        vigisensysUserId: number | null
-      }>
-    >(
-      `SELECT id, username, vigisensysUserId FROM t_auth_user WHERE vigisensysUserId = ${TEST_USER_ID}`,
-    )
-    assert.equal(users.length, 1)
-    assert.equal(users[0].username, TEST_LOGIN)
-    assert.equal(users[0].vigisensysUserId, TEST_USER_ID)
+    assert.equal(signup.user.email, TEST_EMAIL)
+    assert.equal(signup.user.username, TEST_LOGIN)
+    assert.equal(signup.user.vigisensysUserId, TEST_USER_ID)
 
-    const accounts = await prisma.$queryRawUnsafe<
-      Array<{
-        password: string | null
-      }>
-    >(`SELECT password FROM t_auth_account WHERE userId = '${users[0].id.replaceAll("'", "''")}'`)
+    console.log("[better-auth-foundation] stage=verify-persistence")
+    const authUsers = await prisma.$queryRaw<
+      Array<{ id: string; vigisensysUserId: number; username: string | null }>
+    >`SELECT id, vigisensysUserId, username FROM t_auth_user WHERE vigisensysUserId = ${TEST_USER_ID}`
+    assert.equal(authUsers.length, 1)
+    assert.equal(Number(authUsers[0].vigisensysUserId), TEST_USER_ID)
+    assert.equal(authUsers[0].username, TEST_LOGIN)
+
+    const accounts = await prisma.$queryRaw<Array<{ password: string | null }>>`
+      SELECT password
+      FROM t_auth_account
+      WHERE userId = ${authUsers[0].id}
+    `
     assert.equal(accounts.length, 1)
     assert.ok(accounts[0].password?.startsWith("$2"), "Credential password must use bcrypt")
     assert.equal(
@@ -214,9 +228,9 @@ async function run() {
     )
 
     console.log("[better-auth-foundation] stage=refresh-sliding-session")
-    // MySQL DATETIME is stored with second-level precision in the final schema.
-    // Wait long enough to cross more than one persisted second so the sliding
-    // expiry assertion cannot fail only because of timestamp truncation.
+    // The final MySQL schema stores these DATETIME values with second-level precision.
+    // Wait across more than one persisted second so the assertion cannot be flaky
+    // only because two distinct timestamps are truncated to the same DB value.
     await new Promise((resolve) => setTimeout(resolve, TEST_SESSION_REFRESH_WAIT_MS))
     const session2 = await auth.api.getSession({ headers: requestHeaders })
     assert.ok(session2)
@@ -242,6 +256,9 @@ async function run() {
 run()
   .then(() => process.exit(0))
   .catch((error) => {
-    console.error("[better-auth-foundation] FAIL", error)
+    console.error(
+      "[better-auth-foundation] FAIL",
+      error instanceof Error ? error.stack ?? error.message : error,
+    )
     process.exit(1)
   })
