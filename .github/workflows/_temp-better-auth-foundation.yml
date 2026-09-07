@@ -6,16 +6,15 @@ on:
       - feature/better-auth-runtime-foundation
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  web:
+  static-checks:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
           ref: feature/better-auth-runtime-foundation
-          fetch-depth: 0
 
       - uses: pnpm/action-setup@v4
         with:
@@ -26,23 +25,6 @@ jobs:
           node-version: 22.12.0
           cache: pnpm
           cache-dependency-path: website/pnpm-lock.yaml
-
-      - name: Refresh lockfile
-        working-directory: website
-        run: pnpm install --lockfile-only
-
-      - name: Commit lockfile when needed
-        shell: bash
-        run: |
-          if git diff --quiet -- website/pnpm-lock.yaml; then
-            echo "Lockfile already current"
-            exit 0
-          fi
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add website/pnpm-lock.yaml
-          git commit -m "build(auth): actualiser le lockfile Better Auth"
-          git push origin HEAD:feature/better-auth-runtime-foundation
 
       - name: Install frozen dependencies
         working-directory: website
@@ -65,3 +47,174 @@ jobs:
           src/lib/better-auth/vigisensys-identity.ts
           src/app/api/auth-v2/[...all]/route.ts
           scripts/test-better-auth-foundation.ts
+
+  mysql-foundation:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/better-auth-runtime-foundation
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.17.1
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.12.0
+          cache: pnpm
+          cache-dependency-path: website/pnpm-lock.yaml
+
+      - name: Install frozen dependencies
+        working-directory: website
+        run: pnpm install --frozen-lockfile
+
+      - name: Start MySQL 8
+        run: |
+          docker run -d --name vigisensys-auth-mysql \
+            -e MYSQL_ROOT_PASSWORD=vigisensys_test \
+            -p 3306:3306 \
+            mysql:8.0
+          for i in {1..60}; do
+            if docker exec vigisensys-auth-mysql mysqladmin ping -uroot -pvigisensys_test --silent; then
+              exit 0
+            fi
+            sleep 2
+          done
+          docker logs vigisensys-auth-mysql
+          exit 1
+
+      - name: Create minimal 0.90.1 baseline
+        run: |
+          docker exec -i vigisensys-auth-mysql mysql -uroot -pvigisensys_test <<'SQL'
+          CREATE DATABASE vigi_main CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+          USE vigi_main;
+          CREATE TABLE t_utilisateur (
+            Id_Utilisateur INT NOT NULL,
+            Login VARCHAR(50) NULL,
+            Mot_De_Passe VARCHAR(255) NULL,
+            Adresse_Email VARCHAR(255) NULL,
+            Est_Archive TINYINT(1) NOT NULL DEFAULT 0,
+            PRIMARY KEY (Id_Utilisateur)
+          ) ENGINE=InnoDB;
+          CREATE TABLE t_ajustage (
+            Id_Ajustage INT NOT NULL AUTO_INCREMENT,
+            Coeff_Constant FLOAT NULL,
+            PRIMARY KEY (Id_Ajustage)
+          ) ENGINE=InnoDB;
+          CREATE TABLE t_parametre (
+            Section VARCHAR(100) NOT NULL,
+            Mot_Cle VARCHAR(100) NOT NULL,
+            Valeur TEXT NULL,
+            Commentaire TEXT NULL,
+            PRIMARY KEY (Section, Mot_Cle)
+          ) ENGINE=InnoDB;
+          INSERT INTO t_parametre (Section, Mot_Cle, Valeur, Commentaire)
+          VALUES ('VERSION', 'SCHEMA_VERSION', '0.90.1', 'baseline auth test');
+          SQL
+
+      - name: Apply committed DB 0.90.2 migration
+        run: docker exec -i vigisensys-auth-mysql mysql -uroot -pvigisensys_test < db/migrations/0.90.2/mysql.sql
+
+      - name: Generate Prisma MySQL clients
+        working-directory: website
+        run: pnpm prisma:generate:mysql
+
+      - name: Exercise Better Auth on final MySQL schema
+        working-directory: website
+        env:
+          CI: "true"
+          BETTER_AUTH_TEST_ALLOW_DATA_CHANGES: "1"
+          DATABASE_PROVIDER: mysql
+          DATABASE_URL: mysql://root:vigisensys_test@127.0.0.1:3306/vigi_main
+          DATABASE_MESURES_URL: mysql://root:vigisensys_test@127.0.0.1:3306/vigi_main
+        run: pnpm test:better-auth-foundation
+
+  mssql-foundation:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/better-auth-runtime-foundation
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.17.1
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.12.0
+          cache: pnpm
+          cache-dependency-path: website/pnpm-lock.yaml
+
+      - name: Install frozen dependencies
+        working-directory: website
+        run: pnpm install --frozen-lockfile
+
+      - name: Start SQL Server 2022
+        run: |
+          docker run -d --name vigisensys-auth-mssql \
+            -e ACCEPT_EULA=Y \
+            -e MSSQL_SA_PASSWORD='VigiSensys_Test!2026' \
+            -p 1433:1433 \
+            mcr.microsoft.com/mssql/server:2022-latest
+          for i in {1..90}; do
+            if docker exec vigisensys-auth-mssql bash -lc 'SQLCMD=$(command -v sqlcmd || true); if [ -z "$SQLCMD" ] && [ -x /opt/mssql-tools18/bin/sqlcmd ]; then SQLCMD=/opt/mssql-tools18/bin/sqlcmd; fi; if [ -z "$SQLCMD" ] && [ -x /opt/mssql-tools/bin/sqlcmd ]; then SQLCMD=/opt/mssql-tools/bin/sqlcmd; fi; [ -n "$SQLCMD" ] && "$SQLCMD" -S localhost -U sa -P "VigiSensys_Test!2026" -C -Q "SELECT 1" >/dev/null 2>&1'; then
+              exit 0
+            fi
+            sleep 2
+          done
+          docker logs vigisensys-auth-mssql
+          exit 1
+
+      - name: Resolve sqlcmd path
+        run: |
+          SQLCMD=$(docker exec vigisensys-auth-mssql bash -lc 'command -v sqlcmd || ([ -x /opt/mssql-tools18/bin/sqlcmd ] && echo /opt/mssql-tools18/bin/sqlcmd) || ([ -x /opt/mssql-tools/bin/sqlcmd ] && echo /opt/mssql-tools/bin/sqlcmd)')
+          echo "SQLCMD_PATH=$SQLCMD" >> "$GITHUB_ENV"
+
+      - name: Create minimal 0.90.1 baseline
+        run: |
+          docker exec -i vigisensys-auth-mssql "$SQLCMD_PATH" -S localhost -U sa -P 'VigiSensys_Test!2026' -C -b <<'SQL'
+          CREATE DATABASE [vigi_main];
+          GO
+          USE [vigi_main];
+          GO
+          CREATE TABLE dbo.t_utilisateur (
+            Id_Utilisateur INT NOT NULL PRIMARY KEY,
+            Login NVARCHAR(50) NULL,
+            Mot_De_Passe NVARCHAR(255) NULL,
+            Adresse_Email NVARCHAR(255) NULL,
+            Est_Archive BIT NOT NULL CONSTRAINT DF_auth_test_archive DEFAULT (0)
+          );
+          CREATE TABLE dbo.t_ajustage (
+            Id_Ajustage INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+            Coeff_Constant FLOAT NULL
+          );
+          CREATE TABLE dbo.t_parametre (
+            Section VARCHAR(100) NOT NULL,
+            Mot_Cle VARCHAR(100) NOT NULL,
+            Valeur NVARCHAR(MAX) NULL,
+            Commentaire NVARCHAR(MAX) NULL,
+            CONSTRAINT PK_auth_test_parametre PRIMARY KEY (Section, Mot_Cle)
+          );
+          INSERT INTO dbo.t_parametre (Section, Mot_Cle, Valeur, Commentaire)
+          VALUES ('VERSION', 'SCHEMA_VERSION', N'0.90.1', N'baseline auth test');
+          GO
+          SQL
+
+      - name: Apply committed DB 0.90.2 migration
+        run: docker exec -i vigisensys-auth-mssql "$SQLCMD_PATH" -S localhost -U sa -P 'VigiSensys_Test!2026' -C -b < db/migrations/0.90.2/mssql.sql
+
+      - name: Generate Prisma SQL Server clients
+        working-directory: website
+        run: pnpm prisma:generate:mssql
+
+      - name: Exercise Better Auth on final SQL Server schema
+        working-directory: website
+        env:
+          CI: "true"
+          BETTER_AUTH_TEST_ALLOW_DATA_CHANGES: "1"
+          DATABASE_PROVIDER: mssql
+          DATABASE_URL: "sqlserver://127.0.0.1:1433;database=vigi_main;user=sa;password=VigiSensys_Test%212026;encrypt=true;trustServerCertificate=true"
+          DATABASE_MESURES_URL: "sqlserver://127.0.0.1:1433;database=vigi_main;user=sa;password=VigiSensys_Test%212026;encrypt=true;trustServerCertificate=true"
+        run: pnpm test:better-auth-foundation
