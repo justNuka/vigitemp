@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server"
+import { NextRequest } from "next/server"
 import bcrypt from "bcryptjs"
 import { z } from "zod"
 
@@ -16,6 +16,9 @@ import { prisma } from "@/lib/prisma"
 import { shouldUseSecureCookies } from "@/lib/cookie-security"
 import { getCompatHeader } from "@/lib/vigisensys-compat"
 import { checkUserLicenseCapacity } from "@/lib/license-user-limit"
+import { isBetterAuthRuntimeEnabled } from "@/lib/better-auth/auth"
+import { signInExistingVigiSensysUser } from "@/lib/better-auth/credentials"
+import { appendBetterAuthResponseHeaders } from "@/lib/better-auth/response-headers"
 
 const loginSchema = z.object({
   username: z.string().min(1, "Username required"),
@@ -76,7 +79,6 @@ export const POST = withLogging(async (req: NextRequest) => {
       select: { Mot_Cle: true, Valeur: true },
     })
 
-
     const expiryEnabled =
       cfr21Params.find((p) => p.Mot_Cle === "ACTIVATION_EXPIRATION_MOT_DE_PASSE")?.Valeur ===
         "1" ||
@@ -120,8 +122,8 @@ export const POST = withLogging(async (req: NextRequest) => {
         "temporary_password",
         "Vous devez changer votre mot de passe temporaire avant de continuer.",
         {
-        requirePasswordChange: true,
-        userId: user.Id_Utilisateur,
+          requirePasswordChange: true,
+          userId: user.Id_Utilisateur,
         },
       )
     }
@@ -145,6 +147,24 @@ export const POST = withLogging(async (req: NextRequest) => {
     // so default to an empty array here.
     const authorizations: string[] = []
 
+    // La période de transition conserve les JWT pour les consommateurs pas encore migrés,
+    // mais Better Auth devient la session serveur testée lorsque le runtime est activé.
+    let betterAuthHeaders: Headers | null = null
+    if (isBetterAuthRuntimeEnabled()) {
+      const displayName =
+        `${user.Prenom || ""} ${user.Nom || ""}`.trim() || user.Login || "user"
+      const betterAuthSignIn = await signInExistingVigiSensysUser({
+        userId: user.Id_Utilisateur,
+        username: user.Login || username,
+        businessEmail: user.Adresse_Email,
+        displayName,
+        password,
+        legacyPasswordHash: user.Mot_De_Passe as string,
+        requestHeaders: req.headers,
+      })
+      betterAuthHeaders = betterAuthSignIn.headers
+    }
+
     const token = generateAccessToken({
       userId: user.Id_Utilisateur,
       username: user.Login || "user",
@@ -164,9 +184,14 @@ export const POST = withLogging(async (req: NextRequest) => {
       isFirstLogin,
       passwordExpiryEnabled: expiryEnabled,
       passwordValidityDays,
+      authEngine: isBetterAuthRuntimeEnabled() ? "better-auth-transition" : "legacy",
     }
 
     const response = apiOk(userData)
+
+    if (betterAuthHeaders) {
+      appendBetterAuthResponseHeaders(response, betterAuthHeaders)
+    }
 
     response.cookies.set("auth-token", token, {
       httpOnly: true,
@@ -202,6 +227,7 @@ export const POST = withLogging(async (req: NextRequest) => {
         machineName: resolvedMachineName,
         address: ip,
         connectedAt: now.toISOString(),
+        authEngine: isBetterAuthRuntimeEnabled() ? "better-auth-transition" : "legacy",
       },
     })
 
@@ -223,7 +249,11 @@ export const POST = withLogging(async (req: NextRequest) => {
     }
 
     try {
-      let updatedClient = null as null | { Id_Poste: number; Nom_Machine_Connexion: string | null; Adresse_IP_Connexion: string | null }
+      let updatedClient = null as null | {
+        Id_Poste: number
+        Nom_Machine_Connexion: string | null
+        Adresse_IP_Connexion: string | null
+      }
 
       if (resolvedMachineName) {
         updatedClient = await prisma.t_postes_clients.upsert({
@@ -274,6 +304,7 @@ export const POST = withLogging(async (req: NextRequest) => {
         }
       }
 
+      void updatedClient
     } catch (err) {
       log.warn("AUTH", "Failed to update client workstation info", {
         username,
@@ -298,6 +329,3 @@ export const POST = withLogging(async (req: NextRequest) => {
     return apiError(500, "internal_error", "Internal server error")
   }
 })
-
-
-
