@@ -2,7 +2,7 @@
 
 ## Statut
 
-`EN_VALIDATION` — branche `fix/telephony-twilio-trial-call`.
+`VALIDE_TRIAL` — correctif mergé via PR #94, validation terrain confirmée le **07/09/2026**.
 
 ## Contexte
 
@@ -22,7 +22,7 @@ Un premier test réel a été effectué avec un compte Twilio Trial créé le 04
 - le numéro Trial présenté par Twilio appelle correctement le numéro français vérifié ;
 - une API Key dédiée VigiSensys a été créée ;
 - le test de connexion VigiSensys atteint bien l'API Twilio ;
-- le premier appel VigiSensys est refusé avec :
+- le premier appel VigiSensys a été refusé avec :
 
 ```text
 Invalid or disallowed parameters provided - trial accounts have limited parameter access, upgrade your account to unlock full functionality
@@ -92,18 +92,36 @@ Sur Trial, seul le premier point est validé par ce fallback. Le message VigiSen
 - compte Trial : premier POST refusé, puis un seul fallback avec le template Twilio autorisé, sans `Twiml`/`Timeout` ;
 - erreur Twilio non liée au Trial : aucune seconde tentative.
 
+Validation GitHub Actions du lot #94 :
+
+- génération Prisma MySQL : OK ;
+- test provider Twilio : OK ;
+- TypeScript : OK ;
+- ESLint ciblé : OK.
+
+Run de validation : `33875141908`.
+
+## Validation terrain du 07/09/2026
+
+Après merge de la PR #94 dans `dev`, le test a été rejoué avec le compte Twilio Trial réel :
+
+- la connexion Twilio reste fonctionnelle ;
+- **Tester l'appel** depuis VigiSensys aboutit désormais correctement ;
+- l'appel est bien reçu sur le numéro vérifié du compte Trial ;
+- le fallback Trial permet donc de valider la chaîne **VigiSensys → API Twilio → réseau téléphonique → téléphone**.
+
+Le TTS VigiSensys personnalisé via `Twiml` inline reste à valider sur un compte Twilio complet, puisque le Trial impose le template Twilio hébergé.
+
 ## Checklist terrain
 
 - [x] appel `Try out Voice` Twilio reçu sur le numéro vérifié ;
 - [x] numéro Trial émetteur confirmé ;
 - [x] API Key dédiée créée ;
 - [x] erreur VigiSensys Trial reproduite et cause identifiée ;
-- [ ] déployer la branche `fix/telephony-twilio-trial-call` ;
-- [ ] relancer `Tester la connexion` ;
-- [ ] relancer `Tester l'appel` vers le numéro vérifié ;
-- [ ] vérifier la réception de l'appel via le template TTS Twilio ;
-- [ ] vérifier que l'UI indique `Compte Twilio Trial détecté` ;
-- [ ] relever le Call SID retourné pour diagnostic ;
+- [x] correctif PR #94 mergé dans `dev` ;
+- [x] relancer `Tester la connexion` ;
+- [x] relancer `Tester l'appel` vers le numéro vérifié ;
+- [x] vérifier la réception de l'appel via le template TTS Twilio ;
 - [ ] après passage sur un compte complet, vérifier que le test revient automatiquement sur `vigisensys_tts` et lit le message VigiSensys personnalisé.
 
 ## Fichiers principaux
