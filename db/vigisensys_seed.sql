@@ -5010,6 +5010,7 @@ VALUES
   ('ACCES_TABLEAU_BORD_UTILISATEUR','Accès tableau de bord utilisateur','Accès tableau de bord utilisateur'),
   ('ACCES_DASHBOARD_USER','Accès dashboard user','Accès dashboard user'),
   ('ACCES_SURVEILLANCE','Accès surveillance','Accès surveillance'),
+  ('ACCES_VIGILOG','Accès VigiLog','Droit domaine VigiLog'),
   ('LIEU_VISUALISER','Visualiser les lieux','Visualiser les lieux'),
   ('ALARMES_GERER','Gérer les alarmes','Gérer les alarmes'),
   ('ACCES_DASHBOARD_ADMIN','Accès dashboard admin','Accès dashboard admin'),
@@ -5036,7 +5037,19 @@ VALUES
   ('ACCES_AJUSTAGE_ETALONNAGE','Accès ajustage étalonnage','Accès ajustage étalonnage'),
   ('ACQUITTER_ALARMES_MULTI_LIEUX','Acquitter plusieurs lieux','Acquitter des alarmes sur plusieurs lieux');
 INSERT INTO `t_etalon_type` VALUES ('ES','VigiTemp Type ES','Sonde étalon radio type E',1,0,0.05),('EX','Externe','Sonde externe',1,1,0),('SEF','VigiTemp Type SEF','Sonde étalon filaire ou filaire/radio avec prise RJ45',1,0,0.02),('SPET','Sonde étalon platine','Sonde étalon GSP platine',1,0,0.02);
-INSERT INTO `t_module_type` VALUES (1,'BIN','Boîtier filaire avec prise DB9 (port série)',0),(2,'BIR (filaire)','Boîtier réseau filaire avec prise RJ45 (prise réseau)',1),(3,'BTR','Boîtier radio avec prise DB9 (port série)',0),(4,'BIR (radio)','Boîtier réseau radio avec prise RJ45 (port série)',1),(5,'CORONIS','Boîtier radio CORONIS avec prise DB9 (port série)',0),(6,'MRH','Boîtier MRH',0),(7,'ITR','Module port série',0),(8,'IETH','Module ethernet',0);
+INSERT INTO `t_module_type` VALUES
+(1,'BIN','Boîtier filaire avec prise DB9 (port série)',0),
+(2,'BIR (filaire)','Boîtier réseau filaire avec prise RJ45 (prise réseau)',1),
+(3,'BTR','Boîtier radio avec prise DB9 (port série)',0),
+(4,'BIR (radio)','Boîtier réseau radio avec prise RJ45 (port série)',1),
+(5,'CORONIS','Boîtier radio CORONIS avec prise DB9 (port série)',0),
+(6,'MRH','Boîtier MRH',0),
+
+(7,'IUSB','CLE USB RADIO SONDES I',0),
+(8,'IETH','Module Ethernet',0),
+(9,'GSO-U','Module GSO USB',0),
+(10,'GSO-E','Module GSO Ethernet',0),
+(11,'BINX','Boîtier filaire Ethernet',0);
 INSERT INTO `t_parametre` (`Section`, `Mot_Cle`, `Valeur`, `Commentaire`) VALUES ('CFR21','ACTIVATION_EXPIRATION_MOT_DE_PASSE','true','Activer l\'expiration des mots de passe (CFR21)'),('CFR21','ACTIVATION_NORME_CFR21','1','Activer la conformité CFR21 (saisie des configurations)'),('CFR21','EVENEMENTS','1','Activation des événements'),('CFR21','JOURS_VALIDITE_MOT_DE_PASSE','90',NULL),('CFR21','MOT_DE_PASSE_PERMANENT','1','Le mot de passe ne peut pas être changé par l\'utilisateur'),('CFR21','MOT_DE_PASSE_REUTILISABLE','0','L\'utilisateur ne peut pas réutiliser un ancien mot de passe'),('CFR21','NOMBRE_TENTATIVES_MOT_DE_PASSE','3','Nombre de tentatives autorisées avant verrouillage du compte'),('CFR21','REACTIVATION_ALARME_SONORE','500','Délai de réactivation de l\'alarme sonore en millisecondes'),('CFR21','SECURITE','0','Mode sécurité renforcé'),('CFR21','TEMPS_DECONNEXION_MINUTES','20','Temps d\'inactivité avant deconnexion automatique en minutes'),('CFR21','VALIDITE_MOT_DE_PASSE_JOURS','90','Durée de validité du mot de passe en jours'),('SECURITE_EMAIL','SMTP_ACTIVATION','true','Activer l\'envoi d\'emails'),('SECURITE_EMAIL','SMTP_EXPEDITEUR','','Adresse email expéditeur (doit correspondre au domaine SMTP)'),('SECURITE_EMAIL','SMTP_MOT_DE_PASSE','','Mot de passe SMTP'),('SECURITE_EMAIL','SMTP_PORT','587','Port SMTP (587 pour TLS, 465 pour SSL)'),('SECURITE_EMAIL','SMTP_SERVEUR','','Serveur SMTP pour l\'envoi d\'emails'),('SECURITE_EMAIL','SMTP_UTILISATEUR','','Utilisateur SMTP'),('SECURITE_MOT_DE_PASSE','LONGUEUR_MINIMALE','8','Longueur minimale du mot de passe'),('SECURITE_MOT_DE_PASSE','MIN_CARACTERES_SPECIAUX','1','Nombre minimum de caractères spéciaux'),('SECURITE_MOT_DE_PASSE','MIN_CHIFFRES','1','Nombre minimum de chiffres'),('SECURITE_MOT_DE_PASSE','MIN_LETTRES_MAJUSCULES','1','Nombre minimum de majuscules'),('SECURITE_MOT_DE_PASSE','MIN_LETTRES_MINUSCULES','1','Nombre minimum de minuscules');
 INSERT INTO `t_profil` (`Id_Profil`, `Profil_Utilisateur`, `Commentaire`, `Est_MC2`, `Est_Archive`) VALUES
 (1,'Administrateurs',NULL,0,0);
@@ -5045,40 +5058,61 @@ SELECT p.`Id_Profil`, a.`Id_Autorisation`
 FROM `t_profil` p CROSS JOIN `t_autorisation` a
 WHERE p.`Profil_Utilisateur`='Administrateurs';
 INSERT INTO `t_etat_surveillance` VALUES (1,'A','En ajustage'),(2,'D','Surveillance désactivée'),(3,'E','En étalonnage'),(4,'S','Utilisée en surveillance'),(5,'T','En test');
-INSERT INTO `t_sonde_type` (`Id_Sonde_Type`,`Sonde_Type`,`Libelle_Sonde_Type`,`Est_Gestion_Relais`,`Est_Double_Capteur`,`Famille_Sonde`,`Unite`) VALUES
-(1,'E','Sonde radio relais type E',1,0,'CLASSIC',NULL),
-(2,'G','Sonde radio relais type G',1,0,'CLASSIC',NULL),
-(3,'H','Sonde radio relais type H',1,0,'CLASSIC',NULL),
-(4,'I','Sonde radio de type I',0,0,'CLASSIC',NULL),
-(5,'R','Sonde radio',0,0,'CLASSIC',NULL),
-(6,'V','Sonde filaire',0,0,'CLASSIC',NULL),
-(9,'SOIT','Gemsense One Température interne',0,0,'GSO',NULL),
-(10,'SOIH','Gemsense One Température & humidité interne',0,1,'GSO',NULL),
-(11,'SOET','Gemsense One Température externe',0,0,'GSO',NULL),
-(12,'SOEH','Gemsense One Température & humidité externe',0,1,'GSO',NULL),
-(13,'SPNB','Gemsense Pro Numérique blanc',0,0,'GSP',NULL),
-(14,'SPNG','Gemsense Pro Numérique gris',0,0,'GSP',NULL),
-(15,'SPPS','Gemsense Pro platine',0,0,'GSP',NULL),
-(16,'SPAL','Gemsense Pro platine alimentaire',0,0,'GSP',NULL),
-(17,'SPPC','Gemsense Pro platine contact',0,0,'GSP',NULL),
-(18,'SPAU','Gemsense Pro platine autoclave',0,0,'GSP',NULL),
-(19,'SPCF','Gemsense Pro platine chambre froide',0,0,'GSP',NULL),
-(20,'SPMI','Gemsense Pro platine micro-capteur',0,0,'GSP',NULL),
-(21,'SPCO','Gemsense Pro CO2',0,0,'GSP',NULL),
-(22,'SPHY','Gemsense Pro hygrométrie',0,0,'GSP',NULL),
-(23,'SPTH','Gemsense Pro thermocouple',0,0,'GSP',NULL),
-(24,'SPDI','Gemsense Pro pression différentielle',0,0,'GSP',NULL),
-(25,'SPAT','Gemsense Pro pression atmosphérique',0,0,'GSP',NULL),
-(26,'SPLU','Gemsense Pro lumière',0,0,'GSP',NULL),
-(27,'SP01','Gemsense Pro 0-1 Volt',0,0,'GSP',NULL),
-(28,'SP42','Gemsense Pro 4-20 mA',0,0,'GSP',NULL),
-(29,'SPOF','Gemsense Pro NO NF',0,0,'GSP',NULL),
-(30,'SPXB','Gemsense Pro Ethernet numérique blanc',0,0,'GSP',NULL),
-(31,'SPXG','Gemsense Pro Ethernet numérique gris',0,0,'GSP',NULL),
-(32,'SPXP','Gemsense Pro Ethernet platine',0,0,'GSP',NULL),
-(33,'SPFB','Gemsense Pro filaire numérique blanc',0,0,'GSP',NULL),
-(34,'SPFG','Gemsense Pro filaire numérique gris',0,0,'GSP',NULL),
-(35,'SPFP','Gemsense Pro filaire platine',0,0,'GSP',NULL);
+INSERT INTO `t_sonde_type`
+(
+  `Id_Sonde_Type`,
+  `Sonde_Type`,
+  `Libelle_Sonde_Type`,
+  `Est_Gestion_Relais`,
+  `Est_Double_Capteur`,
+  `Famille_Sonde`,
+  `Unite`,
+  `Valeur_Max`,
+  `Valeur_Min`
+)
+VALUES
+(1,'E','Sonde radio relais type E',1,0,'CLASSIC',NULL,NULL,NULL),
+(2,'G','Sonde radio relais type G',1,0,'CLASSIC',NULL,NULL,NULL),
+(3,'H','Sonde radio relais type H',1,0,'CLASSIC',NULL,NULL,NULL),
+(4,'I','Sonde radio de type I',0,0,'CLASSIC',NULL,NULL,NULL),
+(5,'R','Sonde radio',0,0,'CLASSIC',NULL,NULL,NULL),
+(6,'V','Sonde filaire',0,0,'CLASSIC',NULL,NULL,NULL),
+
+(9,'SOIT','Gemsense One Température interne',0,0,'GSO','°C',40,-30),
+(10,'SOIH','Gemsense One Température & humidité interne',0,1,'GSO',NULL,NULL,NULL),
+(11,'SOET','Gemsense One Température externe',0,0,'GSO','°C',125,-40),
+(12,'SOEH','Gemsense One Température & humidité externe',0,1,'GSO',NULL,NULL,NULL),
+
+(13,'SPNB','Gemsense Pro Numérique blanc',0,0,'GSP','°C',125,-40),
+(14,'SPNG','Gemsense Pro Numérique gris',0,0,'GSP','°C',70,-40),
+
+(15,'SPPS','Gemsense Pro platine',0,0,'GSP','°C',NULL,NULL),
+
+(16,'SPAL','Gemsense Pro platine alimentaire',0,0,'GSP','°C',NULL,NULL),
+(17,'SPPC','Gemsense Pro platine contact',0,0,'GSP','°C',NULL,NULL),
+(18,'SPAU','Gemsense Pro platine autoclave',0,0,'GSP','°C',NULL,NULL),
+(19,'SPCF','Gemsense Pro platine chambre froide',0,0,'GSP','°C',NULL,NULL),
+(20,'SPMI','Gemsense Pro platine micro-capteur',0,0,'GSP','°C',NULL,NULL),
+
+(21,'SPCO','Gemsense Pro CO2',0,0,'GSP','%',20,0),
+(22,'SPHY','Gemsense Pro hygrométrie',0,0,'GSP','%',100,0),
+(23,'SPTH','Gemsense Pro thermocouple',0,0,'GSP','°C',NULL,NULL),
+
+(24,'SPDI','Gemsense Pro pression différentielle',0,0,'GSP',NULL,250,-250),
+(25,'SPAT','Gemsense Pro pression atmosphérique',0,0,'GSP',NULL,1200,700),
+
+(26,'SPLU','Gemsense Pro lumière',0,0,'GSP',NULL,NULL,NULL),
+(27,'SP01','Gemsense Pro 0-1 Volt',0,0,'GSP',NULL,NULL,NULL),
+(28,'SP42','Gemsense Pro 4-20 mA',0,0,'GSP',NULL,NULL,NULL),
+(29,'SPOF','Gemsense Pro NO NF',0,0,'GSP',NULL,NULL,NULL),
+
+(30,'SPXB','Gemsense Pro Ethernet numérique blanc',0,0,'GSP','°C',125,-40),
+(31,'SPXG','Gemsense Pro Ethernet numérique gris',0,0,'GSP','°C',70,-40),
+(32,'SPXP','Gemsense Pro Ethernet platine',0,0,'GSP','°C',NULL,NULL),
+
+(33,'SPFB','Gemsense Pro filaire numérique blanc',0,0,'GSP','°C',125,-40),
+(34,'SPFG','Gemsense Pro filaire numérique gris',0,0,'GSP','°C',70,-40),
+(35,'SPFP','Gemsense Pro filaire platine',0,0,'GSP','°C',NULL,NULL);
 INSERT INTO `t_utilisateur` (Login, Mot_De_Passe, Est_Archive, Profil_Utilisateur, Est_Mot_De_Passe_Temporaire, Date_Creation, Date_Derniere_Modification_MDP) VALUES ('admin', '$2b$10$T.LiYgCAdm3FVYteRBfFFucmrl5PqcqdGxr2sdcseukhGylhM2oKe', 0, 'Administrateurs', 1, NOW(), NOW());
 SET FOREIGN_KEY_CHECKS=1;
 
