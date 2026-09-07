@@ -4,6 +4,7 @@ import bcrypt from "bcryptjs"
 
 import {
   BETTER_AUTH_SESSION_MAX_AGE_SECONDS,
+  BETTER_AUTH_SESSION_UPDATE_AGE_SECONDS,
   betterAuthPassword,
   createVigiSensysBetterAuth,
 } from "../src/lib/better-auth/auth"
@@ -19,6 +20,8 @@ const TEST_EMAIL = "better-auth-foundation@vigisensys.test"
 const TEST_PASSWORD = "VigiSensys-BetterAuth-Foundation-2026!"
 const TEST_SECRET = "vigisensys-better-auth-foundation-test-secret-2026-only"
 const TEST_BASE_URL = "http://localhost:3000"
+const TEST_SESSION_MAX_AGE_SECONDS = 10
+const TEST_SESSION_UPDATE_AGE_SECONDS = 1
 
 function requireDisposableDatabase() {
   if (process.env.BETTER_AUTH_TEST_ALLOW_DATA_CHANGES !== "1") {
@@ -132,21 +135,32 @@ async function assertUnknownProvisioningIsRejected(
 async function run() {
   const { databaseUrl, provider, databaseName } = requireDisposableDatabase()
   console.log(`[better-auth-foundation] provider=${provider} database=${databaseName}`)
+  console.log(
+    `[better-auth-foundation] production-session maxAge=${BETTER_AUTH_SESSION_MAX_AGE_SECONDS}s updateAge=${BETTER_AUTH_SESSION_UPDATE_AGE_SECONDS}s`,
+  )
+  assert.equal(BETTER_AUTH_SESSION_MAX_AGE_SECONDS, 60 * 60)
+  assert.ok(BETTER_AUTH_SESSION_UPDATE_AGE_SECONDS < BETTER_AUTH_SESSION_MAX_AGE_SECONDS)
 
   await cleanupTestIdentity()
 
   try {
+    console.log("[better-auth-foundation] stage=seed-business-user")
     await seedBusinessUser()
 
+    console.log("[better-auth-foundation] stage=create-auth")
     const auth = createVigiSensysBetterAuth({
       allowProvisioning: true,
       baseURL: TEST_BASE_URL,
       databaseUrl,
       secret: TEST_SECRET,
+      sessionMaxAgeSeconds: TEST_SESSION_MAX_AGE_SECONDS,
+      sessionUpdateAgeSeconds: TEST_SESSION_UPDATE_AGE_SECONDS,
     })
 
+    console.log("[better-auth-foundation] stage=reject-unknown-provisioning")
     await assertUnknownProvisioningIsRejected(auth)
 
+    console.log("[better-auth-foundation] stage=signup")
     const signup = await auth.api.signUpEmail({
       body: {
         email: TEST_EMAIL,
@@ -160,6 +174,7 @@ async function run() {
     assert.equal(signup.user.username, TEST_LOGIN)
     assert.equal(signup.user.vigisensysUserId, TEST_USER_ID)
 
+    console.log("[better-auth-foundation] stage=verify-persistence")
     const authUsers = await prisma.$queryRaw<
       Array<{ id: string; vigisensysUserId: number; username: string | null }>
     >`SELECT id, vigisensysUserId, username FROM t_auth_user WHERE vigisensysUserId = ${TEST_USER_ID}`
@@ -182,6 +197,7 @@ async function run() {
       true,
     )
 
+    console.log("[better-auth-foundation] stage=sign-in-username")
     const signedIn = await auth.api.signInUsername({
       returnHeaders: true,
       body: {
@@ -196,6 +212,7 @@ async function run() {
       "Better Auth session cookie must use the isolated transition prefix",
     )
 
+    console.log("[better-auth-foundation] stage=get-session-initial")
     const requestHeaders = new Headers({ cookie })
     const session1 = await auth.api.getSession({ headers: requestHeaders })
     assert.ok(session1, "Username/password sign-in must create a server session")
@@ -203,27 +220,29 @@ async function run() {
     assert.equal(session1.user.vigisensysUserId, TEST_USER_ID)
 
     const expiresAt1 = new Date(session1.session.expiresAt).getTime()
-    const expectedExpiry = Date.now() + BETTER_AUTH_SESSION_MAX_AGE_SECONDS * 1000
+    const expectedExpiry = Date.now() + TEST_SESSION_MAX_AGE_SECONDS * 1000
     assert.ok(
-      Math.abs(expiresAt1 - expectedExpiry) < 60_000,
-      "Session expiry should be approximately 24 hours from creation",
+      Math.abs(expiresAt1 - expectedExpiry) < 5_000,
+      "Session expiry should match the configured sliding max age",
     )
 
-    await new Promise((resolve) => setTimeout(resolve, 25))
+    console.log("[better-auth-foundation] stage=refresh-sliding-session")
+    await new Promise((resolve) => setTimeout(resolve, 1_250))
     const session2 = await auth.api.getSession({ headers: requestHeaders })
     assert.ok(session2)
-    assert.equal(
-      new Date(session2.session.expiresAt).getTime(),
-      expiresAt1,
-      "Session expiry must remain absolute and must not slide on reads",
+    const expiresAt2 = new Date(session2.session.expiresAt).getTime()
+    assert.ok(
+      expiresAt2 > expiresAt1,
+      `Session expiry must slide after activity (${expiresAt1} -> ${expiresAt2})`,
     )
 
+    console.log("[better-auth-foundation] stage=sign-out")
     await auth.api.signOut({ headers: requestHeaders })
     const revoked = await auth.api.getSession({ headers: requestHeaders })
     assert.equal(revoked, null, "Sign out must revoke the database session")
 
     console.log(
-      "[better-auth-foundation] PASS: final schema, bcrypt, business mapping, username, 24h absolute session and revocation",
+      "[better-auth-foundation] PASS: final schema, bcrypt, business mapping, username, 1h sliding session policy and revocation",
     )
   } finally {
     await cleanupTestIdentity()
