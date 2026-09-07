@@ -76,7 +76,7 @@ jobs:
             -p 3306:3306 \
             mysql:8.0
           for i in {1..60}; do
-            if docker exec vigisensys-auth-mysql mysqladmin ping -uroot -pvigisensys_test --silent; then
+            if docker exec vigisensys-auth-mysql mysql -uroot -pvigisensys_test -N -e "SELECT 1" >/dev/null 2>&1; then
               exit 0
             fi
             sleep 2
@@ -124,6 +124,7 @@ jobs:
         working-directory: website
         env:
           CI: "true"
+          NODE_ENV: production
           BETTER_AUTH_TEST_ALLOW_DATA_CHANGES: "1"
           DATABASE_PROVIDER: mysql
           DATABASE_URL: mysql://root:vigisensys_test@127.0.0.1:3306/vigi_main
@@ -213,6 +214,7 @@ jobs:
         working-directory: website
         env:
           CI: "true"
+          NODE_ENV: production
           BETTER_AUTH_TEST_ALLOW_DATA_CHANGES: "1"
           DATABASE_PROVIDER: mssql
           DATABASE_URL: "sqlserver://127.0.0.1:1433;database=vigi_main;user=sa;password=VigiSensys_Test%212026;encrypt=true;trustServerCertificate=true"
