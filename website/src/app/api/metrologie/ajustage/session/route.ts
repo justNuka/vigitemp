@@ -51,23 +51,34 @@ const stopSchema = z.object({
 })
 
 const patchSchema = z.discriminatedUnion("action", [
-  z.object({ action: z.literal("extend") }),
-  z.object({ action: z.literal("resolve-calculated-coefficients"), apply: z.boolean() }),
+  z.object({
+    action: z.literal("extend"),
+  }),
+  z.object({
+    action: z.literal("resolve-calculated-coefficients"),
+    apply: z.boolean(),
+  }),
   z.object({
     action: z.literal("update-coefficients"),
-    coefficients: z.array(z.object({
-      sensorId: z.number().int().positive(),
-      coeffA: z.number().finite(),
-      coeffB: z.number().finite(),
-      coeffC: z.number().finite(),
-    })).min(1),
+    coefficients: z
+      .array(
+        z.object({
+          sensorId: z.number().int().positive(),
+          coeffA: z.number().finite(),
+          coeffB: z.number().finite(),
+          coeffC: z.number().finite(),
+        }),
+      )
+      .min(1),
   }),
 ])
 
 function getSafeAdjustmentErrorMessage(error: unknown, fallback: string) {
   if (!(error instanceof Error)) return fallback
+
   const message = error.message?.trim() ?? ""
   if (!message) return fallback
+
   const lower = message.toLowerCase()
   const looksTechnical =
     message.includes("\n") ||
@@ -78,7 +89,9 @@ function getSafeAdjustmentErrorMessage(error: unknown, fallback: string) {
     lower.includes("invocation:") ||
     lower.includes("sql") ||
     lower.includes("p2022")
-  return looksTechnical ? fallback : message
+
+  if (looksTechnical) return fallback
+  return message
 }
 
 function adjustmentWatchdogKey(userId: number) {
@@ -102,21 +115,29 @@ function normalizeAdjustmentSessionDates<T extends Awaited<ReturnType<typeof get
       return [sensorId, { ...reading, measuredAt: preserveStoredWallClock(reading.measuredAt) }]
     }),
   ) as typeof session.latestSensorReadings
+
   return { ...session, latestSensorReadings } as T
 }
 
-function shouldExposeAdjustmentSession(session: Awaited<ReturnType<typeof getAdjustmentSessionForUser>>) {
+function shouldExposeAdjustmentSession(
+  session: Awaited<ReturnType<typeof getAdjustmentSessionForUser>>,
+) {
   if (!session) return false
   if (session.status === "running" || session.status === "idle") return true
+
   const lastUpdatedAt = new Date(session.lastUpdatedAt).getTime()
-  return Number.isFinite(lastUpdatedAt) && Date.now() - lastUpdatedAt <= TERMINAL_RESULT_GRACE_MS
+  if (!Number.isFinite(lastUpdatedAt)) return false
+
+  return Date.now() - lastUpdatedAt <= TERMINAL_RESULT_GRACE_MS
 }
 
 async function getAdjustmentSessionAndRestoreTerminalGsp(userId: number) {
   const session = await getAdjustmentSessionForUser(userId)
   if (session && session.status !== "running" && session.status !== "idle") {
     const completedWithCoefficientDecision =
-      session.status === "completed" && session.coefficientApplication.status !== "not-applicable"
+      session.status === "completed" &&
+      session.coefficientApplication.status !== "not-applicable"
+
     if (!completedWithCoefficientDecision) {
       await restoreGspMetrologyConfigurationOnce(
         `adjustment:${session.id}`,
@@ -130,12 +151,15 @@ async function getAdjustmentSessionAndRestoreTerminalGsp(userId: number) {
 
 function ensureAdjustmentWatchdog(userId: number, session: Awaited<ReturnType<typeof getAdjustmentSessionForUser>>) {
   const key = adjustmentWatchdogKey(userId)
+
   if (!session || session.status !== "running") {
     clearMetrologySessionWatchdog(key)
     return
   }
+
   const deadline = adjustmentWatchdogDeadline(session.expiresAt)
   if (!Number.isFinite(deadline)) return
+
   if (!hasMetrologySessionWatchdog(key)) {
     scheduleMetrologySessionWatchdog(key, deadline, async () => {
       try {
@@ -172,10 +196,19 @@ export const POST = withStandardOrExpertAnyAuthorizationLogging(
       const data = startSchema.parse(body)
       const userId = ctx.user.userId
       await stopMetrologyReadingPreviewSession(userId)
-      neutralizedSensorIds = await applyGspMetrologyConfiguration(data.selectedSensorIds, "adjustment-neutral", "AJUSTAGE")
+
+      neutralizedSensorIds = await applyGspMetrologyConfiguration(
+        data.selectedSensorIds,
+        "adjustment-neutral",
+        "AJUSTAGE",
+      )
+
       const session = await startAdjustmentSession(
         ctx.user,
-        { ...data, mediumId: data.mediumId ?? null },
+        {
+          ...data,
+          mediumId: data.mediumId ?? null,
+        },
         getClientIp(req),
       )
       scheduleMetrologySessionWatchdog(
@@ -213,7 +246,11 @@ export const POST = withStandardOrExpertAnyAuthorizationLogging(
         userId: ctx.user.userId,
         error: error instanceof Error ? error.message : String(error),
       })
-      return apiError(400, "adjustment_start_failed", getSafeAdjustmentErrorMessage(error, "Impossible de demarrer l'ajustage."))
+      return apiError(
+        400,
+        "adjustment_start_failed",
+        getSafeAdjustmentErrorMessage(error, "Impossible de demarrer l'ajustage."),
+      )
     }
   },
 )
@@ -242,7 +279,11 @@ export const DELETE = withStandardOrExpertAnyAuthorizationLogging(
         userId: ctx.user.userId,
         error: error instanceof Error ? error.message : String(error),
       })
-      return apiError(400, "adjustment_stop_failed", getSafeAdjustmentErrorMessage(error, "Impossible d'arreter l'ajustage."))
+      return apiError(
+        400,
+        "adjustment_stop_failed",
+        getSafeAdjustmentErrorMessage(error, "Impossible d'arreter l'ajustage."),
+      )
     }
   },
 )
@@ -252,18 +293,31 @@ export const PATCH = withStandardOrExpertAnyAuthorizationLogging(
   async (req: NextRequest, ctx) => {
     try {
       const body = await req.json().catch(() => ({}))
-      const data = patchSchema.parse({ ...body, action: body.action ?? "extend" })
+      const data = patchSchema.parse({
+        ...body,
+        action: body.action ?? "extend",
+      })
       const userId = ctx.user.userId
 
       if (data.action === "resolve-calculated-coefficients") {
-        const session = await resolveAdjustmentCalculatedCoefficientApplication(userId, data.apply, getClientIp(req))
+        const session = await resolveAdjustmentCalculatedCoefficientApplication(
+          userId,
+          data.apply,
+          getClientIp(req),
+        )
         return apiOk({ session: normalizeAdjustmentSessionDates(session) })
       }
 
       if (data.action === "update-coefficients") {
         await requireAdjustmentCoefficientDirtyColumn()
-        const session = await updateAdjustmentCoefficients(userId, data.coefficients, getClientIp(req))
-        await markLatestAdjustmentCoefficientRowsDirty(session.sensors.map((sensor) => sensor.serialNumber))
+        const session = await updateAdjustmentCoefficients(
+          userId,
+          data.coefficients,
+          getClientIp(req),
+        )
+        await markLatestAdjustmentCoefficientRowsDirty(
+          session.sensors.map((sensor) => sensor.serialNumber),
+        )
         return apiOk({ session: normalizeAdjustmentSessionDates(session) })
       }
 
@@ -285,7 +339,9 @@ export const PATCH = withStandardOrExpertAnyAuthorizationLogging(
       return apiOk({ session: normalizeAdjustmentSessionDates(session) })
     } catch (error) {
       if (error instanceof z.ZodError) {
-        return apiError(400, "validation_error", "Données invalides", { details: error.issues })
+        return apiError(400, "validation_error", "Données invalides", {
+          details: error.issues,
+        })
       }
       if (error instanceof GspSensorUnreachableError) {
         return apiError(400, "gsp_sensor_unreachable", error.message, { serial: error.serial })
@@ -294,7 +350,11 @@ export const PATCH = withStandardOrExpertAnyAuthorizationLogging(
         userId: ctx.user.userId,
         error: error instanceof Error ? error.message : String(error),
       })
-      return apiError(400, "adjustment_patch_failed", getSafeAdjustmentErrorMessage(error, "Impossible de mettre à jour l'ajustage."))
+      return apiError(
+        400,
+        "adjustment_patch_failed",
+        getSafeAdjustmentErrorMessage(error, "Impossible de mettre à jour l'ajustage."),
+      )
     }
   },
 )
