@@ -14,14 +14,15 @@ const METROLOGY_OPERATION_CODES = getPermissionAliases("METROLOGY_OPERATION_ACCE
 
 export const GET = withStandardOrExpertAnyAuthorizationLogging(
   METROLOGY_OPERATION_CODES,
-  async (_req: NextRequest, ctx) => {
+  async (_req: NextRequest, ctx, { params }: { params: Promise<{ id: string }> }) => {
     try {
-      const id = Number(ctx.params?.id)
-      if (!Number.isInteger(id) || id <= 0) {
+      const { id } = await params
+      const calibrationId = Number(id)
+      if (!Number.isInteger(calibrationId) || calibrationId <= 0) {
         return apiError(400, "invalid_calibration_id", "Identifiant d'étalonnage invalide")
       }
 
-      const [report] = await loadCalibrationReportInputs([id])
+      const [report] = await loadCalibrationReportInputs([calibrationId])
       if (!report) {
         return apiError(404, "calibration_not_found", "Étalonnage introuvable")
       }
