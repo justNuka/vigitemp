@@ -78,7 +78,7 @@ Aucune modification n'est nécessaire pour `IN` / `IE`, dont la mesure est textu
 
 Branche : `fix/binary-sensor-raw-reading`
 
-PR : à compléter après ouverture.
+PR : #98 — `fix(server): préserver les octets binaires des sondes IC/IP/IH`
 
 ## Validation terrain
 
