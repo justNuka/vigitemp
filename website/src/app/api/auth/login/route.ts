@@ -189,10 +189,6 @@ export const POST = withLogging(async (req: NextRequest) => {
 
     const response = apiOk(userData)
 
-    if (betterAuthHeaders) {
-      appendBetterAuthResponseHeaders(response, betterAuthHeaders)
-    }
-
     response.cookies.set("auth-token", token, {
       httpOnly: true,
       secure: shouldUseSecureCookies(req),
@@ -212,6 +208,12 @@ export const POST = withLogging(async (req: NextRequest) => {
       maxAge: REFRESH_COOKIE_MAX_AGE_SECONDS,
       path: "/",
     })
+
+    // NextResponse.cookies peut reconstruire l'en-tête Set-Cookie. Les cookies Better Auth
+    // doivent donc être ajoutés après toutes les mutations de cookies legacy.
+    if (betterAuthHeaders) {
+      appendBetterAuthResponseHeaders(response, betterAuthHeaders)
+    }
 
     const headerMachineName =
       getCompatHeader(req, "x-vigisensys-machine-name", "x-vigitemp-machine-name") ||
