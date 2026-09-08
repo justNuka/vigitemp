@@ -6,7 +6,7 @@
 - Branche d’intégration : `dev`
 - HEAD `dev` au démarrage du lot : `4e63a6f58d53e92bc136fca61b7937babae83f80`
 - Branche du lot : `feature/metrology-operation-completion`
-- PR : à renseigner après ouverture vers `dev`
+- PR #97 — ouverte vers `dev`.
 - Branche Better Auth : `feature/better-auth-refactor` — volontairement non modifiée par ce lot.
 
 Ce document conserve le contexte complet du lot demandé le 08/09/2026 autour de la fin des opérations d’ajustage / étalonnage et de leur restitution dans la gestion des sondes.
@@ -154,7 +154,7 @@ Il est important de ne pas assimiler toutes les erreurs Hotline sans trame à un
 - [ ] `pnpm i18n:check`
 - [ ] `pnpm lint`
 - [ ] `pnpm build`
-- [ ] vérifier le diff complet de `feature/metrology-operation-completion` contre le HEAD actuel de `dev` ;
-- [ ] vérifier qu’aucun fichier Better Auth ni changement parasite n’est présent ;
-- [ ] renseigner le numéro de PR dans ce document après ouverture ;
+- [x] vérifier le diff complet de `feature/metrology-operation-completion` contre le HEAD actuel de `dev` ;
+- [x] vérifier qu’aucun fichier Better Auth ni changement parasite n’est présent ;
+- [x] renseigner le numéro de PR dans ce document après ouverture ;
 - [ ] effectuer les validations terrain ci-dessus avant merge.
