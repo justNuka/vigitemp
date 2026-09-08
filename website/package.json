@@ -131,7 +131,7 @@
     "tailwind-merge": "^3.5.0",
     "tailwindcss-animate": "^1.0.7",
     "tarn": "3.0.2",
-    "tedious": "^19.2.2",
+    "tedious": "19.2.2",
     "vaul": "^1.1.2",
     "winston": "^3.19.0",
     "winston-daily-rotate-file": "^5.0.0",
