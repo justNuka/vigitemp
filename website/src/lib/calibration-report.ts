@@ -117,13 +117,16 @@ export async function loadCalibrationReportInputs(ids: number[]) {
 
   const measuresByCalibration = new Map<number, CalibrationReportMeasure[]>()
   for (const measure of measures) {
-    const list = measuresByCalibration.get(measure.Id_Etalonnage) ?? []
+    if (measure.Id_Etalonnage == null || measure.Numero_Ordre == null) continue
+
+    const calibrationId = measure.Id_Etalonnage
+    const list = measuresByCalibration.get(calibrationId) ?? []
     list.push({
       order: measure.Numero_Ordre,
       sensorValue: measure.Mesure_Sonde,
       standardValue: measure.Mesure_Etalon,
     })
-    measuresByCalibration.set(measure.Id_Etalonnage, list)
+    measuresByCalibration.set(calibrationId, list)
   }
 
   const calibrationById = new Map(calibrations.map((row) => [row.Id_Etalonnage, row]))
