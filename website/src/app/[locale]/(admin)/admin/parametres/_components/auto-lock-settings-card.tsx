@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { SwitchWithLoading } from '@/components/ui/switch-with-loading';
@@ -39,12 +40,17 @@ function persistLocalConfig(config: AutoLockConfig) {
   window.dispatchEvent(new CustomEvent(AUTO_LOCK_CONFIG_EVENT, { detail: config }));
 }
 
+function sameConfig(left: AutoLockConfig, right: AutoLockConfig) {
+  return left.enabled === right.enabled && left.duration === right.duration;
+}
+
 export function AutoLockSettingsCard() {
   const t = useTranslations('adminSettings');
-  const [autoLockConfig, setAutoLockConfig] = useState<AutoLockConfig>(() => readLocalConfig());
-
-  const autoLockEnabled = autoLockConfig.enabled;
-  const autoLockDuration = autoLockConfig.duration;
+  const initialConfig = readLocalConfig();
+  const [savedConfig, setSavedConfig] = useState<AutoLockConfig>(initialConfig);
+  const [draftConfig, setDraftConfig] = useState<AutoLockConfig>(initialConfig);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -52,11 +58,15 @@ export function AutoLockSettingsCard() {
     getJson<AutoLockConfig>('/api/parametres/auto-lock')
       .then((config) => {
         if (cancelled) return;
-        setAutoLockConfig(config);
+        setSavedConfig(config);
+        setDraftConfig(config);
         persistLocalConfig(config);
       })
       .catch((error) => {
         console.error('Erreur lors du chargement de la config auto-lock:', error);
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoading(false);
       });
 
     return () => {
@@ -64,42 +74,31 @@ export function AutoLockSettingsCard() {
     };
   }, []);
 
-  const saveAutoLockConfig = async (config: AutoLockConfig) => {
-    const savedConfig = await patchJson<AutoLockConfig>('/api/parametres/auto-lock', config);
-    setAutoLockConfig(savedConfig);
-    persistLocalConfig(savedConfig);
-    return savedConfig;
-  };
+  const hasChanges = !sameConfig(savedConfig, draftConfig);
 
-  const handleAutoLockToggle = async (enabled: boolean) => {
-    const config = { enabled, duration: autoLockDuration };
-    setAutoLockConfig(config);
+  const handleSave = async () => {
+    if (!hasChanges || isSaving) return;
+    setIsSaving(true);
     try {
-      const savedConfig = await saveAutoLockConfig(config);
+      const saved = await patchJson<AutoLockConfig>('/api/parametres/auto-lock', draftConfig);
+      setSavedConfig(saved);
+      setDraftConfig(saved);
+      persistLocalConfig(saved);
       toast.success(
-        savedConfig.enabled
-          ? t('security.toast.enabled', { minutes: savedConfig.duration })
+        saved.enabled
+          ? t('security.toast.enabled', { minutes: saved.duration })
           : t('security.toast.disabled')
       );
     } catch (error) {
       console.error('Erreur lors de la sauvegarde de la config auto-lock:', error);
-      setAutoLockConfig(autoLockConfig);
       toast.error(t('security.toast.update_error'));
+    } finally {
+      setIsSaving(false);
     }
   };
 
-  const handleAutoLockDurationChange = async (duration: string) => {
-    const durationNum = parseInt(duration, 10);
-    const config = { enabled: autoLockEnabled, duration: durationNum };
-    setAutoLockConfig(config);
-    try {
-      const savedConfig = await saveAutoLockConfig(config);
-      toast.success(t('security.toast.duration', { minutes: savedConfig.duration }));
-    } catch (error) {
-      console.error('Erreur lors de la sauvegarde de la config auto-lock:', error);
-      setAutoLockConfig(autoLockConfig);
-      toast.error(t('security.toast.update_error'));
-    }
+  const handleCancel = () => {
+    setDraftConfig(savedConfig);
   };
 
   return (
@@ -118,10 +117,15 @@ export function AutoLockSettingsCard() {
               {t('security.auto_lock.helper')}
             </p>
           </div>
-          <SwitchWithLoading id="autoLock" checked={autoLockEnabled} onCheckedChange={handleAutoLockToggle} />
+          <SwitchWithLoading
+            id="autoLock"
+            checked={draftConfig.enabled}
+            onCheckedChange={(enabled) => setDraftConfig((current) => ({ ...current, enabled }))}
+            isLoading={isLoading || isSaving}
+          />
         </div>
 
-        {autoLockEnabled && (
+        {draftConfig.enabled && (
           <div className="flex items-center justify-between">
             <div className="flex-1">
               <Label htmlFor="autoLockDuration" className="font-medium">
@@ -129,7 +133,13 @@ export function AutoLockSettingsCard() {
               </Label>
               <p className="text-sm text-muted-foreground mt-1">{t('security.inactivity.helper')}</p>
             </div>
-            <Select value={autoLockDuration.toString()} onValueChange={handleAutoLockDurationChange}>
+            <Select
+              value={draftConfig.duration.toString()}
+              onValueChange={(duration) =>
+                setDraftConfig((current) => ({ ...current, duration: parseInt(duration, 10) }))
+              }
+              disabled={isLoading || isSaving}
+            >
               <SelectTrigger className="w-45">
                 <SelectValue />
               </SelectTrigger>
@@ -143,6 +153,17 @@ export function AutoLockSettingsCard() {
             </Select>
           </div>
         )}
+
+        {hasChanges ? (
+          <div className="flex justify-end gap-2 border-t pt-4">
+            <Button type="button" variant="outline" onClick={handleCancel} disabled={isSaving}>
+              {t('pending_changes.cancel')}
+            </Button>
+            <Button type="button" onClick={handleSave} disabled={isSaving}>
+              {t('pending_changes.save')}
+            </Button>
+          </div>
+        ) : null}
       </CardContent>
     </Card>
   );
