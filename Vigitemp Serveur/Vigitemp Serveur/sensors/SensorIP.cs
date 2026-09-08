@@ -9,6 +9,11 @@ namespace Vigitemp_Serveur.sensors
 {
     class SensorIP : Sensor
     {
+        private const double PlatinumCoefficientA = 0.0039083d;
+        private const double PlatinumCoefficientB = -0.0000005775d;
+        private const double LegacyPlatinumSlopeThreshold = 0.01d;
+        private const double CoefficientEpsilon = 0.000000000001d;
+
         private string m_regexResponseTempSensor;
 
         private bool ContainsBatteryMarker(string response)
@@ -23,6 +28,80 @@ namespace Vigitemp_Serveur.sensors
                 response,
                 @"R" + serialSuffix + @"(?:BAT|B)'",
                 RegexOptions.IgnoreCase);
+        }
+
+        private static bool UsesLegacyPlatinumTransferFunction(SondeMetrologySettings metrology)
+        {
+            if (metrology == null || !metrology.HasAjustage)
+            {
+                return false;
+            }
+
+            // Les ajustages historiques des sondes IP ne stockent pas une pente °C/raw.
+            // Coeff_X et Coeff_Constant décrivent la conversion raw -> R/R0 de la platine,
+            // avant inversion de la loi Callendar-Van Dusen utilisée par Vigitemp.
+            // Les ajustages linéaires VigiSensys récents restent, eux, sur le chemin générique.
+            return Math.Abs(metrology.CoeffX2) <= CoefficientEpsilon
+                && Math.Abs(metrology.CoeffX) > CoefficientEpsilon
+                && Math.Abs(metrology.CoeffX) < LegacyPlatinumSlopeThreshold
+                && Math.Abs(metrology.CoeffConstant) < 10d;
+        }
+
+        private bool TryApplyLegacyPlatinumMetrology(double rawValue, out double correctedValue)
+        {
+            correctedValue = 0d;
+
+            var metrology = ths.GetSondeMetrologyCached(m_sondeSerialNumber);
+            if (!UsesLegacyPlatinumTransferFunction(metrology))
+            {
+                return false;
+            }
+
+            var halfRatio = PlatinumCoefficientA / (2d * PlatinumCoefficientB);
+            var discriminant =
+                (halfRatio * halfRatio)
+                + (metrology.CoeffX * rawValue + (metrology.CoeffConstant - 1d)) / PlatinumCoefficientB;
+
+            if (double.IsNaN(discriminant) || double.IsInfinity(discriminant) || discriminant < 0d)
+            {
+                VigitempServeur.Log(
+                    $"[SONDE][METROLOGY][WARN] type=IP serial={m_sondeSerialNumber} model=platinum-legacy " +
+                    $"raw={ToInvariantRaw(rawValue)} discriminant={discriminant} status=invalid");
+                return false;
+            }
+
+            var value = -halfRatio - Math.Sqrt(discriminant);
+            var afterPlatinum = value;
+
+            if (metrology.Offset.HasValue)
+            {
+                value += metrology.Offset.Value;
+            }
+
+            var appliedCorrectionEj = false;
+            if (metrology.HasEtalonnage && metrology.ApplyCorrectionEj && metrology.CorrectionJustesse.HasValue)
+            {
+                value += metrology.CorrectionJustesse.Value;
+                appliedCorrectionEj = true;
+            }
+
+            if (double.IsNaN(value) || double.IsInfinity(value))
+            {
+                return false;
+            }
+
+            if (ths != null && ths.LogMetrologyDetailed)
+            {
+                VigitempServeur.Log(
+                    $"Metrology apply serial={m_sondeSerialNumber} idLieu={m_idLieu} model=platinum-legacy " +
+                    $"raw={ToInvariantRaw(rawValue)} coeffX={metrology.CoeffX} coeffC={metrology.CoeffConstant} " +
+                    $"afterPlatinum={afterPlatinum} " +
+                    $"offset={(metrology.Offset.HasValue ? metrology.Offset.Value.ToString() : "null")} " +
+                    $"applyCorrectionEj={metrology.ApplyCorrectionEj} appliedCorrectionEj={appliedCorrectionEj} final={value}");
+            }
+
+            correctedValue = value;
+            return true;
         }
 
         // Constructeur
@@ -144,13 +223,21 @@ namespace Vigitemp_Serveur.sensors
                 VigitempServeur.Log($"[SONDE][RX] type=IP serial={m_sondeSerialNumber} high=0x{poidsFort:X2} low=0x{poidsFaible:X2} resistance={tmp_resistance}");
 
                 var rawValue = Convert.ToDouble(tmp_resistance, System.Globalization.CultureInfo.InvariantCulture);
-                var correctedValue = RoundMeasure(ApplyMetrology(rawValue));
+                double metrologyValue;
+                var usedLegacyPlatinumConversion = TryApplyLegacyPlatinumMetrology(rawValue, out metrologyValue);
+                var correctedValue = RoundMeasure(
+                    usedLegacyPlatinumConversion
+                        ? metrologyValue
+                        : ApplyMetrology(rawValue));
 
                 HandleSensorPowerAlarm(hasBatteryMarker, hasBatteryMarker ? "IP-BAT" : "IP-NORMAL");
                 HandleNoResponseAlarm(true);
                 compareMeasuresAndLimits(correctedValue, "°C");
                 ths.GetDatabase().AddMesure(m_sondeSerialNumber, correctedValue, "°C", ToInvariantRaw(rawValue));
-                VigitempServeur.Log($"[SONDE][DONE] type=IP serial={m_sondeSerialNumber} port={m_comPort} status=success value={correctedValue} unit=°C raw={ToInvariantRaw(rawValue)}");
+                VigitempServeur.Log(
+                    $"[SONDE][DONE] type=IP serial={m_sondeSerialNumber} port={m_comPort} status=success " +
+                    $"value={correctedValue} unit=°C raw={ToInvariantRaw(rawValue)} " +
+                    $"model={(usedLegacyPlatinumConversion ? "platinum-legacy" : "linear")}");
 
                 m_port.Close();
             }
