@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import type { ColumnDef } from '@tanstack/react-table';
+import { FileText } from 'lucide-react';
 import { toast } from 'sonner';
 import { TanStackTable } from '@/components/data-table/tanstack-table';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -194,10 +195,19 @@ export function CalibrationsPanel({
     {
       id: 'actions',
       header: t('panels.calibrations.columns.actions'),
+      enableSorting: false,
       cell: ({ row }) => (
-        <Button size="sm" variant="outline" onClick={() => openDurationDialog(row.original)}>
-          {t('panels.calibrations.actions.edit_validity_days')}
-        </Button>
+        <div className="flex justify-end gap-2" onClick={(event) => event.stopPropagation()}>
+          <Button asChild size="sm" variant="outline">
+            <a href={`/api/metrologie/etalonnage/report/${row.original.Id_Etalonnage}`} download>
+              <FileText className="mr-1.5 h-3.5 w-3.5" />
+              PDF
+            </a>
+          </Button>
+          <Button size="sm" variant="outline" onClick={() => openDurationDialog(row.original)}>
+            {t('panels.calibrations.actions.edit_validity_days')}
+          </Button>
+        </div>
       ),
     },
   ];
@@ -218,20 +228,18 @@ export function CalibrationsPanel({
           ) : calibrations.length === 0 ? (
             <div className="text-center py-6 text-sm text-muted-foreground">{t('panels.calibrations.empty')}</div>
           ) : (
-            <>
-              <TanStackTable
-                columns={columns}
-                data={calibrations}
-                showSearch={false}
-                showPagination={false}
-                maxHeight="16rem"
-                selectedRowId={selectedCalibrationId ?? undefined}
-                onRowClick={(row: CalibrationRow) => onSelectCalibration(row.Id_Etalonnage)}
-                headerClassName="!bg-sidebar !text-sidebar-foreground"
-                headerCellClassName="!bg-sidebar !text-sidebar-foreground !border-r !border-white/25 hover:!bg-sidebar-accent/80"
-                tableClassName="border-separate border-spacing-0 [&_thead_th]:!border-r [&_thead_th]:!border-white/25 [&_thead_th:last-child]:!border-r-0"
-              />
-            </>
+            <TanStackTable
+              columns={columns}
+              data={calibrations}
+              showSearch={false}
+              showPagination={false}
+              maxHeight="16rem"
+              selectedRowId={selectedCalibrationId ?? undefined}
+              onRowClick={(row: CalibrationRow) => onSelectCalibration(row.Id_Etalonnage)}
+              headerClassName="!bg-sidebar !text-sidebar-foreground"
+              headerCellClassName="!bg-sidebar !text-sidebar-foreground !border-r !border-white/25 hover:!bg-sidebar-accent/80"
+              tableClassName="border-separate border-spacing-0 [&_thead_th]:!border-r [&_thead_th]:!border-white/25 [&_thead_th:last-child]:!border-r-0"
+            />
           )}
         </CardContent>
       </Card>
