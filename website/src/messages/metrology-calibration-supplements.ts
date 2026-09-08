@@ -6,6 +6,11 @@ export const frMetrologyCalibrationSupplements: MessageCatalog = {
       operationTimer: {
         movePanel: "Déplacer le panneau",
       },
+      adjustment: {
+        errors: {
+          sensorUnreachable: "Le serveur n’arrive pas à joindre la sonde. Vérifiez qu’elle est bien branchée.",
+        },
+      },
     },
     calibrationPage: {
       operationTimer: {
@@ -93,6 +98,11 @@ export const enMetrologyCalibrationSupplements: MessageCatalog = {
     adjustmentPage: {
       operationTimer: {
         movePanel: "Move panel",
+      },
+      adjustment: {
+        errors: {
+          sensorUnreachable: "The server cannot reach the sensor. Check that it is properly connected.",
+        },
       },
     },
     calibrationPage: {
