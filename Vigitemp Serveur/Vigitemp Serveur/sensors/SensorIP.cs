@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO.Ports;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
@@ -28,7 +29,11 @@ namespace Vigitemp_Serveur.sensors
         public SensorIP(ThreadServeur p_ths, string p_comPort, string p_sondeSerialNumber, string p_sondeAdresse) : base(p_ths, p_comPort, p_sondeSerialNumber, p_sondeAdresse)
         {
             m_port.DataReceived += new SerialDataReceivedEventHandler(DataReceivedHandler);
-            m_regexResponseTempSensor = @".*(R" + m_sondeSerialNumber.Substring(m_sondeSerialNumber.Length - 4) + "R[\x00-\x7F]{2}').*";
+            // La trame IP est hybride : en-tete ASCII + 2 octets de mesure binaires.
+            // Latin-1 conserve une correspondance 1:1 byte -> char avec ReadExisting(),
+            // contrairement a l'ASCII par defaut qui remplace les octets > 0x7F par '?'.
+            m_port.Encoding = Encoding.GetEncoding("ISO-8859-1");
+            m_regexResponseTempSensor = @".*(R" + m_sondeSerialNumber.Substring(m_sondeSerialNumber.Length - 4) + "R[\x00-\xFF]{2}').*";
         }
 
         public override async Task<bool> read()
@@ -136,7 +141,7 @@ namespace Vigitemp_Serveur.sensors
                 int poidsFort = regex_res[6];
                 int poidsFaible = regex_res[7];
                 tmp_resistance = (poidsFort * 256 + poidsFaible - 2048).ToString();
-                VigitempServeur.Log($"[SONDE][RX] type=IP serial={m_sondeSerialNumber} resistance={tmp_resistance}");
+                VigitempServeur.Log($"[SONDE][RX] type=IP serial={m_sondeSerialNumber} high=0x{poidsFort:X2} low=0x{poidsFaible:X2} resistance={tmp_resistance}");
 
                 var rawValue = Convert.ToDouble(tmp_resistance, System.Globalization.CultureInfo.InvariantCulture);
                 var correctedValue = RoundMeasure(ApplyMetrology(rawValue));
