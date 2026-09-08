@@ -42,6 +42,7 @@ const NOTIFICATION_SETTING_KEYS = new Set([
 
 const MESSAGING_SETTING_KEY = "messaging:enabled";
 const SURVEILLANCE_REFRESH_KEY = "dashboard:surveillance_refresh";
+const TIMEZONE_SETTING_KEY = "general:timezone";
 
 function getTranslatedLabel(t: ReturnType<typeof useTranslations>, setting: Setting) {
   const translatedLabels: Record<string, string> = {
@@ -81,7 +82,7 @@ export function SettingsClient({ settings: initialSettings }: Props) {
 
   const generalSettings = localizedSettings.filter((setting) => {
     if (NOTIFICATION_SETTING_KEYS.has(setting.key)) return false;
-    if (setting.key === MESSAGING_SETTING_KEY) return false;
+    if (setting.key === MESSAGING_SETTING_KEY || setting.key === TIMEZONE_SETTING_KEY) return false;
     if (!canEditSurveillanceRefresh && setting.key === SURVEILLANCE_REFRESH_KEY) return false;
     return true;
   });
