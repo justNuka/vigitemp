@@ -31,10 +31,6 @@ export function GeneralSettingsCard({
 }: GeneralSettingsCardProps) {
   const t = useTranslations('adminSettings');
   const labelMap: Record<string, string> = {
-    'notifications:email': t('general.labels.notifications_email'),
-    'notifications:sms': t('general.labels.notifications_sms'),
-    'alarms:sound': t('general.labels.alarms_sound'),
-    'dashboard:refresh': t('general.labels.dashboard_refresh'),
     'dashboard:surveillance_refresh': t('general.labels.surveillance_refresh'),
     'dashboard:show_null_non_response': t('general.labels.show_null_non_response'),
     'dashboard:etalonnage_warning_days': t('general.labels.etalonnage_warning_days'),
@@ -59,7 +55,7 @@ export function GeneralSettingsCard({
               {labelMap[setting.key] ?? setting.label}
             </Label>
 
-            {setting.key === 'dashboard:refresh' || setting.key === 'dashboard:surveillance_refresh' ? (
+            {setting.key === 'dashboard:surveillance_refresh' ? (
               <Select
                 value={setting.value}
                 onValueChange={(value) => onRefreshIntervalChange(setting.key, value)}
@@ -74,9 +70,6 @@ export function GeneralSettingsCard({
                   <SelectItem value="15">{t('general.refresh_options.15')}</SelectItem>
                   <SelectItem value="30">{t('general.refresh_options.30')}</SelectItem>
                   <SelectItem value="60">{t('general.refresh_options.60')}</SelectItem>
-                  {setting.key === 'dashboard:refresh' ? (
-                    <SelectItem value="0">{t('general.refresh_options.manual')}</SelectItem>
-                  ) : null}
                 </SelectContent>
               </Select>
             ) : setting.key === 'general:global_language' ? (
