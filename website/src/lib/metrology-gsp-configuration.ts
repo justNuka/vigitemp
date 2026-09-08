@@ -18,6 +18,16 @@ export type GspCoefficientOverride = {
   coeffConstant: number
 }
 
+export class GspSensorUnreachableError extends Error {
+  readonly serial: string
+
+  constructor(serial: string) {
+    super(`La sonde ${serial} n'a pas répondu à la commande de configuration.`)
+    this.name = "GspSensorUnreachableError"
+    this.serial = serial
+  }
+}
+
 type GspRuntimeConfiguration = {
   sensorId: number
   serial: string
@@ -333,6 +343,12 @@ async function sendConfiguration(
   const rawResponse = String(data?.RawValue ?? data?.rawValue ?? "")
   const acknowledged = /(?:^|\r?\n)\s*ACK\s*=\s*ECON\b/i.test(rawResponse)
   const overflowField = findFirmwareOverflowField(rawResponse)
+
+  // Une requête Hotline réussie sans aucune trame de réponse signifie que le serveur
+  // d'interrogation est joignable mais que la sonde n'a pas répondu sur le port/module.
+  if (response.ok && !acknowledged && !overflowField && rawResponse.trim().length === 0) {
+    throw new GspSensorUnreachableError(config.serial)
+  }
 
   // ECON est une commande de configuration : un ACK explicite du firmware reste
   // la source de verite, mais un champ `*=ovf` signifie que le firmware n'a pas
