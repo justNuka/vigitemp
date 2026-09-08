@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import type { ColumnDef } from "@tanstack/react-table"
 import { AnimatePresence, LazyMotion, domAnimation, m } from "motion/react"
-import { ArrowRight, BadgeInfo, CheckCircle2, ChevronLeft, CircleX, FlaskConical, GaugeCircle, Play, Square, TimerReset, Waves } from "lucide-react"
+import { ArrowRight, BadgeInfo, CheckCircle2, ChevronLeft, CircleX, FileArchive, FlaskConical, GaugeCircle, Play, Square, TimerReset, Waves } from "lucide-react"
 import { useLocale, useTranslations } from "next-intl"
 
 import { TanStackTable } from "@/components/data-table/tanstack-table"
@@ -33,7 +33,7 @@ import { useAdjustmentSensors, type AdjustmentSensorRow } from "@/hooks/useAdjus
 import { useIntercomparisonMedia } from "@/hooks/useIntercomparisonMedia"
 import { useModules } from "@/hooks/useModules"
 import { useStandards } from "@/hooks/useStandards"
-import { fetchJson, getJson, isUnauthorizedError } from "@/lib/http"
+import { fetchJson, getJson, HttpError, isUnauthorizedError } from "@/lib/http"
 import { formatDbDateTime } from "@/lib/date-display"
 import { formatMeasureValue } from "@/lib/measurements"
 import { MetrologySubpagesCards } from "../_components/metrology-subpages-cards"
@@ -168,8 +168,14 @@ function normalizeUnit(value: string | null | undefined) {
   return normalized
 }
 
+function getDownloadFileName(contentDisposition: string | null, fallback: string) {
+  const match = contentDisposition?.match(/filename="?([^";]+)"?/i)
+  return match?.[1]?.trim() || fallback
+}
+
 export function AdjustmentWorkflowClient() {
   const t = useTranslations("metrologyAdmin.adjustmentPage")
+  const tCommon = useTranslations("common")
   const locale = useLocale()
   const { user } = useAppAccess()
   const queryClient = useQueryClient()
@@ -197,6 +203,7 @@ export function AdjustmentWorkflowClient() {
   const [showStopConfirm, setShowStopConfirm] = useState(false)
   const [showFirstPointConfirm, setShowFirstPointConfirm] = useState(false)
   const [showCalculationDetails, setShowCalculationDetails] = useState(false)
+  const [isExportingAdjustmentZip, setIsExportingAdjustmentZip] = useState(false)
   const [coefficientDrafts, setCoefficientDrafts] = useState<
     Record<number, { a: string; b: string; c: string }>
   >({})
@@ -286,6 +293,48 @@ export function AdjustmentWorkflowClient() {
     await queryClient.invalidateQueries({ queryKey: ["metrology-adjustment-session"] })
   }
 
+  const getActionErrorMessage = (error: unknown) => {
+    if (error instanceof HttpError && error.payload?.error === "gsp_sensor_unreachable") {
+      return t("adjustment.errors.sensorUnreachable")
+    }
+    return error instanceof Error ? error.message : String(error)
+  }
+
+  const exportAdjustmentZip = async () => {
+    if (!session || isExportingAdjustmentZip) return
+    const ids = session.persistedAdjustments.map((item) => item.adjustmentId)
+    if (ids.length === 0) return
+
+    setIsExportingAdjustmentZip(true)
+    setActionError(null)
+    try {
+      const response = await fetch("/api/metrologie/ajustage/export/bulk", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids }),
+      })
+      if (!response.ok) {
+        const payload = await response.json().catch(() => null) as { message?: string } | null
+        throw new Error(payload?.message || tCommon("error"))
+      }
+
+      const blob = await response.blob()
+      const url = URL.createObjectURL(blob)
+      const anchor = document.createElement("a")
+      anchor.href = url
+      anchor.download = getDownloadFileName(response.headers.get("Content-Disposition"), "Ajustages.zip")
+      document.body.appendChild(anchor)
+      anchor.click()
+      anchor.remove()
+      URL.revokeObjectURL(url)
+    } catch (error) {
+      setActionError(getActionErrorMessage(error))
+    } finally {
+      setIsExportingAdjustmentZip(false)
+    }
+  }
+
   const startMutation = useMutation({
     mutationFn: async () =>
       fetchJson<{ session: SessionApiPayload["session"] }>("/api/metrologie/ajustage/session", {
@@ -318,7 +367,7 @@ export function AdjustmentWorkflowClient() {
       await refreshSession()
     },
     onError: (error) => {
-      setActionError(error instanceof Error ? error.message : String(error))
+      setActionError(getActionErrorMessage(error))
     },
   })
 
@@ -377,7 +426,7 @@ export function AdjustmentWorkflowClient() {
       await refreshSession()
     },
     onError: (error) => {
-      setActionError(error instanceof Error ? error.message : String(error))
+      setActionError(getActionErrorMessage(error))
     },
   })
 
@@ -738,6 +787,15 @@ export function AdjustmentWorkflowClient() {
             <AlertDescription className="space-y-3">
               <p>{t("adjustment.status.exportReadyDescription")}</p>
               <div className="flex flex-wrap gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={isExportingAdjustmentZip}
+                  onClick={() => void exportAdjustmentZip()}
+                >
+                  <FileArchive className="mr-2 h-4 w-4" />
+                  {isExportingAdjustmentZip ? tCommon("loading") : t("adjustment.status.exportZipCta")}
+                </Button>
                 {session.persistedAdjustments.map((item) => (
                   <Button key={item.adjustmentId} type="button" variant="outline" asChild>
                     <a href={item.exportUrl}>{t("adjustment.status.exportReadyCta", { serial: item.serialNumber })}</a>
@@ -1690,6 +1748,14 @@ export function AdjustmentWorkflowClient() {
                 </p>
               ) : null}
             </AlertDialogHeader>
+            {resolveCalculatedCoefficientsMutation.error ? (
+              <Alert variant="destructive">
+                <AlertTitle>{t("adjustment.status.errorTitle")}</AlertTitle>
+                <AlertDescription>
+                  {getActionErrorMessage(resolveCalculatedCoefficientsMutation.error)}
+                </AlertDescription>
+              </Alert>
+            ) : null}
             <AlertDialogFooter>
               <Button
                 type="button"

@@ -18,7 +18,10 @@ import {
   markLatestAdjustmentCoefficientRowsDirty,
   requireAdjustmentCoefficientDirtyColumn,
 } from "@/lib/metrology-adjustment-coefficient-dirty"
-import { applyGspMetrologyConfiguration } from "@/lib/metrology-gsp-configuration"
+import {
+  applyGspMetrologyConfiguration,
+  GspSensorUnreachableError,
+} from "@/lib/metrology-gsp-configuration"
 import { restoreGspMetrologyConfigurationOnce } from "@/lib/metrology-gsp-configuration-restore"
 import { stopMetrologyReadingPreviewSession } from "@/lib/metrology-reading-preview-session"
 import {
@@ -236,6 +239,9 @@ export const POST = withStandardOrExpertAnyAuthorizationLogging(
       if (error instanceof z.ZodError) {
         return apiError(400, "validation_error", "Donnees invalides", { details: error.issues })
       }
+      if (error instanceof GspSensorUnreachableError) {
+        return apiError(400, "gsp_sensor_unreachable", error.message, { serial: error.serial })
+      }
       log.error("METROLOGY_ADJUSTMENT", "session_start_failed", {
         userId: ctx.user.userId,
         error: error instanceof Error ? error.message : String(error),
@@ -336,6 +342,9 @@ export const PATCH = withStandardOrExpertAnyAuthorizationLogging(
         return apiError(400, "validation_error", "Données invalides", {
           details: error.issues,
         })
+      }
+      if (error instanceof GspSensorUnreachableError) {
+        return apiError(400, "gsp_sensor_unreachable", error.message, { serial: error.serial })
       }
       log.error("METROLOGY_ADJUSTMENT", "session_patch_failed", {
         userId: ctx.user.userId,

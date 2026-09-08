@@ -6,6 +6,15 @@ export const frMetrologyCalibrationSupplements: MessageCatalog = {
       operationTimer: {
         movePanel: "Déplacer le panneau",
       },
+      adjustment: {
+        status: {
+          exportReadyDescription: "Les résultats ont été enregistrés dans la base de données. Téléchargez l'archive ZIP contenant les XML de l'opération ou un fichier XML individuel.",
+          exportZipCta: "Télécharger le ZIP XML",
+        },
+        errors: {
+          sensorUnreachable: "Le serveur n’arrive pas à joindre la sonde. Vérifiez qu’elle est bien branchée.",
+        },
+      },
     },
     calibrationPage: {
       operationTimer: {
@@ -50,6 +59,7 @@ export const frMetrologyCalibrationSupplements: MessageCatalog = {
           all_samples_description: "Mesures appariées retenues pour les calculs. La colonne étalon est distinguée visuellement.",
           results_title: "Résultats de l'étalonnage",
           results_description: "Résultats calculés côté serveur après les 10 mesures valides.",
+          export_reports_zip: "Télécharger les rapports PDF (.zip)",
           sample_number: "N°",
           standard_column: "Étalon {serial}",
           measured_at: "Date / heure",
@@ -93,6 +103,15 @@ export const enMetrologyCalibrationSupplements: MessageCatalog = {
     adjustmentPage: {
       operationTimer: {
         movePanel: "Move panel",
+      },
+      adjustment: {
+        status: {
+          exportReadyDescription: "The results were saved to the database. Download the ZIP archive containing the operation XML files or an individual XML file.",
+          exportZipCta: "Download XML ZIP",
+        },
+        errors: {
+          sensorUnreachable: "The server cannot reach the sensor. Check that it is properly connected.",
+        },
       },
     },
     calibrationPage: {
@@ -138,6 +157,7 @@ export const enMetrologyCalibrationSupplements: MessageCatalog = {
           all_samples_description: "Paired measurements retained for calculations. The standard column is visually highlighted.",
           results_title: "Calibration results",
           results_description: "Results calculated server-side after 10 valid measurements.",
+          export_reports_zip: "Download PDF reports (.zip)",
           sample_number: "No.",
           standard_column: "Standard {serial}",
           measured_at: "Date / time",
