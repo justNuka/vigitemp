@@ -9,6 +9,7 @@ import {
   BadgeInfo,
   ChevronLeft,
   Clock3,
+  FileArchive,
   FlaskConical,
   Plus,
   Play,
@@ -102,6 +103,11 @@ function formatDiagnosticNumber(value: number | null | undefined) {
   return String(value)
 }
 
+function getDownloadFileName(contentDisposition: string | null, fallback: string) {
+  const match = contentDisposition?.match(/filename="?([^";]+)"?/i)
+  return match?.[1]?.trim() || fallback
+}
+
 export function CalibrationWorkflowClient() {
   const t = useTranslations("metrologyAdmin.calibrationPage")
   const tCommon = useTranslations("common")
@@ -121,6 +127,8 @@ export function CalibrationWorkflowClient() {
   const [addSensorDialogOpen, setAddSensorDialogOpen] = useState(false)
   const [previewReadingEnabled, setPreviewReadingEnabled] = useState(false)
   const [showCalculationDetails, setShowCalculationDetails] = useState(false)
+  const [isExportingCalibrationZip, setIsExportingCalibrationZip] = useState(false)
+  const [exportError, setExportError] = useState<Error | null>(null)
   const defaultOperator = [user?.Prenom, user?.Nom].filter(Boolean).join(" ").trim() || user?.Login || ""
   const operatorValue = operator || defaultOperator
 
@@ -205,6 +213,7 @@ export function CalibrationWorkflowClient() {
     onSuccess: (data) => {
       queryClient.setQueryData(["metrology-calibration-session"], data)
       setShowCalculationDetails(false)
+      setExportError(null)
       setStep("calibration")
     },
   })
@@ -232,6 +241,40 @@ export function CalibrationWorkflowClient() {
       setPreviewReadingEnabled(false)
     },
   })
+
+  const exportCalibrationZip = async () => {
+    if (!session || isExportingCalibrationZip) return
+    const ids = Object.values(session.results).map((result) => result.calibrationId)
+    if (ids.length === 0) return
+
+    setIsExportingCalibrationZip(true)
+    setExportError(null)
+    try {
+      const response = await fetch("/api/metrologie/etalonnage/report/bulk", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids }),
+      })
+      if (!response.ok) {
+        const payload = await response.json().catch(() => null) as { message?: string } | null
+        throw new Error(payload?.message || tCommon("error"))
+      }
+      const blob = await response.blob()
+      const url = URL.createObjectURL(blob)
+      const anchor = document.createElement("a")
+      anchor.href = url
+      anchor.download = getDownloadFileName(response.headers.get("Content-Disposition"), "Etalonnages.zip")
+      document.body.appendChild(anchor)
+      anchor.click()
+      anchor.remove()
+      URL.revokeObjectURL(url)
+    } catch (error) {
+      setExportError(error instanceof Error ? error : new Error(tCommon("error")))
+    } finally {
+      setIsExportingCalibrationZip(false)
+    }
+  }
 
   const selectedSensors = useMemo(
     () => sensors.filter((sensor) => selectedSensorIds.includes(sensor.id)),
@@ -379,6 +422,7 @@ export function CalibrationWorkflowClient() {
   )
 
   const error =
+    exportError ??
     startOperationMutation.error ??
     previewReadingQuery.error ??
     stopPreviewMutation.error ??
@@ -910,9 +954,20 @@ export function CalibrationWorkflowClient() {
 
                 {hasResults && session ? (
                   <Card className="border-emerald-300/60 dark:border-emerald-500/30">
-                    <CardHeader>
-                      <CardTitle>{t("workflow.enhanced.results_title")}</CardTitle>
-                      <CardDescription>{t("workflow.enhanced.results_description")}</CardDescription>
+                    <CardHeader className="flex flex-row items-start justify-between gap-4">
+                      <div className="space-y-1.5">
+                        <CardTitle>{t("workflow.enhanced.results_title")}</CardTitle>
+                        <CardDescription>{t("workflow.enhanced.results_description")}</CardDescription>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        disabled={isExportingCalibrationZip}
+                        onClick={() => void exportCalibrationZip()}
+                      >
+                        <FileArchive className="mr-2 h-4 w-4" />
+                        {isExportingCalibrationZip ? tCommon("loading") : `${tCommon("export")} PDF (.zip)`}
+                      </Button>
                     </CardHeader>
                     <CardContent className="space-y-4">
                       <div className="overflow-x-auto rounded-lg border">

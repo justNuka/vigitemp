@@ -24,16 +24,21 @@ const API_PATH = "/api/parametres/acquittement-auto-non-reponse"
 
 export function NonResponseAutoAckSettingsCard() {
   const t = useTranslations("adminSettings.non_response_auto_ack")
+  const tAdmin = useTranslations("adminSettings")
+  const [savedLocations, setSavedLocations] = useState<LocationSetting[]>([])
   const [locations, setLocations] = useState<LocationSetting[]>([])
   const [search, setSearch] = useState("")
   const [loading, setLoading] = useState(true)
-  const [savingIds, setSavingIds] = useState<Set<number>>(new Set())
+  const [saving, setSaving] = useState(false)
 
   useEffect(() => {
     let cancelled = false
     getJson<LocationSetting[]>(API_PATH)
       .then((data) => {
-        if (!cancelled) setLocations(data)
+        if (!cancelled) {
+          setSavedLocations(data)
+          setLocations(data)
+        }
       })
       .catch(() => {
         if (!cancelled) toast.error(t("load_error"))
@@ -55,26 +60,53 @@ export function NonResponseAutoAckSettingsCard() {
     )
   }, [locations, search])
 
+  const savedStateById = useMemo(
+    () => new Map(savedLocations.map((location) => [location.id, location.enabled])),
+    [savedLocations],
+  )
+  const changedLocations = useMemo(
+    () => locations.filter((location) => savedStateById.get(location.id) !== location.enabled),
+    [locations, savedStateById],
+  )
+  const hasChanges = changedLocations.length > 0
   const enabledCount = locations.filter((location) => location.enabled).length
-  const isSaving = savingIds.size > 0
 
-  const updateLocations = async (locationIds: number[], enabled: boolean) => {
+  const setDraftLocations = (locationIds: number[], enabled: boolean) => {
     if (locationIds.length === 0) return
-    const previousLocations = locations
     const targetIds = new Set(locationIds)
-    setSavingIds(targetIds)
     setLocations((current) => current.map((location) =>
       targetIds.has(location.id) ? { ...location, enabled } : location,
     ))
+  }
+
+  const handleSave = async () => {
+    if (!hasChanges || saving) return
+
+    const enableIds = changedLocations.filter((location) => location.enabled).map((location) => location.id)
+    const disableIds = changedLocations.filter((location) => !location.enabled).map((location) => location.id)
+    const changedCount = changedLocations.length
+    setSaving(true)
 
     try {
-      const result = await patchJson<{ updated: number }>(API_PATH, { locationIds, enabled })
-      toast.success(result.updated === 0 ? t("no_change") : t("updated", { count: result.updated }))
+      if (enableIds.length > 0) {
+        await patchJson<{ updated: number }>(API_PATH, { locationIds: enableIds, enabled: true })
+      }
+      if (disableIds.length > 0) {
+        await patchJson<{ updated: number }>(API_PATH, { locationIds: disableIds, enabled: false })
+      }
+      setSavedLocations(locations)
+      toast.success(t("updated", { count: changedCount }))
     } catch {
-      setLocations(previousLocations)
       toast.error(t("update_error"))
+      try {
+        const fresh = await getJson<LocationSetting[]>(API_PATH)
+        setSavedLocations(fresh)
+        setLocations(fresh)
+      } catch {
+        setLocations(savedLocations)
+      }
     } finally {
-      setSavingIds(new Set())
+      setSaving(false)
     }
   }
 
@@ -110,8 +142,8 @@ export function NonResponseAutoAckSettingsCard() {
               type="button"
               variant="outline"
               size="sm"
-              disabled={loading || isSaving || locations.length === 0}
-              onClick={() => updateLocations(locations.map((location) => location.id), true)}
+              disabled={loading || saving || locations.length === 0}
+              onClick={() => setDraftLocations(locations.map((location) => location.id), true)}
             >
               {t("check_all")}
             </Button>
@@ -119,8 +151,8 @@ export function NonResponseAutoAckSettingsCard() {
               type="button"
               variant="outline"
               size="sm"
-              disabled={loading || isSaving || locations.length === 0}
-              onClick={() => updateLocations(locations.map((location) => location.id), false)}
+              disabled={loading || saving || locations.length === 0}
+              onClick={() => setDraftLocations(locations.map((location) => location.id), false)}
             >
               {t("uncheck_all")}
             </Button>
@@ -154,8 +186,8 @@ export function NonResponseAutoAckSettingsCard() {
                     <span className="flex justify-center">
                       <Checkbox
                         checked={location.enabled}
-                        disabled={isSaving}
-                        onCheckedChange={(checked) => updateLocations([location.id], checked === true)}
+                        disabled={saving}
+                        onCheckedChange={(checked) => setDraftLocations([location.id], checked === true)}
                         aria-label={t("aria", { location: location.name })}
                       />
                     </span>
@@ -166,6 +198,17 @@ export function NonResponseAutoAckSettingsCard() {
           </ScrollArea>
         </div>
         <p className="text-xs text-muted-foreground">{t("helper")}</p>
+
+        {hasChanges ? (
+          <div className="flex justify-end gap-2 border-t pt-4">
+            <Button type="button" variant="outline" onClick={() => setLocations(savedLocations)} disabled={saving}>
+              {tAdmin("pending_changes.cancel")}
+            </Button>
+            <Button type="button" onClick={handleSave} disabled={saving}>
+              {tAdmin("pending_changes.save")}
+            </Button>
+          </div>
+        ) : null}
       </CardContent>
     </Card>
   )

@@ -22,7 +22,12 @@ type NotificationsSettingsCardProps = {
 };
 
 function normalizeRecipients(raw: string) {
-  return raw
+  const normalizedRaw = raw.trim();
+  if (!normalizedRaw || ["false", "0", "off", "no"].includes(normalizedRaw.toLowerCase())) {
+    return "";
+  }
+
+  return normalizedRaw
     .split(/[;,\n\r]+/)
     .map((item) => item.trim())
     .filter(Boolean)

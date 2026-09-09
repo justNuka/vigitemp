@@ -38,7 +38,13 @@ export async function getPasswordRulesFromDb(): Promise<PasswordRules> {
     min_special: securityRules.MIN_CARACTERES_SPECIAUX ?? 1,
     cfr21_enabled: (cfr21Rules.ACTIVATION_NORME_CFR21 as boolean) ?? false,
     history_count: (cfr21Rules.NOMBRE_ANCIENS_MOT_DE_PASSE as number) ?? 5,
-    expiry_days: (cfr21Rules.JOURS_VALIDITE_MOT_DE_PASSE as number) ?? 90,
+    // VALIDITE_MOT_DE_PASSE_JOURS est la source utilisée par le login et /api/me.
+    // JOURS_VALIDITE_MOT_DE_PASSE reste uniquement un fallback de compatibilité
+    // pour les anciennes bases qui ne possèdent pas encore la clé canonique.
+    expiry_days:
+      (cfr21Rules.VALIDITE_MOT_DE_PASSE_JOURS as number) ??
+      (cfr21Rules.JOURS_VALIDITE_MOT_DE_PASSE as number) ??
+      90,
     expiry_enabled:
       (cfr21Rules.ACTIVATION_EXPIRATION_MOT_DE_PASSE as boolean) ?? false,
   };
