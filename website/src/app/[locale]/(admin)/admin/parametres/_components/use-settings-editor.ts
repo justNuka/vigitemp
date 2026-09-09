@@ -12,7 +12,7 @@ type Setting = {
   label: string
 }
 
-const STORAGE_EVENT_KEYS = new Set(["dashboard:refresh", "dashboard:surveillance_refresh", "general:timezone"])
+const STORAGE_EVENT_KEYS = new Set(["dashboard:surveillance_refresh", "general:timezone"])
 
 export function useSettingsEditor(initialSettings: Setting[]) {
   const router = useRouter()

@@ -14,6 +14,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { SwitchWithLoading } from "@/components/ui/switch-with-loading";
 import { toast } from "sonner";
 import { Loader2, Mail } from "lucide-react";
 import { getJson, postJson, putJson } from "@/lib/http";
@@ -23,6 +24,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslations } from "next-intl";
 
 interface SMTPConfigPayload {
+  enabled: boolean;
   host: string;
   port: number;
   user: string;
@@ -32,6 +34,7 @@ interface SMTPConfigPayload {
 }
 
 type SMTPConfigFormValues = {
+  enabled: boolean;
   host: string;
   port: number;
   user: string;
@@ -52,6 +55,7 @@ export function SMTPConfigModal({ open, onOpenChange }: SMTPConfigModalProps) {
   const smtpSchema = useMemo(
     () =>
       z.object({
+        enabled: z.boolean(),
         host: z.string().min(1, t("validation.host_required")),
         port: z
           .number()
@@ -83,10 +87,13 @@ export function SMTPConfigModal({ open, onOpenChange }: SMTPConfigModalProps) {
     register,
     handleSubmit,
     reset,
+    setValue,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm<SMTPConfigFormValues>({
     resolver: zodResolver(smtpSchema),
     defaultValues: {
+      enabled: false,
       host: "",
       port: 587,
       user: "",
@@ -94,6 +101,8 @@ export function SMTPConfigModal({ open, onOpenChange }: SMTPConfigModalProps) {
       sender: "noreply@vigitemp.fr",
     },
   });
+
+  const emailEnabled = watch("enabled");
 
   const {
     register: registerTest,
@@ -112,6 +121,7 @@ export function SMTPConfigModal({ open, onOpenChange }: SMTPConfigModalProps) {
       setIsLoading(true);
       const payload = await getJson<SMTPConfigPayload>("/api/admin/configuration-smtp");
       reset({
+        enabled: payload.enabled,
         host: payload.host,
         port: payload.port,
         user: payload.user,
@@ -179,6 +189,21 @@ export function SMTPConfigModal({ open, onOpenChange }: SMTPConfigModalProps) {
         </DialogHeader>
 
         <form onSubmit={handleSubmit(onSubmit, (errors) => showFormValidationToast(errors))} className="space-y-4">
+          <div className="flex items-center justify-between gap-4 rounded-lg border bg-muted/20 p-4">
+            <div className="space-y-1">
+              <Label htmlFor="smtp-enabled">{t("activation.label")}</Label>
+              <p className="text-xs text-muted-foreground">{t("activation.helper")}</p>
+            </div>
+            <SwitchWithLoading
+              id="smtp-enabled"
+              checked={emailEnabled}
+              onCheckedChange={(checked) => {
+                setValue("enabled", checked, { shouldDirty: true, shouldTouch: true });
+              }}
+              isLoading={isLoading || updateMutation.isPending || isSubmitting}
+            />
+          </div>
+
           <div>
             <Label htmlFor="host">{t("fields.host.label")}</Label>
             <Input

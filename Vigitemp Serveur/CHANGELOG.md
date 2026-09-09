@@ -8,6 +8,15 @@ La version produit de référence du Serveur est `AssemblyInformationalVersion("
 
 ## [Unreleased]
 
+### IC / IP / IH — préservation des octets de mesure binaires
+
+- Les trames IC, IP et IH utilisent un en-tête ASCII mais encodent la mesure sur deux octets binaires.
+- Le `SerialPort` de ces trois protocoles est désormais décodé en ISO-8859-1 afin de conserver une correspondance 1:1 pour les octets `0x00..0xFF` avec `ReadExisting()`.
+- La regex de mesure accepte maintenant les deux octets sur toute la plage `0x00..0xFF`, au lieu de les limiter à `0x00..0x7F`.
+- La formule historique `raw = poidsFort * 256 + poidsFaible - 2048` reste inchangée.
+- Les logs de réception indiquent `high=0x..` et `low=0x..` pour faciliter la comparaison entre la trame physique, la valeur brute et la valeur corrigée.
+- Ce correctif vise notamment les sondes CO2 `IC`, pour lesquelles des octets supérieurs à `0x7F` pouvaient produire une mesure rejetée ou altérée et donner l'impression de paliers de mesure.
+
 ### GSP — commandes de configuration limitées à 60 caractères
 
 - Les commandes `ECON` générées automatiquement par le Serveur respectent désormais la limite firmware/module de **60 caractères maximum par trame**.

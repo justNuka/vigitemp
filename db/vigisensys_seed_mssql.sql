@@ -715,6 +715,40 @@ AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_etat
   CREATE UNIQUE INDEX [t_etat_surveillance_Surveillance_Etat_key] ON dbo.[t_etat_surveillance] ([Surveillance_Etat]) WHERE [Surveillance_Etat] IS NOT NULL;
 GO
 
+SET IDENTITY_INSERT dbo.t_etat_surveillance ON;
+
+MERGE dbo.t_etat_surveillance AS target
+USING (VALUES
+    (1, N'A', N'En ajustage'),
+    (2, N'D', N'Surveillance désactivée'),
+    (3, N'E', N'En étalonnage'),
+    (4, N'S', N'Utilisée en surveillance'),
+    (5, N'T', N'En test')
+) AS source (
+    Id_Surveillance_Etat,
+    Surveillance_Etat,
+    Surveillance_Etat_Libelle
+)
+ON target.Id_Surveillance_Etat = source.Id_Surveillance_Etat
+
+WHEN MATCHED THEN UPDATE SET
+    Surveillance_Etat = source.Surveillance_Etat,
+    Surveillance_Etat_Libelle = source.Surveillance_Etat_Libelle
+
+WHEN NOT MATCHED THEN INSERT (
+    Id_Surveillance_Etat,
+    Surveillance_Etat,
+    Surveillance_Etat_Libelle
+)
+VALUES (
+    source.Id_Surveillance_Etat,
+    source.Surveillance_Etat,
+    source.Surveillance_Etat_Libelle
+);
+
+SET IDENTITY_INSERT dbo.t_etat_surveillance OFF;
+GO
+
 IF OBJECT_ID(N'dbo.t_groupe', N'U') IS NULL
 BEGIN
   CREATE TABLE dbo.[t_groupe] (
@@ -1502,6 +1536,104 @@ GO
 IF OBJECT_ID(N'dbo.t_sonde_type', N'U') IS NOT NULL
 AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID(N'dbo.t_sonde_type') AND name=N'Sonde_Type')
   CREATE UNIQUE INDEX [Sonde_Type] ON dbo.[t_sonde_type] ([Sonde_Type]) WHERE [Sonde_Type] IS NOT NULL;
+GO
+
+SET IDENTITY_INSERT dbo.t_sonde_type ON;
+
+MERGE dbo.t_sonde_type AS target
+USING (VALUES
+    (1, N'E',    N'Sonde radio relais type E',                         1, 0, N'CLASSIC', NULL, NULL, NULL),
+    (2, N'G',    N'Sonde radio relais type G',                         1, 0, N'CLASSIC', NULL, NULL, NULL),
+    (3, N'H',    N'Sonde radio relais type H',                         1, 0, N'CLASSIC', NULL, NULL, NULL),
+    (4, N'I',    N'Sonde radio de type I',                             0, 0, N'CLASSIC', NULL, NULL, NULL),
+    (5, N'R',    N'Sonde radio',                                       0, 0, N'CLASSIC', NULL, NULL, NULL),
+    (6, N'V',    N'Sonde filaire',                                     0, 0, N'CLASSIC', NULL, NULL, NULL),
+
+    (7, N'GSO',  N'GemSenseOne',                                       0, 0, N'GSO', NULL, NULL, NULL),
+    (8, N'GSP',  N'GemSensePro',                                       0, 0, N'GSP', NULL, NULL, NULL),
+
+    (9, N'SOIT', N'Gemsense One Température interne',                  0, 0, N'GSO', N'°C', 40, -30),
+    (10,N'SOIH', N'Gemsense One Température & humidité interne',       0, 1, N'GSO', NULL, NULL, NULL),
+    (11,N'SOET', N'Gemsense One Température externe',                  0, 0, N'GSO', N'°C', 125, -40),
+    (12,N'SOEH', N'Gemsense One Température & humidité externe',       0, 1, N'GSO', NULL, NULL, NULL),
+
+    (13,N'SPNB', N'Gemsense Pro Numérique blanc',                      0, 0, N'GSP', N'°C', 125, -40),
+    (14,N'SPNG', N'Gemsense Pro Numérique gris',                       0, 0, N'GSP', N'°C', 70, -40),
+
+    (15,N'SPPS', N'Gemsense Pro platine',                              0, 0, N'GSP', N'°C', NULL, NULL),
+
+    (16,N'SPAL', N'Gemsense Pro platine alimentaire',                  0, 0, N'GSP', N'°C', NULL, NULL),
+    (17,N'SPPC', N'Gemsense Pro platine contact',                      0, 0, N'GSP', N'°C', NULL, NULL),
+    (18,N'SPAU', N'Gemsense Pro platine autoclave',                    0, 0, N'GSP', N'°C', NULL, NULL),
+    (19,N'SPCF', N'Gemsense Pro platine chambre froide',               0, 0, N'GSP', N'°C', NULL, NULL),
+    (20,N'SPMI', N'Gemsense Pro platine micro-capteur',                0, 0, N'GSP', N'°C', NULL, NULL),
+
+    (21,N'SPCO', N'Gemsense Pro CO2',                                  0, 0, N'GSP', N'%', 20, 0),
+    (22,N'SPHY', N'Gemsense Pro hygrométrie',                          0, 0, N'GSP', N'%', 100, 0),
+    (23,N'SPTH', N'Gemsense Pro thermocouple',                         0, 0, N'GSP', N'°C', NULL, NULL),
+
+    (24,N'SPDI', N'Gemsense Pro pression différentielle',              0, 0, N'GSP', NULL, 250, -250),
+    (25,N'SPAT', N'Gemsense Pro pression atmosphérique',               0, 0, N'GSP', NULL, 1200, 700),
+
+    (26,N'SPLU', N'Gemsense Pro lumière',                              0, 0, N'GSP', NULL, NULL, NULL),
+    (27,N'SP01', N'Gemsense Pro 0-1 Volt',                             0, 0, N'GSP', NULL, NULL, NULL),
+    (28,N'SP42', N'Gemsense Pro 4-20 mA',                              0, 0, N'GSP', NULL, NULL, NULL),
+    (29,N'SPOF', N'Gemsense Pro NO NF',                                0, 0, N'GSP', NULL, NULL, NULL),
+
+    (30,N'SPXB', N'Gemsense Pro Ethernet numérique blanc',             0, 0, N'GSP', N'°C', 125, -40),
+    (31,N'SPXG', N'Gemsense Pro Ethernet numérique gris',              0, 0, N'GSP', N'°C', 70, -40),
+    (32,N'SPXP', N'Gemsense Pro Ethernet platine',                     0, 0, N'GSP', N'°C', NULL, NULL),
+
+    (33,N'SPFB', N'Gemsense Pro filaire numérique blanc',              0, 0, N'GSP', N'°C', 125, -40),
+    (34,N'SPFG', N'Gemsense Pro filaire numérique gris',               0, 0, N'GSP', N'°C', 70, -40),
+    (35,N'SPFP', N'Gemsense Pro filaire platine',                      0, 0, N'GSP', N'°C', NULL, NULL)
+) AS source (
+    Id_Sonde_Type,
+    Sonde_Type,
+    Libelle_Sonde_Type,
+    Est_Gestion_Relais,
+    Est_Double_Capteur,
+    Famille_Sonde,
+    Unite,
+    Valeur_Max,
+    Valeur_Min
+)
+ON target.Id_Sonde_Type = source.Id_Sonde_Type
+
+WHEN MATCHED THEN UPDATE SET
+    Sonde_Type = source.Sonde_Type,
+    Libelle_Sonde_Type = source.Libelle_Sonde_Type,
+    Est_Gestion_Relais = source.Est_Gestion_Relais,
+    Est_Double_Capteur = source.Est_Double_Capteur,
+    Famille_Sonde = source.Famille_Sonde,
+    Unite = source.Unite,
+    Valeur_Max = source.Valeur_Max,
+    Valeur_Min = source.Valeur_Min
+
+WHEN NOT MATCHED THEN INSERT (
+    Id_Sonde_Type,
+    Sonde_Type,
+    Libelle_Sonde_Type,
+    Est_Gestion_Relais,
+    Est_Double_Capteur,
+    Famille_Sonde,
+    Unite,
+    Valeur_Max,
+    Valeur_Min
+)
+VALUES (
+    source.Id_Sonde_Type,
+    source.Sonde_Type,
+    source.Libelle_Sonde_Type,
+    source.Est_Gestion_Relais,
+    source.Est_Double_Capteur,
+    source.Famille_Sonde,
+    source.Unite,
+    source.Valeur_Max,
+    source.Valeur_Min
+);
+
+SET IDENTITY_INSERT dbo.t_sonde_type OFF;
 GO
 
 IF OBJECT_ID(N'dbo.t_utilisateur', N'U') IS NULL
@@ -2643,20 +2775,47 @@ SET IDENTITY_INSERT dbo.t_actionneur_type OFF;
 GO
 
 SET IDENTITY_INSERT dbo.t_module_type ON;
+
 MERGE dbo.t_module_type AS target
 USING (VALUES
-  (1, N'BIN', N'Boîtier filaire avec prise DB9 (port série)', 0),
-  (2, N'BIR (filaire)', N'Boîtier réseau filaire avec prise RJ45 (prise réseau)', 1),
-  (3, N'BTR', N'Boîtier radio avec prise DB9 (port série)', 0),
-  (4, N'BIR (radio)', N'Boîtier réseau radio avec prise RJ45 (port série)', 1),
-  (5, N'CORONIS', N'Boîtier radio CORONIS avec prise DB9 (port série)', 0),
-  (6, N'MRH', N'Boîtier MRH', 0),
-  (7, N'ITR', N'Module port série', 0),
-  (8, N'IETH', N'Module ethernet', 0)
-) AS source (Id_Module_Type, Libelle_Type_Module, Libelle_Module, Est_Flag_Affiche_Plan)
+    (1, N'BIN', N'Boîtier filaire avec prise DB9 (port série)', 0),
+    (2, N'BIR (filaire)', N'Boîtier réseau filaire avec prise RJ45 (prise réseau)', 1),
+    (3, N'BTR', N'Boîtier radio avec prise DB9 (port série)', 0),
+    (4, N'BIR (radio)', N'Boîtier réseau radio avec prise RJ45 (port série)', 1),
+    (5, N'CORONIS', N'Boîtier radio CORONIS avec prise DB9 (port série)', 0),
+    (6, N'MRH', N'Boîtier MRH', 0),
+
+    (7, N'IUSB', N'CLE USB RADIO SONDES I', 0),
+    (8, N'IETH', N'Module Ethernet', 0),
+    (9, N'GSO-U', N'Module GSO USB', 0),
+    (10, N'GSO-E', N'Module GSO Ethernet', 0),
+    (11, N'BINX', N'Boîtier filaire Ethernet', 0)
+) AS source (
+    Id_Module_Type,
+    Libelle_Type_Module,
+    Libelle_Module,
+    Est_Flag_Affiche_Plan
+)
 ON target.Id_Module_Type = source.Id_Module_Type
-WHEN MATCHED THEN UPDATE SET Libelle_Type_Module = source.Libelle_Type_Module, Libelle_Module = source.Libelle_Module, Est_Flag_Affiche_Plan = source.Est_Flag_Affiche_Plan
-WHEN NOT MATCHED THEN INSERT (Id_Module_Type, Libelle_Type_Module, Libelle_Module, Est_Flag_Affiche_Plan) VALUES (source.Id_Module_Type, source.Libelle_Type_Module, source.Libelle_Module, source.Est_Flag_Affiche_Plan);
+
+WHEN MATCHED THEN UPDATE SET
+    Libelle_Type_Module = source.Libelle_Type_Module,
+    Libelle_Module = source.Libelle_Module,
+    Est_Flag_Affiche_Plan = source.Est_Flag_Affiche_Plan
+
+WHEN NOT MATCHED THEN INSERT (
+    Id_Module_Type,
+    Libelle_Type_Module,
+    Libelle_Module,
+    Est_Flag_Affiche_Plan
+)
+VALUES (
+    source.Id_Module_Type,
+    source.Libelle_Type_Module,
+    source.Libelle_Module,
+    source.Est_Flag_Affiche_Plan
+);
+
 SET IDENTITY_INSERT dbo.t_module_type OFF;
 GO
 
@@ -2682,6 +2841,7 @@ INSERT INTO @BootstrapAuth (Code, Libelle, Commentaire) VALUES
 (N'ACCES_TABLEAU_BORD_UTILISATEUR',N'Accès tableau de bord utilisateur',N'Accès tableau de bord utilisateur'),
 (N'ACCES_DASHBOARD_USER',N'Accès dashboard user',N'Accès dashboard user'),
 (N'ACCES_SURVEILLANCE',N'Accès surveillance',N'Accès surveillance'),
+(N'ACCES_VIGILOG',N'Accès VigiLog',N'Droit domaine VigiLog'),
 (N'LIEU_VISUALISER',N'Visualiser les lieux',N'Visualiser les lieux'),
 (N'ALARMES_GERER',N'Gérer les alarmes',N'Gérer les alarmes'),
 (N'ACCES_DASHBOARD_ADMIN',N'Accès dashboard admin',N'Accès dashboard admin'),
@@ -2727,8 +2887,8 @@ GO
 DECLARE @AdminProfilId INT = (SELECT TOP 1 Id_Profil FROM dbo.t_profil WHERE Profil_Utilisateur = N'Administrateurs');
 INSERT INTO dbo.t_liaison_profil_autorisation (Id_Profil, Id_Autorisation) SELECT @AdminProfilId, a.Id_Autorisation FROM dbo.t_autorisation a WHERE @AdminProfilId IS NOT NULL AND NOT EXISTS (SELECT 1 FROM dbo.t_liaison_profil_autorisation l WHERE l.Id_Profil = @AdminProfilId AND l.Id_Autorisation = a.Id_Autorisation);
 GO
-IF NOT EXISTS (SELECT 1 FROM dbo.t_utilisateur WHERE Login = N'admin') INSERT INTO dbo.t_utilisateur (Login, Mot_De_Passe, Est_Archive, Profil_Utilisateur, Est_Mot_De_Passe_Temporaire, Date_Creation, Date_Derniere_Modification_MDP) VALUES (N'admin', N'$2b$10$PkfaBJ2yztneolPwfIcaI.QX5ppoeMa5e1rDA2hspODHvQSYFSn6W', 0, N'Administrateurs', 1, CAST(GETDATE() AS DATE), GETDATE());
-ELSE UPDATE dbo.t_utilisateur SET Mot_De_Passe = N'$2b$10$PkfaBJ2yztneolPwfIcaI.QX5ppoeMa5e1rDA2hspODHvQSYFSn6W', Est_Mot_De_Passe_Temporaire = 1, Profil_Utilisateur = COALESCE(Profil_Utilisateur, N'Administrateurs'), Est_Archive = 0 WHERE Login = N'admin' AND (Mot_De_Passe IS NULL OR Est_Mot_De_Passe_Temporaire = 1);
+IF NOT EXISTS (SELECT 1 FROM dbo.t_utilisateur WHERE Login = N'admin') INSERT INTO dbo.t_utilisateur (Login, Mot_De_Passe, Est_Archive, Profil_Utilisateur, Est_Mot_De_Passe_Temporaire, Date_Creation, Date_Derniere_Modification_MDP) VALUES (N'admin', N'$2b$10$T.LiYgCAdm3FVYteRBfFFucmrl5PqcqdGxr2sdcseukhGylhM2oKe', 0, N'Administrateurs', 1, CAST(GETDATE() AS DATE), GETDATE());
+ELSE UPDATE dbo.t_utilisateur SET Mot_De_Passe = N'$2b$10$T.LiYgCAdm3FVYteRBfFFucmrl5PqcqdGxr2sdcseukhGylhM2oKe', Est_Mot_De_Passe_Temporaire = 1, Profil_Utilisateur = COALESCE(Profil_Utilisateur, N'Administrateurs'), Est_Archive = 0 WHERE Login = N'admin' AND (Mot_De_Passe IS NULL OR Est_Mot_De_Passe_Temporaire = 1);
 GO
 
 USE [vigi_main];

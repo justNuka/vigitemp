@@ -3,6 +3,11 @@ import { PrismaMariaDb } from "@prisma/adapter-mariadb"
 import { PrismaMssql } from "@prisma/adapter-mssql"
 
 import { PrismaClient } from "../generated/@prisma-vigi-chat/client"
+import {
+  detectDatabaseProvider,
+  parseMysqlConnectionUrl,
+  parseSqlServerConnectionUrl,
+} from "./database-connection"
 
 type GlobalPrismaChatState = {
   prismaChat?: PrismaClient
@@ -18,23 +23,43 @@ function requireEnv(name: "DATABASE_CHAT_URL"): string {
   return value
 }
 
-const chatDbUrl = requireEnv("DATABASE_CHAT_URL")
-
-function isMssqlUrl(url: string): boolean {
-  return url.trim().toLowerCase().startsWith("sqlserver://")
+function createMysqlAdapter(url: string) {
+  const connection = parseMysqlConnectionUrl(url)
+  return new PrismaMariaDb({
+    host: connection.host,
+    port: connection.port,
+    user: connection.user,
+    password: connection.password,
+    database: connection.database,
+    allowPublicKeyRetrieval: connection.allowPublicKeyRetrieval,
+  })
 }
 
-function shouldUseMssql(url: string): boolean {
-  const provider = process.env.DATABASE_PROVIDER?.trim().toLowerCase()
-  return provider === "mssql" || provider === "sqlserver" || isMssqlUrl(url)
+function createMssqlAdapter(url: string) {
+  const connection = parseSqlServerConnectionUrl(url)
+  return new PrismaMssql({
+    server: connection.server,
+    port: connection.port,
+    database: connection.database,
+    user: connection.user,
+    password: connection.password,
+    options: {
+      encrypt: connection.encrypt,
+      trustServerCertificate: connection.trustServerCertificate,
+    },
+  })
 }
 
-const chatAdapter = shouldUseMssql(chatDbUrl) ? new PrismaMssql(chatDbUrl) : new PrismaMariaDb(chatDbUrl)
+function createAdapter(url: string) {
+  return detectDatabaseProvider(url) === "mssql"
+    ? createMssqlAdapter(url)
+    : createMysqlAdapter(url)
+}
 
 function getPrismaChatClient(): PrismaClient {
   if (!globalForPrismaChat.prismaChat) {
     globalForPrismaChat.prismaChat = new PrismaClient({
-      adapter: chatAdapter,
+      adapter: createAdapter(requireEnv("DATABASE_CHAT_URL")),
       log: process.env.NODE_ENV === "development" ? ["error", "warn"] : ["error"],
     })
   }
@@ -46,4 +71,3 @@ export const prismaChat = new Proxy({} as PrismaClient, {
     return (getPrismaChatClient() as unknown as Record<string | symbol, unknown>)[prop]
   },
 })
-

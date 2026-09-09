@@ -152,6 +152,9 @@ export const PATCH = withAuthorizationLogging(
       })
 
       revalidateTag("parametres-data", "default")
+      if (sectionVal.toLowerCase() === "general" && motCleVal.toLowerCase() === "timezone") {
+        revalidateTag("app-timezone", "default")
+      }
 
       return apiOk({
         key: `${setting.Section}:${setting.Mot_Cle}`,

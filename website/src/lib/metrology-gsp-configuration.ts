@@ -18,6 +18,16 @@ export type GspCoefficientOverride = {
   coeffConstant: number
 }
 
+export class GspSensorUnreachableError extends Error {
+  readonly serial: string
+
+  constructor(serial: string) {
+    super(`La sonde ${serial} n'a pas répondu à la commande de configuration.`)
+    this.name = "GspSensorUnreachableError"
+    this.serial = serial
+  }
+}
+
 type GspRuntimeConfiguration = {
   sensorId: number
   serial: string
@@ -331,8 +341,24 @@ async function sendConfiguration(
   const body = (await response.json().catch(() => null)) as HotlinePayload | null
   const data = body?.data
   const rawResponse = String(data?.RawValue ?? data?.rawValue ?? "")
+  const reportedError = String(data?.Error ?? data?.error ?? body?.message ?? "").trim()
   const acknowledged = /(?:^|\r?\n)\s*ACK\s*=\s*ECON\b/i.test(rawResponse)
   const overflowField = findFirmwareOverflowField(rawResponse)
+  const reportsNoResponse =
+    /aucune\s+r[ée]ponse|n['’]a\s+pas\s+[ée]t[ée]\s+acquitt[ée]e|ack\s+econ\s+absent/i.test(reportedError)
+
+  // Hotline renvoie HTTP 200 pour les erreurs matérielles normales. On classe donc
+  // comme "sonde injoignable" uniquement l'absence de trame accompagnée d'un
+  // diagnostic explicite de non-réponse/non-acquittement, et non toute erreur vide.
+  if (
+    response.ok &&
+    !acknowledged &&
+    !overflowField &&
+    rawResponse.trim().length === 0 &&
+    reportsNoResponse
+  ) {
+    throw new GspSensorUnreachableError(config.serial)
+  }
 
   // ECON est une commande de configuration : un ACK explicite du firmware reste
   // la source de verite, mais un champ `*=ovf` signifie que le firmware n'a pas
@@ -340,7 +366,7 @@ async function sendConfiguration(
   if (!response.ok || !acknowledged || overflowField) {
     const reason = overflowField
       ? `le firmware signale un dépassement sur le paramètre ${overflowField}`
-      : String(data?.Error ?? data?.error ?? body?.message ?? "ACK ECON absent")
+      : reportedError || "ACK ECON absent"
     throw new Error(`ECON refuse pour ${config.serial}: ${reason}`)
   }
 
