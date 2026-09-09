@@ -8,7 +8,7 @@ Audit demandé pendant une installation VigiSensys afin de vérifier que les ré
 - Branche : `fix/admin-settings-consistency`
 - Base de branche initiale : `dev` au commit `c96045d0133fba577e911a5b7a7f4f53dc554f82`
 - `dev` au 09/09/2026 : `bec77b2631e32c390c9be6b2abd60dcaba738b06` (les commits arrivés entre-temps concernent uniquement les correctifs Serveur IC/IP/IH et IP platine)
-- PR : à renseigner à l'ouverture
+- PR : #100 — `fix(settings): fiabiliser la page Paramètres admin`
 
 ## Points audités
 
