@@ -14,7 +14,7 @@ Il restait une asymétrie avec l'historique des ajustages : depuis la page d'une
 
 - Branche : `feature/calibration-history-bulk-export`
 - Base : `dev` au commit `9b12a96a592d912a162c2dfd9e6b36d47da94f58`
-- PR : à renseigner à l'ouverture
+- PR : #103 — `feat(metrology): exporter plusieurs étalonnages historiques en ZIP`
 
 ## Modification
 
