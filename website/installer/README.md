@@ -52,6 +52,21 @@ cd "website\installer"
   -PnpmPath "C:\Users\<user>\AppData\Roaming\npm\pnpm.cmd"
 ```
 
+## Configuration Better Auth
+
+Les nouvelles mises en service Web configurent automatiquement Better Auth dans le fichier `.env` :
+
+```env
+BETTER_AUTH_ENABLED=true
+BETTER_AUTH_PUBLIC_API_ENABLED=false
+BETTER_AUTH_SECRET="<secret aleatoire genere automatiquement>"
+BETTER_AUTH_URL="<meme valeur que NEXT_PUBLIC_API_BASE_URL>"
+```
+
+Le secret est genere avec le generateur cryptographiquement sur deja utilise par l'installateur et n'est jamais affiche dans les logs. `BETTER_AUTH_PUBLIC_API_ENABLED` reste volontairement a `false` pendant la transition : le runtime Better Auth est actif mais l'API brute `/api/auth-v2/*` reste fermee.
+
+Le package standalone `VigiSensysWebSetup.exe` genere les memes variables lors de la mise en service.
+
 ## Ce que fait le script
 - Copie le site dans le dossier d'installation
 - Ecrit le fichier env avec DB + secrets
