@@ -5708,7 +5708,7 @@
       },
       "operationTimer": {
         "title": "Ajustage en cours",
-        "sensorCount": "{count, plural, one {# sonde concernee} other {# sondes concernees}}",
+        "sensorCount": "{count, plural, one {# sonde concernée} other {# sondes concernées}}",
         "remaining": "Temps restant avant annulation automatique",
         "extend": "Ajouter 30 minutes",
         "extending": "Prolongation...",
