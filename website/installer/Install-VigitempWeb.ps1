@@ -548,6 +548,8 @@ if ([string]::IsNullOrWhiteSpace($AlarmDispatchSecretFile)) {
 }
 $dispatchSecret = Resolve-DispatchSecret -providedSecret $AlarmDispatchSecret -providedFilePath $AlarmDispatchSecretFile -interactiveMode (-not $Silent) -defaultSharedSecretPath $AlarmDispatchSecretFile
 $jwtSecret = Resolve-GeneratedSecretValue -label (T "JWT principal" "Primary JWT")
+$betterAuthSecret = New-RandomSecret
+Write-Log (T "Secret Better Auth genere automatiquement." "Better Auth secret generated automatically.")
 $hotlineJwtSecret = Resolve-GeneratedSecretValue -label (T "JWT hotline" "Hotline JWT")
 $agentSharedSecret = if ($isPackLicense) { $null } else { Resolve-GeneratedSecretValue -label (T "Secret partage agent" "Agent shared secret") }
 if (-not $PSBoundParameters.ContainsKey('ConfigureFirewall') -and -not $Silent) {
@@ -597,6 +599,10 @@ DATABASE_PROVIDER="$dbProvider"
 NEXT_PUBLIC_API_BASE_URL="$websiteBaseUrl"
 NEXT_PUBLIC_APP_URL="$appBaseUrl"
 NEXT_PUBLIC_CACHE_TTL=$cacheTtl
+BETTER_AUTH_ENABLED=true
+BETTER_AUTH_PUBLIC_API_ENABLED=false
+BETTER_AUTH_SECRET="$betterAuthSecret"
+BETTER_AUTH_URL="$websiteBaseUrl"
 VIGISENSYS_LICENSE_PATH="$normalizedLicensePath"
 VIGISENSYS_LICENSE_PUBLIC_KEY_PATH="$normalizedPublicKeyPath"
 $agentPrivateKeyEnvLine
@@ -621,6 +627,7 @@ NODE_ENV=production
 "@
 
 $envContent | Set-Content -Path $envPath -Encoding UTF8
+Write-Log (T "Better Auth active; API publique Better Auth desactivee." "Better Auth enabled; public Better Auth API disabled.")
 
 if ($dbProvider -eq "mssql") {
     Write-Log (T "Attention: Prisma doit etre configure pour SQL Server (schema/provider)." "Warning: Prisma must be configured for SQL Server (schema/provider).")
@@ -667,7 +674,7 @@ if ($Offline) {
         }
     } else {
         if (-not (Test-Path (Join-Path $InstallDir ".next"))) {
-            Write-Log (T "Attention : dossier .next absent. Le site ne demarrera pas sans build." "Warning: .next folder missing. The site will not start without a build.")
+            Write-Log (T "Attention : dossier .next absent. Le site ne demarrera pas sans build." "Warning: .next folder missing. The site will not start without build.")
         }
     }
 }
@@ -786,5 +793,4 @@ function Confirm-WebInstall {
 Confirm-WebInstall
 
 Stop-Transcript | Out-Null
-
 

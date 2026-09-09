@@ -2,13 +2,14 @@
 
 import { useState } from 'react';
 import type { ColumnDef } from '@tanstack/react-table';
-import { FileText } from 'lucide-react';
+import { FileArchive, FileText } from 'lucide-react';
 import { toast } from 'sonner';
 import { TanStackTable } from '@/components/data-table/tanstack-table';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -37,6 +38,11 @@ type CalibrationsPanelProps = {
   onCalibrationUpdated?: () => void;
 };
 
+function getDownloadFileName(contentDisposition: string | null) {
+  const match = contentDisposition?.match(/filename="?([^";]+)"?/i);
+  return match?.[1]?.trim() || 'Etalonnages.zip';
+}
+
 export function CalibrationsPanel({
   calibrations,
   isLoading,
@@ -46,6 +52,7 @@ export function CalibrationsPanel({
   onCalibrationUpdated,
 }: CalibrationsPanelProps) {
   const t = useTranslations('sensorsPage');
+  const tCommon = useTranslations('common');
   const locale = useLocale();
   const localeTag = locale.toLowerCase().startsWith('fr') ? 'fr-FR' : locale;
   const timezone = useAppTimezone();
@@ -53,6 +60,59 @@ export function CalibrationsPanel({
   const [editingRow, setEditingRow] = useState<CalibrationRow | null>(null);
   const [durationDays, setDurationDays] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+  const [selectedExportIds, setSelectedExportIds] = useState<Set<number>>(new Set());
+  const [isBulkExporting, setIsBulkExporting] = useState(false);
+
+  const availableIds = new Set(calibrations.map((calibration) => calibration.Id_Etalonnage));
+  const effectiveSelectedIds = new Set(Array.from(selectedExportIds).filter((id) => availableIds.has(id)));
+  const allSelected = calibrations.length > 0 && effectiveSelectedIds.size === calibrations.length;
+  const partiallySelected = effectiveSelectedIds.size > 0 && !allSelected;
+
+  const toggleAll = (checked: boolean) => {
+    setSelectedExportIds(checked ? new Set(calibrations.map((calibration) => calibration.Id_Etalonnage)) : new Set());
+  };
+
+  const toggleOne = (id: number, checked: boolean) => {
+    setSelectedExportIds((current) => {
+      const next = new Set(Array.from(current).filter((currentId) => availableIds.has(currentId)));
+      if (checked) next.add(id);
+      else next.delete(id);
+      return next;
+    });
+  };
+
+  const handleBulkExport = async () => {
+    if (effectiveSelectedIds.size === 0 || isBulkExporting) return;
+
+    setIsBulkExporting(true);
+    try {
+      const response = await fetch('/api/metrologie/etalonnage/report/bulk', {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids: Array.from(effectiveSelectedIds) }),
+      });
+
+      if (!response.ok) {
+        throw new Error('bulk_calibration_export_failed');
+      }
+
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement('a');
+      anchor.href = url;
+      anchor.download = getDownloadFileName(response.headers.get('Content-Disposition'));
+      document.body.appendChild(anchor);
+      anchor.click();
+      document.body.removeChild(anchor);
+      URL.revokeObjectURL(url);
+      toast.success(tCommon('success'));
+    } catch {
+      toast.error(tCommon('error'));
+    } finally {
+      setIsBulkExporting(false);
+    }
+  };
 
   const openDurationDialog = (row: CalibrationRow) => {
     setEditingRow(row);
@@ -150,6 +210,28 @@ export function CalibrationsPanel({
 
   const columns: ColumnDef<CalibrationRow>[] = [
     {
+      id: 'select',
+      header: () => (
+        <div className="flex justify-center" onClick={(event) => event.stopPropagation()}>
+          <Checkbox
+            checked={allSelected ? true : partiallySelected ? 'indeterminate' : false}
+            onCheckedChange={(checked) => toggleAll(checked === true)}
+            aria-label={tCommon('export')}
+          />
+        </div>
+      ),
+      enableSorting: false,
+      cell: ({ row }) => (
+        <div className="flex justify-center" onClick={(event) => event.stopPropagation()}>
+          <Checkbox
+            checked={effectiveSelectedIds.has(row.original.Id_Etalonnage)}
+            onCheckedChange={(checked) => toggleOne(row.original.Id_Etalonnage, checked === true)}
+            aria-label={tCommon('export')}
+          />
+        </div>
+      ),
+    },
+    {
       accessorKey: 'Nom_Etalonnage',
       header: t('panels.calibrations.columns.name'),
       cell: ({ row }) => row.original.Nom_Etalonnage || '-',
@@ -216,7 +298,28 @@ export function CalibrationsPanel({
     <>
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-base">{t('panels.calibrations.title')}</CardTitle>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <CardTitle className="text-base">{t('panels.calibrations.title')}</CardTitle>
+            <div className="flex items-center gap-2">
+              {effectiveSelectedIds.size > 0 ? (
+                <span className="min-w-6 rounded-full bg-muted px-2 py-0.5 text-center text-xs text-muted-foreground">
+                  {effectiveSelectedIds.size}
+                </span>
+              ) : null}
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="h-8 gap-2"
+                disabled={effectiveSelectedIds.size === 0 || isBulkExporting}
+                onClick={handleBulkExport}
+                title={tCommon('export')}
+              >
+                <FileArchive className="h-3.5 w-3.5" />
+                {isBulkExporting ? tCommon('loading') : tCommon('export')} PDF
+              </Button>
+            </div>
+          </div>
         </CardHeader>
         <CardContent className="p-2 md:p-4 xl:p-4">
           {isLoading ? (
