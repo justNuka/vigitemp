@@ -157,7 +157,7 @@ export const PATCH = withAuthorizationLogging(
       }
 
       return apiOk({
-        key: `${setting.Section}:${setting.MotCle}`,
+        key: `${setting.Section}:${setting.Mot_Cle}`,
         section: setting.Section,
         motCle: setting.Mot_Cle,
         value: setting.Valeur || "",
