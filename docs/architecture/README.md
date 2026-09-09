@@ -19,7 +19,7 @@ Pour toute nouvelle conversation ou tout chantier important :
 1. lire ce fichier ;
 2. lire [`development-guidelines.md`](./development-guidelines.md) avant d'écrire du code ;
 3. lire [`refactor-roadmap.md`](./refactor-roadmap.md) pour connaître les priorités et dépendances entre chantiers ;
-4. si le sujet touche l'authentification, les sessions, le login, le SSO, Microsoft Entra, la 2FA, le passwordless ou une migration des JWT Web, lire obligatoirement [`better-auth-migration.md`](./better-auth-migration.md) puis [`better-auth-current-status.md`](./better-auth-current-status.md) ; le premier conserve l'architecture/roadmap historique, le second décrit l'état réellement implémenté sur la branche dédiée `feature/better-auth-refactor` ;
+4. si le sujet touche l'authentification, les sessions, le login, le SSO, Microsoft Entra, la 2FA, le passwordless ou une migration des JWT Web, lire obligatoirement [`better-auth-migration.md`](./better-auth-migration.md) puis [`better-auth-current-status.md`](./better-auth-current-status.md) ; le premier conserve l'architecture/roadmap historique, le second décrit l'état réellement implémenté et le statut d'intégration de Better Auth ;
 5. si le sujet touche la téléphonie, Twilio, OVHcloud, Click2Call, SIP, Asterisk, les appels d'alarme, le TTS ou le DTMF, lire obligatoirement [`telephony-architecture.md`](./telephony-architecture.md) puis le guide du provider concerné : [`../telephony-twilio-setup.md`](../telephony-twilio-setup.md) pour la V1 recommandée, [`../telephony-ovh-setup.md`](../telephony-ovh-setup.md) pour OVHcloud ou [`../telephony-asterisk-poc.md`](../telephony-asterisk-poc.md) pour Asterisk ;
 6. si le sujet touche l'ajustage, l'étalonnage, les sondes de métrologie ou `HotlineApiServer`, lire obligatoirement [`metrology-refactor.md`](./metrology-refactor.md) ;
 7. pour une API Next.js, lire également `website/docs/API_CONVENTIONS.md` ;
@@ -111,7 +111,7 @@ Avant chaque lot de développement :
 10. mettre à jour la documentation/backlog concerné ;
 11. ouvrir la PR vers `dev`, sans la merger.
 
-**Exception Better Auth :** tant que le chantier de migration est en cours, `feature/better-auth-refactor` sert de branche d'intégration dédiée et longue durée. Les lots Better Auth peuvent continuer sur cette branche afin de ne pas polluer `dev` et de laisser `dev` disponible pour les correctifs clients. Ne pas merger cette branche dans `dev` sans validation explicite.
+**Historique Better Auth :** `feature/better-auth-refactor` a servi temporairement de branche d'intégration longue durée afin de garder `dev` disponible pour les correctifs clients. Après intégration de cette fondation dans `dev`, cette exception prend fin : les lots Better Auth suivants doivent repartir du HEAD courant de `dev` sur des branches ciblées, sauf nouvelle demande explicite de travail parallèle.
 
 Après que la PR est annoncée comme mergée, vérifier réellement son état et le nouveau HEAD de `dev` avant le lot suivant.
 
@@ -149,7 +149,7 @@ Une PR de code n'est terminée que lorsque les points applicables sont couverts 
 - `docs/architecture/development-guidelines.md` — conventions de code et helpers existants à réutiliser.
 - `docs/architecture/refactor-roadmap.md` — ordre des chantiers et critères de découpage.
 - `docs/architecture/better-auth-migration.md` — architecture cible et roadmap détaillée de migration de l'authentification Web vers Better Auth.
-- `docs/architecture/better-auth-current-status.md` — état réellement implémenté, stratégie de branche dédiée, politique de session et checklist de test Better Auth.
+- `docs/architecture/better-auth-current-status.md` — état réellement implémenté, politique de session, validation et statut d'intégration Better Auth.
 - `docs/architecture/telephony-architecture.md` — architecture téléphonie : Twilio recommandé pour la V1, providers optionnels, queue voix, sécurité, DTMF et roadmap.
 - `docs/telephony-twilio-setup.md` — guide client/DSI de référence pour le provider Twilio V1 : compte, numéro, API Key, réseau HTTPS 443, conformité France et tests.
 - `docs/telephony-ovh-setup.md` — guide opératoire du provider OVHcloud / Click2Call.
