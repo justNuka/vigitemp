@@ -18,6 +18,7 @@ import {
   markLatestAdjustmentCoefficientRowsDirty,
   requireAdjustmentCoefficientDirtyColumn,
 } from "@/lib/metrology-adjustment-coefficient-dirty"
+import { withGsoAdjustmentDisplayValue } from "@/lib/metrology-gso-adjustment-display"
 import {
   applyGspMetrologyConfiguration,
   GspSensorUnreachableError,
@@ -108,11 +109,28 @@ function preserveStoredWallClock(value: string) {
 
 function normalizeAdjustmentSessionDates<T extends Awaited<ReturnType<typeof getAdjustmentSessionForUser>>>(session: T): T {
   if (!session) return session
-  const gsoIds = new Set(session.sensors.filter((sensor) => sensor.isGso).map((sensor) => sensor.id))
+
+  const gsoSensorsById = new Map(
+    session.sensors.filter((sensor) => sensor.isGso).map((sensor) => [sensor.id, sensor]),
+  )
   const latestSensorReadings = Object.fromEntries(
     Object.entries(session.latestSensorReadings).map(([sensorId, reading]) => {
-      if (!reading || !gsoIds.has(Number(sensorId))) return [sensorId, reading]
-      return [sensorId, { ...reading, measuredAt: preserveStoredWallClock(reading.measuredAt) }]
+      const gsoSensor = gsoSensorsById.get(Number(sensorId))
+      if (!reading || !gsoSensor) return [sensorId, reading]
+
+      const displayReading = withGsoAdjustmentDisplayValue(reading, {
+        coeffA: gsoSensor.coeffA,
+        coeffB: gsoSensor.coeffB,
+        coeffC: gsoSensor.coeffC,
+      })
+
+      return [
+        sensorId,
+        {
+          ...displayReading,
+          measuredAt: preserveStoredWallClock(displayReading.measuredAt),
+        },
+      ]
     }),
   ) as typeof session.latestSensorReadings
 
