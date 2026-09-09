@@ -45,15 +45,24 @@ Le chemin de Surveillance doit en revanche continuer à appliquer le dernier aju
 - `website/src/app/api/metrologie/ajustage/session/route.ts`
 - `website/scripts/test-metrology-gso-adjustment-display.ts`
 
-## Validation
+## Validation technique
 
-- [ ] test helper : formule linéaire ;
-- [ ] test helper : formule à trois coefficients ;
-- [ ] test helper : conservation du brut dans `rawValue` ;
-- [ ] TypeScript ;
-- [ ] ESLint ciblé ;
-- [ ] build Web ;
-- [ ] terrain : démarrer un ajustage GSO et attendre une mesure ;
+GitHub Actions run `34352282333` :
+
+- [x] dépendances figées ;
+- [x] génération Prisma MySQL ;
+- [x] test helper : formule linéaire ;
+- [x] test helper : formule à trois coefficients ;
+- [x] test helper : conservation du brut dans `rawValue` ;
+- [x] TypeScript ;
+- [x] ESLint ciblé ;
+- [x] build Web standalone production.
+
+Le workflow GitHub Actions temporaire utilisé pour cette validation a été retiré du diff final.
+
+## Validation terrain restante
+
+- [ ] démarrer un ajustage GSO et attendre une mesure ;
 - [ ] modifier A/B/C puis valider ;
 - [ ] vérifier que la valeur affichée évolue avec les nouveaux coefficients ;
 - [ ] vérifier que le timestamp de mesure reste cohérent ;
