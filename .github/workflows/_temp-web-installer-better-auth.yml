@@ -1,0 +1,73 @@
+name: Temporary Web Installer Better Auth Validation
+
+on:
+  push:
+    branches:
+      - feature/web-installer-better-auth-config
+
+jobs:
+  validate-installer:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Publish Web installer bootstrapper
+        shell: pwsh
+        run: dotnet publish "website/WebsiteInstallerBootstrapper/WebsiteInstallerBootstrapper.csproj" -c Release -nologo
+
+      - name: Parse PowerShell installer
+        shell: pwsh
+        run: |
+          $tokens = $null
+          $errors = $null
+          [System.Management.Automation.Language.Parser]::ParseFile(
+            (Resolve-Path "website/installer/Install-VigitempWeb.ps1"),
+            [ref]$tokens,
+            [ref]$errors
+          ) | Out-Null
+          if ($errors.Count -gt 0) {
+            $errors | ForEach-Object { Write-Error $_.Message }
+            exit 1
+          }
+
+      - name: Verify Better Auth env contract
+        shell: pwsh
+        run: |
+          $mainForm = Get-Content "website/WebsiteInstallerBootstrapper/MainForm.cs" -Raw
+          $psInstaller = Get-Content "website/installer/Install-VigitempWeb.ps1" -Raw
+
+          $expectedMainForm = @(
+            'env.AppendLine("BETTER_AUTH_ENABLED=true")',
+            'env.AppendLine("BETTER_AUTH_PUBLIC_API_ENABLED=false")',
+            'env.AppendLine($"BETTER_AUTH_SECRET=\"{betterAuthSecret}\"")',
+            'env.AppendLine($"BETTER_AUTH_URL=\"{_s.WebsiteBaseUrl}\"")',
+            'env.AppendLine($"NEXT_PUBLIC_API_BASE_URL=\"{_s.WebsiteBaseUrl}\"")'
+          )
+          foreach ($needle in $expectedMainForm) {
+            if (-not $mainForm.Contains($needle)) {
+              throw "Missing bootstrapper contract: $needle"
+            }
+          }
+
+          $expectedPowerShell = @(
+            'BETTER_AUTH_ENABLED=true',
+            'BETTER_AUTH_PUBLIC_API_ENABLED=false',
+            'BETTER_AUTH_SECRET="$betterAuthSecret"',
+            'BETTER_AUTH_URL="$websiteBaseUrl"',
+            'NEXT_PUBLIC_API_BASE_URL="$websiteBaseUrl"'
+          )
+          foreach ($needle in $expectedPowerShell) {
+            if (-not $psInstaller.Contains($needle)) {
+              throw "Missing PowerShell installer contract: $needle"
+            }
+          }
+
+          if ($mainForm -match 'AppendLog\([^\r\n]*betterAuthSecret' -or $psInstaller -match 'Write-Log[^\r\n]*\$betterAuthSecret') {
+            throw "Better Auth secret must not be written to installer logs"
+          }
