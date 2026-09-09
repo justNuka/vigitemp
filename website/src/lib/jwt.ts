@@ -1,13 +1,15 @@
 import jwt from "jsonwebtoken";
 
-const jwtSecretEnv = process.env.JWT_SECRET
-if (!jwtSecretEnv) {
-  throw new Error(
-    "[SECURITY] JWT_SECRET environment variable is not set. " +
-    "Set it to a strong random string (min 32 chars) before starting the server."
-  )
+function getJwtSecret(): string {
+  const jwtSecretEnv = process.env.JWT_SECRET
+  if (!jwtSecretEnv) {
+    throw new Error(
+      "[SECURITY] JWT_SECRET environment variable is not set. " +
+      "Set it to a strong random string (min 32 chars) before starting the server."
+    )
+  }
+  return jwtSecretEnv
 }
-const JWT_SECRET: string = jwtSecretEnv
 
 export const ACCESS_COOKIE_MAX_AGE_SECONDS = 60 * 60; // 1h
 export const SESSION_MAX_AGE_SECONDS = 60 * 60 * 24; // 24h absolues depuis la connexion
@@ -37,7 +39,7 @@ export function generateAccessToken(
 ): string {
   return jwt.sign(
     { ...payload, tokenType: "access" },
-    JWT_SECRET,
+    getJwtSecret(),
     { expiresIn: getRemainingLifetimeSeconds(ACCESS_COOKIE_MAX_AGE_SECONDS, sessionExpiresAt) },
   );
 }
@@ -65,7 +67,7 @@ export function generateRefreshToken(
 
   return jwt.sign(
     { ...payload, tokenType: "refresh", sessionExpiresAt: absoluteExpiry },
-    JWT_SECRET,
+    getJwtSecret(),
     { expiresIn: getRemainingLifetimeSeconds(SESSION_MAX_AGE_SECONDS, absoluteExpiry) },
   );
 }
@@ -77,7 +79,7 @@ export function generateToken(payload: Omit<JWTPayload, "iat" | "exp" | "tokenTy
 
 export function verifyAccessToken(token: string): JWTPayload | null {
   try {
-    const decoded = jwt.verify(token, JWT_SECRET) as JWTPayload;
+    const decoded = jwt.verify(token, getJwtSecret()) as JWTPayload;
     if (decoded.tokenType && decoded.tokenType !== "access") return null;
     return decoded;
   } catch (error) {
@@ -87,7 +89,7 @@ export function verifyAccessToken(token: string): JWTPayload | null {
 
 export function verifyRefreshToken(token: string): JWTPayload | null {
   try {
-    const decoded = jwt.verify(token, JWT_SECRET) as JWTPayload;
+    const decoded = jwt.verify(token, getJwtSecret()) as JWTPayload;
     if (decoded.tokenType !== "refresh") return null;
     return decoded;
   } catch {
