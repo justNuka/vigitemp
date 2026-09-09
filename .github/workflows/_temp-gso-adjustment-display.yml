@@ -1,0 +1,59 @@
+name: TEMP GSO adjustment display
+
+on:
+  push:
+    branches:
+      - fix/metrology-gso-adjustment-display
+
+permissions:
+  contents: read
+
+jobs:
+  static-checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/metrology-gso-adjustment-display
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.17.1
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.12.0
+          cache: pnpm
+          cache-dependency-path: website/pnpm-lock.yaml
+
+      - name: Install frozen dependencies
+        working-directory: website
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma MySQL clients
+        working-directory: website
+        run: pnpm prisma:generate:mysql
+
+      - name: GSO adjustment display test
+        working-directory: website
+        run: pnpm exec tsx scripts/test-metrology-gso-adjustment-display.ts
+
+      - name: TypeScript
+        working-directory: website
+        run: pnpm exec tsc --noEmit
+
+      - name: ESLint targeted lot
+        working-directory: website
+        run: >-
+          pnpm exec eslint
+          src/lib/metrology-gso-adjustment-display.ts
+          src/app/api/metrologie/ajustage/session/route.ts
+          scripts/test-metrology-gso-adjustment-display.ts
+
+      - name: Production Next standalone build
+        working-directory: website
+        env:
+          VIGITEMP_SKIP_DB_ON_BUILD: "1"
+          VIGITEMP_LOGS_DIR: /tmp/vigisensys-build-logs
+          NEXT_DISABLE_TURBOPACK: "1"
+        run: pnpm build
