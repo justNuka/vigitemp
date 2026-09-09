@@ -1,94 +1,90 @@
-# Installateur site web VigiSensys
+i??i??# Installateur site web Vigitemp
 
-L'installateur Web installe le build Next.js standalone, écrit le fichier `.env`, puis crée le service Windows `VigiSensysWeb`.
+Ce script installe le site Next.js, ecrit le fichier env, puis cree un service Windows.
 
-Le package de mise en service utilise l'interface `VigiSensysWebSetup.exe`, construite depuis `WebsiteInstallerBootstrapper`. Le script `Install-VigitempWeb.ps1` reste disponible pour les installations manuelles/historiques.
+## Prerequis
+- Lancer PowerShell en tant qu'administrateur.
+- Node.js LTS installe (node dans PATH ou `-NodePath`).
+- pnpm disponible si mode online (le script tente Corepack sinon `-PnpmPath`).
 
-## Prérequis
+## Mode standalone (recommande)
+Le build produit un bundle autonome (`.next/standalone`) qui evite de copier `node_modules`.
 
-- lancer l'installateur en tant qu'administrateur ;
-- Node.js LTS installé ;
-- disposer des fichiers de licence / clés nécessaires ;
-- disposer d'un compte SQL dédié et des trois bases attendues.
+### Preparer le build (machine connectee)
+```
+cd website
+pnpm install
+pnpm prisma:generate
+pnpm build
+```
 
-## Better Auth à la mise en service
+### Copier vers une cle USB
+Copier le dossier `website/` (au minimum : `.next/standalone`, `.next/static`, `public`, `package.json`).
 
-Le bootstrapper Web configure automatiquement Better Auth lors de la génération du `.env` standalone :
+### Installer en offline (machine client)
+```
+cd "website\installer"
+.\Install-VigitempWeb.ps1 -Standalone -Offline
+```
+
+## Mode offline classique (sans standalone)
+- Necessite de copier `node_modules` et `.next`.
+```
+.\Install-VigitempWeb.ps1 -Offline
+```
+
+## Lancer (interactif)
+```
+cd "website\installer"
+.\Install-VigitempWeb.ps1
+```
+
+## Lancer (silencieux)
+```
+.\Install-VigitempWeb.ps1 \
+  -Silent \
+  -SourcePath "C:\repo\vigitemp\website" \
+  -InstallDir "C:\ProgramData\VigiSensys\website" \
+  -ServiceName "VigiSensysWeb" \
+  -Port 3000 \
+  -EnvFileName ".env.production" \
+  -NodePath "C:\Program Files\nodejs\node.exe" \
+  -PnpmPath "C:\Users\<user>\AppData\Roaming\npm\pnpm.cmd"
+```
+
+## Configuration Better Auth
+
+Les nouvelles mises en service Web configurent automatiquement Better Auth dans le fichier `.env` :
 
 ```env
 BETTER_AUTH_ENABLED=true
 BETTER_AUTH_PUBLIC_API_ENABLED=false
-BETTER_AUTH_SECRET="<secret aléatoire généré par l'installateur>"
-BETTER_AUTH_URL="<même valeur que NEXT_PUBLIC_API_BASE_URL>"
+BETTER_AUTH_SECRET="<secret aleatoire genere automatiquement>"
+BETTER_AUTH_URL="<meme valeur que NEXT_PUBLIC_API_BASE_URL>"
 ```
 
-Règles retenues :
+Le secret est genere avec le generateur cryptographiquement sur deja utilise par l'installateur et n'est jamais affiche dans les logs. `BETTER_AUTH_PUBLIC_API_ENABLED` reste volontairement a `false` pendant la transition : le runtime Better Auth est actif mais l'API brute `/api/auth-v2/*` reste fermee.
 
-- le secret est généré avec le générateur cryptographiquement sûr déjà utilisé par l'installateur ;
-- sa valeur n'est jamais affichée dans les logs ou le résumé de mise en service ;
-- `BETTER_AUTH_URL` reprend exactement l'URL publique du site renseignée pour `NEXT_PUBLIC_API_BASE_URL` ;
-- le runtime Better Auth est activé sur les nouvelles mises en service ;
-- l'API Better Auth brute `/api/auth-v2/*` reste fermée avec `BETTER_AUTH_PUBLIC_API_ENABLED=false` pendant la transition ;
-- les JWT historiques restent présents tant que la migration complète de l'authentification n'est pas terminée.
+Le package standalone `VigiSensysWebSetup.exe` genere les memes variables lors de la mise en service.
 
-Les installations existantes qui n'ont pas encore ces variables conservent le comportement précédent tant qu'elles ne sont pas remises en service avec un package récent ou configurées explicitement.
-
-## Mode standalone (recommandé)
-
-Le build produit un bundle autonome (`.next/standalone`) qui évite de copier l'ensemble de `node_modules`.
-
-### Préparer le package
-
-```powershell
-cd website\installer
-.\Prepare-StandaloneBuild.ps1 -DatabaseProvider mysql
-```
-
-Utiliser `-DatabaseProvider mssql` pour un package SQL Server.
-
-Le script :
-
-- prépare/génère Prisma pour le provider choisi ;
-- construit le site ;
-- publie `WebsiteInstallerBootstrapper` ;
-- copie le serveur standalone et les assets statiques ;
-- ajoute `VigiSensysWebSetup.exe` et `winsw.exe` au package final.
-
-### Installation client
-
-Lancer :
-
-```text
-VigiSensysWebSetup.exe
-```
-
-Puis renseigner les paramètres demandés par l'assistant de mise en service.
-
-## Script PowerShell historique
-
-Pour une installation manuelle depuis le dépôt :
-
-```powershell
-cd website\installer
-.\Install-VigitempWeb.ps1 -Standalone -Offline
-```
-
-En mode non-standalone / online, le script peut également installer les dépendances et construire l'application localement.
+## Ce que fait le script
+- Copie le site dans le dossier d'installation
+- Ecrit le fichier env avec DB + secrets
+- Cree un service Windows qui lance le serveur
 
 ## Fichiers
+- Logs install : `C:\ProgramData\VigiSensys\install-logs\install-web-*.log`
+- Logs app : (demande pendant l'install, defaut `C:\ProgramData\VigiSensys\web-logs`)
 
-- installation Web par défaut : `C:\ProgramData\VigiSensys\website` ;
-- `.env` standalone : `C:\ProgramData\VigiSensys\website\.next\standalone\.env` ;
-- logs application : `C:\ProgramData\VigiSensys\web-logs` par défaut ;
-- informations d'installation : registre `HKLM\SOFTWARE\VigiSensys\Web`.
-
-## Rollback / désinstallation
-
-Le bootstrapper génère le script de désinstallation associé au Web. Pour un retrait manuel :
-
-```powershell
+## Rollback
+```
 sc.exe stop VigiSensysWeb
 sc.exe delete VigiSensysWeb
 ```
+Supprimer le dossier d'installation si besoin.
 
-Puis supprimer le dossier d'installation si nécessaire.
+## Desinstallation
+```
+cd "website\installer"
+.\Uninstall-VigitempWeb.ps1
+```
