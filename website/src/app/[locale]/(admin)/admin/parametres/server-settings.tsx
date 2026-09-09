@@ -2,7 +2,6 @@ import { log } from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
 
 const DEFAULT_SETTINGS = [
-  { key: "general:timezone_enabled", value: "true", label: "Enable timezone" },
   { key: "general:timezone", value: "Europe/Paris", label: "Timezone" },
   { key: "general:global_language", value: "fr", label: "Global language" },
   { key: "notifications:email", value: "true", label: "Email notifications" },
@@ -12,8 +11,6 @@ const DEFAULT_SETTINGS = [
   { key: "notifications:alarm_email_fallback_to_system", value: "false", label: "Fallback to system recipients" },
   { key: "notifications:gsp_battery_notify_percent", value: "50", label: "GSP battery notify threshold (%)" },
   { key: "notifications:gsp_battery_email_percent", value: "25", label: "GSP battery email threshold (%)" },
-  { key: "alarms:sound", value: "true", label: "Alarm sound" },
-  { key: "dashboard:refresh", value: "30", label: "Dashboard refresh interval" },
   { key: "dashboard:surveillance_refresh", value: "15", label: "Surveillance refresh interval" },
   { key: "dashboard:show_null_non_response", value: "false", label: "Show null non-response" },
   { key: "dashboard:etalonnage_warning_days", value: "30", label: "Calibration warning days" },
@@ -31,7 +28,7 @@ export async function ServerSettings() {
     const dbSettings = await prisma.t_parametre.findMany({
       where: {
         Section: {
-          in: ["general", "notifications", "alarms", "dashboard", "messaging", "GENERAL", "NOTIFICATIONS", "ALARMS", "DASHBOARD", "MESSAGING"],
+          in: ["general", "notifications", "dashboard", "messaging", "GENERAL", "NOTIFICATIONS", "DASHBOARD", "MESSAGING"],
         },
       },
       select: {
@@ -46,13 +43,13 @@ export async function ServerSettings() {
     const dbSettingsMap = new Map(
       dbSettings.map((setting) => [
         `${(setting.Section || "").toLowerCase()}:${(setting.Mot_Cle || "").toLowerCase()}`,
-        setting.Valeur || "false",
+        setting.Valeur ?? "",
       ]),
     );
 
     return DEFAULT_SETTINGS.map((defaultSetting) => ({
       ...defaultSetting,
-      value: dbSettingsMap.get(defaultSetting.key) || defaultSetting.value,
+      value: dbSettingsMap.get(defaultSetting.key) ?? defaultSetting.value,
     }));
   } catch (error) {
     log.error("settings/server", "settings_load_failed", { error });

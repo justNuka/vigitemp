@@ -8,12 +8,18 @@ import { encryptSmtpPassword, isEncryptedSmtpPassword } from "@/lib/secret-crypt
 import { log } from "@/lib/logger"
 
 type SMTPConfig = {
+  enabled: boolean
   host: string
   port: number
   user: string
   password: string
   sender: string
   passwordConfigured?: boolean
+}
+
+function parseBoolean(value: string | null | undefined) {
+  const normalized = (value ?? "").trim().toLowerCase()
+  return ["1", "true", "yes", "on"].includes(normalized)
 }
 
 /**
@@ -28,6 +34,7 @@ export const GET = withAdminLogging(async (req: NextRequest, ctx: HandlerContext
     })
 
     const config: SMTPConfig = {
+      enabled: false,
       host: "",
       port: 587,
       user: "",
@@ -38,6 +45,9 @@ export const GET = withAdminLogging(async (req: NextRequest, ctx: HandlerContext
 
     params.forEach((param) => {
       switch (param.Mot_Cle) {
+        case "SMTP_ACTIVATION":
+          config.enabled = parseBoolean(param.Valeur)
+          break
         case "SMTP_SERVEUR":
           config.host = param.Valeur || ""
           break
@@ -60,6 +70,7 @@ export const GET = withAdminLogging(async (req: NextRequest, ctx: HandlerContext
       user: ctx.user.username,
       userId: ctx.user.userId,
       ip,
+      enabled: config.enabled,
       hostConfigured: !!config.host,
       userConfigured: !!config.user,
       passwordConfigured: !!config.passwordConfigured,
@@ -79,7 +90,7 @@ export const PUT = withAdminLogging(async (req: NextRequest, ctx: HandlerContext
     const { ip } = getRequestContext(req)
     const body = (await req.json()) as SMTPConfig
 
-    if (!body.host || !body.port || !body.user) {
+    if (typeof body.enabled !== "boolean" || !body.host || !body.port || !body.user) {
       return apiError(400, "invalid_input", "Parametres SMTP incomplets")
     }
 
@@ -103,6 +114,7 @@ export const PUT = withAdminLogging(async (req: NextRequest, ctx: HandlerContext
     }
 
     const updates = [
+      { Mot_Cle: "SMTP_ACTIVATION", Valeur: body.enabled ? "true" : "false" },
       { Mot_Cle: "SMTP_SERVEUR", Valeur: body.host },
       { Mot_Cle: "SMTP_PORT", Valeur: body.port.toString() },
       { Mot_Cle: "SMTP_UTILISATEUR", Valeur: body.user },
@@ -131,6 +143,7 @@ export const PUT = withAdminLogging(async (req: NextRequest, ctx: HandlerContext
       user: ctx.user.username,
       userId: ctx.user.userId,
       ip,
+      enabled: body.enabled,
       host: body.host,
       port: body.port,
       sender: body.sender,
@@ -144,6 +157,7 @@ export const PUT = withAdminLogging(async (req: NextRequest, ctx: HandlerContext
       ip,
       resource: "Configuration SMTP",
       changes: {
+        enabled: body.enabled,
         host: body.host,
         port: body.port,
         user: body.user,

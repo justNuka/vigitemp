@@ -7,6 +7,10 @@ import {
   enMetrologyCalibrationSupplements,
   frMetrologyCalibrationSupplements,
 } from "../src/messages/metrology-calibration-supplements";
+import {
+  enAdminSettingsSupplements,
+  frAdminSettingsSupplements,
+} from "../src/messages/admin-settings-supplements";
 
 const ROOT = process.cwd();
 const MESSAGES_DIR = path.join(ROOT, "src", "messages");
@@ -128,11 +132,17 @@ async function main() {
   ]);
 
   const fr = mergeMessages(
-    mergeMessages(JSON.parse(frRaw) as MessageCatalog, frSupplements),
+    mergeMessages(
+      mergeMessages(JSON.parse(frRaw) as MessageCatalog, frSupplements),
+      frAdminSettingsSupplements,
+    ),
     frMetrologyCalibrationSupplements,
   );
   const en = mergeMessages(
-    mergeMessages(JSON.parse(enRaw) as MessageCatalog, enSupplements),
+    mergeMessages(
+      mergeMessages(JSON.parse(enRaw) as MessageCatalog, enSupplements),
+      enAdminSettingsSupplements,
+    ),
     enMetrologyCalibrationSupplements,
   );
   const frKeys = new Set(flattenKeys(fr));

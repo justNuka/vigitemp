@@ -42,10 +42,10 @@ const NOTIFICATION_SETTING_KEYS = new Set([
 
 const MESSAGING_SETTING_KEY = "messaging:enabled";
 const SURVEILLANCE_REFRESH_KEY = "dashboard:surveillance_refresh";
+const TIMEZONE_SETTING_KEY = "general:timezone";
 
 function getTranslatedLabel(t: ReturnType<typeof useTranslations>, setting: Setting) {
   const translatedLabels: Record<string, string> = {
-    "general:timezone_enabled": t("timezone.enabled_label"),
     "general:timezone": t("timezone.label"),
     "general:global_language": t("general.labels.global_language"),
     "notifications:email": t("notifications.email_toggle"),
@@ -55,8 +55,6 @@ function getTranslatedLabel(t: ReturnType<typeof useTranslations>, setting: Sett
     "notifications:alarm_email_fallback_to_system": t("notifications.fallback_toggle"),
     "notifications:gsp_battery_notify_percent": t("notifications.gsp_battery_notify_percent_label"),
     "notifications:gsp_battery_email_percent": t("notifications.gsp_battery_email_percent_label"),
-    "alarms:sound": t("general.labels.alarms_sound"),
-    "dashboard:refresh": t("general.labels.dashboard_refresh"),
     "dashboard:surveillance_refresh": t("general.labels.surveillance_refresh"),
     "dashboard:show_null_non_response": t("general.labels.show_null_non_response"),
     "dashboard:etalonnage_warning_days": t("general.labels.etalonnage_warning_days"),
@@ -84,7 +82,7 @@ export function SettingsClient({ settings: initialSettings }: Props) {
 
   const generalSettings = localizedSettings.filter((setting) => {
     if (NOTIFICATION_SETTING_KEYS.has(setting.key)) return false;
-    if (setting.key === MESSAGING_SETTING_KEY) return false;
+    if (setting.key === MESSAGING_SETTING_KEY || setting.key === TIMEZONE_SETTING_KEY) return false;
     if (!canEditSurveillanceRefresh && setting.key === SURVEILLANCE_REFRESH_KEY) return false;
     return true;
   });

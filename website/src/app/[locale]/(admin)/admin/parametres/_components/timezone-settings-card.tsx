@@ -3,7 +3,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { cn } from '@/lib/utils';
 import { useTranslations } from 'next-intl';
 
 interface Setting {
@@ -38,9 +37,7 @@ export function TimezoneSettingsCard({
   onTimezoneChange,
 }: TimezoneSettingsCardProps) {
   const t = useTranslations('adminSettings');
-  const timezoneEnabledSetting = settings.find((setting) => setting.key === 'general:timezone_enabled');
   const timezoneSetting = settings.find((setting) => setting.key === 'general:timezone');
-  const timezoneEnabled = timezoneEnabledSetting?.value !== 'false';
   const value = timezoneSetting?.value || 'Europe/Paris';
 
   return (
@@ -49,12 +46,12 @@ export function TimezoneSettingsCard({
         <CardTitle>{t('timezone.title')}</CardTitle>
         <CardDescription>{t('timezone.description')}</CardDescription>
       </CardHeader>
-      <CardContent className={cn('space-y-2', !timezoneEnabled && 'opacity-70')}>
+      <CardContent className="space-y-2">
         <Label htmlFor="general:timezone">{t('timezone.label')}</Label>
         <Select
           value={value}
           onValueChange={(newValue) => onTimezoneChange('general:timezone', newValue)}
-          disabled={loadingKeys.has('general:timezone') || loadingKeys.has('general:timezone_enabled') || !timezoneEnabled}
+          disabled={loadingKeys.has('general:timezone')}
         >
           <SelectTrigger>
             <SelectValue />

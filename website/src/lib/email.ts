@@ -24,7 +24,13 @@ export type EmailAttachment = {
 
 function parseRecipients(raw: string | null | undefined): string[] {
   if (!raw) return [];
-  return raw
+
+  const normalizedRaw = raw.trim();
+  if (!normalizedRaw || ["false", "0", "off", "no"].includes(normalizedRaw.toLowerCase())) {
+    return [];
+  }
+
+  return normalizedRaw
     .split(/[;,\n\r]+/)
     .map((item) => item.trim().toLowerCase())
     .filter(Boolean);
