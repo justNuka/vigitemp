@@ -1,110 +1,99 @@
-# Better Auth — état courant et préparation d'intégration
+# Better Auth — état courant
 
-> **Branche actuelle : `feature/better-auth-refactor`.**
+> Référence canonique de l'état réellement intégré de Better Auth dans VigiSensys.
 >
-> La fondation Better Auth a été développée volontairement sur une branche longue durée afin de ne pas perturber `dev` pendant les correctifs clients urgents. Le 09/09/2026, après validation automatique et validation fonctionnelle interne, l'utilisateur a explicitement autorisé la préparation de son intégration dans `dev`.
->
-> Ce document décrit l'implémentation réellement présente. `better-auth-migration.md` reste le document d'architecture/roadmap historique ; lorsqu'une affirmation diverge, le code puis ce document font foi.
+> `docs/architecture/better-auth-migration.md` reste la roadmap d'architecture historique. Lorsqu'une affirmation diverge, le code courant puis ce document font foi.
 
 ## 1. Statut d'intégration au 09/09/2026
 
-La branche a été resynchronisée avec le HEAD réel de `dev` :
+La fondation Better Auth a été intégrée dans `dev` via la PR #101 puis publiée dans `main` via la PR de release #102.
 
-```text
-dev : 1e78439a82a835a49012133b5ae8a936ec15f30d
-merge de dev dans feature/better-auth-refactor : 8e6c3e3c237cc28fcce1ec10caab0857a13ccd5d
-```
+La longue branche historique `feature/better-auth-refactor` ne doit plus servir de base aux nouveaux développements. Les prochains lots Better Auth doivent repartir du **HEAD courant de `dev`** sur des branches ciblées (`feature/...`, `fix/...`, `refactor/...`).
 
-Le merge de synchronisation a conservé l'intégralité des changements récents de `dev` (métrologie, sondes IC/IP/IH, conversion platine IP, page Paramètres, téléphonie, etc.) et a réappliqué uniquement le diff Better Auth.
-
-Après synchronisation, la comparaison GitHub `dev...feature/better-auth-refactor` indiquait :
-
-- branche `behind = 0` ;
-- uniquement les fichiers Better Auth / session / accès DB associés dans le diff ;
-- aucun fichier parasite issu des lots Serveur ou Paramètres.
-
-La branche est donc prête à être proposée en PR vers `dev` après le nettoyage documentaire/final effectué dans ce lot.
-
-## 2. État fonctionnel actuel
-
-La première fondation Better Auth est implémentée et testée sur **MySQL 8** et **SQL Server 2022**.
-
-La migration reste volontairement progressive :
+Le runtime reste une transition dual-session :
 
 - `t_utilisateur` reste la source de vérité métier ;
-- Better Auth utilise ses tables techniques `t_auth_*` ;
-- le login applicatif historique `/api/auth/login` reste la façade de connexion ;
-- les contrôles métier VigiSensys restent exécutés avant la création de session : compte archivé, bcrypt, CFR21, mot de passe temporaire, capacité licence, audit et métadonnées machine ;
+- Better Auth utilise les tables techniques `t_auth_*` ;
+- `/api/auth/login` reste la façade de connexion VigiSensys ;
+- les contrôles métier historiques restent exécutés avant création de session : compte archivé, bcrypt, CFR21, mot de passe temporaire, capacité licence, audit et métadonnées machine ;
 - une session Better Auth est créée en parallèle lorsque le runtime est activé ;
-- les JWT historiques restent temporairement émis afin de ne pas casser les routes et consommateurs qui n'ont pas encore été migrés ;
-- le logout manuel et le logout d'inactivité révoquent la session Better Auth et suppriment également les cookies historiques ;
-- les endpoints Better Auth bruts sous `/api/auth-v2/*` restent fermés par défaut afin de ne pas contourner les règles métier du login VigiSensys.
+- les JWT historiques restent temporairement émis pour les routes/consommateurs non encore migrés ;
+- logout manuel et logout d'inactivité révoquent Better Auth et suppriment les cookies historiques ;
+- l'API Better Auth brute sous `/api/auth-v2/*` reste fermée par défaut.
 
-Cette étape est donc une **transition dual-session contrôlée**, pas encore la suppression des JWT historiques.
+## 2. Activation runtime et API publique
 
-## 3. Sécurité de l'intégration dans `dev` / `main`
-
-### 3.1 Better Auth est désactivé par défaut
-
-Le runtime n'est actif que si :
+Le runtime Better Auth est actif lorsque :
 
 ```env
 BETTER_AUTH_ENABLED=true
 ```
 
-Si la variable est absente, vide ou différente d'une valeur vraie reconnue (`1`, `true`, `yes`, `on`), `isBetterAuthRuntimeEnabled()` retourne `false`.
+Les valeurs reconnues comme vraies sont `1`, `true`, `yes` et `on`.
 
-**Conséquence : merger le code Better Auth dans `dev` puis `main` n'active pas Better Auth automatiquement chez les clients existants.** Une installation qui ne possède pas ces variables continue d'utiliser le parcours historique JWT.
-
-### 3.2 API publique fermée indépendamment
-
-Même lorsque le runtime Better Auth est activé, les routes publiques `/api/auth-v2/*` nécessitent en plus :
+L'API publique `/api/auth-v2/*` possède un coupe-circuit indépendant :
 
 ```env
 BETTER_AUTH_PUBLIC_API_ENABLED=true
 ```
 
-Pendant la transition cette variable doit rester absente ou à `false`.
+Pendant la transition VigiSensys cette variable doit rester à `false`. Les appels nécessaires au login métier sont effectués côté serveur via l'API interne Better Auth et n'ont pas besoin d'exposer la façade brute.
 
-Les appels Better Auth nécessaires au login VigiSensys sont effectués côté serveur via l'API interne de la librairie et ne nécessitent pas d'ouvrir cette façade publique.
+### Installations existantes
 
-### 3.3 Secret par installation
+Une installation déjà déployée sans variables Better Auth conserve son comportement historique tant qu'elle n'est pas reconfigurée ou remise en service avec un package récent.
 
-Pour une installation où Better Auth est activé :
+### Nouvelles mises en service
+
+À partir du lot installateur `feature/web-installer-better-auth-config`, le nouvel installateur Web configure volontairement :
 
 ```env
-BETTER_AUTH_SECRET=<secret-aléatoire-d'au-moins-32-caractères>
+BETTER_AUTH_ENABLED=true
+BETTER_AUTH_PUBLIC_API_ENABLED=false
+BETTER_AUTH_SECRET="<secret généré par installation>"
+BETTER_AUTH_URL="<même URL que NEXT_PUBLIC_API_BASE_URL>"
 ```
 
-Le secret ne doit jamais être versionné ni partagé entre installations.
+Le but est que les prochaines mises en service MC2 utilisent directement la fondation Better Auth validée, tout en conservant l'API brute fermée et la compatibilité JWT transitoire.
 
-Le helper :
+## 3. Secret Better Auth
+
+Better Auth exige un secret d'au moins 32 caractères :
+
+```env
+BETTER_AUTH_SECRET=<secret-aléatoire>
+```
+
+Règles :
+
+- ne jamais versionner le secret ;
+- ne jamais l'afficher dans les logs ou le résumé d'installation ;
+- utiliser un secret propre à l'installation ;
+- utiliser un générateur cryptographiquement sûr.
+
+Le helper manuel :
 
 ```text
 website/scripts/configure-better-auth.ps1
 ```
 
-permet de générer/configurer ce secret sans l'afficher. L'intégration complète dans l'installateur reste un chantier ultérieur.
+peut toujours générer/configurer le secret sans l'afficher.
+
+Le package Web officiel (`VigiSensysWebSetup.exe`) génère désormais automatiquement le secret via le mécanisme sécurisé existant de `WebsiteInstallerBootstrapper` (`RandomNumberGenerator`). Le script historique `website/installer/Install-VigitempWeb.ps1` écrit également la configuration Better Auth pour rester cohérent avec le bootstrapper.
 
 ## 4. Base URL et cookies
 
-`BETTER_AUTH_URL` peut être défini explicitement :
+`BETTER_AUTH_URL` est défini explicitement par les nouvelles mises en service. L'installateur lui affecte **la même valeur que `NEXT_PUBLIC_API_BASE_URL`**, c'est-à-dire l'URL publique du site renseignée pendant l'installation.
 
-```env
-BETTER_AUTH_URL=https://vigisensys.local
-```
+Côté runtime, Better Auth normalise cette URL à son origin HTTP/HTTPS.
 
-À défaut, Better Auth réutilise `NEXT_PUBLIC_APP_URL`.
-
-Le premier test terrain a mis en évidence puis permis de corriger un bug du bridge de cookies : les `Set-Cookie` Better Auth pouvaient être perdus si les cookies JWT historiques étaient écrits après eux dans `NextResponse`.
-
-Le comportement final est :
+Le bridge de cookies a été corrigé afin que les cookies Better Auth et JWT historiques coexistent correctement :
 
 1. les cookies JWT historiques sont écrits/effacés ;
-2. les headers `Set-Cookie` Better Auth sont ajoutés en dernier ;
-3. `auth-token`, `refresh-token` et `vigisensys-auth-v2.session_token` peuvent donc coexister pendant la transition.
+2. les headers `Set-Cookie` Better Auth sont ajoutés sans être écrasés ;
+3. `auth-token`, `refresh-token` et `vigisensys-auth-v2.session_token` peuvent coexister pendant la transition.
 
-Un test automatisé dédié existe :
+Test automatisé dédié :
 
 ```text
 website/scripts/test-better-auth-cookie-bridge.ts
@@ -112,20 +101,20 @@ website/scripts/test-better-auth-cookie-bridge.ts
 
 ## 5. Politique de session et inactivité
 
-### 5.1 Session Better Auth
+### Session Better Auth
 
-La session serveur Better Auth est configurée avec :
+La session serveur est configurée avec :
 
 - `expiresIn = 3600 s` ;
 - `updateAge = 300 s` ;
 - refresh de session activé ;
-- cookie cache désactivé pour conserver la base comme source de vérité pendant cette phase.
+- cookie cache désactivé pendant cette phase.
 
-La session est donc une **session glissante d'une heure**.
+La session est donc glissante sur une heure.
 
-### 5.2 Source de vérité de l'inactivité utilisateur
+### Source de vérité de l'inactivité
 
-Le délai de déconnexion automatique continue de venir de :
+Le délai d'inactivité VigiSensys continue de venir de :
 
 ```text
 t_parametre
@@ -133,37 +122,28 @@ Section = CFR21
 Mot_Cle = TEMPS_DECONNEXION_MINUTES
 ```
 
-`/api/parametres/auto-lock` lit cette valeur et `useAutoLock` l'utilise comme durée d'inactivité navigateur.
+`/api/parametres/auto-lock` lit cette valeur et `useAutoLock` l'utilise côté navigateur.
 
-Une valeur positive active l'auto-lock ; une valeur nulle ou négative le désactive selon le comportement de l'endpoint.
+### Activité réelle et multi-onglets
 
-### 5.3 Extension sur activité réelle
+Souris, clavier, scroll, touch et clic repoussent le timer. L'activité est synchronisée entre onglets de la même origine et appelle périodiquement :
 
-Les événements utilisateur pris en compte comprennent notamment souris, clavier, scroll, touch et clic.
+```text
+POST /api/auth/session-touch
+```
 
-Sur activité :
+Le touch est throttlé sous `updateAge` afin d'étendre la session sans spammer le serveur.
 
-1. le timer d'inactivité est repoussé ;
-2. l'activité est propagée aux autres onglets du même navigateur ;
-3. au maximum une fois toutes les quatre minutes, le navigateur appelle `POST /api/auth/session-touch` ;
-4. cet endpoint demande à Better Auth de relire/rafraîchir la session et propage les nouveaux cookies si un update est nécessaire.
-
-Le throttling reste inférieur à `updateAge = 5 min`.
-
-### 5.4 Plusieurs onglets
-
-L'activité est synchronisée par `localStorage` entre les onglets de la même origine. Un onglet oublié ne doit donc pas déconnecter une session alors que l'utilisateur travaille activement dans un autre onglet.
-
-### 5.5 Ajustage et étalonnage
+### Ajustage et étalonnage
 
 Les pages :
 
 - `/admin/metrologie/realiser-ajustage` ;
 - `/admin/metrologie/realiser-etalonnage` ;
 
-neutralisent l'auto-logout local pendant l'opération et maintiennent la session Better Auth via heartbeat.
+neutralisent l'auto-logout local pendant une opération et maintiennent la session Better Auth via heartbeat.
 
-Ce scénario reste le seul test manuel de session non encore exécuté lors du checkpoint du 09/09/2026. Il n'est pas considéré bloquant pour l'intégration du code car le comportement est protégé explicitement et Better Auth reste désactivé par défaut chez les clients.
+Ce scénario longue durée reste à confirmer sur un test métrologie complet ; les autres tests d'activité/inactivité ont été validés.
 
 ## 6. Identité et mots de passe
 
@@ -177,11 +157,11 @@ t_auth_user.vigisensysUserId -> t_utilisateur.Id_Utilisateur
 
 Le `Login` historique devient le username Better Auth.
 
-Lorsque `Adresse_Email` est utilisable et unique, elle peut être reprise comme email technique. Sinon une adresse réservée sous `@auth.invalid` est utilisée uniquement comme pont technique ; elle ne doit jamais servir de destination réelle pour Magic Link, OTP ou reset.
+Lorsque `Adresse_Email` est utilisable et unique, elle peut être reprise comme email technique. Sinon une adresse réservée sous `@auth.invalid` sert uniquement de pont technique et ne doit pas devenir une destination réelle pour OTP/Magic Link/reset.
 
-Le hash bcrypt historique de `t_utilisateur.Mot_De_Passe` reste la source de vérité pendant la transition. Le credential Better Auth est synchronisé depuis ce hash après validation du login métier ; aucun mot de passe en clair n'est persisté.
+Le hash bcrypt historique de `t_utilisateur.Mot_De_Passe` reste la source de vérité pendant la transition. Le credential Better Auth est synchronisé après validation du login métier ; aucun mot de passe en clair n'est persisté.
 
-## 7. Accès MySQL / SQL Server
+## 7. MySQL / SQL Server
 
 La fondation centralise le parsing des connexions dans :
 
@@ -189,34 +169,26 @@ La fondation centralise le parsing des connexions dans :
 website/src/lib/database-connection.ts
 ```
 
-Ce helper est réutilisé par :
+Réutilisé par :
 
 - `src/lib/prisma.ts` ;
 - `src/lib/prisma-chat.ts` ;
 - `src/lib/better-auth/database.ts`.
 
-Il gère notamment :
+Support validé :
 
-- MySQL/MariaDB avec configuration structurée `PrismaMariaDb` ;
+- MySQL 8 / MariaDB adapter ;
 - `allowPublicKeyRetrieval` ;
-- SQL Server et ses propriétés séparées par `;` ;
+- SQL Server 2022 ;
 - credentials URL-encodés ;
 - valeurs SQL Server entre accolades ;
-- `encrypt` et `trustServerCertificate`.
+- `encrypt` / `trustServerCertificate`.
 
-Les clients Prisma ont également été rendus paresseux afin que le build standalone puisse analyser les routes sans exiger une connexion DB de production à l'import des modules.
+Les clients Prisma sont initialisés paresseusement afin que le build standalone puisse analyser les routes sans connexion DB de production à l'import.
 
-## 8. Validation automatique finale avant PR
+## 8. Validation Better Auth réalisée avant intégration
 
-Le workflow temporaire :
-
-```text
-.github/workflows/_temp-better-auth-foundation.yml
-```
-
-a été conservé le temps de tester **la branche Better Auth resynchronisée avec le vrai HEAD de `dev`**.
-
-Dernière validation complète :
+Dernière validation complète de la fondation avant PR #101 :
 
 ```text
 GitHub Actions run : 34327210180
@@ -225,41 +197,56 @@ Commit testé       : 8e6c3e3c237cc28fcce1ec10caab0857a13ccd5d
 
 Résultat :
 
-- `static-checks` : ✅
-  - `pnpm install --frozen-lockfile` ;
-  - génération Prisma MySQL ;
-  - TypeScript ;
-  - ESLint du lot Better Auth ;
-  - validation du helper PowerShell ;
-  - **build Next standalone production** ;
-- `mysql-foundation` : ✅
-  - baseline 0.90.1 ;
-  - migration 0.90.2 ;
-  - schéma final ;
-  - provisioning, credentials, session, refresh et logout Better Auth ;
-- `mssql-foundation` : ✅ avec les mêmes validations sur SQL Server 2022.
+- TypeScript : ✅ ;
+- ESLint ciblé : ✅ ;
+- build Next standalone production : ✅ ;
+- helper PowerShell : ✅ ;
+- MySQL foundation : ✅ ;
+- SQL Server foundation : ✅ ;
+- provisioning / credentials / session / refresh / logout : ✅.
 
-Le workflow était volontairement temporaire et a été **supprimé après cette validation réussie**, avant la PR finale vers `dev`. Les scripts de test restent versionnés afin de pouvoir être réutilisés dans une future CI permanente.
+Le workflow temporaire de validation Better Auth a été supprimé après succès ; les scripts de test restent versionnés.
 
-## 9. Validation manuelle effectuée
-
-Validation réalisée sur l'environnement interne / serveur de test avec Better Auth activé.
+## 9. Validation manuelle
 
 | Scénario | État |
 | --- | --- |
-| Connexion classique + présence du cookie Better Auth | ✅ validé |
-| Mouvement souris / navigation sans `401 session-touch` | ✅ validé |
+| Connexion classique + cookie Better Auth | ✅ validé |
+| Activité souris/navigation sans `401 session-touch` | ✅ validé |
 | Activité au-delà du timeout : session conservée | ✅ validé |
 | Aucune activité au-delà du timeout : déconnexion | ✅ validé |
-| Deux onglets : pas de déconnexion prématurée | ✅ validé |
-| Logout manuel : cookies et session invalidés | ✅ validé |
+| Multi-onglets | ✅ validé |
+| Logout manuel | ✅ validé |
 | Métrologie au-delà du timeout | ⏳ à tester ultérieurement |
 
-La création des lignes `t_auth_user`, `t_auth_account` et `t_auth_session` a également été observée sur l'environnement de test. Les sessions créées respectaient l'expiration d'une heure.
+La création des lignes `t_auth_user`, `t_auth_account` et `t_auth_session` a été observée sur l'environnement interne. Les sessions créées respectaient l'expiration d'une heure.
 
-## 10. Ce qui reste volontairement à migrer
+## 10. Mise en service / installateur Web
 
-Cette première intégration n'enlève pas encore la plomberie JWT historique.
+Fichiers principaux :
+
+- `website/WebsiteInstallerBootstrapper/MainForm.cs` — installateur graphique utilisé dans le package standalone ;
+- `website/WebsiteInstallerBootstrapper/InstallerHelpers.cs` — génération sécurisée des secrets ;
+- `website/installer/Prepare-StandaloneBuild.ps1` — construit le package et publie `VigiSensysWebSetup.exe` ;
+- `website/installer/Install-VigitempWeb.ps1` — chemin PowerShell manuel/historique ;
+- `website/installer/README.md` — documentation de mise en service ;
+- `website/scripts/configure-better-auth.ps1` — configuration manuelle complémentaire.
+
+Checklist mise en service Better Auth :
+
+- [ ] construire/publier `WebsiteInstallerBootstrapper` ;
+- [ ] exécuter une nouvelle mise en service sur VM de test ;
+- [ ] vérifier dans `.next/standalone/.env` la présence des quatre variables Better Auth ;
+- [ ] vérifier que `BETTER_AUTH_URL` est identique à `NEXT_PUBLIC_API_BASE_URL` ;
+- [ ] vérifier que le secret est non vide et >= 32 caractères ;
+- [ ] vérifier que le secret n'apparaît ni dans le résumé ni dans les logs ;
+- [ ] vérifier que le service Web démarre ;
+- [ ] se connecter et constater la création d'une session Better Auth ;
+- [ ] confirmer que `/api/auth-v2/*` reste fermé avec `BETTER_AUTH_PUBLIC_API_ENABLED=false`.
+
+## 11. Ce qui reste volontairement à migrer
+
+La première intégration n'enlève pas encore la plomberie JWT historique.
 
 Restent notamment :
 
@@ -270,7 +257,6 @@ Restent notamment :
 - remplacement du refresh JWT historique ;
 - comptage licence à partir des vraies sessions Better Auth ;
 - suppression finale des cookies `token` / `auth-token` / `refresh-token` ;
-- adaptation complète de l'installateur pour générer/persister automatiquement le secret Better Auth ;
 - tests E2E navigateur du cycle de session ;
 - reset password Better Auth ;
 - Microsoft ;
@@ -282,9 +268,9 @@ Restent notamment :
 - i18n Better Auth ;
 - Have I Been Pwned pour les mots de passe.
 
-Ces évolutions doivent rester découpées et ne doivent pas être mélangées à la PR d'intégration de la fondation.
+Ces évolutions doivent rester découpées en lots ciblés depuis le HEAD courant de `dev`.
 
-## 11. Fichiers principaux
+## 12. Fichiers Better Auth principaux
 
 - `website/src/lib/better-auth/auth.ts`
 - `website/src/lib/better-auth/database.ts`
@@ -305,16 +291,13 @@ Ces évolutions doivent rester découpées et ne doivent pas être mélangées �
 - `website/scripts/test-better-auth-foundation.ts`
 - `website/scripts/test-better-auth-cookie-bridge.ts`
 
-## 12. Reprise après intégration
+## 13. Règle de reprise
 
-Tant que la PR finale n'est pas mergée, `feature/better-auth-refactor` reste la branche de référence du chantier.
+Pour tout nouveau travail d'authentification :
 
-Après merge dans `dev` :
-
-1. vérifier réellement le SHA de merge et le nouveau HEAD de `dev` ;
-2. considérer la longue branche `feature/better-auth-refactor` comme historique ;
-3. pour les prochains lots Better Auth, repartir du **HEAD courant de `dev`** sur des branches ciblées (`refactor/...`, `feature/...`, `fix/...`) comme pour les autres travaux ;
-4. garder `BETTER_AUTH_ENABLED` désactivé sur les installations clientes tant que MC2 n'a pas décidé de l'activer ;
-5. continuer à lire `better-auth-migration.md` puis ce document avant chaque nouveau lot d'authentification.
-
-Ne jamais merger automatiquement la PR finale : le merge reste effectué par l'utilisateur.
+1. vérifier le HEAD réel de `dev`, les PR ouvertes et les dernières PR d'auth ;
+2. lire `better-auth-migration.md` puis ce document ;
+3. repartir du HEAD courant de `dev` sur une branche ciblée ;
+4. conserver les invariants métier VigiSensys (CFR21, licences, audit, compte temporaire, droits) ;
+5. ne pas ouvrir l'API Better Auth brute sans besoin explicite et revue de sécurité ;
+6. ne jamais merger automatiquement les PR.
