@@ -58,6 +58,8 @@ export const frSupplements: MessageCatalog = {
   },
   locationsForm: {
     telephony: {
+      planning_info_title: "Emails d'alarme et planning",
+      planning_info_description: "Le planning ne limite pas les horaires d'envoi des emails : il modifie les consignes applicables. Sans règle de planning, les consignes de base restent actives en continu ; si la surveillance et le mailing sont actifs, une alarme peut donc générer un email à toute heure.",
       apply_groups_title: "Appliquer ces contacts aux groupes sélectionnés",
       apply_groups_description: "La liste remplacera les contacts mail de tous les autres lieux appartenant aux groupes sélectionnés.",
       apply_groups_empty: "Sélectionnez au moins un groupe dans l'onglet Général.",
@@ -356,6 +358,8 @@ export const enSupplements: MessageCatalog = {
   },
   locationsForm: {
     telephony: {
+      planning_info_title: "Alarm emails and planning",
+      planning_info_description: "Planning does not restrict email delivery times: it changes the applicable setpoints. Without a planning rule, the location's base setpoints remain active continuously; if monitoring and email notifications are enabled, an alarm can therefore generate an email at any time.",
       apply_groups_title: "Apply these contacts to selected groups",
       apply_groups_description: "This list will replace the email contacts of all other locations belonging to the selected groups.",
       apply_groups_empty: "Select at least one group in the General tab.",

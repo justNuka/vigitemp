@@ -48,7 +48,10 @@ export function LocationsClient() {
   const [isEditOpen, setIsEditOpen] = useState(false)
   const [isArchiveOpen, setIsArchiveOpen] = useState(false)
   const [isCreateNoSondeOpen, setIsCreateNoSondeOpen] = useState(false)
-  const [pendingCreate, setPendingCreate] = useState<LocationFormData | null>(null)
+  const [pendingCreate, setPendingCreate] = useState<{
+    values: LocationFormData
+    submitMode: 'stay' | 'close'
+  } | null>(null)
   const [statusTab, setStatusTab] = useState<'active' | 'archived'>('active')
   const [tabFilter, setTabFilter] = useState<'all' | 'unassigned'>('all')
   const shouldLoadFormData = isCreateOpen || isEditOpen
@@ -102,7 +105,7 @@ export function LocationsClient() {
   })
 
   const createMutation = useMutation({
-    mutationFn: async (data: Partial<LocationRow>) => postJson('/api/lieux', data),
+    mutationFn: async (data: Partial<LocationRow>) => postJson<LocationRow>('/api/lieux', data),
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['locations'] })
       queryClient.invalidateQueries({ queryKey: ['available-sensors'] })
@@ -111,8 +114,6 @@ export function LocationsClient() {
       if (!variables?.Sonde_Numero_Serie) {
         toast.message(t('toast.create_no_sensor'))
       }
-      setIsCreateOpen(false)
-      resetForm()
     },
     onError: (error) => {
       toast.error(error instanceof Error ? error.message : t('toast.create_error'))
@@ -120,24 +121,26 @@ export function LocationsClient() {
   })
 
   const updateMutation = useMutation({
-    mutationFn: async (data: Partial<LocationRow>) => {
-      if (!selectedDisplayedLocation?.Id_Lieu) throw new Error(t('errors.no_location_selected'))
-      return patchJson(`/api/lieux/${selectedDisplayedLocation.Id_Lieu}`, data)
+    mutationFn: async ({ data }: { data: Partial<LocationRow>; submitMode: 'stay' | 'close' }) => {
+      if (!selectedLocation?.Id_Lieu) throw new Error(t('errors.no_location_selected'))
+      return patchJson(`/api/lieux/${selectedLocation.Id_Lieu}`, data)
     },
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['locations'] })
       queryClient.invalidateQueries({ queryKey: ['available-sensors'] })
       router.refresh()
       toast.success(t('toast.update_success'))
-      if (selectedDisplayedLocation?.Id_Lieu) {
+      if (selectedLocation?.Id_Lieu) {
         window.dispatchEvent(
           new CustomEvent('vigitemp:lieu-updated', {
-            detail: { idLieu: selectedDisplayedLocation.Id_Lieu },
+            detail: { idLieu: selectedLocation.Id_Lieu },
           }),
         )
       }
-      setIsEditOpen(false)
-      setSelectedLocation(null)
+      if (variables.submitMode === 'close') {
+        setIsEditOpen(false)
+        setSelectedLocation(null)
+      }
     },
     onError: (error) => {
       toast.error(error instanceof Error ? error.message : t('toast.update_error'))
@@ -260,13 +263,28 @@ export function LocationsClient() {
         locationTemplates={locationTemplates}
         isSubmitting={createMutation.isPending}
         onCancel={() => setIsCreateOpen(false)}
-        onSubmit={(values) => {
+        onSubmit={async (values, submitMode = 'stay') => {
           if (!values.Sonde_Numero_Serie) {
-            setPendingCreate(values)
+            setPendingCreate({ values, submitMode })
             setIsCreateNoSondeOpen(true)
-            return
+            return { saved: false }
           }
-          createMutation.mutate(normalizePayload(values))
+
+          const created = await createMutation.mutateAsync(normalizePayload(values))
+          const committedValues: LocationFormData = {
+            ...values,
+            Id_Lieu: created.Id_Lieu,
+            Commentaire_Action: null,
+          }
+
+          if (submitMode === 'stay') {
+            form.reset(committedValues)
+            setSelectedLocation(created)
+            setIsCreateOpen(false)
+            setIsEditOpen(true)
+          }
+
+          return { saved: true, values: committedValues }
         }}
       />
 
@@ -282,7 +300,10 @@ export function LocationsClient() {
         locationTemplates={locationTemplates}
         isSubmitting={updateMutation.isPending}
         onCancel={() => setIsEditOpen(false)}
-        onSubmit={(values) => updateMutation.mutate(normalizePayload(values))}
+        onSubmit={async (values, submitMode = 'stay') => {
+          await updateMutation.mutateAsync({ data: normalizePayload(values), submitMode })
+          return { saved: true }
+        }}
       />
 
       <AlertDialog open={isArchiveOpen} onOpenChange={setIsArchiveOpen}>
@@ -313,11 +334,34 @@ export function LocationsClient() {
           <div className="flex justify-end gap-2">
             <AlertDialogCancel>{tCommon('cancel')}</AlertDialogCancel>
             <AlertDialogAction
-              onClick={() => {
+              onClick={async () => {
                 if (!pendingCreate) return
-                createMutation.mutate(normalizePayload(pendingCreate, true))
-                setPendingCreate(null)
-                setIsCreateNoSondeOpen(false)
+                try {
+                  const created = await createMutation.mutateAsync(
+                    normalizePayload(pendingCreate.values, true),
+                  )
+                  const committedValues: LocationFormData = {
+                    ...pendingCreate.values,
+                    Id_Lieu: created.Id_Lieu,
+                    Lieu_Etat: 'D',
+                    Commentaire_Action: null,
+                  }
+
+                  if (pendingCreate.submitMode === 'stay') {
+                    form.reset(committedValues)
+                    setSelectedLocation(created)
+                    setIsCreateOpen(false)
+                    setIsEditOpen(true)
+                  } else {
+                    setIsCreateOpen(false)
+                    resetForm()
+                  }
+
+                  setPendingCreate(null)
+                  setIsCreateNoSondeOpen(false)
+                } catch {
+                  // createMutation.onError shows the error and preserves the main form.
+                }
               }}
               disabled={createMutation.isPending}
             >

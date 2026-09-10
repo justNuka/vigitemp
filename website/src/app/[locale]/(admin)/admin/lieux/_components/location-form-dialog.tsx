@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import type { AvailableSensor } from '@/hooks/useAvailableSensors';
 import type { Group } from '@/hooks/useGroups';
@@ -64,6 +64,11 @@ function cleanupStaleModalLocks() {
   }, 0);
 }
 
+export type LocationFormSubmitResult = {
+  saved: boolean;
+  values?: LocationFormData;
+};
+
 type LocationFormDialogProps = {
   open: boolean;
   mode: LocationFormMode;
@@ -81,7 +86,10 @@ type LocationFormDialogProps = {
   showActionComment?: boolean;
   requireActionComment?: boolean;
   onCancel: () => void;
-  onSubmit: (values: LocationFormData, submitMode?: "stay" | "close") => void | Promise<void>;
+  onSubmit: (
+    values: LocationFormData,
+    submitMode?: "stay" | "close",
+  ) => void | LocationFormSubmitResult | Promise<void | LocationFormSubmitResult>;
 };
 
 export function LocationFormDialog({
@@ -154,13 +162,18 @@ export function LocationFormDialog({
       toast.error(validation.error.issues[0]?.message ?? tCommon('error'));
       return;
     }
-    await onSubmit(normalized, 'stay');
-    const nextCommitted = {
-      ...normalized,
-      Commentaire_Action: null,
-    };
-    setLastCommittedValues(nextCommitted);
-    resolvedForm.reset(nextCommitted);
+    try {
+      const result = await onSubmit(normalized, 'stay');
+      if (result?.saved === false) return;
+      const nextCommitted = {
+        ...(result?.values ?? normalized),
+        Commentaire_Action: null,
+      };
+      setLastCommittedValues(nextCommitted);
+      resolvedForm.reset(nextCommitted);
+    } catch {
+      // The parent mutation owns the user-facing error message.
+    }
   }, (errors) => showFormValidationToast(errors));
 
   const submitAndClose = resolvedForm.handleSubmit(async (values) => {
@@ -181,9 +194,14 @@ export function LocationFormDialog({
       toast.error(validation.error.issues[0]?.message ?? tCommon('error'));
       return;
     }
-    await onSubmit(normalized, 'close');
-    setLastCommittedValues(normalized);
-    onCancel();
+    try {
+      const result = await onSubmit(normalized, 'close');
+      if (result?.saved === false) return;
+      setLastCommittedValues(result?.values ?? normalized);
+      onCancel();
+    } catch {
+      // The parent mutation owns the user-facing error message.
+    }
   }, (errors) => showFormValidationToast(errors));
   const memoryKey = `location-form:${mode}:${resolvedForm.watch('Id_Lieu') ?? 'new'}`;
   const resetValues = useMemo(() => (
@@ -256,7 +274,10 @@ export function LocationFormDialog({
       ...currentValues,
       ...patch,
     }, {
-      keepDirty: true,
+      // Keep the committed baseline so template values are explicit changes.
+      // This distinguishes a template Lieu_Etat="D" from the temporary D
+      // automatically applied before a sensor is selected.
+      keepDefaultValues: true,
       keepTouched: true,
     });
     toast.success(t('template.toast_apply_success', { name: selectedTemplate.Nom_Template }));
