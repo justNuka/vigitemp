@@ -1,0 +1,99 @@
+name: temp-gso-backlog-patch
+
+on:
+  push:
+    branches:
+      - "fix/gso-import-address-normalization"
+    paths:
+      - ".github/workflows/_temp-gso-backlog-patch.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/gso-import-address-normalization
+          fetch-depth: 0
+
+      - name: Update B20-002
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path("website/docs/backlog-retours-17-08-2026.md")
+          text = path.read_text(encoding="utf-8-sig")
+          start_marker = "## B20-002 — Import ajustage : identité d’une GSO simple capteur incorrecte"
+          next_marker = "\n---\n\n## B20-003 — Export multiple des XML d’ajustage depuis les sondes"
+          start = text.index(start_marker)
+          end = text.index(next_marker, start)
+
+          replacement = '''## B20-002 — Import ajustage : identité d’une GSO simple capteur incorrecte
+
+**Statut : `PR_OUVERTE` — PR #111 — branche `fix/gso-import-address-normalization`**
+
+### Retour initial du 20/08/2026
+
+Lorsqu’un XML d’ajustage créait automatiquement une **GSO simple capteur**, les valeurs stockées ne suivaient pas la convention attendue. La PR #33 avait alors centralisé la reconstruction du numéro de série et de l’adresse GSO pour les imports.
+
+### Précision terrain du 10/09/2026
+
+La règle d’adresse retenue dans la PR #33 ajoutait `-T` aux GSO simples (`SOIT` / `SOET`). Cette convention a été corrigée : `Adresse_Sonde` doit contenir uniquement l’adresse physique, sans préfixe de type et sans suffixe artificiel.
+
+Exemple confirmé :
+
+- `Sonde_Numero_Serie = SOIT-10007193` ;
+- `Adresse_Sonde = 10007193`.
+
+Lorsqu’une adresse porte réellement un suffixe de canal `-T` ou `-H`, ce suffixe est conservé, mais le préfixe de type (`SOIT`, `SOET`, `SOIH`, `SOEH`) ne doit jamais faire partie de `Adresse_Sonde`.
+
+### Correctif PR #111
+
+La règle reste centralisée dans `website/src/lib/sensor-naming.ts`, via `buildImportedSensorStorageIdentity()` et est donc appliquée sans duplication aux parcours de prévisualisation, import unitaire et import multiple :
+
+- `SOIT` / `SOET` : numéro de série conservé sous la forme `<TYPE>-<numero>` ;
+- `SOIT` / `SOET` : `Adresse_Sonde = <numero>` ;
+- adresses portant réellement un canal : `<numero>-T` ou `<numero>-H` ;
+- aucun préfixe de type dans `Adresse_Sonde` ;
+- `Sonde_Type` et `Est_Sonde_GSO` restent inchangés ;
+- l’ajustage importé continue de référencer le même numéro de série que la sonde créée ou mise à jour.
+
+Fichiers principaux :
+
+- `website/src/lib/sensor-naming.ts` ;
+- `website/scripts/test-gso-import-address-normalization.ts` ;
+- `website/docs/gso-adjustment-import-address-10-09-2026.md`.
+
+Validation automatique : GitHub Actions run `34463664299` — test ciblé, ESLint, TypeScript et build Next.js production réussis.
+
+### Validation terrain restante
+
+- importer un XML `SOIT-10007193` et vérifier `Sonde_Numero_Serie = SOIT-10007193` et `Adresse_Sonde = 10007193` ;
+- refaire avec `SOET` ;
+- tester une GSO avec suffixe `-T` puis `-H` et vérifier que seul le suffixe est conservé dans l’adresse ;
+- tester l’import unitaire et l’import multiple ;
+- tester une sonde GSO déjà existante ;
+- vérifier que l’ajustage importé référence toujours le même numéro de série que la sonde ;
+- vérifier une sonde non-GSO en non-régression.
+'''
+
+          path.write_text(text[:start] + replacement + text[end:], encoding="utf-8")
+          PY
+
+      - name: Commit backlog update
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add website/docs/backlog-retours-17-08-2026.md
+          git diff --cached --check
+          if git diff --cached --quiet; then
+            echo "Backlog already up to date"
+            exit 0
+          fi
+          git commit -m "docs(metrology): actualiser B20-002 pour les adresses GSO"
+          git push origin HEAD:fix/gso-import-address-normalization
