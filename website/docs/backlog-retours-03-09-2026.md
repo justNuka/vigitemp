@@ -252,3 +252,70 @@ Ajouter sur le Dashboard admin des cards synthétiques pour les services optionn
 Pour la Téléphonie, respecter le contrat de licence : si l'option `telephonie` n'est pas présente, la card peut rester visible afin de montrer la fonctionnalité disponible dans VigiSensys, mais doit utiliser le même principe de verrouillage visuel que les paramètres (voile/flou progressif + message de fonctionnalité non disponible avec la licence) et ne proposer aucune action utilisable.
 
 Prévoir si possible un composant de card générique/réutilisable pour pouvoir ajouter plus tard d'autres services sans dupliquer la structure du Dashboard admin.
+
+---
+
+## Lot — fiabilisation du formulaire de lieu (retours du 10/09/2026)
+
+- Branche : `fix/location-form-reliability`
+- PR : #112 — `fix(locations): fiabiliser templates, modules et enregistrement`
+- Base : `dev` au commit `8e952dd775bf5984df5038cb3d0183320e7f5e9c`
+- Statut : `PR_OUVERTE` — validation terrain à réaliser
+
+### 6. Template appliqué avant la sonde — état de surveillance écrasé
+
+Un template avec `Lieu_Etat = D` était réécrit en `S` lors de la sélection de la sonde lorsqu'il avait été appliqué avant celle-ci. Le formulaire confondait le `D` explicite du template avec le `D` temporaire appliqué automatiquement tant qu'aucune sonde n'est sélectionnée.
+
+Correctif : les valeurs d'un template restent des modifications explicites ; seul le `D` automatique d'un nouveau lieu est converti en `S` à la première sélection. Les templates `D` et `S` sont donc tous deux conservés.
+
+### 7. `Enregistrer et rester` fermait la fenêtre
+
+Le dialogue transmettait bien `stay` / `close`, mais `locations-client.tsx` fermait systématiquement les modales après les mutations. Le mode est maintenant respecté. En création, `Enregistrer et rester` bascule le lieu nouvellement créé vers le mode modification avec son `Id_Lieu`, de sorte que les sauvegardes suivantes effectuent un `PATCH` et ne créent pas de doublon. Le cas sans sonde conserve aussi le mode demandé après confirmation.
+
+### 8. Contacts email sans planning — comportement clarifié
+
+Le planning du lieu n'est pas un planning d'envoi des emails. Les contacts `t_lieu_mail_tel` sont utilisés lors des événements d'alarme indépendamment de `t_lieu_planning_regle`. Sans règle de planning, les consignes de base restent actives en continu ; si la surveillance et les notifications email sont actives, une alarme peut donc générer un email à toute heure.
+
+L'onglet Mailing affiche désormais explicitement cette règle en FR/EN. Aucun blocage artificiel n'est ajouté à l'enregistrement de contacts sans planning.
+
+### 9. Champ Module impossible à sélectionner
+
+L'effet React synchronisait `Id_Module` avec le module de la sonde à chaque modification du champ et écrasait donc immédiatement le choix manuel. Le module de la sonde sert désormais uniquement d'initialisation lors d'un changement de sonde ; un choix manuel reste ensuite conservé. Retirer la sonde remet le module à `null`.
+
+### Fichiers principaux
+
+- `website/src/app/[locale]/(admin)/admin/lieux/_components/location-form-dialog.tsx`
+- `website/src/app/[locale]/(admin)/admin/lieux/locations-client.tsx`
+- `website/src/app/[locale]/(admin)/admin/lieux/_components/location-form-tab-general.tsx`
+- `website/src/app/[locale]/(admin)/admin/lieux/_components/general-tab/location-sensor-form-state.ts`
+- `website/src/app/[locale]/(admin)/admin/lieux/_components/location-form-tab-telephony.tsx`
+- `website/src/messages/supplements.ts`
+- `website/scripts/test-location-form-sensor-state.ts`
+
+### Validation technique
+
+GitHub Actions run `34476223814` exécuté sur le même arbre fonctionnel avant nettoyage de la branche :
+
+- [x] installation pnpm avec lockfile figé ;
+- [x] génération Prisma MySQL ;
+- [x] test ciblé des transitions sonde / module / surveillance ;
+- [x] ESLint ciblé ;
+- [x] TypeScript `tsc --noEmit` ;
+- [x] build Next.js production ;
+- [x] nouveaux textes Mailing FR/EN présents ; le check i18n global reste rouge uniquement sur les 15 occurrences préexistantes de `calibration-workflow-client.tsx` ;
+- [x] historique de branche nettoyé et fichiers/workflows temporaires retirés du diff final.
+
+### Validation terrain
+
+- [ ] appliquer un template `D` avant la sonde, sélectionner la sonde : rester en `D` ;
+- [ ] refaire avec un template `S` : rester en `S` ;
+- [ ] sans template, sélectionner une sonde sur un nouveau lieu : conserver le défaut `S` ;
+- [ ] choisir manuellement un autre module : le choix reste affiché et est enregistré ;
+- [ ] changer de sonde : le module est réinitialisé depuis la nouvelle sonde ;
+- [ ] modification : `Enregistrer et rester` garde la fenêtre ouverte ;
+- [ ] création : `Enregistrer et rester`, modifier un autre champ puis enregistrer à nouveau sans doublon ;
+- [ ] tester `Enregistrer et fermer` en création et modification ;
+- [ ] tester la création sans sonde avec les deux modes ;
+- [ ] vérifier le message Mailing en FR/EN ;
+- [ ] déclencher une alarme de test sur un lieu sans planning et confirmer le comportement email attendu.
+

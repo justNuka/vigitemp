@@ -19,6 +19,7 @@ import { LocationGeneralSettingsSection } from './general-tab/location-general-s
 import { LocationSensorSection } from './general-tab/location-sensor-section'
 import { LocationSetpointsSection } from './general-tab/location-setpoints-section'
 import type { LocationFormData } from './location-form-types'
+import { resolveLocationSensorFormState } from './general-tab/location-sensor-form-state'
 
 type Props = {
   sites: SiteSimple[]
@@ -37,11 +38,15 @@ export function LocationFormTabGeneral({ sites, groups, availableSensors, module
     getValues,
     setValue,
     watch,
-    formState: { errors },
+    formState: { errors, dirtyFields },
   } = useFormContext<LocationFormData>()
   const autoDisabledMonitoringRef = useRef(false)
+  const previousSensorSerialRef = useRef<string | null | undefined>(undefined)
 
   const formData = watch()
+  if (previousSensorSerialRef.current === undefined) {
+    previousSensorSerialRef.current = formData.Sonde_Numero_Serie ?? null
+  }
   const selectedSensor = useMemo(
     () => availableSensors.find((sensor) => sensor.Sonde_Numero_Serie === formData.Sonde_Numero_Serie),
     [availableSensors, formData.Sonde_Numero_Serie],
@@ -71,31 +76,41 @@ export function LocationFormTabGeneral({ sites, groups, availableSensors, module
   }, [formData.Frequence, isGsoSensor, setIfChanged])
 
   useEffect(() => {
-    if (!formData.Sonde_Numero_Serie) {
-      if (formData.Id_Module !== null) {
-        setIfChanged('Id_Module', null)
-      }
-      if (formData.Lieu_Etat !== 'D') {
-        if (!Object.is(getValues('Lieu_Etat'), 'D')) {
-          setValue('Lieu_Etat', 'D', { shouldDirty: true })
-        }
-        autoDisabledMonitoringRef.current = true
-      }
-      return
+    const sensorSerial = formData.Sonde_Numero_Serie ?? null
+    const sensorChanged = previousSensorSerialRef.current !== sensorSerial
+    const nextState = resolveLocationSensorFormState({
+      sensorSerial,
+      sensorChanged,
+      selectedSensorModuleId: selectedSensor?.Id_Module ?? null,
+      currentModuleId: formData.Id_Module ?? null,
+      monitoringState: formData.Lieu_Etat ?? null,
+      monitoringWasAutoDisabled: autoDisabledMonitoringRef.current,
+      monitoringExplicitlySet: Boolean(dirtyFields.Lieu_Etat),
+      moduleExplicitlySet: Boolean(dirtyFields.Id_Module),
+    })
+
+    if ((formData.Id_Module ?? null) !== nextState.moduleId) {
+      setValue('Id_Module', nextState.moduleId, { shouldDirty: false })
     }
 
-    const nextModuleId = selectedSensor?.Id_Module ?? null
-    if ((formData.Id_Module ?? null) !== (nextModuleId ?? null)) {
-      setIfChanged('Id_Module', nextModuleId)
+    if ((formData.Lieu_Etat ?? null) !== nextState.monitoringState) {
+      setValue('Lieu_Etat', nextState.monitoringState, {
+        shouldDirty: false,
+        shouldValidate: Boolean(sensorSerial),
+      })
     }
 
-    if (autoDisabledMonitoringRef.current && formData.Lieu_Etat === 'D') {
-      if (!Object.is(getValues('Lieu_Etat'), 'S')) {
-        setValue('Lieu_Etat', 'S', { shouldDirty: true, shouldValidate: true })
-      }
-      autoDisabledMonitoringRef.current = false
-    }
-  }, [formData.Id_Module, formData.Lieu_Etat, formData.Sonde_Numero_Serie, getValues, selectedSensor?.Id_Module, setIfChanged, setValue])
+    autoDisabledMonitoringRef.current = nextState.monitoringWasAutoDisabled
+    previousSensorSerialRef.current = sensorSerial
+  }, [
+    dirtyFields.Id_Module,
+    dirtyFields.Lieu_Etat,
+    formData.Id_Module,
+    formData.Lieu_Etat,
+    formData.Sonde_Numero_Serie,
+    selectedSensor?.Id_Module,
+    setValue,
+  ])
 
   return (
     <TabsContent value="general" className="space-y-4">
