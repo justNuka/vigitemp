@@ -1,0 +1,46 @@
+name: temp-gso-import-address-validate
+
+on:
+  push:
+    branches:
+      - "fix/gso-import-address-normalization"
+
+permissions:
+  contents: read
+
+jobs:
+  web:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: website
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: website/pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma clients
+        run: pnpm prisma:generate:mysql
+
+      - name: Test GSO import address normalization
+        run: pnpm exec tsx scripts/test-gso-import-address-normalization.ts
+
+      - name: Lint changed files
+        run: pnpm exec eslint src/lib/sensor-naming.ts scripts/test-gso-import-address-normalization.ts
+
+      - name: TypeScript
+        run: pnpm exec tsc --noEmit
+
+      - name: Production build
+        run: pnpm build
