@@ -37,6 +37,7 @@ import { fetchJson, getJson, HttpError, isUnauthorizedError } from "@/lib/http"
 import { formatDbDateTime } from "@/lib/date-display"
 import { formatMeasureValue } from "@/lib/measurements"
 import { MetrologySubpagesCards } from "../_components/metrology-subpages-cards"
+import { MetrologyStartFeedback } from "../_components/metrology-start-feedback"
 
 type Step = "selection" | "adjustment"
 type CoefficientKey = "a" | "b" | "c"
@@ -366,8 +367,9 @@ export function AdjustmentWorkflowClient() {
       setStep("adjustment")
       await refreshSession()
     },
-    onError: (error) => {
-      setActionError(getActionErrorMessage(error))
+    onError: () => {
+      // The start error is rendered directly in the Run card, next to the action.
+      setActionError(null)
     },
   })
 
@@ -1325,6 +1327,11 @@ export function AdjustmentWorkflowClient() {
                         <CardDescription>{t("adjustment.cards.run.description")}</CardDescription>
                       </CardHeader>
                       <CardContent className="space-y-3">
+                        <MetrologyStartFeedback
+                          error={startMutation.error}
+                          isPending={startMutation.isPending}
+                          sensors={selectedSensors}
+                        />
                         <Button
                           type="button"
                           className="w-full"

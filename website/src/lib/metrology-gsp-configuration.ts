@@ -2,6 +2,7 @@ import { getHotlineServerConfig } from "@/lib/hotline-config"
 import { log } from "@/lib/logger"
 import { prisma } from "@/lib/prisma"
 import { getSensorFamilyFromSerial } from "@/lib/sensor-naming"
+import { runSequentialMetrologyConfiguration } from "@/lib/metrology-gsp-sequential-configuration"
 
 const DEFAULT_SERVER_PORT = 5310
 const COEFFICIENT_EPSILON = 1e-12
@@ -385,8 +386,19 @@ export async function applyGspMetrologyConfiguration(
   coefficientOverrides?: Readonly<Record<number, GspCoefficientOverride>>,
 ) {
   const configurations = await loadConfigurations(sensorIds, mode, coefficientOverrides)
-  for (const config of configurations) {
-    await sendConfiguration(config, mode, operationContext)
-  }
-  return configurations.map((config) => config.sensorId)
+  const appliedConfigurations = await runSequentialMetrologyConfiguration(configurations, {
+    apply: (config) => sendConfiguration(config, mode, operationContext),
+    rollback: (config) => sendConfiguration(config, "normal", operationContext),
+    rollbackOnFailure: mode !== "normal",
+    onRollbackError: (config, rollbackError) => {
+      log.error("METROLOGY_GSP", "partial_econ_rollback_failed", {
+        sensorId: config.sensorId,
+        serial: config.serial,
+        failedMode: mode,
+        operationContext,
+        error: rollbackError instanceof Error ? rollbackError.message : String(rollbackError),
+      })
+    },
+  })
+  return appliedConfigurations.map((config) => config.sensorId)
 }
