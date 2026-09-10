@@ -319,3 +319,59 @@ GitHub Actions run `34476223814` exécuté sur le même arbre fonctionnel avant 
 - [ ] vérifier le message Mailing en FR/EN ;
 - [ ] déclencher une alarme de test sur un lieu sans planning et confirmer le comportement email attendu.
 
+---
+
+## Lot — échecs de démarrage Ajustage / Étalonnage visibles et rollback GSP (10/09/2026)
+
+- Branche : `fix/metrology-gsp-partial-start-rollback`
+- PR : #113 — `fix(metrology): rendre les échecs de démarrage explicites`
+- Base : `dev` au commit `482e0506156ffd130c530110b049f4035e1fab41`
+- Statut : `PR_OUVERTE` — validation terrain à réaliser
+
+### Retour terrain et cause matérielle confirmée
+
+Lors d'un démarrage avec plusieurs GSP, l'interface attendait la préparation des sondes puis affichait l'erreur uniquement dans le bandeau global tout en haut de la page. L'utilisateur pouvait donc ne pas la voir sans remonter manuellement.
+
+Le cas terrain ayant déclenché l'analyse n'était pas une panne du protocole VigiSensys : la sonde sélectionnée `SPNB-26000148` correspondait à l'étiquette au dos, mais le matériel présent était programmé avec un numéro de série se terminant par `100`. La sonde `148` sélectionnée n'était donc pas joignable. Les logs montraient correctement l'échec `gsp_sensor_unreachable`.
+
+### Amélioration UX
+
+Ajustage et Étalonnage affichent désormais directement dans la card contenant l'action de démarrage :
+
+- un état explicite pendant la configuration/préparation des sondes ;
+- le message d'erreur renvoyé par l'API ;
+- le numéro de série exact de la sonde non joignable lorsqu'il est connu ;
+- une aide GSP : comparer le numéro programmé visible à l'écran avec la sonde sélectionnée et avec l'étiquette au dos ;
+- une aide GSO : vérifier le numéro de série et l'adresse de l'étiquette au dos par rapport à la sonde sélectionnée.
+
+L'API Étalonnage renvoie maintenant `gsp_sensor_unreachable` avec le champ `serial`, comme l'API Ajustage, afin que les deux écrans disposent du même diagnostic structuré.
+
+### Rollback GSP partiel
+
+`applyGspMetrologyConfiguration()` configure les GSP séquentiellement. Avant ce lot, si une première GSP acceptait son `ECON` puis qu'une suivante échouait, l'appel levait une exception avant de retourner la liste des sondes déjà préparées. Les routes ne pouvaient donc pas restaurer cette configuration partielle.
+
+Le helper central applique maintenant le lot de manière transactionnelle au niveau matériel : les GSP déjà configurées sont remises en mode `normal`, dans l'ordre inverse, avant de propager l'erreur d'origine. Une erreur de rollback est journalisée sans masquer l'erreur initiale. Les restaurations en mode `normal` ne déclenchent pas de rollback récursif.
+
+### Validation technique
+
+GitHub Actions run `34481613789` exécuté sur le même arbre fonctionnel avant nettoyage final :
+
+- [x] installation pnpm avec lockfile figé ;
+- [x] génération Prisma MySQL ;
+- [x] test ciblé du rollback GSP séquentiel ;
+- [x] ESLint ciblé ;
+- [x] TypeScript `tsc --noEmit` ;
+- [x] build Next.js production ;
+- [x] textes FR/EN ajoutés ; le check i18n global conserve uniquement sa dette préexistante connue ;
+- [x] diff final nettoyé des workflows/scripts temporaires.
+
+### Validation terrain
+
+- [ ] Ajustage : sélectionner une GSP joignable puis une GSP volontairement non joignable ;
+- [ ] vérifier que la card de démarrage affiche immédiatement la sonde concernée après le timeout ;
+- [ ] vérifier que l'aide GSP est visible sans remonter en haut de la page ;
+- [ ] vérifier dans les logs que les GSP préparées avant l'échec reçoivent un `econ_applied` en mode `normal` ;
+- [ ] refaire le même scénario en Étalonnage ;
+- [ ] vérifier un cas GSO en erreur et la présence de l'aide GSO ;
+- [ ] corriger le numéro/branchements puis vérifier qu'un démarrage normal fonctionne.
+

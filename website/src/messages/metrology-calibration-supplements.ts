@@ -2,6 +2,17 @@ import type { MessageCatalog } from "./supplements"
 
 export const frMetrologyCalibrationSupplements: MessageCatalog = {
   metrologyAdmin: {
+    startFailure: {
+      pendingTitle: "Configuration des sondes en cours",
+      pendingDescription: "VigiSensys prépare les sondes sélectionnées avant de démarrer. Cette étape peut prendre quelques secondes si plusieurs sondes doivent être configurées.",
+      title: "Impossible de démarrer la lecture",
+      sensor: "Sonde concernée : {serial}",
+      checksTitle: "Vérifications recommandées",
+      gspLabel: "GSP :",
+      gspHelp: "vérifiez que le numéro de série affiché sur l'écran de la sonde correspond à la sonde sélectionnée, puis comparez-le avec l'étiquette au dos. Une différence entre le numéro programmé et l'étiquette empêche de joindre la sonde attendue.",
+      gsoLabel: "GSO :",
+      gsoHelp: "vérifiez le numéro de série et l'adresse indiqués sur l'étiquette au dos et assurez-vous qu'ils correspondent à la sonde sélectionnée dans VigiSensys.",
+    },
     adjustmentPage: {
       operationTimer: {
         movePanel: "Déplacer le panneau",
@@ -100,6 +111,17 @@ export const frMetrologyCalibrationSupplements: MessageCatalog = {
 
 export const enMetrologyCalibrationSupplements: MessageCatalog = {
   metrologyAdmin: {
+    startFailure: {
+      pendingTitle: "Configuring sensors",
+      pendingDescription: "VigiSensys is preparing the selected sensors before starting. This can take a few seconds when several sensors must be configured.",
+      title: "Unable to start reading",
+      sensor: "Affected sensor: {serial}",
+      checksTitle: "Recommended checks",
+      gspLabel: "GSP:",
+      gspHelp: "check that the serial number shown on the sensor display matches the selected sensor, then compare it with the label on the back. A mismatch between the programmed serial number and the label prevents the expected sensor from being reached.",
+      gsoLabel: "GSO:",
+      gsoHelp: "check the serial number and address shown on the label on the back and make sure they match the sensor selected in VigiSensys.",
+    },
     adjustmentPage: {
       operationTimer: {
         movePanel: "Move panel",

@@ -68,6 +68,7 @@ import type {
 } from "@/lib/metrology-calibration-session"
 import type { MetrologyPreviewReading } from "@/lib/metrology-reading-preview"
 import { MetrologySubpagesCards } from "../_components/metrology-subpages-cards"
+import { MetrologyStartFeedback } from "../_components/metrology-start-feedback"
 import { CalibrationCoefficientsCard } from "./calibration-coefficients-card"
 
 type Step = "selection" | "calibration"
@@ -423,10 +424,10 @@ export function CalibrationWorkflowClient() {
 
   const error =
     exportError ??
-    startOperationMutation.error ??
-    previewReadingQuery.error ??
     stopPreviewMutation.error ??
     stopMutation.error
+
+  const startOrReadingError = startOperationMutation.error ?? previewReadingQuery.error
 
   const canStartOperation =
     !running &&
@@ -661,6 +662,12 @@ export function CalibrationWorkflowClient() {
                     <CardHeader><CardTitle>{t("workflow.calibration.session")}</CardTitle></CardHeader>
                     <CardContent className="space-y-3">
                       <Badge variant={running ? "default" : "secondary"}>{phaseLabel}</Badge>
+
+                      <MetrologyStartFeedback
+                        error={startOrReadingError}
+                        isPending={startOperationMutation.isPending}
+                        sensors={selectedSensors}
+                      />
 
                       <Button
                         type="button"
