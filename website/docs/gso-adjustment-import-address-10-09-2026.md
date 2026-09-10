@@ -56,22 +56,33 @@ Les routes continuent à utiliser `storageIdentity.serial` pour `Sonde_Numero_Se
 - `website/src/app/api/sondes/ajustages/import/route.ts` (consommateur existant, non modifié) ;
 - `website/src/app/api/sondes/ajustages/bulk/route.ts` (consommateur existant, non modifié).
 
-## Branche
+## Branche / PR
 
 - branche : `fix/gso-import-address-normalization` ;
 - base de départ : `dev` au SHA `663073c4865de3cee010442fd3af153804333b24` ;
-- PR : à renseigner à l'ouverture.
+- PR : #111 — `fix(metrology): corriger l'adresse des GSO créées par import d'ajustage`.
 
 ## Validation automatique
 
-Le test ciblé couvre au minimum :
+GitHub Actions run `34463664299` : **succès**.
+
+Validations réalisées :
+
+- installation `pnpm --frozen-lockfile` ;
+- génération Prisma MySQL ;
+- test ciblé `test-gso-import-address-normalization.ts` ;
+- ESLint ciblé ;
+- TypeScript `tsc --noEmit` ;
+- build Next.js production.
+
+Le test ciblé couvre notamment :
 
 - `SOIT-10007193` -> série `SOIT-10007193`, adresse `10007193` ;
 - `SOET-10007909` -> série `SOET-10007909`, adresse `10007909` ;
 - reconstruction du type depuis le nom d'un fichier d'ajustage lorsque `NUM_SONDE` ne contient que le numéro ;
 - conservation des suffixes d'adresse `-T` / `-H` pour les GSO qui les portent.
 
-Le lot doit également passer ESLint ciblé, TypeScript et le build Next.js de production avant ouverture de la PR.
+Le workflow temporaire de validation a été retiré du diff final.
 
 ## Validation terrain
 
