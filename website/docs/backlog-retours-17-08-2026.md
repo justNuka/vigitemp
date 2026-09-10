@@ -389,35 +389,51 @@ Depuis **Administration > Sondes > détail d’une sonde > Ajustages**, le tél�
 
 ## B20-002 — Import ajustage : identité d’une GSO simple capteur incorrecte
 
-**Statut : `CORRIGE_DEV` — PR #33 — branche `agent/xml-ajustage-import-export`**
+**Statut : `PR_OUVERTE` — PR #111 — branche `fix/gso-import-address-normalization`**
 
-### Retour du 20/08/2026
+### Retour initial du 20/08/2026
 
-Lorsqu’un XML d’ajustage créait automatiquement une **GSO simple capteur**, les valeurs stockées ne suivaient pas la convention attendue.
+Lorsqu’un XML d’ajustage créait automatiquement une **GSO simple capteur**, les valeurs stockées ne suivaient pas la convention attendue. La PR #33 avait alors centralisé la reconstruction du numéro de série et de l’adresse GSO pour les imports.
 
-Exemple terrain fourni :
+### Précision terrain du 10/09/2026
 
-- attendu : `Adresse = 10007909-T`, `Numéro de série = SOET-10007909`;
-- ancien comportement après import : `Adresse = 10007909`, `Numéro de série = 10007909`.
+La règle d’adresse retenue dans la PR #33 ajoutait `-T` aux GSO simples (`SOIT` / `SOET`). Cette convention a été corrigée : `Adresse_Sonde` doit contenir uniquement l’adresse physique, sans préfixe de type et sans suffixe artificiel.
 
-### Correctif livré
+Exemple confirmé :
 
-La règle d’identité des GSO simples `SOIT` / `SOET` est centralisée et utilisée par la prévisualisation, l’import unitaire et l’import multiple :
+- `Sonde_Numero_Serie = SOIT-10007193` ;
+- `Adresse_Sonde = 10007193`.
 
-- `Sonde_Numero_Serie` = `<TYPE>-<chiffres>`;
-- `Adresse_Sonde` = `<chiffres>-T`;
-- `Sonde_Type` reste le type détecté;
-- `Est_Sonde_GSO = true`;
-- l’ajustage importé référence le même numéro typé que la sonde;
-- les doubles `SOIH` / `SOEH` conservent leur convention existante.
+Lorsqu’une adresse porte réellement un suffixe de canal `-T` ou `-H`, ce suffixe est conservé, mais le préfixe de type (`SOIT`, `SOET`, `SOIH`, `SOEH`) ne doit jamais faire partie de `Adresse_Sonde`.
 
-### Validation terrain
+### Correctif PR #111
 
-- importer un XML SOET simple et vérifier exactement les deux colonnes montrées dans les captures;
-- refaire avec SOIT;
-- tester SOIH/SOEH pour confirmer absence de régression;
-- tester un import sur une sonde déjà existante;
-- vérifier que l’ajustage importé référence le même numéro de série que la sonde créée.
+La règle reste centralisée dans `website/src/lib/sensor-naming.ts`, via `buildImportedSensorStorageIdentity()` et est donc appliquée sans duplication aux parcours de prévisualisation, import unitaire et import multiple :
+
+- `SOIT` / `SOET` : numéro de série conservé sous la forme `<TYPE>-<numero>` ;
+- `SOIT` / `SOET` : `Adresse_Sonde = <numero>` ;
+- adresses portant réellement un canal : `<numero>-T` ou `<numero>-H` ;
+- aucun préfixe de type dans `Adresse_Sonde` ;
+- `Sonde_Type` et `Est_Sonde_GSO` restent inchangés ;
+- l’ajustage importé continue de référencer le même numéro de série que la sonde créée ou mise à jour.
+
+Fichiers principaux :
+
+- `website/src/lib/sensor-naming.ts` ;
+- `website/scripts/test-gso-import-address-normalization.ts` ;
+- `website/docs/gso-adjustment-import-address-10-09-2026.md`.
+
+Validation automatique : GitHub Actions run `34463664299` — test ciblé, ESLint, TypeScript et build Next.js production réussis.
+
+### Validation terrain restante
+
+- importer un XML `SOIT-10007193` et vérifier `Sonde_Numero_Serie = SOIT-10007193` et `Adresse_Sonde = 10007193` ;
+- refaire avec `SOET` ;
+- tester une GSO avec suffixe `-T` puis `-H` et vérifier que seul le suffixe est conservé dans l’adresse ;
+- tester l’import unitaire et l’import multiple ;
+- tester une sonde GSO déjà existante ;
+- vérifier que l’ajustage importé référence toujours le même numéro de série que la sonde ;
+- vérifier une sonde non-GSO en non-régression.
 
 ---
 
