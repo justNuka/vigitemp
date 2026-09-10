@@ -140,7 +140,7 @@ export const buildImportedSensorStorageIdentity = (
     const baseAddress = stripGsoSuffix((typedParts?.address ?? identity.serial).replace(/^-+/, ""));
     return {
       serial: `${typeCode}-${baseAddress}`,
-      address: `${baseAddress}-T`,
+      address: baseAddress,
     };
   }
 
