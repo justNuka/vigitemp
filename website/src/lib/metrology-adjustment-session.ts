@@ -8,6 +8,7 @@ import { prisma, prismaMesure } from "@/lib/prisma"
 import { buildAdjustmentExportFileName } from "@/lib/adjustment-export"
 import { hasMainDbColumn } from "@/lib/db-schema"
 import { getTableReference, isMssqlProvider, quoteIdentifier } from "@/lib/metrology-db"
+import { readMetrologyStandard, resolveMetrologyStandardModule } from "@/lib/metrology-reading-preview"
 import { restoreGspMetrologyConfigurationOnce } from "@/lib/metrology-gsp-configuration-restore"
 import type { GspCoefficientOverride } from "@/lib/metrology-gsp-configuration"
 import type { AdjustmentSensorRow } from "@/hooks/useAdjustmentSensors"
@@ -122,6 +123,7 @@ type AdjustmentSession = {
   standardModuleId: number | null
   standardModuleName: string | null
   standardPort: string
+  standardNetworkHost: string | null
   standardOrganization: string | null
   standardCertificateDate: string | null
   standardCertificateNumber: string | null
@@ -1088,11 +1090,14 @@ async function completeAdjustmentPoint(session: AdjustmentSession) {
 
 async function runOneLoop(session: AdjustmentSession) {
   if (!session.standardIsExternal) {
-    const standardReading = await readHotlineGspMeasurement({
-      serial: session.standardSerial,
-      manualPort: session.standardPort,
-      manualModule: session.standardModuleName,
-    })
+    const standardReading = await readMetrologyStandard({
+      serialNumber: session.standardSerial,
+      standardType: session.standardType,
+      unit: session.standardUnit,
+      modulePort: session.standardPort,
+      moduleName: session.standardModuleName,
+      networkHost: session.standardNetworkHost,
+    }, "AJUSTAGE")
     session.latestStandardReading = keepLatestValidReading(session.latestStandardReading, standardReading)
     session.lastUpdatedAt = nowIso()
     await persistStandardReading(session.standardSerial, standardReading).catch((error) => {
@@ -1259,16 +1264,16 @@ export async function startAdjustmentSession(user: JWTPayload, input: StartAdjus
   })
   const standardType = inferStandardTypeCode(standard.Etalon_Numero_Serie, standardTypeRows)
 
-  if (!standard.Est_Sonde_Externe && standardType !== "SPET") {
-    throw new Error("L'ajustage automatique est actuellement limite aux etalons SPET.")
+  if (!standard.Est_Sonde_Externe && standardType !== "SPET" && standardType !== "SEF") {
+    throw new Error("L'ajustage automatique est limité aux étalons SPET et SEF.")
   }
 
-  const standardModule = standard.Id_Module
-    ? await prisma.t_module.findUnique({
-        where: { Id_Module: standard.Id_Module },
-        select: { Module_Numero_Serie: true, Port_Serie: true },
-      })
-    : null
+  const standardModule = await resolveMetrologyStandardModule({
+    standardType,
+    moduleId: standard.Id_Module,
+    legacyPort: standard.Port_Serie,
+    standardSerial: standard.Etalon_Numero_Serie ?? String(standard.Id_Etalon),
+  })
 
   const standardCertif = await prisma.t_certif.findFirst({
     where: { Etalon_Numero_Serie: standard.Etalon_Numero_Serie },
@@ -1289,8 +1294,15 @@ export async function startAdjustmentSession(user: JWTPayload, input: StartAdjus
     : null
 
   const standardPort = standardModule?.Port_Serie?.trim() || standard.Port_Serie?.trim() || ""
-  if (!standard.Est_Sonde_Externe && !standardPort) {
-    throw new Error("Aucun port serie n'est defini pour l'etalon selectionne.")
+  const standardNetworkHost = standardModule?.Adresse_IP?.trim() || null
+  if (!standard.Est_Sonde_Externe && standardType === "SPET" && !standardPort) {
+    throw new Error("Aucun port série n'est configuré pour l'étalon SPET sélectionné.")
+  }
+  if (!standard.Est_Sonde_Externe && standardType === "SEF" && !standardModule) {
+    throw new Error("Aucun module Sollae n'est associé à l'étalon SEF sélectionné et aucun module n'a pu être retrouvé via son ancien port série. Associez le module dans Administration > Étalons.")
+  }
+  if (!standard.Est_Sonde_Externe && standardType === "SEF" && !standardNetworkHost) {
+    throw new Error("Aucune IP Sollae n'est configurée sur le module associé à l'étalon SEF sélectionné.")
   }
 
   const sensorRows = await prisma.t_sonde.findMany({
@@ -1453,9 +1465,10 @@ export async function startAdjustmentSession(user: JWTPayload, input: StartAdjus
     standardId: standard.Id_Etalon,
     standardSerial: standard.Etalon_Numero_Serie,
     standardType,
-    standardModuleId: standard.Id_Module ?? null,
+    standardModuleId: standardModule?.Id_Module ?? standard.Id_Module ?? null,
     standardModuleName: standardModule?.Module_Numero_Serie ?? null,
     standardPort,
+    standardNetworkHost,
     standardOrganization: standardCertif?.Organisme ?? null,
     standardCertificateDate: standardCertif?.Date ? standardCertif.Date.toISOString() : null,
     standardCertificateNumber: standardCertif?.Numero ?? null,

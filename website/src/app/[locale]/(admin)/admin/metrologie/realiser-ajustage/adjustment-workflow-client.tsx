@@ -38,6 +38,7 @@ import { formatDbDateTime } from "@/lib/date-display"
 import { formatMeasureValue } from "@/lib/measurements"
 import { MetrologySubpagesCards } from "../_components/metrology-subpages-cards"
 import { MetrologyStartFeedback } from "../_components/metrology-start-feedback"
+import { MetrologyStartSummaryDialog } from "../_components/metrology-start-summary-dialog"
 
 type Step = "selection" | "adjustment"
 type CoefficientKey = "a" | "b" | "c"
@@ -177,6 +178,7 @@ function getDownloadFileName(contentDisposition: string | null, fallback: string
 export function AdjustmentWorkflowClient() {
   const t = useTranslations("metrologyAdmin.adjustmentPage")
   const tCommon = useTranslations("common")
+  const tStartSummary = useTranslations("metrologyAdmin.startSummary")
   const locale = useLocale()
   const { user } = useAppAccess()
   const queryClient = useQueryClient()
@@ -202,6 +204,7 @@ export function AdjustmentWorkflowClient() {
   const [currentDateTime, setCurrentDateTime] = useState(() => new Date())
   const [actionError, setActionError] = useState<string | null>(null)
   const [showStopConfirm, setShowStopConfirm] = useState(false)
+  const [showStartSummary, setShowStartSummary] = useState(false)
   const [showFirstPointConfirm, setShowFirstPointConfirm] = useState(false)
   const [showCalculationDetails, setShowCalculationDetails] = useState(false)
   const [selectedCalculatedGspSensorIds, setSelectedCalculatedGspSensorIds] = useState<number[]>([])
@@ -1379,7 +1382,7 @@ export function AdjustmentWorkflowClient() {
                               stopMutation.mutate(false)
                               return
                             }
-                            startMutation.mutate()
+                            setShowStartSummary(true)
                           }}
                         >
                           {isAdjustmentRunning ? (
@@ -1408,8 +1411,8 @@ export function AdjustmentWorkflowClient() {
                         <CardDescription>{t("adjustment.cards.points.description")}</CardDescription>
                       </CardHeader>
                       <CardContent className="space-y-4">
-                        <div className="flex items-end gap-2">
-                          <div className="flex-1 space-y-2">
+                        <div className="space-y-2">
+                          <div className="space-y-2">
                             <Label htmlFor="adjustment-point-one">{t("adjustment.cards.points.pointOne")}</Label>
                             <Input
                               id="adjustment-point-one"
@@ -1438,8 +1441,8 @@ export function AdjustmentWorkflowClient() {
                             {t("adjustment.cards.points.startFirstAcquisition")}
                           </Button>
                         </div>
-                        <div className="flex items-end gap-2">
-                          <div className="flex-1 space-y-2">
+                        <div className="space-y-2">
+                          <div className="space-y-2">
                             <Label htmlFor="adjustment-point-two">{t("adjustment.cards.points.pointTwo")}</Label>
                             <Input
                               id="adjustment-point-two"
@@ -1835,6 +1838,54 @@ export function AdjustmentWorkflowClient() {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+
+        <MetrologyStartSummaryDialog
+          open={showStartSummary}
+          onOpenChange={setShowStartSummary}
+          pending={startMutation.isPending}
+          operationLabel={tStartSummary("operations.adjustment")}
+          operator={operator}
+          sensors={selectedSensors.map((sensor) => ({
+            serialNumber: sensor.serialNumber,
+            locationName: sensor.locationName,
+            moduleName: sensor.moduleName,
+          }))}
+          standard={selectedStandard ? {
+            serialNumber: selectedStandard.Etalon_Numero_Serie,
+            type: selectedStandard.Type_Etalon,
+            port: selectedModule?.Port_Serie ?? selectedStandard.Port_Serie,
+            moduleName: selectedModule?.Module_Numero_Serie ?? null,
+            networkHost: selectedModule?.Adresse_IP ?? null,
+          } : null}
+          mediumLabel={selectedMedium ? `${selectedMedium.Model ?? "-"} / ${selectedMedium.Reference ?? "-"}` : null}
+          intervalLabel={tStartSummary("seconds", { count: sensors.some((sensor) => selectedSensorIds.includes(sensor.id) && sensor.isGso) ? 60 : Number(measurementIntervalSeconds === "30" ? 30 : 15) })}
+          onConfirm={() => {
+            startMutation.mutate(undefined, {
+              onSettled: () => setShowStartSummary(false),
+            })
+          }}
+          labels={{
+            title: tStartSummary("title"),
+            description: tStartSummary("description"),
+            operation: tStartSummary("fields.operation"),
+            operator: tStartSummary("fields.operator"),
+            sensors: tStartSummary("fields.sensors"),
+            standard: tStartSummary("fields.standard"),
+            standardType: tStartSummary("fields.standardType"),
+            module: tStartSummary("fields.module"),
+            connection: tStartSummary("fields.connection"),
+            medium: tStartSummary("fields.medium"),
+            interval: tStartSummary("fields.interval"),
+            unassigned: tStartSummary("unassigned"),
+            noModule: tStartSummary("warnings.noModule"),
+            noIp: tStartSummary("warnings.noIp"),
+            sefConnection: (host) => tStartSummary("connections.sef", { host }),
+            serialConnection: (port) => tStartSummary("connections.serial", { port }),
+            cancel: tStartSummary("actions.cancel"),
+            confirm: tStartSummary("actions.confirm"),
+            confirming: tStartSummary("actions.confirming"),
+          }}
+        />
 
         <AlertDialog open={showFirstPointConfirm} onOpenChange={setShowFirstPointConfirm}>
           <AlertDialogContent>

@@ -6,6 +6,7 @@ export type ModuleWithDetails = {
   Type_Module: number | null
   Libelle_Type_Module: string | null
   Port_Serie: string | null
+  Adresse_IP: string | null
   Emplacement: string | null
   Id_Worker: number | null
   sondes_count: number
@@ -42,6 +43,7 @@ export const ModuleRepository = {
         Module_Numero_Serie: true,
         Type_Module: true,
         Port_Serie: true,
+        Adresse_IP: true,
         Emplacement: true,
         Id_Worker: true,
         Archive: true,
@@ -82,6 +84,7 @@ export const ModuleRepository = {
         ? (typeById.get(module.Type_Module) ?? null)
         : null,
       Port_Serie: module.Port_Serie,
+      Adresse_IP: module.Adresse_IP,
       Emplacement: module.Emplacement,
       Id_Worker: module.Id_Worker,
       sondes_count: countByModule.get(module.Id_Module) ?? 0,

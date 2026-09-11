@@ -67,6 +67,9 @@ namespace Vigitemp_Serveur
             public string StopBits { get; set; }
             public int? ReadTimeoutMs { get; set; }
             public int? WriteTimeoutMs { get; set; }
+            public string NetworkHost { get; set; }
+            public int? NetworkPort { get; set; }
+            public string ProtocolAddress { get; set; }
             public GspSensorTestRequest Gsp { get; set; }
         }
 
@@ -88,6 +91,9 @@ namespace Vigitemp_Serveur
             public string Port { get; set; }
             public string Address { get; set; }
             public string Module { get; set; }
+            public string NetworkHost { get; set; }
+            public int? NetworkPort { get; set; }
+            public string ProtocolAddress { get; set; }
             public string OperationContext { get; set; }
             public double? Value { get; set; }
             public string Unit { get; set; }
@@ -262,6 +268,9 @@ namespace Vigitemp_Serveur
                 ManualPort = (payload.Value<string>("manualPort") ?? string.Empty).Trim(),
                 ManualAddress = (payload.Value<string>("manualAddress") ?? string.Empty).Trim(),
                 ManualModule = (payload.Value<string>("manualModule") ?? string.Empty).Trim(),
+                NetworkHost = (payload.Value<string>("networkHost") ?? string.Empty).Trim(),
+                NetworkPort = ValueOrNullInt(payload["networkPort"]),
+                ProtocolAddress = (payload.Value<string>("protocolAddress") ?? string.Empty).Trim(),
                 OperationContext = NormalizeOperationContext(payload.Value<string>("operationContext")),
                 BaudRate = ValueOrNullInt(payload["baudRate"]),
                 Parity = (payload.Value<string>("parity") ?? string.Empty).Trim(),
@@ -322,6 +331,14 @@ namespace Vigitemp_Serveur
 
             try
             {
+                if (string.Equals(request.SensorType, "SEF", StringComparison.OrdinalIgnoreCase))
+                {
+                    ProbeSef(result, request);
+                    result.Success = string.IsNullOrWhiteSpace(result.Error);
+                    LogSensorTestResult(result, startedAt, stopwatch.ElapsedMilliseconds);
+                    return result;
+                }
+
                 SondeMetrologySettings metrologySettings = null;
                 using (var database = DatabaseFactory.Create())
                 {
@@ -383,6 +400,35 @@ namespace Vigitemp_Serveur
             result.Success = string.IsNullOrWhiteSpace(result.Error);
             LogSensorTestResult(result, startedAt, stopwatch.ElapsedMilliseconds);
             return result;
+        }
+
+        private static void ProbeSef(SensorTestResult result, SensorTestRequest request)
+        {
+            var sef = SefProtocol.ReadTemperature(
+                request.NetworkHost,
+                request.NetworkPort,
+                request.ProtocolAddress,
+                request.ReadTimeoutMs,
+                request.WriteTimeoutMs);
+
+            result.NetworkHost = sef.NetworkHost;
+            result.NetworkPort = sef.NetworkPort;
+            result.ProtocolAddress = sef.ProtocolAddress;
+            result.RequestedCommand = sef.Command;
+            result.Value = sef.Value;
+            result.Unit = sef.Unit;
+            result.RawValue = sef.RawResponse;
+            result.Error = sef.Error;
+
+            foreach (var exchange in sef.Exchanges)
+            {
+                result.Exchanges.Add(new SensorExchange
+                {
+                    Direction = exchange.Direction,
+                    Format = exchange.Format,
+                    Content = exchange.Content,
+                });
+            }
         }
 
         private static SondeMetrologySettings LoadCurrentMetrologySettings(

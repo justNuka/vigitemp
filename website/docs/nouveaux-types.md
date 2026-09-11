@@ -58,6 +58,7 @@ SEF	VigiTemp Type SEF	Sonde talon filaire ou filaire/radio avec prise RJ45	1	0	0
 9	GSO-U	Module GSO USB	0
 10	GSO-E	Module GSO Ethernet	0
 11	BINX	Boitier filaire Ethernet	0
+12	SEF	Passerelle Sollae pour sonde étalon SEF	0
 
 
 # Anciens types sondes :

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { z } from "zod"
 
 import { apiError, apiOk } from "@/lib/api-response"
+import { getHotlineSession } from "@/lib/hotline-auth"
 import { getCompatEnv } from "@/lib/vigisensys-compat"
 
 const gspSchema = z.object({
@@ -33,6 +34,9 @@ const bodySchema = z.object({
   manualPort: z.string().trim().optional(),
   manualAddress: z.string().trim().optional(),
   manualModule: z.string().trim().optional(),
+  networkHost: z.string().trim().optional(),
+  networkPort: z.number().int().min(1).max(65535).optional(),
+  protocolAddress: z.string().trim().regex(/^\d{1,2}$/).optional(),
   baudRate: z.number().int().positive().optional(),
   parity: z.string().trim().optional(),
   dataBits: z.number().int().positive().optional(),
@@ -69,6 +73,9 @@ function normalizeResult(raw: Record<string, unknown>) {
     port: raw.Port ?? raw.port ?? null,
     address: raw.Address ?? raw.address ?? null,
     module: raw.Module ?? raw.module ?? null,
+    networkHost: raw.NetworkHost ?? raw.networkHost ?? null,
+    networkPort: raw.NetworkPort ?? raw.networkPort ?? null,
+    protocolAddress: raw.ProtocolAddress ?? raw.protocolAddress ?? null,
     detectedSerials: Array.isArray(detectedSerials)
       ? detectedSerials.map((value: unknown) => String(value))
       : [],
@@ -115,6 +122,10 @@ function getSensorTestTimeoutMs(payload: z.infer<typeof bodySchema>) {
 
 export async function POST(req: NextRequest) {
   try {
+    if (!getHotlineSession(req)) {
+      return apiError(401, "unauthorized", "Non autorisé")
+    }
+
     const json = await req.json()
     const parsed = bodySchema.safeParse(json)
     if (!parsed.success) {
@@ -153,6 +164,9 @@ export async function POST(req: NextRequest) {
           manualPort: payload.manualPort?.trim() || undefined,
           manualAddress: payload.manualAddress?.trim() || undefined,
           manualModule: payload.manualModule?.trim() || undefined,
+          networkHost: payload.networkHost?.trim() || undefined,
+          networkPort: payload.networkPort,
+          protocolAddress: payload.protocolAddress?.trim() || undefined,
           baudRate: payload.baudRate,
           parity: payload.parity?.trim() || undefined,
           dataBits: payload.dataBits,

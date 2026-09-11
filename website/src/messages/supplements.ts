@@ -106,6 +106,32 @@ export const frSupplements: MessageCatalog = {
     description: "Espace de travail métrologie. Les opérations d'ajustage et d'étalonnage seront accessibles ici.",
     notice: "Cette page est prête. Les opérations métrologiques visibles ici sont réservées aux profils disposant de l'autorisation métrologie.",
   },
+  hotlineSefTest: {
+    title: "Ancienne sonde étalon SEF (TCP via Sollae)",
+    description: "Lecture directe d'une ancienne sonde étalon VigiTemp SEF via son convertisseur Sollae TCP/IP, sans port COM virtuel.",
+    protocol_note: "Le Sollae fonctionne en serveur TCP (port 1470 sur l'installation observée). Le COM69 est uniquement le port virtuel historique d'ezVSP et n'est pas requis par VigiSensys. Si ezVSP est connecté au même Sollae, libérez d'abord cette connexion TCP avant le test.",
+    fields: {
+      server_host: "IP / hôte du serveur d'interrogation",
+      api_port: "Port API hotline",
+      network_host: "IP / hôte du convertisseur Sollae",
+      network_port: "Port TCP Sollae",
+      protocol_address: "Adresse protocole SEF",
+      sensor_reference: "Repère sonde (facultatif)",
+      read_timeout: "Timeout lecture (ms)",
+      write_timeout: "Timeout écriture (ms)",
+    },
+    command_title: "Commande de lecture",
+    actions: { test: "Lire la SEF", testing: "Lecture en cours..." },
+    errors: { test_failed: "La lecture SEF a échoué" },
+    results: {
+      endpoint: "Endpoint TCP",
+      protocol_address: "Adresse protocole",
+      value: "Valeur",
+      command: "Commande",
+      raw: "Réponse brute",
+      exchanges: "Trames TX/RX",
+    },
+  },
   hotlineSensorTest: {
     title: "Test manuel de sonde",
     description: "Interrogation directe via le serveur d'interrogation hotline. Si la sonde n'existe pas encore en base, utilisez un override manuel.",
@@ -247,6 +273,33 @@ export const frSupplements: MessageCatalog = {
     },
   },
   metrologyAdmin: {
+    startSummary: {
+      title: "Vérifier avant de lancer la lecture",
+      description: "Confirmez les sondes, l’étalon et sa connexion avant de démarrer l’opération.",
+      operations: { adjustment: "Ajustage", calibration: "Étalonnage" },
+      fields: {
+        operation: "Opération",
+        operator: "Opérateur",
+        sensors: "Sondes sélectionnées",
+        standard: "Étalon",
+        standardType: "Type d’étalon",
+        module: "Module associé",
+        connection: "Connexion étalon",
+        medium: "Milieu",
+        interval: "Intervalle de lecture",
+      },
+      unassigned: "Non affectée à un lieu",
+      seconds: "{count} s",
+      warnings: {
+        noModule: "Aucun module n’est associé explicitement à cette sonde étalon SEF. Associez le module Sollae avant de démarrer.",
+        noIp: "Le module associé à la sonde étalon SEF ne possède pas d’adresse IP Sollae.",
+      },
+      connections: {
+        sef: "TCP {host}:1470 · adresse protocole 01",
+        serial: "Port série {port}",
+      },
+      actions: { cancel: "Revenir à la configuration", confirm: "Confirmer et lancer", confirming: "Démarrage…" },
+    },
     adjustmentPage: {
       adjustment: {
         cards: {
@@ -396,6 +449,32 @@ export const enSupplements: MessageCatalog = {
     description: "Metrology workspace. Adjustment and calibration operations will be available here.",
     notice: "This page is ready. The metrology operations shown here are restricted to profiles with metrology permission.",
   },
+  hotlineSefTest: {
+    title: "Legacy SEF reference sensor (TCP through Sollae)",
+    description: "Direct reading of a legacy VigiTemp SEF reference sensor through its Sollae TCP/IP converter, without a virtual COM port.",
+    protocol_note: "The Sollae works as a TCP server (port 1470 on the observed installation). COM69 is only the legacy ezVSP virtual port and is not required by VigiSensys. If ezVSP is already connected to the same Sollae, release that TCP connection before testing.",
+    fields: {
+      server_host: "Polling server IP / host",
+      api_port: "Hotline API port",
+      network_host: "Sollae converter IP / host",
+      network_port: "Sollae TCP port",
+      protocol_address: "SEF protocol address",
+      sensor_reference: "Sensor reference (optional)",
+      read_timeout: "Read timeout (ms)",
+      write_timeout: "Write timeout (ms)",
+    },
+    command_title: "Read command",
+    actions: { test: "Read SEF", testing: "Reading..." },
+    errors: { test_failed: "SEF reading failed" },
+    results: {
+      endpoint: "TCP endpoint",
+      protocol_address: "Protocol address",
+      value: "Value",
+      command: "Command",
+      raw: "Raw response",
+      exchanges: "TX/RX frames",
+    },
+  },
   hotlineSensorTest: {
     title: "Manual sensor test",
     description: "Direct polling through the hotline polling server. If the sensor is not yet stored in the database, use a manual connection override.",
@@ -537,6 +616,33 @@ export const enSupplements: MessageCatalog = {
     },
   },
   metrologyAdmin: {
+    startSummary: {
+      title: "Review before starting the reading",
+      description: "Confirm the probes, reference standard and its connection before starting the operation.",
+      operations: { adjustment: "Adjustment", calibration: "Calibration" },
+      fields: {
+        operation: "Operation",
+        operator: "Operator",
+        sensors: "Selected probes",
+        standard: "Reference standard",
+        standardType: "Standard type",
+        module: "Associated module",
+        connection: "Standard connection",
+        medium: "Medium",
+        interval: "Reading interval",
+      },
+      unassigned: "Not assigned to a location",
+      seconds: "{count} s",
+      warnings: {
+        noModule: "No module is explicitly associated with this SEF reference probe. Associate the Sollae module before starting.",
+        noIp: "The module associated with the SEF reference probe has no Sollae IP address.",
+      },
+      connections: {
+        sef: "TCP {host}:1470 · protocol address 01",
+        serial: "Serial port {port}",
+      },
+      actions: { cancel: "Back to configuration", confirm: "Confirm and start", confirming: "Starting…" },
+    },
     adjustmentPage: {
       adjustment: {
         cards: {
