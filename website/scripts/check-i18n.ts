@@ -11,6 +11,7 @@ import {
   enAdminSettingsSupplements,
   frAdminSettingsSupplements,
 } from "../src/messages/admin-settings-supplements";
+import { enToolsSupplements, frToolsSupplements } from "../src/messages/tools-supplements";
 
 const ROOT = process.cwd();
 const MESSAGES_DIR = path.join(ROOT, "src", "messages");
@@ -145,8 +146,8 @@ async function main() {
     ),
     enMetrologyCalibrationSupplements,
   );
-  const frKeys = new Set(flattenKeys(fr));
-  const enKeys = new Set(flattenKeys(en));
+  const frKeys = new Set(flattenKeys(mergeMessages(fr, frToolsSupplements)));
+  const enKeys = new Set(flattenKeys(mergeMessages(en, enToolsSupplements)));
 
   const missingInEn = [...frKeys].filter((key) => !enKeys.has(key)).sort();
   const missingInFr = [...enKeys].filter((key) => !frKeys.has(key)).sort();
