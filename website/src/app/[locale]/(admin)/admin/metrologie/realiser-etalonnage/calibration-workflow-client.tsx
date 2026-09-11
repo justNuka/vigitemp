@@ -76,6 +76,7 @@ type SessionPayload = { session: PublicCalibrationSession | null }
 type PreviewPayload = {
   readings: Record<number, MetrologyPreviewReading>
   standardReading: CalibrationReading | null
+  coefficientSync: { sensorIds: number[] }
   readAt: string
 }
 
@@ -183,6 +184,12 @@ export function CalibrationWorkflowClient() {
   const displayedStandardReading = running
     ? session?.latestStandardReading ?? null
     : previewReadingQuery.data?.standardReading ?? null
+
+  useEffect(() => {
+    if ((previewReadingQuery.data?.coefficientSync.sensorIds.length ?? 0) > 0) {
+      void queryClient.invalidateQueries({ queryKey: ["metrology-adjustment-sensors"] })
+    }
+  }, [previewReadingQuery.data, queryClient])
 
   useEffect(() => {
     if (!session) return
@@ -986,6 +993,7 @@ export function CalibrationWorkflowClient() {
                               <TableHead className="text-white">{t("workflow.enhanced.mean_sensor")}</TableHead>
                               <TableHead className="text-white">{t("workflow.enhanced.accuracy_error")}</TableHead>
                               <TableHead className="text-white">{t("workflow.enhanced.uncertainty")}</TableHead>
+                              <TableHead className="text-white">{t("workflow.enhanced.report")}</TableHead>
                             </TableRow>
                           </TableHeader>
                           <TableBody>
@@ -998,6 +1006,13 @@ export function CalibrationWorkflowClient() {
                                   <TableCell>{formatCampaignValue(result.meanSensor, unit)}</TableCell>
                                   <TableCell>{formatCampaignValue(result.accuracyError, unit)}</TableCell>
                                   <TableCell>{formatCampaignValue(result.uncertainty, unit)}</TableCell>
+                                  <TableCell>
+                                    <Button asChild size="sm" variant="outline">
+                                      <a href={`/api/metrologie/etalonnage/report/${result.calibrationId}`}>
+                                        {t("workflow.enhanced.download_pdf")}
+                                      </a>
+                                    </Button>
+                                  </TableCell>
                                 </TableRow>
                               )
                             })}

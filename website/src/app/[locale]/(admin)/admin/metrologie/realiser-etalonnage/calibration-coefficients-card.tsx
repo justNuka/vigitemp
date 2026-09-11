@@ -135,6 +135,12 @@ export function CalibrationCoefficientsCard({
         <CardDescription>{t("coefficients_description")}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
+        {readingActive && sensors.some((sensor) => !sensor.isGso) ? (
+          <Alert className="border-sky-300 bg-sky-50 text-sky-950 dark:border-sky-500/40 dark:bg-sky-500/10 dark:text-sky-100">
+            <AlertDescription>{t("coefficients_retrieved_gsp")}</AlertDescription>
+          </Alert>
+        ) : null}
+
         {!readingActive ? (
           <Alert>
             <AlertDescription>{t("coefficients_reading_required")}</AlertDescription>

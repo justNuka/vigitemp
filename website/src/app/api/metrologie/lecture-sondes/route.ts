@@ -4,6 +4,10 @@ import { z } from "zod"
 import { apiError, apiOk } from "@/lib/api-response"
 import { withStandardOrExpertAnyAuthorizationLogging } from "@/lib/license-guards"
 import { log } from "@/lib/logger"
+import {
+  GspCoefficientReadError,
+  synchronizeGspCoefficientsFromSensors,
+} from "@/lib/metrology-gsp-coefficient-sync"
 import { getAdjustmentSessionForUser } from "@/lib/metrology-adjustment-session"
 import {
   getCalibrationSessionForUser,
@@ -45,6 +49,19 @@ export const POST = withStandardOrExpertAnyAuthorizationLogging(
         input.selectedSensorIds,
         input.operation,
       )
+      let coefficientSync: Awaited<ReturnType<typeof synchronizeGspCoefficientsFromSensors>> = []
+      if (previewSession.created) {
+        try {
+          coefficientSync = await synchronizeGspCoefficientsFromSensors(
+            input.selectedSensorIds,
+            input.operation,
+          )
+        } catch (error) {
+          await stopMetrologyReadingPreviewSession(ctx.user.userId).catch(() => undefined)
+          throw error
+        }
+      }
+
       const startedAt = new Date(previewSession.startedAt)
 
       const sensorPreview = await readMetrologySensorsPreview(
@@ -57,10 +74,17 @@ export const POST = withStandardOrExpertAnyAuthorizationLogging(
           ? await readCalibrationStandardPreview(input.standardId, input.mediumId)
           : null
 
-      return apiOk({ ...sensorPreview, standardReading })
+      return apiOk({
+        ...sensorPreview,
+        standardReading,
+        coefficientSync: { sensorIds: coefficientSync.map((item) => item.sensorId).filter((id): id is number => id != null) },
+      })
     } catch (error) {
       if (error instanceof z.ZodError) {
         return apiError(400, "validation_error", "Donnees invalides", { details: error.issues })
+      }
+      if (error instanceof GspCoefficientReadError) {
+        return apiError(400, "gsp_sensor_unreachable", error.message, { serial: error.serial })
       }
       log.error("METROLOGY_READING", "preview_failed", {
         userId: ctx.user.userId,

@@ -1421,3 +1421,26 @@ Les anciens placeholders `%1`, `%2`, `%3` ainsi que les signatures de mauvais en
 - `db/vigisensys_seed_mssql.sql` ;
 - `db/CHANGELOG.md` ;
 - `CHANGELOG.md`.
+
+
+## Lot métrologie — coefficients relus / GSO / imports-exports (10/09/2026)
+
+- **Statut : `PR_OUVERTE` — branche `feature/metrology-coefficient-synchronization` — PR #114 vers `dev`.**
+- GSP : DCON au lancement, persistance des coefficients existants, suppression de l'ECON neutre automatique.
+- GSO : affichage de `Metrologie_cmd_envoyee` (attente / envoyé) dans les cards de démarrage.
+- Ajustage : sélection individuelle des GSP avant envoi des coefficients calculés.
+- Ajustage XML : conservation de `COEFFX2`, XML individuel + ZIP contrôlés ; parseur corrigé pour distinguer strictement `COEFFX` et `COEFFX2`.
+- Étalonnage : PDF individuel + ZIP proposés.
+- Import XML : GSP/GSO, lecture live DCON pour GSP, upsert ciblé sans suppression complète de l'historique.
+- Validation automatique : GitHub Actions run `34572188177` — test ciblé, ESLint, TypeScript et build production OK.
+- Documentation détaillée : `website/docs/metrology-coefficient-synchronization-10-09-2026.md`.
+
+### Validation terrain
+
+- [ ] GSP avec coefficients non neutres : vérifier que DCON remplit A/B/C sans ECON automatique au lancement ;
+- [ ] GSP sans ajustage puis avec ajustage existant : vérifier création / mise à jour ciblée en base ;
+- [ ] GSO : vérifier le passage visible de « commande en attente » à « commande envoyée » ;
+- [ ] fin d'ajustage : sélectionner une seule GSP et confirmer que seule celle-ci reçoit les coefficients calculés ;
+- [ ] export XML individuel + ZIP avec `COEFFX2/COEFFX/COEFFCONSTANT` ;
+- [ ] export PDF individuel + ZIP après étalonnage ;
+- [ ] import XML GSO puis GSP et vérifier l'upsert, avec DCON prioritaire pour la GSP.

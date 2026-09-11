@@ -20,6 +20,7 @@ type AdjustmentExportInput = {
   standardMeasure2: number | null
   sensorRawValue1: number | null
   sensorRawValue2: number | null
+  coeffX2: number | null
   coeffX: number | null
   coeffConstant: number | null
   correctedValue1: number | null
@@ -120,6 +121,7 @@ export function buildAdjustmentXml(input: AdjustmentExportInput) {
     xmlTag("MESURE_ETALON2", formatNumber(input.standardMeasure2)),
     "<MESURE_SONDE2/>",
     xmlTag("RESISTANCE_SONDE2", formatNumber(input.sensorRawValue2)),
+    xmlTag("COEFFX2", formatNumber(input.coeffX2)),
     xmlTag("COEFFX", formatNumber(input.coeffX)),
     xmlTag("COEFFCONSTANT", formatNumber(input.coeffConstant)),
     xmlTag("TEMPERATURELUE1", formatNumber(input.correctedValue1)),

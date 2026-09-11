@@ -204,6 +204,7 @@ export function AdjustmentWorkflowClient() {
   const [showStopConfirm, setShowStopConfirm] = useState(false)
   const [showFirstPointConfirm, setShowFirstPointConfirm] = useState(false)
   const [showCalculationDetails, setShowCalculationDetails] = useState(false)
+  const [selectedCalculatedGspSensorIds, setSelectedCalculatedGspSensorIds] = useState<number[]>([])
   const [isExportingAdjustmentZip, setIsExportingAdjustmentZip] = useState(false)
   const [coefficientDrafts, setCoefficientDrafts] = useState<
     Record<number, { a: string; b: string; c: string }>
@@ -414,13 +415,14 @@ export function AdjustmentWorkflowClient() {
   })
 
   const resolveCalculatedCoefficientsMutation = useMutation({
-    mutationFn: async (apply: boolean) =>
+    mutationFn: async (input: { apply: boolean; sensorIds: number[] }) =>
       fetchJson<{ session: SessionApiPayload["session"] }>("/api/metrologie/ajustage/session", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           action: "resolve-calculated-coefficients",
-          apply,
+          apply: input.apply,
+          sensorIds: input.sensorIds,
         }),
       }),
     onSuccess: async () => {
@@ -515,6 +517,26 @@ export function AdjustmentWorkflowClient() {
       setStep("adjustment")
     }
   }, [session, step])
+
+  const pendingCalculatedGspSensors = useMemo(
+    () => session?.coefficientApplication.status === "pending"
+      ? session.sensors.filter((sensor) => !sensor.isGso)
+      : [],
+    [session?.coefficientApplication.status, session?.sensors],
+  )
+  const pendingCalculatedGspSensorKey = pendingCalculatedGspSensors.map((sensor) => sensor.id).join(",")
+
+  useEffect(() => {
+    if (session?.coefficientApplication.status !== "pending") {
+      setSelectedCalculatedGspSensorIds([])
+      return
+    }
+    const eligibleIds = pendingCalculatedGspSensors.map((sensor) => sensor.id)
+    setSelectedCalculatedGspSensorIds((current) => {
+      const filtered = current.filter((sensorId) => eligibleIds.includes(sensorId))
+      return filtered.length > 0 ? filtered : eligibleIds
+    })
+  }, [pendingCalculatedGspSensorKey, pendingCalculatedGspSensors, session?.coefficientApplication.status])
 
   const selectedSensors = useMemo(
     () => sensors.filter((sensor) => selectedSensorIds.includes(sensor.id)),
@@ -1202,6 +1224,13 @@ export function AdjustmentWorkflowClient() {
                         </CardDescription>
                       </CardHeader>
                       <CardContent className="space-y-4">
+                        {isAdjustmentRunning && session?.sensors.some((sensor) => !sensor.isGso) ? (
+                          <Alert className="border-sky-300 bg-sky-50 text-sky-950 dark:border-sky-500/40 dark:bg-sky-500/10 dark:text-sky-100">
+                            <BadgeInfo className="h-4 w-4" />
+                            <AlertTitle>{t("adjustment.cards.coefficients.retrievedTitle")}</AlertTitle>
+                            <AlertDescription>{t("adjustment.cards.coefficients.retrievedDescription")}</AlertDescription>
+                          </Alert>
+                        ) : null}
                         <div className="overflow-x-auto">
                           <div className="min-w-[620px] space-y-3">
                             <div className="grid grid-cols-[minmax(180px,1fr)_repeat(3,minmax(110px,0.5fr))] gap-3 text-sm font-medium text-muted-foreground">
@@ -1755,6 +1784,23 @@ export function AdjustmentWorkflowClient() {
                 </p>
               ) : null}
             </AlertDialogHeader>
+            <div className="space-y-2 rounded-md border p-3">
+              <p className="text-sm font-medium">{t("adjustment.cards.calculatedCoefficients.selectSensors")}</p>
+              {pendingCalculatedGspSensors.map((sensor) => (
+                <label key={sensor.id} className="flex items-center gap-3 text-sm">
+                  <Checkbox
+                    checked={selectedCalculatedGspSensorIds.includes(sensor.id)}
+                    disabled={resolveCalculatedCoefficientsMutation.isPending}
+                    onCheckedChange={(checked) => {
+                      setSelectedCalculatedGspSensorIds((current) => checked === true
+                        ? Array.from(new Set([...current, sensor.id]))
+                        : current.filter((sensorId) => sensorId !== sensor.id))
+                    }}
+                  />
+                  <span>{sensor.serialNumber}</span>
+                </label>
+              ))}
+            </div>
             {resolveCalculatedCoefficientsMutation.error ? (
               <Alert variant="destructive">
                 <AlertTitle>{t("adjustment.status.errorTitle")}</AlertTitle>
@@ -1768,15 +1814,18 @@ export function AdjustmentWorkflowClient() {
                 type="button"
                 variant="outline"
                 disabled={resolveCalculatedCoefficientsMutation.isPending}
-                onClick={() => resolveCalculatedCoefficientsMutation.mutate(false)}
+                onClick={() => resolveCalculatedCoefficientsMutation.mutate({ apply: false, sensorIds: [] })}
               >
                 {t("adjustment.cards.calculatedCoefficients.keepPrevious")}
               </Button>
               <AlertDialogAction
-                disabled={resolveCalculatedCoefficientsMutation.isPending}
+                disabled={resolveCalculatedCoefficientsMutation.isPending || selectedCalculatedGspSensorIds.length === 0}
                 onClick={(event) => {
                   event.preventDefault()
-                  resolveCalculatedCoefficientsMutation.mutate(true)
+                  resolveCalculatedCoefficientsMutation.mutate({
+                    apply: true,
+                    sensorIds: selectedCalculatedGspSensorIds,
+                  })
                 }}
               >
                 {resolveCalculatedCoefficientsMutation.isPending
