@@ -20,6 +20,7 @@ import { formatLocalDateKey } from "@/lib/date-range-api"
 import { HotlineHealthCard } from "./dashboard/hotline-health-card"
 import { HotlineLogsFilters, HotlineLogsPanel } from "./dashboard/hotline-logs-panel"
 import { HotlineSensorTestPanel } from "./dashboard/hotline-sensor-test-panel"
+import { HotlineSefTestPanel } from "./dashboard/hotline-sef-test-panel"
 
 type HealthStatus = "ok" | "error" | "unknown"
 
@@ -278,7 +279,10 @@ export function HotlineDashboard({ slug, username }: HotlineDashboardProps) {
         </TabsContent>
 
         <TabsContent value="sensor_test" className="mt-4">
-          <HotlineSensorTestPanel />
+          <div className="space-y-6">
+            <HotlineSefTestPanel />
+            <HotlineSensorTestPanel />
+          </div>
         </TabsContent>
 
         <TabsContent value="request_errors" className="mt-4 space-y-4">

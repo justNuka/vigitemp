@@ -51,6 +51,196 @@ function normalizeSerialPortName(value: string | null | undefined) {
   return match ? `COM${match[1]}` : trimmed
 }
 
+
+export type MetrologyStandardReadTarget = {
+  serialNumber: string
+  standardType: string | null
+  unit: string | null
+  modulePort: string | null
+  moduleName: string | null
+  networkHost: string | null
+}
+
+export type MetrologyStandardReading = {
+  value: number | null
+  rawValue: string | null
+  unit: string | null
+  measuredAt: string
+  source: "GSP" | "SEF"
+  error: string | null
+}
+
+const DEFAULT_SEF_NETWORK_PORT = 1470
+const DEFAULT_SEF_PROTOCOL_ADDRESS = "01"
+
+export function buildLegacyStandardModulePortCandidates(value: string | null | undefined) {
+  const trimmed = value?.trim()
+  if (!trimmed) return []
+
+  const normalized = normalizeSerialPortName(trimmed)
+  const candidates = new Set<string>([trimmed])
+  if (normalized) {
+    candidates.add(normalized)
+    const comMatch = /^COM(\d+)$/i.exec(normalized)
+    if (comMatch) candidates.add(comMatch[1])
+  }
+  return Array.from(candidates)
+}
+
+export async function resolveMetrologyStandardModule(input: {
+  standardType: string | null
+  moduleId: number | null | undefined
+  legacyPort: string | null | undefined
+  standardSerial: string
+}) {
+  const select = {
+    Id_Module: true,
+    Module_Numero_Serie: true,
+    Port_Serie: true,
+    Adresse_IP: true,
+  } as const
+
+  if (typeof input.moduleId === "number" && Number.isInteger(input.moduleId) && input.moduleId > 0) {
+    const explicitModule = await prisma.t_module.findUnique({
+      where: { Id_Module: input.moduleId },
+      select,
+    })
+    if (explicitModule) return explicitModule
+  }
+
+  if (input.standardType?.trim().toUpperCase() !== "SEF") return null
+
+  const portCandidates = buildLegacyStandardModulePortCandidates(input.legacyPort)
+  if (portCandidates.length === 0) return null
+
+  const legacyMatches = await prisma.t_module.findMany({
+    where: { Port_Serie: { in: portCandidates } },
+    select: { ...select, Archive: true },
+  })
+  const activeMatches = legacyMatches.filter((moduleRow) => moduleRow.Archive !== 1)
+  const networkMatches = activeMatches.filter((moduleRow) => Boolean(moduleRow.Adresse_IP?.trim()))
+
+  if (networkMatches.length > 1 || (networkMatches.length === 0 && activeMatches.length > 1)) {
+    throw new Error(
+      `Plusieurs modules correspondent à l'ancien port de l'étalon SEF ${input.standardSerial}. Associez explicitement le module Sollae à l'étalon.`,
+    )
+  }
+
+  const selectedModule = networkMatches[0] ?? activeMatches[0] ?? null
+  if (!selectedModule) return null
+  return {
+    Id_Module: selectedModule.Id_Module,
+    Module_Numero_Serie: selectedModule.Module_Numero_Serie,
+    Port_Serie: selectedModule.Port_Serie,
+    Adresse_IP: selectedModule.Adresse_IP,
+  }
+}
+
+export function buildMetrologyStandardHotlineRequest(
+  target: MetrologyStandardReadTarget,
+  operationContext: "AJUSTAGE" | "ETALONNAGE",
+): Record<string, unknown> {
+  const standardType = target.standardType?.trim().toUpperCase() || ""
+
+  if (standardType === "SEF") {
+    const networkHost = target.networkHost?.trim()
+    if (!networkHost) {
+      throw new Error(`Aucune IP Sollae n'est configurée pour l'étalon ${target.serialNumber}.`)
+    }
+
+    return {
+      sensorType: "SEF",
+      serial: target.serialNumber,
+      action: "read",
+      operationContext,
+      networkHost,
+      networkPort: 1470,
+      protocolAddress: "01",
+      readTimeoutMs: 6000,
+      writeTimeoutMs: 4000,
+    }
+  }
+
+  if (standardType === "SPET") {
+    const manualPort = normalizeSerialPortName(target.modulePort)
+    if (!manualPort) {
+      throw new Error(`Aucun port série n'est configuré pour l'étalon ${target.serialNumber}.`)
+    }
+
+    return {
+      sensorType: "GSP",
+      serial: target.serialNumber,
+      action: "read",
+      operationContext,
+      manualPort,
+      manualModule: target.moduleName?.trim() || undefined,
+      readTimeoutMs: 6000,
+      writeTimeoutMs: 4000,
+      gsp: { listenWindowMs: 500 },
+    }
+  }
+
+  throw new Error(`Type d'étalon automatique non supporté : ${standardType || "inconnu"}.`)
+}
+
+export async function readMetrologyStandard(
+  target: MetrologyStandardReadTarget,
+  operationContext: "AJUSTAGE" | "ETALONNAGE",
+): Promise<MetrologyStandardReading> {
+  const measuredAt = new Date().toISOString()
+  const standardType = target.standardType?.trim().toUpperCase() || ""
+  const source: MetrologyStandardReading["source"] = standardType === "SEF" ? "SEF" : "GSP"
+
+  try {
+    const config = await getHotlineServerConfig()
+    const serverHost = config.serverHost?.trim() || process.env.HOTLINE_SERVER_HOST?.trim() || "127.0.0.1"
+    const serverPort = config.serverPort || Number(process.env.HOTLINE_SERVER_PORT || DEFAULT_SERVER_PORT)
+    if (!serverHost || !Number.isFinite(serverPort)) {
+      throw new Error("Serveur hotline non configuré")
+    }
+
+    const response = await fetch(`${buildServerBaseUrl(serverHost, serverPort)}/api/hotline/sensor-test`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      cache: "no-store",
+      body: JSON.stringify(buildMetrologyStandardHotlineRequest(target, operationContext)),
+    })
+    const payload = await response.json().catch(() => null)
+    const raw = payload?.data ?? payload ?? {}
+    const success = response.ok && Boolean(raw?.Success ?? raw?.success ?? payload?.ok ?? false)
+
+    if (!success) {
+      return {
+        value: null,
+        rawValue: raw?.RawValue == null ? null : String(raw.RawValue),
+        unit: target.unit ?? (raw?.Unit == null ? null : String(raw.Unit)),
+        measuredAt,
+        source,
+        error: String(raw?.Error ?? raw?.error ?? payload?.message ?? "Lecture de l'étalon impossible"),
+      }
+    }
+
+    const parsedValue = Number(raw?.Value)
+    return {
+      value: Number.isFinite(parsedValue) ? parsedValue : null,
+      rawValue: raw?.RawValue == null ? null : String(raw.RawValue),
+      unit: target.unit ?? (raw?.Unit == null ? null : String(raw.Unit)),
+      measuredAt,
+      source,
+      error: null,
+    }
+  } catch (error) {
+    return {
+      value: null,
+      rawValue: null,
+      unit: target.unit,
+      measuredAt,
+      source,
+      error: error instanceof Error ? error.message : String(error),
+    }
+  }
+}
+
 async function readGsp(
   sensor: {
     id: number

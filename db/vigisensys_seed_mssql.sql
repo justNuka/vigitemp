@@ -2789,7 +2789,8 @@ USING (VALUES
     (8, N'IETH', N'Module Ethernet', 0),
     (9, N'GSO-U', N'Module GSO USB', 0),
     (10, N'GSO-E', N'Module GSO Ethernet', 0),
-    (11, N'BINX', N'Boîtier filaire Ethernet', 0)
+    (11, N'BINX', N'Boîtier filaire Ethernet', 0),
+    (12, N'SEF', N'Passerelle Sollae pour sonde étalon SEF', 0)
 ) AS source (
     Id_Module_Type,
     Libelle_Type_Module,

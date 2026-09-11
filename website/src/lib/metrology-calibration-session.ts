@@ -21,6 +21,7 @@ import {
 } from "@/lib/metrology-db"
 import { getSensorFamilyFromSerial } from "@/lib/sensor-naming"
 import { inferStandardTypeCode } from "@/lib/standard-types"
+import { readMetrologyStandard, resolveMetrologyStandardModule } from "@/lib/metrology-reading-preview"
 import { prisma, prismaMesure } from "@/lib/prisma"
 
 const DEFAULT_SERVER_PORT = 5310
@@ -35,7 +36,7 @@ export type CalibrationReading = {
   rawValue: string | null
   unit: string | null
   measuredAt: string
-  source: "GSP" | "GSO"
+  source: "GSP" | "GSO" | "SEF"
   error: string | null
 }
 
@@ -73,8 +74,10 @@ type ManagedCalibrationSensor = AdjustmentSensorRow & {
 type CalibrationReference = {
   standardId: number
   standardSerial: string
+  standardType: string
   standardModuleName: string | null
   standardPort: string
+  standardNetworkHost: string | null
   standardUnit: string | null
   standardResolution: number
   standardUncertainty: number
@@ -409,8 +412,8 @@ async function loadCalibrationReference(
     select: { Type_Etalon: true, Resolution: true },
   })
   const standardType = inferStandardTypeCode(standardSerial, typeRows)
-  if (standardType !== "SPET") {
-    throw new Error("L'etalonnage automatique est actuellement limite aux etalons SPET.")
+  if (standardType !== "SPET" && standardType !== "SEF") {
+    throw new Error("L'étalonnage automatique est limité aux étalons SPET et SEF.")
   }
   const typeInfo = typeRows.find((row) => String(row.Type_Etalon).trim().toUpperCase() === standardType)
   const standardResolution = asFiniteNumber(typeInfo?.Resolution)
@@ -440,15 +443,24 @@ async function loadCalibrationReference(
   const standardModuleId = moduleIdValue != null && Number.isInteger(moduleIdValue) && moduleIdValue > 0
     ? moduleIdValue
     : null
-  const standardModule = standardModuleId
-    ? await prisma.t_module.findUnique({
-        where: { Id_Module: standardModuleId },
-        select: { Module_Numero_Serie: true, Port_Serie: true },
-      })
-    : null
   const directPort = standard.Port_Serie == null ? "" : String(standard.Port_Serie).trim()
+  const standardModule = await resolveMetrologyStandardModule({
+    standardType,
+    moduleId: standardModuleId,
+    legacyPort: directPort,
+    standardSerial,
+  })
   const standardPort = standardModule?.Port_Serie?.trim() || directPort
-  if (!standardPort) throw new Error("Aucun port série n'est défini pour l'étalon sélectionné.")
+  const standardNetworkHost = standardModule?.Adresse_IP?.trim() || null
+  if (standardType === "SPET" && !standardPort) {
+    throw new Error("Aucun port série n'est configuré pour l'étalon SPET sélectionné.")
+  }
+  if (standardType === "SEF" && !standardModule) {
+    throw new Error("Aucun module Sollae n'est associé à l'étalon SEF sélectionné et aucun module n'a pu être retrouvé via son ancien port série. Associez le module dans Administration > Étalons.")
+  }
+  if (standardType === "SEF" && !standardNetworkHost) {
+    throw new Error("Aucune IP Sollae n'est configurée sur le module associé à l'étalon SEF sélectionné.")
+  }
 
   const certificate = await prisma.t_certif.findFirst({
     where: { Etalon_Numero_Serie: standardSerial },
@@ -477,8 +489,10 @@ async function loadCalibrationReference(
   return {
     standardId,
     standardSerial,
+    standardType,
     standardModuleName: standardModule?.Module_Numero_Serie ?? null,
     standardPort,
+    standardNetworkHost,
     standardUnit,
     standardResolution,
     standardUncertainty,
@@ -553,13 +567,14 @@ export async function readCalibrationStandardPreview(
   mediumId: number,
 ): Promise<CalibrationReading> {
   const reference = await loadCalibrationReference(standardId, mediumId, null)
-  return readGspMeasurement({
+  return readMetrologyStandard({
     serialNumber: reference.standardSerial,
+    standardType: reference.standardType,
     unit: reference.standardUnit,
     modulePort: reference.standardPort,
     moduleName: reference.standardModuleName,
-    address: null,
-  })
+    networkHost: reference.standardNetworkHost,
+  }, "ETALONNAGE")
 }
 
 async function readLatestGsoMeasurement(
@@ -800,13 +815,14 @@ async function runMeasurementLoop(session: CalibrationSession) {
   if (session.stopRequested || session.status !== "running") return
   const loopStartedAt = Date.now()
 
-  const standardReading = await readGspMeasurement({
+  const standardReading = await readMetrologyStandard({
     serialNumber: session.standardSerial,
+    standardType: session.standardType,
     unit: session.standardUnit,
     modulePort: session.standardPort,
     moduleName: session.standardModuleName,
-    address: null,
-  })
+    networkHost: session.standardNetworkHost,
+  }, "ETALONNAGE")
   session.latestStandardReading = standardReading
   session.lastUpdatedAt = nowIso()
 
