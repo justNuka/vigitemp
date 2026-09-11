@@ -18,10 +18,11 @@ import {
   restoreCalibrationSensorStates,
   setCalibrationSensorsToCalibrationState,
 } from "@/lib/metrology-calibration-sensor-state"
+import { GspSensorUnreachableError } from "@/lib/metrology-gsp-configuration"
 import {
-  applyGspMetrologyConfiguration,
-  GspSensorUnreachableError,
-} from "@/lib/metrology-gsp-configuration"
+  GspCoefficientReadError,
+  synchronizeGspCoefficientsFromSensors,
+} from "@/lib/metrology-gsp-coefficient-sync"
 import { restoreGspMetrologyConfigurationOnce } from "@/lib/metrology-gsp-configuration-restore"
 import { stopMetrologyReadingPreviewSession } from "@/lib/metrology-reading-preview-session"
 import {
@@ -177,20 +178,14 @@ export const POST = withStandardOrExpertAnyAuthorizationLogging(
   async (req: NextRequest, ctx) => {
     let sensorStatesCaptured = false
     let calibrationStarted = false
-    let preparedGspSensorIds: number[] = []
     try {
       const input = startSchema.parse(await req.json())
       const userId = ctx.user.userId
 
       await stopMetrologyReadingPreviewSession(userId)
+      await synchronizeGspCoefficientsFromSensors(input.selectedSensorIds, "ETALONNAGE")
       await captureCalibrationSensorStates(userId, input.selectedSensorIds)
       sensorStatesCaptured = true
-
-      preparedGspSensorIds = await applyGspMetrologyConfiguration(
-        input.selectedSensorIds,
-        "calibration-without-accuracy",
-        "ETALONNAGE",
-      )
 
       const session = await startCalibrationSession(ctx.user, input)
       calibrationStarted = true
@@ -228,15 +223,6 @@ export const POST = withStandardOrExpertAnyAuthorizationLogging(
           })
         })
       } else {
-        if (preparedGspSensorIds.length > 0) {
-          await applyGspMetrologyConfiguration(preparedGspSensorIds, "normal", "ETALONNAGE").catch((restoreError) => {
-            log.error("METROLOGY_GSP", "calibration_start_econ_rollback_failed", {
-              userId: ctx.user.userId,
-              sensorIds: preparedGspSensorIds,
-              error: restoreError instanceof Error ? restoreError.message : String(restoreError),
-            })
-          })
-        }
         if (sensorStatesCaptured) {
           await restoreCalibrationSensorStates(ctx.user.userId).catch((restoreError) => {
             log.error("METROLOGY_CALIBRATION", "sensor_state_restore_failed", {
@@ -249,7 +235,7 @@ export const POST = withStandardOrExpertAnyAuthorizationLogging(
       if (error instanceof z.ZodError) {
         return apiError(400, "validation_error", "Données invalides", { details: error.issues })
       }
-      if (error instanceof GspSensorUnreachableError) {
+      if (error instanceof GspCoefficientReadError || error instanceof GspSensorUnreachableError) {
         return apiError(400, "gsp_sensor_unreachable", error.message, { serial: error.serial })
       }
       log.error("METROLOGY_CALIBRATION", "session_start_failed", {
@@ -266,7 +252,6 @@ export const PATCH = withStandardOrExpertAnyAuthorizationLogging(
   async (req: NextRequest, ctx) => {
     let snapshotAdded = false
     let sensorId: number | null = null
-    let gspPrepared = false
     try {
       const input = patchSchema.parse(await req.json())
 
@@ -278,29 +263,18 @@ export const PATCH = withStandardOrExpertAnyAuthorizationLogging(
       sensorId = input.sensorId
       await appendCalibrationSensorStates(ctx.user.userId, [sensorId])
       snapshotAdded = true
-      const preparedIds = await applyGspMetrologyConfiguration(
-        [sensorId],
-        "calibration-without-accuracy",
-        "ETALONNAGE",
-      )
-      gspPrepared = preparedIds.includes(sensorId)
+      await synchronizeGspCoefficientsFromSensors([sensorId], "ETALONNAGE")
       const session = await addCalibrationSensor(ctx.user.userId, sensorId)
       return apiOk({ session })
     } catch (error) {
-      if (gspPrepared && sensorId != null) {
-        await applyGspMetrologyConfiguration([sensorId], "normal", "ETALONNAGE").catch((restoreError) => {
-          log.error("METROLOGY_GSP", "calibration_sensor_add_econ_rollback_failed", {
-            userId: ctx.user.userId,
-            sensorId,
-            error: restoreError instanceof Error ? restoreError.message : String(restoreError),
-          })
-        })
-      }
       if (snapshotAdded && sensorId != null) {
         removeCalibrationSensorStateSnapshots(ctx.user.userId, [sensorId])
       }
       if (error instanceof z.ZodError) {
         return apiError(400, "validation_error", "Données invalides", { details: error.issues })
+      }
+      if (error instanceof GspCoefficientReadError || error instanceof GspSensorUnreachableError) {
+        return apiError(400, "gsp_sensor_unreachable", error.message, { serial: error.serial })
       }
       log.error("METROLOGY_CALIBRATION", "session_patch_failed", {
         userId: ctx.user.userId,

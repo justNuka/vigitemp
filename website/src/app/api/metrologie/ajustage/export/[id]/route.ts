@@ -82,6 +82,7 @@ export const GET = withStandardOrExpertAnyAuthorizationLogging(
         standardMeasure2: adjustment.Mesure_Etalon2,
         sensorRawValue1: adjustment.Valeur_Brute1,
         sensorRawValue2: adjustment.Valeur_Brute2,
+        coeffX2: adjustment.Coeff_X2,
         coeffX: adjustment.Coeff_X,
         coeffConstant: adjustment.Coeff_Constant,
         correctedValue1: adjustment.Nouvelle_Mesure1,

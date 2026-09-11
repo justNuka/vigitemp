@@ -1700,6 +1700,7 @@ export async function updateAdjustmentCoefficients(
 export async function resolveAdjustmentCalculatedCoefficientApplication(
   userId: number,
   applyCalculatedCoefficients: boolean,
+  selectedGspSensorIds: number[] = [],
   ip?: string,
 ) {
   const session = sessionsByUserId.get(userId)
@@ -1721,17 +1722,32 @@ export async function resolveAdjustmentCalculatedCoefficientApplication(
     return toPublicSession(session)
   }
 
+  const eligibleIds = new Set(gspSensors.map((sensor) => sensor.id))
+  const selectedIds = Array.from(
+    new Set(selectedGspSensorIds.filter((sensorId) => Number.isInteger(sensorId) && eligibleIds.has(sensorId))),
+  )
   if (applyCalculatedCoefficients) {
+    if (selectedIds.length === 0) {
+      throw new Error("Sélectionnez au moins une sonde GSP à mettre à jour.")
+    }
+    if (selectedIds.length !== new Set(selectedGspSensorIds).size) {
+      throw new Error("La sélection contient une sonde qui ne fait pas partie de cet ajustage GSP.")
+    }
+
+    if (!session.coefficientApplication.previousConfigurationRestored) {
+      await restorePreviousAdjustmentGspConfiguration(session)
+      session.coefficientApplication.previousConfigurationRestored = true
+    }
+
     await restoreGspMetrologyConfigurationOnce(
-      `adjustment:${session.id}:calculated`,
-      gspSensors.map((sensor) => sensor.id),
+      `adjustment:${session.id}:calculated:${selectedIds.slice().sort((a, b) => a - b).join("-")}`,
+      selectedIds,
       "AJUSTAGE",
     )
     session.coefficientApplication.status = "applied"
-    session.message =
-      gspSensors.length === 1
-        ? "Les nouveaux coefficients calculés ont été envoyés à la sonde GSP."
-        : `Les nouveaux coefficients calculés ont été envoyés aux ${gspSensors.length} sondes GSP.`
+    session.message = selectedIds.length === 1
+      ? "Les nouveaux coefficients calculés ont été envoyés à la sonde GSP sélectionnée."
+      : `Les nouveaux coefficients calculés ont été envoyés aux ${selectedIds.length} sondes GSP sélectionnées.`
   } else {
     await restorePreviousAdjustmentGspConfiguration(session)
     session.coefficientApplication.previousConfigurationRestored = true
@@ -1752,6 +1768,7 @@ export async function resolveAdjustmentCalculatedCoefficientApplication(
     resourceId: session.id,
     changes: {
       applyCalculatedCoefficients,
+      selectedGspSensorIds: selectedIds,
       gspSensorIds: gspSensors.map((sensor) => sensor.id),
       gspSerialNumbers: gspSensors.map((sensor) => sensor.serialNumber),
       gsoSensorCount: session.coefficientApplication.gsoSensorCount,

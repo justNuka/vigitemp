@@ -34,7 +34,7 @@ const trimText = (value: string | null | undefined) => {
 };
 
 const getTagBlock = (xml: string, tag: string) => {
-  const regex = new RegExp(`<${tag}[^>]*>([\\s\\S]*?)</${tag}>`, "i");
+  const regex = new RegExp(`<${tag}(?:\\s[^>]*)?>([\\s\\S]*?)</${tag}>`, "i");
   const match = xml.match(regex);
   return match ? trimText(match[1]) : null;
 };
@@ -126,6 +126,7 @@ export function parseAdjustmentXml(xml: string, fileName = ""): ParsedAdjustment
     : null;
   const sensorNumber = sensorNumberRaw ? resolveImportedSensorIdentity(sensorNumberRaw, fileName).serial : null;
 
+  const coeffX2 = parseNumber(getTagValueAny(xml, ["COEFFX2", "COEFF_X2"]));
   const coeffX = parseNumber(getTagValueAny(xml, ["COEFFX", "COEFF_X"]));
   const coeffConstant = parseNumber(getTagValueAny(xml, ["COEFFCONSTANT", "COEFF_CONSTANT"]));
 
@@ -148,7 +149,7 @@ export function parseAdjustmentXml(xml: string, fileName = ""): ParsedAdjustment
   const data: Prisma.t_ajustageCreateInput = {
     Date_Heure_Ajustage: date,
     Sonde_Numero_Serie: sensorNumber,
-    Coeff_X2: 0,
+    Coeff_X2: coeffX2 ?? 0,
     Coeff_X: coeffX,
     Coeff_Constant: coeffConstant,
     Unite: unit,

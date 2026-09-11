@@ -5,8 +5,10 @@ import { useTranslations } from "next-intl"
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { HttpError } from "@/lib/http"
+import { MetrologyGsoCommandFeedback } from "./metrology-gso-command-feedback"
 
 type SensorIdentity = {
+  id: number
   serialNumber: string
   isGso: boolean
 }
@@ -33,15 +35,18 @@ export function MetrologyStartFeedback({ error, isPending = false, sensors }: Pr
 
   if (isPending) {
     return (
-      <Alert className="border-sky-300 bg-sky-50 text-sky-950 dark:border-sky-500/40 dark:bg-sky-500/10 dark:text-sky-100">
-        <LoaderCircle className="h-4 w-4 animate-spin text-sky-700 dark:text-sky-300" />
-        <AlertTitle>{t("pendingTitle")}</AlertTitle>
-        <AlertDescription>{t("pendingDescription")}</AlertDescription>
-      </Alert>
+      <div className="space-y-2">
+        <Alert className="border-sky-300 bg-sky-50 text-sky-950 dark:border-sky-500/40 dark:bg-sky-500/10 dark:text-sky-100">
+          <LoaderCircle className="h-4 w-4 animate-spin text-sky-700 dark:text-sky-300" />
+          <AlertTitle>{t("pendingTitle")}</AlertTitle>
+          <AlertDescription>{t("pendingDescription")}</AlertDescription>
+        </Alert>
+        <MetrologyGsoCommandFeedback sensors={sensors} />
+      </div>
     )
   }
 
-  if (!error) return null
+  if (!error) return <MetrologyGsoCommandFeedback sensors={sensors} />
 
   const message = error instanceof Error ? error.message : String(error)
   const serial = resolveSerial(error)
@@ -55,6 +60,7 @@ export function MetrologyStartFeedback({ error, isPending = false, sensors }: Pr
   const showGsoHelp = serial ? isGso : !isKnownGspFailure
 
   return (
+    <div className="space-y-2">
     <Alert variant="destructive">
       <AlertTriangle className="h-4 w-4" />
       <AlertTitle>{t("title")}</AlertTitle>
@@ -72,5 +78,7 @@ export function MetrologyStartFeedback({ error, isPending = false, sensors }: Pr
         </div>
       </AlertDescription>
     </Alert>
+    <MetrologyGsoCommandFeedback sensors={sensors} />
+    </div>
   )
 }
