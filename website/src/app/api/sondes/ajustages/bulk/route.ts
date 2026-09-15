@@ -3,8 +3,10 @@ import { z } from "zod";
 import { apiError, apiOk } from "@/lib/api-response";
 import { prisma } from "@/lib/prisma";
 import { getRequestContext } from "@/lib/api-logger";
+import { hasMainDbColumn } from "@/lib/db-schema";
 import { withOneOrHigherAnyAuthorizationLogging } from "@/lib/license-guards";
 import { log } from "@/lib/logger";
+import { getTableReference, isMssqlProvider, quoteIdentifier } from "@/lib/metrology-db";
 import { getPermissionAliases } from "@/lib/permissions";
 import {
   buildImportedSensorStorageIdentity,
@@ -12,11 +14,12 @@ import {
   resolveImportedSensorIdentity,
 } from "@/lib/sensor-naming";
 import { parseDbDateTime } from "@/lib/date-display";
-import { readGspCoefficientsFromTarget } from "@/lib/metrology-gsp-coefficient-sync";
 import {
   buildAdjustmentImportModuleAssignments,
   resolveEffectiveImportModuleId,
 } from "@/lib/adjustment-import-module-assignment";
+
+const COEFFICIENT_DIRTY_COLUMN = "Coeffs_Modifies_Depuis_Derniere_Mesure";
 
 const rowSchema = z.object({
   id: z.string().min(1),
@@ -50,10 +53,17 @@ const bodySchema = z.object({
   moduleId: z.number().int().positive().optional(),
   rows: z.array(rowSchema).min(1),
   confirmOverwrite: z.boolean().optional(),
+  sendCoefficients: z.boolean().optional().default(false),
 });
 
 const isMeaningfulOffset = (value: number | null | undefined) =>
   value !== null && value !== undefined && Math.abs(value) > 0.0000001;
+
+function buildCoefficientDirtyUpdateSql() {
+  return isMssqlProvider()
+    ? `UPDATE ${getTableReference("t_ajustage")} SET ${quoteIdentifier(COEFFICIENT_DIRTY_COLUMN)} = @P1 WHERE ${quoteIdentifier("Id_Ajustage")} = @P2`
+    : `UPDATE ${getTableReference("t_ajustage")} SET ${quoteIdentifier(COEFFICIENT_DIRTY_COLUMN)} = ? WHERE ${quoteIdentifier("Id_Ajustage")} = ?`;
+}
 
 export const POST = withOneOrHigherAnyAuthorizationLogging(getPermissionAliases("METROLOGY_OPERATION_ACCESS"), async (req: NextRequest, ctx) => {
   const { ip } = getRequestContext(req);
@@ -69,6 +79,7 @@ export const POST = withOneOrHigherAnyAuthorizationLogging(getPermissionAliases(
       ip,
       files: validated.rows.length,
       legacyModuleId,
+      sendCoefficients: validated.sendCoefficients,
     });
 
     const sensorTypes = await prisma.t_sonde_type.findMany({
@@ -229,61 +240,18 @@ export const POST = withOneOrHigherAnyAuthorizationLogging(getPermissionAliases(
     const moduleById = new Map(
       [...requestedModules, ...existingModules].map((moduleRow) => [moduleRow.Id_Module, moduleRow]),
     );
-    const liveGspCoefficients = new Map<string, Awaited<ReturnType<typeof readGspCoefficientsFromTarget>>>();
-    const gspCoefficientFallbackSerials = new Set<string>();
 
-    for (const serial of serials.filter((value) => !isGsoSerial(value))) {
-      const existingSensor = existingSensorBySerial.get(serial);
-      const requestedModuleId = requestedModuleBySerial.get(serial) ?? null;
-      const effectiveModuleId = resolveEffectiveImportModuleId(existingSensor?.Id_Module, requestedModuleId);
-
-      if (!effectiveModuleId) {
-        gspCoefficientFallbackSerials.add(serial);
-        log.info("ADJUSTMENT_IMPORT", "Skipping live GSP coefficient read because sensor has no module assignment", {
-          user: ctx.user.username,
-          userId: ctx.user.userId,
-          ip,
-          serial,
-        });
-        continue;
-      }
-
-      const moduleRow = moduleById.get(effectiveModuleId) ?? null;
-      const modulePort = moduleRow?.Port_Serie?.trim();
-      if (!modulePort) {
-        gspCoefficientFallbackSerials.add(serial);
-        log.warn("ADJUSTMENT_IMPORT", "Skipping live GSP coefficient read because assigned module has no serial port", {
-          user: ctx.user.username,
-          userId: ctx.user.userId,
-          ip,
-          serial,
-          moduleId: effectiveModuleId,
-        });
-        continue;
-      }
-
-      try {
-        const live = await readGspCoefficientsFromTarget({
-          sensorId: existingSensor?.Id_Sonde ?? null,
-          serialNumber: serial,
-          address: existingSensor?.Adresse_Sonde?.trim() || addressBySerial.get(serial) || null,
-          modulePort,
-          moduleName: moduleRow?.Module_Numero_Serie ?? moduleRow?.Emplacement ?? null,
-          unit: null,
-        }, "AJUSTAGE");
-        liveGspCoefficients.set(serial, live);
-      } catch (error) {
-        gspCoefficientFallbackSerials.add(serial);
-        log.warn("ADJUSTMENT_IMPORT", "Live GSP coefficient read failed; imported XML coefficients will be used", {
-          user: ctx.user.username,
-          userId: ctx.user.userId,
-          ip,
-          serial,
-          moduleId: effectiveModuleId,
-          error: error instanceof Error ? error.message : String(error),
-        });
-      }
+    // Le choix d'un module reste une affectation BDD uniquement. L'import bulk ne doit
+    // plus contacter le matériel : aucune lecture DCON ni écriture ECON n'est déclenchée ici.
+    const hasCoefficientDirtyColumn = await hasMainDbColumn("t_ajustage", COEFFICIENT_DIRTY_COLUMN);
+    if (validated.sendCoefficients && !hasCoefficientDirtyColumn) {
+      return apiError(
+        409,
+        "coefficient_sync_schema_required",
+        "La base doit être migrée en version 0.90.2 avant de programmer l'envoi des coefficients.",
+      );
     }
+    const coefficientDirtyUpdateSql = hasCoefficientDirtyColumn ? buildCoefficientDirtyUpdateSql() : null;
 
     if (offsetSerials.length > 0 && !validated.confirmOverwrite) {
       log.warn("ADJUSTMENT_IMPORT", "Confirmation required before overwrite", {
@@ -312,6 +280,9 @@ export const POST = withOneOrHigherAnyAuthorizationLogging(getPermissionAliases(
     const skippedIds: string[] = [];
     let overwrittenAdjustments = 0;
     const insertedSerials = new Set<string>();
+    const importedAdjustmentIdsBySerial = new Map<string, Set<number>>();
+    const coefficientSyncQueuedSerials = new Set<string>();
+    const coefficientSyncSkippedSerials = new Set<string>();
     let invalidatedEtalonnages = 0;
     let invalidatedEtalonnageMeasures = 0;
 
@@ -379,25 +350,17 @@ export const POST = withOneOrHigherAnyAuthorizationLogging(getPermissionAliases(
         });
       }
 
-      if (serials.length > 0) {
-        await tx.t_lieu.updateMany({
-          where: { Sonde_Numero_Serie: { in: serials } },
-          data: { Infos_Modifiees_Depuis_Derniere_Mesure: true },
-        });
-      }
-
       for (const row of normalizedRows) {
         const data = row.insertData;
         const dateAjustage = parseDbDateTime(data.Date_Heure_Ajustage);
         const dateCertif = parseDbDateTime(data.SE_Date_Certif);
 
-        const live = data.Sonde_Numero_Serie ? liveGspCoefficients.get(data.Sonde_Numero_Serie) : null;
         const adjustmentData = {
             Date_Heure_Ajustage: dateAjustage,
             Sonde_Numero_Serie: data.Sonde_Numero_Serie,
-            Coeff_X2: live?.stored.coeffX2 ?? data.Coeff_X2 ?? 0,
-            Coeff_X: live?.stored.coeffX ?? data.Coeff_X,
-            Coeff_Constant: live?.stored.coeffConstant ?? data.Coeff_Constant,
+            Coeff_X2: data.Coeff_X2 ?? 0,
+            Coeff_X: data.Coeff_X,
+            Coeff_Constant: data.Coeff_Constant,
             Unite: data.Unite,
             Nb_Decimale: data.Nb_Decimale,
             Operateur: data.Operateur,
@@ -424,17 +387,64 @@ export const POST = withOneOrHigherAnyAuthorizationLogging(getPermissionAliases(
           select: { Id_Ajustage: true },
         });
 
-        if (existing) {
-          await tx.t_ajustage.update({ where: { Id_Ajustage: existing.Id_Ajustage }, data: adjustmentData });
-          overwrittenAdjustments += 1;
-        } else {
-          await tx.t_ajustage.create({ data: adjustmentData });
+        const savedAdjustment = existing
+          ? await tx.t_ajustage.update({
+              where: { Id_Ajustage: existing.Id_Ajustage },
+              data: adjustmentData,
+              select: { Id_Ajustage: true },
+            })
+          : await tx.t_ajustage.create({
+              data: adjustmentData,
+              select: { Id_Ajustage: true },
+            });
+
+        if (existing) overwrittenAdjustments += 1;
+
+        if (coefficientDirtyUpdateSql) {
+          // Un import non coché doit neutraliser un ancien dirty flag sur la ligne
+          // remplacée ; sinon les coefficients importés pourraient être envoyés sans
+          // action explicite de l'opérateur.
+          await tx.$executeRawUnsafe(coefficientDirtyUpdateSql, 0, savedAdjustment.Id_Ajustage);
         }
 
         if (data.Sonde_Numero_Serie) {
           insertedSerials.add(data.Sonde_Numero_Serie);
+          const adjustmentIds = importedAdjustmentIdsBySerial.get(data.Sonde_Numero_Serie) ?? new Set<number>();
+          adjustmentIds.add(savedAdjustment.Id_Ajustage);
+          importedAdjustmentIdsBySerial.set(data.Sonde_Numero_Serie, adjustmentIds);
         }
         insertedIds.push(row.id);
+      }
+
+      if (validated.sendCoefficients && coefficientDirtyUpdateSql) {
+        for (const [serial, importedAdjustmentIds] of importedAdjustmentIdsBySerial) {
+          if (isGsoSerial(serial)) continue;
+
+          const existingSensor = existingSensorBySerial.get(serial);
+          const requestedModuleId = requestedModuleBySerial.get(serial) ?? null;
+          const effectiveModuleId = resolveEffectiveImportModuleId(existingSensor?.Id_Module, requestedModuleId);
+          const modulePort = effectiveModuleId ? moduleById.get(effectiveModuleId)?.Port_Serie?.trim() : null;
+          if (!effectiveModuleId || !modulePort) {
+            coefficientSyncSkippedSerials.add(serial);
+            continue;
+          }
+
+          const latestAdjustment = await tx.t_ajustage.findFirst({
+            where: { Sonde_Numero_Serie: serial },
+            orderBy: [{ Date_Heure_Ajustage: "desc" }, { Id_Ajustage: "desc" }],
+            select: { Id_Ajustage: true },
+          });
+
+          if (!latestAdjustment || !importedAdjustmentIds.has(latestAdjustment.Id_Ajustage)) {
+            // Ne jamais armer un ajustage plus récent qui ne fait pas partie du lot :
+            // l'opérateur a demandé l'envoi des coefficients du XML importé.
+            coefficientSyncSkippedSerials.add(serial);
+            continue;
+          }
+
+          await tx.$executeRawUnsafe(coefficientDirtyUpdateSql, 1, latestAdjustment.Id_Ajustage);
+          coefficientSyncQueuedSerials.add(serial);
+        }
       }
 
       const insertedSerialList = Array.from(insertedSerials);
@@ -468,8 +478,9 @@ export const POST = withOneOrHigherAnyAuthorizationLogging(getPermissionAliases(
       createdSensorsFromAdjustment: serialsToCreate.length,
       invalidatedEtalonnages,
       invalidatedEtalonnageMeasures,
-      gspCoefficientFallbackCount: gspCoefficientFallbackSerials.size,
-      gspCoefficientFallbackSerials: Array.from(gspCoefficientFallbackSerials).slice(0, 20),
+      sendCoefficients: validated.sendCoefficients,
+      coefficientSyncQueuedCount: coefficientSyncQueuedSerials.size,
+      coefficientSyncSkippedCount: coefficientSyncSkippedSerials.size,
     })
 
     log.audit("CA", {
@@ -486,8 +497,11 @@ export const POST = withOneOrHigherAnyAuthorizationLogging(getPermissionAliases(
         clearedOffsets: validated.confirmOverwrite ? offsetSerials.length : 0,
         invalidatedEtalonnages,
         invalidatedEtalonnageMeasures,
-        gspCoefficientFallbackCount: gspCoefficientFallbackSerials.size,
-        gspCoefficientFallbackSerials: Array.from(gspCoefficientFallbackSerials).slice(0, 20),
+        sendCoefficients: validated.sendCoefficients,
+        coefficientSyncQueuedCount: coefficientSyncQueuedSerials.size,
+        coefficientSyncQueuedSerials: Array.from(coefficientSyncQueuedSerials).slice(0, 20),
+        coefficientSyncSkippedCount: coefficientSyncSkippedSerials.size,
+        coefficientSyncSkippedSerials: Array.from(coefficientSyncSkippedSerials).slice(0, 20),
         serials: serials.slice(0, 10),
         fileNames: validated.rows.slice(0, 10).map((row) => row.file),
       },
@@ -505,8 +519,10 @@ export const POST = withOneOrHigherAnyAuthorizationLogging(getPermissionAliases(
       existingSensorsWithModule,
       invalidatedEtalonnages,
       invalidatedEtalonnageMeasures,
-      gspCoefficientFallbackCount: gspCoefficientFallbackSerials.size,
-      gspCoefficientFallbackSerials: Array.from(gspCoefficientFallbackSerials),
+      coefficientSyncQueuedCount: coefficientSyncQueuedSerials.size,
+      coefficientSyncQueuedSerials: Array.from(coefficientSyncQueuedSerials),
+      coefficientSyncSkippedCount: coefficientSyncSkippedSerials.size,
+      coefficientSyncSkippedSerials: Array.from(coefficientSyncSkippedSerials),
     });
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -537,4 +553,3 @@ export const POST = withOneOrHigherAnyAuthorizationLogging(getPermissionAliases(
     return apiError(500, "bulk_import_failed", "Erreur lors de l'insertion en base");
   }
 });
-

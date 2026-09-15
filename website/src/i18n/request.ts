@@ -5,6 +5,7 @@ import {mergeMessages, supplementForLocale, type MessageCatalog} from '../messag
 import {metrologyCalibrationSupplementForLocale} from '../messages/metrology-calibration-supplements';
 import {adminSettingsSupplementForLocale} from '../messages/admin-settings-supplements';
 import {toolsSupplementForLocale} from '../messages/tools-supplements';
+import {adjustmentImportSupplementForLocale} from '../messages/adjustment-import-supplements';
  
 export default getRequestConfig(async ({requestLocale}) => {
   // Typically corresponds to the `[locale]` segment
@@ -19,9 +20,10 @@ export default getRequestConfig(async ({requestLocale}) => {
   const messagesWithSupplements = mergeMessages(baseMessages, supplementForLocale(locale));
   const messagesWithAdminSettings = mergeMessages(messagesWithSupplements, adminSettingsSupplementForLocale(locale));
   const messagesWithMetrology = mergeMessages(messagesWithAdminSettings, metrologyCalibrationSupplementForLocale(locale));
+  const messagesWithTools = mergeMessages(messagesWithMetrology, toolsSupplementForLocale(locale));
  
   return {
     locale,
-    messages: mergeMessages(messagesWithMetrology, toolsSupplementForLocale(locale))
+    messages: mergeMessages(messagesWithTools, adjustmentImportSupplementForLocale(locale))
   };
 });

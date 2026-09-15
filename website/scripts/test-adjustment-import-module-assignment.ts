@@ -36,8 +36,22 @@ const routeSource = readFileSync(
   new URL("../src/app/api/sondes/ajustages/bulk/route.ts", import.meta.url),
   "utf8",
 )
-assert.match(routeSource, /gspCoefficientFallbackSerials\.add\(serial\)/)
-assert.match(routeSource, /imported XML coefficients will be used/)
+assert.doesNotMatch(routeSource, /readGspCoefficientsFromTarget/)
+assert.doesNotMatch(routeSource, /action:\s*["']read-config["']/)
+assert.doesNotMatch(routeSource, /Infos_Modifiees_Depuis_Derniere_Mesure/)
+assert.match(routeSource, /sendCoefficients/)
+assert.match(routeSource, /Coeffs_Modifies_Depuis_Derniere_Mesure/)
+assert.match(routeSource, /coefficientSyncQueuedSerials\.add\(serial\)/)
+assert.match(routeSource, /coefficientSyncSkippedSerials\.add\(serial\)/)
+assert.match(routeSource, /modulePort/)
 assert.doesNotMatch(routeSource, /gsp_module_required/)
 
-console.log("Adjustment import module assignment OK")
+const clientSource = readFileSync(
+  new URL("../src/app/[locale]/(admin)/admin/sondes/ajustage-import/adjustment-import-client.tsx", import.meta.url),
+  "utf8",
+)
+assert.match(clientSource, /useState\(false\).*sendCoefficients|sendCoefficients, setSendCoefficients/u)
+assert.match(clientSource, /coefficient_sync\.label/)
+assert.match(clientSource, /sendCoefficients/u)
+
+console.log("Adjustment import module assignment and coefficient sync OK")
