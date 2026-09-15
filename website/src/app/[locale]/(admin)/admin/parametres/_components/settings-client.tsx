@@ -14,6 +14,7 @@ import { NotificationsSettingsCard } from "./notifications-settings-card";
 import { NonResponseAutoAckSettingsCard } from "./non-response-auto-ack-settings-card";
 import { PasswordPolicyCard } from "./password-policy-card";
 import { SMTPConfigModal } from "./smtp-config-modal";
+import { SMTPConfigurationGuideDialog } from "./smtp-configuration-guide-dialog";
 import { SmtpSettingsCard } from "./smtp-settings-card";
 import { TelephonyLicenseLockedCard } from "./telephony/telephony-license-locked-card";
 import { TelephonySettingsCard } from "./telephony-settings-card";
@@ -72,6 +73,7 @@ export function SettingsClient({ settings: initialSettings }: Props) {
   const canEditSurveillanceRefresh = isStandardOrExpert(license);
   const canUseTelephony = hasLicenseOption(license, "telephonie");
   const [smtpModalOpen, setSmtpModalOpen] = useState(false);
+  const [smtpGuideOpen, setSmtpGuideOpen] = useState(false);
   const { settings, loadingKeys, hasPendingChanges, setDraftValue, toggleDraft, discardChanges, saveChanges } =
     useSettingsEditor(initialSettings);
 
@@ -143,9 +145,13 @@ export function SettingsClient({ settings: initialSettings }: Props) {
         />
       ) : null}
 
-      <SmtpSettingsCard onOpenSmtpModal={() => setSmtpModalOpen(true)} />
+      <SmtpSettingsCard
+        onOpenSmtpModal={() => setSmtpModalOpen(true)}
+        onOpenSmtpGuide={() => setSmtpGuideOpen(true)}
+      />
       {canUseTelephony ? <TelephonySettingsCard /> : <TelephonyLicenseLockedCard />}
       <SMTPConfigModal open={smtpModalOpen} onOpenChange={setSmtpModalOpen} />
+      <SMTPConfigurationGuideDialog open={smtpGuideOpen} onOpenChange={setSmtpGuideOpen} />
     </main>
   );
 }
