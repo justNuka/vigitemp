@@ -375,3 +375,28 @@ GitHub Actions run `34481613789` exécuté sur le même arbre fonctionnel avant 
 - [ ] vérifier un cas GSO en erreur et la présence de l'aide GSO ;
 - [ ] corriger le numéro/branchements puis vérifier qu'un démarrage normal fonctionne.
 
+---
+
+## Lot — import d'ajustage : assignation optionnelle et multi-modules (15/09/2026)
+
+- Branche : `feature/import-module-assignment`
+- PR : #116 — `feat(import): assouplir l'assignation et la lecture GSP`
+- Statut : `PR_OUVERTE` — validation terrain à réaliser
+- Documentation détaillée : `website/docs/adjustment-import-module-assignment-15-09-2026.md`
+
+### Retour terrain
+
+L'import d'ajustage ne doit plus exiger un module unique pour tout le lot. Il doit être possible d'importer sans module ou de préparer des affectations différentes par sonde via une dialog dédiée.
+
+### Validation terrain
+
+- [ ] import sans module non bloqué ;
+- [ ] module A sur un sous-ensemble de sondes ;
+- [ ] module B sur un autre sous-ensemble dans le même lot ;
+- [ ] sondes non cochées créées sans module ;
+- [ ] module existant d'une sonde déjà connue conservé ;
+- [ ] GSP sans module importée sans lecture DCON impossible ;
+- [ ] GSP avec module continue à relire ses coefficients physiques ;
+- [ ] GSP injoignable ou module sans port : import non bloqué, coefficients XML conservés et avertissement affiché ;
+- [ ] FR / EN et ergonomie dialog validés.
+

@@ -101,6 +101,39 @@ export const frSupplements: MessageCatalog = {
       typing: "{names} est en train d'écrire…",
     },
   },
+  sensorAdjustmentImport: {
+    actions: {
+      assign_modules: "Assignation des modules",
+    },
+    toast: {
+      gsp_coefficients_fallback: "Lecture des coefficients impossible pour {count} GSP : les coefficients du fichier XML ont été importés à la place.",
+    },
+    labels: {
+      no_module: "Sans module",
+    },
+    tooltips: {
+      created_on_import: "Affectation définie pour cet import. Sans affectation, la sonde est créée ou conservée sans module.",
+    },
+    module_assignment_dialog: {
+      title: "Assignation des modules",
+      description: "Choisissez un module, puis cochez les sondes à lui affecter. Changez de module et recommencez autant de fois que nécessaire. Une sonde peut rester sans module.",
+      module_label: "Module à affecter",
+      module_placeholder: "Sélectionner un module",
+      search_placeholder: "Rechercher une sonde ou un module...",
+      assigned_count: "{count} affectée(s)",
+      unassigned_count: "{count} sans module",
+      no_modules: "Aucun module n'est disponible. L'import reste possible sans affectation.",
+      no_module: "Sans module",
+      move_hint: "Cocher une sonde déjà affectée dans cette fenêtre la déplace vers le module sélectionné. Les sondes déjà affectées en base restent verrouillées ici.",
+      existing_locked: "Module déjà enregistré en base. Utilisez la gestion des sondes pour le modifier.",
+      assigned_here: "Affectation préparée pour cet import.",
+      unassigned: "Aucune affectation préparée : l'import reste autorisé.",
+      clear: "Retirer",
+      close: "Terminer",
+      empty: "Aucune sonde ne correspond à la recherche.",
+      checkbox_aria: "Affecter {sensor} à {module}",
+    },
+  },
   metrologyWorkspace: {
     title: "Métrologie",
     description: "Espace de travail métrologie. Les opérations d'ajustage et d'étalonnage seront accessibles ici.",
@@ -442,6 +475,39 @@ export const enSupplements: MessageCatalog = {
   messaging: {
     thread: {
       typing: "{names} is typing…",
+    },
+  },
+  sensorAdjustmentImport: {
+    actions: {
+      assign_modules: "Module assignment",
+    },
+    toast: {
+      gsp_coefficients_fallback: "Coefficient reading failed for {count} GSP sensor(s): the XML file coefficients were imported instead.",
+    },
+    labels: {
+      no_module: "No module",
+    },
+    tooltips: {
+      created_on_import: "Assignment defined for this import. Without an assignment, the sensor is created or kept without a module.",
+    },
+    module_assignment_dialog: {
+      title: "Module assignment",
+      description: "Choose a module, then check the sensors to assign to it. Switch modules and repeat as many times as needed. A sensor may remain unassigned.",
+      module_label: "Module to assign",
+      module_placeholder: "Select a module",
+      search_placeholder: "Search a sensor or module...",
+      assigned_count: "{count} assigned",
+      unassigned_count: "{count} without module",
+      no_modules: "No module is available. Import remains possible without an assignment.",
+      no_module: "No module",
+      move_hint: "Checking a sensor already assigned in this dialog moves it to the selected module. Sensors already assigned in the database remain locked here.",
+      existing_locked: "A module is already stored in the database. Use sensor management to change it.",
+      assigned_here: "Assignment prepared for this import.",
+      unassigned: "No assignment prepared: import remains allowed.",
+      clear: "Remove",
+      close: "Done",
+      empty: "No sensor matches the search.",
+      checkbox_aria: "Assign {sensor} to {module}",
     },
   },
   metrologyWorkspace: {
