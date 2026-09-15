@@ -1,6 +1,6 @@
 'use client';
 
-import { AlertTriangle, Mail } from 'lucide-react';
+import { AlertTriangle, BookOpen, Mail } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,9 +8,10 @@ import { useTranslations } from 'next-intl';
 
 type SmtpSettingsCardProps = {
   onOpenSmtpModal: () => void;
+  onOpenSmtpGuide: () => void;
 };
 
-export function SmtpSettingsCard({ onOpenSmtpModal }: SmtpSettingsCardProps) {
+export function SmtpSettingsCard({ onOpenSmtpModal, onOpenSmtpGuide }: SmtpSettingsCardProps) {
   const t = useTranslations('adminSettings');
 
   return (
@@ -30,10 +31,16 @@ export function SmtpSettingsCard({ onOpenSmtpModal }: SmtpSettingsCardProps) {
           </AlertDescription>
         </Alert>
 
-        <Button onClick={onOpenSmtpModal} variant="default" className="w-full sm:w-auto">
-          <Mail className="mr-2 h-4 w-4" />
-          {t('smtp.configure_button')}
-        </Button>
+        <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+          <Button onClick={onOpenSmtpModal} variant="default" className="w-full sm:w-auto">
+            <Mail className="mr-2 h-4 w-4" />
+            {t('smtp.configure_button')}
+          </Button>
+          <Button onClick={onOpenSmtpGuide} variant="outline" className="w-full sm:w-auto">
+            <BookOpen className="mr-2 h-4 w-4" />
+            {t('smtp.guide_button')}
+          </Button>
+        </div>
       </CardContent>
     </Card>
   );

@@ -100,6 +100,36 @@ La désactivation conserve l'hôte, le port, l'utilisateur, l'expéditeur et le 
 
 Correction d'une incohérence dans la réponse PATCH de `/api/parametres/[key]` : la propriété Prisma correcte est `Mot_Cle` et non `MotCle`.
 
+### 8. Guide de configuration SMTP — 15/09/2026
+
+Un test d'installation client avec Gmail a retourné `535 5.7.8 Username and Password not accepted`. La connexion à `smtp.gmail.com` arrivait correctement jusqu'à `AUTH PLAIN` : le problème provenait donc de l'authentification Google, qui nécessite un mot de passe d'application lorsque ce mode est utilisé.
+
+Lot associé :
+
+- branche : `feature/smtp-configuration-guide` ;
+- base : `dev` au commit `db05fdd87e58bc9ce9ad82bf9986667ba596cc02` (merge PR #117) ;
+- PR : #118 — `feat(settings): ajouter un guide de configuration SMTP`.
+
+La carte **Configuration Email** expose désormais un bouton **Guide SMTP** ouvrant une dialog FR/EN distincte du formulaire de configuration.
+
+Le guide couvre :
+
+- **Google / Gmail** : `smtp.gmail.com`, port `587`, STARTTLS, adresse complète comme utilisateur/expéditeur et mot de passe d'application Google ;
+- **Microsoft 365** : `smtp.office365.com`, port `587`, STARTTLS, avec avertissement sur SMTP AUTH et les politiques de tenant ;
+- **Outlook.com personnel** : rappel que Microsoft documente désormais OAuth2 / Modern Auth comme méthode d'authentification ;
+- **Alwaysdata** en solution de repli lorsqu'aucun SMTP client n'est disponible : `smtp-[account].alwaysdata.net`, port `465` SSL/TLS ou `587` STARTTLS, adresse email complète et mot de passe de la boîte ;
+- **autre relais SMTP** : checklist des informations à demander à la DSI (DNS, port, TLS, identifiants, expéditeur autorisé et ouverture réseau).
+
+Limite documentée : VigiSensys utilise actuellement Nodemailer avec authentification SMTP utilisateur/mot de passe. OAuth2 SMTP n'est pas encore implémenté. Un tenant Microsoft imposant exclusivement Modern Auth doit donc fournir un relais compatible ou utiliser une autre solution SMTP telle qu'Alwaysdata.
+
+Fichiers principaux :
+
+- `website/src/app/[locale]/(admin)/admin/parametres/_components/smtp-settings-card.tsx` ;
+- `website/src/app/[locale]/(admin)/admin/parametres/_components/smtp-configuration-guide-dialog.tsx` ;
+- `website/src/app/[locale]/(admin)/admin/parametres/_components/settings-client.tsx` ;
+- `website/src/messages/smtp-guide-supplements.ts` ;
+- `website/src/i18n/request.ts`.
+
 ## Validation terrain
 
 - [ ] Modifier `Rafraîchissement surveillance`, vérifier qu'aucune écriture n'a lieu avant clic sur Enregistrer.
@@ -112,4 +142,6 @@ Correction d'une incohérence dans la réponse PATCH de `/api/parametres/[key]` 
 - [ ] Enregistrer une ou plusieurs adresses en copie puis envoyer un email de test/alarme adapté.
 - [ ] Désactiver `SECURITE_EMAIL:SMTP_ACTIVATION` depuis le switch SMTP : l'email de test doit être refusé proprement.
 - [ ] Réactiver le switch : l'email de test doit être envoyé si la configuration SMTP est complète.
-- [ ] Vérifier FR et EN.
+- [ ] Ouvrir **Guide SMTP** et vérifier les quatre sections Google, Microsoft, Alwaysdata et autre SMTP.
+- [ ] Tester Gmail avec mot de passe d'application et vérifier l'envoi de l'email de test.
+- [ ] Vérifier le rendu du guide en FR / EN, thèmes clair / sombre et largeur mobile.
