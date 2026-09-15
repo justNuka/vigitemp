@@ -130,6 +130,7 @@ namespace Vigitemp_Serveur
             public string Module { get; set; }
             public int? ModuleType { get; set; }
             public int? ManualWorkerId { get; set; }
+            public bool ConfigurationOnly { get; set; }
             // NOTE: ConfigDirty est accede uniquement depuis les methodes qui tiennent
             // le SemaphoreSlim(1,1) — pas de volatile requis pour cette raison.
             public bool ConfigDirty { get; set; }
@@ -227,13 +228,13 @@ namespace Vigitemp_Serveur
                 return false;
             }
 
-            if (!_schedules.Values.Any(s => string.Equals(s.Serial, serial, StringComparison.OrdinalIgnoreCase)))
+            if (!_schedules.Values.Any(s => !s.ConfigurationOnly && string.Equals(s.Serial, serial, StringComparison.OrdinalIgnoreCase)))
             {
                 VigitempServeur.Log($"[SONDE][MEMO-JOB] serial={serial} status=rejected reason=schedule-not-found");
                 return false;
             }
 
-            var schedule = _schedules.Values.FirstOrDefault(s => string.Equals(s.Serial, serial, StringComparison.OrdinalIgnoreCase));
+            var schedule = _schedules.Values.FirstOrDefault(s => !s.ConfigurationOnly && string.Equals(s.Serial, serial, StringComparison.OrdinalIgnoreCase));
 
             var requestedCount = Math.Max(1, totalCount);
             var requestSize = Math.Min(
@@ -285,7 +286,7 @@ namespace Vigitemp_Serveur
 
             if (_gspMemoJobs.TryRemove(serial, out _))
             {
-                var schedule = _schedules.Values.FirstOrDefault(s => string.Equals(s.Serial, serial, StringComparison.OrdinalIgnoreCase));
+                var schedule = _schedules.Values.FirstOrDefault(s => !s.ConfigurationOnly && string.Equals(s.Serial, serial, StringComparison.OrdinalIgnoreCase));
                 if (schedule != null)
                 {
                     GetDatabase().setLieuGspRecoveryPending(schedule.IdLieu, false);
@@ -461,7 +462,7 @@ namespace Vigitemp_Serveur
 
         private bool TryQueuePendingGspRecovery(SondeScheduleInfo row, SensorSchedule schedule, DateTime now)
         {
-            if (row == null || schedule == null || !row.GspRecoveryPending)
+            if (row == null || schedule == null || row.ConfigurationOnly || !row.GspRecoveryPending)
             {
                 return false;
             }
@@ -1322,7 +1323,7 @@ namespace Vigitemp_Serveur
                 }
 
                 var due = _schedules.Values
-                    .Where(s => !s.InProgress && IsScheduleDue(s, now))
+                    .Where(s => !s.InProgress && !s.ConfigurationOnly && IsScheduleDue(s, now))
                     .OrderByDescending(ComputePriority)
                     .ThenBy(s => s.FrequencySeconds)
                     .ThenBy(s => s.NextDue)
@@ -1450,7 +1451,26 @@ namespace Vigitemp_Serveur
                 return false;
             }
 
-            if (!GetDatabase().isSondeAvailableForSurveillance(schedule.IdLieu, schedule.Serial))
+            if (schedule.ConfigurationOnly)
+            {
+                if (!schedule.ConfigDirty ||
+                    !GspPendingConfigurationReader.IsStillEligible(schedule.IdLieu, schedule.Serial))
+                {
+                    _schedules.TryRemove(schedule.IdLieu, out _);
+                    _sondeMetrologyCache.TryRemove(schedule.Serial, out _);
+                    _nextProbeDueBySerial.TryRemove(schedule.Serial, out _);
+                    VigitempServeur.Log(
+                        $"[SONDE][CFG-JOB] serial={schedule.Serial} status=deferred " +
+                        "reason=configuration-only-no-longer-eligible");
+                    return false;
+                }
+
+                // Ne jamais reutiliser un cache peuple par un ancien schedule de Surveillance :
+                // le provider metrologie doit relire le dernier ajustage, y compris Coeff_X2.
+                _sondeMetrologyCache.TryRemove(schedule.Serial, out _);
+                InvalidateLieuSettingsCache(schedule.IdLieu, "configuration-only");
+            }
+            else if (!GetDatabase().isSondeAvailableForSurveillance(schedule.IdLieu, schedule.Serial))
             {
                 _schedules.TryRemove(schedule.IdLieu, out _);
                 VigitempServeur.Log(
@@ -1459,7 +1479,7 @@ namespace Vigitemp_Serveur
                 return false;
             }
 
-            if (GetDatabase().isSondeInNoResponse(schedule.IdLieu, schedule.Serial))
+            if (!schedule.ConfigurationOnly && GetDatabase().isSondeInNoResponse(schedule.IdLieu, schedule.Serial))
             {
                 schedule.ConfigNextAttemptUtc = DateTime.UtcNow.AddSeconds(
                     Math.Max(10, Math.Min(60, schedule.FrequencySeconds)));
@@ -1486,7 +1506,7 @@ namespace Vigitemp_Serveur
                 var fullConfiguration = schedule.ConfigDirty;
                 var mode = fullConfiguration ? "push" : "verify";
                 VigitempServeur.Log(
-                    $"[SONDE][CFG-JOB] serial={schedule.Serial} status=start mode={mode} port={schedule.Port} priority={(prioritizeDirtyPushes ? "dirty-first" : "free-slot")} minWindowSec={_gspConfigFreeSlotMinSeconds} nextDue={FormatDateForLog(nextDue)} dirty={schedule.ConfigDirty} checkDue={schedule.ConfigCheckDue}");
+                    $"[SONDE][CFG-JOB] serial={schedule.Serial} status=start mode={mode} port={schedule.Port} priority={(prioritizeDirtyPushes ? "dirty-first" : "free-slot")} minWindowSec={_gspConfigFreeSlotMinSeconds} nextDue={FormatDateForLog(nextDue)} dirty={schedule.ConfigDirty} checkDue={schedule.ConfigCheckDue} configurationOnly={schedule.ConfigurationOnly}");
 
                 var synchronized = false;
                 await RunWithPortLockAsync(schedule.Port, schedule.Serial, async () =>
@@ -1508,7 +1528,13 @@ namespace Vigitemp_Serveur
                     {
                         GetDatabase().setLieuInfosModifiees(schedule.IdLieu, false);
                     }
-                    VigitempServeur.Log($"[SONDE][CFG-JOB] serial={schedule.Serial} status=success mode={mode}");
+                    if (schedule.ConfigurationOnly)
+                    {
+                        _schedules.TryRemove(schedule.IdLieu, out _);
+                        _sondeMetrologyCache.TryRemove(schedule.Serial, out _);
+                        _nextProbeDueBySerial.TryRemove(schedule.Serial, out _);
+                    }
+                    VigitempServeur.Log($"[SONDE][CFG-JOB] serial={schedule.Serial} status=success mode={mode} configurationOnly={schedule.ConfigurationOnly}");
                 }
                 else
                 {
@@ -1566,6 +1592,7 @@ namespace Vigitemp_Serveur
             }
 
             var schedule = _schedules.Values.FirstOrDefault(s =>
+                !s.ConfigurationOnly &&
                 string.Equals(s.Serial, job.Serial, StringComparison.OrdinalIgnoreCase));
             if (schedule == null)
             {
@@ -2030,6 +2057,7 @@ namespace Vigitemp_Serveur
             var port = NormalizePortLockKey(schedule?.Port);
             return _schedules.Values.Where(s =>
                 s != null &&
+                !s.ConfigurationOnly &&
                 !string.IsNullOrWhiteSpace(s.Serial) &&
                 ((!string.IsNullOrWhiteSpace(module) &&
                   string.Equals((s.Module ?? string.Empty).Trim(), module, StringComparison.OrdinalIgnoreCase)) ||
@@ -2501,12 +2529,20 @@ namespace Vigitemp_Serveur
                 {
                     schedule = BuildSchedule(row, now);
                     _schedules[row.IdLieu] = schedule;
-                    RememberNextProbeDue(schedule);
-                    SetSondeMetrologyFromSchedule(row);
-                    BootstrapPendingGspRecovery(row, schedule, now);
+                    if (row.ConfigurationOnly)
+                    {
+                        _sondeMetrologyCache.TryRemove(row.SondeNumeroSerie, out _);
+                        InvalidateLieuSettingsCache(row.IdLieu, "configuration-only-added");
+                    }
+                    else
+                    {
+                        RememberNextProbeDue(schedule);
+                        SetSondeMetrologyFromSchedule(row);
+                        BootstrapPendingGspRecovery(row, schedule, now);
+                    }
                     if (_logScheduler)
                     {
-                        VigitempServeur.Log($"Scheduler add idLieu={row.IdLieu} serial={row.SondeNumeroSerie} freqSec={row.FrequenceSecondes}");
+                        VigitempServeur.Log($"Scheduler add idLieu={row.IdLieu} serial={row.SondeNumeroSerie} freqSec={row.FrequenceSecondes} configurationOnly={row.ConfigurationOnly}");
                     }
 
                     continue;
@@ -2527,12 +2563,20 @@ namespace Vigitemp_Serveur
                                  !string.Equals(schedule.Module, row.ModuleNumeroSerie, StringComparison.Ordinal) ||
                                  schedule.ModuleType != row.ModuleType ||
                                  schedule.ManualWorkerId != NormalizeWorkerId(row.ManualWorkerId) ||
+                                 schedule.ConfigurationOnly != row.ConfigurationOnly ||
                                  schedule.FrequencySeconds != row.FrequenceSecondes;
 
                 if (hasChanges)
                 {
                     var previousSerial = schedule.Serial;
-                    SetSondeMetrologyFromSchedule(row);
+                    if (row.ConfigurationOnly)
+                    {
+                        _sondeMetrologyCache.TryRemove(row.SondeNumeroSerie, out _);
+                    }
+                    else
+                    {
+                        SetSondeMetrologyFromSchedule(row);
+                    }
                     schedule.Serial = row.SondeNumeroSerie;
                     schedule.SondeType = row.SondeType;
                     schedule.FamilleSonde = row.FamilleSonde;
@@ -2541,6 +2585,7 @@ namespace Vigitemp_Serveur
                     schedule.Module = row.ModuleNumeroSerie;
                     schedule.ModuleType = row.ModuleType;
                     schedule.ManualWorkerId = NormalizeWorkerId(row.ManualWorkerId);
+                    schedule.ConfigurationOnly = row.ConfigurationOnly;
                     schedule.FrequencySeconds = row.FrequenceSecondes;
                     schedule.LastMeasure = row.DerniereDateHeure ?? schedule.LastMeasure;
                     if (!string.Equals(previousSerial, schedule.Serial, StringComparison.OrdinalIgnoreCase) &&
@@ -2552,7 +2597,7 @@ namespace Vigitemp_Serveur
 
                     if (_logScheduler)
                     {
-                        VigitempServeur.Log($"Scheduler update idLieu={row.IdLieu} serial={row.SondeNumeroSerie} freqSec={row.FrequenceSecondes}");
+                        VigitempServeur.Log($"Scheduler update idLieu={row.IdLieu} serial={row.SondeNumeroSerie} freqSec={row.FrequenceSecondes} configurationOnly={row.ConfigurationOnly}");
                     }
 
                 }
@@ -2579,7 +2624,7 @@ namespace Vigitemp_Serveur
 
         private void BootstrapPendingGspRecovery(SondeScheduleInfo row, SensorSchedule schedule, DateTime now)
         {
-            if (row == null || schedule == null || !row.GspRecoveryPending)
+            if (row == null || schedule == null || row.ConfigurationOnly || !row.GspRecoveryPending)
             {
                 return;
             }
@@ -2600,8 +2645,28 @@ namespace Vigitemp_Serveur
 
         private List<SondeScheduleInfo> GetAssignedSondesForCurrentWorker()
         {
-            var rows = GetDatabase().getSondesActivesAllServeurs();
-            if (rows == null || rows.Count == 0)
+            var rows = GetDatabase().getSondesActivesAllServeurs() ?? new List<SondeScheduleInfo>();
+
+            // Les configurations dirty hors Surveillance sont gerees par un seul worker
+            // logique afin de ne pas perturber la repartition des sondes actives entre ports.
+            if (!VigitempServeur.InterrogationOnlyMode && _idServer == 1)
+            {
+                var activeLieuIds = new HashSet<int>(rows.Where(r => r != null).Select(r => r.IdLieu));
+                var pendingConfigurationRows = GspPendingConfigurationReader.GetPendingSchedules();
+                foreach (var pending in pendingConfigurationRows)
+                {
+                    if (pending == null || activeLieuIds.Contains(pending.IdLieu))
+                    {
+                        continue;
+                    }
+
+                    pending.ManualWorkerId = 1;
+                    rows.Add(pending);
+                    activeLieuIds.Add(pending.IdLieu);
+                }
+            }
+
+            if (rows.Count == 0)
             {
                 return new List<SondeScheduleInfo>();
             }
@@ -2795,6 +2860,7 @@ namespace Vigitemp_Serveur
 
             var dueOnPort = _schedules.Values
                 .Where(s => s != null &&
+                            !s.ConfigurationOnly &&
                             !s.InProgress &&
                             string.Equals(NormalizePortLockKey(s.Port), portKey, StringComparison.OrdinalIgnoreCase))
                 .Select(s => s.NextDue)
@@ -2822,7 +2888,7 @@ namespace Vigitemp_Serveur
             var logIntervalSeconds = Math.Max(30, _portSaturationLogIntervalSeconds);
 
             foreach (var portGroup in _schedules.Values
-                .Where(s => s != null && !string.IsNullOrWhiteSpace(s.Port))
+                .Where(s => s != null && !s.ConfigurationOnly && !string.IsNullOrWhiteSpace(s.Port))
                 .GroupBy(s => NormalizePortLockKey(s.Port), StringComparer.OrdinalIgnoreCase))
             {
                 var port = portGroup.Key;
@@ -2909,6 +2975,7 @@ namespace Vigitemp_Serveur
                 Module = info.ModuleNumeroSerie,
                 ModuleType = info.ModuleType,
                 ManualWorkerId = NormalizeWorkerId(info.ManualWorkerId),
+                ConfigurationOnly = info.ConfigurationOnly,
                 ConfigDirty = info.InfosModifiees,
                 ConfigCheckDue = false,
                 FrequencySeconds = info.FrequenceSecondes,

@@ -19,6 +19,7 @@ namespace Vigitemp_Serveur
         public DateTime? DerniereDateHeure { get; set; }
         public bool InfosModifiees { get; set; }
         public bool GspRecoveryPending { get; set; }
+        public bool ConfigurationOnly { get; set; }
         public double? SondeOffset { get; set; }
         public bool HasAjustage { get; set; }
         public double CoeffX { get; set; } = 1d;
