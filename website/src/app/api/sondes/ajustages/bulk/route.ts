@@ -13,10 +13,15 @@ import {
 } from "@/lib/sensor-naming";
 import { parseDbDateTime } from "@/lib/date-display";
 import { readGspCoefficientsFromTarget } from "@/lib/metrology-gsp-coefficient-sync";
+import {
+  buildAdjustmentImportModuleAssignments,
+  resolveEffectiveImportModuleId,
+} from "@/lib/adjustment-import-module-assignment";
 
 const rowSchema = z.object({
   id: z.string().min(1),
   file: z.string().min(1),
+  moduleId: z.number().int().positive().nullable().optional(),
   insertData: z.object({
     Date_Heure_Ajustage: z.string().nullable(),
     Sonde_Numero_Serie: z.string().nullable(),
@@ -56,14 +61,14 @@ export const POST = withOneOrHigherAnyAuthorizationLogging(getPermissionAliases(
   try {
     const body = await req.json();
     const validated = bodySchema.parse(body);
-    const selectedModuleId = validated.moduleId ?? null;
+    const legacyModuleId = validated.moduleId ?? null;
 
     log.info("ADJUSTMENT_IMPORT", "Bulk adjustment import requested", {
       user: ctx.user.username,
       userId: ctx.user.userId,
       ip,
       files: validated.rows.length,
-      moduleId: selectedModuleId,
+      legacyModuleId,
     });
 
     const sensorTypes = await prisma.t_sonde_type.findMany({
@@ -87,6 +92,7 @@ export const POST = withOneOrHigherAnyAuthorizationLogging(getPermissionAliases(
         : null;
       return {
         ...row,
+        requestedModuleId: row.moduleId === undefined ? legacyModuleId : row.moduleId,
         sensorTypeCode: sensorIdentity?.typeCode ?? null,
         sensorAddress: storageIdentity?.address ?? null,
         insertData: {
@@ -151,7 +157,23 @@ export const POST = withOneOrHigherAnyAuthorizationLogging(getPermissionAliases(
       typeBySerial.get(serial) ?? resolveImportedSensorIdentity(serial, "", knownTypeCodes).typeCode;
     const isGsoSerial = (serial: string) => familyByType.get(getSerialTypeCode(serial)) === "GSO";
 
-    const [sensorsWithOffset, selectedModule] = await Promise.all([
+    const { assignments: requestedModuleBySerial, conflicts: moduleAssignmentConflicts } =
+      buildAdjustmentImportModuleAssignments(
+        normalizedRows.map((row) => ({
+          sensorSerial: row.insertData.Sonde_Numero_Serie?.trim() ?? null,
+          moduleId: row.requestedModuleId ?? null,
+        })),
+      );
+    if (moduleAssignmentConflicts.length > 0) {
+      return apiError(400, "conflicting_module_assignments", "Une même sonde ne peut pas être affectée à plusieurs modules pendant le même import", {
+        sensors: moduleAssignmentConflicts,
+      });
+    }
+    const requestedModuleIds = Array.from(
+      new Set(Array.from(requestedModuleBySerial.values()).filter((id): id is number => id != null)),
+    );
+
+    const [sensorsWithOffset, requestedModules] = await Promise.all([
       serials.length > 0
         ? prisma.t_sonde.findMany({
             where: { Sonde_Numero_Serie: { in: serials } },
@@ -164,16 +186,20 @@ export const POST = withOneOrHigherAnyAuthorizationLogging(getPermissionAliases(
             },
           })
         : Promise.resolve([]),
-      selectedModuleId
-        ? prisma.t_module.findUnique({
-            where: { Id_Module: selectedModuleId },
+      requestedModuleIds.length > 0
+        ? prisma.t_module.findMany({
+            where: { Id_Module: { in: requestedModuleIds } },
             select: { Id_Module: true, Port_Serie: true, Module_Numero_Serie: true, Emplacement: true },
           })
-        : Promise.resolve(null),
+        : Promise.resolve([]),
     ]);
 
-    if (selectedModuleId && !selectedModule) {
-      return apiError(400, "invalid_module", "Module sélectionné introuvable");
+    const requestedModuleIdSet = new Set(requestedModules.map((moduleRow) => moduleRow.Id_Module));
+    const missingModuleIds = requestedModuleIds.filter((moduleId) => !requestedModuleIdSet.has(moduleId));
+    if (missingModuleIds.length > 0) {
+      return apiError(400, "invalid_module", "Un ou plusieurs modules sélectionnés sont introuvables", {
+        moduleIds: missingModuleIds,
+      });
     }
 
     const offsetRows = sensorsWithOffset.filter((sensor) => isMeaningfulOffset(sensor.Sonde_Offset));
@@ -193,31 +219,70 @@ export const POST = withOneOrHigherAnyAuthorizationLogging(getPermissionAliases(
     const existingModuleIds = Array.from(
       new Set(sensorsWithOffset.map((sensor) => sensor.Id_Module).filter((id): id is number => id != null)),
     );
-    const existingModules = existingModuleIds.length
+    const additionalExistingModuleIds = existingModuleIds.filter((moduleId) => !requestedModuleIdSet.has(moduleId));
+    const existingModules = additionalExistingModuleIds.length
       ? await prisma.t_module.findMany({
-          where: { Id_Module: { in: existingModuleIds } },
+          where: { Id_Module: { in: additionalExistingModuleIds } },
           select: { Id_Module: true, Port_Serie: true, Module_Numero_Serie: true, Emplacement: true },
         })
       : [];
-    const moduleById = new Map(existingModules.map((moduleRow) => [moduleRow.Id_Module, moduleRow]));
+    const moduleById = new Map(
+      [...requestedModules, ...existingModules].map((moduleRow) => [moduleRow.Id_Module, moduleRow]),
+    );
     const liveGspCoefficients = new Map<string, Awaited<ReturnType<typeof readGspCoefficientsFromTarget>>>();
+    const gspCoefficientFallbackSerials = new Set<string>();
 
     for (const serial of serials.filter((value) => !isGsoSerial(value))) {
       const existingSensor = existingSensorBySerial.get(serial);
-      const moduleRow = existingSensor?.Id_Module ? moduleById.get(existingSensor.Id_Module) ?? null : selectedModule;
+      const requestedModuleId = requestedModuleBySerial.get(serial) ?? null;
+      const effectiveModuleId = resolveEffectiveImportModuleId(existingSensor?.Id_Module, requestedModuleId);
+
+      if (!effectiveModuleId) {
+        gspCoefficientFallbackSerials.add(serial);
+        log.info("ADJUSTMENT_IMPORT", "Skipping live GSP coefficient read because sensor has no module assignment", {
+          user: ctx.user.username,
+          userId: ctx.user.userId,
+          ip,
+          serial,
+        });
+        continue;
+      }
+
+      const moduleRow = moduleById.get(effectiveModuleId) ?? null;
       const modulePort = moduleRow?.Port_Serie?.trim();
       if (!modulePort) {
-        return apiError(400, "gsp_module_required", `Aucun module/port série n'est disponible pour relire les coefficients de ${serial}.`);
+        gspCoefficientFallbackSerials.add(serial);
+        log.warn("ADJUSTMENT_IMPORT", "Skipping live GSP coefficient read because assigned module has no serial port", {
+          user: ctx.user.username,
+          userId: ctx.user.userId,
+          ip,
+          serial,
+          moduleId: effectiveModuleId,
+        });
+        continue;
       }
-      const live = await readGspCoefficientsFromTarget({
-        sensorId: existingSensor?.Id_Sonde ?? null,
-        serialNumber: serial,
-        address: existingSensor?.Adresse_Sonde?.trim() || addressBySerial.get(serial) || null,
-        modulePort,
-        moduleName: moduleRow?.Module_Numero_Serie ?? moduleRow?.Emplacement ?? null,
-        unit: null,
-      }, "AJUSTAGE");
-      liveGspCoefficients.set(serial, live);
+
+      try {
+        const live = await readGspCoefficientsFromTarget({
+          sensorId: existingSensor?.Id_Sonde ?? null,
+          serialNumber: serial,
+          address: existingSensor?.Adresse_Sonde?.trim() || addressBySerial.get(serial) || null,
+          modulePort,
+          moduleName: moduleRow?.Module_Numero_Serie ?? moduleRow?.Emplacement ?? null,
+          unit: null,
+        }, "AJUSTAGE");
+        liveGspCoefficients.set(serial, live);
+      } catch (error) {
+        gspCoefficientFallbackSerials.add(serial);
+        log.warn("ADJUSTMENT_IMPORT", "Live GSP coefficient read failed; imported XML coefficients will be used", {
+          user: ctx.user.username,
+          userId: ctx.user.userId,
+          ip,
+          serial,
+          moduleId: effectiveModuleId,
+          error: error instanceof Error ? error.message : String(error),
+        });
+      }
     }
 
     if (offsetSerials.length > 0 && !validated.confirmOverwrite) {
@@ -254,14 +319,16 @@ export const POST = withOneOrHigherAnyAuthorizationLogging(getPermissionAliases(
       for (const serial of serials) {
         const typeCode = getSerialTypeCode(serial);
         const gso = familyByType.get(typeCode) === "GSO";
+        const requestedModuleId = requestedModuleBySerial.get(serial) ?? null;
+        const requestedModule = requestedModuleId ? moduleById.get(requestedModuleId) ?? null : null;
         await tx.t_sonde.updateMany({
           where: { Sonde_Numero_Serie: serial },
           data: {
             Sonde_Type: typeCode,
             Est_Sonde_GSO: gso,
             ...(gso && addressBySerial.has(serial) ? { Adresse_Sonde: addressBySerial.get(serial) } : {}),
-            ...(!existingSensorBySerial.get(serial)?.Id_Module && selectedModule
-              ? { Id_Module: selectedModule.Id_Module, Port_Serie: selectedModule.Port_Serie }
+            ...(!existingSensorBySerial.get(serial)?.Id_Module && requestedModule
+              ? { Id_Module: requestedModule.Id_Module, Port_Serie: requestedModule.Port_Serie }
               : {}),
           },
         });
@@ -285,6 +352,8 @@ export const POST = withOneOrHigherAnyAuthorizationLogging(getPermissionAliases(
           await tx.t_sonde.createMany({
             data: serialsStillMissing.map((serial) => {
               const gso = isGsoSerial(serial);
+              const requestedModuleId = requestedModuleBySerial.get(serial) ?? null;
+              const requestedModule = requestedModuleId ? moduleById.get(requestedModuleId) ?? null : null;
               return {
                 Sonde_Numero_Serie: serial,
                 Sonde_Type: getSerialTypeCode(serial),
@@ -294,8 +363,8 @@ export const POST = withOneOrHigherAnyAuthorizationLogging(getPermissionAliases(
                 Est_Sonde_GSO: gso,
                 Surveillance_Etat: "D",
                 Sonde_Offset: 0,
-                Id_Module: selectedModule?.Id_Module ?? null,
-                Port_Serie: selectedModule?.Port_Serie ?? null,
+                Id_Module: requestedModule?.Id_Module ?? null,
+                Port_Serie: requestedModule?.Port_Serie ?? null,
               };
             }),
           });
@@ -399,6 +468,8 @@ export const POST = withOneOrHigherAnyAuthorizationLogging(getPermissionAliases(
       createdSensorsFromAdjustment: serialsToCreate.length,
       invalidatedEtalonnages,
       invalidatedEtalonnageMeasures,
+      gspCoefficientFallbackCount: gspCoefficientFallbackSerials.size,
+      gspCoefficientFallbackSerials: Array.from(gspCoefficientFallbackSerials).slice(0, 20),
     })
 
     log.audit("CA", {
@@ -415,6 +486,8 @@ export const POST = withOneOrHigherAnyAuthorizationLogging(getPermissionAliases(
         clearedOffsets: validated.confirmOverwrite ? offsetSerials.length : 0,
         invalidatedEtalonnages,
         invalidatedEtalonnageMeasures,
+        gspCoefficientFallbackCount: gspCoefficientFallbackSerials.size,
+        gspCoefficientFallbackSerials: Array.from(gspCoefficientFallbackSerials).slice(0, 20),
         serials: serials.slice(0, 10),
         fileNames: validated.rows.slice(0, 10).map((row) => row.file),
       },
@@ -432,6 +505,8 @@ export const POST = withOneOrHigherAnyAuthorizationLogging(getPermissionAliases(
       existingSensorsWithModule,
       invalidatedEtalonnages,
       invalidatedEtalonnageMeasures,
+      gspCoefficientFallbackCount: gspCoefficientFallbackSerials.size,
+      gspCoefficientFallbackSerials: Array.from(gspCoefficientFallbackSerials),
     });
   } catch (error) {
     if (error instanceof z.ZodError) {

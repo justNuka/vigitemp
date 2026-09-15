@@ -3,18 +3,15 @@
 import type { ReactNode } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { TanStackTable } from "@/components/data-table/tanstack-table"
 import type { ColumnDef } from "@tanstack/react-table"
 
-import type { Module } from "@/hooks/useModules"
 
 interface AdjustmentImportTableCardProps<Row extends Record<string, any>> {
   title: string
-  modules: Module[]
-  modulePlaceholder: string
-  selectedModuleId: string
-  onModuleChange: (value: string) => void
+  assignmentLabel: string
+  onOpenAssignment: () => void
+  assignmentDisabled?: boolean
   onOpenImport: () => void
   importLabel: string
   columns: ColumnDef<Row>[]
@@ -33,10 +30,9 @@ interface AdjustmentImportTableCardProps<Row extends Record<string, any>> {
 
 export function AdjustmentImportTableCard<Row extends Record<string, any>>({
   title,
-  modules,
-  modulePlaceholder,
-  selectedModuleId,
-  onModuleChange,
+  assignmentLabel,
+  onOpenAssignment,
+  assignmentDisabled = false,
   onOpenImport,
   importLabel,
   columns,
@@ -58,20 +54,9 @@ export function AdjustmentImportTableCard<Row extends Record<string, any>>({
         <div className="flex flex-wrap items-center justify-between gap-3">
           <CardTitle>{title}</CardTitle>
           <div className="flex flex-wrap items-center gap-2">
-            <div className="w-65">
-              <Select value={selectedModuleId} onValueChange={onModuleChange}>
-                <SelectTrigger>
-                  <SelectValue placeholder={modulePlaceholder} />
-                </SelectTrigger>
-                <SelectContent>
-                  {modules.map((module) => (
-                    <SelectItem key={module.Id_Module} value={String(module.Id_Module)}>
-                      {module.Module_Numero_Serie || module.Libelle_Type_Module || `#${module.Id_Module}`}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            <Button size="sm" variant="outline" onClick={onOpenAssignment} disabled={assignmentDisabled}>
+              {assignmentLabel}
+            </Button>
             <Button size="sm" className="gap-2" onClick={onOpenImport}>{importLabel}</Button>
           </div>
         </div>
