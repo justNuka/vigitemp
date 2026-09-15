@@ -70,6 +70,7 @@ export function AdjustmentImportClient() {
   const [moduleAssignmentBySensor, setModuleAssignmentBySensor] = useState<Record<string, number | null>>({});
   const [selectedRowIds, setSelectedRowIds] = useState<string[]>([]);
   const [bulkUnit, setBulkUnit] = useState<string>("");
+  const [sendCoefficients, setSendCoefficients] = useState(false);
   const [confirmOverwriteOpen, setConfirmOverwriteOpen] = useState(false);
   const [confirmOverwriteAdjustments, setConfirmOverwriteAdjustments] = useState<string[]>([]);
   const [confirmOverwriteOffsets, setConfirmOverwriteOffsets] = useState<string[]>([]);
@@ -108,7 +109,6 @@ export function AdjustmentImportClient() {
     const importedUnits = rows.map((row) => row.unit?.trim()).filter((unit): unit is string => !!unit);
     return Array.from(new Set([...COMMON_UNIT_OPTIONS, ...importedUnits]));
   }, [rows]);
-
 
   const assignmentSensors = useMemo(() => {
     const seen = new Set<string>();
@@ -293,6 +293,7 @@ export function AdjustmentImportClient() {
     setRows([]);
     setSelectedRowIds([]);
     setModuleAssignmentBySensor({});
+    setSendCoefficients(false);
     closeEdit();
   };
 
@@ -311,6 +312,7 @@ export function AdjustmentImportClient() {
     setRows([]);
     setSelectedRowIds([]);
     setModuleAssignmentBySensor({});
+    setSendCoefficients(false);
     setOpen(false);
     setStepperSessionKey((prev) => prev + 1);
     closeEdit();
@@ -325,7 +327,7 @@ export function AdjustmentImportClient() {
 
     setIsSaving(true);
     try {
-      const result = await saveAdjustmentsBulk(buildSaveRows(), t);
+      const result = await saveAdjustmentsBulk(buildSaveRows(), t, { sendCoefficients });
 
       if (result.status === "confirmation_required") {
         setConfirmOverwriteAdjustments(result.adjustmentList);
@@ -354,7 +356,10 @@ export function AdjustmentImportClient() {
 
     setIsSaving(true);
     try {
-      const result = await saveAdjustmentsBulk(buildSaveRows(), t, true);
+      const result = await saveAdjustmentsBulk(buildSaveRows(), t, {
+        confirmOverwrite: true,
+        sendCoefficients,
+      });
 
       if (result.status === "confirmation_required") {
         setConfirmOverwriteAdjustments(result.adjustmentList);
@@ -487,6 +492,21 @@ export function AdjustmentImportClient() {
       <Button size="sm" variant="outline" onClick={applyBulkUnit} disabled={selectedPendingRowIds.length === 0 || isSaving}>
         {t("actions.apply_unit")}
       </Button>
+
+      <div className="flex min-w-[280px] flex-1 items-start gap-2 sm:ml-2 sm:border-l sm:pl-4">
+        <Checkbox
+          id="send-adjustment-coefficients"
+          checked={sendCoefficients}
+          onCheckedChange={(checked) => setSendCoefficients(checked === true)}
+          disabled={isSaving}
+        />
+        <div className="space-y-0.5">
+          <label htmlFor="send-adjustment-coefficients" className="cursor-pointer font-medium leading-none">
+            {t("coefficient_sync.label")}
+          </label>
+          <p className="text-xs text-muted-foreground">{t("coefficient_sync.description")}</p>
+        </div>
+      </div>
     </div>
   ) : null;
 
