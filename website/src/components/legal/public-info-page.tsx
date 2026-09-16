@@ -25,7 +25,7 @@ export function PublicInfoPage({
         <div className="mx-auto flex w-full max-w-5xl items-center justify-between gap-4">
           <Logo size="md" showText />
           <Button asChild variant="outline" size="sm">
-            <Link href="/login" className="gap-2">
+            <Link href="/" className="gap-2">
               <ArrowLeft className="h-4 w-4" aria-hidden="true" />
               {backLabel}
             </Link>
