@@ -1,4 +1,5 @@
 import { NextRequest } from "next/server"
+import { z } from "zod"
 
 import { withAuthLogging } from "@/lib/api-wrappers"
 import { apiError, apiOk } from "@/lib/api-response"
@@ -28,13 +29,28 @@ function mapAlarmType(type: string | null | undefined) {
   }
 }
 
-export const GET = withAuthLogging(async (_req: NextRequest, ctx) => {
+const querySchema = z.object({
+  locationId: z.coerce.number().int().positive().optional(),
+})
+
+export const GET = withAuthLogging(async (req: NextRequest, ctx) => {
   try {
+    const parsed = querySchema.safeParse({
+      locationId: req.nextUrl.searchParams.get("locationId") ?? undefined,
+    })
+    if (!parsed.success) {
+      return apiError(400, "validation_error", "Paramètres invalides", { details: parsed.error.issues })
+    }
+
     const scope = await getUserLocationScope(ctx.user.userId)
     const accessFilter = buildAlarmAccessFilter(scope)
+    const baseWhere = {
+      Est_Acquittee: false,
+      ...(parsed.data.locationId ? { Id_Lieu: parsed.data.locationId } : {}),
+    }
 
     const alarms = await prisma.t_alarme.findMany({
-      where: applyAccessFilter({ Est_Acquittee: false }, accessFilter),
+      where: applyAccessFilter(baseWhere, accessFilter),
       select: {
         Id_Alarme: true,
         Id_Lieu: true,

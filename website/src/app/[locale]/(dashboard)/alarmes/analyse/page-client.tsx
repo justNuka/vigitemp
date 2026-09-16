@@ -15,7 +15,7 @@ import {
   Title,
   Tooltip as ChartTooltip,
 } from "chart.js"
-import { AlertTriangle, ChevronLeft, Clock3, LocateFixed, Maximize2, Minimize2 } from "lucide-react"
+import { AlertTriangle, ChevronDown, ChevronLeft, Clock3, LocateFixed, Maximize2, Minimize2 } from "lucide-react"
 import { AlarmAcknowledgeDialog, type AcknowledgeDialogAlarm } from "@/components/alarm-acknowledge-dialog"
 import { alarmsApi } from "@/lib/api"
 import { toast } from "sonner"
@@ -116,6 +116,8 @@ export function AlarmAnalysisClient() {
 
   const locationId = Number(searchParams.get("locationId") ?? "0")
   const initialAlarmId = Number(searchParams.get("alarmId") ?? "0")
+  const source = searchParams.get("source")
+  const isFromAcknowledgement = source === "acknowledgement"
   const [alarms, setAlarms] = useState<AlarmListItem[]>([])
   const [isLoadingAlarms, setIsLoadingAlarms] = useState(false)
   const [selectedAlarmId, setSelectedAlarmId] = useState<number | null>(Number.isFinite(initialAlarmId) && initialAlarmId > 0 ? initialAlarmId : null)
@@ -131,6 +133,7 @@ export function AlarmAnalysisClient() {
   const [showGraphAudits, setShowGraphAudits] = useState(false)
   const [isAcknowledgeOpen, setIsAcknowledgeOpen] = useState(false)
   const [isAcknowledgePending, setIsAcknowledgePending] = useState(false)
+  const [relatedAlarmsOpen, setRelatedAlarmsOpen] = useState(!(isFromAcknowledgement && initialAlarmId > 0))
   const tabContentMaxHeight =
     detailsSize === "expanded" || activeTab === "audit"
       ? "calc(100vh - 18rem)"
@@ -446,6 +449,8 @@ export function AlarmAnalysisClient() {
     URL.revokeObjectURL(url)
   }, [auditLogs, selectedAlarmId, tMonitoring])
 
+  const otherAlarms = alarms.filter((item) => item.id !== selectedAlarmId)
+
   return (
     <div className="p-6 space-y-6">
       <PageHeader
@@ -453,9 +458,19 @@ export function AlarmAnalysisClient() {
         description={t("analysis.description")}
       >
         <div className="flex flex-wrap items-center gap-2">
-          <Button variant="outline" onClick={() => router.push(`/${locale}/alarmes`)}>
+          <Button
+            variant="outline"
+            onClick={() => {
+              if (isFromAcknowledgement) {
+                window.close()
+                window.setTimeout(() => router.push(`/${locale}/surveillance`), 80)
+                return
+              }
+              router.push(`/${locale}/alarmes`)
+            }}
+          >
             <ChevronLeft className="mr-2 h-4 w-4" />
-            {t("analysis.back")}
+            {isFromAcknowledgement ? t("analysis.backToAcknowledgement") : t("analysis.back")}
           </Button>
           <Button variant="outline" onClick={() => router.push(`/${locale}/surveillance`)}>
             {t("analysis.backToMonitoring")}
@@ -486,27 +501,33 @@ export function AlarmAnalysisClient() {
         </div>
       </PageHeader>
 
-      <div className="grid gap-6 xl:grid-cols-[380px_minmax(0,1fr)]">
-        <Card className="min-w-0">
-          <CardHeader>
-            <CardTitle>{t("analysis.locationAlarms")}</CardTitle>
-            <CardDescription>{selectedAlarmRow?.locationName ?? t("analysis.selectAlarm")}</CardDescription>
+      <div className="flex flex-col gap-6">
+        <Card className="order-2 min-w-0 border-border/60 bg-muted/20">
+          <CardHeader className="flex flex-row items-center justify-between gap-4 space-y-0">
+            <div>
+              <CardTitle className="text-base">{t("analysis.otherLocationAlarms", { count: otherAlarms.length })}</CardTitle>
+              <CardDescription>{selectedAlarmRow?.locationName ?? t("analysis.selectAlarm")}</CardDescription>
+            </div>
+            <Button type="button" variant="ghost" size="sm" onClick={() => setRelatedAlarmsOpen((current) => !current)}>
+              <ChevronDown className={cn("mr-1.5 h-4 w-4 transition-transform", relatedAlarmsOpen && "rotate-180")} />
+              {relatedAlarmsOpen ? t("analysis.otherAlarmsHide") : t("analysis.otherAlarmsShow")}
+            </Button>
           </CardHeader>
-          <CardContent className="min-w-0">
+          <CardContent className={cn("min-w-0", !relatedAlarmsOpen && "hidden")}>
             {isLoadingAlarms ? (
               <div className="space-y-3">
                 <Skeleton className="h-16 w-full" />
                 <Skeleton className="h-16 w-full" />
                 <Skeleton className="h-16 w-full" />
               </div>
-            ) : alarms.length === 0 ? (
+            ) : otherAlarms.length === 0 ? (
               <div className="rounded-lg border border-dashed p-4 text-sm text-muted-foreground">
                 {t("analysis.empty")}
               </div>
             ) : (
-              <ScrollArea className="h-[72vh] pr-3">
+              <ScrollArea className="max-h-80 pr-3">
                 <div className="space-y-3">
-                  {alarms.map((alarm) => {
+                  {otherAlarms.map((alarm) => {
                     const active = alarm.id === selectedAlarmId
                     const value = alarm.currentValue == null ? t("dialog.na") : `${formatAlarmNumber(alarm.currentValue, locale)} ${alarm.unit ?? ""}`.trim()
                     return (
@@ -550,8 +571,8 @@ export function AlarmAnalysisClient() {
           </CardContent>
         </Card>
 
-        <div className="min-w-0 space-y-6">
-          <Card>
+        <div className="order-1 min-w-0 space-y-6">
+          <Card className="border-primary/40 bg-primary/5 shadow-sm">
             <CardHeader>
               <CardTitle>{t("analysis.focusTitle")}</CardTitle>
               <CardDescription>{selectedAlarmDetail?.locationName ?? t("analysis.selectAlarm")}</CardDescription>

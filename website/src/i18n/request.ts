@@ -8,6 +8,7 @@ import {toolsSupplementForLocale} from '../messages/tools-supplements';
 import {adjustmentImportSupplementForLocale} from '../messages/adjustment-import-supplements';
 import {smtpGuideSupplementForLocale} from '../messages/smtp-guide-supplements';
 import {authResetSupplementForLocale} from '../messages/auth-reset-supplements';
+import {alarmAcknowledgementSupplementForLocale} from '../messages/alarm-acknowledgement-supplements';
 import {legalSupplementForLocale} from '../messages/legal-supplements';
  
 export default getRequestConfig(async ({requestLocale}) => {
@@ -22,9 +23,10 @@ export default getRequestConfig(async ({requestLocale}) => {
   ).default as MessageCatalog;
   const messagesWithSupplements = mergeMessages(baseMessages, supplementForLocale(locale));
   const messagesWithAuthReset = mergeMessages(messagesWithSupplements, authResetSupplementForLocale(locale));
-  const messagesWithLegal = mergeMessages(messagesWithAuthReset, legalSupplementForLocale(locale));
-  const messagesWithAdminSettings = mergeMessages(messagesWithLegal, adminSettingsSupplementForLocale(locale));
-  const messagesWithSmtpGuide = mergeMessages(messagesWithAdminSettings, smtpGuideSupplementForLocale(locale));
+  const messagesWithAlarmAcknowledgement = mergeMessages(messagesWithAuthReset, alarmAcknowledgementSupplementForLocale(locale));
+  const messagesWithAdminSettings = mergeMessages(messagesWithAlarmAcknowledgement, adminSettingsSupplementForLocale(locale));
+  const messagesWithLegal = mergeMessages(messagesWithAdminSettings, legalSupplementForLocale(locale));
+  const messagesWithSmtpGuide = mergeMessages(messagesWithLegal, smtpGuideSupplementForLocale(locale));
   const messagesWithMetrology = mergeMessages(messagesWithSmtpGuide, metrologyCalibrationSupplementForLocale(locale));
   const messagesWithTools = mergeMessages(messagesWithMetrology, toolsSupplementForLocale(locale));
  
