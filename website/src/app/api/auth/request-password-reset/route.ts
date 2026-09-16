@@ -41,29 +41,22 @@ export const POST = withLogging(async (req: NextRequest) => {
 
     log.info("AUTH_RESET_REQUEST", "Password reset requested", { ip, email })
 
+    // Check SMTP readiness before looking up the account so the public
+    // behavior does not reveal whether the email exists in VigiSensys.
+    if (!(await isEmailEnabled())) {
+      log.warn("AUTH_RESET_REQUEST", "Password reset email unavailable: smtp not configured", {
+        ip,
+        email,
+      })
+      return apiOk({ message: GENERIC_RESET_MESSAGE })
+    }
+
     const user = await prisma.t_utilisateur.findFirst({
       where: { Adresse_Email: email, Est_Archive: false },
     })
 
     if (!user) {
       log.warn("AUTH_RESET_REQUEST", "Password reset requested for unknown email", { ip, email })
-      return apiOk({ message: GENERIC_RESET_MESSAGE })
-    }
-
-    if (!(await isEmailEnabled())) {
-      log.warn("AUTH_RESET_REQUEST", "Password reset email unavailable: smtp not configured", {
-        ip,
-        email,
-        userId: user.Id_Utilisateur,
-      })
-      log.audit("MDP", {
-        user: user.Login || email,
-        userId: user.Id_Utilisateur,
-        ip,
-        resource: "Request password reset",
-        success: false,
-        reason: "smtp_not_configured",
-      })
       return apiOk({ message: GENERIC_RESET_MESSAGE })
     }
 
