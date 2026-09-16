@@ -8,6 +8,7 @@ import {toolsSupplementForLocale} from '../messages/tools-supplements';
 import {adjustmentImportSupplementForLocale} from '../messages/adjustment-import-supplements';
 import {smtpGuideSupplementForLocale} from '../messages/smtp-guide-supplements';
 import {authResetSupplementForLocale} from '../messages/auth-reset-supplements';
+import {legalSupplementForLocale} from '../messages/legal-supplements';
  
 export default getRequestConfig(async ({requestLocale}) => {
   // Typically corresponds to the `[locale]` segment
@@ -21,7 +22,8 @@ export default getRequestConfig(async ({requestLocale}) => {
   ).default as MessageCatalog;
   const messagesWithSupplements = mergeMessages(baseMessages, supplementForLocale(locale));
   const messagesWithAuthReset = mergeMessages(messagesWithSupplements, authResetSupplementForLocale(locale));
-  const messagesWithAdminSettings = mergeMessages(messagesWithAuthReset, adminSettingsSupplementForLocale(locale));
+  const messagesWithLegal = mergeMessages(messagesWithAuthReset, legalSupplementForLocale(locale));
+  const messagesWithAdminSettings = mergeMessages(messagesWithLegal, adminSettingsSupplementForLocale(locale));
   const messagesWithSmtpGuide = mergeMessages(messagesWithAdminSettings, smtpGuideSupplementForLocale(locale));
   const messagesWithMetrology = mergeMessages(messagesWithSmtpGuide, metrologyCalibrationSupplementForLocale(locale));
   const messagesWithTools = mergeMessages(messagesWithMetrology, toolsSupplementForLocale(locale));

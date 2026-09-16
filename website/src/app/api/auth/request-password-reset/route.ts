@@ -9,6 +9,7 @@ import { getGlobalAppLanguage } from "@/lib/app-language"
 import { apiError, apiOk } from "@/lib/api-response"
 import { log } from "@/lib/logger"
 import { checkRateLimit } from "@/lib/rate-limiter"
+import { getLocalizedPublicAppUrl } from "@/lib/public-app-url"
 
 const requestResetSchema = z.object({
   email: z.string().email("Email invalide"),
@@ -70,12 +71,17 @@ export const POST = withLogging(async (req: NextRequest) => {
       data: { Reset_Password_Token: hashedToken, Reset_Password_Expires: expiresAt },
     })
 
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL
-    if (!baseUrl) {
-      log.warn("AUTH_RESET_REQUEST", "NEXT_PUBLIC_APP_URL not set, password reset links will use localhost", { ip })
+    if (!process.env.NEXT_PUBLIC_APP_URL) {
+      log.warn("AUTH_RESET_REQUEST", "NEXT_PUBLIC_APP_URL not set, password reset links will use request origin", { ip })
     }
-    const resetUrl = `${baseUrl ?? "http://localhost:3000"}/reset-password?token=${resetToken}`
+
     const mailLocale = await getGlobalAppLanguage()
+    const resetUrl = getLocalizedPublicAppUrl(
+      "/reset-password",
+      mailLocale,
+      req,
+      { token: resetToken },
+    )
 
     const delivery = await sendEmail({
       to: email,
