@@ -14,9 +14,16 @@ const requestResetSchema = z.object({
   email: z.string().email("Email invalide"),
 })
 
+const GENERIC_RESET_MESSAGE =
+  "Si un compte existe avec cet email et que le service d'envoi est disponible, un lien de réinitialisation vous sera envoyé."
+
 /**
  * POST /api/auth/request-password-reset
- * Demande de reinitialisation de mot de passe.
+ * Demande de réinitialisation de mot de passe.
+ *
+ * La réponse publique reste volontairement identique pour un compte existant
+ * ou inexistant, y compris lorsque SMTP est indisponible. Les détails de
+ * livraison restent uniquement dans les logs/audits serveur.
  */
 export const POST = withLogging(async (req: NextRequest) => {
   const { ip } = getRequestContext(req)
@@ -34,24 +41,23 @@ export const POST = withLogging(async (req: NextRequest) => {
 
     log.info("AUTH_RESET_REQUEST", "Password reset requested", { ip, email })
 
+    // Check SMTP readiness before looking up the account so the public
+    // behavior does not reveal whether the email exists in VigiSensys.
+    if (!(await isEmailEnabled())) {
+      log.warn("AUTH_RESET_REQUEST", "Password reset email unavailable: smtp not configured", {
+        ip,
+        email,
+      })
+      return apiOk({ message: GENERIC_RESET_MESSAGE })
+    }
+
     const user = await prisma.t_utilisateur.findFirst({
       where: { Adresse_Email: email, Est_Archive: false },
     })
 
-    const genericMessage = "Si un compte existe avec cet email, un lien de reinitialisation a ete envoye."
-
     if (!user) {
       log.warn("AUTH_RESET_REQUEST", "Password reset requested for unknown email", { ip, email })
-      return apiOk({ message: genericMessage })
-    }
-
-    if (!(await isEmailEnabled())) {
-      log.warn("AUTH_RESET_REQUEST", "Password reset blocked: smtp not configured", {
-        ip,
-        email,
-        userId: user.Id_Utilisateur,
-      })
-      return apiError(503, "smtp_not_configured", "Le systeme d'envoi d'emails n'est pas configure.")
+      return apiOk({ message: GENERIC_RESET_MESSAGE })
     }
 
     const resetToken = crypto.randomBytes(32).toString("hex")
@@ -71,12 +77,12 @@ export const POST = withLogging(async (req: NextRequest) => {
     const resetUrl = `${baseUrl ?? "http://localhost:3000"}/reset-password?token=${resetToken}`
     const mailLocale = await getGlobalAppLanguage()
 
-    await sendEmail({
+    const delivery = await sendEmail({
       to: email,
       subject:
         mailLocale === "en"
           ? "Reset your VigiSensys password"
-          : "Reinitialisation de votre mot de passe VigiSensys",
+          : "Réinitialisation de votre mot de passe VigiSensys",
       react: PasswordResetEmail({
         resetUrl,
         firstName: user.Prenom || undefined,
@@ -85,6 +91,41 @@ export const POST = withLogging(async (req: NextRequest) => {
         locale: mailLocale,
       }),
     })
+
+    if (!delivery.success) {
+      log.warn("AUTH_RESET_REQUEST", "Password reset email delivery failed", {
+        ip,
+        email,
+        userId: user.Id_Utilisateur,
+        error: delivery.error ?? "unknown_email_delivery_error",
+      })
+
+      try {
+        await prisma.t_utilisateur.update({
+          where: { Id_Utilisateur: user.Id_Utilisateur },
+          data: { Reset_Password_Token: null, Reset_Password_Expires: null },
+        })
+      } catch (cleanupError) {
+        log.error("AUTH_RESET_REQUEST", "Failed to clear undelivered password reset token", {
+          ip,
+          email,
+          userId: user.Id_Utilisateur,
+          error: cleanupError instanceof Error ? cleanupError.message : String(cleanupError),
+        })
+      }
+
+      log.audit("MDP", {
+        user: user.Login || email,
+        userId: user.Id_Utilisateur,
+        ip,
+        resource: "Request password reset",
+        changes: { email },
+        success: false,
+        reason: delivery.error ?? "password_reset_email_delivery_failed",
+      })
+
+      return apiOk({ message: GENERIC_RESET_MESSAGE })
+    }
 
     log.audit("MDP", {
       user: user.Login || email,
@@ -95,10 +136,10 @@ export const POST = withLogging(async (req: NextRequest) => {
       success: true,
     })
 
-    return apiOk({ message: genericMessage })
+    return apiOk({ message: GENERIC_RESET_MESSAGE })
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return apiError(400, "validation_error", "Donnees invalides", { details: error.issues })
+      return apiError(400, "validation_error", "Données invalides", { details: error.issues })
     }
 
     log.error("AUTH_RESET_REQUEST", "Password reset request failed", {
@@ -114,6 +155,6 @@ export const POST = withLogging(async (req: NextRequest) => {
       success: false,
       reason: error instanceof Error ? error.message : String(error),
     })
-    return apiError(500, "request_password_reset_failed", "Une erreur est survenue lors de la demande de reinitialisation.")
+    return apiError(500, "request_password_reset_failed", "Une erreur est survenue lors de la demande de réinitialisation.")
   }
 })
