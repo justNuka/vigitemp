@@ -3,9 +3,9 @@
 ## Statut
 
 - **Branche** : `fix/password-reset-delivery-feedback`
-- **PR** : à renseigner après ouverture
+- **PR** : #121
 - **Cible** : `dev`
-- **État** : correctif prêt à valider
+- **État** : PR ouverte, en attente de validation/merge
 
 ## Retour terrain
 
@@ -25,9 +25,10 @@ La route exposait également un comportement différent lorsqu'un compte existai
 
 - la réponse publique ne prétend plus qu'un email a été envoyé ; elle confirme uniquement que la demande a été prise en compte ;
 - le même message générique est renvoyé pour une adresse connue ou inconnue lorsque SMTP n'est pas configuré ;
+- la disponibilité SMTP configurée est contrôlée avant la recherche du compte ;
 - le résultat de `sendEmail()` est maintenant contrôlé explicitement ;
 - en cas d'échec de livraison, le token de reset fraîchement créé est invalidé afin de ne pas conserver un token inutilisable ;
-- l'échec reste visible dans les logs et dans l'audit interne, sans exposer au navigateur l'existence du compte ;
+- l'échec de livraison reste visible dans les logs et dans l'audit interne, sans exposer au navigateur l'existence du compte ;
 - les textes FR/EN de la fenêtre et du toast ont été alignés sur ce comportement.
 
 Le correctif ne masque pas le problème SMTP lui-même : une erreur DNS, réseau, TLS ou d'authentification reste à corriger dans la configuration de l'installation et demeure journalisée côté serveur.
