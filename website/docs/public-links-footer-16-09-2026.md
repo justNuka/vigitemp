@@ -4,8 +4,8 @@
 
 - **Branche** : `fix/localized-reset-and-app-footer`
 - **Base** : `dev` au commit `69fe87c5dd4f3a7df71c5781975d96b6121bf01d` (merge PR #121)
-- **PR** : à renseigner après ouverture
-- **État** : correctif prêt à valider
+- **PR** : #122
+- **État** : PR ouverte, en attente de validation/merge
 
 ## Retours terrain
 
@@ -95,6 +95,23 @@ Page FR/EN décrivant le fonctionnement standard :
 - shells Dashboard/Admin
 - `website/scripts/test-public-app-url.ts`
 
+## Validation technique
+
+GitHub Actions run `35086188125` : ✅
+
+- installation `pnpm --frozen-lockfile` : ✅ ;
+- génération Prisma MySQL : ✅ ;
+- test ciblé `test-public-app-url.ts` : ✅ ;
+- ESLint ciblé : ✅ ;
+- TypeScript MySQL : ✅ ;
+- audit i18n : ✅ ;
+- génération Prisma SQL Server : ✅ ;
+- TypeScript SQL Server : ✅ ;
+- restauration Prisma MySQL : ✅ ;
+- build Next.js production : ✅.
+
+Le workflow temporaire utilisé pour cette validation a été retiré du diff final.
+
 ## Validation terrain
 
 - [ ] `NEXT_PUBLIC_APP_URL` avec slash terminal : aucun `//reset-password` dans l'email ;
@@ -108,13 +125,3 @@ Page FR/EN décrivant le fonctionnement standard :
 - [ ] pages Mentions légales / Protection des données accessibles en FR et EN ;
 - [ ] thèmes clair/sombre et petite largeur ;
 - [ ] vérifier qu'aucun bandeau de consentement ou tracking n'a été ajouté.
-
-## Validation technique recommandée
-
-```text
-pnpm exec tsx scripts/test-public-app-url.ts
-pnpm i18n:check
-pnpm exec tsc --noEmit
-pnpm lint
-pnpm build
-```
