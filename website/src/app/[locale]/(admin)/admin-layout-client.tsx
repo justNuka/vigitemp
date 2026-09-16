@@ -1,6 +1,7 @@
 "use client";
 
 import { AdminSidebar } from "@/components/admin-sidebar";
+import { AppFooter } from "@/components/app-footer";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { authApi } from "@/lib/api";
 import { useAutoLock } from "@/hooks/useAutoLock";
@@ -100,7 +101,7 @@ export function AdminGroupLayoutClient({ children }: { children: React.ReactNode
           onLogout={handleLogout}
           activeAlarms={activeAlarmsCount}
         />
-        <main className="flex-1 min-h-0 bg-background">
+        <main className="min-h-0 flex-1 overflow-y-auto bg-background">
           {isFeatureEnabled("enableAgentSecretAlert") &&
           agentSecretStatus &&
           agentSecretStatus.status !== "ok" &&
@@ -116,6 +117,7 @@ export function AdminGroupLayoutClient({ children }: { children: React.ReactNode
             </div>
           ) : null}
           <PageTransitionWrapper className="min-h-0">{children}</PageTransitionWrapper>
+          <AppFooter />
         </main>
       </div>
     </SidebarProvider>

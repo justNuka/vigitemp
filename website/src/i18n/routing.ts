@@ -136,6 +136,14 @@ export const routing = defineRouting({
       fr: '/reinitialisation-mot-de-passe',
       en: '/reset-password',
     },
+    '/legal-notice': {
+      fr: '/mentions-legales',
+      en: '/legal-notice',
+    },
+    '/data-protection': {
+      fr: '/protection-des-donnees',
+      en: '/data-protection',
+    },
     '/upgrade-licence': {
       fr: '/upgrade-licence',
       en: '/upgrade-licence',
