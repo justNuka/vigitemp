@@ -400,3 +400,49 @@ L'import d'ajustage ne doit plus exiger un module unique pour tout le lot. Il do
 - [ ] GSP injoignable ou module sans port : import non bloqué, coefficients XML conservés et avertissement affiché ;
 - [ ] FR / EN et ergonomie dialog validés.
 
+
+
+## 16/09/2026 — Acquittement : conserver le contexte du lieu et de l’alarme
+
+### Retour terrain
+
+Depuis une carte Surveillance, l’utilisateur veut acquitter une alarme d’un lieu précis. La popup chargeait pourtant toutes les alarmes non acquittées accessibles, tous lieux confondus. L’analyse graphique ouvrait ensuite un écran où la liste des alarmes reprenait visuellement beaucoup de place, ce qui faisait perdre le fil « lieu → alarme ciblée ».
+
+### Cause
+
+- `AlarmAcknowledgeDialog` appelait `/api/alarmes/acknowledgement-candidates` sans transmettre le `locationId` de la carte Surveillance ;
+- l’endpoint retournait donc jusqu’à 500 alarmes accessibles ;
+- l’écran `/alarmes/analyse` filtrait déjà correctement les données par lieu, mais présentait la liste des alarmes du lieu comme navigation principale au-dessus/à côté de l’alarme ciblée.
+
+### Correctif
+
+- branche : `fix/alarm-acknowledgement-context` ;
+- PR : à renseigner ;
+- depuis Surveillance, les candidats d’acquittement sont filtrés serveur par `Id_Lieu` ;
+- l’alarme focalisée est mise en avant dans un bloc principal ;
+- les autres alarmes du même lieu sont placées dans une section secondaire repliée par défaut ;
+- le comportement multi-lieux général reste disponible dans les contextes qui ne fournissent pas de `candidateLocationId` ;
+- l’analyse graphique met le graphe/l’alarme ciblée en premier et relègue les autres alarmes du lieu dans une section repliable ;
+- l’analyse sait lorsqu’elle vient de la popup d’acquittement et propose un retour explicite.
+
+### Fichiers principaux
+
+- `website/src/components/alarm-acknowledge-dialog/alarm-acknowledge-dialog.tsx` ;
+- `website/src/components/monitoring-card.tsx` ;
+- `website/src/app/api/alarmes/acknowledgement-candidates/route.ts` ;
+- `website/src/app/[locale]/(dashboard)/alarmes/analyse/page-client.tsx` ;
+- `website/src/messages/alarm-acknowledgement-supplements.ts` ;
+- `website/scripts/test-alarm-acknowledgement-context.ts`.
+
+### Checklist terrain
+
+- [ ] depuis Surveillance, ouvrir l’acquittement de « Fenêtre SCO » : aucune alarme d’un autre lieu n’est chargée ;
+- [ ] l’alarme cliquée est le bloc visuellement principal ;
+- [ ] les autres alarmes du lieu sont repliées par défaut ;
+- [ ] déplier la section, filtrer par type et sélectionner plusieurs alarmes du même lieu ;
+- [ ] `Acquitter et rester` garde un focus cohérent sur la prochaine alarme du lieu ;
+- [ ] `Acquitter et fermer` ferme correctement la popup ;
+- [ ] ouvrir l’analyse graphique : alarme/graphe en premier, autres alarmes du lieu en retrait ;
+- [ ] depuis l’analyse ouverte par la popup, utiliser « Fermer et revenir à l’acquittement » ;
+- [ ] vérifier FR/EN, clair/sombre et petite largeur ;
+- [ ] vérifier qu’un écran général non scoppé conserve le comportement multi-lieux autorisé.

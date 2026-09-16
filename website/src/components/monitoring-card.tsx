@@ -809,6 +809,8 @@ export default function MonitoringCard({
           setShowAcknowledgeModal(open)
           if (!open) setAckComment('')
         }}
+        candidateLocationId={idLieu}
+        relatedAlarmsInitiallyOpen={false}
         onConfirm={async (ackAlarmIds, commentValue, options) => {
           try {
             for (const ackAlarmId of ackAlarmIds) {
