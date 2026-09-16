@@ -92,6 +92,26 @@ function Resolve-PathInput($value) {
     return $value.Trim().Trim('"')
 }
 
+function Normalize-WebsiteBaseUrl([string]$value) {
+    if ([string]::IsNullOrWhiteSpace($value)) {
+        throw (T "L'URL du site web est obligatoire." "Website base URL is required.")
+    }
+
+    $candidate = $value.Trim()
+    if ($candidate -notmatch '^[A-Za-z][A-Za-z0-9+.-]*://') {
+        $candidate = "http://$candidate"
+    }
+
+    $uri = $null
+    if (-not [Uri]::TryCreate($candidate, [UriKind]::Absolute, [ref]$uri) -or
+        $uri.Scheme -notin @('http', 'https') -or
+        [string]::IsNullOrWhiteSpace($uri.Host)) {
+        throw (T "URL du site web invalide : $value. Exemple attendu : http://10.44.0.21:3000" "Invalid website base URL: $value. Expected example: http://10.44.0.21:3000")
+    }
+
+    return $candidate.TrimEnd('/')
+}
+
 function Find-FirstFile($directoryPath, $filter) {
     if ([string]::IsNullOrWhiteSpace($directoryPath)) { return $null }
     if (-not (Test-Path $directoryPath)) { return $null }
@@ -314,7 +334,7 @@ if (-not (Test-Path $configPath)) {
     Write-Error (T "Fichier config introuvable : $configPath" "Config file not found: $configPath")
 }
 
-$websiteBaseUrl = Read-InstallValue (T "URL du site web (ex: http://192.168.1.10:3000)" "Website base URL (example: http://192.168.1.10:3000)") $websiteUrlDefault
+$websiteBaseUrl = Normalize-WebsiteBaseUrl (Read-InstallValue (T "URL du site web (ex: http://192.168.1.10:3000)" "Website base URL (example: http://192.168.1.10:3000)") $websiteUrlDefault)
 $dbHost = Read-InstallValue (T "H?te BDD" "DB host") $dbHostDefault
 $dbProvider = Read-InstallValue (T "Type de BDD (mysql/mssql)" "DB provider (mysql/mssql)") "mysql"
 $dbProvider = $dbProvider.ToLowerInvariant()
