@@ -10,6 +10,7 @@ import { AlarmAcknowledgeDialog, type AcknowledgeDialogAlarm } from '@/component
 import MonitoringDetailsModal from '@/components/monitoring-details-modal'
 import { MonitoringCardChartPreview } from '@/components/monitoring-card/monitoring-card-chart-preview'
 import { MonitoringCardHeader } from '@/components/monitoring-card/monitoring-card-header'
+import { BatteryIndicator } from '@/components/monitoring-card/battery-indicator'
 import { RssiBars } from '@/components/monitoring-card/rssi-bars'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
@@ -21,7 +22,6 @@ import { useLieuMeasurements } from '@/hooks/useLieuMeasurements'
 import { formatDbDateTime, parseDbDateTime, serializeDbDateTime } from '@/lib/date-display'
 import type { LieuTypeValue } from '@/lib/lieu-types'
 import { calculateYDomain, formatMeasureValue, getMeasureSummary, sortMeasuresChronologically } from '@/lib/measurements'
-import { formatNumber } from '@/lib/number-display'
 import { cn } from '@/lib/utils'
 import { fadeInUp } from '@/lib/motion-variants'
 import { markAlarmAcknowledgedInPaginatedSensorsCache } from '@/lib/surveillance-cache'
@@ -442,18 +442,21 @@ export default function MonitoringCard({
   const formattedConsigneSup = useMemo(() => formatMeasureValue(consigneSup, decimals, localeTag), [consigneSup, decimals, localeTag])
   const formattedConsigneInf = useMemo(() => formatMeasureValue(consigneInf, decimals, localeTag), [consigneInf, decimals, localeTag])
   const formattedLastValue = useMemo(() => formatMeasureValue(lastValue, decimals, localeTag), [lastValue, decimals, localeTag])
-  const hasWirelessMetrics = Boolean(gsoRssi || gsoTension || batteryPercent !== null && batteryPercent !== undefined)
+  const hasBatteryMetric = Boolean(
+    batteryPercent !== null && batteryPercent !== undefined || gsoTension,
+  )
+  const hasWirelessMetrics = Boolean(gsoRssi || hasBatteryMetric)
   const isOnBatteryPower = effectiveAlarmType === 'S'
-  const gsoBatteryState = useMemo(() => {
-    if (!isGso || !gsoTension) return null
-    const normalized = gsoTension.replace(',', '.').replace(/[^0-9.\-]/g, '')
-    const voltage = Number.parseFloat(normalized)
-    if (!Number.isFinite(voltage)) return null
-    const formattedVoltage = formatNumber(voltage, { decimals: 2, locale: "en-US", grouping: false })
-    if (voltage >= 2.9) return t('gso.battery_state.ok', { value: formattedVoltage })
-    if (voltage >= 2.65) return t('gso.battery_state.medium', { value: formattedVoltage })
-    return t('gso.battery_state.low', { value: formattedVoltage })
-  }, [gsoTension, isGso, t])
+  const batteryTooltipLabel = useMemo(() => {
+    const labels: string[] = []
+    if (batteryPercent !== null && batteryPercent !== undefined) {
+      labels.push(t('wireless.battery', { value: batteryPercent }))
+    }
+    if (gsoTension) {
+      labels.push(t('gso.tension', { value: gsoTension }))
+    }
+    return labels.join(' · ')
+  }, [batteryPercent, gsoTension, t])
 
   const cardGlowClass = (() => {
     if (!isSurveillanceActive) return "opacity-75"
@@ -579,8 +582,13 @@ export default function MonitoringCard({
                     {hasWirelessMetrics ? (
                         <div className={`flex flex-wrap items-center justify-center gap-4 text-[11px] ${contentTextClassName}`}>
                           {gsoRssi ? <RssiBars value={gsoRssi} label={t('gso.rssi', { value: gsoRssi })} /> : null}
-                          {batteryPercent !== null && batteryPercent !== undefined ? <span>{t('wireless.battery', { value: batteryPercent })}</span> : null}
-                          {gsoBatteryState ? <span>{gsoBatteryState}</span> : gsoTension ? <span>{t('gso.tension', { value: gsoTension })}</span> : null}
+                          {hasBatteryMetric && batteryTooltipLabel ? (
+                            <BatteryIndicator
+                              percent={batteryPercent}
+                              voltage={gsoTension}
+                              label={batteryTooltipLabel}
+                            />
+                          ) : null}
                         </div>
                     ) : null}
                     {isOnBatteryPower ? (

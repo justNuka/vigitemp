@@ -485,3 +485,67 @@ Le seed SQL Server est encodé en UTF-8 mais l'installateur appelait `sqlcmd -i`
 - [ ] vérifier que les droits associés aux profils ne changent pas ;
 - [ ] vérifier MySQL et SQL Server ;
 - [ ] contrôler les logs `AUTHORIZATIONS` lorsqu'une réparation est effectuée.
+
+
+## 17/09/2026 — Nouveaux retours UX : batterie, duplication lieu, santé système et footer
+
+### 1. Surveillance — indicateur visuel de batterie
+
+**Statut : PR_OUVERTE — validation terrain à réaliser**
+
+- branche : `feature/surveillance-battery-indicator` ;
+- PR : #125 ;
+
+Retour : les cartes Surveillance affichaient les informations batterie sous forme de texte (`Batterie : 72 %`, état GSO OK/faible, tension). Le souhait terrain est d'avoir un indicateur compact comparable aux barres RSSI.
+
+Cible :
+
+- une icône batterie segmentée dont le remplissage évolue avec la valeur ;
+- GSP/autres sondes exposant un pourcentage : 4 niveaux, avec batterie faible à 50 % ou moins et critique à 25 % ou moins ;
+- GSO exposant `Tension_Piles` : conservation des seuils historiques 2,90 V / 2,65 V ;
+- batterie faible : pulsation discrète ;
+- batterie critique : pulsation rapide et accent visuel rouge ;
+- survol : valeur réelle (% et/ou tension) ;
+- respecter `prefers-reduced-motion` ;
+- conserver séparément le badge métier « fonctionnement sur batterie » d'une alarme secteur.
+
+Principaux fichiers :
+
+- `website/src/components/monitoring-card/battery-indicator.tsx` ;
+- `website/src/components/monitoring-card.tsx` ;
+- `website/scripts/test-surveillance-battery-indicator.ts`.
+
+Checklist terrain :
+
+- [ ] GSP 80 % : 4 segments, pas de clignotement ;
+- [ ] GSP 50 % : indicateur orange, pulsation lente ;
+- [ ] GSP 25 % : indicateur rouge, pulsation rapide ;
+- [ ] GSO >= 2,90 V : état normal ;
+- [ ] GSO entre 2,65 et 2,90 V : batterie faible ;
+- [ ] GSO < 2,65 V : batterie critique ;
+- [ ] le tooltip affiche la valeur reçue ;
+- [ ] RSSI et batterie restent lisibles côte à côte ;
+- [ ] clair/sombre + reduced motion.
+
+### 2. Administration Lieux — duplication / création depuis un lieu existant
+
+**Statut : A_FAIRE après merge du lot batterie.**
+
+Deux entrées sont demandées mais doivent réutiliser le même mécanisme de copie de formulaire :
+
+1. liste des lieux → sélectionner un lieu → **Dupliquer** → ouvrir un formulaire de création prérempli ;
+2. formulaire de création → **Créer à partir d'une configuration existante** → sélectionner un lieu source avec résumé → appliquer sa configuration.
+
+Invariants : `Nom_Lieu` vide, `Sonde_Numero_Serie = null`, `Lieu_Etat = D`, aucun identifiant/état runtime/historique copié. Réutiliser les helpers existants de formulaire/templates au lieu de dupliquer le mapping.
+
+### 3. Dashboard admin — santé du système
+
+**Statut : A_FAIRE après le lot duplication.**
+
+Ajouter une card synthétique et une page admin dédiée donnant l'état de santé VigiSensys : Web, serveur d'interrogation, bases principale/mesures/chat, versions, sauvegardes et informations système utiles sans exposer de secrets. Réutiliser/extracter la logique déjà présente dans `/api/hotline/health` plutôt que créer une deuxième implémentation des checks TCP/DB/version.
+
+### 4. Footer / cookies / RGPD
+
+**Statut : DEJA_FAIT — PR #122.**
+
+Le footer courant affiche déjà `Mentions légales`, `Protection des données` et `Cookies techniques uniquement`. La page Protection des données indique que VigiSensys fonctionne on-premise, sans télémétrie/analytics/publicité, que les données restent dans l'infrastructure du client et ne sont pas transmises automatiquement à MC2, et que les cookies/stockages sont limités à la session/authentification, sécurité, langue/thème/préférences et états locaux nécessaires. Aucun nouveau bandeau cookies n'est requis tant qu'aucun traceur non essentiel n'est ajouté.
