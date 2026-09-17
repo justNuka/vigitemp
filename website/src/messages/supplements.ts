@@ -56,7 +56,44 @@ export const frSupplements: MessageCatalog = {
     planning_value: "{count} règle{count, plural, one {} other {s}}",
     refresh: { error: "Échec de l'actualisation" },
   },
+  locationsPage: {
+    actions: {
+      duplicate: "Dupliquer",
+    },
+    copy: {
+      applied: "Configuration de « {name} » chargée.",
+      unnamed: "Lieu sans nom",
+    },
+  },
+  locationConfigCopy: {
+    title: "Créer à partir d'une configuration existante",
+    description: "Choisissez un lieu actif. Les champs de configuration seront repris, mais jamais le nom, la sonde, le module ni l'état de surveillance. Les règles de planning restent propres à chaque lieu.",
+    search_placeholder: "Rechercher un lieu, site, groupe ou numéro de sonde...",
+    empty: "Aucun lieu ne correspond à la recherche.",
+    select: "Utiliser cette configuration",
+    summary: {
+      site: "Site",
+      sensor: "Sonde source",
+      setpoint: "Consigne :",
+      range: "Plage :",
+      range_value: "{low} → {high}",
+      frequency: "Fréquence :",
+      frequency_value: "{value} min",
+      contacts: "Contacts :",
+      none: "—",
+      unnamed: "Lieu sans nom",
+      no_sensor: "Aucune",
+      more_groups: "+{count}",
+    },
+  },
   locationsForm: {
+    dialog: {
+      copy_existing: {
+        title: "Créer à partir d'un lieu existant",
+        description: "Reprenez la configuration d'un autre lieu sans copier son nom, sa sonde, son module ni son état de surveillance.",
+        button: "Choisir un lieu",
+      },
+    },
     telephony: {
       planning_info_title: "Emails d'alarme et planning",
       planning_info_description: "Le planning ne limite pas les horaires d'envoi des emails : il modifie les consignes applicables. Sans règle de planning, les consignes de base restent actives en continu ; si la surveillance et le mailing sont actifs, une alarme peut donc générer un email à toute heure.",
@@ -442,7 +479,44 @@ export const enSupplements: MessageCatalog = {
       },
     },
   },
+  locationsPage: {
+    actions: {
+      duplicate: "Duplicate",
+    },
+    copy: {
+      applied: "Configuration from “{name}” loaded.",
+      unnamed: "Unnamed location",
+    },
+  },
+  locationConfigCopy: {
+    title: "Create from an existing configuration",
+    description: "Choose an active location. Configuration fields will be copied, but never the name, sensor, module or monitoring state. Planning rules remain specific to each location.",
+    search_placeholder: "Search a location, site, group or sensor serial...",
+    empty: "No location matches the search.",
+    select: "Use this configuration",
+    summary: {
+      site: "Site",
+      sensor: "Source sensor",
+      setpoint: "Setpoint:",
+      range: "Range:",
+      range_value: "{low} → {high}",
+      frequency: "Frequency:",
+      frequency_value: "{value} min",
+      contacts: "Contacts:",
+      none: "—",
+      unnamed: "Unnamed location",
+      no_sensor: "None",
+      more_groups: "+{count}",
+    },
+  },
   locationsForm: {
+    dialog: {
+      copy_existing: {
+        title: "Create from an existing location",
+        description: "Reuse another location's configuration without copying its name, sensor, module or monitoring state.",
+        button: "Choose a location",
+      },
+    },
     telephony: {
       planning_info_title: "Alarm emails and planning",
       planning_info_description: "Planning does not restrict email delivery times: it changes the applicable setpoints. Without a planning rule, the location's base setpoints remain active continuously; if monitoring and email notifications are enabled, an alarm can therefore generate an email at any time.",

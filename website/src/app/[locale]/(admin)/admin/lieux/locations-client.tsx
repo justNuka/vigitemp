@@ -26,12 +26,14 @@ import {
 import { toast } from 'sonner'
 import { useRouter } from '@/i18n/navigation'
 import { LocationFormDialog } from './_components/location-form-dialog'
+import { LocationConfigSourceDialog } from './_components/location-config-source-dialog'
 import { LocationsTable } from './_components/locations-table'
 import { getJson, patchJson, postJson } from '@/lib/http'
 import { LocationsActions } from './_components/locations-actions'
 import type { LocationFormData } from './_components/location-form-types'
 import { getDefaultLocationFormData } from './_components/location-form-defaults'
 import { mapLocationToFormData } from './_components/location-form-mappers'
+import { buildLocationConfigCopy } from './_components/location-config-copy'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useTranslations } from 'next-intl'
 import { MapPin } from 'lucide-react'
@@ -47,6 +49,7 @@ export function LocationsClient() {
   const [isCreateOpen, setIsCreateOpen] = useState(false)
   const [isEditOpen, setIsEditOpen] = useState(false)
   const [isArchiveOpen, setIsArchiveOpen] = useState(false)
+  const [isCopySourceOpen, setIsCopySourceOpen] = useState(false)
   const [isCreateNoSondeOpen, setIsCreateNoSondeOpen] = useState(false)
   const [pendingCreate, setPendingCreate] = useState<{
     values: LocationFormData
@@ -172,6 +175,20 @@ export function LocationsClient() {
     setIsEditOpen(true)
   }
 
+  const applyExistingLocationConfig = (source: LocationRow, preserveCurrentName = false) => {
+    const currentName = preserveCurrentName ? (form.getValues('Nom_Lieu') ?? '') : ''
+    form.reset(buildLocationConfigCopy(source, { name: currentName }))
+    toast.success(t('copy.applied', { name: source.Nom_Lieu || t('copy.unnamed') }))
+  }
+
+  const handleDuplicate = () => {
+    if (!selectedDisplayedLocation) return
+    setPendingCreate(null)
+    setIsCreateNoSondeOpen(false)
+    applyExistingLocationConfig(selectedDisplayedLocation)
+    setIsCreateOpen(true)
+  }
+
   return (
     <LazyMotion features={domAnimation}>
       <m.main
@@ -193,10 +210,14 @@ export function LocationsClient() {
           </div>
           <LocationsActions
             canEdit={!!selectedDisplayedLocation && statusTab === 'active'}
+            canDuplicate={!!selectedDisplayedLocation && statusTab === 'active'}
             onCreate={() => {
               resetForm()
+              setPendingCreate(null)
+              setIsCreateNoSondeOpen(false)
               setIsCreateOpen(true)
             }}
+            onDuplicate={handleDuplicate}
             onEdit={handleEdit}
             onArchive={() => setIsArchiveOpen(true)}
           />
@@ -262,7 +283,11 @@ export function LocationsClient() {
         mailingUsers={mailingUsers}
         locationTemplates={locationTemplates}
         isSubmitting={createMutation.isPending}
-        onCancel={() => setIsCreateOpen(false)}
+        onRequestCopyFromExisting={() => setIsCopySourceOpen(true)}
+        onCancel={() => {
+          setIsCopySourceOpen(false)
+          setIsCreateOpen(false)
+        }}
         onSubmit={async (values, submitMode = 'stay') => {
           if (!values.Sonde_Numero_Serie) {
             setPendingCreate({ values, submitMode })
@@ -285,6 +310,16 @@ export function LocationsClient() {
           }
 
           return { saved: true, values: committedValues }
+        }}
+      />
+
+      <LocationConfigSourceDialog
+        open={isCopySourceOpen}
+        onOpenChange={setIsCopySourceOpen}
+        locations={activeLocations}
+        onSelect={(source) => {
+          applyExistingLocationConfig(source, true)
+          setIsCopySourceOpen(false)
         }}
       />
 
@@ -374,6 +409,5 @@ export function LocationsClient() {
     </LazyMotion>
   )
 }
-
 
 

@@ -32,7 +32,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useLicense } from "@/components/license/license-provider";
 import { isExpert, isStandardOrExpert } from "@/lib/license-access";
-import { Check, ChevronDown, X } from "lucide-react";
+import { Check, ChevronDown, Copy, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import type { Dispatch, SetStateAction } from "react";
 import { FormProvider, type UseFormReturn, useForm, useWatch } from 'react-hook-form';
@@ -83,6 +83,7 @@ type LocationFormDialogProps = {
   mailingUsers: MailingUser[];
   locationTemplates?: LocationTemplateRow[];
   isSubmitting: boolean;
+  onRequestCopyFromExisting?: () => void;
   showActionComment?: boolean;
   requireActionComment?: boolean;
   onCancel: () => void;
@@ -105,6 +106,7 @@ export function LocationFormDialog({
   mailingUsers,
   locationTemplates = [],
   isSubmitting,
+  onRequestCopyFromExisting,
   showActionComment = false,
   requireActionComment = false,
   onCancel,
@@ -320,6 +322,23 @@ export function LocationFormDialog({
                   saved: t('temporary_memory.saved'),
                 }}
               />
+            ) : null}
+            {!isEdit && onRequestCopyFromExisting ? (
+              <div className="flex flex-col gap-3 rounded-md border border-primary/25 bg-primary/5 p-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="space-y-1">
+                  <p className="text-sm font-medium">{t('copy_existing.title')}</p>
+                  <p className="text-xs text-muted-foreground">{t('copy_existing.description')}</p>
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="shrink-0 gap-2"
+                  onClick={onRequestCopyFromExisting}
+                >
+                  <Copy className="h-4 w-4" aria-hidden="true" />
+                  {t('copy_existing.button')}
+                </Button>
+              </div>
             ) : null}
             <div className="space-y-3 rounded-md border border-border/60 bg-muted/20 p-3">
               <div className="space-y-1">
