@@ -11,6 +11,7 @@ import {authResetSupplementForLocale} from '../messages/auth-reset-supplements';
 import {alarmAcknowledgementSupplementForLocale} from '../messages/alarm-acknowledgement-supplements';
 import {legalSupplementForLocale} from '../messages/legal-supplements';
 import {systemHealthSupplementForLocale} from '../messages/system-health-supplements';
+import {adminServiceCardsSupplementForLocale} from '../messages/admin-service-cards-supplements';
  
 export default getRequestConfig(async ({requestLocale}) => {
   // Typically corresponds to the `[locale]` segment
@@ -28,7 +29,8 @@ export default getRequestConfig(async ({requestLocale}) => {
   const messagesWithAdminSettings = mergeMessages(messagesWithAlarmAcknowledgement, adminSettingsSupplementForLocale(locale));
   const messagesWithLegal = mergeMessages(messagesWithAdminSettings, legalSupplementForLocale(locale));
   const messagesWithSystemHealth = mergeMessages(messagesWithLegal, systemHealthSupplementForLocale(locale));
-  const messagesWithSmtpGuide = mergeMessages(messagesWithSystemHealth, smtpGuideSupplementForLocale(locale));
+  const messagesWithAdminServiceCards = mergeMessages(messagesWithSystemHealth, adminServiceCardsSupplementForLocale(locale));
+  const messagesWithSmtpGuide = mergeMessages(messagesWithAdminServiceCards, smtpGuideSupplementForLocale(locale));
   const messagesWithMetrology = mergeMessages(messagesWithSmtpGuide, metrologyCalibrationSupplementForLocale(locale));
   const messagesWithTools = mergeMessages(messagesWithMetrology, toolsSupplementForLocale(locale));
  

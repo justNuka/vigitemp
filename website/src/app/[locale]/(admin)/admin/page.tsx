@@ -36,6 +36,7 @@ import {
 } from "@/hooks/useAdminData"
 import { useUnassignedSensors } from "@/hooks/useSensors"
 import { AdminSystemHealthCard } from "./_components/admin-system-health-card"
+import { AdminServiceCards } from "./_components/admin-service-cards"
 import { ExpertAdminDashboard } from "./_components/expert-admin-dashboard"
 import { staggerContainer, fadeInUp } from "@/lib/motion-variants"
 import { formatDbDateTime } from "@/lib/date-display"
@@ -251,6 +252,7 @@ export default function AdminDashboard() {
             ))}
 
             <AdminSystemHealthCard />
+            <AdminServiceCards />
 
             <SummaryCard
               title={t("backup.title")}
@@ -270,8 +272,9 @@ export default function AdminDashboard() {
     return (
       <div className="flex min-h-full flex-col">
         <PageHeader title={t("title")} />
-        <div className="px-6 pt-6">
+        <div className="grid gap-4 px-6 pt-6 md:grid-cols-2 xl:grid-cols-3">
           <AdminSystemHealthCard />
+          <AdminServiceCards />
         </div>
         <ExpertAdminDashboard
           metrics={{
@@ -322,6 +325,7 @@ export default function AdminDashboard() {
           animate="visible"
         >
           <AdminSystemHealthCard />
+          <AdminServiceCards />
 
           <SummaryCard
             title={t("summary.alarms_title")}

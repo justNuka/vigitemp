@@ -240,18 +240,74 @@ Principal fichier :
 
 ---
 
-## Idée — cards de services sur le Dashboard admin
+## Lot — cards de services Mailing / Téléphonie sur le Dashboard admin
 
-**Statut : `A_FAIRE` — idée UI à planifier**
+**Statut : PR_OUVERTE — PR #128, validation terrain à réaliser**
 
-Ajouter sur le Dashboard admin des cards synthétiques pour les services optionnels/configurables, en commençant par :
+- branche : `feature/admin-service-cards` ;
+- PR : #128 ;
+- base : `dev` au commit `eb09d1421d21a7768f302122547e17b7d533a421` (merge PR #127).
 
-- **Mailing** : état activé/désactivé, configuration SMTP disponible, accès rapide aux paramètres de mailing ; ne jamais afficher de secret dans la card.
-- **Téléphonie** : état activé/désactivé, provider configuré lorsque pertinent, accès rapide aux paramètres de téléphonie.
+Le Dashboard admin affiche maintenant deux cards de services configurables en complément de la Santé système :
 
-Pour la Téléphonie, respecter le contrat de licence : si l'option `telephonie` n'est pas présente, la card peut rester visible afin de montrer la fonctionnalité disponible dans VigiSensys, mais doit utiliser le même principe de verrouillage visuel que les paramètres (voile/flou progressif + message de fonctionnalité non disponible avec la licence) et ne proposer aucune action utilisable.
+- **Mailing** : état actif/désactivé de `SMTP_ACTIVATION`, complétude de la configuration SMTP et accès rapide aux Paramètres ;
+- **Téléphonie** : état actif/désactivé, fournisseur configuré et complétude de la configuration, avec accès rapide aux Paramètres lorsque la licence le permet.
 
-Prévoir si possible un composant de card générique/réutilisable pour pouvoir ajouter plus tard d'autres services sans dupliquer la structure du Dashboard admin.
+La card générique `AdminServiceCard` est réutilisable pour de futurs services.
+
+### Mailing
+
+La card réutilise `GET /api/admin/configuration-smtp`, dont la réponse masque déjà le mot de passe. Elle ne conserve côté Dashboard que les informations nécessaires à la synthèse.
+
+La configuration est considérée complète lorsque hôte, port valide, utilisateur et mot de passe sont configurés. Cette card représente volontairement l’infrastructure SMTP globale (`SMTP_ACTIVATION`) et ne doit pas être confondue avec `NOTIFICATIONS:EMAIL`, qui pilote séparément l’envoi des emails d’alarme.
+
+### Téléphonie
+
+Ajout de `GET /api/admin/telephony/status`, protégé par le contrôle admin et `requireTelephonyLicense()`.
+
+Le payload est volontairement minimal : `enabled`, `provider`, `configured`. Aucun identifiant, mot de passe, token, URL fournisseur sensible ou autre secret téléphonie n’est renvoyé au navigateur.
+
+La complétude réutilise `getTelephonyConfigMissingFields()` afin de rester alignée avec la validation métier existante.
+
+Sans option `telephonie` dans la licence :
+
+- la card reste visible pour présenter la fonctionnalité ;
+- elle réutilise le même `LicenseFeatureLock` que les Paramètres ;
+- aucune requête vers `/api/admin/telephony/status` n’est lancée ;
+- aucun lien ou bouton de configuration n’est utilisable.
+
+### Frontière client / serveur
+
+Le premier build de validation a détecté qu’un helper partagé importait `telephony/config.ts` depuis le bundle client, ce qui faisait remonter Prisma et les drivers MariaDB/Tedious côté navigateur. Le lot sépare désormais le contrat browser-safe (`admin-service-status.ts`) du helper de synthèse Téléphonie côté serveur (`admin-telephony-service-status.ts`). Le build production final valide cette frontière.
+
+Principaux fichiers :
+
+- `website/src/app/[locale]/(admin)/admin/_components/admin-service-card.tsx` ;
+- `website/src/app/[locale]/(admin)/admin/_components/admin-service-cards.tsx` ;
+- `website/src/app/[locale]/(admin)/admin/page.tsx` ;
+- `website/src/app/api/admin/telephony/status/route.ts` ;
+- `website/src/hooks/useAdminServiceStatus.ts` ;
+- `website/src/lib/admin-service-status.ts` ;
+- `website/src/lib/admin-telephony-service-status.ts` ;
+- `website/src/messages/admin-service-cards-supplements.ts` ;
+- `website/scripts/test-admin-service-status.ts` ;
+- `website/docs/API_MAP.md`.
+
+Validation technique : GitHub Actions `35239689855` ✅ — `git diff --check`, test ciblé, ESLint, TypeScript MySQL, i18n sans nouvelle dette du lot, génération + TypeScript SQL Server et build production.
+
+Checklist terrain :
+
+- [ ] SMTP actif + configuration complète : card Mailing `Actif` ;
+- [ ] SMTP désactivé : card `Désactivé` avec état de configuration toujours visible ;
+- [ ] SMTP actif avec hôte/utilisateur/mot de passe manquant : `Configuration incomplète` ;
+- [ ] Téléphonie licenciée, active et correctement configurée : fournisseur correct + état `Actif` ;
+- [ ] Téléphonie licenciée mais désactivée : état `Désactivé` ;
+- [ ] Téléphonie active mais configuration fournisseur incomplète : `Configuration incomplète` ;
+- [ ] sans option Téléphonie : card visible et verrouillée, aucune action utilisable ;
+- [ ] vérifier qu’aucun secret SMTP/Téléphonie n’apparaît dans les cards ni dans le payload `/api/admin/telephony/status` ;
+- [ ] vérifier l’accès rapide aux Paramètres lorsque le service est disponible ;
+- [ ] vérifier les Dashboard Basic, Standard et Expert ;
+- [ ] vérifier FR/EN, clair/sombre et petite largeur.
 
 ---
 
