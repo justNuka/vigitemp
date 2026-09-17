@@ -35,7 +35,7 @@ export default function AdminLayout({
   const showDock = !(isOneOrPack(license) && normalizedPathname === "/admin");
 
   const hasRouteAccess =
-    normalizedPathname === "/admin"
+    normalizedPathname === "/admin" || matchesAdminPath(normalizedPathname, ["/admin/sante-systeme"])
       ? hasPermission("DASHBOARD_ADMIN_ACCESS")
       : matchesAdminPath(normalizedPathname, ["/admin/parametres", "/admin/sites", "/admin/groupes", "/admin/audit"])
         ? hasAuthorizationCode("PARAMETRES_GERER")

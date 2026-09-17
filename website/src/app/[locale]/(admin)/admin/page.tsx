@@ -1,4 +1,4 @@
-﻿"use client"
+"use client"
 
 import { useMemo } from "react"
 import { LazyMotion, domAnimation, m } from "motion/react"
@@ -35,6 +35,7 @@ import {
   useConnectedUsers,
 } from "@/hooks/useAdminData"
 import { useUnassignedSensors } from "@/hooks/useSensors"
+import { AdminSystemHealthCard } from "./_components/admin-system-health-card"
 import { ExpertAdminDashboard } from "./_components/expert-admin-dashboard"
 import { staggerContainer, fadeInUp } from "@/lib/motion-variants"
 import { formatDbDateTime } from "@/lib/date-display"
@@ -249,25 +250,29 @@ export default function AdminDashboard() {
               />
             ))}
 
-              <SummaryCard
-                title={t("backup.title")}
-                description={t("backup.description", { total: backupsTotal })}
-                value={latestBackupStatus}
-                helper={`${t("backup.last.label")}: ${lastBackupLabel}\n${backupStoragePath}`}
-                icon={<BookOpen className="h-5 w-5 text-violet-600" />}
-                badge={latestBackupBadge}
-              />
+            <AdminSystemHealthCard />
+
+            <SummaryCard
+              title={t("backup.title")}
+              description={t("backup.description", { total: backupsTotal })}
+              value={latestBackupStatus}
+              helper={`${t("backup.last.label")}: ${lastBackupLabel}\n${backupStoragePath}`}
+              icon={<BookOpen className="h-5 w-5 text-violet-600" />}
+              badge={latestBackupBadge}
+            />
           </m.div>
         </LazyMotion>
       </div>
     )
   }
 
-
   if (isExpertEdition) {
     return (
       <div className="flex min-h-full flex-col">
         <PageHeader title={t("title")} />
+        <div className="px-6 pt-6">
+          <AdminSystemHealthCard />
+        </div>
         <ExpertAdminDashboard
           metrics={{
             alarmsInProgressTotal,
@@ -316,6 +321,8 @@ export default function AdminDashboard() {
           initial="hidden"
           animate="visible"
         >
+          <AdminSystemHealthCard />
+
           <SummaryCard
             title={t("summary.alarms_title")}
             description={t("summary.alarms_description", {
