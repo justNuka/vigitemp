@@ -529,7 +529,7 @@ Checklist terrain :
 
 ### 2. Administration Lieux — duplication / création depuis un lieu existant
 
-**Statut : PR_OUVERTE — validation terrain à réaliser**
+**Statut : MERGE — PR #126, validation terrain à réaliser**
 
 - branche : `feature/location-config-duplication` ;
 - PR : #126 ;
@@ -575,9 +575,65 @@ Checklist terrain :
 
 ### 3. Dashboard admin — santé du système
 
-**Statut : A_FAIRE après le lot duplication.**
+**Statut : PR_OUVERTE — PR #127, validation terrain à réaliser**
 
-Ajouter une card synthétique et une page admin dédiée donnant l'état de santé VigiSensys : Web, serveur d'interrogation, bases principale/mesures/chat, versions, sauvegardes et informations système utiles sans exposer de secrets. Réutiliser/extracter la logique déjà présente dans `/api/hotline/health` plutôt que créer une deuxième implémentation des checks TCP/DB/version.
+- branche : `feature/admin-system-health` ;
+- PR : #127 ;
+- base : `dev` au commit `a1c01f0543fee88a58fecd3f579fcb40c62b50df` (merge PR #126).
+
+Le lot réutilise désormais une source de vérité commune pour les diagnostics techniques au lieu de conserver les checks dans la seule route Hotline :
+
+- `collectSystemHealth()` centralise les contrôles du Web, du serveur d'interrogation et des bases principale, mesures et conversation ;
+- `/api/hotline/health` conserve son contrat historique mais délègue au helper partagé ;
+- `GET /api/admin/system-health` expose la vue admin avec le droit `DASHBOARD_ADMIN_ACCESS` ;
+- le droit de l'API admin est contrôlé depuis les autorisations déjà signées dans la session, sans requête supplémentaire sur la base principale, afin de pouvoir diagnostiquer précisément une panne de cette base ;
+- chaque dépendance est contrôlée indépendamment afin qu'une panne n'empêche pas d'afficher l'état des autres composants ;
+- la base conversation est optionnelle : absente, elle est indiquée non configurée sans dégrader le système ; configurée mais indisponible, l'état global passe à **Dégradé** si les composants critiques restent disponibles ;
+- une erreur sur le serveur d'interrogation, la base principale ou la base mesures produit un état **Incident** ;
+- aucune clé API, mot de passe, URL de base ou chaîne de connexion n'est exposée.
+
+Interface :
+
+- card **Santé système** sur les Dashboard admin Basic, Standard et Expert ;
+- page dédiée `/admin/sante-systeme` avec état global et détail par composant ;
+- versions Web et Serveur ;
+- moteur de base MySQL / SQL Server ;
+- informations système non sensibles : machine, OS, architecture, Node.js, uptime Web et uptime système ;
+- réutilisation de l'API de sauvegardes existante pour la dernière exécution, la rotation détectée et les chemins locaux ;
+- rafraîchissement automatique toutes les 30 secondes + action manuelle ;
+- textes FR/EN et rendu clair/sombre.
+
+Principaux fichiers :
+
+- `website/src/lib/system-health.ts` ;
+- `website/src/lib/system-health-overview.ts` ;
+- `website/src/types/system-health.ts` ;
+- `website/src/app/api/admin/system-health/route.ts` ;
+- `website/src/app/api/hotline/health/route.ts` ;
+- `website/src/hooks/useSystemHealth.ts` ;
+- `website/src/app/[locale]/(admin)/admin/_components/admin-system-health-card.tsx` ;
+- `website/src/app/[locale]/(admin)/admin/sante-systeme/page.tsx` ;
+- `website/src/messages/system-health-supplements.ts` ;
+- `website/scripts/test-system-health-overview.ts` ;
+- `website/docs/API_MAP.md`.
+
+Validation technique : GitHub Actions `35224012807` ✅ — test ciblé, ESLint, TypeScript MySQL, i18n sans nouvelle dette du lot, génération + TypeScript SQL Server et build production.
+
+Checklist terrain :
+
+- [ ] vérifier la card Santé système sur les éditions Basic, Standard et Expert ;
+- [ ] ouvrir `/admin/sante-systeme` et contrôler Web, serveur, bases principale/mesures/chat ;
+- [ ] confirmer les versions Web et Serveur ;
+- [ ] arrêter temporairement le serveur d'interrogation et vérifier l'état Incident ;
+- [ ] sur un environnement de test, simuler si possible l'indisponibilité de la base principale puis de la base mesures et vérifier que les autres diagnostics restent visibles ;
+- [ ] sans `DATABASE_CHAT_URL`, vérifier que la base conversation est indiquée non configurée sans dégrader l'état global ;
+- [ ] avec une base conversation configurée mais indisponible, vérifier l'état Dégradé ;
+- [ ] vérifier machine, OS, architecture, Node.js et uptimes ;
+- [ ] vérifier la dernière sauvegarde, le nombre d'archives et les chemins affichés ;
+- [ ] tester le bouton Actualiser et le rafraîchissement automatique ;
+- [ ] vérifier FR/EN, clair/sombre et petite largeur ;
+- [ ] vérifier qu'un profil sans `DASHBOARD_ADMIN_ACCESS` ne peut pas ouvrir la page ni appeler l'API ;
+- [ ] vérifier `/api/hotline/health` en non-régression depuis la Hotline.
 
 ### 4. Footer / cookies / RGPD
 

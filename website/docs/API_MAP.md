@@ -89,6 +89,7 @@ Objectif : fournir une vue fiable des endpoints réellement implémentés.
 - `GET /api/admin/acquittements`
 - `GET /api/admin/journaux-systeme`
 - `GET /api/admin/sauvegardes`
+- `GET /api/admin/system-health`
 - `GET, PUT /api/admin/configuration-smtp`
 - `GET, PUT /api/parametres`
 - `GET, PATCH /api/parametres/[key]`
