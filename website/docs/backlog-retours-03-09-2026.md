@@ -446,3 +446,42 @@ Depuis une carte Surveillance, l’utilisateur veut acquitter une alarme d’un 
 - [ ] depuis l’analyse ouverte par la popup, utiliser « Fermer et revenir à l’acquittement » ;
 - [ ] vérifier FR/EN, clair/sombre et petite largeur ;
 - [ ] vérifier qu’un écran général non scoppé conserve le comportement multi-lieux autorisé.
+
+
+## 17/09/2026 — Profils / Autorisations : réparer les accents corrompus
+
+### Retour terrain
+
+Sur une installation client, les libellés et descriptions de la page **Profils / Autorisations** pouvaient contenir du mojibake (`AccÃ¨s`, `ParamÃ©trage`, voire des variantes CP850 comme `Acc├¿s`). Les chaînes i18n du composant React sont correctes : l'écran affiche directement `t_autorisation.Libelle_Autorisation` et `t_autorisation.Commentaire`.
+
+### Cause
+
+Le seed SQL Server est encodé en UTF-8 mais l'installateur appelait `sqlcmd -i` sans préciser de page de codes. `sqlcmd` utilise alors la page de codes courante pour les fichiers d'entrée non Unicode, ce qui peut interpréter les octets UTF-8 comme Windows-1252/CP850 avant insertion. Le même risque concernait les autres libellés accentués du seed.
+
+### Correctif
+
+- branche : `fix/profile-authorization-encoding` ;
+- PR : #124 ;
+- `sqlcmd` force désormais UTF-8 en entrée et en sortie (`-f i:65001,o:65001`) pour le seed et le script d'événements SQL Server ;
+- ajout d'un helper conservatif de réparation des mojibakes UTF-8 historiques Windows-1252 et des séquences CP850 françaises les plus courantes ;
+- lors du chargement administratif des autorisations, les libellés/commentaires corrompus détectés sont réparés en base via Prisma ;
+- une chaîne déjà correcte reste strictement inchangée ;
+- MySQL conserve son bootstrap `--default-character-set=utf8mb4`.
+
+### Fichiers principaux
+
+- `Vigitemp Serveur/VigitempServerInstaller/InstallerHelpers.cs` ;
+- `website/src/lib/legacy-text-encoding.ts` ;
+- `website/src/lib/application-authorizations.ts` ;
+- `website/src/app/api/autorisations/route.ts` ;
+- `website/scripts/test-authorization-encoding.ts`.
+
+### Checklist terrain
+
+- [ ] installation SQL Server neuve : `Accès`, `Paramétrage`, `Étalonnage`, `Gérer` s'affichent correctement ;
+- [ ] base historique contenant `AccÃ¨s` / `ParamÃ©trage` : ouvrir Profils et vérifier la réparation ;
+- [ ] tester une variante CP850 (`Acc├¿s`) si disponible ;
+- [ ] vérifier qu'un libellé propre n'est pas modifié ;
+- [ ] vérifier que les droits associés aux profils ne changent pas ;
+- [ ] vérifier MySQL et SQL Server ;
+- [ ] contrôler les logs `AUTHORIZATIONS` lorsqu'une réparation est effectuée.

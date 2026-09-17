@@ -358,9 +358,9 @@ internal static class InstallerHelpers
         var seedPath = Path.Combine(dbDir, "vigisensys_seed_mssql.sql");
         var eventsPath = Path.Combine(dbDir, "vigisensys_sqlserver_events.sql");
         log($"[INFO] Seed SQL Server: {seedPath}");
-        EnsureSuccess(RunProcess(sqlcmdExe, $"-S \"{server}\" -U \"{user}\" -P \"{password}\" -b -i \"{seedPath}\"", dbDir, log), "sqlcmd seed mssql");
+        EnsureSuccess(RunProcess(sqlcmdExe, $"-S \"{server}\" -U \"{user}\" -P \"{password}\" -b -f i:65001,o:65001 -i \"{seedPath}\"", dbDir, log), "sqlcmd seed mssql");
         log($"[INFO] Jobs SQL Server: {eventsPath}");
-        EnsureSuccess(RunProcess(sqlcmdExe, $"-S \"{server}\" -U \"{user}\" -P \"{password}\" -b -i \"{eventsPath}\"", dbDir, log), "sqlcmd events mssql");
+        EnsureSuccess(RunProcess(sqlcmdExe, $"-S \"{server}\" -U \"{user}\" -P \"{password}\" -b -f i:65001,o:65001 -i \"{eventsPath}\"", dbDir, log), "sqlcmd events mssql");
     }
 
     private static int RunProcessWithInputFile(string fileName, string arguments, string workingDirectory, string inputFilePath, Action<string> log)
