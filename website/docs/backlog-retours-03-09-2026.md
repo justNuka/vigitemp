@@ -491,7 +491,7 @@ Le seed SQL Server est encodé en UTF-8 mais l'installateur appelait `sqlcmd -i`
 
 ### 1. Surveillance — indicateur visuel de batterie
 
-**Statut : PR_OUVERTE — validation terrain à réaliser**
+**Statut : MERGE — PR #125, validation terrain à réaliser**
 
 - branche : `feature/surveillance-battery-indicator` ;
 - PR : #125 ;
@@ -529,14 +529,49 @@ Checklist terrain :
 
 ### 2. Administration Lieux — duplication / création depuis un lieu existant
 
-**Statut : A_FAIRE après merge du lot batterie.**
+**Statut : PR_OUVERTE — validation terrain à réaliser**
 
-Deux entrées sont demandées mais doivent réutiliser le même mécanisme de copie de formulaire :
+- branche : `feature/location-config-duplication` ;
+- PR : #126 ;
 
-1. liste des lieux → sélectionner un lieu → **Dupliquer** → ouvrir un formulaire de création prérempli ;
-2. formulaire de création → **Créer à partir d'une configuration existante** → sélectionner un lieu source avec résumé → appliquer sa configuration.
+Deux entrées réutilisent le même helper pur de copie :
 
-Invariants : `Nom_Lieu` vide, `Sonde_Numero_Serie = null`, `Lieu_Etat = D`, aucun identifiant/état runtime/historique copié. Réutiliser les helpers existants de formulaire/templates au lieu de dupliquer le mapping.
+1. liste des lieux → sélectionner un lieu actif → **Dupliquer** → ouvrir le formulaire de création prérempli ;
+2. formulaire de création → **Créer à partir d'un lieu existant** → ouvrir une recherche avec résumé des configurations → appliquer la source sélectionnée.
+
+Invariants de sécurité fonctionnelle :
+
+- `Id_Lieu` n'est jamais copié ;
+- le nom du lieu source n'est jamais copié ; depuis un formulaire de création déjà commencé, le nom saisi par l'utilisateur est conservé ;
+- `Sonde_Numero_Serie = null` ;
+- `Id_Module = null`, car le module est lié à la sonde qui sera affectée au nouveau lieu ;
+- `Lieu_Etat = D` afin que le nouveau lieu ne parte jamais directement en surveillance ;
+- les identifiants des contacts mail/téléphone ne sont pas repris, seulement leur configuration utilisateur/canaux/ordre ;
+- les champs runtime/historiques et résultats de dernière métrologie ne sont pas copiés ;
+- les règles de planning ne sont pas des champs du formulaire de création et restent propres à chaque lieu dans ce lot.
+
+Configuration copiée : site, groupes, observations, consignes/seuils/pré-alarmes, fréquences et temporisations, paramètres EMT applicables, état du son d'alarme et contacts de notification.
+
+Principaux fichiers :
+
+- `website/src/app/[locale]/(admin)/admin/lieux/_components/location-config-copy.ts` ;
+- `website/src/app/[locale]/(admin)/admin/lieux/_components/location-config-source-dialog.tsx` ;
+- `website/src/app/[locale]/(admin)/admin/lieux/_components/locations-actions.tsx` ;
+- `website/src/app/[locale]/(admin)/admin/lieux/_components/location-form-dialog.tsx` ;
+- `website/src/app/[locale]/(admin)/admin/lieux/locations-client.tsx` ;
+- `website/src/messages/supplements.ts` ;
+- `website/scripts/test-location-config-copy.ts`.
+
+Checklist terrain :
+
+- [ ] sélectionner un lieu puis cliquer **Dupliquer** : le formulaire s'ouvre avec nom vide, aucune sonde/module et surveillance désactivée ;
+- [ ] vérifier que site, groupes, consignes, seuils, temporisations, observations et contacts sont bien repris ;
+- [ ] depuis **Nouveau**, saisir éventuellement un nom puis utiliser **Créer à partir d'un lieu existant** : le nom saisi reste présent et la configuration choisie est appliquée ;
+- [ ] rechercher un lieu par nom, site, groupe et numéro de sonde source ;
+- [ ] choisir ensuite une sonde : la surveillance doit rester désactivée tant que l'utilisateur ne l'active pas explicitement ;
+- [ ] enregistrer sans sonde et vérifier la confirmation existante ;
+- [ ] vérifier qu'aucune donnée historique, aucun `Id_Lieu` et aucun identifiant de contact source ne sont persistés ;
+- [ ] vérifier FR/EN, clair/sombre et petite largeur.
 
 ### 3. Dashboard admin — santé du système
 
