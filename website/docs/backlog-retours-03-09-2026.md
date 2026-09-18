@@ -789,7 +789,7 @@ Le footer courant affiche déjà `Mentions légales`, `Protection des données` 
 
 ## 18/09/2026 — Finalisation VigiSensys 1.0.0 : pages légales, footer et changelogs
 
-**Statut : PR_OUVERTE — PR #130, validation terrain à réaliser**
+**Statut : MERGE — PR #130, validation terrain à réaliser**
 
 - branche : `release/v1.0.0` ;
 - PR : #130 ;
@@ -1054,3 +1054,229 @@ Le premier essai Windows de la préparation 1.0.0 avait échoué uniquement parc
 - [ ] se déconnecter/reconnecter puis confirmer que l'access token contient des autorisations et que les deux APIs restent accessibles ;
 - [ ] tester une ancienne session à claims vides : le premier appel doit utiliser le fallback BDD puis renouveler le token ;
 - [ ] avec un profil sans `DASHBOARD_ADMIN_ACCESS`, confirmer que les deux APIs restent en 403.
+
+---
+
+## 18/09/2026 — Paramètres : validation SMTP par code et navigation par onglets
+
+**Statut : PR_OUVERTE — PR #131, validation terrain à réaliser**
+
+- branche : `feature/settings-smtp-verification-tabs` ;
+- PR : #131 ;
+- base : `dev` au commit `0992e4779a85b5f3ad4187c76a8d2e968e5e584d` (merge PR #130).
+
+Ce lot traite ensemble la fiabilisation du Mailing SMTP et la lisibilité de la page **Administration > Paramètres**.
+
+### 1. Validation obligatoire de la configuration SMTP
+
+#### Objectif
+
+Une modification SMTP ne doit plus être considérée valide simplement parce qu'elle a été enregistrée. La nouvelle configuration doit prouver qu'elle sait réellement envoyer un email.
+
+#### Flux retenu
+
+Lorsqu'un administrateur modifie réellement l'un des champs suivants :
+
+- serveur SMTP ;
+- port ;
+- utilisateur ;
+- mot de passe ;
+- expéditeur ;
+
+VigiSensys :
+
+1. enregistre les nouvelles valeurs ;
+2. invalide immédiatement la confirmation avec `SECURITE_EMAIL:SMTP_CONFIRME=false` ;
+3. bloque les emails métier tant que la configuration est non confirmée ;
+4. envoie un code à 6 chiffres **avec la nouvelle configuration elle-même** ;
+5. demande la saisie du code dans la modale ;
+6. repasse `SMTP_CONFIRME=true` uniquement après validation correcte.
+
+Un clic sur Enregistrer sans changement réel d'une configuration déjà confirmée ne force pas inutilement une nouvelle validation.
+
+Désactiver puis réactiver le Mailing ne détruit pas les paramètres ni une confirmation existante lorsque les paramètres techniques n'ont pas changé.
+
+#### Stockage / compatibilité BDD
+
+Aucune colonne et aucune migration de schéma ne sont ajoutées.
+
+Le mécanisme réutilise `t_parametre`, section `SECURITE_EMAIL` :
+
+- `SMTP_CONFIRME` ;
+- `SMTP_VERIFICATION_HASH` ;
+- `SMTP_VERIFICATION_EXPIRES_AT` ;
+- `SMTP_VERIFICATION_ATTEMPTS` ;
+- `SMTP_VERIFICATION_RECIPIENT`.
+
+Les seeds MySQL et SQL Server contiennent maintenant :
+
+`SECURITE_EMAIL:SMTP_CONFIRME=false`
+
+pour les nouvelles installations.
+
+Compatibilité ascendante : une installation historique disposant d'une configuration SMTP complète mais ne possédant pas encore `SMTP_CONFIRME` est considérée confirmée jusqu'à sa première modification. Une mise à jour de VigiSensys ne coupe donc pas brutalement un SMTP client déjà opérationnel.
+
+#### Sécurité du code
+
+- code à 6 chiffres généré avec `crypto.randomInt` ;
+- validité : 10 minutes ;
+- maximum 5 essais ;
+- aucun code en clair en base ;
+- stockage d'un HMAC-SHA256 lié au code, à l'adresse destinataire et à l'expiration ;
+- secret HMAC : `JWT_SECRET` déjà obligatoire pour VigiSensys ;
+- comparaison constant-time ;
+- challenge supprimé après validation, expiration, 5 erreurs, désactivation du Mailing ou échec d'envoi.
+
+Le code n'est jamais écrit dans les logs ou l'audit email.
+
+#### Moteur d'envoi
+
+`sendEmail()` exige maintenant :
+
+- SMTP activé ;
+- configuration complète ;
+- configuration confirmée.
+
+Une configuration enregistrée mais non confirmée produit `smtp_configuration_unconfirmed` et ne peut pas être utilisée silencieusement par une alarme, un reset de mot de passe ou un autre email système.
+
+Le mail contenant le code est volontairement envoyé directement avec Nodemailer à partir des paramètres en cours de validation : il doit précisément pouvoir tester une configuration qui n'est pas encore autorisée pour les autres emails métier.
+
+#### Audit
+
+Le type `smtp_verification` est ajouté à l'audit des emails de Santé système.
+
+Seuls le destinataire, le sujet, le statut et l'erreur éventuelle sont historisés. Le code de confirmation et les credentials SMTP ne le sont jamais.
+
+### 2. Card Mailing / Configuration Email
+
+Le switch global `SMTP_ACTIVATION` est déplacé de la modale vers la card **Configuration Email**.
+
+Comportement attendu :
+
+- Mailing désactivé :
+  - switch visible ;
+  - pas de bandeau d'alerte ;
+  - pas de bouton **Configurer SMTP** ;
+  - bouton **Guide SMTP** toujours visible ;
+- Mailing activé :
+  - bandeau rouge/destructif ;
+  - badge de configuration/confirmation ;
+  - bouton **Configurer SMTP** ;
+  - bouton **Guide SMTP**.
+
+Le Dashboard Admin distingue également une configuration techniquement complète mais non confirmée d'une configuration réellement opérationnelle.
+
+### 3. Modale SMTP
+
+La modale ne contient plus le switch global d'activation.
+
+Elle fonctionne en deux étapes :
+
+1. formulaire technique + adresse de réception du code ;
+2. saisie du code à 6 chiffres.
+
+Actions disponibles pendant la confirmation :
+
+- **Valider la configuration** ;
+- **Renvoyer le code** ;
+- **Modifier les paramètres**.
+
+Si l'enregistrement des paramètres réussit mais que l'envoi du code échoue, la modale recharge l'état persisté afin d'afficher immédiatement la configuration comme non confirmée.
+
+### 4. Navigation Paramètres par onglets
+
+La page est maintenant organisée en quatre onglets :
+
+- **Général** :
+  - paramètres généraux ;
+  - fuseau horaire ;
+- **Sécurité** :
+  - déconnexion automatique ;
+  - politique de mot de passe ;
+- **Alarmes & notifications** :
+  - notifications ;
+  - acquittement automatique des non-réponses ;
+- **Services** :
+  - messagerie lorsque la licence le permet ;
+  - Mailing / SMTP ;
+  - Téléphonie ou card verrouillée selon la licence.
+
+La barre globale de modifications en attente reste au-dessus des onglets. Les brouillons du système de paramètres commun ne sont donc pas perdus en changeant d'onglet.
+
+### Principaux fichiers
+
+- `website/src/app/[locale]/(admin)/admin/parametres/_components/settings-client.tsx` ;
+- `website/src/app/[locale]/(admin)/admin/parametres/_components/smtp-settings-card.tsx` ;
+- `website/src/app/[locale]/(admin)/admin/parametres/_components/smtp-config-modal.tsx` ;
+- `website/src/app/api/admin/configuration-smtp/route.ts` ;
+- `website/src/app/api/admin/configuration-smtp/verification/request/route.ts` ;
+- `website/src/app/api/admin/configuration-smtp/verification/confirm/route.ts` ;
+- `website/src/lib/smtp-config.ts` ;
+- `website/src/lib/smtp-config-contract.ts` ;
+- `website/src/lib/smtp-verification.ts` ;
+- `website/src/lib/smtp-verification-code.ts` ;
+- `website/emails/smtp-verification.tsx` ;
+- `website/src/lib/email.ts` ;
+- `website/src/app/[locale]/(admin)/admin/_components/admin-service-cards.tsx` ;
+- `website/src/hooks/useAdminServiceStatus.ts` ;
+- `website/src/lib/admin-service-status.ts` ;
+- `website/src/types/email-audit.ts` ;
+- `website/src/lib/email-audit-payload.ts` ;
+- `db/vigisensys_seed.sql` ;
+- `db/vigisensys_seed_mssql.sql` ;
+- `website/docs/admin-settings-audit-09-09-2026.md` ;
+- `website/docs/API_MAP.md`.
+
+### Validation technique
+
+GitHub Actions `35361427830` ✅ sur l'implémentation principale :
+
+- `git diff --check` ;
+- test unitaire génération/HMAC du code SMTP ;
+- contrat SMTP / onglets ;
+- test de statut des cards Admin ;
+- régression audit email ;
+- ESLint ciblé ;
+- TypeScript MySQL ;
+- i18n sans nouvelle dette du lot ;
+- génération et TypeScript SQL Server ;
+- restauration Prisma MySQL ;
+- build Next.js production ;
+- suppression automatique du workflow temporaire.
+
+Revalidation finale GitHub Actions `35362593764` ✅ après mise à jour documentaire et finition UI :
+
+- tests SMTP / onglets / cards / audit ;
+- ESLint ;
+- TypeScript MySQL ;
+- i18n sans nouvelle dette du lot ;
+- TypeScript SQL Server ;
+- build Next.js production ;
+- suppression automatique du workflow temporaire.
+
+### Checklist terrain
+
+- [ ] avec Mailing désactivé, vérifier : switch + Guide SMTP visibles, aucun warning et aucun bouton Configurer ;
+- [ ] activer Mailing : vérifier le bandeau rouge et le bouton Configurer ;
+- [ ] saisir une configuration SMTP valide puis enregistrer : vérifier le passage immédiat à **À valider** ;
+- [ ] vérifier la réception d'un code à 6 chiffres à l'adresse choisie ;
+- [ ] saisir le bon code : vérifier l'état **Configuration confirmée** ;
+- [ ] vérifier qu'un email métier fonctionne après validation ;
+- [ ] modifier ensuite un seul champ SMTP : vérifier que la confirmation est de nouveau invalidée ;
+- [ ] tant que la nouvelle configuration n'est pas validée, vérifier qu'un email métier est refusé proprement ;
+- [ ] saisir un mauvais code et contrôler le nombre d'essais restants ;
+- [ ] après 5 mauvais codes, vérifier qu'il faut en demander un nouveau ;
+- [ ] vérifier l'expiration après 10 minutes ;
+- [ ] demander plusieurs codes successifs : seul le dernier doit être valide ;
+- [ ] utiliser une mauvaise configuration SMTP : l'envoi du code doit échouer explicitement et la configuration doit rester non confirmée ;
+- [ ] vérifier qu'aucun code, mot de passe ou secret SMTP n'apparaît dans Santé système / audit email ;
+- [ ] désactiver puis réactiver une configuration confirmée et inchangée : elle doit rester confirmée ;
+- [ ] sur une installation historique sans `SMTP_CONFIRME`, vérifier que le SMTP complet existant fonctionne encore jusqu'à sa première modification ;
+- [ ] vérifier que la card Mailing du Dashboard Admin passe en configuration incomplète/à valider lorsque `SMTP_CONFIRME=false` ;
+- [ ] vérifier les quatre onglets Paramètres sur desktop et petite largeur ;
+- [ ] modifier un réglage géré par la barre globale, changer d'onglet puis revenir : le brouillon doit être conservé ;
+- [ ] vérifier les licences : Messagerie/Téléphonie restent affichées ou verrouillées selon les règles existantes ;
+- [ ] vérifier FR/EN et clair/sombre ;
+- [ ] valider le parcours sur MySQL ;
+- [ ] valider le parcours sur SQL Server.
+

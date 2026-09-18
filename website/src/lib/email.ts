@@ -1,7 +1,7 @@
 import nodemailer from "nodemailer";
 import { render } from "@react-email/components";
 import { prisma } from "@/lib/prisma";
-import { decryptSmtpPassword } from "@/lib/secret-crypto";
+import { getSmtpConfigState } from "@/lib/smtp-config";
 import { log } from "@/lib/logger";
 import { recordSystemEmailAuditSafely } from "@/lib/email-audit";
 import type { EmailSendAuditMetadata } from "@/types/email-audit";
@@ -13,6 +13,8 @@ interface EmailConfig {
   password: string;
   from: string;
   enabled: boolean;
+  configured: boolean;
+  confirmed: boolean;
 }
 
 export type EmailAttachment = {
@@ -40,48 +42,23 @@ function parseRecipients(raw: string | null | undefined): string[] {
 
 
 /**
- * Get email configuration from database parameters
- * Uses the new parameter structure with section: SECURITE_EMAIL
+ * Get the canonical SMTP configuration.
+ * Existing installations without SMTP_CONFIRME remain compatible until their
+ * SMTP details are modified for the first time.
  */
 async function getEmailConfig(): Promise<EmailConfig> {
-  const params = await prisma.t_parametre.findMany({
-    where: {
-      Section: "SECURITE_EMAIL",
-    },
-  });
+  const config = await getSmtpConfigState({ includePassword: true });
 
-  const config: EmailConfig = {
-    host: "",
-    port: 587,
-    user: "",
-    password: "",
-    from: "noreply@alwaysdata.net",
-    enabled: false,
+  return {
+    host: config.host,
+    port: config.port,
+    user: config.user,
+    password: config.password,
+    from: config.sender,
+    enabled: config.enabled,
+    configured: config.configured,
+    confirmed: config.confirmed,
   };
-
-  params.forEach((param) => {
-    switch (param.Mot_Cle) {
-      case "SMTP_SERVEUR":
-        config.host = param.Valeur || "sandbox.smtp.mailtrap.io";
-        break;
-      case "SMTP_PORT":
-        config.port = parseInt(param.Valeur || "587");
-        break;
-      case "SMTP_UTILISATEUR":
-        config.user = param.Valeur || "eb3e24c69a3763";
-        break;
-      case "SMTP_MOT_DE_PASSE":
-        config.password = decryptSmtpPassword(param.Valeur || "");
-        break;
-      case "SMTP_EXPEDITEUR":
-        config.from = param.Valeur || "noreply@alwaysdata.net";
-        break;
-      case "SMTP_ACTIVATION":
-        config.enabled = param.Valeur === "1" || param.Valeur?.toLowerCase() === "true";
-        break;
-    }
-  });
-  return config;
 }
 
 export async function getSystemEmailCcRecipients(): Promise<string[]> {
@@ -154,7 +131,7 @@ export async function sendEmail({
       return { success: false, error: "Email sending is disabled" };
     }
 
-    if (!config.host || !config.user || !config.password) {
+    if (!config.configured || !config.password) {
       log.error("email", "smtp_configuration_incomplete");
       if (auditMetadata) {
         await recordSystemEmailAuditSafely({
@@ -168,6 +145,25 @@ export async function sendEmail({
         });
       }
       return { success: false, error: "SMTP configuration is incomplete" };
+    }
+
+    if (!config.confirmed) {
+      log.error("email", "smtp_configuration_unconfirmed");
+      if (auditMetadata) {
+        await recordSystemEmailAuditSafely({
+          metadata: auditMetadata,
+          status: "skipped",
+          recipient: normalizedAuditRecipient,
+          ccRecipients: resolvedCcRecipients,
+          subject,
+          attempts: 0,
+          lastError: "smtp_configuration_unconfirmed",
+        });
+      }
+      return {
+        success: false,
+        error: "SMTP configuration is not confirmed",
+      };
     }
 
     const toNormalized = parseRecipients(to);
@@ -242,7 +238,12 @@ export async function sendEmail({
  */
 export async function isEmailEnabled(): Promise<boolean> {
   const config = await getEmailConfig();
-  return config.enabled && !!config.host && !!config.user && !!config.password;
+  return (
+    config.enabled &&
+    config.configured &&
+    config.confirmed &&
+    Boolean(config.password)
+  );
 }
 
 export async function isSystemEmailFallbackEnabled(): Promise<boolean> {

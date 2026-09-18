@@ -2952,6 +2952,7 @@ USING (VALUES
   (N'CFR21', N'TEMPS_DECONNEXION_MINUTES', N'20', N'Temps d''inactivité avant deconnexion automatique en minutes'),
   (N'CFR21', N'VALIDITE_MOT_DE_PASSE_JOURS', N'90', N'Durée de validité du mot de passe en jours'),
   (N'SECURITE_EMAIL', N'SMTP_ACTIVATION', N'true', N'Activer l''envoi d''emails'),
+  (N'SECURITE_EMAIL', N'SMTP_CONFIRME', N'false', N'Configuration SMTP validée par code email'),
   (N'SECURITE_EMAIL', N'SMTP_EXPEDITEUR', N'', N'Adresse email expéditeur (doit correspondre au domaine SMTP)'),
   (N'SECURITE_EMAIL', N'SMTP_MOT_DE_PASSE', N'', N'Mot de passe SMTP'),
   (N'SECURITE_EMAIL', N'SMTP_PORT', N'587', N'Port SMTP (587 pour TLS, 465 pour SSL)'),

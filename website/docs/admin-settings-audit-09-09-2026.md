@@ -130,6 +130,84 @@ Fichiers principaux :
 - `website/src/messages/smtp-guide-supplements.ts` ;
 - `website/src/i18n/request.ts`.
 
+## 9. Validation obligatoire de la configuration SMTP — 18/09/2026
+
+La configuration SMTP ne repose plus sur un simple email de test facultatif.
+
+### Source de vérité
+
+L'état est stocké dans `t_parametre`, section `SECURITE_EMAIL` :
+
+- `SMTP_ACTIVATION` : activation globale du service Mailing ;
+- `SMTP_SERVEUR`, `SMTP_PORT`, `SMTP_UTILISATEUR`, `SMTP_MOT_DE_PASSE`, `SMTP_EXPEDITEUR` : paramètres techniques ;
+- `SMTP_CONFIRME` : indique que la configuration technique courante a effectivement réussi à envoyer un code reçu puis validé.
+
+Aucune nouvelle colonne ni migration de schéma n'est nécessaire.
+
+Les nouvelles installations initialisent `SMTP_CONFIRME=false` dans les seeds MySQL et SQL Server. Pour ne pas couper les emails sur une installation historique déjà fonctionnelle, une configuration complète qui ne possède pas encore ce paramètre est considérée confirmée jusqu'à sa première modification.
+
+### Modification et confirmation
+
+Lorsqu'un administrateur modifie réellement l'hôte, le port, l'utilisateur, le mot de passe ou l'expéditeur :
+
+1. les nouveaux paramètres sont enregistrés ;
+2. `SMTP_CONFIRME` passe immédiatement à `false` ;
+3. les emails métier VigiSensys sont bloqués tant que la configuration n'est pas confirmée ;
+4. un code à 6 chiffres est envoyé avec **la nouvelle configuration SMTP elle-même** à l'adresse choisie pour le test ;
+5. la saisie correcte du code passe `SMTP_CONFIRME` à `true`.
+
+Le code :
+
+- expire après 10 minutes ;
+- est limité à 5 tentatives ;
+- n'est jamais stocké en clair ;
+- est persisté uniquement sous forme de HMAC-SHA256 lié à l'adresse et à l'expiration ;
+- utilise le secret JWT déjà obligatoire pour VigiSensys ;
+- est supprimé après succès, expiration, trop de tentatives, désactivation du service ou échec de l'envoi.
+
+Les paramètres temporaires de challenge utilisent également `SECURITE_EMAIL` :
+
+- `SMTP_VERIFICATION_HASH` ;
+- `SMTP_VERIFICATION_EXPIRES_AT` ;
+- `SMTP_VERIFICATION_ATTEMPTS` ;
+- `SMTP_VERIFICATION_RECIPIENT`.
+
+### Activation globale déplacée sur la card
+
+Le switch `SMTP_ACTIVATION` sort de la modale technique et est affiché directement sur la card **Configuration Email**.
+
+- service désactivé : aucun bandeau d'alerte ni bouton de configuration ; le **Guide SMTP** reste toujours visible ;
+- service activé : bandeau rouge/destructif, état de confirmation et bouton **Configurer SMTP** ;
+- désactiver/réactiver le service ne détruit pas la configuration technique et ne force pas une nouvelle validation lorsque la configuration confirmée n'a pas changé.
+
+### Usage par le moteur email
+
+Le moteur `sendEmail()` exige désormais simultanément :
+
+- SMTP activé ;
+- configuration techniquement complète ;
+- configuration confirmée.
+
+Une configuration enregistrée mais non confirmée retourne `smtp_configuration_unconfirmed` et n'est pas utilisée silencieusement pour les alarmes, resets ou autres emails métier.
+
+L'ancien endpoint `POST /api/email/test` est conservé comme endpoint de diagnostic, mais le parcours normal de configuration de l'interface utilise désormais les endpoints dédiés :
+
+- `POST /api/admin/configuration-smtp/verification/request` ;
+- `POST /api/admin/configuration-smtp/verification/confirm`.
+
+Les emails de validation apparaissent dans l'audit Santé système avec le type `smtp_verification`, sans stocker le code ou le mot de passe SMTP.
+
+## 10. Navigation Paramètres par onglets — 18/09/2026
+
+La page n'affiche plus toutes les cards dans une seule colonne continue. Elle est répartie en quatre onglets :
+
+- **Général** : réglages généraux + fuseau horaire ;
+- **Sécurité** : déconnexion automatique + règles de mot de passe ;
+- **Alarmes & notifications** : notifications + acquittement automatique des non-réponses ;
+- **Services** : messagerie, Mailing/SMTP et Téléphonie.
+
+La barre commune **Modifications en attente / Enregistrer / Annuler** reste au-dessus des onglets : changer d'onglet ne perd pas les brouillons des paramètres utilisant le système de sauvegarde globale.
+
 ## Validation terrain
 
 - [ ] Modifier `Rafraîchissement surveillance`, vérifier qu'aucune écriture n'a lieu avant clic sur Enregistrer.
@@ -143,5 +221,15 @@ Fichiers principaux :
 - [ ] Désactiver `SECURITE_EMAIL:SMTP_ACTIVATION` depuis le switch SMTP : l'email de test doit être refusé proprement.
 - [ ] Réactiver le switch : l'email de test doit être envoyé si la configuration SMTP est complète.
 - [ ] Ouvrir **Guide SMTP** et vérifier les quatre sections Google, Microsoft, Alwaysdata et autre SMTP.
+- [ ] Désactiver le Mailing depuis la card : vérifier que warning et bouton de configuration disparaissent, mais que **Guide SMTP** reste visible.
+- [ ] Réactiver le Mailing : vérifier le bandeau rouge et le bouton **Configurer SMTP**.
+- [ ] Modifier un paramètre SMTP et enregistrer : vérifier que la configuration passe immédiatement à **À valider**.
+- [ ] Vérifier qu'un email métier est refusé tant que le code n'est pas confirmé.
+- [ ] Vérifier la réception du code à 6 chiffres avec la nouvelle configuration puis sa validation.
+- [ ] Tester un mauvais code et vérifier le nombre d'essais restants ; après 5 erreurs, demander un nouveau code.
+- [ ] Vérifier l'expiration d'un code après 10 minutes.
+- [ ] Modifier la configuration vers des identifiants invalides : l'envoi du code doit échouer clairement et la configuration doit rester non confirmée.
+- [ ] Sur une installation historique sans `SMTP_CONFIRME`, vérifier qu'une configuration complète existante reste utilisable jusqu'à sa prochaine modification.
+- [ ] Vérifier les quatre onglets Paramètres sur desktop/mobile et confirmer qu'un brouillon global survit à un changement d'onglet.
 - [ ] Tester Gmail avec mot de passe d'application et vérifier l'envoi de l'email de test.
 - [ ] Vérifier le rendu du guide en FR / EN, thèmes clair / sombre et largeur mobile.

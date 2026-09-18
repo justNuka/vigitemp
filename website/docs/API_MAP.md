@@ -92,7 +92,9 @@ Objectif : fournir une vue fiable des endpoints réellement implémentés.
 - `GET /api/admin/system-health`
 - `GET /api/admin/email-audit`
 - `GET /api/admin/telephony/status`
-- `GET, PUT /api/admin/configuration-smtp`
+- `GET, PUT, PATCH /api/admin/configuration-smtp`
+- `POST /api/admin/configuration-smtp/verification/request`
+- `POST /api/admin/configuration-smtp/verification/confirm`
 - `GET, PUT /api/parametres`
 - `GET, PATCH /api/parametres/[key]`
 - `GET /api/parametres/password-rules`

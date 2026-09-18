@@ -10,8 +10,13 @@ const mailingReady = summarizeMailingService({
   port: 587,
   user: "alerts@example.test",
   passwordConfigured: true,
+  confirmed: true,
 })
-assert.deepEqual(mailingReady, { enabled: true, configured: true })
+assert.deepEqual(mailingReady, {
+  enabled: true,
+  configured: true,
+  confirmed: true,
+})
 
 const mailingMissingPassword = summarizeMailingService({
   enabled: true,
@@ -19,8 +24,27 @@ const mailingMissingPassword = summarizeMailingService({
   port: 587,
   user: "alerts@example.test",
   passwordConfigured: false,
+  confirmed: false,
 })
-assert.deepEqual(mailingMissingPassword, { enabled: true, configured: false })
+assert.deepEqual(mailingMissingPassword, {
+  enabled: true,
+  configured: false,
+  confirmed: false,
+})
+
+const mailingNeedsVerification = summarizeMailingService({
+  enabled: true,
+  host: "smtp.example.test",
+  port: 587,
+  user: "alerts@example.test",
+  passwordConfigured: true,
+  confirmed: false,
+})
+assert.deepEqual(mailingNeedsVerification, {
+  enabled: true,
+  configured: true,
+  confirmed: false,
+})
 
 const telephonyNone = summarizeTelephonyService(DEFAULT_TELEPHONY_CONFIG)
 assert.deepEqual(telephonyNone, {
