@@ -5,6 +5,7 @@ import {
   Database,
   Globe2,
   HardDrive,
+  Mail,
   MessagesSquare,
   MonitorCog,
   RefreshCw,
@@ -14,10 +15,13 @@ import { useLocale, useTranslations } from "next-intl"
 
 import { PageHeader } from "@/components/page-header"
 import { useAppTimezone } from "@/components/timezone-provider"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { useBackups } from "@/hooks/useAdminData"
-import { useSystemHealth } from "@/hooks/useSystemHealth"
+import { useSystemEmailAudit, useSystemHealth } from "@/hooks/useSystemHealth"
+import { formatDbDateTime } from "@/lib/date-display"
 import { formatNumber } from "@/lib/number-display"
 import { getSystemHealthOverview } from "@/lib/system-health-overview"
 import type { HealthState, SystemHealthOverallState } from "@/types/system-health"
@@ -81,6 +85,29 @@ function formatInstant(value: string | null | undefined, locale: string, timeZon
   }).format(parsed)
 }
 
+function EmailAuditStatusBadge({
+  status,
+  label,
+}: {
+  status: "queued" | "sending" | "sent" | "failed" | "skipped" | "unknown"
+  label: string
+}) {
+  const className =
+    status === "sent"
+      ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
+      : status === "failed"
+        ? "border-destructive/30 bg-destructive/10 text-destructive"
+        : status === "queued" || status === "sending"
+          ? "border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300"
+          : "border-slate-500/30 bg-slate-500/10 text-slate-600 dark:text-slate-300"
+
+  return (
+    <Badge variant="outline" className={className}>
+      {label}
+    </Badge>
+  )
+}
+
 function formatDuration(
   seconds: number | null | undefined,
   locale: string,
@@ -121,6 +148,7 @@ export default function SystemHealthPage() {
   const timeZone = useAppTimezone()
   const healthQuery = useSystemHealth()
   const backupsQuery = useBackups()
+  const emailAuditQuery = useSystemEmailAudit(50)
   const health = healthQuery.data
   const overview = health ? getSystemHealthOverview(health) : null
 
@@ -140,8 +168,15 @@ export default function SystemHealthPage() {
       ? t("backup.status.unavailable")
       : t("backup.status.none")
 
+  const isRefreshing =
+    healthQuery.isFetching || backupsQuery.isFetching || emailAuditQuery.isFetching
+
   const refreshAll = () => {
-    void Promise.all([healthQuery.refetch(), backupsQuery.refetch()])
+    void Promise.all([
+      healthQuery.refetch(),
+      backupsQuery.refetch(),
+      emailAuditQuery.refetch(),
+    ])
   }
 
   return (
@@ -175,10 +210,10 @@ export default function SystemHealthPage() {
               variant="outline"
               type="button"
               onClick={refreshAll}
-              disabled={healthQuery.isFetching || backupsQuery.isFetching}
+              disabled={isRefreshing}
             >
               <RefreshCw
-                className={`mr-2 h-4 w-4 ${healthQuery.isFetching || backupsQuery.isFetching ? "animate-spin" : ""}`}
+                className={`mr-2 h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`}
               />
               {t("actions.refresh")}
             </Button>
@@ -351,6 +386,90 @@ export default function SystemHealthPage() {
             </CardContent>
           </Card>
         </div>
+
+        <Card className="border-border/60 bg-card/95 shadow-sm">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <Mail className="h-5 w-5 text-indigo-600" />
+              {t("email_audit.title")}
+            </CardTitle>
+            <CardDescription>
+              {t("email_audit.description", {
+                count: emailAuditQuery.data?.items.length ?? 0,
+              })}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {emailAuditQuery.isLoading ? (
+              <p className="text-sm text-muted-foreground">{t("email_audit.loading")}</p>
+            ) : emailAuditQuery.isError ? (
+              <p className="text-sm text-destructive">{t("email_audit.unavailable")}</p>
+            ) : !emailAuditQuery.data?.items.length ? (
+              <p className="text-sm text-muted-foreground">{t("email_audit.empty")}</p>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>{t("email_audit.columns.date")}</TableHead>
+                    <TableHead>{t("email_audit.columns.type")}</TableHead>
+                    <TableHead>{t("email_audit.columns.recipient")}</TableHead>
+                    <TableHead>{t("email_audit.columns.subject")}</TableHead>
+                    <TableHead>{t("email_audit.columns.status")}</TableHead>
+                    <TableHead className="text-right">{t("email_audit.columns.attempts")}</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {emailAuditQuery.data.items.map((entry) => (
+                    <TableRow key={entry.id}>
+                      <TableCell className="whitespace-nowrap text-xs">
+                        {formatDbDateTime(entry.createdAt, {
+                          format: "dateTimeSeconds",
+                          locale,
+                        })}
+                      </TableCell>
+                      <TableCell>
+                        <div className="font-medium">{t(`email_audit.kind.${entry.kind}`)}</div>
+                        {entry.context ? (
+                          <div className="mt-1 text-xs text-muted-foreground">{entry.context}</div>
+                        ) : null}
+                        {entry.alarmId ? (
+                          <div className="text-xs text-muted-foreground">
+                            {t("email_audit.alarm_id", { id: entry.alarmId })}
+                          </div>
+                        ) : null}
+                      </TableCell>
+                      <TableCell className="max-w-64">
+                        <div className="break-all">{entry.recipient || "—"}</div>
+                        {entry.ccRecipients.length > 0 ? (
+                          <div className="mt-1 break-all text-xs text-muted-foreground">
+                            {t("email_audit.cc")}: {entry.ccRecipients.join(", ")}
+                          </div>
+                        ) : null}
+                      </TableCell>
+                      <TableCell className="max-w-72">
+                        <div className="break-words">{entry.subject || "—"}</div>
+                      </TableCell>
+                      <TableCell className="max-w-72">
+                        <EmailAuditStatusBadge
+                          status={entry.status}
+                          label={t(`email_audit.status.${entry.status}`)}
+                        />
+                        {entry.lastError ? (
+                          <div className="mt-2 break-words text-xs text-muted-foreground">
+                            {entry.lastError}
+                          </div>
+                        ) : null}
+                      </TableCell>
+                      <TableCell className="text-right tabular-nums">
+                        {formatNumber(entry.attempts, { decimals: 0, locale })}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </div>
   )

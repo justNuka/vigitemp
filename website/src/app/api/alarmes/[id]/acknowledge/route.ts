@@ -63,8 +63,17 @@ export const POST = withAnyAuthorizationLogging(getPermissionAliases("ALARM_ACK_
 
         const lieuId = current.t_lieu?.Id_Lieu ?? null
 
-        // Supprime d'abord les notifications liees pour eviter les conflits FK,
-        // puis supprime l'alarme (le trigger DB peut alimenter t_alarme_histo).
+        // Preserve persisted alarm-email queue/audit rows before deleting the alarm.
+        // Older rows may still carry the FK; newer ALARM_EMAIL rows keep the
+        // correlation only in Payload_Json.
+        ackStep = "tx_detach_alarm_email_notifications"
+        await tx.t_notification.updateMany({
+          where: { Id_Alarme: alarmId, Type: "ALARM_EMAIL" },
+          data: { Id_Alarme: null },
+        })
+
+        // Remove the remaining runtime notifications to avoid FK conflicts,
+        // then delete the alarm (the DB trigger can populate t_alarme_histo).
         ackStep = "tx_delete_notifications"
         await tx.t_notification.deleteMany({
           where: { Id_Alarme: alarmId },

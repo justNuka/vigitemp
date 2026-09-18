@@ -148,6 +148,7 @@ export const POST = withAdminLogging(async (req: NextRequest, ctx: HandlerContex
             mailLocale === "en"
               ? "Your VigiSensys account has been created"
               : "Votre compte VigiSensys a été créé",
+          audit: { kind: "account_creation", context: data.username },
           react: AccountCreationEmail({
             username: data.username,
             temporaryPassword,

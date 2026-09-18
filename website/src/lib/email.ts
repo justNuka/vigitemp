@@ -3,6 +3,8 @@ import { render } from "@react-email/components";
 import { prisma } from "@/lib/prisma";
 import { decryptSmtpPassword } from "@/lib/secret-crypto";
 import { log } from "@/lib/logger";
+import { recordSystemEmailAuditSafely } from "@/lib/email-audit";
+import type { EmailSendAuditMetadata } from "@/types/email-audit";
 
 interface EmailConfig {
   host: string;
@@ -118,6 +120,7 @@ export async function sendEmail({
   subject,
   react,
   attachments,
+  audit,
 }: {
   to: string;
   cc?: string | string[];
@@ -125,17 +128,45 @@ export async function sendEmail({
   subject: string;
   react: React.ReactElement;
   attachments?: EmailAttachment[];
+  audit?: EmailSendAuditMetadata | false;
 }): Promise<{ success: boolean; error?: string }> {
+  const auditMetadata = audit === false ? null : (audit ?? { kind: "other" as const });
+  const normalizedAuditRecipient = parseRecipients(to).join(", ") || to.trim();
+  let resolvedCcRecipients: string[] = [];
+  let smtpAttempted = false;
+
   try {
     const config = await getEmailConfig();
 
     if (!config.enabled) {
       log.info("EMAIL", "email_sending_disabled");
+      if (auditMetadata) {
+        await recordSystemEmailAuditSafely({
+          metadata: auditMetadata,
+          status: "skipped",
+          recipient: normalizedAuditRecipient,
+          ccRecipients: resolvedCcRecipients,
+          subject,
+          attempts: 0,
+          lastError: "email_sending_disabled",
+        });
+      }
       return { success: false, error: "Email sending is disabled" };
     }
 
     if (!config.host || !config.user || !config.password) {
       log.error("email", "smtp_configuration_incomplete");
+      if (auditMetadata) {
+        await recordSystemEmailAuditSafely({
+          metadata: auditMetadata,
+          status: "skipped",
+          recipient: normalizedAuditRecipient,
+          ccRecipients: resolvedCcRecipients,
+          subject,
+          attempts: 0,
+          lastError: "smtp_configuration_incomplete",
+        });
+      }
       return { success: false, error: "SMTP configuration is incomplete" };
     }
 
@@ -144,39 +175,64 @@ export async function sendEmail({
     const systemCc = includeSystemCc ? await getSystemEmailCcRecipients() : [];
 
     const toSet = new Set(toNormalized);
-    const ccRecipients = Array.from(new Set([...explicitCc, ...systemCc])).filter((email) => !toSet.has(email));
+    resolvedCcRecipients = Array.from(new Set([...explicitCc, ...systemCc])).filter(
+      (email) => !toSet.has(email),
+    );
 
-    // Create transporter
     const transporter = nodemailer.createTransport({
       host: config.host,
       port: config.port,
-      secure: config.port === 465, // true for 465, false for other ports
+      secure: config.port === 465,
       auth: {
         user: config.user,
         pass: config.password,
       },
     });
 
-    // Render React email to HTML
     const html = await render(react);
 
-    // Send email
+    smtpAttempted = true;
     await transporter.sendMail({
       from: config.from,
       to,
-      cc: ccRecipients.length > 0 ? ccRecipients : undefined,
+      cc: resolvedCcRecipients.length > 0 ? resolvedCcRecipients : undefined,
       subject,
       html,
       attachments,
     });
 
+    if (auditMetadata) {
+      await recordSystemEmailAuditSafely({
+        metadata: auditMetadata,
+        status: "sent",
+        recipient: normalizedAuditRecipient,
+        ccRecipients: resolvedCcRecipients,
+        subject,
+        attempts: 1,
+      });
+    }
+
     log.info("EMAIL", "email_sent", { to });
     return { success: true };
   } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+
+    if (auditMetadata) {
+      await recordSystemEmailAuditSafely({
+        metadata: auditMetadata,
+        status: "failed",
+        recipient: normalizedAuditRecipient,
+        ccRecipients: resolvedCcRecipients,
+        subject,
+        attempts: smtpAttempted ? 1 : 0,
+        lastError: errorMessage,
+      });
+    }
+
     log.error("email", "failed_to_send_email", { error });
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Unknown error",
+      error: errorMessage,
     };
   }
 }
