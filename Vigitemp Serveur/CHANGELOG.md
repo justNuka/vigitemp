@@ -8,6 +8,13 @@ La version produit de référence du Serveur est `AssemblyInformationalVersion("
 
 ## [Unreleased]
 
+Aucun changement supplémentaire documenté depuis la préparation de la release 1.0.0.
+
+## [1.0.0] — 2026-09-18
+
+Cette version consolide les évolutions Serveur intégrées depuis `0.90.3` et constitue la première release Serveur VigiSensys finalisée. Les versions techniques `AssemblyVersion` / `AssemblyFileVersion` restent volontairement indépendantes ; la version produit est portée par `AssemblyInformationalVersion("1.0.0")`.
+
+
 ### IC / IP / IH — préservation des octets de mesure binaires
 
 - Les trames IC, IP et IH utilisent un en-tête ASCII mais encodent la mesure sur deux octets binaires.
@@ -33,6 +40,56 @@ La version produit de référence du Serveur est `AssemblyInformationalVersion("
 - Après acquittement `ECON`, le dirty flag est remis à `0`; en cas d'échec, le mécanisme existant le restaure à `1`.
 - Le dirty flag historique de `t_lieu` reste utilisé par le chemin normal de Surveillance.
 - La migration BDD `0.90.2` MySQL ou SQL Server est requise pour activer ce nouveau parcours. Si elle manque, le décorateur DB retombe sur le provider historique afin d'éviter de neutraliser les paramètres métrologiques.
+
+### IP — conversion platine restaurée
+
+- Le correctif de lecture binaire IC/IP/IH conserve les octets `0x00..0xFF` sans modifier la formule métier historique des sondes.
+- La conversion platine spécifique aux sondes IP a été restaurée après identification d'une régression introduite pendant la fiabilisation du décodage brut.
+- Les valeurs IP continuent donc d'utiliser le traitement historique attendu après reconstruction de la mesure brute.
+
+### SEF — communication directe Sollae TCP
+
+- Ajout du protocole `SefProtocol` pour les anciennes sondes étalon SEF reliées à un convertisseur Sollae.
+- VigiSensys se connecte directement au Sollae en TCP, avec port `1470` et adresse protocole `01` par défaut, sans dépendre d'ezVSP ni d'un port COM virtuel.
+- Le protocole envoie `Q#<adresse>\r00000000` et accepte le banner MAC Sollae avant la réponse de température.
+- La lecture reste robuste lorsque le banner et la mesure arrivent dans plusieurs paquets TCP.
+- Le support est exposé aux parcours Hotline / métrologie sans dupliquer la logique protocolaire côté Web.
+
+### GSP — configuration avant Surveillance
+
+- Une GSP dont `Infos_Modifiees_Depuis_Derniere_Mesure = 1` peut être planifiée en mode `ConfigurationOnly` même si le lieu n'est pas encore activé en Surveillance.
+- La configuration pending est appliquée avant la première mesure normale, sans assouplir les garde-fous utilisés par les chemins de mesure et d'alarme.
+- Les sondes en métrologie ou sans module/port exploitable restent exclues du traitement automatique.
+
+### Dispatch alarmes vers le Web
+
+- Les valeurs `VigiSensys.WebsiteBaseUrl` / `Vigi.WebsiteBaseUrl` sont normalisées lorsqu'une installation historique contient seulement `IP:port`.
+- Les URL HTTP/HTTPS sont validées avant utilisation et les configurations réellement invalides sont diagnostiquées explicitement.
+- L'installateur graphique et le script PowerShell appliquent la même normalisation afin d'éviter de créer de nouvelles configurations ambiguës.
+
+### Installation SQL Server / encodage
+
+- L'installateur Serveur force désormais l'entrée et la sortie UTF-8 de `sqlcmd` pour le seed principal et les scripts associés.
+- Cette mesure évite l'insertion de libellés français corrompus selon la page de codes Windows active.
+- Le Web dispose en complément d'une réparation conservatrice pour les anciennes autorisations déjà enregistrées avec un mojibake connu.
+
+### Compatibilité / installation 1.0.0
+
+- Installateur Serveur : `1.0.0`.
+- La révision de schéma BDD de référence reste `0.90.2` ; elle est requise pour les chemins utilisant `t_ajustage.Coeffs_Modifies_Depuis_Derniere_Mesure`.
+- Aucun changement de schéma n'est introduit uniquement par le passage du Serveur à `1.0.0`.
+- Les protocoles et correctifs ci-dessus sont inclus dans le binaire Serveur `1.0.0`.
+
+### PR principales
+
+- #67 — synchronisation des coefficients métrologie via `t_ajustage`.
+- #69 — limite de 60 caractères des commandes GSP `ECON`.
+- #98 — préservation des octets binaires IC/IP/IH.
+- #99 — restauration de la conversion platine IP.
+- #110 — support SEF via Sollae TCP.
+- #119 — synchronisation des GSP dirty avant Surveillance.
+- #120 — normalisation de l'URL Web des alarmes.
+- #124 — exécution UTF-8 des seeds SQL Server par l'installateur.
 
 ## [0.90.3] — 2026-08-27
 

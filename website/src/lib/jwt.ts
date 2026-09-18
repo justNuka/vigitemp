@@ -59,7 +59,7 @@ export function getRefreshSessionExpiresAt(payload: JWTPayload): number | null {
 }
 
 export function generateRefreshToken(
-  payload: Omit<JWTPayload, "iat" | "exp" | "authorizations" | "tokenType" | "sessionExpiresAt">,
+  payload: Omit<JWTPayload, "iat" | "exp" | "tokenType" | "sessionExpiresAt">,
   sessionExpiresAt?: number,
 ): string {
   const nowSeconds = Math.floor(Date.now() / 1000);

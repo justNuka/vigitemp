@@ -8,7 +8,7 @@ import { log } from "@/lib/logger"
 
 export const GET = withAuthLogging(
   async (req: NextRequest, { user }) => {
-    if (!hasDashboardAdminAccess(user.authorizations)) {
+    if (!(await hasDashboardAdminAccess(user))) {
       return apiError(403, "forbidden", "Accès interdit")
     }
 

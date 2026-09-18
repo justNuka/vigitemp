@@ -8,6 +8,13 @@ Les versions suivent `MAJOR.MINOR.PATCH` sans zéros de tête. La source de vers
 
 ## [Unreleased]
 
+Aucun changement supplémentaire documenté depuis la préparation de la release 1.0.0.
+
+## [1.0.0] — 2026-09-18
+
+Cette version consolide l'ensemble des évolutions Web intégrées depuis la baseline `0.90.2` et constitue la première release Web VigiSensys considérée comme finalisée.
+
+
 ### Authentification / expérience utilisateur
 
 - Première connexion : après le bouton d’accès, l’onboarding reste affiché sous forme d’écran de préparation pendant la finalisation de la session et jusqu’à la redirection, au lieu de laisser réapparaître brièvement le formulaire de connexion.
@@ -49,6 +56,71 @@ Les versions suivent `MAJOR.MINOR.PATCH` sans zéros de tête. La source de vers
 - `AdjustmentSensorRow` conserve `coeffA`, `coeffB` et `coeffC` optionnels car ce type partagé sert aussi de base au `ManagedSensor` interne du moteur d'Ajustage, qui stocke ses coefficients courants dans `currentCoeffA/B/C`.
 - Ce correctif complète la PR #65 : rendre globalement A/B/C obligatoires corrigeait le premier diagnostic TypeScript mais rendait incompatible le mapper `ManagedSensor` du moteur d'Ajustage.
 - Aucun comportement métier, formule métrologique, payload API ou stockage BDD n'est modifié par ce hotfix de typage/build.
+
+### Surveillance et alarmes
+
+- Les candidats d'acquittement ouverts depuis Surveillance sont scoppés au lieu courant ; l'alarme sélectionnée reste l'élément principal et les autres alarmes du lieu sont repliées par défaut.
+- L'analyse graphique conserve le contexte du parcours d'acquittement et permet de revenir explicitement au dialogue.
+- L'audit Surveillance masque les métadonnées techniques non utiles et affiche clairement les commentaires utilisateur.
+- Les cartes Surveillance remplacent le texte batterie par un indicateur segmenté compact, avec valeur exacte au survol, seuils GSP et seuils historiques GSO.
+- Les outils de test de sondes utilisent les mesures réelles produites par VigiSensys Serveur dans `tm_mesures`, sans second moteur d'interrogation matériel.
+
+### Administration et lieux
+
+- La page Paramètres utilise les réglages réellement consommés, évite les sauvegardes implicites et aligne les règles de mot de passe entre les différents parcours.
+- La configuration SMTP expose clairement son état et un guide intégré documente Gmail, les mots de passe d'application, Microsoft 365, SMTP AUTH, TLS et les diagnostics courants.
+- Le formulaire de lieu respecte désormais les templates désactivés, le mode **Enregistrer et rester**, les choix manuels de module et la règle Mailing indépendante des plannings de consigne.
+- Une configuration de lieu peut être dupliquée depuis la liste ou appliquée comme source lors de la création ; seules les données configurables whitelistées sont copiées.
+- Le Dashboard Admin dispose d'une card **Santé système** et d'une page détaillée couvrant Web, Serveur, bases, versions, machine, uptime et sauvegardes.
+- Les cards **Mailing** et **Téléphonie** indiquent activation et complétude de configuration ; la Téléphonie reste verrouillée visuellement lorsque la licence ne l'autorise pas.
+- La page Santé système affiche les derniers événements d'envoi email avec type, destinataire, sujet, statut, tentatives et erreur éventuelle, sans corps de mail ni secret.
+
+### Métrologie et imports
+
+- Les fins d'opération proposent les exports ZIP d'ajustage et les rapports PDF d'étalonnage ; les étalonnages historiques peuvent être sélectionnés et exportés en lot.
+- L'affichage GSO pendant un ajustage applique les coefficients courants uniquement à la valeur présentée, sans modifier le signal brut utilisé par le calcul.
+- Les anciennes sondes étalon SEF sont intégrées aux workflows grâce au support Sollae TCP du Serveur.
+- Les erreurs de préparation/démarrage sont affichées dans la card d'action avec la sonde concernée et une aide de diagnostic ; les GSP déjà préparées sont restaurées en cas d'échec partiel.
+- Les coefficients GSP sont relus avec `DCON` avant les opérations sans envoi `ECON` automatique ; les changements explicites de l'opérateur restent synchronisés selon le workflow prévu.
+- L'import XML accepte les sondes sans module et les affectations multi-modules ; l'affectation BDD est dissociée de toute synchronisation matérielle implicite.
+- Les adresses GSO créées depuis un import respectent désormais l'adresse physique réelle sans suffixe `-T` artificiel pour les types SOIT/SOET.
+
+### Authentification, sécurité et liens publics
+
+- La fondation Better Auth est intégrée en mode opt-in et conserve le parcours JWT historique lorsque l'option n'est pas activée.
+- Le bootstrapper Web sait générer le secret Better Auth et écrire les variables d'environnement nécessaires sans exposer ce secret.
+- La création utilisateur applique les mêmes règles de mot de passe que les autres parcours.
+- Le reset mot de passe contrôle réellement le résultat Nodemailer, invalide un token non livré et renvoie une réponse publique neutre.
+- Les access/refresh tokens JWT incluent désormais les codes d'autorisation du profil au lieu d'un tableau vide. Les anciennes sessions peuvent recharger ponctuellement leurs droits depuis la BDD puis sont renouvelées avec les claims corrigés.
+- Santé système et Audit email réutilisent `DASHBOARD_ADMIN_ACCESS` sans nouvelle autorisation dédiée ; une fois les claims présents, leur contrôle d'accès ne dépend plus de la disponibilité de la base principale.
+- Les liens de connexion et de reset générés par email utilisent les pathnames localisés `next-intl`.
+- Le footer applicatif affiche la version, les informations cookies techniques et les liens publics Mentions légales / Protection des données.
+- Pour la finalisation 1.0.0, les slugs français `/mentions-legales` et `/protection-des-donnees` disposent également de routes physiques de fallback afin d'éviter toute 404 de réécriture.
+- Le shell Dashboard utilise une hauteur `dvh` bornée et un unique conteneur scrollable, supprimant la double scrollbar observée sur Surveillance après ajout du footer.
+- Dans l'Administration, le footer ajoute un dégagement inférieur conditionnel lorsque le dock de navigation est visible, afin d'éviter tout recouvrement de la version ou des liens légaux.
+
+### Téléphonie
+
+- OVHcloud Click2Call, Asterisk/SIP et Twilio sont documentés/configurables selon les besoins ; Twilio est la cible recommandée de la V1.
+- Le test Twilio prend en charge le comportement spécifique des comptes Trial et indique lorsque le template Trial a été utilisé.
+- Les fonctions Téléphonie côté API et interface respectent l'option de licence `telephonie`.
+- Le Dashboard Admin synthétise l'état du provider et de sa configuration sans exposer les credentials.
+
+### Fondation Web / compatibilité
+
+- Les formats de dates sont centralisés via des presets explicites et conservent la sémantique des `DATETIME` MySQL/SQL Server sans fuseau.
+- Le formatage numérique utilisateur est centralisé via `Intl.NumberFormat`, notamment pour les mesures.
+- Les libellés d'autorisation SQL Server historiquement mojibakés peuvent être réparés de manière conservatrice lors de leur lecture administrative.
+- MySQL et SQL Server restent les deux providers supportés ; les contrôles TypeScript/build sont exécutés sur les deux configurations.
+- La version de la modale **Nouvelle version** est maintenant dérivée de `website/package.json` au lieu d'un numéro historique codé en dur.
+
+### PR principales
+
+- Métrologie : #67, #70, #71, #97, #103, #107, #110, #111, #113, #114, #116, #117.
+- Authentification / sécurité : #72, #74, #82, #90, #101, #105, #121, #122, #124.
+- Téléphonie : #83, #84, #85, #94, #95, #96, #128.
+- Surveillance / alarmes / administration : #86, #87, #100, #112, #115, #123, #125, #126, #127, #128, #129.
+- Fondations Web : #73, #75, #77, #78, #79, #80, #81.
 
 ## [0.90.2] — 2026-08-27
 

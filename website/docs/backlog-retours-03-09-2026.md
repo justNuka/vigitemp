@@ -693,7 +693,7 @@ Checklist terrain :
 
 ### 4. Santé système — audit des emails
 
-**Statut : PR_OUVERTE — PR #129, validation terrain à réaliser**
+**Statut : MERGE — PR #129, validation terrain à réaliser**
 
 - branche : `feature/system-health-email-audit` ;
 - PR : #129 ;
@@ -783,3 +783,274 @@ Checklist terrain :
 **Statut : DEJA_FAIT — PR #122.**
 
 Le footer courant affiche déjà `Mentions légales`, `Protection des données` et `Cookies techniques uniquement`. La page Protection des données indique que VigiSensys fonctionne on-premise, sans télémétrie/analytics/publicité, que les données restent dans l'infrastructure du client et ne sont pas transmises automatiquement à MC2, et que les cookies/stockages sont limités à la session/authentification, sécurité, langue/thème/préférences et états locaux nécessaires. Aucun nouveau bandeau cookies n'est requis tant qu'aucun traceur non essentiel n'est ajouté.
+
+
+---
+
+## 18/09/2026 — Finalisation VigiSensys 1.0.0 : pages légales, footer et changelogs
+
+**Statut : PR_OUVERTE — PR #130, validation terrain à réaliser**
+
+- branche : `release/v1.0.0` ;
+- PR : #130 ;
+- base : `dev` au commit `bc535b7b698a722c99e97861f39128b4a7e428fa` (merge PR #129).
+
+Ce lot prépare la première version produit considérée comme finalisée de VigiSensys. Il regroupe volontairement les deux derniers correctifs de présentation observés sur le terrain et la mise à niveau du versioning/changelog, afin que la release `1.0.0` soit cohérente techniquement et documentée.
+
+### 1. Mentions légales / Protection des données — 404 sur les slugs français
+
+#### Constat
+
+Les pages existaient déjà dans le code sous les routes canoniques :
+
+- `/[locale]/legal-notice` ;
+- `/[locale]/data-protection`.
+
+Le routing `next-intl` déclarait également les aliases français :
+
+- `/mentions-legales` ;
+- `/protection-des-donnees`.
+
+Le retour terrain montrait pourtant des 404 depuis les liens du footer sur certaines installations. Le contenu n'était donc pas absent : le problème venait de la dépendance exclusive à la réécriture localisée pour ces URLs publiques.
+
+#### Correction
+
+Deux routes physiques de fallback ont été ajoutées :
+
+- `website/src/app/[locale]/mentions-legales/page.tsx` réexporte la page canonique `legal-notice` ;
+- `website/src/app/[locale]/protection-des-donnees/page.tsx` réexporte la page canonique `data-protection`.
+
+Le contenu, les métadonnées et les traductions restent ainsi définis à un seul endroit.
+
+La modale **Nouvelle version** ignore désormais les quatre variantes d'URL publiques afin de ne jamais s'afficher au-dessus de ces pages.
+
+### 2. Surveillance / Administration — footer et navigation
+
+#### Surveillance — cause du double scroll
+
+Le shell utilisateur combinait :
+
+- un conteneur racine `min-h-screen` ;
+- un `main` interne en `overflow-y-auto` ;
+- le footer placé après le contenu de page.
+
+Le document et le `main` pouvaient donc devenir scrollables simultanément, produisant les deux scrollbars visibles sur la capture terrain.
+
+#### Correction
+
+Le shell utilisateur reprend la structure déjà utilisée côté Administration :
+
+- racine bornée avec `h-dvh` et `overflow-hidden` ;
+- conteneur flex intermédiaire avec `min-h-0` ;
+- `main` avec `min-h-0 min-w-0 flex-1 overflow-y-auto`.
+
+Le `main` devient l'unique propriétaire du scroll vertical et le footer reste dans ce même flux.
+
+#### Administration — footer derrière le dock
+
+Le footer Admin est rendu dans le layout parent, alors que le dock de navigation est un élément `fixed bottom-2` de 68 px. Le `pb-28` déjà présent protège le contenu des pages, mais pas le footer rendu après ce contenu : les liens légaux et la version peuvent donc passer derrière le dock.
+
+Correction :
+
+- le layout Admin parent applique la même règle de visibilité que le dock ;
+- lorsque le dock est visible, `AppFooter` reçoit un dégagement inférieur de 96 px (`mb-24`) ;
+- lorsque le dock est volontairement masqué, aucun espace supplémentaire n'est ajouté ;
+- le composant générique `AppFooter` et le positionnement flottant du dock restent inchangés.
+
+### 3. Version produit VigiSensys 1.0.0
+
+Le dépôt conserve le principe de versions indépendantes par composant défini dans `docs/versioning.md`. La release produit `1.0.0` n'impose pas artificiellement `1.0.0` à un composant qui n'a pas évolué.
+
+| Composant | Version de la livraison |
+| --- | --- |
+| Produit VigiSensys | `1.0.0` |
+| Web | `1.0.0` |
+| Serveur Windows | `1.0.0` |
+| Installateur Serveur | `1.0.0` |
+| Agent Windows | `1.0.1` — inchangé |
+| Installateur Agent | `1.0.1` — inchangé |
+| BDD / seeds | `0.90.2` — révision de schéma conservée |
+| Générateur de licences | `0.1.0` — inchangé |
+
+Sources de vérité modifiées :
+
+- `website/package.json` → Web `1.0.0` ;
+- `Vigitemp Serveur/Vigitemp Serveur/Properties/AssemblyInfo.cs` → `AssemblyInformationalVersion("1.0.0")` ;
+- `Vigitemp Serveur/VigitempServerInstaller/VigitempServerInstaller.csproj` → installateur `1.0.0`.
+
+Les `AssemblyVersion` / `AssemblyFileVersion` historiques du Serveur restent volontairement indépendantes ; la version produit exposée par le binaire est l'Informational/ProductVersion.
+
+La modale Web ne possède plus l'ancien `RELEASE_VERSION = "0.3.7"` en dur : elle utilise `WEB_APP_VERSION`, lui-même dérivé du `package.json`.
+
+### 4. Remise à niveau des changelogs
+
+#### Écart constaté
+
+Avant ce lot :
+
+- le changelog racine et le changelog Web restaient centrés sur la baseline du 27/08/2026 ;
+- la dernière version Web structurée était `0.90.2` ;
+- le Serveur était encore présenté autour de `0.90.3` ;
+- la modale utilisateur annonçait encore `0.3.7` ;
+- les lots récents, notamment la majorité des PR #97 à #129, n'étaient pas consolidés dans une release cohérente.
+
+#### Changelogs remis à niveau
+
+- `CHANGELOG.md` — synthèse produit VigiSensys `1.0.0` ;
+- `website/CHANGELOG.md` — release Web `1.0.0` ;
+- `Vigitemp Serveur/CHANGELOG.md` — release Serveur `1.0.0` ;
+- `Vigitemp agent/CHANGELOG.md` — Agent explicitement maintenu en `1.0.1` pour cette release ;
+- `db/CHANGELOG.md` — schéma `0.90.2` figé comme baseline BDD de VigiSensys `1.0.0` ;
+- `Vigitemp Serveur/Vigitemp License Generator/CHANGELOG.md` — générateur maintenu en `0.1.0`.
+
+Le contenu consolidé couvre notamment :
+
+- surveillance, acquittements, audit et indicateur batterie ;
+- métrologie par plateau, coefficients, rollback, exports PDF/ZIP, SEF Sollae TCP ;
+- imports d'ajustage sans module / multi-modules ;
+- Better Auth opt-in, onboarding première connexion et reset de mot de passe ;
+- Twilio / OVHcloud / Asterisk et option de licence Téléphonie ;
+- protocoles GSP, IC/IP/IH et synchronisation des GSP dirty ;
+- paramètres admin / SMTP ;
+- duplication de configuration de lieu ;
+- Santé système, cards Mailing/Téléphonie et audit emails ;
+- encodage UTF-8 SQL Server ;
+- migrations MySQL / SQL Server et révision de schéma `0.90.2`.
+
+Les anciennes sections et anciens numéros de versions restent inchangés lorsqu'ils décrivent réellement l'historique. Aucun remplacement global des anciennes versions n'a été effectué.
+
+### 5. Modale Nouvelle version 1.0.0
+
+La modale visible après changement de version contient maintenant un résumé FR/EN organisé par domaines :
+
+- Surveillance / alarmes ;
+- Métrologie ;
+- Administration ;
+- Authentification / sécurité ;
+- Téléphonie ;
+- plateforme / fiabilité.
+
+La version de cette modale provient désormais de la même source que le reste du Web.
+
+### 6. Santé système / Audit email — correction des 403
+
+#### Constat
+
+Après merge des PR #127 et #129, les appels :
+
+- `GET /api/admin/system-health` ;
+- `GET /api/admin/email-audit` ;
+
+pouvaient retourner `403 forbidden` alors que l'utilisateur disposait bien de l'accès au Dashboard Admin dans l'interface.
+
+Aucune nouvelle autorisation n'était manquante dans les seeds : les endpoints réutilisent volontairement le droit existant `DASHBOARD_ADMIN_ACCESS`, dont les aliases sont :
+
+- `ACCES_DASHBOARD_ADMIN` ;
+- `ACCES_TABLEAU_BORD_ADMIN` ;
+- `ACCES_ADMIN`.
+
+Le profil `Administrateurs` reçoit déjà ces autorisations dans les seeds MySQL et SQL Server.
+
+#### Cause
+
+Le login legacy créait pourtant les JWT avec :
+
+```ts
+const authorizations: string[] = []
+```
+
+L'interface recharge les droits réels via `/api/me`, donc les menus et protections client pouvaient fonctionner. En revanche, Santé système et Audit email avaient été conçus pour lire les autorisations directement depuis le JWT signé afin de rester accessibles lorsqu'une panne de la base principale est précisément en cours de diagnostic.
+
+Les claims étant vides, les deux APIs refusaient donc systématiquement l'accès.
+
+#### Correction
+
+- ajout de `getUserAuthorizationCodes(userId)` comme helper serveur partagé ;
+- le login charge désormais les codes du profil et les place dans l'access token **et** le refresh token ;
+- le changement forcé de mot de passe émet les mêmes claims complets ;
+- le refresh recharge les autorisations courantes depuis la BDD lorsqu'elle est disponible, puis les conserve dans les deux tokens tournants ;
+- si la BDD est temporairement indisponible au refresh, les claims signés déjà présents sont conservés au lieu d'être effacés ;
+- Santé système / Audit email contrôlent d'abord les claims signés ;
+- une ancienne session émise avant ce correctif, donc avec un tableau vide, dispose d'un fallback BDD ponctuel ;
+- lorsque ce fallback réussit, les codes sont réinjectés dans le payload en mémoire et `withAuthLogging` renouvelle immédiatement l'access token avec les bons droits sur la même réponse.
+
+Ainsi, aucune nouvelle autorisation fonctionnelle n'est créée et les nouvelles sessions conservent la capacité de diagnostiquer la base principale même lorsqu'elle devient indisponible après authentification.
+
+### Principaux fichiers
+
+- `CHANGELOG.md` ;
+- `website/CHANGELOG.md` ;
+- `Vigitemp Serveur/CHANGELOG.md` ;
+- `Vigitemp agent/CHANGELOG.md` ;
+- `db/CHANGELOG.md` ;
+- `Vigitemp Serveur/Vigitemp License Generator/CHANGELOG.md` ;
+- `website/package.json` ;
+- `Vigitemp Serveur/Vigitemp Serveur/Properties/AssemblyInfo.cs` ;
+- `Vigitemp Serveur/VigitempServerInstaller/VigitempServerInstaller.csproj` ;
+- `website/src/app/[locale]/(dashboard)/dashboard-shell.tsx` ;
+- `website/src/app/[locale]/(admin)/admin-layout-client.tsx` ;
+- `website/src/app/[locale]/mentions-legales/page.tsx` ;
+- `website/src/app/[locale]/protection-des-donnees/page.tsx` ;
+- `website/src/components/version-changelog-modal.tsx` ;
+- `website/src/messages/fr.json` ;
+- `website/src/messages/en.json` ;
+- `website/src/app/api/auth/login/route.ts` ;
+- `website/src/app/api/auth/force-password-change/route.ts` ;
+- `website/src/app/api/auth/refresh/route.ts` ;
+- `website/src/app/api/admin/system-health/route.ts` ;
+- `website/src/app/api/admin/email-audit/route.ts` ;
+- `website/src/lib/authz.ts` ;
+- `website/src/lib/jwt.ts` ;
+- `website/src/lib/dashboard-admin-access.ts` ;
+- `website/scripts/test-release-1.0.0.ts` ;
+- `website/scripts/test-admin-health-authorization.ts`.
+
+### Validation technique
+
+GitHub Actions run final `35354244660` ✅ :
+
+- `git diff --check` ;
+- contrat ciblé de préparation de release `1.0.0` ;
+- test dédié `test-admin-health-authorization.ts` couvrant les aliases admin, les claims du refresh token et l'intégration des routes Santé système / Audit email ;
+- test de régression des URLs publiques ;
+- ESLint ciblé ;
+- TypeScript MySQL ;
+- audit i18n sans nouvelle dette du lot ;
+- génération Prisma SQL Server ;
+- TypeScript SQL Server ;
+- restauration Prisma MySQL ;
+- build Next.js production ;
+- restauration des packages legacy .NET Framework ;
+- build Release de VigiSensys Serveur ;
+- build Release de l'installateur Serveur ;
+- suppression automatique du workflow temporaire après succès.
+
+Le run précédent `35349987450` avait déjà validé la préparation de release avant le correctif 403. Le run `35354244660` reprend toute la matrice après correction des claims d'autorisation et devient la validation technique de référence de la PR #130.
+
+Validation complémentaire du footer Admin : GitHub Actions `35356488527` ✅ — contrat release, contrat d'autorisation, ESLint ciblé, TypeScript MySQL, TypeScript SQL Server et build Next.js production. Le workflow temporaire est supprimé automatiquement après succès.
+
+Le premier essai Windows de la préparation 1.0.0 avait échoué uniquement parce que la commande CI restaurait la solution sans alimenter le répertoire `packages/` attendu par le `packages.config` historique. La matrice finale restaure explicitement ce fichier et confirme que le code Serveur/installateur compile sans correctif applicatif supplémentaire.
+
+### Checklist terrain
+
+- [ ] depuis `/fr/surveillance`, cliquer **Mentions légales** et vérifier `/fr/mentions-legales` sans 404 ;
+- [ ] rafraîchir directement `/fr/mentions-legales` ;
+- [ ] cliquer **Protection des données** et vérifier `/fr/protection-des-donnees` sans 404 ;
+- [ ] rafraîchir directement `/fr/protection-des-donnees` ;
+- [ ] vérifier également `/en/legal-notice` et `/en/data-protection` ;
+- [ ] sur Surveillance, vérifier qu'une seule scrollbar verticale est présente ;
+- [ ] atteindre le footer puis revenir en haut sans scroll imbriqué ;
+- [ ] vérifier Dashboard utilisateur / Alarmes / autres pages du même shell ;
+- [ ] sur une page Admin, atteindre le footer et vérifier que la version et les liens légaux restent entièrement au-dessus du dock flottant ;
+- [ ] vérifier une page/édition où le dock est masqué et confirmer qu'aucun grand espace vide ne reste sous le footer ;
+- [ ] confirmer `V1.0.0` dans la sidebar et le footer ;
+- [ ] avec un ancien état de changelog, vérifier l'ouverture de la modale **VigiSensys 1.0.0** en FR et EN ;
+- [ ] après déploiement du Serveur, confirmer `1.0.0` dans Santé système / Hotline ;
+- [ ] confirmer que l'Agent reste `1.0.1` ;
+- [ ] confirmer que la BDD reste en révision `0.90.2` ;
+- [ ] relire les changelogs racine, Web et Serveur pour validation métier avant de considérer la release diffusée.
+- [ ] avec le profil Administrateurs, vérifier que `/api/admin/system-health` retourne 200 ;
+- [ ] vérifier que `/api/admin/email-audit?limit=50` retourne 200 ;
+- [ ] se déconnecter/reconnecter puis confirmer que l'access token contient des autorisations et que les deux APIs restent accessibles ;
+- [ ] tester une ancienne session à claims vides : le premier appel doit utiliser le fallback BDD puis renouveler le token ;
+- [ ] avec un profil sans `DASHBOARD_ADMIN_ACCESS`, confirmer que les deux APIs restent en 403.

@@ -53,9 +53,24 @@ function profileHasAnyAuthorization(
   )
 }
 
-export async function isAdminUser(userId: number): Promise<boolean> {
+export async function getUserAuthorizationCodes(userId: number): Promise<string[]> {
   const profil = await getUserProfile(userId)
-  return profileHasAnyAuthorization(profil, ADMIN_ACCESS_CODES)
+  if (!profil) return []
+
+  return Array.from(
+    new Set(
+      profil.t_liaison_profil_autorisation
+        .map((liaison) => normalizeCode(liaison.t_autorisation.Code_Autorisation))
+        .filter(Boolean),
+    ),
+  )
+}
+
+export async function isAdminUser(userId: number): Promise<boolean> {
+  const authorizations = await getUserAuthorizationCodes(userId)
+  return authorizations.some((code) =>
+    ADMIN_ACCESS_CODES.some((adminCode) => normalizeCode(adminCode) === code),
+  )
 }
 
 export async function hasUserAuthorizationCode(

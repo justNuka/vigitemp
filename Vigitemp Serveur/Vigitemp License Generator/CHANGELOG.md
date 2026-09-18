@@ -10,6 +10,18 @@ Les fichiers `.vtlic` générés sont des données de licence et ne constituent 
 
 Aucun changement supplémentaire documenté.
 
+## État pour VigiSensys 1.0.0 — 2026-09-18
+
+### Version livrée
+
+- Générateur de licences : `0.1.0` — inchangé.
+
+### Portée
+
+- Le passage du produit VigiSensys à `1.0.0` ne modifie pas le format `.vtlic`, la signature ni le modèle de génération des licences.
+- L'option contractuelle `telephonie` est consommée par le Web pour protéger les fonctions Téléphonie, sans nécessiter une nouvelle version du générateur dans ce lot.
+- Aucun bump artificiel du générateur n'est effectué en l'absence de changement de son binaire ou de son contrat de fichier.
+
 ## [0.1.0] — baseline de référence au 2026-08-27
 
 Cette entrée fixe la première baseline documentée du générateur. Elle ne reconstitue pas exhaustivement les anciennes versions.

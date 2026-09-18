@@ -10,6 +10,19 @@ La version produit de référence est `AssemblyInformationalVersion("x.y.z")`. L
 
 Aucun changement supplémentaire documenté.
 
+## État pour VigiSensys 1.0.0 — 2026-09-18
+
+### Version livrée
+
+- Agent Windows : `1.0.1` — inchangé.
+- Installateur Agent : `1.0.1` — inchangé.
+
+### Portée
+
+- La release produit VigiSensys `1.0.0` ne nécessite aucun bump artificiel de l'Agent : aucun changement fonctionnel Agent n'a été introduit dans les lots finalisés depuis sa baseline `1.0.1`.
+- Les évolutions Web / Serveur de cette release conservent les mécanismes Agent existants et n'introduisent pas de nouvelle contrainte minimale documentée.
+- Les métadonnées .NET historiques à quatre composantes restent inchangées.
+
 ## [1.0.1] — baseline de référence au 2026-08-27
 
 Cette entrée fixe la première baseline documentée de l'Agent. Elle ne reconstitue pas exhaustivement les anciennes versions.
