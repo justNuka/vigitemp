@@ -6,10 +6,10 @@ import { collectSystemHealth } from "@/lib/system-health"
 
 export const GET = withAuthLogging(
   async (_req, { user }) => {
-    // Deliberately authorize from the signed access-token claims instead of querying the
-    // main database here. This diagnostic endpoint must remain usable when that database
-    // is precisely the dependency being diagnosed.
-    if (!hasDashboardAdminAccess(user.authorizations)) {
+    // Signed claims are the normal authorization source so this endpoint remains
+    // usable while diagnosing a main-DB outage. Legacy empty-claim sessions receive
+    // a one-time DB fallback and are renewed with their actual authorization codes.
+    if (!(await hasDashboardAdminAccess(user))) {
       return apiError(403, "forbidden", "Accès interdit")
     }
 

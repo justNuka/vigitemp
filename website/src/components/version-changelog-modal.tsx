@@ -11,8 +11,9 @@ import {
 import { useTranslations } from "next-intl"
 import { usePathname } from "next/navigation"
 import { stripLocalePrefix } from "@/i18n/pathnames"
+import { WEB_APP_VERSION } from "@/lib/app-version"
 
-const RELEASE_VERSION = "0.3.7"
+const RELEASE_VERSION = WEB_APP_VERSION
 const COOKIE_NAME = "vigitemp_release_seen"
 
 type ChangelogItem = {
@@ -48,7 +49,11 @@ export function VersionChangelogModal() {
     normalizedPathname === "/reset-password" ||
     normalizedPathname === "/reinitialisation-mot-de-passe" ||
     normalizedPathname === "/force-password-change" ||
-    normalizedPathname === "/changement-mot-de-passe-obligatoire"
+    normalizedPathname === "/changement-mot-de-passe-obligatoire" ||
+    normalizedPathname === "/legal-notice" ||
+    normalizedPathname === "/mentions-legales" ||
+    normalizedPathname === "/data-protection" ||
+    normalizedPathname === "/protection-des-donnees"
   const [open, setOpen] = useState(false)
 
   const changelog = useMemo<ChangelogItem[]>(
@@ -60,15 +65,16 @@ export function VersionChangelogModal() {
           t("sections.surveillance.items.1"),
           t("sections.surveillance.items.2"),
           t("sections.surveillance.items.3"),
-          t("sections.surveillance.items.4"),
-          t("sections.surveillance.items.5"),
-          t("sections.surveillance.items.6"),
-          t("sections.surveillance.items.7"),
-          t("sections.surveillance.items.8"),
-          t("sections.surveillance.items.9"),
-          t("sections.surveillance.items.10"),
-          t("sections.surveillance.items.11"),
-          t("sections.surveillance.items.12"),
+        ],
+      },
+      {
+        title: t("sections.metrology.title"),
+        details: [
+          t("sections.metrology.items.0"),
+          t("sections.metrology.items.1"),
+          t("sections.metrology.items.2"),
+          t("sections.metrology.items.3"),
+          t("sections.metrology.items.4"),
         ],
       },
       {
@@ -79,7 +85,32 @@ export function VersionChangelogModal() {
           t("sections.admin.items.2"),
           t("sections.admin.items.3"),
           t("sections.admin.items.4"),
-          t("sections.admin.items.5"),
+        ],
+      },
+      {
+        title: t("sections.security.title"),
+        details: [
+          t("sections.security.items.0"),
+          t("sections.security.items.1"),
+          t("sections.security.items.2"),
+          t("sections.security.items.3"),
+        ],
+      },
+      {
+        title: t("sections.telephony.title"),
+        details: [
+          t("sections.telephony.items.0"),
+          t("sections.telephony.items.1"),
+          t("sections.telephony.items.2"),
+        ],
+      },
+      {
+        title: t("sections.platform.title"),
+        details: [
+          t("sections.platform.items.0"),
+          t("sections.platform.items.1"),
+          t("sections.platform.items.2"),
+          t("sections.platform.items.3"),
         ],
       },
     ],

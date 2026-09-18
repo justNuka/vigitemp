@@ -3398,36 +3398,62 @@
     }
   },
   "versionChangelog": {
-    "title": "New version {version}",
-    "description": "Key updates and changes to know.",
+    "title": "VigiSensys {version}",
+    "description": "Version 1.0: key functional, technical and reliability improvements.",
     "sections": {
       "surveillance": {
         "title": "Monitoring and alarms",
         "items": {
-          "0": "Fixed loading errors on the alarms list and on the related access filters.",
-          "1": "Monitoring refresh now preserves filtered display and already loaded locations more reliably.",
-          "2": "Values shown in chart tooltips and on the Y axis are now formatted cleanly.",
-          "3": "Alarm analysis charts now use the full measurement history, including for older alarms.",
-          "4": "GSP setpoint updates now correctly send both low and high alarm delays to the probe.",
-          "5": "Re-enabling monitoring now resets the last response timestamp to avoid unjustified no-response alarms.",
-          "6": "Group-level monitoring activation and deactivation have been stabilized, with the correct labels in the confirmation dialog.",
-          "7": "Measurements coming from memory retrieval are now visually highlighted in the location details table.",
-          "8": "Alarm acknowledgments now appear correctly in the audit trail of a location details view.",
-          "9": "With active filters, refresh now reloads the matching locations correctly and keeps the load-more action positioned inside each section.",
-          "10": "Tree-view counters now separate pre-alarms from ended alarms correctly.",
-          "11": "The surveillance page now shows a clear empty state when no sensor matches the active filters.",
-          "12": "Location details keep setpoint and tolerance labels readable even on smaller screens."
+          "0": "Monitoring cards now include a compact battery indicator with exact value on hover and low/critical states.",
+          "1": "Alarm acknowledgment now keeps the current location and alarm context, with other alarms moved to a secondary section.",
+          "2": "Monitoring audits and details are easier to read, with consistent date and number formatting throughout the Web app.",
+          "3": "Diagnostic tools now rely on measurements actually produced by the server instead of browser-side simulations."
+        }
+      },
+      "metrology": {
+        "title": "Metrology",
+        "items": {
+          "0": "Adjustment and calibration workflows are more reliable with plateau acquisitions, A/B/C coefficients, explicit hardware errors and rollback after partial failures.",
+          "1": "Calibration PDF reports and ZIP exports can now export one operation or several historical operations at once.",
+          "2": "SEF standards are supported directly through Sollae TCP converters without an ezVSP virtual COM port.",
+          "3": "GSP/GSO coefficients are read, displayed and synchronized without automatically overwriting the configuration already stored in probes.",
+          "4": "Adjustment import supports unassigned probes, multi-module assignment and keeps database import separate from hardware synchronization."
         }
       },
       "admin": {
         "title": "Administration",
         "items": {
-          "0": "Added the system backup block for all license tiers.",
-          "1": "The acknowledgment history link from the admin dashboard now opens a real page.",
-          "2": "Acknowledgment history exports now correctly reapply the active filters.",
-          "3": "Free acknowledgment comments are now loaded from the dedicated journal source.",
-          "4": "The accuracy error preview now clearly shows the inverse sign applied by the correction.",
-          "5": "Excel exports now include a VigiSensys presentation sheet and a separate, readable data sheet."
+          "0": "The Admin Dashboard now reports Web, server, database and backup health with a dedicated detailed diagnostic page.",
+          "1": "Mailing and Telephony cards show activation and configuration readiness while respecting license options.",
+          "2": "System health now includes an email delivery audit for sent, queued and failed messages without storing bodies or SMTP secrets.",
+          "3": "A location configuration can be duplicated from the list or used as the starting point for a new location.",
+          "4": "Admin Settings and SMTP configuration have been hardened and include a Gmail / Microsoft 365 setup guide."
+        }
+      },
+      "security": {
+        "title": "Authentication and security",
+        "items": {
+          "0": "First login now has a dedicated onboarding flow and follows the configured password policy.",
+          "1": "The Better Auth foundation is integrated as an opt-in feature with controlled activation and compatibility with the legacy flow.",
+          "2": "Password reset no longer reports a successful delivery when SMTP failed and avoids revealing whether an account exists.",
+          "3": "Email links are localized and the Legal notice / Data protection pages document the standard on-premise VigiSensys model."
+        }
+      },
+      "telephony": {
+        "title": "Telephony",
+        "items": {
+          "0": "Twilio is ready as the recommended test-call provider, including Trial account support and a deployment guide.",
+          "1": "OVHcloud Click2Call and Asterisk/SIP remain documented options depending on the customer's infrastructure.",
+          "2": "Telephony features are protected by the corresponding license option in both APIs and the user interface."
+        }
+      },
+      "platform": {
+        "title": "Platform and reliability",
+        "items": {
+          "0": "The Server improves GSP and IC/IP/IH protocol reliability, including binary frames and ECON commands capped at 60 characters.",
+          "1": "GSP probes with pending configuration are synchronized before their first Monitoring measurement.",
+          "2": "MySQL and SQL Server remain supported with formal migrations, aligned seeds and safer UTF-8 SQL Server bootstrap.",
+          "3": "This delivery marks the first finalized VigiSensys 1.0.0 product release."
         }
       }
     }

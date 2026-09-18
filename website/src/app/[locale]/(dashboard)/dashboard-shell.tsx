@@ -70,10 +70,10 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="flex min-h-screen w-full flex-col">
-      <div className="flex flex-1 overflow-hidden">
+    <div className="flex h-dvh w-full flex-col overflow-hidden">
+      <div className="flex min-h-0 flex-1 overflow-hidden">
         <AppSidebar activeAlarms={activeAlarmsCount} currentUser={currentUser} onLogout={handleLogout} />
-        <main className="flex-1 overflow-y-auto bg-background">
+        <main className="min-h-0 min-w-0 flex-1 overflow-y-auto bg-background">
           <PageTransitionWrapper className="min-h-full">{children}</PageTransitionWrapper>
           <AppFooter />
         </main>

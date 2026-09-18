@@ -16,22 +16,102 @@ La convention de versioning est décrite dans [`docs/versioning.md`](docs/versio
 
 ## [Unreleased]
 
-### Web
+Aucun changement supplémentaire documenté depuis la préparation de la release 1.0.0.
 
-- Téléphonie : Twilio devient le provider recommandé pour la V1 des alarmes vocales. Le PoC utilise directement l'API HTTPS Twilio pour tester les credentials puis déclencher un appel avec TTS `fr-FR`, sans SDK supplémentaire, SIP/RTP, VM Linux ni port entrant chez le client.
-- Téléphonie : ajout d'un guide Twilio client/DSI détaillant création du compte et de l'API Key, choix d'un numéro français compatible appels automatisés, sécurité, diagnostic et prérequis réseau ; la V1 requiert uniquement DNS et HTTPS TCP 443 sortant vers `api.twilio.com`.
-- Téléphonie : le PoC Twilio Trial est validé en conditions réelles : connexion API depuis VigiSensys, fallback Trial conforme aux paramètres autorisés et réception effective de l'appel sur le numéro vérifié.
-- Téléphonie : la cible production à valider commercialement est un compte Twilio propre au client avec **Programmable Voice en Pay-as-you-go** et, en France, un numéro dont l'usage autorise explicitement `Automated Outbound Calling` ; le type Verified Polyvalent / NPV est la piste actuellement documentée à revalider au moment de la commande.
-- Téléphonie : la cible interactive prévoit message TTS dynamique, plusieurs contacts par lieu et saisie DTMF via Twilio `<Gather>`. L'acquittement reste une décision métier VigiSensys ; une architecture publique intermédiaire (relais minimal, Twilio Functions ou combinaison) doit être choisie afin de ne pas exposer directement les installations on-premise.
-- Téléphonie : la roadmap privilégie une queue Voice persistante réutilisant le dispatch d'alarmes existant afin qu'une panne Internet/Twilio ne bloque jamais l'interrogation des sondes ; les callbacks/DTMF et l'acquittement restent des lots ultérieurs.
-- Téléphonie : le guide OVHcloud/Click2Call reste disponible et le provider Asterisk mergé en PR #84 est conservé comme option avancée/on-premise pour les projets qui le nécessitent, mais il n'est plus un prérequis standard de la V1.
-- Licence téléphonie : l'accès à la configuration et aux tests providers dépend désormais explicitement de l'option contractuelle `telephonie`, avec garde serveur `403` et carte verrouillée côté Administration lorsque l'option est absente.
+## Livraison VigiSensys 1.0.0 — 2026-09-18
 
-### Base de données / seeds
+Cette livraison marque la première version produit considérée comme finalisée de **VigiSensys**. Elle consolide les travaux réalisés depuis la baseline documentée du 27/08/2026 et les retours terrain traités jusqu'au 18/09/2026.
 
-- Révision de bootstrap `0.90.2` pour les seeds MySQL et SQL Server, avec préparation des tables finales Better Auth (`t_auth_user`, `t_auth_session`, `t_auth_account`, `t_auth_verification`) sans réactivation du runtime Better Auth.
-- Les seeds complets `0.90.2` ont été validés sur bases vierges MySQL 8.0 et SQL Server 2022, avec conservation de la colonne métrologie `t_ajustage.Coeffs_Modifies_Depuis_Derniere_Mesure`.
-- Nettoyage des libellés français des seeds MySQL/SQL Server : accents, fautes historiques confirmées et marqueur SemVer canonique `0.90.1`, sans changement de schéma pour ce sous-lot historique.
+Les composants restent versionnés indépendamment conformément à la convention du dépôt : le numéro produit **VigiSensys 1.0.0** ne force pas artificiellement les composants inchangés à adopter le même numéro.
+
+### Versions des composants
+
+| Composant | Version livrée | Compatibilité / remarque |
+| --- | --- | --- |
+| Web | `1.0.0` | première version Web finalisée ; MySQL et SQL Server supportés |
+| Serveur Windows | `1.0.0` | intègre les derniers correctifs protocolaires, métrologie, SEF et dispatch Web |
+| Installateur Serveur | `1.0.0` | suit le Serveur distribué |
+| Agent Windows | `1.0.1` | inchangé dans cette release |
+| Installateur Agent | `1.0.1` | suit l'Agent distribué, inchangé |
+| BDD / seeds | `0.90.2` | schéma de référence ; migrations MySQL / SQL Server formalisées |
+| Générateur de licences | `0.1.0` | inchangé ; format de licence conservé |
+
+### Surveillance, alarmes et audit
+
+- Les parcours d'acquittement conservent désormais le contexte du lieu et de l'alarme ; les vues multi-alarmes restent disponibles lorsque les droits et le contexte le permettent.
+- Les détails d'audit Surveillance ont été humanisés afin de masquer les métadonnées techniques inutiles et d'afficher clairement les commentaires d'acquittement.
+- Les cartes Surveillance utilisent un indicateur batterie compact, cohérent avec le RSSI, avec valeur réelle au survol et états faible / critique.
+- Les tests de sondes des Outils s'appuient sur les mesures réellement produites par VigiSensys Serveur au lieu d'un moteur de simulation Web.
+- La file persistante des emails d'alarme est préservée lors de l'acquittement et la Santé système expose maintenant un audit unifié des envois email.
+
+### Métrologie
+
+- Les workflows Ajustage / Étalonnage ont été consolidés : acquisitions par plateau, affichage et synchronisation des coefficients, erreurs de démarrage explicites et rollback des configurations GSP partielles.
+- Les coefficients GSP sont relus depuis le matériel sans écrasement automatique ; les valeurs GSO affichées pendant l'ajustage reflètent les coefficients courants tout en conservant le signal brut pour les calculs.
+- Les opérations disposent de rapports PDF et d'exports ZIP, y compris pour plusieurs étalonnages historiques.
+- Les imports d'ajustage acceptent désormais les sondes sans module et les affectations multi-modules, sans déclencher implicitement une communication matérielle.
+- Les étalons SEF historiques sont pris en charge directement via les convertisseurs Sollae TCP, sans dépendre d'ezVSP ou d'un port COM virtuel.
+
+### Administration
+
+- La page Paramètres a été fiabilisée : sauvegarde explicite des réglages, cohérence des règles de mot de passe, paramètres SMTP et valeurs historiques nettoyées.
+- Un guide SMTP intégré couvre notamment Gmail / mots de passe d'application et Microsoft 365 / SMTP AUTH.
+- Le Dashboard Admin expose une **Santé système** détaillée : Web, Serveur, bases principale / mesures / conversation, versions, machine, uptime et sauvegardes.
+- Des cards **Mailing** et **Téléphonie** synthétisent l'activation et la complétude de leur configuration sans exposer de secret.
+- La Santé système inclut un audit des emails envoyés, en attente ou en échec.
+- La configuration d'un lieu peut être dupliquée depuis la liste des lieux ou utilisée comme base lors d'une nouvelle création, sans copier l'identité matérielle ni l'état runtime.
+
+### Authentification et sécurité
+
+- La première connexion dispose d'un onboarding dédié et conserve un écran de transition jusqu'à la finalisation de la session.
+- Les règles de mot de passe sont appliquées de manière cohérente à la création utilisateur et aux différents parcours de changement / réinitialisation.
+- La fondation Better Auth est intégrée en mode opt-in avec coexistence du parcours JWT historique ; l'installateur Web sait générer et renseigner sa configuration.
+- La réinitialisation de mot de passe traite correctement les échecs de livraison SMTP et conserve une réponse publique neutre afin de ne pas révéler l'existence d'un compte.
+- Les liens envoyés par email sont localisés ; le footer expose les pages **Mentions légales** et **Protection des données**, adaptées au fonctionnement on-premise.
+- L'installation SQL Server force désormais l'encodage UTF-8 pour éviter les autorisations/libellés accentués corrompus et sait réparer les anciennes valeurs identifiées.
+- Les JWT d'accès et de rafraîchissement embarquent désormais les autorisations réelles du profil ; les endpoints Santé système et Audit email réutilisent le droit existant `DASHBOARD_ADMIN_ACCESS` et savent migrer une ancienne session dont les claims étaient vides.
+
+### Téléphonie
+
+- Twilio est le provider recommandé pour la V1 des appels vocaux ; le PoC REST HTTPS, les tests de connexion/appel et le fallback des comptes Trial sont intégrés.
+- La documentation de mise en service Twilio couvre les prérequis réseau, la sécurité, la numérotation et la cible production / DTMF.
+- OVHcloud Click2Call reste documenté et Asterisk/SIP est disponible comme option avancée ou on-premise.
+- Les fonctions Téléphonie sont protégées par l'option de licence correspondante côté API et interface.
+
+### Serveur et protocoles matériels
+
+- Les trames binaires IC / IP / IH préservent désormais tous les octets de mesure ; la conversion platine des sondes IP a été restaurée.
+- Les commandes GSP `ECON` sont découpées sans dépasser la limite de 60 caractères du firmware/module.
+- Les GSP dont la configuration est marquée dirty peuvent être synchronisées avant leur première mesure de Surveillance.
+- Les séquences série `+++` parasites et les acquittements `ECON *=ovf` sont gérés explicitement.
+- L'URL Web utilisée par le Serveur pour le dispatch des alarmes est normalisée et validée, y compris pour les anciennes configurations `IP:port`.
+
+### Base de données, installation et fondations Web
+
+- Les migrations des installations existantes sont formalisées pour MySQL et SQL Server ; la révision de schéma reste `0.90.2`.
+- Les seeds incluent la colonne de synchronisation métrologie et les tables préparatoires Better Auth, sans activer automatiquement ce runtime.
+- Les libellés français des seeds ont été nettoyés et les deux moteurs restent alignés.
+- Le Web centralise désormais l'affichage des dates et des nombres dans des helpers testés, en conservant la sémantique des `DATETIME` sans fuseau.
+- La roadmap d'architecture, les règles de développement et les frontières de métrologie / authentification / téléphonie ont été documentées pour faciliter les évolutions suivantes.
+
+### Finalisation 1.0.0
+
+- Les routes publiques localisées **Mentions légales** et **Protection des données** disposent d'un fallback physique en plus du routage `next-intl`.
+- Le shell utilisateur utilise une hauteur viewport bornée et un seul conteneur scrollable : le footer ne crée plus de double scrollbar sur Surveillance.
+- Sur les pages Administration, le footer réserve désormais l'encombrement du dock flottant afin que la version et les liens légaux ne passent plus derrière la navigation.
+- La modale de changelog suit directement la version Web canonique au lieu d'un ancien numéro `0.3.7` codé en dur.
+- Le contrôle d'accès de Santé système / Audit email est corrigé : aucune nouvelle autorisation n'est requise, les droits du profil sont maintenant propagés dans les tokens signés avec fallback BDD pour les anciennes sessions.
+
+### PR structurantes
+
+- Fondations / versioning / formatage : #60, #63, #73, #75, #77, #78, #79, #80, #81.
+- Métrologie : #67, #70, #71, #97, #103, #107, #110, #111, #113, #114, #116, #117.
+- Authentification / sécurité / installation : #72, #74, #82, #90, #92, #101, #105, #121, #122, #124.
+- Téléphonie : #83, #84, #85, #94, #95, #96, #128.
+- Surveillance / alarmes / administration : #86, #87, #100, #112, #115, #123, #125, #126, #127, #128, #129.
+- Serveur : #61, #62, #69, #98, #99, #110, #119, #120.
+
+[Détail du Web](website/CHANGELOG.md) · [Détail du Serveur](Vigitemp%20Serveur/CHANGELOG.md) · [Détail BDD](db/CHANGELOG.md)
 
 ## État intégré — 2026-08-27
 

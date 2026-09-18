@@ -23,6 +23,13 @@ La procédure complète d'upgrade des installations existantes est documentée d
 
 ## [Unreleased]
 
+Aucun changement de schéma supplémentaire documenté depuis la préparation de VigiSensys 1.0.0.
+
+## [0.90.2] — 2026-09-18
+
+Cette révision est le schéma / bootstrap de référence de la livraison produit **VigiSensys 1.0.0**. Le numéro BDD reste indépendant de la version Web/Serveur et n'est pas artificiellement porté à `1.0.0`.
+
+
 ### Objets et colonnes ajoutés — schéma 0.90.2
 
 | Table | Évolution | Colonnes ajoutées / définition |
@@ -76,6 +83,39 @@ Ces scripts regroupent l'ensemble des changements de schéma `0.90.2` : colonne 
 - `db/migrations/README.md`
 - `db/migrations/0.90.2/mysql.sql`
 - `db/migrations/0.90.2/mssql.sql`
+
+### Types et données initiales
+
+- Les seeds MySQL et SQL Server incluent les éléments nécessaires au support des étalons SEF utilisés par les workflows de métrologie / Hotline.
+- Les valeurs initiales restent alignées entre les deux moteurs lorsque le modèle fonctionnel est commun.
+- Les libellés français ont été nettoyés sans modifier les codes techniques ni les identifiants métier.
+
+### Installation / encodage SQL Server
+
+- L'installateur Serveur exécute les seeds SQL Server en UTF-8 explicite avec `sqlcmd -f i:65001,o:65001`.
+- Cette fiabilisation ne modifie pas le schéma mais évite les mojibakes des libellés accentués sur les nouvelles installations.
+- Les bases historiques peuvent être réparées côté application pour les chaînes d'autorisation reconnues comme corrompues, sans réécriture des textes déjà corrects.
+
+### Better Auth
+
+- Les tables `t_auth_user`, `t_auth_session`, `t_auth_account` et `t_auth_verification` restent préparatoires et compatibles avec l'activation opt-in du runtime Better Auth.
+- Leur présence dans le schéma `0.90.2` n'active aucune authentification supplémentaire à elle seule.
+
+### Compatibilité VigiSensys 1.0.0
+
+- Web `1.0.0` et Serveur `1.0.0` utilisent cette révision de schéma comme baseline de la livraison.
+- Les migrations `db/migrations/0.90.2/mysql.sql` et `db/migrations/0.90.2/mssql.sql` restent la voie d'upgrade des installations existantes antérieures à `0.90.2`.
+- Aucun bump de `SCHEMA_VERSION` n'est effectué uniquement pour aligner visuellement le numéro avec la release produit.
+
+### PR principales
+
+- #67 — colonne / flux de synchronisation des coefficients métrologie.
+- #76 — nettoyage des libellés et artefacts des seeds.
+- #90 — préparation des seeds `0.90.2` et tables Better Auth.
+- #92 — formalisation des migrations d'installations existantes.
+- #101 — fondation Better Auth opt-in utilisant les tables préparées.
+- #110 — données de seed liées au support SEF.
+- #124 — fiabilisation UTF-8 de l'application des scripts SQL Server.
 
 ## [0.90.1] — baseline de référence au 2026-08-27
 

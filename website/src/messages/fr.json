@@ -3402,36 +3402,62 @@
     }
   },
   "versionChangelog": {
-    "title": "Nouvelle version {version}",
-    "description": "Nouveautes principales et changements a connaitre.",
+    "title": "VigiSensys {version}",
+    "description": "Version 1.0 : principales évolutions fonctionnelles, techniques et de fiabilité.",
     "sections": {
       "surveillance": {
         "title": "Surveillance et alarmes",
         "items": {
-          "0": "Correction des erreurs de chargement sur la liste des alarmes et sur les filtres d'acces associes.",
-          "1": "Le rafraichissement de la surveillance conserve maintenant mieux l'affichage filtre et les lieux deja charges.",
-          "2": "Les valeurs affichees dans les info-bulles et sur l'axe des graphes sont maintenant formatees proprement.",
-          "3": "L'analyse d'alarme affiche maintenant sa courbe a partir de l'historique complet des mesures, y compris pour les alarmes plus anciennes.",
-          "4": "Les modifications de consignes des sondes GSP envoient maintenant aussi correctement les retards haut et bas vers la sonde.",
-          "5": "La reactivation de la surveillance reinitialise maintenant la derniere date de reponse pour eviter les alarmes de non-reponse non justifiees.",
-          "6": "L'activation et la desactivation de la surveillance par groupe ont ete fiabilisees, avec les bons libelles dans la fenetre de confirmation.",
-          "7": "Les mesures issues d'une remontee memoire sont maintenant distinguees visuellement dans le tableau de details d'un lieu.",
-          "8": "Les acquittements d'alarme remontent maintenant correctement dans l'audit de detail d'un lieu.",
-          "9": "Avec un filtre actif, le rafraichissement recharge maintenant correctement les lieux correspondants et replace le bouton de chargement au bon endroit dans chaque section.",
-          "10": "Les compteurs en vue arborescence distinguent maintenant correctement les pre-alarmes et les alarmes terminees.",
-          "11": "La page de surveillance affiche maintenant un message explicite quand aucun capteur ne correspond aux filtres actifs.",
-          "12": "Le detail d'un lieu conserve des libelles de consigne et de tolerance plus lisibles, y compris sur petits ecrans."
+          "0": "Les cartes de Surveillance gagnent un indicateur batterie compact avec valeur exacte au survol et états faible/critique.",
+          "1": "L'acquittement conserve désormais le contexte du lieu et de l'alarme, avec les autres alarmes reléguées dans une section secondaire.",
+          "2": "Les audits et détails de Surveillance ont été rendus plus lisibles et les formats de dates/nombres sont désormais homogènes.",
+          "3": "Les outils de diagnostic utilisent les mesures réellement produites par le serveur au lieu de simulations côté Web."
+        }
+      },
+      "metrology": {
+        "title": "Métrologie",
+        "items": {
+          "0": "Ajustage et étalonnage ont été fiabilisés : acquisitions par plateau, coefficients A/B/C, erreurs matérielles explicites et rollback en cas d'échec partiel.",
+          "1": "Les rapports d'étalonnage PDF et les exports ZIP permettent d'exporter une opération ou plusieurs historiques en une fois.",
+          "2": "Les étalons SEF sont désormais pris en charge directement via les convertisseurs Sollae TCP, sans port COM virtuel ezVSP.",
+          "3": "Les coefficients GSP/GSO sont relus, affichés et synchronisés sans écraser automatiquement la configuration présente sur les sondes.",
+          "4": "L'import d'ajustage accepte les sondes sans module, les affectations multi-modules et sépare l'import BDD de la synchronisation matérielle."
         }
       },
       "admin": {
         "title": "Administration",
         "items": {
-          "0": "Ajout du bloc sauvegarde systeme pour toutes les licences.",
-          "1": "Le lien du journal des acquittements depuis le dashboard admin ouvre maintenant une vraie page.",
-          "2": "L'export de l'historique des acquittements reapplique maintenant correctement les filtres actifs.",
-          "3": "La liste des commentaires libres d'acquittement est maintenant chargee depuis le journal dedie.",
-          "4": "L'aperçu de l'erreur de justesse affiche maintenant clairement le signe inverse applique lors de la correction.",
-          "5": "Les exports Excel comportent maintenant un onglet de presentation VigiSensys et un onglet de donnees distinct et lisible."
+          "0": "Le Dashboard Admin affiche maintenant la santé du Web, du serveur, des bases et des sauvegardes, avec une page de diagnostic détaillée.",
+          "1": "Des cards Mailing et Téléphonie indiquent l'activation et la complétude de leur configuration, en respectant les licences.",
+          "2": "La Santé système inclut un audit des emails envoyés, en attente ou en échec, sans stocker leur contenu ni les secrets SMTP.",
+          "3": "La configuration d'un lieu peut être dupliquée depuis la liste ou utilisée comme base lors de la création d'un nouveau lieu.",
+          "4": "La page Paramètres et la configuration SMTP ont été fiabilisées et complétées par un guide Gmail / Microsoft 365."
+        }
+      },
+      "security": {
+        "title": "Authentification et sécurité",
+        "items": {
+          "0": "La première connexion dispose d'un onboarding dédié et respecte les règles de mot de passe configurées.",
+          "1": "La fondation Better Auth est intégrée en mode opt-in, avec activation contrôlée et compatibilité avec le parcours historique.",
+          "2": "La réinitialisation de mot de passe ne signale plus à tort un envoi réussi et évite de révéler l'existence d'un compte.",
+          "3": "Les liens d'email sont localisés et les pages Mentions légales / Protection des données décrivent le fonctionnement on-premise de VigiSensys."
+        }
+      },
+      "telephony": {
+        "title": "Téléphonie",
+        "items": {
+          "0": "Twilio est prêt comme provider recommandé pour les appels de test, avec prise en charge des comptes Trial et un guide de mise en service.",
+          "1": "OVHcloud Click2Call et Asterisk/SIP restent disponibles comme options documentées selon l'infrastructure du client.",
+          "2": "L'accès aux fonctions de téléphonie est protégé par l'option de licence correspondante côté API et interface."
+        }
+      },
+      "platform": {
+        "title": "Plateforme et fiabilité",
+        "items": {
+          "0": "Le Serveur fiabilise les protocoles GSP et les sondes IC/IP/IH, y compris les trames binaires et les ECON limitées à 60 caractères.",
+          "1": "Les GSP dont la configuration est en attente sont synchronisées avant leur première mesure de Surveillance.",
+          "2": "MySQL et SQL Server restent supportés avec migrations formalisées, seeds harmonisés et exécution UTF-8 renforcée sous SQL Server.",
+          "3": "Cette livraison marque la première version produit finalisée VigiSensys 1.0.0."
         }
       }
     }

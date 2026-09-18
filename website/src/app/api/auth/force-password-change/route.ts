@@ -16,6 +16,7 @@ import {
 } from "@/lib/jwt"
 import { log } from "@/lib/logger"
 import { shouldUseSecureCookies } from "@/lib/cookie-security"
+import { getUserAuthorizationCodes } from "@/lib/authz"
 
 const forcePasswordChangeSchema = z.object({
   username: z.string().min(1, "Username requis"),
@@ -141,7 +142,7 @@ export const POST = withLogging(
         },
       })
 
-      const authorizations: string[] = []
+      const authorizations = await getUserAuthorizationCodes(user.Id_Utilisateur)
       const authToken = generateAccessToken({
         userId: user.Id_Utilisateur,
         username: user.Login || "user",
@@ -166,6 +167,7 @@ export const POST = withLogging(
         userId: user.Id_Utilisateur,
         username: user.Login || "user",
         profile: user.Profil_Utilisateur || "user",
+        authorizations,
       })
       response.cookies.set("refresh-token", refreshToken, {
         httpOnly: true,
