@@ -674,6 +674,7 @@ async function sendQueuedAlarmEmailNow(payload: QueuedAlarmEmailPayload) {
     cc: payload.ccRecipients,
     subject,
     includeSystemCc: false,
+    audit: false,
     attachments: chartInline ? [chartInline.attachment] : undefined,
     react: AlarmEventNotificationEmail({
       eventType: input.eventType,
@@ -724,7 +725,9 @@ async function reserveAlarmEmail(
   return prisma.t_notification.create({
     data: {
       Type: ALARM_EMAIL_NOTIFICATION_TYPE,
-      Id_Alarme: input.alarmId ?? null,
+      // Keep alarm correlation in Payload_Json instead of the FK so the email
+      // queue/audit survives alarm acknowledgement and history cleanup.
+      Id_Alarme: null,
       Titre: buildSubject(input.eventType, input.lieu, locale).slice(0, 128),
       Message: key,
       Payload_Json: JSON.stringify(payload),

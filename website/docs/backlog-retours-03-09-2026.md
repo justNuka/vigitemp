@@ -242,7 +242,7 @@ Principal fichier :
 
 ## Lot — cards de services Mailing / Téléphonie sur le Dashboard admin
 
-**Statut : PR_OUVERTE — PR #128, validation terrain à réaliser**
+**Statut : MERGE — PR #128, validation terrain à réaliser**
 
 - branche : `feature/admin-service-cards` ;
 - PR : #128 ;
@@ -631,7 +631,7 @@ Checklist terrain :
 
 ### 3. Dashboard admin — santé du système
 
-**Statut : PR_OUVERTE — PR #127, validation terrain à réaliser**
+**Statut : MERGE — PR #127, validation terrain à réaliser**
 
 - branche : `feature/admin-system-health` ;
 - PR : #127 ;
@@ -691,7 +691,94 @@ Checklist terrain :
 - [ ] vérifier qu'un profil sans `DASHBOARD_ADMIN_ACCESS` ne peut pas ouvrir la page ni appeler l'API ;
 - [ ] vérifier `/api/hotline/health` en non-régression depuis la Hotline.
 
-### 4. Footer / cookies / RGPD
+### 4. Santé système — audit des emails
+
+**Statut : PR_OUVERTE — PR #129, validation terrain à réaliser**
+
+- branche : `feature/system-health-email-audit` ;
+- PR : #129 ;
+- base : `dev` au commit `8cb869180e6faf59fbde376f62bb285b8f325ce7` (merge PR #128).
+
+La page `/admin/sante-systeme` est complétée par une section **Audit des emails** permettant de vérifier les envois réellement effectués par VigiSensys, en complément de la card Mailing qui indique surtout l'état de configuration SMTP.
+
+Architecture retenue :
+
+- réutilisation de `t_notification`, sans migration de schéma ;
+- les emails d'alarme conservent leur file persistante historique `ALARM_EMAIL` comme source d'audit ;
+- les autres appels à `sendEmail()` créent une entrée `SYSTEM_EMAIL_AUDIT` ;
+- l'audit est best-effort : une panne d'écriture de l'audit ne fait jamais échouer un email SMTP déjà envoyé ;
+- les 50 derniers événements sont exposés via `GET /api/admin/email-audit?limit=50` avec `DASHBOARD_ADMIN_ACCESS` ;
+- la limite API est bornée de 1 à 100 et la requête Prisma utilise un `select` minimal ;
+- aucun corps HTML, pièce jointe, token de réinitialisation, mot de passe ou secret SMTP n'est conservé.
+
+Informations affichées :
+
+- date / heure ;
+- type fonctionnel de mail ;
+- lieu / contexte et identifiant d'alarme lorsqu'ils existent ;
+- destinataire(s) et CC ;
+- sujet ;
+- état : en attente, envoi en cours, envoyé, échec, non envoyé ou inconnu ;
+- nombre de tentatives ;
+- dernière erreur courte éventuelle.
+
+Types identifiés actuellement :
+
+- alarme déclenchée ;
+- fin d'alarme ;
+- acquittement d'alarme ;
+- réinitialisation du mot de passe ;
+- création de compte ;
+- test SMTP ;
+- rapport mensuel ;
+- demande de matériel ;
+- type générique pour les futurs appels non encore catégorisés.
+
+Point de fiabilité découvert pendant le lot :
+
+- l'acquittement d'une alarme supprimait auparavant toutes les lignes `t_notification` liées par `Id_Alarme`, donc également l'historique et les retries `ALARM_EMAIL` ;
+- l'email d'acquittement est créé après suppression de `t_alarme`, alors que la queue renseignait encore cette FK, ce qui pouvait empêcher sa mise en file ;
+- les nouvelles lignes `ALARM_EMAIL` conservent maintenant la corrélation alarme dans leur payload mais utilisent `Id_Alarme = null` ;
+- lors d'un acquittement, les anciennes lignes `ALARM_EMAIL` encore rattachées par FK sont détachées avant le nettoyage des autres notifications runtime ;
+- la déduplication, les retries et le comportement métier existants de la queue restent inchangés.
+
+Les dates de l'audit réutilisent `serializeStoredDbDateTime` puis le helper canonique d'affichage afin de préserver les composantes des `DATETIME` sans introduire de décalage UTC/local.
+
+Principaux fichiers :
+
+- `website/src/app/[locale]/(admin)/admin/sante-systeme/page.tsx` ;
+- `website/src/app/api/admin/email-audit/route.ts` ;
+- `website/src/lib/email-audit.ts` ;
+- `website/src/lib/email-audit-payload.ts` ;
+- `website/src/types/email-audit.ts` ;
+- `website/src/lib/email.ts` ;
+- `website/src/lib/alarm-email.ts` ;
+- `website/src/app/api/alarmes/[id]/acknowledge/route.ts` ;
+- `website/src/hooks/useSystemHealth.ts` ;
+- `website/src/lib/dashboard-admin-access.ts` ;
+- `website/src/messages/system-health-supplements.ts` ;
+- `website/scripts/test-email-audit.ts` ;
+- `website/docs/API_MAP.md`.
+
+Validation technique : GitHub Actions `35320825236` ✅ — `git diff --check`, test ciblé, ESLint, TypeScript MySQL, i18n sans nouvelle dette du lot, génération + TypeScript SQL Server et build production.
+
+Checklist terrain :
+
+- [ ] envoyer un test SMTP et vérifier une ligne **Test SMTP / Envoyé** ;
+- [ ] provoquer un échec SMTP en environnement de test et vérifier état, nombre de tentatives et erreur ;
+- [ ] demander une réinitialisation de mot de passe et vérifier le type sans exposition du token ;
+- [ ] créer un utilisateur avec email et vérifier **Création de compte** ;
+- [ ] vérifier un rapport mensuel et une demande de matériel lorsque ces parcours sont disponibles ;
+- [ ] déclencher puis terminer une alarme et vérifier les événements correspondants avec le lieu ;
+- [ ] acquitter une alarme et vérifier que les événements précédents restent présents puis que l'email d'acquittement est historisé ;
+- [ ] tester si possible un email d'alarme en échec et vérifier l'évolution des retries / tentatives ;
+- [ ] contrôler la réponse de `/api/admin/email-audit` : aucun contenu de mail, token, mot de passe ou secret SMTP ;
+- [ ] vérifier le bouton **Actualiser** et le rafraîchissement automatique ;
+- [ ] vérifier FR/EN, clair/sombre et petite largeur ;
+- [ ] vérifier qu'un profil sans `DASHBOARD_ADMIN_ACCESS` ne peut pas lire l'API ;
+- [ ] valider le parcours sur MySQL et SQL Server.
+
+### 5. Footer / cookies / RGPD
 
 **Statut : DEJA_FAIT — PR #122.**
 

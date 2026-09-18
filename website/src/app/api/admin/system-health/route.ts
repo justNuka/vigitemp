@@ -1,18 +1,8 @@
 import { apiError, apiOk } from "@/lib/api-response"
 import { withAuthLogging } from "@/lib/api-wrappers"
 import { log } from "@/lib/logger"
-import { getPermissionAliases } from "@/lib/permissions"
+import { hasDashboardAdminAccess } from "@/lib/dashboard-admin-access"
 import { collectSystemHealth } from "@/lib/system-health"
-
-const DASHBOARD_ADMIN_CODES = new Set(
-  getPermissionAliases("DASHBOARD_ADMIN_ACCESS").map((code) => code.trim().toUpperCase()),
-)
-
-function hasDashboardAdminAccess(authorizations: readonly string[] | undefined) {
-  return (authorizations ?? []).some((code) =>
-    DASHBOARD_ADMIN_CODES.has(code.trim().toUpperCase()),
-  )
-}
 
 export const GET = withAuthLogging(
   async (_req, { user }) => {

@@ -103,6 +103,7 @@ export const POST = withAuthLogging(async (req: NextRequest, ctx: HandlerContext
       const sendResult = await sendEmail({
         to: commercialEmail,
         subject: `Demande de devis materiel ${reference}`,
+        audit: { kind: "hardware_order", context: reference },
         react: HardwareOrderRequestEmail({
           reference,
           requesterName: requester.requesterName,
