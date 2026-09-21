@@ -2985,7 +2985,7 @@ DECLARE @RecentParams TABLE (
 );
 
 INSERT INTO @RecentParams (Section, Mot_Cle, Valeur, Commentaire) VALUES
-(N'VERSION',N'SCHEMA_VERSION',N'0.90.2',N'Version produit commune des seeds MySQL et SQL Server'),
+(N'VERSION',N'SCHEMA_VERSION',N'0.91.0',N'Version de schéma VigiSensys'),
 (N'GENERAL',N'TIMEZONE',N'Europe/Paris',N'Fuseau horaire par defaut'),
 (N'DASHBOARD',N'AUDIT_GRAPH_OPENINGS',N'false',N'Activer l audit trail a l ouverture des graphiques'),
 (N'DASHBOARD',N'ETALONNAGE_WARNING_DAYS',N'90',N'Délai alerte validité étalonnage en jours'),
