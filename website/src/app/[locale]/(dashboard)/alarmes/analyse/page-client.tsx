@@ -259,7 +259,7 @@ export function AlarmAnalysisClient() {
     [activeRangeNow, selectedAlarmDetail?.endedAt, selectedAlarmDetail?.triggeredAt],
   )
 
-  const { data: graphData = [] } = useMonitoringRangeMeasurements  const { data: graphData = [], isLoading: isGraphLoading } = useMonitoringRangeMeasurements(locationId, {
+  const { data: graphData = [] } = useMonitoringRangeMeasurements(locationId, {
     enabled: locationId > 0 && !!explicitRangeStart && !!explicitRangeEnd,
     rangeStart: explicitRangeStart,
     rangeEnd: explicitRangeEnd,
