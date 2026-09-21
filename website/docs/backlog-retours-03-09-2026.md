@@ -1417,9 +1417,10 @@ Revalidation finale GitHub Actions `35571682951` ✅ :
 
 ## 21/09/2026 — Refonte du parcours d’acquittement et de l’analyse d’alarme
 
-**Statut : EN_COURS — branche feature/alarm-acknowledgement-analysis-flow, PR à ouvrir**
+**Statut : PR_OUVERTE — PR #133, validation terrain à réaliser**
 
 - branche : feature/alarm-acknowledgement-analysis-flow ;
+- PR : #133 ;
 - base : dev au commit b3af96d07f459d3d690641c56d6a9d8a865104d1 (merge PR #132) ;
 - version Web : 1.1.0 ;
 - aucun changement de schéma BDD.
@@ -1487,7 +1488,7 @@ La logique complexe de sélection de candidats de l’ancien composant partagé 
 Avec plusieurs alarmes sélectionnées :
 
 - le graphique et le tableau sont masqués ;
-- chaque alarme est résumée sur une ligne avec son identifiant/type, sa sonde, son début et sa fin ;
+- chaque alarme est résumée sur une ligne avec son identifiant/type, sa sonde, sa dernière valeur, son début, sa fin et son état ;
 - un bouton Acquitter indique le nombre de lignes concernées ;
 - un même commentaire est appliqué ;
 - les requêtes d’acquittement sont exécutées séquentiellement afin d’éviter un burst de writes et de conserver un résultat partiel lisible en cas d’échec.
@@ -1557,14 +1558,20 @@ Le helper Excel partagé accepte désormais une image de présentation optionnel
 
 ### Validation technique
 
-- [x] contrat statique mis à jour pour la nouvelle navigation, la sélection multiple, l’état local acquitté, la période exacte, l’absence d’Audit/print/CSV et l’export XLSX ;
-- [x] contrôle du diff Git sans changement BDD/Serveur/Agent attendu ;
-- [ ] ESLint ciblé final ;
-- [ ] TypeScript MySQL ;
-- [ ] contrôle i18n ;
-- [ ] TypeScript SQL Server ;
-- [ ] build Next.js production ;
-- [ ] workflow temporaire supprimé avant PR.
+Validation applicative GitHub Actions **35615763256** ✅ :
+
+- [x] `git diff --check origin/dev...HEAD` ;
+- [x] génération Prisma MySQL ;
+- [x] contrat statique du nouveau parcours : navigation, sélection multiple, état local acquitté, droits/cache, période exacte, absence d’Audit/print/CSV et export XLSX ;
+- [x] ESLint ciblé : 0 erreur ; les warnings React refs déjà présents dans le composant graphique restent non bloquants ;
+- [x] TypeScript MySQL ;
+- [x] contrôle i18n : aucune nouvelle dette dans les fichiers du lot ; le checker global conserve uniquement des occurrences historiques hors périmètre ;
+- [x] génération Prisma SQL Server ;
+- [x] TypeScript SQL Server ;
+- [x] restauration Prisma MySQL ;
+- [x] build Next.js production ;
+- [x] contrôle du diff : aucun changement BDD/Serveur/Agent ni lockfile ;
+- [ ] workflow temporaire à supprimer du diff final après la dernière revalidation documentaire.
 
 ### Checklist terrain
 
