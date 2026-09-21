@@ -3,11 +3,11 @@
 import type { ReactNode } from "react";
 import Dock from "@/components/ui/dock";
 import { useLicense } from "@/components/license/license-provider";
-import { isOneOrPack, isPack } from "@/lib/license-access";
+import { isPack } from "@/lib/license-access";
 import { usePathname, useRouter } from "@/i18n/navigation";
 import { getLocalizedPathname, stripLocalePrefix } from "@/i18n/pathnames";
 import { useLocale, useTranslations } from "next-intl";
-import { Copy, Gauge, Globe, MapPin, Radio, Ruler, Users, WifiCog, Wrench } from "lucide-react";
+import { Gauge, Globe, MapPin, Radio, Users, WifiCog, Wrench } from "lucide-react";
 
 type DockItem = {
   key: string;
@@ -17,6 +17,20 @@ type DockItem = {
   isActive: boolean;
 };
 
+export const ADMIN_NAV_DOCK_PATHS = [
+  "/admin/sondes",
+  "/admin/modules",
+  "/admin/actionneurs",
+  "/admin/groupes",
+  "/admin/lieux",
+  "/admin/sites",
+  "/admin/outils",
+] as const;
+
+export function shouldShowAdminNavDock(pathname: string) {
+  return ADMIN_NAV_DOCK_PATHS.some((path) => pathname === path);
+}
+
 export function AdminNavDock() {
   const router = useRouter();
   const pathname = usePathname();
@@ -24,7 +38,6 @@ export function AdminNavDock() {
   const tDock = useTranslations("dock");
   const { license } = useLicense();
 
-  const hideStandards = isOneOrPack(license);
   const hideOnePlus = isPack(license);
   const normalizedPathname = stripLocalePrefix(pathname);
 
@@ -42,15 +55,6 @@ export function AdminNavDock() {
       label: tDock("modules"),
       onClick: () => router.push("/admin/modules"),
       isActive: normalizedPathname === getLocalizedPathname("/admin/modules", locale as any),
-    },
-    {
-      key: "etalons",
-      icon: <Ruler size={20} />,
-      label: tDock("etalons"),
-      onClick: () => router.push("/admin/metrologie/bains-etalons"),
-      isActive:
-        normalizedPathname.startsWith(getLocalizedPathname("/admin/metrologie", locale as any)) ||
-        normalizedPathname === getLocalizedPathname("/admin/etalons", locale as any),
     },
     {
       key: "actionneurs",
@@ -74,13 +78,6 @@ export function AdminNavDock() {
       isActive: normalizedPathname === getLocalizedPathname("/admin/lieux", locale as any),
     },
     {
-      key: "lieux_templates",
-      icon: <Copy size={20} />,
-      label: tDock("lieux_templates"),
-      onClick: () => router.push("/admin/lieux/templates"),
-      isActive: normalizedPathname === getLocalizedPathname("/admin/lieux/templates", locale as any),
-    },
-    {
       key: "sites",
       icon: <Globe size={20} />,
       label: tDock("sites"),
@@ -97,7 +94,6 @@ export function AdminNavDock() {
   ];
 
   const visibleNavItems = navItems.filter((item) => {
-    if (hideStandards && item.key === "metrologie") return false;
     if (hideOnePlus && (item.key === "sites" || item.key === "groupes")) return false;
     return true;
   });

@@ -46,7 +46,7 @@ export function AdminServiceCard({
   hrefLabel,
 }: Props) {
   return (
-    <Card className="h-full overflow-hidden border-border/60 bg-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md dark:bg-card/95 dark:shadow-black/20">
+    <Card className="flex h-full flex-col overflow-hidden border-border/60 bg-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md dark:bg-card/95 dark:shadow-black/20">
       <CardHeader className="border-b border-border/50 bg-white/90 pb-3 dark:bg-card/90">
         <div className="flex items-start justify-between gap-3">
           <div>
@@ -61,7 +61,7 @@ export function AdminServiceCard({
           </Badge>
         </div>
       </CardHeader>
-      <CardContent className="space-y-3 pt-4">
+      <CardContent className="flex flex-1 flex-col space-y-3 pt-4">
         <div className="space-y-2 text-sm">
           {details.map((detail) => (
             <div
@@ -77,7 +77,7 @@ export function AdminServiceCard({
         {href && hrefLabel ? (
           <Link
             href={href as never}
-            className="inline-flex items-center gap-1 text-sm font-medium text-primary transition-colors hover:text-primary/80"
+            className="mt-auto inline-flex items-center gap-1 pt-2 text-sm font-medium text-primary transition-colors hover:text-primary/80"
           >
             {hrefLabel}
             <ArrowRight className="h-4 w-4" />

@@ -1,3 +1,11 @@
+export type BackupLogEntryLevel = "info" | "success" | "error" | "section"
+
+export interface BackupLogEntry {
+  timestamp: string | null
+  message: string
+  level: BackupLogEntryLevel
+}
+
 export interface BackupRecord {
   id: string
   etat: "success" | "in_progress" | "failed"
@@ -11,6 +19,9 @@ export interface BackupSummary {
   archiveCount: number
   slotCount: number
   latestRun?: BackupRecord | null
+  logEntries: BackupLogEntry[]
+  logLineCount: number
+  logTruncated: boolean
 }
 
 export interface BackupsResponse {

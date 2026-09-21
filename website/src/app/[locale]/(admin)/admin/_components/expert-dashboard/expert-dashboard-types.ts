@@ -25,10 +25,11 @@ export type Metrics = {
   latestBackupEtat: "success" | "in_progress" | "failed" | null
   backupStoragePath: string
   backupLogFilePath: string
+  upcomingCalibrationCount: number
   hideStandards: boolean
 }
 
-export type Props = { metrics: Metrics }
+export type Props = { metrics: Metrics; onOpenBackupLog?: () => void }
 export type BreakpointKey = "lg" | "md" | "sm" | "xs" | "xxs"
 export type GridLayouts = Partial<Record<BreakpointKey, Layout>>
 

@@ -32,12 +32,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useLicense } from "@/components/license/license-provider";
 import { isExpert, isStandardOrExpert } from "@/lib/license-access";
-import { Check, ChevronDown, Copy, X } from "lucide-react";
+import { ArrowUpRight, Check, ChevronDown, Copy, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import type { Dispatch, SetStateAction } from "react";
 import { FormProvider, type UseFormReturn, useForm, useWatch } from 'react-hook-form';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useLocale, useTranslations } from 'next-intl';
+import { Link } from '@/i18n/navigation';
 import { toast } from 'sonner';
 import { showFormValidationToast } from '@/lib/form-toast';
 import { postJson } from '@/lib/http';
@@ -375,9 +376,19 @@ export function LocationFormDialog({
               </div>
             ) : null}
             <div className="space-y-3 rounded-md border border-border/60 bg-muted/20 p-3">
-              <div className="space-y-1">
-                <p className="text-sm font-medium">{t('template.title')}</p>
-                <p className="text-xs text-muted-foreground">{t('template.description')}</p>
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                <div className="space-y-1">
+                  <p className="text-sm font-medium">{t('template.title')}</p>
+                  <p className="text-xs text-muted-foreground">{t('template.description')}</p>
+                </div>
+                {!isEdit ? (
+                  <Button asChild type="button" variant="ghost" size="sm" className="h-8 shrink-0 gap-1.5">
+                    <Link href="/admin/lieux/templates">
+                      {t('template.manage')}
+                      <ArrowUpRight className="h-3.5 w-3.5" aria-hidden="true" />
+                    </Link>
+                  </Button>
+                ) : null}
               </div>
               <div className="grid gap-2 md:grid-cols-[1fr_auto_auto]">
                 <Select value={selectedTemplateId} onValueChange={setSelectedTemplateId}>

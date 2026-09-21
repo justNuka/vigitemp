@@ -27,7 +27,7 @@ export function AdminSystemHealthCard() {
     : t("health.helper_unavailable")
 
   return (
-    <Card className="card-interactive overflow-hidden border-border/60 bg-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md dark:bg-card/95 dark:shadow-black/20">
+    <Card className="card-interactive flex h-full flex-col overflow-hidden border-border/60 bg-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md dark:bg-card/95 dark:shadow-black/20">
       <CardHeader className="border-b border-border/50 bg-white/90 pb-2 dark:bg-card/90">
         <div className="flex items-start justify-between gap-3">
           <div>
@@ -40,12 +40,12 @@ export function AdminSystemHealthCard() {
           <SystemHealthStatusBadge status={status} label={statusLabel} />
         </div>
       </CardHeader>
-      <CardContent className="space-y-2 pt-4">
+      <CardContent className="flex flex-1 flex-col space-y-2 pt-4">
         <div className="text-2xl font-bold">{statusLabel}</div>
         <p className="text-sm text-muted-foreground">{helper}</p>
         <Link
           href="/admin/sante-systeme"
-          className="inline-flex items-center gap-1 text-sm font-medium text-primary transition-colors hover:text-primary/80"
+          className="mt-auto inline-flex items-center gap-1 pt-2 text-sm font-medium text-primary transition-colors hover:text-primary/80"
         >
           {t("health.open")}
           <ArrowRight className="h-4 w-4" />

@@ -28,7 +28,7 @@ export function DashboardLinkCard({
     <m.div
       variants={fadeInUp}
       className={cn(
-        "group rounded-xl border border-border bg-card p-4 shadow-sm",
+        "group h-full rounded-xl border border-border bg-card p-4 shadow-sm",
         "transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md",
         "hover:bg-linear-to-br hover:from-card hover:to-primary/5",
         className

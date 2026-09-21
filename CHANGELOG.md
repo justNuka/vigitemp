@@ -16,7 +16,7 @@ La convention de versioning est décrite dans [`docs/versioning.md`](docs/versio
 
 ## [Unreleased]
 
-- Versions de ce lot : **Web 1.2.0**, **Serveur / installateur 1.1.0**, **BDD 0.91.0** ; l'Agent reste en **1.0.1**.
+- État intégré courant : **Web 1.3.0**, **Serveur / installateur 1.1.0**, **BDD 0.91.0**, **Agent 1.0.1**.
 - Le parcours d’acquittement depuis Surveillance ouvre directement l’analyse du lieu : liste des alarmes à gauche, acquittement dans le bandeau sélectionné, dialog commentaire compacte et sélection multiple avec résumés.
 - Une alarme acquittée reste temporairement visible et grisée dans la liste jusqu’au rafraîchissement, afin de conserver le contexte de traitement de l’opérateur.
 - L’analyse d’alarme se limite désormais à la période réelle de l’alarme, sans sélection de période ni Audit ; l’impression et les exports multiples sont remplacés par un XLSX unique avec la courbe intégrée dans la présentation lorsqu’elle existe.
@@ -28,6 +28,8 @@ La convention de versioning est décrite dans [`docs/versioning.md`](docs/versio
 - Des **seuils critiques haut/bas** optionnels sont ajoutés : ils doivent rester plus extrêmes que les seuils normaux et déclenchent immédiatement une alarme haute/basse, sans attendre le retard normal. Les sondes interrogées par le Serveur utilisent le moteur C# ; les GSO conservent leur moteur BDD via les triggers MySQL / SQL Server mis à jour.
 - L'affichage des EMT et valeurs métrologiques dérivées passe par le helper numérique canonique afin d'éviter les flottants à rallonge, et le nom d'un lieu affiche désormais explicitement sa limite de 30 caractères avec compteur restant.
 - La migration **BDD 0.91.0** est requise avant le Web 1.2.0 afin de créer les colonnes de seuils critiques ; le Serveur 1.1.0 conserve un fallback de lecture des anciens schémas mais la fonctionnalité complète nécessite BDD 0.91.0.
+- Le Dashboard Admin Web 1.3.0 simplifie son dock aux pages principales, rend la card Sauvegarde système consultable avec son journal, limite le compteur d'acquittements aux 7 derniers jours et expose les étalonnages arrivant à échéance sous 15 jours.
+- Les cards du Dashboard Admin sont harmonisées en hauteur et la gestion des templates de lieu reste accessible directement depuis la création d'un lieu, sans encombrer le dock global.
 
 ## Livraison VigiSensys 1.0.0 — 2026-09-18
 

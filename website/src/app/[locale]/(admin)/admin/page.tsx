@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo } from "react"
+import { useMemo, useState } from "react"
 import { LazyMotion, domAnimation, m } from "motion/react"
 import { Link } from "@/i18n/navigation"
 import { useLocale, useTranslations } from "next-intl"
@@ -33,9 +33,11 @@ import {
   useAuditLogs,
   useBackups,
   useConnectedUsers,
+  useUpcomingCalibrationCount,
 } from "@/hooks/useAdminData"
 import { useUnassignedSensors } from "@/hooks/useSensors"
 import { AdminSystemHealthCard } from "./_components/admin-system-health-card"
+import { AdminBackupLogDialog } from "./_components/admin-backup-log-dialog"
 import { AdminServiceCards } from "./_components/admin-service-cards"
 import { ExpertAdminDashboard } from "./_components/expert-admin-dashboard"
 import { staggerContainer, fadeInUp } from "@/lib/motion-variants"
@@ -50,6 +52,8 @@ type SummaryCardProps = {
   icon: React.ReactNode
   badge?: React.ReactNode
   helper?: string
+  onClick?: () => void
+  ariaLabel?: string
 }
 
 function SummaryCard({
@@ -61,10 +65,28 @@ function SummaryCard({
   icon,
   badge,
   helper,
+  onClick,
+  ariaLabel,
 }: SummaryCardProps) {
   return (
-    <m.div variants={fadeInUp}>
-      <Card className="card-interactive overflow-hidden border-border/60 bg-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md dark:bg-card/95 dark:shadow-black/20">
+    <m.div variants={fadeInUp} className="h-full">
+      <Card
+        className={`card-interactive flex h-full flex-col overflow-hidden border-border/60 bg-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md dark:bg-card/95 dark:shadow-black/20 ${onClick ? "cursor-pointer" : ""}`}
+        role={onClick ? "button" : undefined}
+        tabIndex={onClick ? 0 : undefined}
+        aria-label={onClick ? ariaLabel ?? title : undefined}
+        onClick={onClick}
+        onKeyDown={
+          onClick
+            ? (event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault()
+                  onClick()
+                }
+              }
+            : undefined
+        }
+      >
         <CardHeader className="border-b border-border/50 bg-white/90 pb-2 dark:bg-card/90">
           <div className="flex items-start justify-between gap-3">
             <div>
@@ -77,13 +99,13 @@ function SummaryCard({
             {badge}
           </div>
         </CardHeader>
-        <CardContent className="space-y-2 pt-4">
+        <CardContent className="flex flex-1 flex-col space-y-2 pt-4">
           <div className="text-3xl font-bold tabular-nums">{value}</div>
           {helper ? <p className="whitespace-pre-line break-all text-sm text-muted-foreground">{helper}</p> : null}
           {href && hrefLabel ? (
             <Link
               href={href as any}
-              className="inline-flex items-center gap-1 text-sm font-medium text-primary transition-colors hover:text-primary/80"
+              className="mt-auto inline-flex items-center gap-1 pt-2 text-sm font-medium text-primary transition-colors hover:text-primary/80"
             >
               {hrefLabel}
               <ArrowRight className="h-4 w-4" />
@@ -97,6 +119,7 @@ function SummaryCard({
 
 export default function AdminDashboard() {
   const t = useTranslations("adminDashboard")
+  const [isBackupLogOpen, setIsBackupLogOpen] = useState(false)
   const locale = useLocale()
   const timezone = useAppTimezone()
   const { license } = useLicense()
@@ -110,9 +133,10 @@ export default function AdminDashboard() {
   const activeAlarmsQuery = useActiveAlarms(1)
   const alarmsActiveCountQuery = useAlarmCount("active")
   const alarmsResolvedCountQuery = useAlarmCount("resolved")
-  const acknowledgmentsQuery = useAcknowledgments(1)
+  const acknowledgmentsQuery = useAcknowledgments(1, 7)
   const systemLogsQuery = useAuditLogs()
   const backupsQuery = useBackups()
+  const upcomingCalibrationQuery = useUpcomingCalibrationCount(15, !hideStandards)
   const unassignedSensorsQuery = useUnassignedSensors({ page: 1, limit: 20 })
 
   const activeAlarmsTotal = activeAlarmsQuery.data?.pagination.total || 0
@@ -123,6 +147,7 @@ export default function AdminDashboard() {
   const systemLogsTotal = systemLogsQuery.data?.pagination.total || 0
   const unassignedTotal = unassignedSensorsQuery.data?.pagination.total || 0
   const backupsTotal = backupsQuery.data?.summary.archiveCount ?? 0
+  const upcomingCalibrationCount = upcomingCalibrationQuery.data?.count ?? 0
   const accessLabel = t("actions.open_page")
   const alarmsAccessLabel = `${accessLabel} (${alarmsInProgressTotal})`
   const backupStoragePath = backupsQuery.data?.summary.storagePath ?? "-"
@@ -170,6 +195,14 @@ export default function AdminDashboard() {
           .join(", ")
       : "-"
 
+  const backupDialog = (
+    <AdminBackupLogDialog
+      open={isBackupLogOpen}
+      onOpenChange={setIsBackupLogOpen}
+      summary={backupsQuery.data?.summary}
+    />
+  )
+
   const isInitialLoading = useMemo(() => {
     return (
       connectedUsersQuery.isLoading &&
@@ -179,7 +212,8 @@ export default function AdminDashboard() {
       acknowledgmentsQuery.isLoading &&
       systemLogsQuery.isLoading &&
       backupsQuery.isLoading &&
-      unassignedSensorsQuery.isLoading
+      unassignedSensorsQuery.isLoading &&
+      (hideStandards || upcomingCalibrationQuery.isLoading)
     )
   }, [
     acknowledgmentsQuery.isLoading,
@@ -189,7 +223,9 @@ export default function AdminDashboard() {
     connectedUsersQuery.isLoading,
     systemLogsQuery.isLoading,
     backupsQuery.isLoading,
+    hideStandards,
     unassignedSensorsQuery.isLoading,
+    upcomingCalibrationQuery.isLoading,
   ])
 
   if (isBasicDashboard) {
@@ -236,7 +272,7 @@ export default function AdminDashboard() {
         <PageHeader title={t("title")} />
         <LazyMotion features={domAnimation}>
           <m.div
-            className="grid gap-4 p-6 md:grid-cols-2 xl:grid-cols-3"
+            className="grid auto-rows-fr gap-4 p-6 md:grid-cols-2 xl:grid-cols-3"
             variants={staggerContainer}
             initial="hidden"
             animate="visible"
@@ -261,9 +297,12 @@ export default function AdminDashboard() {
               helper={`${t("backup.last.label")}: ${lastBackupLabel}\n${backupStoragePath}`}
               icon={<BookOpen className="h-5 w-5 text-violet-600" />}
               badge={latestBackupBadge}
+              onClick={() => setIsBackupLogOpen(true)}
+              ariaLabel={t("backup.log.open")}
             />
           </m.div>
         </LazyMotion>
+        {backupDialog}
       </div>
     )
   }
@@ -272,7 +311,7 @@ export default function AdminDashboard() {
     return (
       <div className="flex min-h-full flex-col">
         <PageHeader title={t("title")} />
-        <div className="grid gap-4 px-6 pt-6 md:grid-cols-2 xl:grid-cols-3">
+        <div className="grid auto-rows-fr gap-4 px-6 pt-6 md:grid-cols-2 xl:grid-cols-3">
           <AdminSystemHealthCard />
           <AdminServiceCards />
         </div>
@@ -293,9 +332,12 @@ export default function AdminDashboard() {
             latestBackupEtat: latestBackup?.etat ?? null,
             backupStoragePath,
             backupLogFilePath,
+            upcomingCalibrationCount,
             hideStandards,
           }}
+          onOpenBackupLog={() => setIsBackupLogOpen(true)}
         />
+        {backupDialog}
       </div>
     )
   }
@@ -304,7 +346,7 @@ export default function AdminDashboard() {
     return (
       <div className="flex min-h-full flex-col">
         <PageHeader title={t("title")} />
-        <div className="grid gap-4 p-6 md:grid-cols-2 xl:grid-cols-3">
+        <div className="grid auto-rows-fr gap-4 p-6 md:grid-cols-2 xl:grid-cols-3">
           {Array.from({ length: 6 }).map((_, i) => (
             <div key={i} className="rounded-xl h-40 animate-shimmer" />
           ))}
@@ -319,7 +361,7 @@ export default function AdminDashboard() {
 
       <LazyMotion features={domAnimation}>
         <m.div
-          className="grid gap-4 p-6 md:grid-cols-2 xl:grid-cols-3"
+          className="grid auto-rows-fr gap-4 p-6 md:grid-cols-2 xl:grid-cols-3"
           variants={staggerContainer}
           initial="hidden"
           animate="visible"
@@ -347,7 +389,7 @@ export default function AdminDashboard() {
 
           <SummaryCard
             title={t("acknowledgments.title")}
-            description={t("acknowledgments.description", { total: acknowledgmentsTotal, max: 50 })}
+            description={t("acknowledgments.description_recent", { total: acknowledgmentsTotal, days: 7 })}
             value={String(acknowledgmentsTotal)}
             helper={`${t("acknowledgments.columns.date_time")}: ${latestAck}`}
             href={`/admin/alarmes/acquittements`}
@@ -382,6 +424,8 @@ export default function AdminDashboard() {
             helper={`${t("backup.last.label")}: ${lastBackupLabel}\n${backupStoragePath}`}
             icon={<BookOpen className="h-5 w-5 text-violet-600" />}
             badge={latestBackupBadge}
+            onClick={() => setIsBackupLogOpen(true)}
+            ariaLabel={t("backup.log.open")}
           />
 
           <SummaryCard
@@ -395,9 +439,10 @@ export default function AdminDashboard() {
 
           {!hideStandards ? (
             <SummaryCard
-              title={t("links.etalons.title")}
-              description={t("links.etalons.description")}
-              value="-"
+              title={t("metrology.title")}
+              description={t("metrology.description", { days: 15 })}
+              value={String(upcomingCalibrationCount)}
+              helper={t("metrology.helper", { days: 15 })}
               href={`/admin/metrologie`}
               hrefLabel={accessLabel}
               icon={<Ruler className="h-5 w-5 text-cyan-600" />}
@@ -405,6 +450,7 @@ export default function AdminDashboard() {
           ) : null}
         </m.div>
       </LazyMotion>
+      {backupDialog}
     </div>
   )
 }
