@@ -1542,7 +1542,8 @@
         "email_ended": "Alarm ended",
         "email_acknowledged": "Alarm acknowledged",
         "email_sent": "Sent"
-      }
+      },
+      "email_event": "Alarm email: {event}"
     }
   },
   "profilePage": {
