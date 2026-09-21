@@ -431,14 +431,16 @@ export function AlarmAnalysisClient() {
 
     setIsAcknowledgePending(true)
     try {
-      const results = await Promise.allSettled(
-        acknowledgementTargetIds.map((alarmId) => alarmsApi.acknowledge(String(alarmId), comment)),
-      )
-      const successfulIds = new Set(
-        results
-          .map((result, index) => result.status === "fulfilled" ? acknowledgementTargetIds[index] : null)
-          .filter((id): id is number => id !== null),
-      )
+      const successfulIds = new Set<number>()
+      for (const alarmId of acknowledgementTargetIds) {
+        try {
+          await alarmsApi.acknowledge(String(alarmId), comment)
+          successfulIds.add(alarmId)
+        } catch {
+          // Keep processing the remaining alarms so a partial multi-acknowledgement
+          // is reflected accurately without creating a burst of concurrent writes.
+        }
+      }
 
       if (successfulIds.size === 0) {
         throw new Error("no_acknowledgement_succeeded")
