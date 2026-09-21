@@ -2167,7 +2167,7 @@ Conséquences :
 
 ### Validation technique
 
-GitHub Actions **35653944150** ✅ avant finalisation version / documentation :
+GitHub Actions **35653944150** ✅ sur l'implémentation, puis revalidation finale **35655075579** ✅ après version / traductions / changelogs / documentation :
 
 - [x] `git diff --check origin/dev...HEAD` ;
 - [x] génération Prisma MySQL ;
@@ -2179,8 +2179,8 @@ GitHub Actions **35653944150** ✅ avant finalisation version / documentation :
 - [x] TypeScript SQL Server ;
 - [x] restauration Prisma MySQL ;
 - [x] build Next.js production ;
-- [ ] revalidation finale après version/changelog/backlog ;
-- [ ] suppression du workflow temporaire avant PR.
+- [x] revalidation finale après version/changelog/backlog ;
+- [x] suppression du workflow temporaire avant PR.
 
 ### Checklist terrain
 
