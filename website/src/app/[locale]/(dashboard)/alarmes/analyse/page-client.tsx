@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useLocale, useTranslations } from "next-intl"
 import { useRouter, useSearchParams } from "next/navigation"
 import type { SortingState, Updater } from "@tanstack/react-table"
+import { useQueryClient } from "@tanstack/react-query"
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -18,6 +19,7 @@ import {
 import { ChevronLeft, Maximize2, Minimize2 } from "lucide-react"
 import { toast } from "sonner"
 
+import { useAppAccess } from "@/components/access/app-access-provider"
 import { PageHeader } from "@/components/page-header"
 import { MonitoringGraphTab } from "@/components/monitoring-details/monitoring-graph-tab"
 import { MonitoringTableTab } from "@/components/monitoring-details/monitoring-table-tab"
@@ -37,6 +39,7 @@ import { exportStyledExcel } from "@/lib/excel-export"
 import { fetchJson } from "@/lib/http"
 import { getMeasureSummary, calculateYDomain, formatMeasureValue, sortMeasuresChronologically } from "@/lib/measurements"
 import type { MeasureData } from "@/lib/measurements"
+import { markAlarmAcknowledgedInPaginatedSensorsCache } from "@/lib/surveillance-cache"
 import { cn } from "@/lib/utils"
 
 import { AlarmAcknowledgementCommentDialog } from "./alarm-acknowledgement-comment-dialog"
@@ -121,6 +124,9 @@ export function AlarmAnalysisClient() {
   const localeTag = locale === "fr" ? "fr-FR" : locale
   const router = useRouter()
   const searchParams = useSearchParams()
+  const queryClient = useQueryClient()
+  const { hasPermission } = useAppAccess()
+  const canAcknowledgeAlarm = hasPermission("ALARM_ACK_ACCESS")
   const chartRef = useRef<ChartJS<"line"> | null>(null)
 
   const locationId = Number(searchParams.get("locationId") ?? "0")
@@ -396,27 +402,29 @@ export function AlarmAnalysisClient() {
     acknowledgeableAlarms.some((row) => selectedAlarmIds.includes(row.id))
 
   const toggleAlarmSelection = useCallback((alarmId: number, checked: boolean) => {
+    if (!canAcknowledgeAlarm) return
     setSelectedAlarmIds((current) => {
       if (checked) {
         return current.includes(alarmId) ? current : [...current, alarmId]
       }
       return current.filter((id) => id !== alarmId)
     })
-  }, [])
+  }, [canAcknowledgeAlarm])
 
   const selectOnlyAlarm = useCallback((alarmId: number) => {
     setSelectedAlarmIds([alarmId])
   }, [])
 
   const toggleAllAlarms = useCallback((checked: boolean) => {
+    if (!canAcknowledgeAlarm) return
     setSelectedAlarmIds(checked ? acknowledgeableAlarms.map((row) => row.id) : [])
-  }, [acknowledgeableAlarms])
+  }, [acknowledgeableAlarms, canAcknowledgeAlarm])
 
   const openAcknowledgementDialog = useCallback(() => {
-    if (selectedAcknowledgeableIds.length === 0) return
+    if (!canAcknowledgeAlarm || selectedAcknowledgeableIds.length === 0) return
     setAcknowledgementTargetIds(selectedAcknowledgeableIds)
     setIsAcknowledgeOpen(true)
-  }, [selectedAcknowledgeableIds])
+  }, [canAcknowledgeAlarm, selectedAcknowledgeableIds])
 
   const handleAcknowledgementConfirm = useCallback(async (comment: string) => {
     if (acknowledgementTargetIds.length === 0) return
@@ -441,6 +449,17 @@ export function AlarmAnalysisClient() {
       )
       setAlarms(nextAlarms)
 
+      successfulIds.forEach((alarmId) => {
+        markAlarmAcknowledgedInPaginatedSensorsCache(queryClient, alarmId)
+      })
+      void Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["alarms"] }),
+        queryClient.invalidateQueries({ queryKey: ["capteurs", "paginated"] }),
+        queryClient.invalidateQueries({ queryKey: ["admin", "alarmes-actives"] }),
+        queryClient.invalidateQueries({ queryKey: ["admin", "alarms-count"] }),
+        queryClient.invalidateQueries({ queryKey: ["dashboard"] }),
+      ])
+
       const remainingSelection = selectedAlarmIds.filter((id) => !successfulIds.has(id))
       if (remainingSelection.length > 0) {
         setSelectedAlarmIds(remainingSelection)
@@ -461,7 +480,7 @@ export function AlarmAnalysisClient() {
     } finally {
       setIsAcknowledgePending(false)
     }
-  }, [acknowledgementTargetIds, alarms, selectedAlarmIds, t])
+  }, [acknowledgementTargetIds, alarms, queryClient, selectedAlarmIds, t])
 
   const handleChartImageReady = useCallback((dataUrl: string) => {
     setChartImageDataUrl(dataUrl)
@@ -606,7 +625,7 @@ export function AlarmAnalysisClient() {
             <label className="flex cursor-pointer items-center gap-2 text-sm font-medium">
               <Checkbox
                 checked={allAcknowledgeableSelected ? true : someAcknowledgeableSelected ? "indeterminate" : false}
-                disabled={acknowledgeableAlarms.length === 0}
+                disabled={!canAcknowledgeAlarm || acknowledgeableAlarms.length === 0}
                 onCheckedChange={(checked) => toggleAllAlarms(checked === true)}
               />
               <span>{t("analysis.selectAllForAcknowledgement")}</span>
@@ -656,7 +675,7 @@ export function AlarmAnalysisClient() {
                         <div className="flex items-start gap-3">
                           <Checkbox
                             checked={selected}
-                            disabled={acknowledged}
+                            disabled={acknowledged || !canAcknowledgeAlarm}
                             onCheckedChange={(checked) => toggleAlarmSelection(alarm.id, checked === true)}
                             onClick={(event) => event.stopPropagation()}
                             aria-label={t("analysis.selectAlarmAria", { id: alarm.id })}
@@ -721,7 +740,7 @@ export function AlarmAnalysisClient() {
                 </div>
                 <Button
                   type="button"
-                  disabled={selectedAcknowledgeableIds.length === 0 || isAcknowledgePending}
+                  disabled={!canAcknowledgeAlarm || selectedAcknowledgeableIds.length === 0 || isAcknowledgePending}
                   onClick={openAcknowledgementDialog}
                 >
                   {t("analysis.acknowledgeMany", { count: selectedAcknowledgeableIds.length })}
@@ -763,7 +782,7 @@ export function AlarmAnalysisClient() {
                   </div>
                   <Button
                     type="button"
-                    disabled={!selectedAlarmDetail || isLoadingDetail || selectedAcknowledgeableIds.length === 0 || isAcknowledgePending}
+                    disabled={!canAcknowledgeAlarm || !selectedAlarmDetail || isLoadingDetail || selectedAcknowledgeableIds.length === 0 || isAcknowledgePending}
                     onClick={openAcknowledgementDialog}
                   >
                     {t("analysis.acknowledge")}
