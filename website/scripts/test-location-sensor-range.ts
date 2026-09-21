@@ -66,6 +66,16 @@ const websiteRoot = process.cwd()
 const readWebsite = (relativePath: string) =>
   readFileSync(path.join(websiteRoot, relativePath), "utf8")
 
+const rangeServer = readWebsite("src/lib/sensor-value-range.ts")
+const serialRangeFunction = rangeServer.slice(
+  rangeServer.indexOf("export async function getSensorTypeValueRangeBySerial"),
+)
+assert.equal(
+  (serialRangeFunction.match(/st\.Unite AS unite/g) ?? []).length,
+  2,
+  "MySQL and SQL Server serial range queries must both return the unit exactly once.",
+)
+
 const createRoute = readWebsite("src/app/api/lieux/route.ts")
 const updateRoute = readWebsite("src/app/api/lieux/[id]/route.ts")
 assert.ok(
