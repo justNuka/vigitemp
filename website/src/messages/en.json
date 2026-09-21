@@ -401,7 +401,7 @@
       "related_type_filter_all": "All types",
       "related_alarms_empty": "No alarms match the current filter.",
       "comment_loading": "Loading...",
-      "characters": "characters"
+      "characters_count": "{count}/{max} characters"
     },
     "status": {
       "active": "Active",
