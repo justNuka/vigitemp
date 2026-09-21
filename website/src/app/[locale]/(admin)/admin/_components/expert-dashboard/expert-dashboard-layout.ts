@@ -13,7 +13,7 @@ export const DEFAULT_WIDGETS: WidgetDefinition[] = [
   { id: "systemLogs", w: 12, h: 13 },
   { id: "backups", w: 12, h: 13 },
   { id: "unassigned", w: 12, h: 13 },
-  { id: "etalons", w: 12, h: 11 },
+  { id: "etalons", w: 12, h: 13 },
 ]
 
 export function getMinW(breakpoint: BreakpointKey): number {
