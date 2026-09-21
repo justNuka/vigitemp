@@ -8,7 +8,49 @@ Les versions suivent `MAJOR.MINOR.PATCH` sans zéros de tête. La source de vers
 
 ## [Unreleased]
 
-Aucun changement supplémentaire documenté depuis la préparation de la version Web 1.3.0.
+Aucun changement supplémentaire documenté depuis la préparation de la version Web 1.4.0.
+
+## [1.4.0] — 2026-09-21
+
+Cette version améliore la saisie du mot de passe de connexion et fiabilise l'Audit trail global et par lieu.
+
+### Connexion
+
+- Le champ mot de passe dispose maintenant d'un bouton œil accessible pour afficher / masquer la valeur saisie.
+- Un avertissement **Verr. Maj / Caps Lock** apparaît sous le champ dès que le navigateur détecte le verrouillage majuscule pendant la saisie.
+- Le moteur d'authentification écrit dans les nouveaux audits uniquement les valeurs canoniques `legacy` ou `new`. Les anciennes valeurs `better-auth-transition` restent interprétées comme `new` à l'affichage.
+
+### Audit trail global
+
+- Les libellés métier, champs de détails, booléens, actions et valeurs connues passent désormais par `next-intl` au lieu de mélanger chaînes françaises/anglaises codées en dur.
+- Les accents des libellés d'audit ont été restaurés, notamment pour les tolérances, fréquences, réactivations, événements, créations/désactivations et libellés de codes historiques.
+- `GRPH` est désormais reconnu comme **Ouverture d'un graphique / Graph opened** au lieu d'« Action inconnue ».
+- Les autres codes présents dans les seeds ou générés par le runtime (`MAIL`, `ALARM_RESOLVED`, `ETAP`, `VLOG`, `FERMSURV`, `IMP`, `PLAN`, `TEL`, `UT`) disposent également d'un libellé i18n.
+- Le menu des codes charge l'union du référentiel `tm_journal_code` et des codes réellement observés dans `tm_journal`, afin qu'un nouveau code runtime reste filtrable sans attendre une migration de seed.
+- Le menu des codes est plafonné en hauteur, scrollable et présente le code séparément de son libellé pour éviter les lignes trop larges.
+
+### Pagination / volume
+
+- La page Audit n'est plus préchargée avec un tableau figé de 100 événements.
+- `GET /api/audit` supporte maintenant une pagination serveur opt-in avec `page`, `limit` et un maximum de **1000 événements par page**.
+- Les tailles 200 / 500 / 1000 de la table déclenchent désormais réellement une nouvelle requête serveur ; la navigation Suivant / Précédent charge les pages correspondantes.
+- La recherche globale de l'écran est également transmise au serveur pour éviter de filtrer uniquement la page déjà chargée.
+- Le format historique non paginé de l'API est conservé pour les consommateurs existants, notamment la card Dashboard Admin.
+
+### Emails d'alarme dans l'audit
+
+- Après un **succès SMTP réel** d'un email d'alarme, la file persistante écrit maintenant un événement `MAIL` dans `tm_journal`.
+- L'événement conserve l'`Id_Lieu`, le type `triggered / ended / acknowledged`, le destinataire, le nombre de tentatives et l'utilisation éventuelle des destinataires système.
+- Le même événement apparaît donc dans l'Audit global et dans l'Audit du lieu concerné.
+- Les trois événements métier sont couverts : **alarme déclenchée**, **fin d'alarme** et **acquittement d'alarme**.
+- Les tentatives SMTP échouées ne créent pas de faux audit « envoyé » ; l'écriture `MAIL` intervient uniquement après passage de la notification persistante à l'état `sent`.
+
+### Compatibilité
+
+- Version Web : **1.4.0**.
+- Serveur **1.1.0**, Agent **1.0.1** et BDD **0.91.0** restent inchangés.
+- Aucune migration BDD n'est requise.
+- MySQL et SQL Server restent supportés.
 
 ## [1.3.0] — 2026-09-21
 

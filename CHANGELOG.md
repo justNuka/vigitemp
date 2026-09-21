@@ -16,7 +16,7 @@ La convention de versioning est décrite dans [`docs/versioning.md`](docs/versio
 
 ## [Unreleased]
 
-- État intégré courant : **Web 1.3.0**, **Serveur / installateur 1.1.0**, **BDD 0.91.0**, **Agent 1.0.1**.
+- État intégré courant : **Web 1.4.0**, **Serveur / installateur 1.1.0**, **BDD 0.91.0**, **Agent 1.0.1**.
 - Le parcours d’acquittement depuis Surveillance ouvre directement l’analyse du lieu : liste des alarmes à gauche, acquittement dans le bandeau sélectionné, dialog commentaire compacte et sélection multiple avec résumés.
 - Une alarme acquittée reste temporairement visible et grisée dans la liste jusqu’au rafraîchissement, afin de conserver le contexte de traitement de l’opérateur.
 - L’analyse d’alarme se limite désormais à la période réelle de l’alarme, sans sélection de période ni Audit ; l’impression et les exports multiples sont remplacés par un XLSX unique avec la courbe intégrée dans la présentation lorsqu’elle existe.
@@ -30,6 +30,9 @@ La convention de versioning est décrite dans [`docs/versioning.md`](docs/versio
 - La migration **BDD 0.91.0** est requise avant le Web 1.2.0 afin de créer les colonnes de seuils critiques ; le Serveur 1.1.0 conserve un fallback de lecture des anciens schémas mais la fonctionnalité complète nécessite BDD 0.91.0.
 - Le Dashboard Admin Web 1.3.0 simplifie son dock aux pages principales, rend la card Sauvegarde système consultable avec son journal, limite le compteur d'acquittements aux 7 derniers jours et expose les étalonnages arrivant à échéance sous 15 jours.
 - Les cards du Dashboard Admin sont harmonisées en hauteur et la gestion des templates de lieu reste accessible directement depuis la création d'un lieu, sans encombrer le dock global.
+- La connexion Web 1.4.0 ajoute l'affichage/masquage du mot de passe et l'avertissement Caps Lock.
+- L'Audit trail Web 1.4.0 passe sur une pagination serveur jusqu'à 1000 lignes par page, localise les libellés connus, reconnaît notamment `GRPH` et corrige les accents historiques.
+- Les emails d'alarme réellement envoyés sont maintenant tracés avec le code `MAIL`, l'`Id_Lieu` et leur événement (déclenchement, fin, acquittement), ce qui les rend visibles dans l'audit global comme dans celui du lieu.
 
 ## Livraison VigiSensys 1.0.0 — 2026-09-18
 

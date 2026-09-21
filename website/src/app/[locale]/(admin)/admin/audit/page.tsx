@@ -5,7 +5,6 @@ import { PageHeader } from "@/components/page-header";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card } from "@/components/ui/card";
 import { getTranslations, setRequestLocale } from 'next-intl/server';
-import { loadRecentAuditLogs } from "@/lib/audit/enrich-audit-logs";
 
 export async function generateMetadata({
   params,
@@ -56,8 +55,6 @@ export default async function AuditPage({
   const { locale } = await params;
   setRequestLocale(locale);
   const t = await getTranslations({ locale, namespace: 'auditPage' });
-  const logsData = await loadRecentAuditLogs(100);
-
   return (
     <div className="flex flex-col min-h-full">
       <PageHeader
@@ -67,7 +64,7 @@ export default async function AuditPage({
       />
 
       <Suspense fallback={<AuditLoadingSkeleton />}>
-        <AuditClient logs={logsData} />
+        <AuditClient />
       </Suspense>
     </div>
   );

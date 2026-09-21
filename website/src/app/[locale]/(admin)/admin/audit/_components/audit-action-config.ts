@@ -1,4 +1,4 @@
-import { Activity, AlertCircle, Archive, Bell, BellOff, FileText, LogIn, LogOut, Phone, PhoneOff, Plug, Server, Settings, TrendingUp, Unplug, UserCheck, UserCog, Volume2, VolumeX, Wrench } from 'lucide-react'
+import { Activity, AlertCircle, Archive, Bell, BellOff, FileText, LogIn, LogOut, Mail, Phone, PhoneOff, Plug, Server, Settings, TrendingUp, Unplug, UserCheck, UserCog, Volume2, VolumeX, Wrench } from 'lucide-react'
 
 export type ActionConfig = {
   icon: typeof LogIn
@@ -38,5 +38,15 @@ export function buildAuditActionConfig(t: (key: string, values?: Record<string, 
     PS: { icon: Server, label: t('actions.PS'), color: 'text-muted-foreground', badgeVariant: 'outline' },
     SACT: { icon: Unplug, label: t('actions.SACT'), color: 'text-warning', badgeVariant: 'secondary' },
     AACT: { icon: Plug, label: t('actions.AACT'), color: 'text-primary', badgeVariant: 'secondary' },
+    GRPH: { icon: FileText, label: t('actions.GRPH'), color: 'text-sky-600', badgeVariant: 'outline' },
+    MAIL: { icon: Mail, label: t('actions.MAIL'), color: 'text-indigo-600', badgeVariant: 'secondary' },
+    ALARM_RESOLVED: { icon: AlertCircle, label: t('actions.ALARM_RESOLVED'), color: 'text-emerald-600', badgeVariant: 'outline' },
+    ETAP: { icon: Wrench, label: t('actions.ETAP'), color: 'text-primary', badgeVariant: 'secondary' },
+    VLOG: { icon: FileText, label: t('actions.VLOG'), color: 'text-muted-foreground', badgeVariant: 'outline' },
+    FERMSURV: { icon: FileText, label: t('actions.FERMSURV'), color: 'text-muted-foreground', badgeVariant: 'outline' },
+    IMP: { icon: Archive, label: t('actions.IMP'), color: 'text-primary', badgeVariant: 'secondary' },
+    PLAN: { icon: Settings, label: t('actions.PLAN'), color: 'text-primary', badgeVariant: 'secondary' },
+    TEL: { icon: Server, label: t('actions.TEL'), color: 'text-muted-foreground', badgeVariant: 'outline' },
+    UT: { icon: FileText, label: t('actions.UT'), color: 'text-muted-foreground', badgeVariant: 'outline' },
   }
 }

@@ -1756,7 +1756,7 @@
       "dateTo": "Au",
       "clearFilters": "Effacer les filtres",
       "action": "Action",
-      "today_limit_hint": "Affichage du jour en cours. Pour une période plus precise, ajustez les dates. La liste reste limitée à 100 entrées."
+      "today_limit_hint": "Affichage du jour en cours. Ajustez les dates pour changer de période ; les événements sont chargés par pages."
     },
     "expandedDetails": "Détails complets",
     "actions": {
@@ -1789,7 +1789,17 @@
       "PS": "Redémarrage port série",
       "SACT": "Module alarme retiré",
       "AACT": "Module alarme associé",
-      "unknown": "Action inconnue ({code})"
+      "unknown": "Action inconnue ({code})",
+      "GRPH": "Ouverture d'un graphique",
+      "MAIL": "Email d'alarme envoyé",
+      "ALARM_RESOLVED": "Fin d'alarme",
+      "ETAP": "Étalonnage appliqué",
+      "VLOG": "Action VigiLog",
+      "FERMSURV": "Fermeture de la surveillance",
+      "IMP": "Import de données",
+      "PLAN": "Modification du planning",
+      "TEL": "Système",
+      "UT": "Événement système"
     },
     "filters": {
       "site": "Site",
@@ -1819,7 +1829,67 @@
       "from": "De : {value}",
       "to": "Vers : {value}",
       "action": "Action : {action}",
-      "ip": "IP : {ip}"
+      "ip": "IP : {ip}",
+      "resources": {
+        "audit_graph_openings": "Affichage des ouvertures de graphiques"
+      },
+      "fields": {
+        "address": "Adresse",
+        "connectedAt": "Connecté le",
+        "machineName": "Machine",
+        "authEngine": "Moteur d'authentification",
+        "newToleranceSup": "Tolérance supérieure",
+        "newToleranceInf": "Tolérance inférieure",
+        "simAlarms": "Alarmes simulées",
+        "realAlarms": "Alarmes réelles",
+        "dateRange": "Période",
+        "alarmId": "N° alarme",
+        "acknowledgedAt": "Acquitté le",
+        "from": "Avant",
+        "to": "Après",
+        "forced": "Forcé",
+        "description": "Description",
+        "format": "Format",
+        "Nom_Lieu": "Nom du lieu",
+        "Tolerance_Sup": "Tolérance supérieure",
+        "Tolerance_Inf": "Tolérance inférieure",
+        "Consigne_Sup": "Consigne supérieure",
+        "Consigne_Inf": "Consigne inférieure",
+        "Est_Son_Alarme_Active": "Son d'alarme",
+        "Nom_Sonde": "Nom de la sonde",
+        "Frequence_Mesure": "Fréquence de mesure (s)",
+        "Retard_Alarme": "Retard d'alarme (s)",
+        "Hysteresis": "Hystérésis",
+        "disabled": "Surveillance désactivée",
+        "durationMinutes": "Durée (min)",
+        "reactivationAt": "Réactivation prévue",
+        "updated": "Lieux modifiés",
+        "lieuIds": "Lieux concernés",
+        "groupOrLiaisonId": "Groupe / liaison",
+        "emailEvent": "Événement email",
+        "emailStatus": "Statut email",
+        "recipient": "Destinataire",
+        "attempts": "Tentatives",
+        "usedSystemFallback": "Destinataires système utilisés"
+      },
+      "values": {
+        "yes": "Oui",
+        "no": "Non",
+        "before": "Avant",
+        "after": "Après",
+        "auth_legacy": "legacy",
+        "auth_new": "new",
+        "action_create": "Création",
+        "action_update": "Modification",
+        "action_delete": "Suppression",
+        "action_enable": "Activation",
+        "action_disable": "Désactivation",
+        "email_triggered": "Alarme déclenchée",
+        "email_ended": "Fin d'alarme",
+        "email_acknowledged": "Acquittement d'alarme",
+        "email_sent": "Envoyé"
+      },
+      "email_event": "Email d'alarme : {event}"
     }
   },
   "profilePage": {
@@ -2943,7 +3013,10 @@
       "password_label": "Mot de passe",
       "password_placeholder": "Votre mot de passe",
       "reset_email_label": "Adresse email",
-      "reset_email_placeholder": "votre@email.com"
+      "reset_email_placeholder": "votre@email.com",
+      "show_password": "Afficher le mot de passe",
+      "hide_password": "Masquer le mot de passe",
+      "caps_lock_warning": "Verr. Maj est activé"
     },
     "buttons": {
       "sign_in": "Se connecter",
@@ -3472,15 +3545,15 @@
   },
   "versionChangelog": {
     "title": "VigiSensys {version}",
-    "description": "Version 1.3 : navigation Admin allégée, dashboard plus lisible et indicateurs opérationnels ciblés.",
+    "description": "Version 1.4 : connexion plus pratique et Audit trail localisé, paginé et enrichi des emails d’alarme.",
     "sections": {
       "surveillance": {
-        "title": "Navigation et lieux",
+        "title": "Connexion et ergonomie",
         "items": {
-          "0": "Le bandeau Admin est désormais réservé aux pages principales réellement présentes dans sa navigation.",
-          "1": "Les accès Bains & étalons et Templates lieux ont été retirés du bandeau afin d’alléger les pages secondaires.",
-          "2": "La création d’un lieu propose directement un lien vers la gestion des templates à côté du sélecteur existant.",
-          "3": "Les pages Métrologie, Audit, Santé système, Paramètres et autres sous-pages gardent tout leur espace sans dock inutile."
+          "0": "Le mot de passe de connexion peut maintenant être affiché ou masqué avec l’icône œil.",
+          "1": "Un avertissement indique immédiatement lorsque Verr. Maj est actif pendant la saisie du mot de passe.",
+          "2": "Le moteur d’authentification journalisé utilise désormais uniquement les valeurs legacy ou new.",
+          "3": "Les anciennes valeurs Better Auth restent correctement normalisées à l’affichage de l’audit."
         }
       },
       "metrology": {
@@ -3494,13 +3567,13 @@
         }
       },
       "admin": {
-        "title": "Dashboard administrateur",
+        "title": "Audit trail",
         "items": {
-          "0": "La card Sauvegarde système ouvre maintenant un journal lisible avec horodatages, succès et erreurs.",
-          "1": "Le Journal acquittements alarmes compte uniquement les acquittements des 7 derniers jours.",
-          "2": "La card Métrologie indique les sondes actives dont l’étalonnage arrive à échéance dans les 15 prochains jours.",
-          "3": "Les cards du dashboard utilisent une hauteur homogène et des actions alignées.",
-          "4": "Le dashboard Expert retrouve le widget Métrologie avec le même indicateur J+15."
+          "0": "Les libellés, valeurs connues et détails d’audit utilisent maintenant les traductions FR/EN avec les accents corrigés.",
+          "1": "GRPH et les autres codes runtime connus disposent d’un libellé explicite au lieu d’Action inconnue.",
+          "2": "La pagination serveur permet de charger réellement 200, 500 ou 1000 événements par page au-delà de l’ancienne limite de 100.",
+          "3": "Le sélecteur de codes est scrollable et affiche proprement code + libellé.",
+          "4": "Les emails d’alarme envoyés, de fin d’alarme et d’acquittement sont visibles dans l’audit global et dans celui du lieu."
         }
       },
       "security": {
@@ -3523,10 +3596,10 @@
       "platform": {
         "title": "Version et compatibilité",
         "items": {
-          "0": "Le Web passe en version 1.3.0.",
+          "0": "Le Web passe en version 1.4.0.",
           "1": "Le Serveur 1.1.0, l’Agent 1.0.1 et la BDD 0.91.0 restent inchangés.",
-          "2": "Le compteur Métrologie utilise une requête agrégée sur le dernier étalonnage de chaque sonde afin de rester léger.",
-          "3": "Aucune migration BDD supplémentaire n’est nécessaire et MySQL / SQL Server restent supportés."
+          "2": "L’API Audit conserve son ancien format pour les consommateurs existants et ajoute la pagination de manière opt-in.",
+          "3": "Aucune migration BDD n’est nécessaire ; MySQL et SQL Server restent supportés."
         }
       }
     }

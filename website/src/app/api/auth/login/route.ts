@@ -185,7 +185,7 @@ export const POST = withLogging(async (req: NextRequest) => {
       isFirstLogin,
       passwordExpiryEnabled: expiryEnabled,
       passwordValidityDays,
-      authEngine: isBetterAuthRuntimeEnabled() ? "better-auth-transition" : "legacy",
+      authEngine: isBetterAuthRuntimeEnabled() ? "new" : "legacy",
     }
 
     const response = apiOk(userData)
@@ -231,7 +231,7 @@ export const POST = withLogging(async (req: NextRequest) => {
         machineName: resolvedMachineName,
         address: ip,
         connectedAt: now.toISOString(),
-        authEngine: isBetterAuthRuntimeEnabled() ? "better-auth-transition" : "legacy",
+        authEngine: isBetterAuthRuntimeEnabled() ? "new" : "legacy",
       },
     })
 
