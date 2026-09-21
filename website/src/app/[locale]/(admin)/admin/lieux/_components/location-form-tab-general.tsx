@@ -18,6 +18,7 @@ import { useStandards } from '@/hooks/useStandards'
 import { LocationGeneralSettingsSection } from './general-tab/location-general-settings-section'
 import { LocationSensorSection } from './general-tab/location-sensor-section'
 import { LocationSetpointsSection } from './general-tab/location-setpoints-section'
+import { LocationTimingSection } from './general-tab/location-timing-section'
 import type { LocationFormData } from './location-form-types'
 import { resolveLocationSensorFormState } from './general-tab/location-sensor-form-state'
 
@@ -171,6 +172,7 @@ export function LocationFormTabGeneral({ sites, groups, availableSensors, module
         hasSondeSelected={hasSondeSelected}
         standardSensorSerials={standardSensorSerials}
       />
+      <LocationTimingSection isGsoSensor={isGsoSensor} />
       <LocationSetpointsSection
         isGsoSensor={isGsoSensor}
         idLieu={formData.Id_Lieu ?? null}
