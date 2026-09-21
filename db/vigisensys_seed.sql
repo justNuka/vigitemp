@@ -5126,7 +5126,7 @@ INSERT INTO `t_utilisateur` (Login, Mot_De_Passe, Est_Archive, Profil_Utilisateu
 SET FOREIGN_KEY_CHECKS=1;
 
 INSERT INTO `t_parametre` (`Section`, `Mot_Cle`, `Valeur`, `Commentaire`)
-VALUES ('VERSION', 'SCHEMA_VERSION', '0.90.2', 'Version produit commune des seeds MySQL et SQL Server')
+VALUES ('VERSION', 'SCHEMA_VERSION', '0.91.0', 'Version de schéma VigiSensys')
 ON DUPLICATE KEY UPDATE
   `Valeur` = VALUES(`Valeur`),
   `Commentaire` = VALUES(`Commentaire`);
