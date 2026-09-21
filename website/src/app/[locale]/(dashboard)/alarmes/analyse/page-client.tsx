@@ -752,11 +752,19 @@ export function AlarmAnalysisClient() {
                 {selectedAlarmRows.map((alarm) => (
                   <div
                     key={alarm.id}
-                    className="grid gap-3 rounded-xl border bg-muted/15 p-4 md:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)_minmax(0,1fr)]"
+                    className="grid gap-3 rounded-xl border bg-muted/15 p-4 md:grid-cols-2 xl:grid-cols-[minmax(0,1.2fr)_minmax(0,.8fr)_minmax(0,1fr)_minmax(0,1fr)_auto]"
                   >
                     <div>
                       <p className="text-sm font-semibold">#{alarm.id} - {getTypeLabel(t, alarm.type)}</p>
                       <p className="text-xs text-muted-foreground">{alarm.sensorName}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs uppercase tracking-wide text-muted-foreground">{t("dialog.last_value_label")}</p>
+                      <p className="text-sm font-medium">
+                        {alarm.currentValue == null
+                          ? t("dialog.na")
+                          : `${formatAlarmNumber(alarm.currentValue, locale)} ${alarm.unit ?? ""}`.trim()}
+                      </p>
                     </div>
                     <div>
                       <p className="text-xs uppercase tracking-wide text-muted-foreground">{t("dialog.start_label")}</p>
@@ -769,6 +777,22 @@ export function AlarmAnalysisClient() {
                           ? formatDbDateTime(alarm.resolvedAt, { format: "dateTimeSeconds" })
                           : t("dialog.end_in_progress")}
                       </p>
+                    </div>
+                    <div className="flex items-start justify-end">
+                      <span
+                        className={cn(
+                          "inline-flex shrink-0 items-center rounded-full px-2.5 py-1 text-xs font-medium",
+                          alarm.status === "active" && "bg-red-100 text-red-700 dark:bg-red-950/40 dark:text-red-300",
+                          alarm.status === "resolved" && "bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300",
+                          alarm.status === "acknowledged" && "bg-muted text-muted-foreground",
+                        )}
+                      >
+                        {alarm.status === "active"
+                          ? t("analysis.statusActive")
+                          : alarm.status === "resolved"
+                            ? t("analysis.statusResolved")
+                            : t("status.acknowledged")}
+                      </span>
                     </div>
                   </div>
                 ))}
