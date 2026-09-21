@@ -149,7 +149,7 @@ export function AuditClient() {
     const commentaire = originalLog.commentaireUtilisateur ?? null
     const rows = changesJson ? renderChangesAsRows(changesJson, localeTag, timezone, t) : []
     return { rows, commentaire, hasContent: rows.length > 0 || !!commentaire }
-  }, [sourceLogs, localeTag, timezone])
+  }, [sourceLogs, localeTag, timezone, t])
 
   const columns: ColumnDef<AuditLogRow>[] = [
     {
