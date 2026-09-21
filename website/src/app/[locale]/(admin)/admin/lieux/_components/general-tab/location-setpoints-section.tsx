@@ -36,7 +36,6 @@ export function LocationSetpointsSection({
   onGoToPlanning,
   sensorRange,
 }: {
-  isGsoSensor: boolean
   idLieu: number | null
   onGoToPlanning?: () => void
   sensorRange?: SensorValueRange | null
