@@ -13,6 +13,8 @@ export function ExpertWidgetCard({
   hrefLabel,
   icon,
   badge,
+  onClick,
+  ariaLabel,
 }: {
   title: string
   description: string
@@ -22,9 +24,27 @@ export function ExpertWidgetCard({
   hrefLabel?: string
   icon: ReactNode
   badge?: ReactNode
+  onClick?: () => void
+  ariaLabel?: string
 }) {
   return (
-    <Card className="h-full overflow-hidden border-slate-200 bg-white/95 shadow-sm dark:border-border dark:bg-card/95">
+    <Card
+      className={`h-full overflow-hidden border-slate-200 bg-white/95 shadow-sm dark:border-border dark:bg-card/95 ${onClick ? "cursor-pointer transition-shadow hover:shadow-md" : ""}`}
+      role={onClick ? "button" : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      aria-label={onClick ? ariaLabel ?? title : undefined}
+      onClick={onClick}
+      onKeyDown={
+        onClick
+          ? (event) => {
+              if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault()
+                onClick()
+              }
+            }
+          : undefined
+      }
+    >
       <CardHeader className="pb-2">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
