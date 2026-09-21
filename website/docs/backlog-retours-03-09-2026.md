@@ -1599,7 +1599,7 @@ Validation applicative GitHub Actions **35615763256** ✅, puis revalidation com
 
 ## 21/09/2026 — Création/modification lieu : EMT, consignes, seuils critiques et aperçu live
 
-**Statut : EN_COURS — branche `feature/location-alarm-threshold-visualization` — PR à ouvrir**
+**Statut : PR_OUVERTE — branche `feature/location-alarm-threshold-visualization` — PR #134**
 
 - base : `dev` au commit `31136c4864947b9a60513749119e0ec68f9a5b28` (merge PR #133) ;
 - version Web : **1.2.0** ;
@@ -1760,11 +1760,12 @@ Le Web 1.2.0 doit être lancé après la migration BDD car son modèle Prisma ex
 
 ### Validation technique
 
-GitHub Actions **35641899404** ✅ :
+GitHub Actions **35644043487** ✅ :
 
 - [x] `git diff --check origin/dev...HEAD` ;
 - [x] génération Prisma MySQL ;
 - [x] contrat ciblé seuils critiques / mini-graphe / compteur 30 caractères / formatage EMT ;
+- [x] régression plage de sonde, y compris retour de l'unité sur MySQL / SQL Server ;
 - [x] régression `number-display` ;
 - [x] ESLint ciblé ;
 - [x] TypeScript MySQL ;
@@ -1778,7 +1779,7 @@ GitHub Actions **35641899404** ✅ :
 - [x] build Release de VigiSensys Serveur ;
 - [x] build Release de l'installateur Serveur.
 
-Une revalidation finale sera exécutée après mise à jour de la documentation / PR et le workflow temporaire sera retiré du diff avant merge.
+Le workflow temporaire de validation a été supprimé de la branche après ce run vert. La seule modification post-validation est la mise à jour documentaire du statut / numéro de PR.
 
 ### Checklist terrain
 
