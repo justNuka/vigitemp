@@ -1,0 +1,146 @@
+name: Temporary location critical thresholds validation
+
+on:
+  push:
+    branches:
+      - feature/location-alarm-threshold-visualization
+
+permissions:
+  contents: read
+
+concurrency:
+  group: temp-location-critical-thresholds-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  web:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    defaults:
+      run:
+        working-directory: website
+    env:
+      DATABASE_PROVIDER: mysql
+      DATABASE_URL: mysql://root:password@127.0.0.1:3306/vigisensys
+      DATABASE_MESURES_URL: mysql://root:password@127.0.0.1:3306/vigisensys_mesures
+      DATABASE_CHAT_URL: mysql://root:password@127.0.0.1:3306/vigisensys_chat
+      JWT_SECRET: temporary-ci-secret-that-is-long-enough-for-validation
+      BETTER_AUTH_SECRET: temporary-ci-better-auth-secret-that-is-long-enough
+      NEXT_PUBLIC_APP_URL: http://localhost:3000
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: website/pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Diff check
+        working-directory: .
+        run: git diff --check origin/dev...HEAD
+
+      - name: Generate Prisma MySQL
+        run: pnpm prisma:generate:mysql
+
+      - name: Critical threshold contract
+        run: pnpm test:location-critical-thresholds
+
+      - name: Number display regression
+        run: pnpm test:number-display
+
+      - name: ESLint targeted
+        run: >-
+          pnpm exec eslint
+          "src/app/[locale]/(admin)/admin/lieux/_components/location-form-schema.ts"
+          "src/app/[locale]/(admin)/admin/lieux/_components/location-form-tab-general.tsx"
+          "src/app/[locale]/(admin)/admin/lieux/_components/location-form-tab-metrology.tsx"
+          "src/app/[locale]/(admin)/admin/lieux/_components/general-tab/location-setpoints-section.tsx"
+          "src/app/[locale]/(admin)/admin/lieux/_components/general-tab/location-alarm-preview.tsx"
+          "src/app/[locale]/(admin)/admin/lieux/_components/metrology-tab/emt-mode-section.tsx"
+          "src/app/[locale]/(admin)/admin/lieux/_components/metrology-tab/metrology-sensor-info-section.tsx"
+          "src/app/[locale]/(admin)/admin/lieux/_components/location-template-utils.ts"
+          "src/app/api/lieux/route.ts"
+          "src/app/api/lieux/[id]/route.ts"
+          "src/app/api/lieux/templates/route.ts"
+          "src/app/api/lieux/templates/[id]/route.ts"
+          "src/hooks/useLocations.ts"
+          "src/hooks/useLocationTemplates.ts"
+          "src/lib/location-critical-threshold-contract.ts"
+          "src/lib/sensor-value-range-contract.ts"
+          "scripts/test-location-critical-thresholds.ts"
+
+      - name: TypeScript MySQL
+        run: pnpm exec tsc --noEmit
+
+      - name: i18n check (no new debt in changed sources)
+        shell: bash
+        run: |
+          set +e
+          pnpm i18n:check 2>&1 | tee /tmp/i18n-check.log
+          status=${PIPESTATUS[0]}
+          set -e
+
+          if grep -E 'admin/lieux/_components/(location-form|general-tab/location|metrology-tab)|src/app/api/lieux|src/hooks/use(Location|Locations)|src/lib/location-critical-threshold-contract|src/lib/sensor-value-range-contract' /tmp/i18n-check.log; then
+            echo "New i18n debt detected in a source changed by this lot."
+            exit 1
+          fi
+
+          if [ "${status}" -ne 0 ]; then
+            echo "The global checker still reports only pre-existing debt outside this lot."
+          fi
+
+      - name: Generate Prisma SQL Server
+        run: pnpm prisma:generate:mssql
+
+      - name: TypeScript SQL Server
+        run: pnpm exec tsc --noEmit
+
+      - name: Restore Prisma MySQL
+        run: pnpm prisma:generate:mysql
+
+      - name: Production build
+        run: pnpm build
+
+  server:
+    runs-on: windows-latest
+    timeout-minutes: 35
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup NuGet
+        uses: NuGet/setup-nuget@v2
+
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Critical threshold alarm contract
+        shell: powershell
+        run: '& ".\Vigitemp Serveur\scripts\Test-CriticalThresholdAlarm.ps1"'
+
+      - name: Restore legacy server packages
+        shell: powershell
+        run: nuget restore ".\Vigitemp Serveur\Vigitemp Serveur.sln"
+
+      - name: Build VigiSensys Server
+        shell: powershell
+        run: msbuild ".\Vigitemp Serveur\Vigitemp Serveur.sln" /m /p:Configuration=Release /p:Platform="Any CPU"
+
+      - name: Build Server installer
+        shell: powershell
+        run: dotnet build ".\Vigitemp Serveur\VigitempServerInstaller\VigitempServerInstaller.csproj" -c Release
