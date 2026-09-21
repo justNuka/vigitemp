@@ -12,6 +12,7 @@ import {alarmAcknowledgementSupplementForLocale} from '../messages/alarm-acknowl
 import {legalSupplementForLocale} from '../messages/legal-supplements';
 import {systemHealthSupplementForLocale} from '../messages/system-health-supplements';
 import {adminServiceCardsSupplementForLocale} from '../messages/admin-service-cards-supplements';
+import {helpSupportSupplementForLocale} from '../messages/help-support-supplements';
  
 export default getRequestConfig(async ({requestLocale}) => {
   // Typically corresponds to the `[locale]` segment
@@ -30,7 +31,8 @@ export default getRequestConfig(async ({requestLocale}) => {
   const messagesWithLegal = mergeMessages(messagesWithAdminSettings, legalSupplementForLocale(locale));
   const messagesWithSystemHealth = mergeMessages(messagesWithLegal, systemHealthSupplementForLocale(locale));
   const messagesWithAdminServiceCards = mergeMessages(messagesWithSystemHealth, adminServiceCardsSupplementForLocale(locale));
-  const messagesWithSmtpGuide = mergeMessages(messagesWithAdminServiceCards, smtpGuideSupplementForLocale(locale));
+  const messagesWithHelpSupport = mergeMessages(messagesWithAdminServiceCards, helpSupportSupplementForLocale(locale));
+  const messagesWithSmtpGuide = mergeMessages(messagesWithHelpSupport, smtpGuideSupplementForLocale(locale));
   const messagesWithMetrology = mergeMessages(messagesWithSmtpGuide, metrologyCalibrationSupplementForLocale(locale));
   const messagesWithTools = mergeMessages(messagesWithMetrology, toolsSupplementForLocale(locale));
  
