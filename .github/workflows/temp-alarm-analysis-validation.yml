@@ -66,6 +66,8 @@ jobs:
           "src/components/monitoring-card.tsx"
           "src/components/monitoring-details/monitoring-graph-tab.tsx"
           "src/components/monitoring-details/monitoring-table-tab.tsx"
+          "src/components/monitoring-details/use-monitoring-range-measurements.ts"
+          "src/components/version-changelog-modal.tsx"
           "src/lib/excel-export.ts"
           "scripts/test-alarm-acknowledgement-context.ts"
 
