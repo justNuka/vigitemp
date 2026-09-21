@@ -16,7 +16,8 @@ assert.doesNotMatch(dock, /key: "lieux_templates"/)
 
 const layout = read("src/app/[locale]/(admin)/admin/layout.tsx")
 assert.match(layout, /shouldShowAdminNavDock\(normalizedPathname\)/)
-assert.doesNotMatch(layout, /normalizedPathname === "\/admin"/)
+assert.doesNotMatch(layout, /showDock\s*=\s*!\(/)
+assert.doesNotMatch(layout, /isOneOrPack\(license\)/)
 
 const locationDialog = read("src/app/[locale]/(admin)/admin/lieux/_components/location-form-dialog.tsx")
 assert.match(locationDialog, /href="\/admin\/lieux\/templates"/)
