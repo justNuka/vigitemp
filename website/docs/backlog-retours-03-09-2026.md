@@ -1596,3 +1596,59 @@ Validation applicative GitHub Actions **35615763256** ✅, puis revalidation com
 - [ ] vérifier FR/EN, clair/sombre et petite largeur ;
 - [ ] valider MySQL et SQL Server.
 
+---
+
+## 21/09/2026 — Création/modification lieu : EMT, consignes et seuils critiques
+
+**Statut : EN_COURS — branche feature/location-thresholds-ux**
+
+- base : dev au commit 31136c4864947b9a60513749119e0ec68f9a5b28 (merge PR #133) ;
+- branche : feature/location-thresholds-ux.
+
+### Retour réunion
+
+- normaliser l’affichage des flottants EMT avec le helper numérique canonique ;
+- sortir Fréquence de mesure et Temporisation de redéclenchement dans un encadré dédié juste au-dessus des consignes ;
+- nettoyer la présentation de l’encadré Consignes ;
+- ajouter des seuils critiques bas/haut ;
+- ajouter un mini-graphe de prévisualisation des seuils/consignes — détail fonctionnel à compléter, le retour reçu s’arrêtant après « Afficher visuellement ».
+
+### État du code vérifié avant modification
+
+- le Web possède déjà le helper canonique website/src/lib/number-display.ts ;
+- l’EMT utilisait partiellement ce helper, mais plusieurs valeurs intermédiaires et champs calculés affichaient encore directement les nombres JS ;
+- fréquence et temporisation de redéclenchement étaient mélangées dans le bloc Consignes ;
+- les pré-alarmes haute/basse existent déjà ;
+- aucun champ de seuil critique n’existe actuellement dans t_lieu, Prisma, les seeds ou les providers C# ;
+- le moteur Serveur gère aujourd’hui alarme haute/basse, pré-alarme et non-réponse, mais aucun niveau « critique » distinct.
+
+### Modifications déjà réalisées
+
+- affichage EMT normalisé via formatNumber, locale applicative et maximum de 4 décimales ;
+- tolérances calculées EMT affichées via le même helper ;
+- nouvelle card Mesure et temporisation avec fréquence + temporisation de redéclenchement ;
+- card Consignes restructurée autour d’une consigne centrale et de deux blocs symétriques Seuil bas / Seuil haut ;
+- pré-alarmes et retards regroupés avec le seuil correspondant ;
+- libellés FR/EN clarifiés ;
+- test de contrat ciblé ajouté.
+
+### À verrouiller avant la partie critique
+
+Le modèle métier des seuils critiques doit être confirmé avant toute migration ou modification Serveur :
+
+- simple information/visualisation ou vrai niveau d’alarme ;
+- comportement vis-à-vis du retard d’alarme normal ;
+- type/statut à persister et à exposer dans Surveillance/Alarmes ;
+- contenu exact attendu du mini-graphe.
+
+### Checklist terrain provisoire
+
+- [ ] vérifier EMT avec valeurs produisant beaucoup de décimales en FR et EN ;
+- [ ] vérifier les modes quart, manuel et incertitudes ;
+- [ ] vérifier la card Mesure et temporisation en création et modification ;
+- [ ] vérifier une GSO : fréquence toujours verrouillée à 15 min ;
+- [ ] vérifier la nouvelle disposition Consigne / Seuil bas / Seuil haut ;
+- [ ] vérifier pré-alarmes et retards haut/bas ;
+- [ ] vérifier un lieu piloté par planning ;
+- [ ] vérifier clair/sombre et petite largeur.
+
