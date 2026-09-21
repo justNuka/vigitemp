@@ -11,6 +11,7 @@ import { computeEmt, emtModeToDb, emtModeFromDb } from "@/lib/emt"
 import { requireStandardOrExpertIfFieldsUsed } from "@/lib/license-guards"
 import { applyAccessFilter, buildLieuAccessFilter, getUserLocationScope } from "@/lib/location-access-scope"
 import { findLocationNameConflict, normalizeLocationName } from "@/lib/location-name-conflicts"
+import { buildCriticalThresholdIssues } from "@/lib/location-critical-threshold-contract"
 import { buildLocationValueRangeIssues, getSensorTypeValueRangeBySerial } from "@/lib/sensor-value-range"
 import { getDbNow } from "@/lib/sql-provider"
 import { syncGspLocationConfiguration } from "@/lib/gsp-config-sync"
@@ -174,12 +175,16 @@ const createLieuSchema = z.object({
   Est_Consigne_Sup_Active: z.boolean().optional(),
   Consigne_Sup_Pre_Alarme: z.number().nullable().optional(),
   Est_Consigne_Sup_Pre_Alarme_Active: z.boolean().optional(),
+  Seuil_Critique_Haut: z.number().nullable().optional(),
+  Est_Seuil_Critique_Haut_Active: z.boolean().optional(),
   Retard_Alarme_Haut: z.number().nullable().optional(),
   Consigne_Inf: z.number().nullable().optional(),
   Tolerance_Surveillance_Inf: z.number().nullable().optional(),
   Est_Consigne_Inf_Active: z.boolean().optional(),
   Consigne_Inf_Pre_Alarme: z.number().nullable().optional(),
   Est_Consigne_Inf_Pre_Alarme_Active: z.boolean().optional(),
+  Seuil_Critique_Bas: z.number().nullable().optional(),
+  Est_Seuil_Critique_Bas_Active: z.boolean().optional(),
   Retard_Alarme_Bas: z.number().nullable().optional(),
   Retard_Non_Reponse: z.number().nullable().optional(),
   Retard_Alarme_Changement_Consigne: z.number().nullable().optional(),
@@ -417,6 +422,19 @@ export const POST = withLogging(async (req: NextRequest) => {
         ? (validated.Est_Consigne_Inf_Active ? validated.Consigne_Inf : null)
         : validated.Tolerance_Surveillance_Inf
 
+    const criticalIssues = buildCriticalThresholdIssues({
+      consigne: validated.Consigne ?? null,
+      effectiveHigh: toleranceSup ?? validated.Consigne_Sup ?? null,
+      effectiveLow: toleranceInf ?? validated.Consigne_Inf ?? null,
+      criticalHigh: validated.Seuil_Critique_Haut ?? null,
+      criticalHighActive: validated.Est_Seuil_Critique_Haut_Active ?? false,
+      criticalLow: validated.Seuil_Critique_Bas ?? null,
+      criticalLowActive: validated.Est_Seuil_Critique_Bas_Active ?? false,
+    })
+    if (criticalIssues.length > 0) {
+      return apiError(400, "validation_error", criticalIssues[0].message, { issues: criticalIssues })
+    }
+
     const lieu = await prisma.t_lieu.create({
       data: ({
         Nom_Lieu: normalizedLocationName,
@@ -433,6 +451,8 @@ export const POST = withLogging(async (req: NextRequest) => {
         Est_Consigne_Sup_Active: validated.Est_Consigne_Sup_Active ?? false,
         Consigne_Sup_Pre_Alarme: validated.Consigne_Sup_Pre_Alarme,
         Est_Consigne_Sup_Pre_Alarme_Active: validated.Est_Consigne_Sup_Pre_Alarme_Active ?? false,
+        Seuil_Critique_Haut: validated.Seuil_Critique_Haut,
+        Est_Seuil_Critique_Haut_Active: validated.Est_Seuil_Critique_Haut_Active ?? false,
         Retard_Alarme_Haut: validated.Retard_Alarme_Haut,
         Consigne_Inf: validated.Consigne_Inf,
         Consigne_Inf_Base: validated.Consigne_Inf ?? null,
@@ -441,6 +461,8 @@ export const POST = withLogging(async (req: NextRequest) => {
         Est_Consigne_Inf_Active: validated.Est_Consigne_Inf_Active ?? false,
         Consigne_Inf_Pre_Alarme: validated.Consigne_Inf_Pre_Alarme,
         Est_Consigne_Inf_Pre_Alarme_Active: validated.Est_Consigne_Inf_Pre_Alarme_Active ?? false,
+        Seuil_Critique_Bas: validated.Seuil_Critique_Bas,
+        Est_Seuil_Critique_Bas_Active: validated.Est_Seuil_Critique_Bas_Active ?? false,
         Retard_Alarme_Bas: validated.Retard_Alarme_Bas,
         Retard_Non_Reponse: validated.Retard_Non_Reponse,
         Retard_Alarme_Changement_Consigne: validated.Retard_Alarme_Changement_Consigne,
