@@ -8,7 +8,33 @@ Les versions suivent `MAJOR.MINOR.PATCH` sans zéros de tête. La source de vers
 
 ## [Unreleased]
 
-Aucun changement supplémentaire documenté depuis la préparation de la version Web 1.4.1.
+Aucun changement supplémentaire documenté depuis la préparation de la version Web 1.5.0.
+
+## [1.5.0] — 2026-09-21
+
+Cette version ajoute un guide utilisateur directement accessible depuis la sidebar et centralise le contact avec la hotline MC2.
+
+### Hotline & aide
+
+- Une nouvelle entrée **Hotline & aide** est disponible dans le footer de la sidebar, à côté des Services.
+- La page dédiée est localisée en `/fr/aide` et `/en/help` et reste distincte de la console Hotline technique réservée au diagnostic.
+- Le guide présente les notions de Site, Groupe, Lieu, Sonde, Surveillance et Alarme afin d'expliquer l'organisation fonctionnelle de VigiSensys.
+- Des procédures pas à pas couvrent la mise en surveillance d'une sonde non affectée, l'analyse/acquittement d'une alarme, la désactivation temporaire de la surveillance et la consultation d'un historique.
+- Un rappel précise que certaines actions dépendent du profil utilisateur et de la licence active.
+
+### Contact Hotline
+
+- Les coordonnées de support MC2 sont centralisées dans un helper dédié et affichées en bas du guide.
+- Le bouton **Nous écrire** ouvre l'application de messagerie du poste avec un sujet et un corps préremplis.
+- Le modèle de demande inclut notamment l'établissement, le contact, la version Web VigiSensys, la page concernée, le lieu, la sonde, les étapes de reproduction et le message d'erreur.
+- Le guide et le modèle de mail sont disponibles en français et en anglais.
+
+### Compatibilité
+
+- Version Web : **1.5.0**.
+- Serveur **1.1.0**, Agent **1.0.1** et BDD **0.91.0** restent inchangés.
+- Aucune migration BDD n'est requise.
+- Aucun nouvel appel réseau ou stockage de données n'est introduit par cette page.
 
 ## [1.4.1] — 2026-09-21
 
