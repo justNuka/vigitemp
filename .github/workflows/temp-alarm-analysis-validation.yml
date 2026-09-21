@@ -1,0 +1,84 @@
+name: Temporary alarm analysis validation
+
+on:
+  push:
+    branches:
+      - feature/alarm-acknowledgement-analysis-flow
+
+permissions:
+  contents: read
+
+jobs:
+  web:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: website
+    env:
+      DATABASE_PROVIDER: mysql
+      DATABASE_URL: mysql://root:password@127.0.0.1:3306/vigisensys
+      DATABASE_MESURES_URL: mysql://root:password@127.0.0.1:3306/vigisensys_mesures
+      DATABASE_CHAT_URL: mysql://root:password@127.0.0.1:3306/vigisensys_chat
+      JWT_SECRET: temporary-ci-secret-that-is-long-enough-for-validation
+      BETTER_AUTH_SECRET: temporary-ci-better-auth-secret-that-is-long-enough
+      NEXT_PUBLIC_APP_URL: http://localhost:3000
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: website/pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Diff check
+        working-directory: .
+        run: git diff --check origin/dev...HEAD
+
+      - name: Generate Prisma MySQL
+        run: pnpm prisma:generate:mysql
+
+      - name: Alarm acknowledgement contract
+        run: pnpm test:alarm-acknowledgement-context
+
+      - name: ESLint targeted
+        run: >-
+          pnpm exec eslint
+          "src/app/[locale]/(dashboard)/alarmes/analyse/page-client.tsx"
+          "src/app/[locale]/(dashboard)/alarmes/analyse/alarm-acknowledgement-comment-dialog.tsx"
+          "src/components/monitoring-card.tsx"
+          "src/components/monitoring-details/monitoring-graph-tab.tsx"
+          "src/components/monitoring-details/monitoring-table-tab.tsx"
+          "src/lib/excel-export.ts"
+          "scripts/test-alarm-acknowledgement-context.ts"
+
+      - name: TypeScript MySQL
+        run: pnpm exec tsc --noEmit
+
+      - name: i18n check
+        run: pnpm i18n:check
+
+      - name: Generate Prisma SQL Server
+        run: pnpm prisma:generate:mssql
+
+      - name: TypeScript SQL Server
+        run: pnpm exec tsc --noEmit
+
+      - name: Restore Prisma MySQL
+        run: pnpm prisma:generate:mysql
+
+      - name: Production build
+        run: pnpm build
