@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { buildCriticalThresholdIssues } from "@/lib/location-critical-threshold-contract";
+import { computeEmt } from "@/lib/emt";
 
 const mailingContactSchema = z.object({
   Id_Tel_Num: z.number().optional(),
@@ -142,20 +143,40 @@ function addConsigneGuards(data: Record<string, unknown>, ctx: z.RefinementCtx) 
     })
   }
 
+  const liveEmt = computeEmt({
+    mode: typeof data.EMT_Mode === "string" ? data.EMT_Mode : null,
+    emtValue: typeof data.EMT_Valeur === "number" ? data.EMT_Valeur : null,
+    consigne: typeof data.Consigne === "number" ? data.Consigne : null,
+    consigneSup: typeof data.Consigne_Sup === "number" ? data.Consigne_Sup : null,
+    consigneInf: typeof data.Consigne_Inf === "number" ? data.Consigne_Inf : null,
+    isConsigneSupActive: data.Est_Consigne_Sup_Active === true,
+    isConsigneInfActive: data.Est_Consigne_Inf_Active === true,
+    incertitude: typeof data.Incertitude === "number" ? data.Incertitude : null,
+    erreurJustesse: typeof data.Erreur_Justesse === "number" ? data.Erreur_Justesse : null,
+    derive: typeof data.Derive === "number" ? data.Derive : null,
+    includeDeriveInUncertainty:
+      data.EMT_Mode === "quart" || data.EMT_Mode === "manuel"
+        ? true
+        : data.Prendre_En_Compte_Derive === true,
+    correctAccuracyError: data.Corriger_Erreur_Justesse === true,
+  })
+
   const criticalIssues = buildCriticalThresholdIssues({
     consigne: typeof data.Consigne === "number" ? data.Consigne : null,
     effectiveHigh:
-      typeof data.Tolerance_Surveillance_Sup === "number"
+      liveEmt.toleranceSup ??
+      (typeof data.Tolerance_Surveillance_Sup === "number"
         ? data.Tolerance_Surveillance_Sup
         : typeof data.Consigne_Sup === "number"
           ? data.Consigne_Sup
-          : null,
+          : null),
     effectiveLow:
-      typeof data.Tolerance_Surveillance_Inf === "number"
+      liveEmt.toleranceInf ??
+      (typeof data.Tolerance_Surveillance_Inf === "number"
         ? data.Tolerance_Surveillance_Inf
         : typeof data.Consigne_Inf === "number"
           ? data.Consigne_Inf
-          : null,
+          : null),
     criticalHigh: typeof data.Seuil_Critique_Haut === "number" ? data.Seuil_Critique_Haut : null,
     criticalHighActive: data.Est_Seuil_Critique_Haut_Active === true,
     criticalLow: typeof data.Seuil_Critique_Bas === "number" ? data.Seuil_Critique_Bas : null,
