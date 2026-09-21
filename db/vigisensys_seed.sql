@@ -1029,7 +1029,7 @@ DELIMITER ;;
         SET NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee_T1 = 0;
         LEAVE main_block;
     END IF;
-	
+
 
 
 
