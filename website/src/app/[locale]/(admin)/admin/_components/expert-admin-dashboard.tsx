@@ -13,15 +13,12 @@ import { ExpertWidgetToolbox } from "./expert-dashboard/expert-widget-toolbox"
 import { BREAKPOINTS, COLS, DEFAULT_WIDGETS, STORAGE_KEY, createDefaultLayouts, normalizeLayouts, sanitizeItem } from "./expert-dashboard/expert-dashboard-layout"
 import type { BreakpointKey, GridLayouts, Props, WidgetId } from "./expert-dashboard/expert-dashboard-types"
 
-export function ExpertAdminDashboard({ metrics }: Props) {
+export function ExpertAdminDashboard({ metrics, onOpenBackupLog }: Props) {
   const t = useTranslations("adminDashboard")
   const locale = useLocale()
   const [isEditMode, setIsEditMode] = useState(false)
 
-  const allWidgetDefs = useMemo(
-    () => DEFAULT_WIDGETS.filter((widget) => widget.id !== "etalons"),
-    [],
-  )
+  const allWidgetDefs = useMemo(() => DEFAULT_WIDGETS, [])
   const defaultWidgetIds = useMemo(() => allWidgetDefs.map((widget) => widget.id), [allWidgetDefs])
   const [widgetIds, setWidgetIds] = useState<WidgetId[]>(defaultWidgetIds)
   const [layouts, setLayouts] = useState<GridLayouts>(() => createDefaultLayouts(defaultWidgetIds))
@@ -169,7 +166,7 @@ export function ExpertAdminDashboard({ metrics }: Props) {
                       <Trash2 className="h-4 w-4" />
                     </button>
                   ) : null}
-                  {renderExpertWidget({ id, locale, metrics, accessLabel, t })}
+                  {renderExpertWidget({ id, locale, metrics, accessLabel, t, onOpenBackupLog })}
                 </div>
               </div>
             ))}
