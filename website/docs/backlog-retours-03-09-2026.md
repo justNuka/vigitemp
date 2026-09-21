@@ -1809,7 +1809,7 @@ Le workflow temporaire de validation a été supprimé de la branche après ce r
 
 ## 21/09/2026 — Dashboard Admin : navigation allégée et indicateurs opérationnels
 
-**Statut : PR_OUVERTE — branche `feature/admin-dashboard-navigation-cleanup` — PR #135, validation terrain à réaliser**
+**Statut : MERGE — branche `feature/admin-dashboard-navigation-cleanup` — PR #135, validation terrain à réaliser**
 
 - base : `dev` au commit `2cb2f66bcc550007d199f7720ef9d25a2c7bb2b8` (merge PR #134) ;
 - branche : `feature/admin-dashboard-navigation-cleanup` ;
@@ -2016,4 +2016,190 @@ Le diff final de la PR #135 ne contient plus le workflow temporaire et reste lim
 - [ ] vérifier l'alignement / hauteur des cards en Standard, Basic et Expert ;
 - [ ] en Expert, ajouter le widget Métrologie et vérifier son compteur J+15 ;
 - [ ] vérifier FR/EN, clair/sombre et petite largeur.
+
+---
+
+## 21/09/2026 — Connexion : visibilité mot de passe + refonte Audit trail
+
+**Statut : EN_COURS — branche `fix/login-password-audit-trail`, PR à ouvrir**
+
+- base : `dev` au commit `62abc407dfbff446b7b0d526705d85d43ffbc915` (squash merge PR #135) ;
+- branche : `fix/login-password-audit-trail` ;
+- version Web cible : **1.4.0** ;
+- Serveur **1.1.0**, Agent **1.0.1**, BDD **0.91.0** inchangés ;
+- aucune migration BDD.
+
+### Retour réunion
+
+#### Connexion
+
+- ajouter un œil dans le champ mot de passe ;
+- signaler lorsque Verr. Maj / Caps Lock est actif.
+
+#### Audit trail
+
+- localiser les affichages encore en anglais avec `next-intl` ;
+- normaliser `authEngine` sur `legacy` ou `new` ;
+- corriger les accents ;
+- reconnaître `GRPH` ;
+- supprimer la limite effective à 100 événements ;
+- rendre le bandeau des codes scrollable et lisible ;
+- permettre 200 / 500 / 1000 audits réellement chargés ;
+- faire remonter dans l'audit global **et** celui du lieu les emails d'alarme déclenchée, terminée et acquittée.
+
+### État vérifié avant modification
+
+- le champ de connexion était un input password sans contrôle de visibilité ni détection Caps Lock ;
+- le login journalisait `better-auth-transition` lorsque le runtime Better Auth était actif ;
+- la page Audit préchargeait `loadRecentAuditLogs(100)` et l'API globale prenait 100 lignes par défaut sans pagination ;
+- le composant de table proposait pourtant 200 / 500 / 1000, ce qui ne faisait que repaginer localement les 100 lignes déjà chargées ;
+- `GRPH` existait dans les seeds et était produit à l'ouverture d'un graphique, mais n'était pas déclaré dans la configuration visuelle de l'audit ;
+- plusieurs champs / valeurs de détail utilisaient des chaînes FR/EN codées en dur et plusieurs libellés français historiques avaient perdu leurs accents ;
+- la file persistante `ALARM_EMAIL` savait déjà distinguer `triggered`, `ended` et `acknowledged`, mais un succès SMTP n'écrivait aucun événement dans `tm_journal`.
+
+### Connexion
+
+Le composant de credentials ajoute :
+
+- bouton œil `Eye / EyeOff` ;
+- type `password` / `text` basculé sans modifier la valeur RHF ;
+- labels ARIA localisés ;
+- détection de `event.getModifierState("CapsLock")` sur keydown / keyup ;
+- message Verr. Maj localisé sous le champ ;
+- nettoyage de l'indicateur au blur.
+
+### Auth engine
+
+Les nouveaux événements de connexion utilisent uniquement :
+
+- `legacy` ;
+- `new`.
+
+Pour les historiques déjà enregistrés, le formatter affiche également `better-auth-transition` et `better-auth` comme `new`, sans migration de données.
+
+### i18n / accents / codes
+
+Le formatter global s'appuie sur `next-intl` pour les champs et valeurs connus :
+
+- machine / adresse / dates ;
+- moteur d'authentification ;
+- tolérances / consignes ;
+- booléens ;
+- créations / modifications / activations ;
+- données d'emails d'alarme.
+
+Les codes runtime/seeds suivants disposent d'un libellé explicite : `GRPH`, `MAIL`, `ALARM_RESOLVED`, `ETAP`, `VLOG`, `FERMSURV`, `IMP`, `PLAN`, `TEL`, `UT`, en plus des codes déjà connus.
+
+Les accents historiques de l'audit de lieu sont également remis en état.
+
+### Volume / pagination Audit
+
+`GET /api/audit` garde son format tableau historique par défaut pour ne pas casser les consommateurs existants.
+
+Le mode `paginated=1` ajoute :
+
+- `page` ;
+- `limit`, de 1 à **1000** ;
+- `q` ;
+- réponse `{ data, pagination }`.
+
+La page Admin Audit utilise ce mode en permanence :
+
+- taille initiale 200 ;
+- 500 / 1000 déclenchent une nouvelle requête serveur ;
+- Suivant / Précédent changent réellement de page ;
+- la recherche est envoyée au serveur ;
+- les changements de filtres remettent la pagination en page 1.
+
+Le rendu initial fixe à 100 événements a été supprimé de `page.tsx`.
+
+### Bandeau / filtre des codes
+
+`/api/audit/codes` retourne l'union :
+
+- du référentiel `tm_journal_code` ;
+- des `Code_Journal` distincts réellement observés dans `tm_journal`.
+
+Ainsi un code produit par le runtime reste filtrable même avant une éventuelle évolution du seed.
+
+Le Select :
+
+- est plafonné à 60 vh / 30 rem ;
+- utilise le scroll Radix existant ;
+- affiche le code en monospace puis son libellé i18n ;
+- évite l'ancien rendu trop large.
+
+### Emails d'alarme dans l'audit
+
+L'audit `MAIL` est créé **après succès SMTP** et après passage de la notification persistante à `sent`.
+
+Il contient :
+
+- `Id_Lieu` ;
+- `alarmId` ;
+- `emailEvent` : `triggered`, `ended` ou `acknowledged` ;
+- destinataire ;
+- nombre de tentatives ;
+- indication d'utilisation du fallback système.
+
+Conséquences :
+
+- visible dans le journal Audit global ;
+- visible dans l'Audit du lieu via son `Id_Lieu` ;
+- les retries échoués ne sont pas annoncés comme « envoyés » ;
+- une livraison réussie n'est pas réauditée lors des traitements ultérieurs car la notification est déjà `sent`.
+
+### Principaux fichiers
+
+- `website/src/app/[locale]/login/_components/login-credentials-form.tsx` ;
+- `website/src/app/[locale]/login/login-form.tsx` ;
+- `website/src/app/api/auth/login/route.ts` ;
+- `website/src/app/[locale]/(admin)/admin/audit/audit-client.tsx` ;
+- `website/src/app/[locale]/(admin)/admin/audit/page.tsx` ;
+- `website/src/app/[locale]/(admin)/admin/audit/_components/audit-action-config.ts` ;
+- `website/src/app/[locale]/(admin)/admin/audit/_components/audit-client-helpers.ts` ;
+- `website/src/app/api/audit/route.ts` ;
+- `website/src/app/api/audit/codes/route.ts` ;
+- `website/src/app/api/lieux/[id]/audit/route.ts` ;
+- `website/src/lib/audit/monitoring-audit.ts` ;
+- `website/src/lib/alarm-email.ts` ;
+- `website/scripts/test-login-audit-trail.ts`.
+
+### Validation technique
+
+GitHub Actions **35653944150** ✅ avant finalisation version / documentation :
+
+- [x] `git diff --check origin/dev...HEAD` ;
+- [x] génération Prisma MySQL ;
+- [x] contrat ciblé connexion / pagination Audit / GRPH / MAIL / i18n ;
+- [x] ESLint ciblé ;
+- [x] TypeScript MySQL ;
+- [x] contrôle i18n sans nouvelle dette du lot ;
+- [x] génération Prisma SQL Server ;
+- [x] TypeScript SQL Server ;
+- [x] restauration Prisma MySQL ;
+- [x] build Next.js production ;
+- [ ] revalidation finale après version/changelog/backlog ;
+- [ ] suppression du workflow temporaire avant PR.
+
+### Checklist terrain
+
+- [ ] login FR : œil afficher/masquer le mot de passe sans perdre la saisie ;
+- [ ] login EN : mêmes contrôles et labels accessibles ;
+- [ ] activer Verr. Maj puis saisir dans le mot de passe : warning visible ; le désactiver : warning retiré ;
+- [ ] connexion en moteur historique : détail `authEngine = legacy` ;
+- [ ] connexion avec runtime Better Auth activé : détail `authEngine = new` ;
+- [ ] vérifier un ancien audit `better-auth-transition` : affichage normalisé en `new` ;
+- [ ] ouvrir un graphique avec audit des ouvertures activé : `GRPH` doit afficher « Ouverture d'un graphique » / « Graph opened » ;
+- [ ] vérifier FR/EN sur les détails connus et les accents français ;
+- [ ] ouvrir le filtre codes avec une longue liste : scroll utilisable et texte non « goofy » ;
+- [ ] choisir 200 puis 500 puis 1000 lignes : le serveur doit charger le volume demandé si disponible ;
+- [ ] utiliser Suivant / Précédent avec plus d'une page d'audits ;
+- [ ] rechercher un événement au-delà de la première page chargée : la recherche serveur doit le retrouver ;
+- [ ] vérifier que le Dashboard Admin continue à consommer `/api/audit?limit=50` sans régression ;
+- [ ] envoyer un email de déclenchement d'alarme : événement `MAIL` dans Audit global et dans le lieu ;
+- [ ] envoyer un email de fin d'alarme : idem avec événement « Fin d'alarme » ;
+- [ ] acquitter une alarme avec email activé : idem avec événement « Acquittement d'alarme » ;
+- [ ] provoquer un SMTP en échec puis une réussite de retry : aucun faux « envoyé » sur l'échec, un seul audit lors du succès ;
+- [ ] vérifier MySQL et SQL Server.
 
