@@ -719,7 +719,8 @@
         "create_saving": "Creating...",
         "toast_apply_success": "Template \"{name}\" applied.",
         "toast_create_success": "Location template created.",
-        "toast_create_error": "Failed to create location template."
+        "toast_create_error": "Failed to create location template.",
+        "manage": "Manage templates"
       },
       "current_location_label": "Current location:",
       "action_comment_label": "Action comment",
@@ -4381,7 +4382,8 @@
         "action": "Action",
         "sensor": "Sensor",
         "alarm": "Alarm"
-      }
+      },
+      "description_recent": "{total, plural, =0 {No acknowledgment in the last {days} days} one {# acknowledgment in the last {days} days} other {# acknowledgments in the last {days} days}}"
     },
     "connected_users": {
       "title": "Recent connections",
@@ -4428,7 +4430,19 @@
       "actions": {
         "run": "Run backup"
       },
-      "empty": "No backup history available"
+      "empty": "No backup history available",
+      "log": {
+        "open": "Show backup log",
+        "title": "System backup log",
+        "description": "Latest backup log lines, presented by date and status.",
+        "file": "Log file",
+        "lines": "{count, plural, one {# line} other {# lines}}",
+        "last_lines": "Last {count} shown",
+        "truncated": "The log contains {total} lines. The latest {shown} are displayed.",
+        "empty": "The backup log is empty or unavailable.",
+        "unavailable": "Unavailable",
+        "time_unknown": "No timestamp"
+      }
     },
     "backups": {
       "columns": {
@@ -4477,6 +4491,11 @@
       "alarms_title": "Alarms",
       "alarms_description": "Alarms in progress: {inProgress}",
       "alarms_helper": "Ended alarms awaiting acknowledgment: {pending}"
+    },
+    "metrology": {
+      "title": "Metrology",
+      "description": "Calibrations expiring within the next {days} days",
+      "helper": "Active sensors whose latest calibration validity expires between today and D+{days}."
     }
   },
   "cacheControls": {
