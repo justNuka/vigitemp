@@ -1809,10 +1809,11 @@ Le workflow temporaire de validation a été supprimé de la branche après ce r
 
 ## 21/09/2026 — Dashboard Admin : navigation allégée et indicateurs opérationnels
 
-**Statut : EN_COURS — branche `feature/admin-dashboard-navigation-cleanup`, PR à ouvrir**
+**Statut : PR_OUVERTE — branche `feature/admin-dashboard-navigation-cleanup` — PR #135, validation terrain à réaliser**
 
 - base : `dev` au commit `2cb2f66bcc550007d199f7720ef9d25a2c7bb2b8` (merge PR #134) ;
 - branche : `feature/admin-dashboard-navigation-cleanup` ;
+- PR : **#135** ;
 - version Web cible : **1.3.0** ;
 - Serveur : **1.1.0**, inchangé ;
 - Agent : **1.0.1**, inchangé ;
@@ -1972,7 +1973,7 @@ Pour le dashboard Expert :
 
 ### Validation technique
 
-GitHub Actions **35648143531** ✅ avant finalisation version/documentation :
+GitHub Actions **35648143531** ✅ sur l'implémentation, puis revalidation finale **35649284649** ✅ après version/changelog/backlog :
 
 - [x] `git diff --check origin/dev...HEAD` ;
 - [x] génération Prisma MySQL ;
@@ -1984,10 +1985,12 @@ GitHub Actions **35648143531** ✅ avant finalisation version/documentation :
 - [x] TypeScript SQL Server ;
 - [x] restauration Prisma MySQL ;
 - [x] build Next.js production ;
-- [ ] revalidation finale après version/changelog/backlog ;
-- [ ] workflow temporaire retiré du diff avant PR.
+- [x] revalidation finale après version/changelog/backlog ;
+- [x] workflow temporaire retiré du diff avant PR.
 
-Le premier run **35647775177** avait échoué uniquement à cause d'une assertion statique trop large dans le test du dock : elle confondait la comparaison `/admin` du contrôle d'accès avec l'ancienne condition d'affichage. Le comportement applicatif était déjà correct ; l'assertion a été resserrée avant le run vert.
+Le premier run **35647775177** avait échoué uniquement à cause d'une assertion statique trop large dans le test du dock : elle confondait la comparaison `/admin` du contrôle d'accès avec l'ancienne condition d'affichage. Le comportement applicatif était déjà correct ; l'assertion a été resserrée avant les runs verts.
+
+Le diff final de la PR #135 ne contient plus le workflow temporaire et reste limité au Web + documentation.
 
 ### Checklist terrain
 
