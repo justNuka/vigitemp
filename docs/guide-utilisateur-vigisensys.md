@@ -26,7 +26,9 @@ https://vigisensys.example.com
 
 1. Ouvrir l'adresse VigiSensys.
 2. Saisir le login et le mot de passe.
-3. Valider la connexion.
+3. Utiliser l'icône œil si nécessaire pour afficher temporairement le mot de passe saisi.
+4. Vérifier l'avertissement **Verr. Maj** : il apparaît lorsque Caps Lock est actif pendant la saisie.
+5. Valider la connexion.
 
 Selon la configuration, l'utilisateur peut devoir changer son mot de passe à la première connexion ou après expiration.
 
@@ -174,7 +176,10 @@ L'onglet Audit liste les événements liés au lieu :
 - changement de consignes ;
 - activation ou désactivation de surveillance ;
 - acquittements d'alarme ;
-- actions utilisateur.
+- actions utilisateur ;
+- emails d'alarme réellement envoyés pour un déclenchement, une fin d'alarme ou un acquittement.
+
+Les audits d'email indiquent notamment le type d'événement et le destinataire. Une tentative SMTP en échec n'est pas présentée comme un email envoyé.
 
 ## Alarmes
 
@@ -309,7 +314,11 @@ Le journal d'audit centralise les actions importantes :
 - changement de paramètres ;
 - acquittement ;
 - création ou modification d'utilisateur ;
-- actions de surveillance.
+- actions de surveillance ;
+- ouverture de graphiques lorsque l'audit correspondant est activé ;
+- emails d'alarme effectivement envoyés.
+
+L'écran utilise une pagination serveur : le nombre de lignes par page peut être augmenté jusqu'à 1000 et les pages suivantes chargent réellement les événements supplémentaires. Le filtre de code est scrollable et les codes connus sont traduits selon la langue de l'interface.
 
 ## Métrologie
 
