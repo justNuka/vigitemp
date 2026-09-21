@@ -62,7 +62,7 @@ Assert-Match $mssqlSeed "@Derniere_Valeur > @Seuil_Critique_Haut" "SQL Server GS
 
 $mysqlMigration = Read-RepoFile "..\db\migrations\0.91.0\mysql.sql"
 Assert-Match $mysqlMigration "DROP TRIGGER IF EXISTS `TRG_GSO_BEF_UPD_LIEU_ALARME`" "MySQL migration must replace the GSO alarm trigger."
-Assert-Order $mysqlMigration "DROP TRIGGER IF EXISTS `TRG_GSO_BEF_UPD_LIEU_ALARME`" "SCHEMA_VERSION" "MySQL schema version must be updated after the trigger definition."
+Assert-Order $mysqlMigration "DROP TRIGGER IF EXISTS `TRG_GSO_BEF_UPD_LIEU_ALARME`" "INSERT INTO `t_parametre` (`Section`, `Mot_Cle`, `Valeur`, `Commentaire`)" "MySQL schema version must be updated after the trigger definition."
 
 $mssqlMigration = Read-RepoFile "..\db\migrations\0.91.0\mssql.sql"
 Assert-Match $mssqlMigration "CREATE OR ALTER TRIGGER dbo\.\[TRG_GSO_BEF_UPD_LIEU_ALARME\]" "SQL Server migration must replace the GSO alarm trigger."
