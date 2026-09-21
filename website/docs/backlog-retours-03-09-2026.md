@@ -1599,7 +1599,7 @@ Validation applicative GitHub Actions **35615763256** ✅, puis revalidation com
 
 ## 21/09/2026 — Création/modification lieu : EMT, consignes, seuils critiques et aperçu live
 
-**Statut : PR_OUVERTE — branche `feature/location-alarm-threshold-visualization` — PR #134**
+**Statut : MERGE — branche `feature/location-alarm-threshold-visualization` — PR #134, validation terrain à réaliser**
 
 - base : `dev` au commit `31136c4864947b9a60513749119e0ec68f9a5b28` (merge PR #133) ;
 - version Web : **1.2.0** ;
@@ -1804,4 +1804,213 @@ Le workflow temporaire de validation a été supprimé de la branche après ce r
 - [ ] avec une règle de planning active, vérifier que les consignes restent verrouillées et que le critique reste modifiable / visible ;
 - [ ] vérifier FR/EN, clair/sombre et petite largeur ;
 - [ ] contrôler Santé système après déploiement : Web 1.2.0, Serveur 1.1.0 et BDD 0.91.0.
+
+---
+
+## 21/09/2026 — Dashboard Admin : navigation allégée et indicateurs opérationnels
+
+**Statut : EN_COURS — branche `feature/admin-dashboard-navigation-cleanup`, PR à ouvrir**
+
+- base : `dev` au commit `2cb2f66bcc550007d199f7720ef9d25a2c7bb2b8` (merge PR #134) ;
+- branche : `feature/admin-dashboard-navigation-cleanup` ;
+- version Web cible : **1.3.0** ;
+- Serveur : **1.1.0**, inchangé ;
+- Agent : **1.0.1**, inchangé ;
+- BDD : **0.91.0**, inchangée ;
+- aucune migration BDD.
+
+### Retour réunion
+
+#### Bandeau de navigation Admin
+
+- ne plus afficher les liens **Bains & étalons** et **Templates lieux** ;
+- conserver l'accès à la gestion des templates directement depuis la création d'un lieu ;
+- ne plus afficher le bandeau sur les pages qui ne correspondent pas à une entrée du bandeau, notamment Métrologie, Audit et les autres pages secondaires.
+
+#### Dashboard Admin
+
+- card **Sauvegarde système** : afficher proprement le contenu du journal lorsque la card est ouverte ;
+- card **Journal acquittements alarmes** : afficher le nombre d'acquittements sur les 7 derniers jours au lieu du total historique ;
+- harmoniser la hauteur de toutes les cards ;
+- card **Métrologie** : afficher le nombre de sondes qui vont nécessiter un étalonnage dans les 15 jours.
+
+### État vérifié avant modification
+
+- le dock global contenait encore Sondes, Modules, Bains & étalons, Actionneurs, Groupes, Lieux, Templates lieux, Sites et Outils ;
+- le layout Admin affichait ce dock sur presque toutes les sous-pages, même si aucune entrée n'y correspondait ;
+- la création d'un lieu possédait déjà le sélecteur / enregistrement de templates mais aucun lien vers la page de gestion globale ;
+- `/api/admin/sauvegardes` lisait déjà `backup_bdd_vigisensys.log` pour déterminer l'état des exécutions, mais ne renvoyait pas son contenu à l'interface ;
+- la card des acquittements utilisait le `pagination.total` sans filtre temporel ;
+- l'API d'historique des acquittements possédait déjà `dateFrom/dateTo` : aucun second endpoint métier n'était nécessaire ;
+- `Date_Validite` du dernier `t_etalonnage` par sonde existe déjà et est utilisé dans l'administration des sondes / métrologie ;
+- les cards standard n'avaient pas toutes une structure `h-full / flex-1`, et le widget Métrologie Expert avait une hauteur initiale différente.
+
+### Navigation retenue
+
+Le dock possède maintenant une liste canonique de pages principales :
+
+- Sondes : `/admin/sondes` ;
+- Modules : `/admin/modules` ;
+- Actionneurs : `/admin/actionneurs` ;
+- Groupes : `/admin/groupes` ;
+- Lieux : `/admin/lieux` ;
+- Sites : `/admin/sites` ;
+- Outils : `/admin/outils`.
+
+Le dock est affiché uniquement lorsque le chemin courant correspond **exactement** à l'une de ces pages.
+
+Conséquences :
+
+- plus de lien Bains & étalons dans le dock ;
+- plus de lien Templates lieux dans le dock ;
+- pas de dock sur `/admin/metrologie`, `/admin/metrologie/*`, `/admin/audit`, `/admin/sante-systeme`, `/admin/parametres`, `/admin/lieux/templates`, etc. ;
+- les contrôles d'autorisation des routes Admin ne changent pas : seule la navigation visuelle est simplifiée.
+
+### Templates de lieux
+
+Dans la dialog de **création** d'un lieu, l'encadré Template contient désormais un lien **Gérer les templates** vers :
+
+`/admin/lieux/templates`
+
+Le sélecteur de template, l'application d'un template et l'action « Enregistrer en template » restent inchangés.
+
+Le lien n'est volontairement affiché que dans le parcours de création demandé, pas dans l'édition d'un lieu.
+
+### Card Sauvegarde système
+
+La card devient cliquable au clavier et à la souris.
+
+Au clic, une dialog affiche une représentation structurée de `backup_bdd_vigisensys.log` :
+
+- chemin du fichier ;
+- horodatage localisé ;
+- lignes de début / fin de processus ;
+- succès mis en évidence ;
+- erreurs mises en évidence ;
+- autres lignes techniques conservées ;
+- zone scrollable.
+
+Pour éviter de transférer un journal historique potentiellement très volumineux :
+
+- l'API lit le fichier une seule fois ;
+- le parsing des exécutions existant est conservé ;
+- seules les **300 dernières lignes non vides** sont renvoyées au client ;
+- le nombre total de lignes et l'indicateur de troncature sont également retournés.
+
+Le comportement est disponible sur les dashboards Basic/Standard et sur le widget Expert.
+
+### Journal acquittements alarmes — 7 jours
+
+Le hook du dashboard réutilise l'API d'historique existante avec :
+
+- `dateFrom` = aujourd'hui - 6 jours ;
+- `dateTo` = aujourd'hui.
+
+Le total affiché couvre donc **7 jours calendaires inclusifs**, et le « dernier acquittement » présenté par la card provient de cette même fenêtre.
+
+La page complète du journal garde ses filtres et son historique complet : seule la métrique synthétique du Dashboard Admin change.
+
+### Card Métrologie — échéances à 15 jours
+
+Une route légère dédiée calcule le nombre de sondes qui vont nécessiter un étalonnage entre aujourd'hui et J+15.
+
+La définition retenue est :
+
+- sonde non réformée ;
+- numéro de série présent ;
+- dernier étalonnage connu de la sonde, déterminé avec `ROW_NUMBER() OVER (PARTITION BY Sonde_Numero_Serie ORDER BY Date_Heure_Etalonnage DESC, Id_Etalonnage DESC)` ;
+- `Date_Validite` non nulle ;
+- date de validité comprise entre aujourd'hui 00:00 et J+15 23:59:59.
+
+Les étalonnages **déjà expirés** ne sont pas ajoutés à ce compteur « à prévoir ».
+
+La requête est agrégée et ne charge pas tout le catalogue de sondes dans le dashboard. Le SQL utilisé est commun à MySQL 8 et SQL Server.
+
+La card Standard et le widget Expert affichent le même compteur.
+
+### Hauteur des cards
+
+Pour le dashboard classique :
+
+- les grilles utilisent `auto-rows-fr` ;
+- cards de navigation, Santé système, Services et Summary cards remplissent leur ligne avec `h-full` ;
+- les contenus principaux utilisent `flex-1` ;
+- les liens d'action sont alignés en bas lorsque présents.
+
+Pour le dashboard Expert :
+
+- les widgets conservent le mécanisme de redimensionnement volontaire du mode édition ;
+- leur hauteur **initiale** est harmonisée à 13 unités, y compris Métrologie.
+
+### Compatibilité / performance
+
+- aucune requête N+1 ajoutée ;
+- le journal de sauvegarde est plafonné à 300 lignes côté API ;
+- le compteur Métrologie retourne uniquement une agrégation ;
+- l'historique des acquittements réutilise son filtre serveur existant ;
+- MySQL et SQL Server sont validés par génération Prisma + TypeScript ;
+- aucune modification Serveur, Agent ou BDD.
+
+### Principaux fichiers
+
+- `website/src/components/admin-nav-dock.tsx` ;
+- `website/src/app/[locale]/(admin)/admin/layout.tsx` ;
+- `website/src/app/[locale]/(admin)/admin/page.tsx` ;
+- `website/src/app/[locale]/(admin)/admin/_components/admin-backup-log-dialog.tsx` ;
+- `website/src/app/[locale]/(admin)/admin/_components/admin-system-health-card.tsx` ;
+- `website/src/app/[locale]/(admin)/admin/_components/admin-service-card.tsx` ;
+- `website/src/app/[locale]/(admin)/admin/_components/expert-admin-dashboard.tsx` ;
+- `website/src/app/[locale]/(admin)/admin/_components/expert-dashboard/*` ;
+- `website/src/app/[locale]/(admin)/admin/lieux/_components/location-form-dialog.tsx` ;
+- `website/src/app/api/admin/sauvegardes/route.ts` ;
+- `website/src/app/api/admin/metrologie/etalonnages-a-prevoir/route.ts` ;
+- `website/src/hooks/useAdminData.ts` ;
+- `website/src/types/backup-types.ts` ;
+- `website/scripts/test-admin-dashboard-refinements.ts` ;
+- `website/src/messages/fr.json` ;
+- `website/src/messages/en.json`.
+
+### Validation technique
+
+GitHub Actions **35648143531** ✅ avant finalisation version/documentation :
+
+- [x] `git diff --check origin/dev...HEAD` ;
+- [x] génération Prisma MySQL ;
+- [x] contrat ciblé Dashboard Admin / dock / templates / sauvegardes / J+15 ;
+- [x] ESLint ciblé ;
+- [x] TypeScript MySQL ;
+- [x] contrôle i18n sans nouvelle dette du lot ;
+- [x] génération Prisma SQL Server ;
+- [x] TypeScript SQL Server ;
+- [x] restauration Prisma MySQL ;
+- [x] build Next.js production ;
+- [ ] revalidation finale après version/changelog/backlog ;
+- [ ] workflow temporaire retiré du diff avant PR.
+
+Le premier run **35647775177** avait échoué uniquement à cause d'une assertion statique trop large dans le test du dock : elle confondait la comparaison `/admin` du contrôle d'accès avec l'ancienne condition d'affichage. Le comportement applicatif était déjà correct ; l'assertion a été resserrée avant le run vert.
+
+### Checklist terrain
+
+- [ ] ouvrir Sondes, Modules, Actionneurs, Groupes, Lieux, Sites et Outils : le dock doit être visible ;
+- [ ] ouvrir Dashboard Admin : le dock ne doit pas être affiché ;
+- [ ] ouvrir Métrologie, Bains & étalons, Réaliser ajustage/étalonnage : aucun dock ;
+- [ ] ouvrir Audit, Santé système, Paramètres et Templates lieux : aucun dock ;
+- [ ] vérifier qu'aucun bouton Bains & étalons / Templates lieux ne reste dans le dock ;
+- [ ] création d'un lieu : vérifier le lien **Gérer les templates** et sa navigation vers la page Templates ;
+- [ ] édition d'un lieu : confirmer que ce nouveau lien spécifique à la création n'est pas ajouté ;
+- [ ] cliquer la card Sauvegarde système : dialog visible, scrollable et lisible ;
+- [ ] vérifier un journal avec lignes OK, erreur et début/fin de processus ;
+- [ ] vérifier un journal vide / absent ;
+- [ ] avec un journal >300 lignes, vérifier l'indication de troncature ;
+- [ ] confirmer que la card Journal acquittements correspond aux 7 derniers jours et non au total historique ;
+- [ ] comparer si besoin ce total avec la page d'acquittements filtrée sur les mêmes dates ;
+- [ ] préparer une sonde dont `Date_Validite` est à J+10 : elle doit être comptée ;
+- [ ] préparer une sonde à J+16 : elle ne doit pas être comptée ;
+- [ ] préparer une sonde expirée hier : elle ne doit pas être comptée dans « à prévoir » ;
+- [ ] vérifier qu'une sonde réformée n'est pas comptée ;
+- [ ] vérifier que plusieurs étalonnages d'une même sonde utilisent uniquement le plus récent ;
+- [ ] vérifier les mêmes résultats sur MySQL et SQL Server ;
+- [ ] vérifier l'alignement / hauteur des cards en Standard, Basic et Expert ;
+- [ ] en Expert, ajouter le widget Métrologie et vérifier son compteur J+15 ;
+- [ ] vérifier FR/EN, clair/sombre et petite largeur.
 
