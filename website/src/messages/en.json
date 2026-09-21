@@ -732,7 +732,8 @@
     "general": {
       "sections": {
         "sensor": "Sensor",
-        "setpoints": "Setpoints"
+        "setpoints": "Setpoints",
+        "measurement_timing": "Measurement and timing"
       },
       "labels": {
         "name": "Location name",
@@ -748,20 +749,22 @@
         "sensor_state": "Sensor status",
         "setpoint": "Setpoint",
         "frequency": "Measurement frequency (min)",
-        "upper_enable": "Enable upper setpoint",
-        "upper_max": "Maximum",
+        "upper_enable": "Enable upper threshold",
+        "upper_max": "Upper threshold",
         "alarm_delay_minutes": "Alarm delay (min)",
         "upper_pre_enable": "Enable upper pre-alarm",
         "upper_pre_label": "Upper pre-alarm",
-        "lower_enable": "Enable lower setpoint",
-        "lower_min": "Minimum",
+        "lower_enable": "Enable lower threshold",
+        "lower_min": "Lower threshold",
         "lower_pre_enable": "Enable lower pre-alarm",
         "lower_pre_label": "Lower pre-alarm",
         "retrigger_delay_measures": "Retrigger delay (measures)",
         "module_select": "Module",
         "enabled": "Enabled",
         "disabled": "Disabled",
-        "observations": "Observations"
+        "observations": "Observations",
+        "lower_threshold": "Lower threshold",
+        "upper_threshold": "Upper threshold"
       },
       "placeholders": {
         "name": "e.g. Storage A",
@@ -808,7 +811,10 @@
         "title": "Setpoints driven by planning",
         "description": "Planning rules are active for this location. Base setpoints are locked here. Edit the planning if you need to change the applied setpoints.",
         "go_to_planning": "Go to planning"
-      }
+      },
+      "measurement_timing_description": "Measurement cadence and alarm retrigger settings.",
+      "setpoints_description": "Define the central setpoint, then the lower and upper monitoring limits.",
+      "threshold_disabled_hint": "This threshold is disabled for this location."
     },
     "metrology": {
       "sections": {
