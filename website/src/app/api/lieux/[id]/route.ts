@@ -12,6 +12,7 @@ import { isSurveillanceActionCommentRequired } from "@/lib/action-comment-policy
 import { withAnyAuthorizationLogging } from "@/lib/api-wrappers"
 import { getPermissionAliases } from "@/lib/permissions"
 import { findLocationNameConflict } from "@/lib/location-name-conflicts"
+import { buildCriticalThresholdIssues } from "@/lib/location-critical-threshold-contract"
 import { buildLocationValueRangeIssues, getSensorTypeValueRangeBySerial } from "@/lib/sensor-value-range"
 import { getDbDatePlusMinutes, getDbNow } from "@/lib/sql-provider"
 import { syncGspLocationConfiguration } from "@/lib/gsp-config-sync"
@@ -92,6 +93,10 @@ const AUDIT_FIELD_LABELS: Record<string, string> = {
   Frequence: "Fréquence (min)",
   Consigne_Sup: "Consigne supérieure",
   Consigne_Inf: "Consigne inférieure",
+  Seuil_Critique_Haut: "Seuil critique haut",
+  Seuil_Critique_Bas: "Seuil critique bas",
+  Est_Seuil_Critique_Haut_Active: "Seuil critique haut actif",
+  Est_Seuil_Critique_Bas_Active: "Seuil critique bas actif",
   Retard_Alarme_Haut: "Retard alarme haut",
   Retard_Alarme_Bas: "Retard alarme bas",
   Retard_Non_Reponse: "Retard non-reponse",
@@ -266,12 +271,16 @@ const updateLieuSchema = z.object({
   Est_Consigne_Sup_Active: z.boolean().optional(),
   Consigne_Sup_Pre_Alarme: z.number().nullable().optional(),
   Est_Consigne_Sup_Pre_Alarme_Active: z.boolean().optional(),
+  Seuil_Critique_Haut: z.number().nullable().optional(),
+  Est_Seuil_Critique_Haut_Active: z.boolean().optional(),
   Retard_Alarme_Haut: z.number().nullable().optional(),
   Consigne_Inf: z.number().nullable().optional(),
   Tolerance_Surveillance_Inf: z.number().nullable().optional(),
   Est_Consigne_Inf_Active: z.boolean().optional(),
   Consigne_Inf_Pre_Alarme: z.number().nullable().optional(),
   Est_Consigne_Inf_Pre_Alarme_Active: z.boolean().optional(),
+  Seuil_Critique_Bas: z.number().nullable().optional(),
+  Est_Seuil_Critique_Bas_Active: z.boolean().optional(),
   Retard_Alarme_Bas: z.number().nullable().optional(),
   Retard_Non_Reponse: z.number().nullable().optional(),
   Retard_Alarme_Changement_Consigne: z.number().nullable().optional(),
@@ -533,7 +542,18 @@ export const PATCH = withAnyAuthorizationLogging(
 
       const currentLieuForRange = await prisma.t_lieu.findUnique({
         where: { Id_Lieu: lieuId },
-        select: { Sonde_Numero_Serie: true },
+        select: {
+          Sonde_Numero_Serie: true,
+          Consigne: true,
+          Consigne_Sup: true,
+          Consigne_Inf: true,
+          Tolerance_Surveillance_Sup: true,
+          Tolerance_Surveillance_Inf: true,
+          Seuil_Critique_Haut: true,
+          Est_Seuil_Critique_Haut_Active: true,
+          Seuil_Critique_Bas: true,
+          Est_Seuil_Critique_Bas_Active: true,
+        },
       })
       if (!currentLieuForRange) {
         return apiError(404, "not_found", "Lieu introuvable")
@@ -552,6 +572,43 @@ export const PATCH = withAnyAuthorizationLogging(
           rangeIssues[0]?.message ?? "Validation impossible",
           { issues: rangeIssues },
         )
+      }
+
+      const resolvePatchedNumber = (field: string, fallback: number | null | undefined) => {
+        if (!Object.prototype.hasOwnProperty.call(lieuPatch, field)) return fallback ?? null
+        const value = lieuPatch[field]
+        if (value === null || value === undefined) return null
+        const numeric = Number(value)
+        return Number.isFinite(numeric) ? numeric : null
+      }
+      const resolvePatchedBoolean = (field: string, fallback: boolean | null | undefined) => {
+        if (!Object.prototype.hasOwnProperty.call(lieuPatch, field)) return fallback === true
+        return lieuPatch[field] === true
+      }
+
+      const criticalIssues = buildCriticalThresholdIssues({
+        consigne: resolvePatchedNumber("Consigne", currentLieuForRange.Consigne),
+        effectiveHigh: resolvePatchedNumber(
+          "Tolerance_Surveillance_Sup",
+          currentLieuForRange.Tolerance_Surveillance_Sup ?? currentLieuForRange.Consigne_Sup,
+        ),
+        effectiveLow: resolvePatchedNumber(
+          "Tolerance_Surveillance_Inf",
+          currentLieuForRange.Tolerance_Surveillance_Inf ?? currentLieuForRange.Consigne_Inf,
+        ),
+        criticalHigh: resolvePatchedNumber("Seuil_Critique_Haut", currentLieuForRange.Seuil_Critique_Haut),
+        criticalHighActive: resolvePatchedBoolean(
+          "Est_Seuil_Critique_Haut_Active",
+          currentLieuForRange.Est_Seuil_Critique_Haut_Active,
+        ),
+        criticalLow: resolvePatchedNumber("Seuil_Critique_Bas", currentLieuForRange.Seuil_Critique_Bas),
+        criticalLowActive: resolvePatchedBoolean(
+          "Est_Seuil_Critique_Bas_Active",
+          currentLieuForRange.Est_Seuil_Critique_Bas_Active,
+        ),
+      })
+      if (criticalIssues.length > 0) {
+        return apiError(400, "validation_error", criticalIssues[0].message, { issues: criticalIssues })
       }
 
       const ip = getClientIp(req)
@@ -581,6 +638,10 @@ export const PATCH = withAnyAuthorizationLogging(
             Consigne_Inf: true,
             Tolerance_Surveillance_Sup: true,
             Tolerance_Surveillance_Inf: true,
+            Seuil_Critique_Haut: true,
+            Est_Seuil_Critique_Haut_Active: true,
+            Seuil_Critique_Bas: true,
+            Est_Seuil_Critique_Bas_Active: true,
             Retard_Alarme_Haut: true,
             Retard_Alarme_Bas: true,
             Retard_Non_Reponse: true,
@@ -606,6 +667,10 @@ export const PATCH = withAnyAuthorizationLogging(
           Frequence: current?.Frequence !== null && current?.Frequence !== undefined ? Number(current.Frequence) / 60 : current?.Frequence,
           Consigne_Sup: current?.Consigne_Sup,
           Consigne_Inf: current?.Consigne_Inf,
+          Seuil_Critique_Haut: current?.Seuil_Critique_Haut,
+          Seuil_Critique_Bas: current?.Seuil_Critique_Bas,
+          Est_Seuil_Critique_Haut_Active: current?.Est_Seuil_Critique_Haut_Active,
+          Est_Seuil_Critique_Bas_Active: current?.Est_Seuil_Critique_Bas_Active,
           Retard_Alarme_Haut: current?.Retard_Alarme_Haut,
           Retard_Alarme_Bas: current?.Retard_Alarme_Bas,
           Retard_Non_Reponse: current?.Retard_Non_Reponse,
@@ -1032,6 +1097,10 @@ export const PATCH = withAnyAuthorizationLogging(
           "Consigne",
           "Consigne_Sup",
           "Consigne_Inf",
+          "Seuil_Critique_Haut",
+          "Seuil_Critique_Bas",
+          "Est_Seuil_Critique_Haut_Active",
+          "Est_Seuil_Critique_Bas_Active",
           "Retard_Non_Reponse",
           "Retard_Alarme_Changement_Consigne",
           "Nb_Mesures_Temporisation_Redeclenchement",
