@@ -15,6 +15,7 @@ type SmtpConfigResponse = {
   password: string
   sender: string
   passwordConfigured?: boolean
+  confirmed?: boolean
 }
 
 export function useMailingServiceStatus() {

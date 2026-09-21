@@ -5,6 +5,7 @@ export type EmailAuditKind =
   | "password_reset"
   | "account_creation"
   | "smtp_test"
+  | "smtp_verification"
   | "monthly_statistics"
   | "hardware_order"
   | "other"

@@ -23,7 +23,9 @@ La procédure complète d'upgrade des installations existantes est documentée d
 
 ## [Unreleased]
 
-Aucun changement de schéma supplémentaire documenté depuis la préparation de VigiSensys 1.0.0.
+- Aucun changement de schéma.
+- Ajout dans les seeds MySQL et SQL Server du paramètre `SECURITE_EMAIL:SMTP_CONFIRME=false` pour les nouvelles installations.
+- Les installations existantes ne nécessitent pas de migration de schéma : le paramètre est créé automatiquement lors de la première modification SMTP. Une configuration historique complète sans ce paramètre est considérée confirmée jusqu'à sa prochaine modification.
 
 ## [0.90.2] — 2026-09-18
 

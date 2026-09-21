@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useLicense } from "@/components/license/license-provider";
 import { hasLicenseOption, isStandardOrExpert } from "@/lib/license-access";
 
@@ -111,45 +112,66 @@ export function SettingsClient({ settings: initialSettings }: Props) {
         </div>
       ) : null}
 
-      <GeneralSettingsCard
-        settings={generalSettings}
-        loadingKeys={loadingKeys}
-        onToggle={toggleDraft}
-        onRefreshIntervalChange={setDraftValue}
-        onNumericSettingChange={setDraftValue}
-      />
+      <Tabs defaultValue="general" className="w-full">
+        <div className="overflow-x-auto pb-1">
+          <TabsList className="h-auto min-w-max justify-start gap-1">
+            <TabsTrigger value="general">{t("tabs.general")}</TabsTrigger>
+            <TabsTrigger value="security">{t("tabs.security")}</TabsTrigger>
+            <TabsTrigger value="alerts">{t("tabs.alerts")}</TabsTrigger>
+            <TabsTrigger value="services">{t("tabs.services")}</TabsTrigger>
+          </TabsList>
+        </div>
 
-      <TimezoneSettingsCard
-        settings={localizedSettings}
-        loadingKeys={loadingKeys}
-        onTimezoneChange={setDraftValue}
-      />
+        <TabsContent value="general" className="mt-6 space-y-6">
+          <GeneralSettingsCard
+            settings={generalSettings}
+            loadingKeys={loadingKeys}
+            onToggle={toggleDraft}
+            onRefreshIntervalChange={setDraftValue}
+            onNumericSettingChange={setDraftValue}
+          />
 
-      <AutoLockSettingsCard />
-      <PasswordPolicyCard />
+          <TimezoneSettingsCard
+            settings={localizedSettings}
+            loadingKeys={loadingKeys}
+            onTimezoneChange={setDraftValue}
+          />
+        </TabsContent>
 
-      <NotificationsSettingsCard
-        settings={notificationSettings}
-        loadingKeys={loadingKeys}
-        onToggle={toggleDraft}
-        onRecipientsChange={setDraftValue}
-      />
+        <TabsContent value="security" className="mt-6 space-y-6">
+          <AutoLockSettingsCard />
+          <PasswordPolicyCard />
+        </TabsContent>
 
-      <NonResponseAutoAckSettingsCard />
+        <TabsContent value="alerts" className="mt-6 space-y-6">
+          <NotificationsSettingsCard
+            settings={notificationSettings}
+            loadingKeys={loadingKeys}
+            onToggle={toggleDraft}
+            onRecipientsChange={setDraftValue}
+          />
 
-      {isStandardOrExpert(license) ? (
-        <MessagingSettingsCard
-          settings={messagingSettings}
-          loadingKeys={loadingKeys}
-          onToggle={toggleDraft}
-        />
-      ) : null}
+          <NonResponseAutoAckSettingsCard />
+        </TabsContent>
 
-      <SmtpSettingsCard
-        onOpenSmtpModal={() => setSmtpModalOpen(true)}
-        onOpenSmtpGuide={() => setSmtpGuideOpen(true)}
-      />
-      {canUseTelephony ? <TelephonySettingsCard /> : <TelephonyLicenseLockedCard />}
+        <TabsContent value="services" className="mt-6 space-y-6">
+          {isStandardOrExpert(license) ? (
+            <MessagingSettingsCard
+              settings={messagingSettings}
+              loadingKeys={loadingKeys}
+              onToggle={toggleDraft}
+            />
+          ) : null}
+
+          <SmtpSettingsCard
+            onOpenSmtpModal={() => setSmtpModalOpen(true)}
+            onOpenSmtpGuide={() => setSmtpGuideOpen(true)}
+          />
+
+          {canUseTelephony ? <TelephonySettingsCard /> : <TelephonyLicenseLockedCard />}
+        </TabsContent>
+      </Tabs>
+
       <SMTPConfigModal open={smtpModalOpen} onOpenChange={setSmtpModalOpen} />
       <SMTPConfigurationGuideDialog open={smtpGuideOpen} onOpenChange={setSmtpGuideOpen} />
     </main>

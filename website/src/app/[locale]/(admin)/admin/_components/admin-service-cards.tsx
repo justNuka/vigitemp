@@ -45,7 +45,7 @@ export function AdminServiceCards() {
     loading: mailingQuery.isLoading,
     error: mailingQuery.isError,
     enabled: mailing?.enabled,
-    configured: mailing?.configured,
+    configured: mailing?.configured && mailing?.confirmed,
   })
 
   const mailingConfiguredLabel = mailingQuery.isLoading
@@ -53,6 +53,12 @@ export function AdminServiceCards() {
     : mailing?.configured
       ? t("configuration.configured")
       : t("configuration.incomplete")
+
+  const mailingConfirmedLabel = mailingQuery.isLoading
+    ? "—"
+    : mailing?.confirmed
+      ? t("mailing.confirmed")
+      : t("mailing.not_confirmed")
 
   const mailingEnabledLabel = mailingQuery.isLoading
     ? "—"
@@ -90,6 +96,7 @@ export function AdminServiceCards() {
         details={[
           { label: t("mailing.activation"), value: mailingEnabledLabel },
           { label: t("mailing.configuration"), value: mailingConfiguredLabel },
+          { label: t("mailing.confirmation"), value: mailingConfirmedLabel },
         ]}
         href="/admin/parametres"
         hrefLabel={t("actions.open_settings")}

@@ -3,6 +3,7 @@ export type TelephonyProviderId = "none" | "twilio" | "ovhcloud" | "keyyo" | "as
 export type MailingServiceStatus = {
   enabled: boolean
   configured: boolean
+  confirmed: boolean
 }
 
 export type TelephonyServiceStatus = {
@@ -17,6 +18,7 @@ export type SmtpConfigurationStatusInput = {
   port: number
   user: string
   passwordConfigured?: boolean
+  confirmed?: boolean
 }
 
 export function summarizeMailingService(
@@ -33,5 +35,6 @@ export function summarizeMailingService(
   return {
     enabled: config.enabled,
     configured,
+    confirmed: config.confirmed ?? true,
   }
 }

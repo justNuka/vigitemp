@@ -8,7 +8,16 @@ Les versions suivent `MAJOR.MINOR.PATCH` sans zéros de tête. La source de vers
 
 ## [Unreleased]
 
-Aucun changement supplémentaire documenté depuis la préparation de la release 1.0.0.
+### Administration / Paramètres
+
+- La page Paramètres est organisée en quatre onglets : Général, Sécurité, Alarmes & notifications et Services.
+- La card Configuration Email porte désormais le switch global `SMTP_ACTIVATION`. Lorsqu'il est désactivé, la configuration et le warning sont masqués mais le guide SMTP reste toujours accessible.
+- Le warning SMTP devient destructif/rouge lorsque le service est activé.
+- Toute modification réelle de l'hôte, du port, de l'utilisateur, du mot de passe ou de l'expéditeur invalide `SMTP_CONFIRME`.
+- Après enregistrement, VigiSensys envoie un code à 6 chiffres via les nouveaux paramètres SMTP ; la configuration ne redevient utilisable par les emails métier qu'après saisie correcte du code.
+- Les codes sont hachés côté serveur, expirent après 10 minutes et sont limités à 5 tentatives. Aucun code en clair n'est persisté.
+- Les installations historiques sans paramètre `SMTP_CONFIRME` conservent leur comportement actuel tant que leur configuration SMTP n'est pas modifiée.
+- Le Dashboard Admin distingue désormais une configuration Mailing techniquement complète mais encore non confirmée.
 
 ## [1.0.0] — 2026-09-18
 

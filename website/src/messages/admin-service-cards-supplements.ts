@@ -21,6 +21,9 @@ export const frAdminServiceCardsSupplements: MessageCatalog = {
       description: "État de l'infrastructure globale d'envoi d'emails VigiSensys.",
       activation: "Envoi global",
       configuration: "Configuration SMTP",
+      confirmation: "Validation SMTP",
+      confirmed: "Confirmée",
+      not_confirmed: "À valider",
     },
     telephony: {
       title: "Téléphonie",
@@ -62,6 +65,9 @@ export const enAdminServiceCardsSupplements: MessageCatalog = {
       description: "Status of the global VigiSensys email delivery infrastructure.",
       activation: "Global delivery",
       configuration: "SMTP configuration",
+      confirmation: "SMTP verification",
+      confirmed: "Confirmed",
+      not_confirmed: "Needs verification",
     },
     telephony: {
       title: "Telephony",
