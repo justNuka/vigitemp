@@ -1059,7 +1059,8 @@
     "general": {
       "sections": {
         "sensor": "Sonde",
-        "setpoints": "Consignes"
+        "setpoints": "Consignes",
+        "timing": "Fréquence & temporisations"
       },
       "labels": {
         "name": "Nom du lieu",
@@ -1088,7 +1089,14 @@
         "module_select": "Module",
         "enabled": "Activé",
         "disabled": "Désactivé",
-        "observations": "Observations"
+        "observations": "Observations",
+        "alarm_delay_high": "Retard alarme haute (min)",
+        "alarm_delay_low": "Retard alarme basse (min)",
+        "no_response_delay": "Retard de non-réponse (min)",
+        "setpoint_change_delay": "Retard après changement de consigne (min)",
+        "effective_threshold": "Seuil effectif",
+        "critical_high_enable": "Seuil critique haut",
+        "critical_low_enable": "Seuil critique bas"
       },
       "placeholders": {
         "name": "Ex: Stockage A",
@@ -1127,7 +1135,17 @@
       "tooltips": {
         "frequency_gso": "Fréquence fixée à 15 min pour les sondes GSO.",
         "retrigger_delay_measures": "Nombre de mesures hors tolérances à ignorer avant un nouveau déclenchement apres acquittement ou alarme terminée.",
-        "monitoring_requires_sensor": "Sans sonde sélectionnée, la surveillance est désactivée automatiquement."
+        "monitoring_requires_sensor": "Sans sonde sélectionnée, la surveillance est désactivée automatiquement.",
+        "frequency": "Intervalle entre deux mesures utilisées par la surveillance.",
+        "alarm_delay_high": "Durée pendant laquelle la valeur doit rester au-dessus du seuil haut normal avant le déclenchement de l'alarme.",
+        "alarm_delay_low": "Durée pendant laquelle la valeur doit rester sous le seuil bas normal avant le déclenchement de l'alarme.",
+        "no_response_delay": "Durée maximale sans réponse de la sonde avant une alarme de non-réponse.",
+        "setpoint_change_delay": "Temporisation appliquée après un changement de consigne, notamment lors d'un changement de règle de planning.",
+        "setpoint": "Valeur cible autour de laquelle les seuils de surveillance sont configurés.",
+        "upper_alarm": "Seuil haut normal. Son dépassement applique le retard d'alarme haut avant déclenchement.",
+        "lower_alarm": "Seuil bas normal. Son dépassement applique le retard d'alarme bas avant déclenchement.",
+        "effective_threshold": "Seuil réellement utilisé par la surveillance. En métrologie, il peut intégrer l'EMT calculée.",
+        "prealarm": "Niveau d'avertissement visuel avant d'atteindre le seuil d'alarme normal."
       },
       "group_fallback": "Groupe {id}",
       "sensor_range": "Plage de mesure de la sonde sélectionnée : {range}",
@@ -1135,6 +1153,41 @@
         "title": "Consignes pilotées par le planning",
         "description": "Des règles de planning sont actives pour ce lieu. Les consignes de base sont verrouillées ici. Modifiez le planning si vous devez changer les consignes appliquées.",
         "go_to_planning": "Aller au planning"
+      },
+      "setpoints": {
+        "description": "Consigne, seuils normaux, pré-alarmes et limites critiques du lieu.",
+        "target_hint": "Valeur de référence du lieu.",
+        "upper_title": "Limites hautes",
+        "upper_hint": "Pré-alerte, alarme temporisée et sécurité critique.",
+        "lower_title": "Limites basses",
+        "lower_hint": "Pré-alerte, alarme temporisée et sécurité critique.",
+        "normal_disabled": "Le seuil d'alarme normal est désactivé.",
+        "critical_hint": "Déclenchement immédiat, sans attendre le retard d'alarme normal."
+      },
+      "timing": {
+        "description": "Cadence de mesure et délais utilisés avant les différents déclenchements."
+      },
+      "name_limit": "30 caractères maximum",
+      "name_remaining": "{remaining} restant(s) / {max}",
+      "alarm_preview": {
+        "title": "Aperçu du comportement des alarmes",
+        "description": "Simulation visuelle mise à jour en temps réel à partir des valeurs du formulaire.",
+        "chart_aria": "Aperçu des consignes, seuils et temporisations d'alarme",
+        "frequency": "Mesure toutes les {value} min",
+        "setpoint": "Consigne",
+        "setpoint_description": "Valeur cible configurée pour le lieu.",
+        "prealarm_high": "Pré-alarme haute",
+        "prealarm_low": "Pré-alarme basse",
+        "prealarm_description": "Avertissement avant le seuil d'alarme normal.",
+        "alarm_high": "Alarme haute",
+        "alarm_low": "Alarme basse",
+        "alarm_description": "Le franchissement doit persister pendant {delay} min avant le déclenchement.",
+        "critical_high": "Critique haut",
+        "critical_low": "Critique bas",
+        "critical_description": "Seuil de sécurité : le franchissement déclenche immédiatement l'alarme.",
+        "delay_short": "retard {value} min",
+        "normal_behavior": "Seuil normal franchi : la temporisation démarre, puis l'alarme se déclenche si le dépassement persiste.",
+        "critical_behavior": "Seuil critique franchi : l'alarme est déclenchée immédiatement, sans temporisation."
       }
     },
     "metrology": {
