@@ -148,7 +148,7 @@ export function AlarmAcknowledgementCommentDialog({
               disabled={isConfirming}
             />
             <div className="text-right text-xs text-muted-foreground">
-              {comment.length}/200 {t("dialog.characters")}
+              {t("dialog.characters_count", { count: comment.length, max: 200 })}
             </div>
           </div>
         </div>
