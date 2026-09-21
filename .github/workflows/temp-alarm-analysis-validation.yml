@@ -8,6 +8,10 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: temp-alarm-analysis-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   web:
     runs-on: ubuntu-latest
