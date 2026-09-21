@@ -151,7 +151,6 @@ export function AlarmAnalysisClient() {
       : "calc(100vh - 26rem)"
 
   useEffect(() => {
-    if (isChartZoomPluginRegistered) return  useEffect(() => {
     if (isChartZoomPluginRegistered) return
     let cancelled = false
     import("chartjs-plugin-zoom")
