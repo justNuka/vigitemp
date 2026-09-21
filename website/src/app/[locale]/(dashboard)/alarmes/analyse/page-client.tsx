@@ -282,7 +282,7 @@ export function AlarmAnalysisClient() {
     sortDirection: measurementSortDirection,
   })
 
-  const orderedData = useMemo  const orderedData = useMemo(() => sortMeasuresChronologically(graphData), [graphData])
+  const orderedData = useMemo(() => sortMeasuresChronologically(graphData), [graphData])
   const orderedHistoryData = useMemo(() => {
     if (measurementSortBy) return historyData
     return sortMeasuresChronologically(historyData)
