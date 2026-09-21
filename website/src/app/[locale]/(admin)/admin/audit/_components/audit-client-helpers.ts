@@ -23,21 +23,60 @@ type ParsedDetails = {
   raw?: string
 }
 
-const RESOURCE_LABEL_MAP: Record<string, { fr: string; en: string }> = {
-  'dashboard:audit_graph_openings': {
-    fr: "Affichage des ouvertures d'audit sur les graphiques",
-    en: 'Display audit openings on charts',
-  },
+type AuditTranslator = (key: string, values?: Record<string, string | number>) => string
+
+const RESOURCE_TRANSLATION_KEYS: Record<string, string> = {
+  'dashboard:audit_graph_openings': 'details.resources.audit_graph_openings',
+}
+
+const FIELD_TRANSLATION_KEYS: Record<string, string> = {
+  address: 'details.fields.address',
+  connectedAt: 'details.fields.connectedAt',
+  machineName: 'details.fields.machineName',
+  authEngine: 'details.fields.authEngine',
+  newToleranceSup: 'details.fields.newToleranceSup',
+  newToleranceInf: 'details.fields.newToleranceInf',
+  simAlarms: 'details.fields.simAlarms',
+  realAlarms: 'details.fields.realAlarms',
+  dateRange: 'details.fields.dateRange',
+  alarmId: 'details.fields.alarmId',
+  acknowledgedAt: 'details.fields.acknowledgedAt',
+  from: 'details.fields.from',
+  to: 'details.fields.to',
+  forced: 'details.fields.forced',
+  description: 'details.fields.description',
+  format: 'details.fields.format',
+  Nom_Lieu: 'details.fields.Nom_Lieu',
+  Tolerance_Sup: 'details.fields.Tolerance_Sup',
+  Tolerance_Inf: 'details.fields.Tolerance_Inf',
+  Consigne_Sup: 'details.fields.Consigne_Sup',
+  Consigne_Inf: 'details.fields.Consigne_Inf',
+  Est_Son_Alarme_Active: 'details.fields.Est_Son_Alarme_Active',
+  Nom_Sonde: 'details.fields.Nom_Sonde',
+  Frequence_Mesure: 'details.fields.Frequence_Mesure',
+  Retard_Alarme: 'details.fields.Retard_Alarme',
+  Hysteresis: 'details.fields.Hysteresis',
+  disabled: 'details.fields.disabled',
+  durationMinutes: 'details.fields.durationMinutes',
+  reactivationAt: 'details.fields.reactivationAt',
+  updated: 'details.fields.updated',
+  lieuIds: 'details.fields.lieuIds',
+  groupOrLiaisonId: 'details.fields.groupOrLiaisonId',
+  emailEvent: 'details.fields.emailEvent',
+  emailStatus: 'details.fields.emailStatus',
+  recipient: 'details.fields.recipient',
+  attempts: 'details.fields.attempts',
+  usedSystemFallback: 'details.fields.usedSystemFallback',
 }
 
 function joinParts(parts: string[], separator = ' - ') {
   return parts.filter(Boolean).join(separator)
 }
 
-function humanizeIdentifier(value: string, localeTag: string): string {
+function humanizeIdentifier(value: string, localeTag: string, t?: AuditTranslator): string {
   const normalized = value.trim().toLowerCase()
-  const configured = RESOURCE_LABEL_MAP[normalized]
-  if (configured) return localeTag.toLowerCase().startsWith('fr') ? configured.fr : configured.en
+  const translationKey = RESOURCE_TRANSLATION_KEYS[normalized]
+  if (translationKey && t) return t(translationKey)
 
   const words = value
     .replace(/[.:/_-]+/g, ' ')
@@ -92,7 +131,7 @@ export function parseAuditDetails(
   }
 
   const resourceLabel = resource && !resource.startsWith('{') && !resource.toLowerCase().startsWith('ip:')
-    ? humanizeIdentifier(resource, localeTag)
+    ? humanizeIdentifier(resource, localeTag, t)
     : resource
   const rawTitle = joinParts([resourceLabel, idPart], ' ').trim()
   const title = rawTitle || normalizedDetails
@@ -120,13 +159,13 @@ export function parseAuditDetails(
     }
 
     if (from !== undefined || to !== undefined) {
-      const fromText = from !== undefined ? t('details.from', { value: formatFieldValue('from', from, localeTag, timezone) }) : ''
-      const toText = to !== undefined ? t('details.to', { value: formatFieldValue('to', to, localeTag, timezone) }) : ''
+      const fromText = from !== undefined ? t('details.from', { value: formatFieldValue('from', from, localeTag, timezone, t) }) : ''
+      const toText = to !== undefined ? t('details.to', { value: formatFieldValue('to', to, localeTag, timezone, t) }) : ''
       subtitleParts.push(joinParts([fromText, toText]))
     }
 
     if (action && subtitleParts.length === 0) {
-      subtitleParts.push(t('details.action', { action: humanizeIdentifier(action, localeTag) }))
+      subtitleParts.push(t('details.action', { action: formatFieldValue('action', action, localeTag, timezone, t) }))
     }
   }
 
@@ -178,49 +217,18 @@ export function toAuditTableData(logs: AuditLog[]): AuditLogRow[] {
   }))
 }
 
-const FIELD_LABEL_MAP: Record<string, { fr: string; en: string }> = {
-  address: { fr: 'Adresse', en: 'Address' },
-  connectedAt: { fr: 'Connecte le', en: 'Connected at' },
-  machineName: { fr: 'Machine', en: 'Machine' },
-  newToleranceSup: { fr: 'Tolerance sup.', en: 'Upper tolerance' },
-  newToleranceInf: { fr: 'Tolerance inf.', en: 'Lower tolerance' },
-  simAlarms: { fr: 'Alarmes simulees', en: 'Simulated alarms' },
-  realAlarms: { fr: 'Alarmes reelles', en: 'Real alarms' },
-  dateRange: { fr: 'Periode', en: 'Period' },
-  alarmId: { fr: 'No alarme', en: 'Alarm #' },
-  acknowledgedAt: { fr: 'Acquitte le', en: 'Acknowledged at' },
-  from: { fr: 'Avant', en: 'Before' },
-  to: { fr: 'Apres', en: 'After' },
-  forced: { fr: 'Force', en: 'Forced' },
-  description: { fr: 'Description', en: 'Description' },
-  format: { fr: 'Format', en: 'Format' },
-  Nom_Lieu: { fr: 'Nom du lieu', en: 'Location name' },
-  Tolerance_Sup: { fr: 'Tolerance sup.', en: 'Upper tolerance' },
-  Tolerance_Inf: { fr: 'Tolerance inf.', en: 'Lower tolerance' },
-  Consigne_Sup: { fr: 'Consigne sup.', en: 'Upper setpoint' },
-  Consigne_Inf: { fr: 'Consigne inf.', en: 'Lower setpoint' },
-  Est_Son_Alarme_Active: { fr: "Son d'alarme", en: 'Alarm sound' },
-  Nom_Sonde: { fr: 'Nom de la sonde', en: 'Sensor name' },
-  Frequence_Mesure: { fr: 'Frequence mesure (s)', en: 'Measurement freq. (s)' },
-  Retard_Alarme: { fr: "Retard d'alarme (s)", en: 'Alarm delay (s)' },
-  Hysteresis: { fr: 'Hysteresis', en: 'Hysteresis' },
-  disabled: { fr: 'Surveillance desactivee', en: 'Monitoring disabled' },
-  durationMinutes: { fr: 'Duree (min)', en: 'Duration (min)' },
-  reactivationAt: { fr: 'Reactivation prevue', en: 'Scheduled reactivation' },
-  updated: { fr: 'Lieux modifies', en: 'Updated locations' },
-  lieuIds: { fr: 'Lieux concernes', en: 'Locations' },
-  groupOrLiaisonId: { fr: 'Groupe / liaison', en: 'Group / link' },
-}
 
 function formatFieldValue(
   key: string,
   value: unknown,
   localeTag: string,
   timezone?: string,
+  t?: AuditTranslator,
 ): string {
   if (value === null || value === undefined) return '-'
 
   if (typeof value === 'boolean') {
+    if (t) return t(value ? 'details.values.yes' : 'details.values.no')
     return localeTag.startsWith('fr') ? (value ? 'Oui' : 'Non') : (value ? 'Yes' : 'No')
   }
 
@@ -230,7 +238,7 @@ function formatFieldValue(
   }
 
   if (Array.isArray(value)) {
-    return value.map((item) => formatFieldValue(key, item, localeTag, timezone)).join(', ')
+    return value.map((item) => formatFieldValue(key, item, localeTag, timezone, t)).join(', ')
   }
 
   if (typeof value === 'string') {
@@ -248,6 +256,27 @@ function formatFieldValue(
       const formatted = formatDateSafe(value, localeTag, timezone)
       if (formatted) return formatted
     }
+    const normalizedValue = value.trim().toLowerCase()
+    if (t && key === 'authEngine') {
+      if (normalizedValue === 'legacy') return t('details.values.auth_legacy')
+      if (['new', 'better-auth', 'better-auth-transition'].includes(normalizedValue)) {
+        return t('details.values.auth_new')
+      }
+    }
+    if (t && key === 'action') {
+      const actionKey = ['create', 'update', 'delete', 'enable', 'disable'].includes(normalizedValue)
+        ? `details.values.action_${normalizedValue}`
+        : null
+      if (actionKey) return t(actionKey)
+    }
+    if (t && key === 'emailEvent') {
+      if (['triggered', 'ended', 'acknowledged'].includes(normalizedValue)) {
+        return t(`details.values.email_${normalizedValue}`)
+      }
+    }
+    if (t && key === 'emailStatus' && normalizedValue === 'sent') {
+      return t('details.values.email_sent')
+    }
     return value
   }
 
@@ -264,6 +293,7 @@ export function renderChangesAsRows(
   changes: Record<string, unknown>,
   localeTag: string,
   timezone?: string,
+  t?: AuditTranslator,
 ): Array<{ label: string; value: string }> {
   const isFr = localeTag.toLowerCase().startsWith('fr')
   const rows: Array<{ label: string; value: string }> = []
@@ -272,20 +302,20 @@ export function renderChangesAsRows(
     if (key === 'action') continue
     if (value === null || value === undefined) continue
 
-    const labelDef = FIELD_LABEL_MAP[key]
-    const label = labelDef ? (isFr ? labelDef.fr : labelDef.en) : humanizeIdentifier(key, localeTag)
+    const labelKey = FIELD_TRANSLATION_KEYS[key]
+    const label = labelKey && t ? t(labelKey) : humanizeIdentifier(key, localeTag, t)
 
     if (isFromToChange(value)) {
-      const beforeLabel = isFr ? 'Avant' : 'Before'
-      const afterLabel = isFr ? 'Apres' : 'After'
+      const beforeLabel = t ? t('details.values.before') : (isFr ? 'Avant' : 'Before')
+      const afterLabel = t ? t('details.values.after') : (isFr ? 'Après' : 'After')
       rows.push({
         label,
-        value: `${beforeLabel}: ${formatFieldValue('from', value.from, localeTag, timezone)} | ${afterLabel}: ${formatFieldValue('to', value.to, localeTag, timezone)}`,
+        value: `${beforeLabel}: ${formatFieldValue('from', value.from, localeTag, timezone, t)} | ${afterLabel}: ${formatFieldValue('to', value.to, localeTag, timezone, t)}`,
       })
       continue
     }
 
-    rows.push({ label, value: formatFieldValue(key, value, localeTag, timezone) })
+    rows.push({ label, value: formatFieldValue(key, value, localeTag, timezone, t) })
   }
 
   return rows
