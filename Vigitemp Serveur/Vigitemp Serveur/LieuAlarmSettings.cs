@@ -16,6 +16,11 @@ namespace Vigitemp_Serveur
         public double? ConsigneSupPreAlarme { get; }
         public bool ConsigneSupPreAlarmeActive { get; }
 
+        public double? SeuilCritiqueBas { get; }
+        public bool SeuilCritiqueBasActive { get; }
+        public double? SeuilCritiqueHaut { get; }
+        public bool SeuilCritiqueHautActive { get; }
+
         // En base/UI, les retards d'alarme sont en minutes.
         public int RetardAlarmeBasMinutes { get; }
         public int RetardAlarmeHautMinutes { get; }
@@ -49,7 +54,11 @@ namespace Vigitemp_Serveur
             DateTime dateHeureReactivationAlarme,
             DateTime planningDerniereMaj,
             DateTime dateHeureDerniereReponse = default(DateTime),
-            DateTime dateHeureDerniereReponseRecueOk = default(DateTime))
+            DateTime dateHeureDerniereReponseRecueOk = default(DateTime),
+            double? seuilCritiqueBas = null,
+            bool seuilCritiqueBasActive = false,
+            double? seuilCritiqueHaut = null,
+            bool seuilCritiqueHautActive = false)
         {
             IdLieu = idLieu;
             ConsigneInf = consigneInf;
@@ -60,6 +69,10 @@ namespace Vigitemp_Serveur
             ConsigneInfPreAlarmeActive = consigneInfPreAlarmeActive;
             ConsigneSupPreAlarme = consigneSupPreAlarme;
             ConsigneSupPreAlarmeActive = consigneSupPreAlarmeActive;
+            SeuilCritiqueBas = seuilCritiqueBas;
+            SeuilCritiqueBasActive = seuilCritiqueBasActive;
+            SeuilCritiqueHaut = seuilCritiqueHaut;
+            SeuilCritiqueHautActive = seuilCritiqueHautActive;
             RetardAlarmeBasMinutes = retardAlarmeBasMinutes;
             RetardAlarmeHautMinutes = retardAlarmeHautMinutes;
             RetardNonReponseMinutes = retardNonReponseMinutes;
