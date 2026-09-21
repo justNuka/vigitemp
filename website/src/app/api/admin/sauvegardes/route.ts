@@ -7,9 +7,10 @@ import { apiError, apiOk } from "@/lib/api-response"
 import { log } from "@/lib/logger"
 import { getCompatEnv } from "@/lib/vigisensys-compat"
 import { appDataPath, firstExistingPath, legacyAppDataPath } from "@/lib/vigisensys-paths"
-import type { BackupRecord, BackupsResponse } from "@/types/backup-types"
+import type { BackupLogEntry, BackupRecord, BackupsResponse } from "@/types/backup-types"
 
 const BACKUP_SLOT_NAMES = ["J", "J-1", "J-2", "J-3", "J-4", "J-5", "J-6", "J-7"]
+const MAX_BACKUP_LOG_ENTRIES = 300
 
 async function resolveBackupRoot() {
   const configured = getCompatEnv("VIGISENSYS_BACKUP_ROOT", "VIGITEMP_BACKUP_ROOT")
@@ -125,12 +126,46 @@ function parseBackupRuns(rawLog: string): ParsedRun[] {
   return runs.sort((a, b) => Date.parse(b.startedAt) - Date.parse(a.startedAt))
 }
 
-async function readBackupRuns(backupLogPath: string): Promise<ParsedRun[]> {
+function toBackupLogEntry(line: string): BackupLogEntry {
+  const timestampMatch = line.match(/^\[([^\]]+)\]\s*(.*)$/)
+  const timestamp = timestampMatch ? parseFrenchTimestamp(timestampMatch[1]) : null
+  const rawMessage = (timestampMatch?.[2] ?? line).trim()
+  const message = rawMessage.replace(/^#+\s*/, "").replace(/\s*#+$/, "").trim() || rawMessage
+
+  const level: BackupLogEntry["level"] =
+    /DEBUT PROCESS BACKUP|FIN PROCESS BACKUP/i.test(rawMessage)
+      ? "section"
+      : /:\s*Erreur\b|\bERREUR\b|\bERROR\b/i.test(rawMessage)
+        ? "error"
+        : /:\s*OK\b/i.test(rawMessage)
+          ? "success"
+          : "info"
+
+  return { timestamp, message, level }
+}
+
+async function readBackupLog(backupLogPath: string) {
   try {
     const rawLog = await fs.readFile(backupLogPath, "utf8")
-    return parseBackupRuns(rawLog)
+    const meaningfulLines = rawLog
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter(Boolean)
+    const selectedLines = meaningfulLines.slice(-MAX_BACKUP_LOG_ENTRIES)
+
+    return {
+      runs: parseBackupRuns(rawLog),
+      entries: selectedLines.map(toBackupLogEntry),
+      totalLineCount: meaningfulLines.length,
+      truncated: meaningfulLines.length > selectedLines.length,
+    }
   } catch {
-    return []
+    return {
+      runs: [] as ParsedRun[],
+      entries: [] as BackupLogEntry[],
+      totalLineCount: 0,
+      truncated: false,
+    }
   }
 }
 
@@ -164,12 +199,12 @@ export const GET = withAdminLogging(async (_req: NextRequest) => {
   try {
     const backupRoot = await resolveBackupRoot()
     const backupLogPath = resolveBackupLogPath(backupRoot)
-    const [archiveRecords, parsedRuns] = await Promise.all([
+    const [archiveRecords, backupLog] = await Promise.all([
       readArchiveRecords(backupRoot),
-      readBackupRuns(backupLogPath),
+      readBackupLog(backupLogPath),
     ])
 
-    const runRecords: BackupRecord[] = parsedRuns.map((run, index) => ({
+    const runRecords: BackupRecord[] = backupLog.runs.map((run, index) => ({
       id: `run:${index}:${run.startedAt}`,
       etat: run.status,
       dateHeure: run.endedAt ?? run.startedAt,
@@ -195,6 +230,9 @@ export const GET = withAdminLogging(async (_req: NextRequest) => {
         archiveCount: archiveRecords.length,
         slotCount: BACKUP_SLOT_NAMES.length,
         latestRun: runRecords[0] ?? null,
+        logEntries: backupLog.entries,
+        logLineCount: backupLog.totalLineCount,
+        logTruncated: backupLog.truncated,
       },
     }
 
