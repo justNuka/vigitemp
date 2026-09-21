@@ -8,6 +8,7 @@ import { useFormContext } from 'react-hook-form'
 
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { formatNumber } from '@/lib/number-display'
+import { computeEmt } from '@/lib/emt'
 import type { SensorValueRange } from '@/lib/sensor-value-range-contract'
 
 import type { LocationFormData } from '../location-form-types'
@@ -38,11 +39,28 @@ export function LocationAlarmPreview({
 
   const unit = sensorRange?.unit?.trim() || data.Unite?.trim() || ''
   const target = finite(data.Consigne)
+  const liveEmt = computeEmt({
+    mode: data.EMT_Mode,
+    emtValue: data.EMT_Valeur ?? null,
+    consigne: data.Consigne ?? null,
+    consigneSup: data.Consigne_Sup ?? null,
+    consigneInf: data.Consigne_Inf ?? null,
+    isConsigneSupActive: data.Est_Consigne_Sup_Active ?? false,
+    isConsigneInfActive: data.Est_Consigne_Inf_Active ?? false,
+    incertitude: data.Incertitude ?? null,
+    erreurJustesse: data.Erreur_Justesse ?? null,
+    derive: data.Derive ?? null,
+    includeDeriveInUncertainty:
+      data.EMT_Mode === 'quart' || data.EMT_Mode === 'manuel'
+        ? true
+        : (data.Prendre_En_Compte_Derive ?? false),
+    correctAccuracyError: data.Corriger_Erreur_Justesse ?? false,
+  })
   const normalHigh = data.Est_Consigne_Sup_Active
-    ? finite(data.Tolerance_Surveillance_Sup ?? data.Consigne_Sup)
+    ? finite(liveEmt.toleranceSup ?? data.Tolerance_Surveillance_Sup ?? data.Consigne_Sup)
     : null
   const normalLow = data.Est_Consigne_Inf_Active
-    ? finite(data.Tolerance_Surveillance_Inf ?? data.Consigne_Inf)
+    ? finite(liveEmt.toleranceInf ?? data.Tolerance_Surveillance_Inf ?? data.Consigne_Inf)
     : null
   const preHigh = data.Est_Consigne_Sup_Pre_Alarme_Active
     ? finite(data.Consigne_Sup_Pre_Alarme)
