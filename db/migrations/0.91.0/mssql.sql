@@ -54,18 +54,6 @@ BEGIN TRY
             ADD Est_Seuil_Critique_Bas_Active BIT NOT NULL
                 CONSTRAINT DF_t_lieu_template_Seuil_Critique_Bas_Active DEFAULT (0);
 
-    UPDATE dbo.t_parametre
-       SET Valeur = N'0.91.0',
-           Commentaire = N'Version de schéma VigiSensys'
-     WHERE Section = 'VERSION'
-       AND Mot_Cle = 'SCHEMA_VERSION';
-
-    IF @@ROWCOUNT = 0
-    BEGIN
-        INSERT INTO dbo.t_parametre (Section, Mot_Cle, Valeur, Commentaire)
-        VALUES ('VERSION', 'SCHEMA_VERSION', N'0.91.0', N'Version de schéma VigiSensys');
-    END;
-
     COMMIT TRANSACTION;
 END TRY
 BEGIN CATCH
@@ -510,6 +498,31 @@ BEGIN
   CLOSE cur;
   DEALLOCATE cur;
 END;
+GO
+
+-- Le marqueur n'est mis à jour qu'après succès du DDL ET du trigger GSO.
+BEGIN TRY
+    BEGIN TRANSACTION;
+
+    UPDATE dbo.t_parametre
+       SET Valeur = N'0.91.0',
+           Commentaire = N'Version de schéma VigiSensys'
+     WHERE Section = 'VERSION'
+       AND Mot_Cle = 'SCHEMA_VERSION';
+
+    IF @@ROWCOUNT = 0
+    BEGIN
+        INSERT INTO dbo.t_parametre (Section, Mot_Cle, Valeur, Commentaire)
+        VALUES ('VERSION', 'SCHEMA_VERSION', N'0.91.0', N'Version de schéma VigiSensys');
+    END;
+
+    COMMIT TRANSACTION;
+END TRY
+BEGIN CATCH
+    IF @@TRANCOUNT > 0
+        ROLLBACK TRANSACTION;
+    THROW;
+END CATCH;
 GO
 
 SELECT N'Migration VigiSensys DB 0.91.0 terminée' AS Migration_Status;
