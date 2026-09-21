@@ -1888,7 +1888,8 @@
         "email_ended": "Fin d'alarme",
         "email_acknowledged": "Acquittement d'alarme",
         "email_sent": "Envoyé"
-      }
+      },
+      "email_event": "Email d'alarme : {event}"
     }
   },
   "profilePage": {
