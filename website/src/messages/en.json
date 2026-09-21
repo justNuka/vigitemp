@@ -213,7 +213,7 @@
   "alarmsPage": {
     "analysis": {
       "title": "Alarm analysis",
-      "description": "Detailed analysis of an alarm, its measurements, and its audit trail.",
+      "description": "Acknowledge and analyse location alarms over the relevant alarm period.",
       "back": "Back to alarms",
       "backToMonitoring": "Back to monitoring",
       "acknowledge": "Acknowledge",
@@ -228,7 +228,19 @@
       "focusTitle": "Selected alarm",
       "refocus": "Refocus on alarm",
       "statusActive": "Active",
-      "statusResolved": "Resolved"
+      "statusResolved": "Resolved",
+      "exportXlsx": "Export XLSX",
+      "exportingXlsx": "Exporting XLSX...",
+      "exportError": "Unable to export measurements to XLSX.",
+      "partialAcknowledgeError": "Some alarms could not be acknowledged.",
+      "selectAllForAcknowledgement": "Select all (multiple acknowledgement)",
+      "selectAlarmAria": "Select alarm {id}",
+      "noSelection": "Select an alarm from the list to display its details.",
+      "multipleSelectionTitle": "Selected alarms ({count})",
+      "multipleSelectionDescription": "The chart is hidden during multiple selection. Review the alarms before acknowledging them together.",
+      "acknowledgeMany": "Acknowledge ({count})",
+      "acknowledgeManyDialogTitle": "Acknowledge {count} alarms",
+      "acknowledgeDialogDescription": "Optionally add a comment that will be attached to the acknowledgement."
     },
     "title": "Alarm management",
     "description": "Follow-up and handling of alarms",
@@ -387,7 +399,9 @@
       "deselect_all": "Clear all",
       "related_type_filter_placeholder": "Filter by type",
       "related_type_filter_all": "All types",
-      "related_alarms_empty": "No alarms match the current filter."
+      "related_alarms_empty": "No alarms match the current filter.",
+      "comment_loading": "Loading...",
+      "characters": "characters"
     },
     "status": {
       "active": "Active",
