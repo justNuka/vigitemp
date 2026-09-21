@@ -327,6 +327,8 @@ model t_lieu {
   Est_Consigne_Sup_Active                   Boolean?                @default(false)
   Consigne_Sup_Pre_Alarme                   Float?                  @db.Float
   Est_Consigne_Sup_Pre_Alarme_Active        Boolean?                @default(false)
+  Seuil_Critique_Haut                       Float?                  @db.Float
+  Est_Seuil_Critique_Haut_Active            Boolean                 @default(false)
   Consigne_Inf                              Float?                  @db.Float
   Consigne_Inf_Base                         Float?
   Tolerance_Surveillance_Inf                Float?                  @db.Float
@@ -334,6 +336,8 @@ model t_lieu {
   Est_Consigne_Inf_Active                   Boolean?                @default(false)
   Consigne_Inf_Pre_Alarme                   Float?                  @db.Float
   Est_Consigne_Inf_Pre_Alarme_Active        Boolean?                @default(false)
+  Seuil_Critique_Bas                        Float?                  @db.Float
+  Est_Seuil_Critique_Bas_Active             Boolean                 @default(false)
   Frequence                                 Int?
   Lieu_Etat                                 String?                 @default("D") @db.VarChar(1)
   Retard_Alarme_Haut                        Int?
@@ -439,10 +443,14 @@ model t_lieu_template {
   Tolerance_Surveillance_Inf                Decimal? @db.Decimal(10, 2)
   Consigne_Sup_Pre_Alarme                   Decimal? @db.Decimal(10, 2)
   Consigne_Inf_Pre_Alarme                   Decimal? @db.Decimal(10, 2)
+  Seuil_Critique_Haut                       Decimal? @db.Decimal(10, 2)
+  Seuil_Critique_Bas                        Decimal? @db.Decimal(10, 2)
   Est_Consigne_Sup_Active                   Boolean  @default(false)
   Est_Consigne_Inf_Active                   Boolean  @default(false)
   Est_Consigne_Sup_Pre_Alarme_Active        Boolean  @default(false)
   Est_Consigne_Inf_Pre_Alarme_Active        Boolean  @default(false)
+  Est_Seuil_Critique_Haut_Active            Boolean  @default(false)
+  Est_Seuil_Critique_Bas_Active             Boolean  @default(false)
   Est_Son_Alarme_Active                     Boolean  @default(true)
   Est_Redeclenchement_Immediat              Boolean  @default(false)
   Nb_Mesures_Temporisation_Redeclenchement  Int?     @default(0)
