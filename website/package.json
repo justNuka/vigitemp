@@ -18,6 +18,7 @@
     "test:api": "tsx scripts/test-api.ts",
     "test:alarm-acknowledgement-context": "tsx scripts/test-alarm-acknowledgement-context.ts",
     "test:location-critical-thresholds": "tsx scripts/test-location-critical-thresholds.ts",
+    "test:admin-dashboard-refinements": "tsx scripts/test-admin-dashboard-refinements.ts",
     "test:better-auth-foundation": "tsx scripts/test-better-auth-cookie-bridge.ts && tsx scripts/test-better-auth-foundation.ts",
     "test:db": "tsx scripts/test-db-connection.ts",
     "test:date-display": "tsx scripts/test-date-display.ts",
