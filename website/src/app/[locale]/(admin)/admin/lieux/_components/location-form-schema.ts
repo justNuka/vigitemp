@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { buildCriticalThresholdIssues } from "@/lib/location-critical-threshold-contract";
 
 const mailingContactSchema = z.object({
   Id_Tel_Num: z.number().optional(),
@@ -140,6 +141,34 @@ function addConsigneGuards(data: Record<string, unknown>, ctx: z.RefinementCtx) 
       message: "Le retard d'alarme bas doit etre strictement superieur a 0.",
     })
   }
+
+  const criticalIssues = buildCriticalThresholdIssues({
+    consigne: typeof data.Consigne === "number" ? data.Consigne : null,
+    effectiveHigh:
+      typeof data.Tolerance_Surveillance_Sup === "number"
+        ? data.Tolerance_Surveillance_Sup
+        : typeof data.Consigne_Sup === "number"
+          ? data.Consigne_Sup
+          : null,
+    effectiveLow:
+      typeof data.Tolerance_Surveillance_Inf === "number"
+        ? data.Tolerance_Surveillance_Inf
+        : typeof data.Consigne_Inf === "number"
+          ? data.Consigne_Inf
+          : null,
+    criticalHigh: typeof data.Seuil_Critique_Haut === "number" ? data.Seuil_Critique_Haut : null,
+    criticalHighActive: data.Est_Seuil_Critique_Haut_Active === true,
+    criticalLow: typeof data.Seuil_Critique_Bas === "number" ? data.Seuil_Critique_Bas : null,
+    criticalLowActive: data.Est_Seuil_Critique_Bas_Active === true,
+  })
+
+  for (const issue of criticalIssues) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: issue.path,
+      message: issue.message,
+    })
+  }
 }
 
 export const locationFormSchema = z.object({
@@ -156,11 +185,15 @@ export const locationFormSchema = z.object({
   Est_Consigne_Sup_Active: z.boolean().optional(),
   Consigne_Sup_Pre_Alarme: z.number().optional().nullable(),
   Est_Consigne_Sup_Pre_Alarme_Active: z.boolean().optional(),
+  Seuil_Critique_Haut: z.number().optional().nullable(),
+  Est_Seuil_Critique_Haut_Active: z.boolean().optional(),
   Retard_Alarme_Haut: z.number().optional().nullable(),
   Consigne_Inf: z.number().optional().nullable(),
   Est_Consigne_Inf_Active: z.boolean().optional(),
   Consigne_Inf_Pre_Alarme: z.number().optional().nullable(),
   Est_Consigne_Inf_Pre_Alarme_Active: z.boolean().optional(),
+  Seuil_Critique_Bas: z.number().optional().nullable(),
+  Est_Seuil_Critique_Bas_Active: z.boolean().optional(),
   Retard_Alarme_Bas: z.number().optional().nullable(),
   Retard_Non_Reponse: z.number().optional().nullable(),
   Retard_Alarme_Changement_Consigne: z.number().optional().nullable(),
