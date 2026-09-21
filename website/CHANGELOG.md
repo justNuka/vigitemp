@@ -19,6 +19,14 @@ Les versions suivent `MAJOR.MINOR.PATCH` sans zéros de tête. La source de vers
 - Les installations historiques sans paramètre `SMTP_CONFIRME` conservent leur comportement actuel tant que leur configuration SMTP n'est pas modifiée.
 - Le Dashboard Admin distingue désormais une configuration Mailing techniquement complète mais encore non confirmée.
 
+### Lieux / sondes
+
+- Le formulaire de création et d'édition d'un lieu reçoit désormais les bornes `Valeur_Min` / `Valeur_Max` du type de sonde sélectionné et affiche sa plage de mesure dans l'onglet Général.
+- La même validation de plage est partagée entre le frontend et les APIs `POST/PATCH /api/lieux`, afin d'éviter toute divergence de règle métier.
+- Une valeur hors plage est bloquée avant le POST et l'erreur est associée directement au champ concerné ; l'API renvoie également le premier motif précis au lieu du générique `Validation impossible`.
+- Cas terrain verrouillé : une `SOET` reste limitée à `-40 … 125 °C` conformément aux données produit du dépôt ; une consigne `-80 °C` est refusée explicitement au lieu d'échouer sans explication.
+- Les plages des sondes disponibles sont chargées par type en une requête batch, sans N+1, et restent compatibles avec les installations où les colonnes de plage historiques sont absentes.
+
 ## [1.0.0] — 2026-09-18
 
 Cette version consolide l'ensemble des évolutions Web intégrées depuis la baseline `0.90.2` et constitue la première release Web VigiSensys considérée comme finalisée.

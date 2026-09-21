@@ -1059,7 +1059,7 @@ Le premier essai Windows de la préparation 1.0.0 avait échoué uniquement parc
 
 ## 18/09/2026 — Paramètres : validation SMTP par code et navigation par onglets
 
-**Statut : PR_OUVERTE — PR #131, validation terrain à réaliser**
+**Statut : MERGE — PR #131, validation terrain à réaliser**
 
 - branche : `feature/settings-smtp-verification-tabs` ;
 - PR : #131 ;
@@ -1279,4 +1279,137 @@ Revalidation finale GitHub Actions `35362593764` ✅ après mise à jour documen
 - [ ] vérifier FR/EN et clair/sombre ;
 - [ ] valider le parcours sur MySQL ;
 - [ ] valider le parcours sur SQL Server.
+
+---
+
+## 21/09/2026 — Création de lieu : erreur générique sur une consigne hors plage sonde
+
+**Statut : PR_OUVERTE — PR #132, validation terrain à réaliser**
+
+- branche : `fix/location-sensor-range-validation` ;
+- PR : #132 ;
+- base : `dev` au commit `6cd2018eaebf0d9389cc1bd698649403721fc0b4` (merge PR #131).
+
+### Retour terrain
+
+Création du lieu :
+
+- nom : `GSO -80°C (8699)` ;
+- sonde : `SOET-10008699` ;
+- consigne : `-80 °C` ;
+
+avec réponse :
+
+`POST /api/lieux -> 400 — Validation impossible`.
+
+Le champ `Type_Lieu: ""` présent dans le payload n'est pas la cause : il n'appartient pas au schéma Zod de création et est simplement ignoré par le parseur.
+
+### Cause réelle
+
+Après la validation Zod, `POST /api/lieux` contrôle les consignes contre `t_sonde_type.Valeur_Min / Valeur_Max`.
+
+Le type `SOET` est défini dans les seeds MySQL et SQL Server comme :
+
+- `Gemsense One Température externe` ;
+- unité : `°C` ;
+- minimum : `-40` ;
+- maximum : `125`.
+
+La fiche matériel seedée `GSO-ET` confirme également : **« Température d'utilisation : -40°C à 125°C »**.
+
+La consigne `-80 °C` est donc réellement hors plage et doit rester refusée. Le bug provenait de l'expérience utilisateur :
+
+- le formulaire n'affichait pas la plage de la sonde sélectionnée ;
+- il n'effectuait pas cette validation avant le POST ;
+- l'API calculait bien une issue précise mais répondait avec le message générique `Validation impossible`, ce qui masquait la vraie cause.
+
+### Correction
+
+La plage de mesure devient une donnée disponible dans les résultats sondes utilisés par le formulaire :
+
+- `Valeur_Min` ;
+- `Valeur_Max` ;
+- `Unite_Type`.
+
+Pour éviter un N+1, les définitions de plages sont chargées en une seule requête batch par type de sonde.
+
+La règle de validation est extraite dans un contrat pur partagé Web/API :
+
+`website/src/lib/sensor-value-range-contract.ts`
+
+Le formulaire création/édition :
+
+- retrouve la sonde sélectionnée ;
+- affiche par exemple **Plage de mesure de la sonde sélectionnée : -40 à 125 °C** ;
+- vérifie consigne, seuils, pré-alarmes et tolérances avant d'appeler l'API ;
+- place l'erreur directement sur le champ concerné ;
+- empêche le POST/PATCH tant que la valeur reste hors plage.
+
+Les APIs conservent la validation serveur et renvoient désormais le premier motif précis. Pour le payload terrain, le message attendu devient :
+
+**La consigne doit être supérieure ou égale à -40 °C.**
+
+La modification de lieu bénéficie du même comportement.
+
+### Compatibilité / performance
+
+- aucune modification de schéma ou de seed ;
+- les colonnes `Valeur_Min / Valeur_Max` restent lues en SQL brut, comme avant, car elles ne sont pas encore matérialisées dans le modèle Prisma courant ;
+- si une ancienne installation ne possède pas ces colonnes, le helper conserve le fallback historique sans contrainte de plage ;
+- les plages de la liste des sondes sont chargées en batch et non sonde par sonde ;
+- MySQL et SQL Server utilisent le même contrat métier.
+
+### Principaux fichiers
+
+- `website/src/lib/sensor-value-range-contract.ts` ;
+- `website/src/lib/sensor-value-range.ts` ;
+- `website/src/app/api/sondes/route.ts` ;
+- `website/src/app/api/sondes/unassigned/route.ts` ;
+- `website/src/hooks/useAvailableSensors.ts` ;
+- `website/src/app/api/lieux/route.ts` ;
+- `website/src/app/api/lieux/[id]/route.ts` ;
+- `website/src/app/[locale]/(admin)/admin/lieux/_components/location-form-dialog.tsx` ;
+- `website/src/app/[locale]/(admin)/admin/lieux/_components/location-form-tab-general.tsx` ;
+- `website/src/app/[locale]/(admin)/admin/lieux/_components/general-tab/location-setpoints-section.tsx` ;
+- `website/scripts/test-location-sensor-range.ts`.
+
+### Validation technique
+
+Le test ciblé reproduit explicitement le retour terrain :
+
+- `SOET` avec plage `[-40 ; 125] °C` ;
+- consigne `-80 °C` -> refus ;
+- message exact `La consigne doit être supérieure ou égale à -40 °C.` ;
+- bornes `-40` et `125` acceptées ;
+- `126` refusé ;
+- validation de plusieurs champs hors plage.
+
+Le premier run CI `35570824976` a détecté uniquement un chemin d'import erroné du client Prisma généré ; le test métier et ESLint étaient déjà verts. Le chemin a été corrigé avant revalidation complète.
+
+Revalidation finale GitHub Actions `35571682951` ✅ :
+
+- `git diff --check origin/dev...HEAD` ;
+- test ciblé `SOET / -80 °C` ;
+- validation des messages FR/EN ;
+- ESLint ;
+- TypeScript MySQL ;
+- i18n sans nouvelle dette du lot ;
+- génération + TypeScript SQL Server ;
+- restauration Prisma MySQL ;
+- build Next.js production ;
+- suppression automatique du workflow temporaire.
+
+### Checklist terrain
+
+- [ ] créer un lieu avec une SOET et vérifier l'affichage de la plage `-40 à 125 °C` ;
+- [ ] saisir `Consigne = -80` : le formulaire doit refuser avant tout POST et afficher l'erreur sur **Consigne** ;
+- [ ] saisir `-40` puis `125` : les deux bornes doivent être acceptées ;
+- [ ] saisir `126` : refus explicite côté formulaire ;
+- [ ] appeler directement `POST /api/lieux` avec SOET + `Consigne=-80` : réponse 400 avec le motif `... -40 °C`, pas `Validation impossible` ;
+- [ ] vérifier la même règle en édition d'un lieu ;
+- [ ] vérifier les seuils haut/bas et pré-alarmes hors plage ;
+- [ ] sélectionner un type sans plage configurée : aucun blocage arbitraire ne doit apparaître ;
+- [ ] vérifier une autre sonde disposant de bornes : les bornes de son propre type doivent être utilisées ;
+- [ ] vérifier FR/EN ;
+- [ ] valider MySQL et SQL Server.
 

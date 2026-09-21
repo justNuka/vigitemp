@@ -37,10 +37,11 @@ import { useEffect, useMemo, useState } from "react";
 import type { Dispatch, SetStateAction } from "react";
 import { FormProvider, type UseFormReturn, useForm, useWatch } from 'react-hook-form';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import { showFormValidationToast } from '@/lib/form-toast';
 import { postJson } from '@/lib/http';
+import { buildLocationValueRangeIssues } from '@/lib/sensor-value-range-contract';
 
 import type { EmtMode } from "@/lib/emt"
 import type { LieuEmtParams } from "@/lib/planning-regle-schema"
@@ -118,12 +119,43 @@ export function LocationFormDialog({
   const isExpertEdition = isExpert(license);
   const t = useTranslations('locationsForm.dialog');
   const tCommon = useTranslations('common');
+  const locale = useLocale() === 'en' ? 'en' : 'fr';
   const internalForm = useForm<LocationFormData>({
     defaultValues: formData ?? getDefaultLocationFormData(),
   });
   const resolvedForm = form ?? internalForm;
   const internalFormValues = useWatch({ control: internalForm.control });
   const hasChanges = open && resolvedForm.formState.isDirty;
+
+  const validateSelectedSensorRange = (values: LocationFormData) => {
+    const serial = values.Sonde_Numero_Serie?.trim();
+    if (!serial) return true;
+
+    const sensor = availableSensors.find(
+      (candidate) => candidate.Sonde_Numero_Serie === serial,
+    );
+    if (!sensor) return true;
+
+    const range = {
+      min: sensor.Valeur_Min ?? null,
+      max: sensor.Valeur_Max ?? null,
+      unit: sensor.Unite_Type ?? values.Unite ?? null,
+    };
+    const issues = buildLocationValueRangeIssues(values, range, locale);
+
+    if (issues.length === 0) return true;
+
+    for (const issue of issues) {
+      const [field] = issue.path;
+      resolvedForm.setError(field as keyof LocationFormData, {
+        type: 'manual',
+        message: issue.message,
+      });
+    }
+
+    toast.error(issues[0]?.message ?? tCommon('error'));
+    return false;
+  };
 
   const normalizeSubmitValues = (values: LocationFormData): LocationFormData | null => {
     if (!showActionComment) return values;
@@ -164,6 +196,7 @@ export function LocationFormDialog({
       toast.error(validation.error.issues[0]?.message ?? tCommon('error'));
       return;
     }
+    if (!validateSelectedSensorRange(normalized)) return;
     try {
       const result = await onSubmit(normalized, 'stay');
       if (result?.saved === false) return;
@@ -196,6 +229,7 @@ export function LocationFormDialog({
       toast.error(validation.error.issues[0]?.message ?? tCommon('error'));
       return;
     }
+    if (!validateSelectedSensorRange(normalized)) return;
     try {
       const result = await onSubmit(normalized, 'close');
       if (result?.saved === false) return;
