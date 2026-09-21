@@ -272,7 +272,7 @@ export default function AdminDashboard() {
         <PageHeader title={t("title")} />
         <LazyMotion features={domAnimation}>
           <m.div
-            className="grid gap-4 p-6 md:grid-cols-2 xl:grid-cols-3"
+            className="grid auto-rows-fr gap-4 p-6 md:grid-cols-2 xl:grid-cols-3"
             variants={staggerContainer}
             initial="hidden"
             animate="visible"
@@ -311,7 +311,7 @@ export default function AdminDashboard() {
     return (
       <div className="flex min-h-full flex-col">
         <PageHeader title={t("title")} />
-        <div className="grid gap-4 px-6 pt-6 md:grid-cols-2 xl:grid-cols-3">
+        <div className="grid auto-rows-fr gap-4 px-6 pt-6 md:grid-cols-2 xl:grid-cols-3">
           <AdminSystemHealthCard />
           <AdminServiceCards />
         </div>
@@ -346,7 +346,7 @@ export default function AdminDashboard() {
     return (
       <div className="flex min-h-full flex-col">
         <PageHeader title={t("title")} />
-        <div className="grid gap-4 p-6 md:grid-cols-2 xl:grid-cols-3">
+        <div className="grid auto-rows-fr gap-4 p-6 md:grid-cols-2 xl:grid-cols-3">
           {Array.from({ length: 6 }).map((_, i) => (
             <div key={i} className="rounded-xl h-40 animate-shimmer" />
           ))}
@@ -361,7 +361,7 @@ export default function AdminDashboard() {
 
       <LazyMotion features={domAnimation}>
         <m.div
-          className="grid gap-4 p-6 md:grid-cols-2 xl:grid-cols-3"
+          className="grid auto-rows-fr gap-4 p-6 md:grid-cols-2 xl:grid-cols-3"
           variants={staggerContainer}
           initial="hidden"
           animate="visible"
