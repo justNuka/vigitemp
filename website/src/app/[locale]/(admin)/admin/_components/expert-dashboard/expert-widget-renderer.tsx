@@ -19,12 +19,14 @@ export function renderExpertWidget({
   metrics,
   accessLabel,
   t,
+  onOpenBackupLog,
 }: {
   id: WidgetId
   locale: string
   metrics: Metrics
   accessLabel: string
   t: Translate
+  onOpenBackupLog?: () => void
 }) {
   if (id === "alarms") {
     return (
@@ -48,7 +50,7 @@ export function renderExpertWidget({
     return (
       <ExpertWidgetCard
         title={t("acknowledgments.title")}
-        description={t("acknowledgments.description", { total: metrics.acknowledgmentsTotal, max: 50 })}
+        description={t("acknowledgments.description_recent", { total: metrics.acknowledgmentsTotal, days: 7 })}
         value={String(metrics.acknowledgmentsTotal)}
         helper={`${t("acknowledgments.columns.date_time")}: ${metrics.latestAck}`}
         href="/admin/alarmes/acquittements"
@@ -119,6 +121,8 @@ export function renderExpertWidget({
         helper={`${t("backup.last.label")}: ${metrics.lastBackupLabel}\n${metrics.backupStoragePath}`}
         icon={<BookOpen className="h-5 w-5 text-violet-600" />}
         badge={backupBadge}
+        onClick={onOpenBackupLog}
+        ariaLabel={t("backup.log.open")}
       />
     )
   }
@@ -138,9 +142,10 @@ export function renderExpertWidget({
 
   return (
     <ExpertWidgetCard
-      title={t("links.etalons.title")}
-      description={t("links.etalons.description")}
-      value="-"
+      title={t("metrology.title")}
+      description={t("metrology.description", { days: 15 })}
+      value={String(metrics.upcomingCalibrationCount)}
+      helper={t("metrology.helper", { days: 15 })}
       href="/admin/metrologie"
       hrefLabel={accessLabel}
       icon={<Ruler className="h-5 w-5 text-cyan-600" />}
