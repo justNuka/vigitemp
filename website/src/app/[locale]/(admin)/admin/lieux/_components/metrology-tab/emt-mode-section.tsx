@@ -107,13 +107,13 @@ export function EmtModeSection({
                 ) : formData.Corriger_Erreur_Justesse ? (
                   <>
                     <span className="font-medium">I<sub>mes</sub> = 2 * sqrt((I<sub>et</sub>/2)<sup>2</sup> + (Derive/sqrt(3))<sup>2</sup>)</span>
-                    <div className="text-xs text-muted-foreground">{`I_et = ${iEtalonnage}`}</div>
+                    <div className="text-xs text-muted-foreground">{`I_et = ${formatEmtNumber(iEtalonnage)}`}</div>
                     <div className="text-xs text-muted-foreground">{`I_mes = ${formatEmtNumber(withDerivePart)}`}</div>
                   </>
                 ) : (
                   <>
                     <span className="font-medium">I<sub>mes</sub> = |EJ| + 2 * sqrt((I<sub>et</sub>/2)<sup>2</sup> + (Derive/sqrt(3))<sup>2</sup>)</span>
-                    <div className="text-xs text-muted-foreground">{`I_et = ${iEtalonnage}`}</div>
+                    <div className="text-xs text-muted-foreground">{`I_et = ${formatEmtNumber(iEtalonnage)}`}</div>
                     <div className="text-xs text-muted-foreground">{`I_mes = |${formatEmtNumber(absEj)}| + ${formatEmtNumber(withDerivePart)} = ${formatEmtNumber(absEj + withDerivePart)}`}</div>
                   </>
                 )}
