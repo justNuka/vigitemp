@@ -10,6 +10,8 @@ export type LocationRangeField =
   | "Consigne_Inf"
   | "Consigne_Sup_Pre_Alarme"
   | "Consigne_Inf_Pre_Alarme"
+  | "Seuil_Critique_Haut"
+  | "Seuil_Critique_Bas"
   | "Tolerance_Surveillance_Sup"
   | "Tolerance_Surveillance_Inf"
 
@@ -43,6 +45,14 @@ const RANGE_FIELDS: Array<{
   {
     key: "Consigne_Inf_Pre_Alarme",
     label: { fr: "La pré-alarme inférieure", en: "The lower pre-alarm" },
+  },
+  {
+    key: "Seuil_Critique_Haut",
+    label: { fr: "Le seuil critique haut", en: "The critical upper threshold" },
+  },
+  {
+    key: "Seuil_Critique_Bas",
+    label: { fr: "Le seuil critique bas", en: "The critical lower threshold" },
   },
   {
     key: "Tolerance_Surveillance_Sup",
