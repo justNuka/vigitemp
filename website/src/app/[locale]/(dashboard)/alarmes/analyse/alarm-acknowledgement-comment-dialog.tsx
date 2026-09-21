@@ -45,9 +45,11 @@ export function AlarmAcknowledgementCommentDialog({
     if (!open) return
 
     let active = true
-    setSelectedCommentId("")
-    setComment("")
-    setIsLoadingComments(true)
+    const initTimer = window.setTimeout(() => {
+      setSelectedCommentId("")
+      setComment("")
+      setIsLoadingComments(true)
+    }, 0)
 
     fetch("/api/alarmes/commentaires-acquittement", { cache: "no-store" })
       .then((response) => (response.ok ? response.json() : null))
@@ -72,6 +74,7 @@ export function AlarmAcknowledgementCommentDialog({
 
     return () => {
       active = false
+      window.clearTimeout(initTimer)
     }
   }, [open])
 
