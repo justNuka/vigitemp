@@ -8,7 +8,35 @@ Les versions suivent `MAJOR.MINOR.PATCH` sans zéros de tête. La source de vers
 
 ## [Unreleased]
 
-Aucun changement supplémentaire documenté depuis la préparation de la version Web 1.2.0.
+Aucun changement supplémentaire documenté depuis la préparation de la version Web 1.3.0.
+
+## [1.3.0] — 2026-09-21
+
+Cette version affine le Dashboard administrateur et simplifie la navigation secondaire de l'espace Admin.
+
+### Navigation Administration
+
+- Le dock d'administration est désormais limité aux pages qu'il représente réellement : Sondes, Modules, Actionneurs, Groupes, Lieux, Sites et Outils.
+- Les entrées **Bains & étalons** et **Templates lieux** sont retirées du dock.
+- Le dock n'est plus affiché sur les pages secondaires absentes de cette liste, notamment Métrologie, Audit, Santé système, Paramètres et Templates lieux.
+- La création d'un lieu conserve son sélecteur de template et propose maintenant un lien direct **Gérer les templates** vers la page dédiée.
+
+### Dashboard administrateur
+
+- Les cards du dashboard standard et simplifié occupent désormais uniformément la hauteur de leur ligne ; les widgets du dashboard Expert utilisent également une hauteur initiale commune.
+- La card **Sauvegarde système** est interactive : un clic ouvre une dialog présentant les dernières lignes de `backup_bdd_vigisensys.log`, avec horodatage, état, mise en évidence des erreurs/succès et indication lorsque le journal est tronqué.
+- L'API de sauvegarde ne renvoie au Web que les **300 dernières lignes utiles** du journal afin d'éviter de transférer un fichier historique potentiellement volumineux.
+- La card **Journal acquittements alarmes** affiche maintenant le nombre d'acquittements des **7 derniers jours calendaires** et conserve le dernier acquittement de cette même période comme information secondaire.
+- La card **Métrologie** affiche le nombre de sondes actives dont le dernier étalonnage arrive à échéance entre aujourd'hui et **J+15**. Les sondes déjà expirées ne sont pas mélangées à ce compteur « à prévoir ».
+- Le calcul Métrologie utilise uniquement le dernier étalonnage de chaque sonde et une requête SQL agrégée compatible MySQL / SQL Server, sans charger toute la liste des sondes sur le dashboard.
+- Le widget Métrologie est de nouveau disponible sur le dashboard Expert avec la même métrique J+15.
+
+### Compatibilité
+
+- Version Web : **1.3.0**.
+- Serveur **1.1.0**, Agent **1.0.1** et BDD **0.91.0** restent inchangés par ce lot.
+- Aucune migration BDD n'est requise.
+- MySQL et SQL Server restent supportés.
 
 ## [1.2.0] — 2026-09-21
 
