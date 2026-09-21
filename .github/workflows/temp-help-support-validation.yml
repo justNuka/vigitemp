@@ -1,0 +1,103 @@
+name: Temporary Hotline help validation
+
+on:
+  push:
+    branches:
+      - feature/hotline-user-help
+
+permissions:
+  contents: read
+
+concurrency:
+  group: temp-hotline-help-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  web:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    defaults:
+      run:
+        working-directory: website
+    env:
+      DATABASE_PROVIDER: mysql
+      DATABASE_URL: mysql://root:password@127.0.0.1:3306/vigisensys
+      DATABASE_MESURES_URL: mysql://root:password@127.0.0.1:3306/vigisensys_mesures
+      DATABASE_CHAT_URL: mysql://root:password@127.0.0.1:3306/vigisensys_chat
+      JWT_SECRET: temporary-ci-secret-that-is-long-enough-for-validation
+      BETTER_AUTH_SECRET: temporary-ci-better-auth-secret-that-is-long-enough
+      NEXT_PUBLIC_APP_URL: http://localhost:3000
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: website/pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Diff check
+        working-directory: .
+        run: git diff --check origin/dev...HEAD
+
+      - name: Generate Prisma MySQL
+        run: pnpm prisma:generate:mysql
+
+      - name: Hotline help contract
+        run: pnpm test:help-support
+
+      - name: ESLint targeted
+        run: >-
+          pnpm exec eslint
+          "src/app/[locale]/(dashboard)/help/page.tsx"
+          "src/app/[locale]/(dashboard)/help/help-support-page-client.tsx"
+          "src/components/app-sidebar.tsx"
+          "src/i18n/routing.ts"
+          "src/i18n/request.ts"
+          "src/messages/help-support-supplements.ts"
+          "src/lib/support-contact.ts"
+          "scripts/test-help-support-page.ts"
+
+      - name: TypeScript MySQL
+        run: pnpm exec tsc --noEmit
+
+      - name: i18n check
+        shell: bash
+        run: |
+          set +e
+          pnpm i18n:check 2>&1 | tee /tmp/i18n-check.log
+          status=${PIPESTATUS[0]}
+          set -e
+
+          if grep -E 'dashboard.*/help|app-sidebar|help-support' /tmp/i18n-check.log; then
+            echo "New i18n debt detected in a source changed by this lot."
+            exit 1
+          fi
+
+          if [ "${status}" -ne 0 ]; then
+            echo "The global checker still reports only pre-existing debt outside this lot."
+          fi
+
+      - name: Generate Prisma SQL Server
+        run: pnpm prisma:generate:mssql
+
+      - name: TypeScript SQL Server
+        run: pnpm exec tsc --noEmit
+
+      - name: Restore Prisma MySQL
+        run: pnpm prisma:generate:mysql
+
+      - name: Production build
+        run: pnpm build
