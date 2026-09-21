@@ -13,7 +13,8 @@ import { computeEmt } from '@/lib/emt'
 import { useAdjustments } from '@/hooks/useAdjustments'
 import { useCalibrations } from '@/hooks/useCalibrations'
 import { formatDbDateTime } from '@/lib/date-display'
-import { useTranslations } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
+import { formatNumber } from '@/lib/number-display'
 
 import { EmtModeSection } from './metrology-tab/emt-mode-section'
 import { MetrologySensorInfoSection } from './metrology-tab/metrology-sensor-info-section'
@@ -27,6 +28,15 @@ type LocationFormTabMetrologyProps = {
 export function LocationFormTabMetrology({ isExpertEdition }: LocationFormTabMetrologyProps) {
   const t = useTranslations('locationsForm.metrology')
   const tGeneral = useTranslations('locationsForm.general')
+  const locale = useLocale()
+  const formatMetrologyNumber = (value: number | null | undefined) =>
+    formatNumber(value, {
+      minimumDecimals: 0,
+      maximumDecimals: 4,
+      locale: locale === 'fr' ? 'fr-FR' : locale,
+      grouping: false,
+      fallback: '',
+    })
   const { register, watch, setValue } = useFormContext<LocationFormData>()
   const formData = watch()
 
@@ -280,16 +290,16 @@ export function LocationFormTabMetrology({ isExpertEdition }: LocationFormTabMet
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label>{tGeneral('labels.upper_max')}</Label>
-            <Input disabled value={formData.Consigne_Sup ?? ''} className="bg-muted" />
+            <Input disabled value={formatMetrologyNumber(formData.Consigne_Sup)} className="bg-muted" />
           </div>
           <div className="space-y-2">
             <Label>{t('setpoints.upper_tolerance')}</Label>
-            <Input disabled value={formData.Est_Consigne_Sup_Active ? (formData.Tolerance_Surveillance_Sup ?? '') : ''} className="bg-muted" />
+            <Input disabled value={formData.Est_Consigne_Sup_Active ? formatMetrologyNumber(formData.Tolerance_Surveillance_Sup) : ''} className="bg-muted" />
           </div>
 
           <div className="space-y-2">
             <Label>{tGeneral('labels.setpoint')}</Label>
-            <Input disabled value={formData.Consigne ?? ''} className="bg-muted" />
+            <Input disabled value={formatMetrologyNumber(formData.Consigne)} className="bg-muted" />
           </div>
           <div className="space-y-2">
             <Label>{tGeneral('labels.frequency')}</Label>
@@ -298,11 +308,11 @@ export function LocationFormTabMetrology({ isExpertEdition }: LocationFormTabMet
 
           <div className="space-y-2">
             <Label>{tGeneral('labels.lower_min')}</Label>
-            <Input disabled value={formData.Consigne_Inf ?? ''} className="bg-muted" />
+            <Input disabled value={formatMetrologyNumber(formData.Consigne_Inf)} className="bg-muted" />
           </div>
           <div className="space-y-2">
             <Label>{t('setpoints.lower_tolerance')}</Label>
-            <Input disabled value={formData.Est_Consigne_Inf_Active ? (formData.Tolerance_Surveillance_Inf ?? '') : ''} className="bg-muted" />
+            <Input disabled value={formData.Est_Consigne_Inf_Active ? formatMetrologyNumber(formData.Tolerance_Surveillance_Inf) : ''} className="bg-muted" />
           </div>
         </div>
 
