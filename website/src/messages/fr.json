@@ -575,7 +575,7 @@
   "alarmsPage": {
     "analysis": {
       "title": "Analyse d'alarme",
-      "description": "Analyse détaillée d'une alarme, de ses mesures et de son audit.",
+      "description": "Acquittement et analyse des alarmes du lieu sur leur période concernée.",
       "back": "Retour aux alarmes",
       "backToMonitoring": "Retour à la surveillance",
       "acknowledge": "Acquitter",
@@ -590,7 +590,19 @@
       "focusTitle": "Alarme sélectionnée",
       "refocus": "Recentrer sur l'alarme",
       "statusActive": "Active",
-      "statusResolved": "Terminée"
+      "statusResolved": "Terminée",
+      "exportXlsx": "Exporter XLSX",
+      "exportingXlsx": "Export XLSX...",
+      "exportError": "Impossible d'exporter les mesures en XLSX.",
+      "partialAcknowledgeError": "Certaines alarmes n'ont pas pu être acquittées.",
+      "selectAllForAcknowledgement": "Tout cocher (acquittement multiple)",
+      "selectAlarmAria": "Sélectionner l'alarme {id}",
+      "noSelection": "Sélectionnez une alarme dans la liste pour afficher son détail.",
+      "multipleSelectionTitle": "Alarmes sélectionnées ({count})",
+      "multipleSelectionDescription": "Le graphique est masqué pendant une sélection multiple. Vérifiez les alarmes avant de les acquitter ensemble.",
+      "acknowledgeMany": "Acquitter ({count})",
+      "acknowledgeManyDialogTitle": "Acquitter {count} alarmes",
+      "acknowledgeDialogDescription": "Ajoutez si besoin un commentaire qui sera associé à l'acquittement."
     },
     "title": "Gestion des alarmes",
     "description": "Suivi et traitement des alarmes",
@@ -748,7 +760,9 @@
       "deselect_all": "Tout décocher",
       "related_type_filter_placeholder": "Filtrer par type",
       "related_type_filter_all": "Tous les types",
-      "related_alarms_empty": "Aucune alarme ne correspond au filtre."
+      "related_alarms_empty": "Aucune alarme ne correspond au filtre.",
+      "comment_loading": "Chargement...",
+      "characters": "caractères"
     },
     "status": {
       "active": "En cours",
