@@ -43,5 +43,10 @@ export function buildAuditActionConfig(t: (key: string, values?: Record<string, 
     ALARM_RESOLVED: { icon: AlertCircle, label: t('actions.ALARM_RESOLVED'), color: 'text-emerald-600', badgeVariant: 'outline' },
     ETAP: { icon: Wrench, label: t('actions.ETAP'), color: 'text-primary', badgeVariant: 'secondary' },
     VLOG: { icon: FileText, label: t('actions.VLOG'), color: 'text-muted-foreground', badgeVariant: 'outline' },
+    FERMSURV: { icon: FileText, label: t('actions.FERMSURV'), color: 'text-muted-foreground', badgeVariant: 'outline' },
+    IMP: { icon: Archive, label: t('actions.IMP'), color: 'text-primary', badgeVariant: 'secondary' },
+    PLAN: { icon: Settings, label: t('actions.PLAN'), color: 'text-primary', badgeVariant: 'secondary' },
+    TEL: { icon: Server, label: t('actions.TEL'), color: 'text-muted-foreground', badgeVariant: 'outline' },
+    UT: { icon: FileText, label: t('actions.UT'), color: 'text-muted-foreground', badgeVariant: 'outline' },
   }
 }
