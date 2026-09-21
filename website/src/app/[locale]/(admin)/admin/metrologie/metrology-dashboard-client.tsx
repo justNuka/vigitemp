@@ -1,5 +1,6 @@
 "use client"
 
+import { useMemo } from "react"
 import type { ColumnDef } from "@tanstack/react-table"
 import { FlaskConical, GaugeCircle, TestTubeDiagonal } from "lucide-react"
 import { useLocale, useTranslations } from "next-intl"
@@ -18,6 +19,18 @@ export function MetrologyDashboardClient() {
   const t = useTranslations("metrologyAdmin.dashboard")
   const locale = useLocale()
   const { data, isLoading } = useMetrologyDashboard()
+  const sortedData = useMemo(() => {
+    return [...(data ?? [])].sort((left, right) => {
+      const leftDate = left.dateProchainEtalonnage
+      const rightDate = right.dateProchainEtalonnage
+
+      if (!leftDate && !rightDate) return 0
+      if (!leftDate) return 1
+      if (!rightDate) return -1
+
+      return leftDate.localeCompare(rightDate)
+    })
+  }, [data])
 
   function formatNumber(value: number | null) {
     return formatDisplayNumber(value, {
@@ -74,7 +87,7 @@ export function MetrologyDashboardClient() {
             <div className="w-full max-w-full overflow-x-auto">
               <TanStackTable
                 columns={columns}
-                data={data || []}
+                data={sortedData}
                 searchField={["nomLieu", "sondeAssociee"]}
                 searchPlaceholder={t("table.searchPlaceholder")}
                 isLoading={isLoading}

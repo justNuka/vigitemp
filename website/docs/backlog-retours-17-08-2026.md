@@ -1444,3 +1444,49 @@ Les anciens placeholders `%1`, `%2`, `%3` ainsi que les signatures de mauvais en
 - [ ] export XML individuel + ZIP avec `COEFFX2/COEFFX/COEFFCONSTANT` ;
 - [ ] export PDF individuel + ZIP après étalonnage ;
 - [ ] import XML GSO puis GSP et vérifier l'upsert, avec DCON prioritaire pour la GSP.
+
+---
+
+## R21-001 — Trier le suivi métrologique par prochain étalonnage
+
+**Statut : `PR_OUVERTE` — branche `fix/metrology-next-calibration-sort` — PR #137**
+
+### Retour — 21/09/2026
+
+Sur la page **Métrologie**, le tableau de suivi doit présenter en priorité les lieux dont la date de prochain étalonnage est la plus proche.
+
+### État vérifié avant correction
+
+Le tableau expose déjà la colonne **Date prochain étalonnage** via `dateProchainEtalonnage`, mais les données étaient transmises dans l'ordre de récupération de l'API et aucun tri initial n'était appliqué côté écran.
+
+### Correctif du lot
+
+- tri initial ascendant sur `dateProchainEtalonnage` ;
+- la date la plus proche apparaît en premier ;
+- les lignes sans date de prochain étalonnage sont conservées en fin de tableau ;
+- le tri interactif existant de `TanStackTable` reste disponible pour l'utilisateur ;
+- aucune requête, formule métrologique ou donnée persistée n'est modifiée.
+
+### Fichiers principaux
+
+- `website/src/app/[locale]/(admin)/admin/metrologie/metrology-dashboard-client.tsx` ;
+- `website/package.json` ;
+- `website/CHANGELOG.md` ;
+- `CHANGELOG.md`.
+
+### Version
+
+- Web : **1.4.1** ;
+- Serveur : **1.1.0** — inchangé ;
+- Agent : **1.0.1** — inchangé ;
+- BDD : **0.91.0** — inchangée.
+
+### Validation terrain
+
+- [ ] ouvrir Administration > Métrologie avec plusieurs échéances différentes ;
+- [ ] confirmer que la date de prochain étalonnage la plus proche est affichée en haut ;
+- [ ] vérifier que les dates plus lointaines suivent dans l'ordre chronologique ;
+- [ ] vérifier que les lignes sans prochaine date restent visibles en fin de tableau ;
+- [ ] cliquer sur d'autres colonnes et confirmer que le tri manuel du tableau reste fonctionnel ;
+- [ ] contrôler le rendu FR/EN des dates.
+

@@ -8,7 +8,24 @@ Les versions suivent `MAJOR.MINOR.PATCH` sans zéros de tête. La source de vers
 
 ## [Unreleased]
 
-Aucun changement supplémentaire documenté depuis la préparation de la version Web 1.4.0.
+Aucun changement supplémentaire documenté depuis la préparation de la version Web 1.4.1.
+
+## [1.4.1] — 2026-09-21
+
+Cette version affine l'ordre d'affichage du suivi métrologique.
+
+### Métrologie
+
+- Le tableau **Suivi métrologique des lieux** est trié par défaut sur la **Date prochain étalonnage**, de la date la plus proche à la plus lointaine.
+- Les lignes sans date de prochain étalonnage restent affichées après les lignes planifiées.
+- Le tri manuel des autres colonnes reste disponible via le tableau existant.
+
+### Compatibilité
+
+- Version Web : **1.4.1**.
+- Serveur **1.1.0**, Agent **1.0.1** et BDD **0.91.0** restent inchangés.
+- Aucune migration BDD n'est requise.
+- MySQL et SQL Server restent supportés.
 
 ## [1.4.0] — 2026-09-21
 
