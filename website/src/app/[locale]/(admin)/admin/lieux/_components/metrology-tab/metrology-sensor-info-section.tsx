@@ -3,8 +3,8 @@
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { formatDbDateTime } from '@/lib/date-display'
-import { formatMeasureValue } from '@/lib/measurements'
-import { useTranslations } from 'next-intl'
+import { formatNumber } from '@/lib/number-display'
+import { useLocale, useTranslations } from 'next-intl'
 
 import type { LocationFormData } from '../location-form-types'
 import { defaultMetrologyUnit, normalizeMetrologyUnit } from './metrology-helpers'
@@ -21,9 +21,19 @@ export function MetrologySensorInfoSection({
   appliedAccuracyCorrection: number | null
 }) {
   const t = useTranslations('locationsForm.metrology')
+  const locale = useLocale()
+  const localeTag = locale === 'fr' ? 'fr-FR' : locale
+  const formatMetrologyNumber = (value: number | null | undefined) =>
+    formatNumber(value, {
+      minimumDecimals: 0,
+      maximumDecimals: 4,
+      locale: localeTag,
+      grouping: false,
+      fallback: '',
+    })
   const correctionExample = appliedAccuracyCorrection === null
     ? null
-    : `${appliedAccuracyCorrection >= 0 ? '+' : '-'}${formatMeasureValue(Math.abs(appliedAccuracyCorrection), 2)}`
+    : `${appliedAccuracyCorrection >= 0 ? '+' : '-'}${formatMetrologyNumber(Math.abs(appliedAccuracyCorrection))}`
 
   return (
     <div className="border p-4 rounded-lg space-y-4">
@@ -66,7 +76,7 @@ export function MetrologySensorInfoSection({
       <div className="grid grid-cols-3 gap-4">
         <div className="space-y-2">
           <Label>{t('labels.accuracy_error')}</Label>
-          <Input type="number" step="0.01" disabled value={formData.Erreur_Justesse || ''} className="bg-muted" />
+          <Input type="text" disabled value={formatMetrologyNumber(formData.Erreur_Justesse)} className="bg-muted" />
           {correctionExample ? (
             <p className="text-xs text-muted-foreground">
               {t('labels.accuracy_correction_example', { value: correctionExample })}
@@ -75,11 +85,11 @@ export function MetrologySensorInfoSection({
         </div>
         <div className="space-y-2">
           <Label>{t('labels.uncertainty')}</Label>
-          <Input type="number" step="0.01" disabled value={formData.Incertitude || ''} className="bg-muted" />
+          <Input type="text" disabled value={formatMetrologyNumber(formData.Incertitude)} className="bg-muted" />
         </div>
         <div className="space-y-2">
           <Label>{t('labels.drift')}</Label>
-          <Input type="number" step="0.01" disabled value={formData.Derive || ''} className="bg-muted" />
+          <Input type="text" disabled value={formatMetrologyNumber(formData.Derive)} className="bg-muted" />
         </div>
       </div>
     </div>

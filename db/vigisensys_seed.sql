@@ -1,4 +1,4 @@
--- Version produit / seed : 0.90.2
+-- Version produit / seed : 0.91.0
 -- DDL synchronise sur le dump schema courant du 2026-08-25.
 -- Les DEFINER et compteurs AUTO_INCREMENT de production sont volontairement retires.
 
@@ -742,11 +742,15 @@ CREATE TABLE `t_lieu` (
   `Est_Consigne_Sup_Active` tinyint(1) DEFAULT '0',
   `Consigne_Sup_Pre_Alarme` float DEFAULT NULL,
   `Est_Consigne_Sup_Pre_Alarme_Active` tinyint(1) DEFAULT '0',
+  `Seuil_Critique_Haut` float DEFAULT NULL,
+  `Est_Seuil_Critique_Haut_Active` tinyint(1) NOT NULL DEFAULT '0',
   `Consigne_Inf` float DEFAULT NULL,
   `Tolerance_Surveillance_Inf` float DEFAULT NULL,
   `Est_Consigne_Inf_Active` tinyint(1) DEFAULT '0',
   `Consigne_Inf_Pre_Alarme` float DEFAULT NULL,
   `Est_Consigne_Inf_Pre_Alarme_Active` tinyint(1) DEFAULT '0',
+  `Seuil_Critique_Bas` float DEFAULT NULL,
+  `Est_Seuil_Critique_Bas_Active` tinyint(1) NOT NULL DEFAULT '0',
   `Frequence` int DEFAULT NULL,
   `Lieu_Etat` varchar(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'D',
   `Retard_Alarme_Haut` int DEFAULT NULL,
@@ -931,7 +935,101 @@ DELIMITER ;;
 
       AND Date_Heure_Fin IS NULL
 
-    LIMIT 1;	
+    LIMIT 1;
+
+    /* ==========================================================
+       2b. SEUILS CRITIQUES : déclenchement immédiat
+       ========================================================== */
+    IF NEW.Lieu_Etat = 'S'
+       AND TIMESTAMPDIFF(SECOND, NEW.Date_Heure_Derniere_Reponse, NOW()) <= NEW.Retard_Non_Reponse * 60
+       AND COALESCE(NEW.Est_Seuil_Critique_Bas_Active, 0) = 1
+       AND NEW.Seuil_Critique_Bas IS NOT NULL
+       AND NEW.Derniere_Valeur < NEW.Seuil_Critique_Bas
+    THEN
+        IF v_Id_Alarme IS NOT NULL AND v_TypeAlarme = 'B' THEN
+            UPDATE t_alarme
+            SET Valeur = NEW.Derniere_Valeur,
+                Date_Heure_Derniere_Mesure = NEW.Derniere_Date_Heure
+            WHERE Id_Alarme = v_Id_Alarme;
+
+            SET NEW.Id_Alarme = v_Id_Alarme;
+            SET NEW.Est_Lieu_En_Alarme = 1;
+            SET NEW.Est_Lieu_En_Pre_Alarme = 0;
+            SET NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee = 0;
+            SET NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee_T1 = 0;
+            LEAVE main_block;
+        END IF;
+
+        IF v_Id_Alarme IS NOT NULL THEN
+            UPDATE t_alarme
+            SET Date_Heure_Fin = NEW.Derniere_Date_Heure,
+                Valeur = NEW.Derniere_Valeur,
+                Date_Heure_Derniere_Mesure = NEW.Derniere_Date_Heure
+            WHERE Id_Alarme = v_Id_Alarme;
+
+            IF v_TypeAlarme = 'N' AND NEW.Est_Acq_Auto_Alarme_NR = 1 THEN
+                DELETE FROM t_alarme WHERE Id_Alarme = v_Id_Alarme;
+            END IF;
+        END IF;
+
+        INSERT INTO t_alarme
+            (Date_Heure_Debut, Valeur, Type, Id_Lieu, Sonde_Numero_Serie, Date_Heure_Derniere_Mesure, Unite)
+        VALUES
+            (NEW.Derniere_Date_Heure, NEW.Derniere_Valeur, 'B', NEW.Id_Lieu, NEW.Sonde_Numero_Serie, NEW.Derniere_Date_Heure, NEW.Derniere_Unite);
+
+        SET NEW.Id_Alarme = LAST_INSERT_ID();
+        SET NEW.Est_Lieu_En_Alarme = 1;
+        SET NEW.Est_Lieu_En_Pre_Alarme = 0;
+        SET NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee = 0;
+        SET NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee_T1 = 0;
+        LEAVE main_block;
+    END IF;
+
+    IF NEW.Lieu_Etat = 'S'
+       AND TIMESTAMPDIFF(SECOND, NEW.Date_Heure_Derniere_Reponse, NOW()) <= NEW.Retard_Non_Reponse * 60
+       AND COALESCE(NEW.Est_Seuil_Critique_Haut_Active, 0) = 1
+       AND NEW.Seuil_Critique_Haut IS NOT NULL
+       AND NEW.Derniere_Valeur > NEW.Seuil_Critique_Haut
+    THEN
+        IF v_Id_Alarme IS NOT NULL AND v_TypeAlarme = 'H' THEN
+            UPDATE t_alarme
+            SET Valeur = NEW.Derniere_Valeur,
+                Date_Heure_Derniere_Mesure = NEW.Derniere_Date_Heure
+            WHERE Id_Alarme = v_Id_Alarme;
+
+            SET NEW.Id_Alarme = v_Id_Alarme;
+            SET NEW.Est_Lieu_En_Alarme = 1;
+            SET NEW.Est_Lieu_En_Pre_Alarme = 0;
+            SET NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee = 0;
+            SET NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee_T1 = 0;
+            LEAVE main_block;
+        END IF;
+
+        IF v_Id_Alarme IS NOT NULL THEN
+            UPDATE t_alarme
+            SET Date_Heure_Fin = NEW.Derniere_Date_Heure,
+                Valeur = NEW.Derniere_Valeur,
+                Date_Heure_Derniere_Mesure = NEW.Derniere_Date_Heure
+            WHERE Id_Alarme = v_Id_Alarme;
+
+            IF v_TypeAlarme = 'N' AND NEW.Est_Acq_Auto_Alarme_NR = 1 THEN
+                DELETE FROM t_alarme WHERE Id_Alarme = v_Id_Alarme;
+            END IF;
+        END IF;
+
+        INSERT INTO t_alarme
+            (Date_Heure_Debut, Valeur, Type, Id_Lieu, Sonde_Numero_Serie, Date_Heure_Derniere_Mesure, Unite)
+        VALUES
+            (NEW.Derniere_Date_Heure, NEW.Derniere_Valeur, 'H', NEW.Id_Lieu, NEW.Sonde_Numero_Serie, NEW.Derniere_Date_Heure, NEW.Derniere_Unite);
+
+        SET NEW.Id_Alarme = LAST_INSERT_ID();
+        SET NEW.Est_Lieu_En_Alarme = 1;
+        SET NEW.Est_Lieu_En_Pre_Alarme = 0;
+        SET NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee = 0;
+        SET NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee_T1 = 0;
+        LEAVE main_block;
+    END IF;
+
 
 
 
@@ -2091,10 +2189,14 @@ CREATE TABLE `t_lieu_template` (
   `Tolerance_Surveillance_Inf` decimal(10,2) DEFAULT NULL,
   `Consigne_Sup_Pre_Alarme` decimal(10,2) DEFAULT NULL,
   `Consigne_Inf_Pre_Alarme` decimal(10,2) DEFAULT NULL,
+  `Seuil_Critique_Haut` decimal(10,2) DEFAULT NULL,
+  `Seuil_Critique_Bas` decimal(10,2) DEFAULT NULL,
   `Est_Consigne_Sup_Active` tinyint(1) NOT NULL DEFAULT '0',
   `Est_Consigne_Inf_Active` tinyint(1) NOT NULL DEFAULT '0',
   `Est_Consigne_Sup_Pre_Alarme_Active` tinyint(1) NOT NULL DEFAULT '0',
   `Est_Consigne_Inf_Pre_Alarme_Active` tinyint(1) NOT NULL DEFAULT '0',
+  `Est_Seuil_Critique_Haut_Active` tinyint(1) NOT NULL DEFAULT '0',
+  `Est_Seuil_Critique_Bas_Active` tinyint(1) NOT NULL DEFAULT '0',
   `Est_Son_Alarme_Active` tinyint(1) NOT NULL DEFAULT '1',
   `Est_Redeclenchement_Immediat` tinyint(1) NOT NULL DEFAULT '0',
   `Nb_Mesures_Temporisation_Redeclenchement` int DEFAULT '0',
@@ -5118,7 +5220,7 @@ INSERT INTO `t_utilisateur` (Login, Mot_De_Passe, Est_Archive, Profil_Utilisateu
 SET FOREIGN_KEY_CHECKS=1;
 
 INSERT INTO `t_parametre` (`Section`, `Mot_Cle`, `Valeur`, `Commentaire`)
-VALUES ('VERSION', 'SCHEMA_VERSION', '0.90.2', 'Version produit commune des seeds MySQL et SQL Server')
+VALUES ('VERSION', 'SCHEMA_VERSION', '0.91.0', 'Version de schéma VigiSensys')
 ON DUPLICATE KEY UPDATE
   `Valeur` = VALUES(`Valeur`),
   `Commentaire` = VALUES(`Commentaire`);

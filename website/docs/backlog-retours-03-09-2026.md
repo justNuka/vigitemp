@@ -1595,4 +1595,213 @@ Validation applicative GitHub Actions **35615763256** ✅, puis revalidation com
 - [ ] avec un profil sans ALARM_ACK_ACCESS, vérifier que l’analyse reste consultable mais qu’aucun acquittement n’est possible ;
 - [ ] vérifier FR/EN, clair/sombre et petite largeur ;
 - [ ] valider MySQL et SQL Server.
+---
+
+## 21/09/2026 — Création/modification lieu : EMT, consignes, seuils critiques et aperçu live
+
+**Statut : PR_OUVERTE — branche `feature/location-alarm-threshold-visualization` — PR #134**
+
+- base : `dev` au commit `31136c4864947b9a60513749119e0ec68f9a5b28` (merge PR #133) ;
+- version Web : **1.2.0** ;
+- version Serveur / installateur : **1.1.0** ;
+- version BDD cible : **0.91.0** ;
+- Agent inchangé : **1.0.1**.
+
+### Retour réunion
+
+Deux sujets proches dans la fiche de création / modification d'un lieu :
+
+1. normaliser avec le helper numérique canonique les flottants affichés dans les EMT afin d'éviter les longues suites de décimales ;
+2. revoir le paramétrage des consignes :
+   - sortir la fréquence de mesure et la temporisation de redéclenchement dans un encadré juste au-dessus des consignes ;
+   - ajouter des seuils critiques haut et bas ;
+   - rendre l'encadré des consignes plus lisible ;
+   - ajouter un mini-graphe live montrant consigne, tolérances, retards d'alarme et seuils critiques ;
+   - illustrer par une fausse courbe le retard avant une alarme normale puis le déclenchement immédiat d'un seuil critique ;
+   - animer les changements de valeurs et fournir des tooltips / lignes pointillées / curseurs d'aide ;
+   - rendre visible la limite de 30 caractères du nom de lieu avec compteur restant.
+
+### État vérifié avant modification
+
+- la limite `Nom_Lieu <= 30` existait déjà dans l'input, le schéma React Hook Form / Zod et les APIs ; le besoin était donc uniquement de rendre cette contrainte visible ;
+- `website/src/lib/number-display.ts` est le helper canonique de présentation numérique et doit être réutilisé pour les EMT ;
+- les pré-alarmes hautes/basses et les retards d'alarme existent déjà ;
+- aucun champ métier de seuil critique n'existait dans `t_lieu`, `t_lieu_template`, Prisma ou les providers C# ;
+- les sondes interrogées directement par le Serveur passent par `Sensor.compareMeasuresAndLimits()` ;
+- les GSO conservent une logique d'alarme historique dans le trigger BDD `TRG_GSO_BEF_UPD_LIEU_ALARME` : modifier uniquement le C# aurait donc produit un comportement incohérent suivant la famille de sonde ;
+- les GSP ne possèdent pas de notion firmware dédiée de seuil critique : les nouvelles limites doivent rester une règle VigiSensys et ne pas être ajoutées à `ECON`.
+
+### Sémantique retenue des seuils critiques
+
+Un seuil critique est optionnel et indépendant de l'activation du seuil normal du même côté.
+
+Lorsqu'il est actif :
+
+- **critique haut** : sa valeur doit être strictement supérieure au seuil haut effectif utilisé par la surveillance ; si aucun seuil normal n'est actif, la consigne sert de référence de cohérence ;
+- **critique bas** : sa valeur doit être strictement inférieure au seuil bas effectif ; même fallback sur la consigne en l'absence de seuil normal ;
+- lorsque les deux sont actifs, le critique bas doit rester strictement inférieur au critique haut ;
+- les valeurs restent soumises à la plage min/max du type de sonde ;
+- le seuil normal conserve son retard configuré ;
+- le franchissement critique déclenche immédiatement le même type historique d'alarme `H` ou `B`, sans créer de nouveau code d'alarme.
+
+Pour les sondes traitées par le moteur C#, le critique ignore le debounce normal, le retard après changement de consigne et la temporisation de redéclenchement. Pour les GSO, le trigger BDD applique la même priorité au critique avant la logique temporisée normale.
+
+### Web — interface et validation
+
+Le formulaire Général a été réorganisé :
+
+- une card **Fréquence & temporisation** placée juste avant les consignes regroupe la fréquence de mesure et `Nb_Mesures_Temporisation_Redeclenchement` ;
+- les retards haut/bas restent avec leur seuil respectif afin de conserver le lien métier entre limite et délai ;
+- la consigne centrale, les blocs haut/bas, pré-alarmes, seuils effectifs et critiques sont regroupés de façon plus lisible ;
+- le verrouillage des consignes lorsque des règles de planning existent est conservé ;
+- la fréquence GSO reste verrouillée au comportement existant ;
+- les seuils critiques et leurs flags sont également recopiés par les templates de lieux.
+
+La validation pure `location-critical-threshold-contract.ts` est partagée avec les routes de création / modification. La validation de plage sonde existante est étendue aux seuils critiques.
+
+Les tolérances effectives affichées et utilisées pour contrôler les critiques sont recalculées à partir de l'état **courant** du formulaire via `computeEmt()`. Cela évite de dépendre d'une valeur `Tolerance_Surveillance_*` précédemment calculée uniquement lors du montage de l'onglet Métrologie.
+
+### Mini-graphe live
+
+Le composant `location-alarm-preview.tsx` observe directement le formulaire.
+
+Il affiche en temps réel :
+
+- consigne ;
+- pré-alarmes ;
+- seuils/tolérances normaux effectivement utilisés, EMT comprise ;
+- seuils critiques ;
+- retards d'alarme haut/bas.
+
+Une courbe de démonstration simule :
+
+- un passage au-delà d'une limite normale avec une zone de retard avant déclenchement ;
+- un franchissement critique haut/bas avec déclenchement immédiat.
+
+Les lignes de référence sont pointillées. Les valeurs disposent d'une légende interactive, d'un curseur d'aide et de tooltips explicatifs. Les transitions sont animées avec Motion et respectent `prefers-reduced-motion`.
+
+### Métrologie — affichage des floats EMT
+
+Les valeurs EMT et leurs valeurs intermédiaires ne sont plus injectées directement comme nombres JavaScript.
+
+Les affichages concernés passent par `formatNumber` :
+
+- EMT calculée ;
+- erreur de justesse ;
+- incertitude ;
+- dérive ;
+- valeurs intermédiaires `I_et` / `I_mes` ;
+- consignes / tolérances de synthèse de l'onglet Métrologie.
+
+Le rendu suit la locale applicative, masque les zéros inutiles et affiche jusqu'à 4 décimales. Les valeurs métier ne sont pas arrondies avant calcul ou persistance.
+
+### Base de données
+
+Le schéma **0.91.0** ajoute dans `t_lieu` :
+
+- `Seuil_Critique_Haut FLOAT NULL` ;
+- `Est_Seuil_Critique_Haut_Active BOOLEAN/BIT NOT NULL DEFAULT 0` ;
+- `Seuil_Critique_Bas FLOAT NULL` ;
+- `Est_Seuil_Critique_Bas_Active BOOLEAN/BIT NOT NULL DEFAULT 0`.
+
+Les quatre champs correspondants sont aussi ajoutés à `t_lieu_template`, avec `DECIMAL(10,2)` pour les valeurs de template.
+
+Les deux seeds sont à jour et les installations existantes disposent de :
+
+- `db/migrations/0.91.0/mysql.sql` ;
+- `db/migrations/0.91.0/mssql.sql`.
+
+Les migrations réinstallent également le trigger GSO afin de garantir le déclenchement critique immédiat sur les deux moteurs. `SCHEMA_VERSION` passe à `0.91.0` uniquement après application des objets nécessaires.
+
+### Serveur
+
+`LieuAlarmSettings` transporte les nouveaux seuils.
+
+Les providers MySQL / SQL Server essaient la lecture **V3 / schéma 0.91.0**, puis retombent sur les lectures V2/V1 historiques si les nouvelles colonnes ne sont pas encore présentes. Ce fallback permet au Serveur 1.1.0 de démarrer pendant une phase de mise à jour, sans activer artificiellement une fonctionnalité absente de la BDD.
+
+`Sensor.compareMeasuresAndLimits()` conserve les alarmes normales temporisées mais force un debounce à zéro pour le critique. Aucun paramètre critique n'est envoyé au firmware GSP.
+
+### Ordre de déploiement / compatibilité
+
+Pour activer le lot complet sur une installation existante :
+
+1. sauvegarder les bases ;
+2. appliquer les migrations manquantes jusqu'à **BDD 0.91.0** ;
+3. déployer **Serveur / installateur 1.1.0** ;
+4. déployer **Web 1.2.0** ;
+5. réaliser les validations terrain ci-dessous.
+
+Le Web 1.2.0 doit être lancé après la migration BDD car son modèle Prisma expose les nouvelles colonnes. Le Serveur 1.1.0 est plus tolérant grâce aux fallbacks de lecture, mais la fonctionnalité critique n'est évidemment disponible qu'avec le schéma 0.91.0.
+
+### Principaux fichiers
+
+- `website/src/lib/location-critical-threshold-contract.ts` ;
+- `website/src/lib/sensor-value-range-contract.ts` ;
+- `website/src/app/[locale]/(admin)/admin/lieux/_components/location-form-schema.ts` ;
+- `website/src/app/[locale]/(admin)/admin/lieux/_components/location-form-tab-general.tsx` ;
+- `website/src/app/[locale]/(admin)/admin/lieux/_components/general-tab/location-setpoints-section.tsx` ;
+- `website/src/app/[locale]/(admin)/admin/lieux/_components/general-tab/location-alarm-preview.tsx` ;
+- `website/src/app/[locale]/(admin)/admin/lieux/_components/location-form-tab-metrology.tsx` ;
+- `website/src/app/[locale]/(admin)/admin/lieux/_components/metrology-tab/emt-mode-section.tsx` ;
+- `website/src/app/[locale]/(admin)/admin/lieux/_components/metrology-tab/metrology-sensor-info-section.tsx` ;
+- `website/src/app/api/lieux/route.ts` ;
+- `website/src/app/api/lieux/[id]/route.ts` ;
+- `website/src/app/api/lieux/templates/route.ts` ;
+- `website/src/app/api/lieux/templates/[id]/route.ts` ;
+- `website/prisma/db-main/schema.prisma` ;
+- `Vigitemp Serveur/Vigitemp Serveur/LieuAlarmSettings.cs` ;
+- `Vigitemp Serveur/Vigitemp Serveur/Sensor.cs` ;
+- `Vigitemp Serveur/Vigitemp Serveur/MySqlDatabaseProvider.cs` ;
+- `Vigitemp Serveur/Vigitemp Serveur/SqlServerDatabaseProvider.cs` ;
+- `db/vigisensys_seed.sql` ;
+- `db/vigisensys_seed_mssql.sql` ;
+- `db/migrations/0.91.0/mysql.sql` ;
+- `db/migrations/0.91.0/mssql.sql`.
+
+### Validation technique
+
+GitHub Actions **35644043487** ✅ :
+
+- [x] `git diff --check origin/dev...HEAD` ;
+- [x] génération Prisma MySQL ;
+- [x] contrat ciblé seuils critiques / mini-graphe / compteur 30 caractères / formatage EMT ;
+- [x] régression plage de sonde, y compris retour de l'unité sur MySQL / SQL Server ;
+- [x] régression `number-display` ;
+- [x] ESLint ciblé ;
+- [x] TypeScript MySQL ;
+- [x] contrôle i18n sans nouvelle dette du lot ;
+- [x] génération Prisma SQL Server ;
+- [x] TypeScript SQL Server ;
+- [x] restauration Prisma MySQL ;
+- [x] build Next.js production ;
+- [x] contrat Serveur critique ;
+- [x] restauration des packages .NET Framework historiques dans le dossier attendu ;
+- [x] build Release de VigiSensys Serveur ;
+- [x] build Release de l'installateur Serveur.
+
+Le workflow temporaire de validation a été supprimé de la branche après ce run vert. La seule modification post-validation est la mise à jour documentaire du statut / numéro de PR.
+
+### Checklist terrain
+
+- [ ] créer un lieu et vérifier l'indication **30 caractères maximum** ainsi que le compteur restant ;
+- [ ] modifier un lieu existant et vérifier le même compteur sans tronquer sa valeur ;
+- [ ] vérifier la card fréquence / temporisation juste au-dessus des consignes ;
+- [ ] vérifier une GSO : fréquence toujours verrouillée au comportement existant ;
+- [ ] modifier consigne, pré-alarme, limite haute/basse et observer la mise à jour immédiate du mini-graphe ;
+- [ ] en mode EMT quart, manuel puis incertitudes, vérifier que le seuil effectif et le graphe suivent le calcul EMT sans longues suites décimales ;
+- [ ] vérifier une valeur EMT produisant plus de quatre décimales en FR puis en EN ;
+- [ ] vérifier les tooltips, lignes pointillées et curseurs d'aide du graphe ;
+- [ ] vérifier le comportement avec réduction des animations activée dans l'OS / navigateur ;
+- [ ] activer un critique haut : une valeur égale ou inférieure au seuil haut effectif doit être refusée ;
+- [ ] activer un critique bas : une valeur égale ou supérieure au seuil bas effectif doit être refusée ;
+- [ ] vérifier que les seuils critiques hors plage physique de la sonde sont refusés ;
+- [ ] sauvegarder / rouvrir le lieu et confirmer la persistance des deux critiques et flags ;
+- [ ] créer un template depuis ce lieu puis le réappliquer et vérifier les valeurs critiques ;
+- [ ] sonde classique/GSP : dépasser légèrement le seuil normal et confirmer que le retard reste appliqué ;
+- [ ] sonde classique/GSP : franchir le critique et confirmer le déclenchement immédiat d'une alarme `H` / `B` ;
+- [ ] GSO MySQL : mêmes tests retard normal / critique immédiat ;
+- [ ] GSO SQL Server : mêmes tests retard normal / critique immédiat ;
+- [ ] avec une règle de planning active, vérifier que les consignes restent verrouillées et que le critique reste modifiable / visible ;
+- [ ] vérifier FR/EN, clair/sombre et petite largeur ;
+- [ ] contrôler Santé système après déploiement : Web 1.2.0, Serveur 1.1.0 et BDD 0.91.0.
 

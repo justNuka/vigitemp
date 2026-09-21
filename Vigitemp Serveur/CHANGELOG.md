@@ -8,7 +8,25 @@ La version produit de référence du Serveur est `AssemblyInformationalVersion("
 
 ## [Unreleased]
 
-Aucun changement supplémentaire documenté depuis la préparation de la release 1.0.0.
+Aucun changement supplémentaire documenté depuis la préparation de la version Serveur 1.1.0.
+
+## [1.1.0] — 2026-09-21
+
+### Alarmes — seuils critiques haut / bas
+
+- `LieuAlarmSettings` expose désormais les seuils critiques haut/bas et leurs flags d'activation.
+- Pour les sondes dont les mesures passent par `Sensor.compareMeasuresAndLimits()`, un franchissement critique utilise le même canal métier `H` / `B` que l'alarme de seuil correspondante, mais son activation est immédiate.
+- Le franchissement critique ignore le retard d'alarme normal, le debounce global, le retard après changement de consigne et la temporisation de redéclenchement. Le comportement normal reste inchangé lorsque seul le seuil normal est dépassé.
+- Un seuil critique peut rester actif même si le seuil normal du même côté est désactivé.
+- Les providers MySQL et SQL Server lisent d'abord le schéma 0.91.0 (`ReadLieuAlarmSettingsV3`) puis conservent les fallbacks V2/V1 afin qu'un Serveur 1.1.0 puisse démarrer sur une installation pas encore migrée.
+- Les seuils critiques sont évalués côté VigiSensys : ils ne sont pas ajoutés aux commandes `ECON` et ne modifient donc pas le contrat firmware GSP.
+- Les GSO restent gérées par la logique BDD historique ; leurs triggers d'alarme sont mis à jour par la migration BDD 0.91.0 pour appliquer le même déclenchement critique immédiat.
+
+### Version / compatibilité
+
+- Version produit Serveur : **1.1.0**.
+- Installateur Serveur : **1.1.0**.
+- Le Serveur reste compatible en lecture avec le schéma 0.90.2, mais les seuils critiques nécessitent **BDD 0.91.0** pour être configurés et utilisés.
 
 ## [1.0.0] — 2026-09-18
 

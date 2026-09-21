@@ -83,7 +83,6 @@ export async function getSensorTypeValueRangeBySerial(serialNumber: string | nul
           SELECT TOP 1
             st.Valeur_Min AS valeurMin,
             st.Valeur_Max AS valeurMax,
-            st.Unite AS unite,
             st.Unite AS unite
           FROM t_sonde s
           LEFT JOIN t_sonde_type st ON st.Sonde_Type = s.Sonde_Type
@@ -92,7 +91,8 @@ export async function getSensorTypeValueRangeBySerial(serialNumber: string | nul
       : await prisma.$queryRaw<SensorTypeRangeRow[]>`
           SELECT
             st.Valeur_Min AS valeurMin,
-            st.Valeur_Max AS valeurMax
+            st.Valeur_Max AS valeurMax,
+            st.Unite AS unite
           FROM t_sonde s
           LEFT JOIN t_sonde_type st ON st.Sonde_Type = s.Sonde_Type
           WHERE s.Sonde_Numero_Serie = ${serialNumber}

@@ -14,6 +14,9 @@ db/migrations/
   0.90.2/
     mysql.sql
     mssql.sql
+  0.91.0/
+    mysql.sql
+    mssql.sql
   <version-suivante>/
     mysql.sql
     mssql.sql
@@ -68,14 +71,22 @@ Lorsqu'une table complète est ajoutée, le changelog doit lister toutes ses col
 
 Les migrations ne remplacent pas les backups ni les validations terrain. Elles évitent en revanche les vérifications et `ALTER TABLE` manuels sur chaque installation existante.
 
-## Baseline actuelle
+## Baseline et dernière révision
 
-La première migration formalisée dans cette arborescence est `0.90.2`.
-
-Elle couvre :
+La première migration formalisée dans cette arborescence est `0.90.2`. Elle couvre :
 
 - `t_ajustage.Coeffs_Modifies_Depuis_Derniere_Mesure` ;
 - les quatre tables de préparation Better Auth `t_auth_user`, `t_auth_session`, `t_auth_account`, `t_auth_verification` ;
 - le passage de `SCHEMA_VERSION` à `0.90.2`.
 
 Better Auth reste désactivé dans le runtime de cette version : ces tables sont uniquement préparées pour la trajectoire de migration future.
+
+La dernière révision de schéma est `0.91.0`. Elle ajoute :
+
+- `t_lieu.Seuil_Critique_Haut` / `Est_Seuil_Critique_Haut_Active` ;
+- `t_lieu.Seuil_Critique_Bas` / `Est_Seuil_Critique_Bas_Active` ;
+- les quatre champs correspondants dans `t_lieu_template` ;
+- la mise à jour du trigger GSO `TRG_GSO_BEF_UPD_LIEU_ALARME` sur MySQL et SQL Server pour déclencher immédiatement une alarme haute/basse lors d'un franchissement critique ;
+- le passage de `SCHEMA_VERSION` à `0.91.0` uniquement après application des changements.
+
+Une installation déjà en `0.90.2` exécute uniquement `0.91.0/<moteur>.sql`. Une installation plus ancienne exécute toutes les révisions manquantes dans l'ordre.

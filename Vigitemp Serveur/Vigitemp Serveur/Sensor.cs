@@ -469,8 +469,18 @@ namespace Vigitemp_Serveur
                     return false;
                 }
 
-                var hasLow = settings.ConsigneInfActive && settings.ConsigneInf.HasValue;
-                var hasHigh = settings.ConsigneSupActive && settings.ConsigneSup.HasValue;
+                var hasNormalLow = settings.ConsigneInfActive && settings.ConsigneInf.HasValue;
+                var hasNormalHigh = settings.ConsigneSupActive && settings.ConsigneSup.HasValue;
+                var hasCriticalLow = settings.SeuilCritiqueBasActive && settings.SeuilCritiqueBas.HasValue;
+                var hasCriticalHigh = settings.SeuilCritiqueHautActive && settings.SeuilCritiqueHaut.HasValue;
+                var hasLow = hasNormalLow || hasCriticalLow;
+                var hasHigh = hasNormalHigh || hasCriticalHigh;
+                var lowBoundary = hasNormalLow
+                    ? settings.ConsigneInf.Value
+                    : (hasCriticalLow ? settings.SeuilCritiqueBas.Value : 0d);
+                var highBoundary = hasNormalHigh
+                    ? settings.ConsigneSup.Value
+                    : (hasCriticalHigh ? settings.SeuilCritiqueHaut.Value : 0d);
 
                 var policy = AlarmPolicy.Current;
                 var eligible =
@@ -486,8 +496,10 @@ namespace Vigitemp_Serveur
                 var retriggerDelayMeasures = Math.Max(0, settings.NbMesuresTemporisationRedeclenchement);
                 var forceImmediateRetrigger = ths.GetLieuRetriggerFlagCached(m_idLieu);
 
-                var outLowNow = hasLow && p_valeur < settings.ConsigneInf.Value;
-                var outHighNow = hasHigh && p_valeur > settings.ConsigneSup.Value;
+                var criticalLowNow = hasCriticalLow && p_valeur < settings.SeuilCritiqueBas.Value;
+                var criticalHighNow = hasCriticalHigh && p_valeur > settings.SeuilCritiqueHaut.Value;
+                var outLowNow = hasLow && p_valeur < lowBoundary;
+                var outHighNow = hasHigh && p_valeur > highBoundary;
                 var outOfToleranceNow = outLowNow || outHighNow;
 
                 var suppressRetriggerThisMeasure = false;
@@ -551,15 +563,20 @@ namespace Vigitemp_Serveur
                     _alarmStateByLieu[m_idLieu] = false;
                 }
 
+                var lowImmediate = forceLowImmediate || criticalLowNow;
+                var highImmediate = forceHighImmediate || criticalHighNow;
+
                 var lowEval = EvaluateAlarmChannel(
                     channel: "alarm-low",
                     enabled: hasLow,
                     value: p_valeur,
-                    low: hasLow ? settings.ConsigneInf.Value : 0d,
+                    low: hasLow ? lowBoundary : 0d,
                     high: hasLow ? 1_000_000_000d : 0d,
-                    eligible: suppressRetriggerThisMeasure ? false : (eligible && !planningDelayActive),
-                    debounceSeconds: forceLowImmediate ? 0 : Math.Max(0, settings.RetardAlarmeBasMinutes * 60),
-                    ignorePolicyDebounce: forceLowImmediate,
+                    eligible: eligible &&
+                              (criticalLowNow || !planningDelayActive) &&
+                              (criticalLowNow || !suppressRetriggerThisMeasure),
+                    debounceSeconds: lowImmediate ? 0 : Math.Max(0, settings.RetardAlarmeBasMinutes * 60),
+                    ignorePolicyDebounce: lowImmediate,
                     nowUtc: nowUtc);
 
                 var highEval = EvaluateAlarmChannel(
@@ -567,25 +584,27 @@ namespace Vigitemp_Serveur
                     enabled: hasHigh,
                     value: p_valeur,
                     low: hasHigh ? -1_000_000_000d : 0d,
-                    high: hasHigh ? settings.ConsigneSup.Value : 0d,
-                    eligible: suppressRetriggerThisMeasure ? false : (eligible && !planningDelayActive),
-                    debounceSeconds: forceHighImmediate ? 0 : Math.Max(0, settings.RetardAlarmeHautMinutes * 60),
-                    ignorePolicyDebounce: forceHighImmediate,
+                    high: hasHigh ? highBoundary : 0d,
+                    eligible: eligible &&
+                              (criticalHighNow || !planningDelayActive) &&
+                              (criticalHighNow || !suppressRetriggerThisMeasure),
+                    debounceSeconds: highImmediate ? 0 : Math.Max(0, settings.RetardAlarmeHautMinutes * 60),
+                    ignorePolicyDebounce: highImmediate,
                     nowUtc: nowUtc);
 
-                if (planningDelayActive && outOfToleranceNow)
+                if (planningDelayActive && outOfToleranceNow && !criticalLowNow && !criticalHighNow)
                 {
                     VigitempServeur.Log($"Retard changement consigne actif lieu {m_idLieu} - sonde {m_sondeSerialNumber} jusqu'a {settings.PlanningDerniereMaj.AddMinutes(settings.RetardAlarmeChangementConsigneMinutes):O}");
                 }
                 else
                 {
-                    if (outLowNow && !lowEval.IsActive)
+                    if (outLowNow && !lowEval.IsActive && !criticalLowNow)
                     {
                         VigitempServeur.Log(
                             $"Depassement bas sonde {m_sondeSerialNumber}: valeur={p_valeur} en attente retard={Math.Max(0, settings.RetardAlarmeBasMinutes)}m lieu={m_idLieu}");
                     }
 
-                    if (outHighNow && !highEval.IsActive)
+                    if (outHighNow && !highEval.IsActive && !criticalHighNow)
                     {
                         VigitempServeur.Log(
                             $"Depassement haut sonde {m_sondeSerialNumber}: valeur={p_valeur} en attente retard={Math.Max(0, settings.RetardAlarmeHautMinutes)}m lieu={m_idLieu}");
@@ -598,7 +617,12 @@ namespace Vigitemp_Serveur
 
                 if (lowEval.TransitionToActive)
                 {
-                    if (forceLowImmediate)
+                    if (criticalLowNow)
+                    {
+                        VigitempServeur.Log(
+                            $"Seuil critique bas franchi: alarme immediate lieu={m_idLieu} sonde={m_sondeSerialNumber} valeur={p_valeur} seuil={settings.SeuilCritiqueBas.Value} unite={unit ?? ""}");
+                    }
+                    else if (forceLowImmediate)
                     {
                         VigitempServeur.Log(
                             $"Re-declenchement immediat (alarme basse acquittee) lieu {m_idLieu} - sonde {m_sondeSerialNumber} valeur={p_valeur} unite={unit ?? ""}");
@@ -612,7 +636,12 @@ namespace Vigitemp_Serveur
 
                 if (highEval.TransitionToActive)
                 {
-                    if (forceHighImmediate)
+                    if (criticalHighNow)
+                    {
+                        VigitempServeur.Log(
+                            $"Seuil critique haut franchi: alarme immediate lieu={m_idLieu} sonde={m_sondeSerialNumber} valeur={p_valeur} seuil={settings.SeuilCritiqueHaut.Value} unite={unit ?? ""}");
+                    }
+                    else if (forceHighImmediate)
                     {
                         VigitempServeur.Log(
                             $"Re-declenchement immediat (alarme haute acquittee) lieu {m_idLieu} - sonde {m_sondeSerialNumber} valeur={p_valeur} unite={unit ?? ""}");

@@ -16,7 +16,7 @@ La convention de versioning est décrite dans [`docs/versioning.md`](docs/versio
 
 ## [Unreleased]
 
-- Le composant Web passe à **1.1.0** ; Serveur 1.0.0, Agent 1.0.1 et BDD 0.90.2 restent indépendants et inchangés par ce lot Web.
+- Versions de ce lot : **Web 1.2.0**, **Serveur / installateur 1.1.0**, **BDD 0.91.0** ; l'Agent reste en **1.0.1**.
 - Le parcours d’acquittement depuis Surveillance ouvre directement l’analyse du lieu : liste des alarmes à gauche, acquittement dans le bandeau sélectionné, dialog commentaire compacte et sélection multiple avec résumés.
 - Une alarme acquittée reste temporairement visible et grisée dans la liste jusqu’au rafraîchissement, afin de conserver le contexte de traitement de l’opérateur.
 - L’analyse d’alarme se limite désormais à la période réelle de l’alarme, sans sélection de période ni Audit ; l’impression et les exports multiples sont remplacés par un XLSX unique avec la courbe intégrée dans la présentation lorsqu’elle existe.
@@ -24,6 +24,10 @@ La convention de versioning est décrite dans [`docs/versioning.md`](docs/versio
 - Toute modification réelle de la configuration SMTP invalide sa confirmation et exige désormais la saisie d'un code reçu par email via la nouvelle configuration avant que les emails métier puissent repartir.
 - L'activation globale du Mailing est déplacée sur la card SMTP ; le guide reste disponible même lorsque le service est désactivé.
 - La création/édition d'un lieu affiche et valide désormais la plage de mesure de la sonde sélectionnée avant l'envoi ; les erreurs de consigne hors plage ne sont plus masquées derrière un générique « Validation impossible ».
+- La création/édition d'un lieu sépare désormais fréquence de mesure et temporisation de redéclenchement dans une card dédiée, réorganise les consignes et affiche en temps réel un aperçu animé des pré-alarmes, tolérances effectives et retards d'alarme.
+- Des **seuils critiques haut/bas** optionnels sont ajoutés : ils doivent rester plus extrêmes que les seuils normaux et déclenchent immédiatement une alarme haute/basse, sans attendre le retard normal. Les sondes interrogées par le Serveur utilisent le moteur C# ; les GSO conservent leur moteur BDD via les triggers MySQL / SQL Server mis à jour.
+- L'affichage des EMT et valeurs métrologiques dérivées passe par le helper numérique canonique afin d'éviter les flottants à rallonge, et le nom d'un lieu affiche désormais explicitement sa limite de 30 caractères avec compteur restant.
+- La migration **BDD 0.91.0** est requise avant le Web 1.2.0 afin de créer les colonnes de seuils critiques ; le Serveur 1.1.0 conserve un fallback de lecture des anciens schémas mais la fonctionnalité complète nécessite BDD 0.91.0.
 
 ## Livraison VigiSensys 1.0.0 — 2026-09-18
 

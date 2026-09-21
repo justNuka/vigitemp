@@ -8,7 +8,40 @@ Les versions suivent `MAJOR.MINOR.PATCH` sans zéros de tête. La source de vers
 
 ## [Unreleased]
 
-Aucun changement supplémentaire documenté depuis la préparation de la version Web 1.1.0.
+Aucun changement supplémentaire documenté depuis la préparation de la version Web 1.2.0.
+
+## [1.2.0] — 2026-09-21
+
+Cette version étend la configuration des lieux avec des seuils critiques réellement appliqués par le moteur d'alarme et améliore la lisibilité du paramétrage des consignes / EMT.
+
+### Lieux / consignes
+
+- La fréquence de mesure et la **temporisation de redéclenchement** sont sorties du bloc Consignes dans une card dédiée placée juste au-dessus.
+- Le bloc Consignes est réorganisé autour d'une consigne centrale et de deux zones haut/bas regroupant seuil normal, retard d'alarme, pré-alarme, seuil effectif et seuil critique.
+- Deux limites optionnelles **Seuil critique haut** / **Seuil critique bas** sont disponibles. Lorsqu'elles sont actives, elles doivent être respectivement strictement au-dessus / au-dessous du seuil d'alarme normal réellement utilisé.
+- La validation tient compte de la tolérance EMT calculée en temps réel, de la plage min/max du type de sonde et est partagée entre formulaire et API.
+- Les templates de lieux transportent également les seuils critiques et leurs flags d'activation.
+- Le nom d'un lieu reste limité à 30 caractères ; la limite est maintenant affichée explicitement avec le nombre de caractères restants pendant la saisie.
+
+### Aperçu live des alarmes
+
+- Un mini-graphe se met à jour directement à partir des valeurs du formulaire : consigne, pré-alarmes, tolérances effectives, seuils critiques et retards haut/bas.
+- Une fausse courbe illustre la différence de comportement entre un dépassement normal — temporisé avant alarme — et un franchissement critique qui déclenche immédiatement.
+- Les valeurs sont représentées par des lignes pointillées et une légende interactive avec curseur d'aide / tooltips.
+- Les transitions utilisent Motion et respectent `prefers-reduced-motion`.
+- Les tolérances affichées sont recalculées avec `computeEmt()` depuis l'état courant du formulaire : une modification de consigne ou d'EMT est donc reflétée sans nécessiter d'ouvrir l'onglet Métrologie.
+
+### Métrologie / affichage numérique
+
+- Les EMT, erreurs de justesse, incertitudes, dérives et tolérances dérivées affichées dans la fiche lieu passent par `formatNumber`, avec locale applicative et jusqu'à 4 décimales utiles.
+- Les valeurs métier restent non arrondies pour les calculs et la persistance ; seul l'affichage est normalisé.
+
+### Compatibilité
+
+- Version Web : **1.2.0**.
+- Le Web 1.2.0 nécessite la migration de schéma **BDD 0.91.0** avant démarrage, car le modèle Prisma expose les nouvelles colonnes de seuils critiques.
+- Le déclenchement critique des sondes gérées par le service Windows nécessite **Serveur 1.1.0** ; les GSO utilisent les triggers BDD inclus dans la migration 0.91.0.
+- MySQL et SQL Server restent supportés.
 
 ## [1.1.0] — 2026-09-21
 

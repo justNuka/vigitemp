@@ -276,16 +276,22 @@ namespace Vigitemp_Serveur
 
                 try
                 {
-                    return ReadLieuAlarmSettingsV2(idLieu);
+                    return ReadLieuAlarmSettingsV3(idLieu);
                 }
                 catch (MySqlException)
                 {
                     try
                     {
-                        return ReadLieuAlarmSettingsV1(idLieu);
+                        return ReadLieuAlarmSettingsV2(idLieu);
                     }
-                    catch (MySqlException ex)
+                    catch (MySqlException)
                     {
+                        try
+                        {
+                            return ReadLieuAlarmSettingsV1(idLieu);
+                        }
+                        catch (MySqlException ex)
+                        {
                         VigitempServeur.Log("getLieuAlarmSettings MySQL error: " + ex.Message);
                         return new LieuAlarmSettings(
                             idLieu,
@@ -305,6 +311,7 @@ namespace Vigitemp_Serveur
                             notificationActive: false,
                             dateHeureReactivationAlarme: default(DateTime),
                             planningDerniereMaj: default(DateTime));
+                        }
                     }
                 }
             }
@@ -451,6 +458,72 @@ namespace Vigitemp_Serveur
             }
         }
 
+
+        private LieuAlarmSettings ReadLieuAlarmSettingsV3(int idLieu)
+        {
+            var cmd = this.connection_vigitemp.CreateCommand();
+            cmd.CommandText =
+                "SELECT " +
+                "Id_Lieu, " +
+                "Tolerance_Surveillance_Inf as Consigne_Inf, Est_Consigne_Inf_Active, Retard_Alarme_Bas, Consigne_Inf_Pre_Alarme, Est_Consigne_Inf_Pre_Alarme_Active, " +
+                "Tolerance_Surveillance_Sup as Consigne_Sup, Est_Consigne_Sup_Active, Retard_Alarme_Haut, Consigne_Sup_Pre_Alarme, Est_Consigne_Sup_Pre_Alarme_Active, " +
+                "Seuil_Critique_Bas, Est_Seuil_Critique_Bas_Active, Seuil_Critique_Haut, Est_Seuil_Critique_Haut_Active, " +
+                "Retard_Non_Reponse, Retard_Alarme_Changement_Consigne, Nb_Mesures_Temporisation_Redeclenchement, Planning_Derniere_Maj, " +
+                "Notification_Active, Date_Heure_Reactivation_Alarme, Date_Heure_Derniere_Reponse, Date_Heure_Derniere_Reponse_Recue_OK " +
+                "FROM t_lieu WHERE Id_Lieu = @idLieu;";
+            cmd.Parameters.AddWithValue("@idLieu", idLieu);
+
+            using (var reader = cmd.ExecuteReader())
+            {
+                if (!reader.Read())
+                {
+                    return new LieuAlarmSettings(
+                        idLieu,
+                        consigneInf: null,
+                        consigneSup: null,
+                        consigneInfActive: false,
+                        consigneSupActive: false,
+                        consigneInfPreAlarme: null,
+                        consigneInfPreAlarmeActive: false,
+                        consigneSupPreAlarme: null,
+                        consigneSupPreAlarmeActive: false,
+                        retardAlarmeBasMinutes: 0,
+                        retardAlarmeHautMinutes: 0,
+                        retardNonReponseMinutes: 0,
+                        retardAlarmeChangementConsigneMinutes: 0,
+                        nbMesuresTemporisationRedeclenchement: 0,
+                        notificationActive: false,
+                        dateHeureReactivationAlarme: default(DateTime),
+                        planningDerniereMaj: default(DateTime),
+                        dateHeureDerniereReponse: default(DateTime));
+                }
+
+                return new LieuAlarmSettings(
+                    idLieu,
+                    consigneInf: GetNullableDouble(reader, "Consigne_Inf"),
+                    consigneSup: GetNullableDouble(reader, "Consigne_Sup"),
+                    consigneInfActive: GetNullableBool(reader, "Est_Consigne_Inf_Active", true),
+                    consigneSupActive: GetNullableBool(reader, "Est_Consigne_Sup_Active", true),
+                    consigneInfPreAlarme: GetNullableDouble(reader, "Consigne_Inf_Pre_Alarme"),
+                    consigneInfPreAlarmeActive: GetNullableBool(reader, "Est_Consigne_Inf_Pre_Alarme_Active", false),
+                    consigneSupPreAlarme: GetNullableDouble(reader, "Consigne_Sup_Pre_Alarme"),
+                    consigneSupPreAlarmeActive: GetNullableBool(reader, "Est_Consigne_Sup_Pre_Alarme_Active", false),
+                    retardAlarmeBasMinutes: GetNullableInt(reader, "Retard_Alarme_Bas", 0),
+                    retardAlarmeHautMinutes: GetNullableInt(reader, "Retard_Alarme_Haut", 0),
+                    retardNonReponseMinutes: Math.Max(0, GetNullableInt(reader, "Retard_Non_Reponse", 0)),
+                    retardAlarmeChangementConsigneMinutes: Math.Max(0, GetNullableInt(reader, "Retard_Alarme_Changement_Consigne", 0)),
+                    nbMesuresTemporisationRedeclenchement: Math.Max(0, GetNullableInt(reader, "Nb_Mesures_Temporisation_Redeclenchement", 0)),
+                    notificationActive: GetNullableBool(reader, "Notification_Active", true),
+                    dateHeureReactivationAlarme: GetNullableDateTime(reader, "Date_Heure_Reactivation_Alarme"),
+                    planningDerniereMaj: GetNullableDateTime(reader, "Planning_Derniere_Maj"),
+                    dateHeureDerniereReponse: GetNullableDateTime(reader, "Date_Heure_Derniere_Reponse"),
+                    dateHeureDerniereReponseRecueOk: GetNullableDateTime(reader, "Date_Heure_Derniere_Reponse_Recue_OK"),
+                    seuilCritiqueBas: GetNullableDouble(reader, "Seuil_Critique_Bas"),
+                    seuilCritiqueBasActive: GetNullableBool(reader, "Est_Seuil_Critique_Bas_Active", false),
+                    seuilCritiqueHaut: GetNullableDouble(reader, "Seuil_Critique_Haut"),
+                    seuilCritiqueHautActive: GetNullableBool(reader, "Est_Seuil_Critique_Haut_Active", false));
+            }
+        }
 
         private LieuAlarmSettings ReadLieuAlarmSettingsV2(int idLieu)
         {

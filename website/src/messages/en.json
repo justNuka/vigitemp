@@ -732,7 +732,8 @@
     "general": {
       "sections": {
         "sensor": "Sensor",
-        "setpoints": "Setpoints"
+        "setpoints": "Setpoints",
+        "timing": "Frequency & timing"
       },
       "labels": {
         "name": "Location name",
@@ -761,7 +762,14 @@
         "module_select": "Module",
         "enabled": "Enabled",
         "disabled": "Disabled",
-        "observations": "Observations"
+        "observations": "Observations",
+        "alarm_delay_high": "High alarm delay (min)",
+        "alarm_delay_low": "Low alarm delay (min)",
+        "no_response_delay": "No-response delay (min)",
+        "setpoint_change_delay": "Delay after setpoint change (min)",
+        "effective_threshold": "Effective threshold",
+        "critical_high_enable": "Critical upper threshold",
+        "critical_low_enable": "Critical lower threshold"
       },
       "placeholders": {
         "name": "e.g. Storage A",
@@ -800,7 +808,17 @@
       "tooltips": {
         "frequency_gso": "Frequency is fixed to 15 minutes for GSO sensors.",
         "retrigger_delay_measures": "Number of out-of-tolerance measures to ignore before triggering a new alarm after acknowledge or alarm end.",
-        "monitoring_requires_sensor": "Without a selected sensor, monitoring is automatically disabled."
+        "monitoring_requires_sensor": "Without a selected sensor, monitoring is automatically disabled.",
+        "frequency": "Interval between two measurements used by monitoring.",
+        "alarm_delay_high": "How long the value must remain above the normal upper threshold before the alarm is triggered.",
+        "alarm_delay_low": "How long the value must remain below the normal lower threshold before the alarm is triggered.",
+        "no_response_delay": "Maximum time without a sensor response before a no-response alarm.",
+        "setpoint_change_delay": "Delay applied after a setpoint change, especially when a planning rule changes.",
+        "setpoint": "Target value around which monitoring thresholds are configured.",
+        "upper_alarm": "Normal upper threshold. Crossing it applies the high alarm delay before triggering.",
+        "lower_alarm": "Normal lower threshold. Crossing it applies the low alarm delay before triggering.",
+        "effective_threshold": "Threshold actually used by monitoring. In metrology, it may include the calculated EMT.",
+        "prealarm": "Visual warning level before reaching the normal alarm threshold."
       },
       "group_fallback": "Group {id}",
       "sensor_range": "Selected sensor measurement range: {range}",
@@ -808,6 +826,41 @@
         "title": "Setpoints driven by planning",
         "description": "Planning rules are active for this location. Base setpoints are locked here. Edit the planning if you need to change the applied setpoints.",
         "go_to_planning": "Go to planning"
+      },
+      "setpoints": {
+        "description": "Setpoint, normal thresholds, pre-alarms and critical safety limits for the location.",
+        "target_hint": "Reference value for the location.",
+        "upper_title": "Upper limits",
+        "upper_hint": "Pre-alert, delayed alarm and critical safety.",
+        "lower_title": "Lower limits",
+        "lower_hint": "Pre-alert, delayed alarm and critical safety.",
+        "normal_disabled": "The normal alarm threshold is disabled.",
+        "critical_hint": "Triggers immediately without waiting for the normal alarm delay."
+      },
+      "timing": {
+        "description": "Measurement cadence and delays used before the different alarm triggers."
+      },
+      "name_limit": "30 characters maximum",
+      "name_remaining": "{remaining} remaining / {max}",
+      "alarm_preview": {
+        "title": "Alarm behaviour preview",
+        "description": "Live visual simulation based on the current form values.",
+        "chart_aria": "Preview of setpoints, thresholds and alarm delays",
+        "frequency": "Measure every {value} min",
+        "setpoint": "Setpoint",
+        "setpoint_description": "Target value configured for the location.",
+        "prealarm_high": "Upper pre-alarm",
+        "prealarm_low": "Lower pre-alarm",
+        "prealarm_description": "Warning before the normal alarm threshold.",
+        "alarm_high": "High alarm",
+        "alarm_low": "Low alarm",
+        "alarm_description": "The threshold must remain crossed for {delay} min before the alarm triggers.",
+        "critical_high": "Critical high",
+        "critical_low": "Critical low",
+        "critical_description": "Safety threshold: crossing it triggers the alarm immediately.",
+        "delay_short": "{value} min delay",
+        "normal_behavior": "Normal threshold crossed: the delay starts, then the alarm triggers if the excursion persists.",
+        "critical_behavior": "Critical threshold crossed: the alarm triggers immediately with no delay."
       }
     },
     "metrology": {

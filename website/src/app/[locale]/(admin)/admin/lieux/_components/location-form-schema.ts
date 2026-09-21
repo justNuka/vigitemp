@@ -1,4 +1,6 @@
 import { z } from "zod";
+import { buildCriticalThresholdIssues } from "@/lib/location-critical-threshold-contract";
+import { computeEmt } from "@/lib/emt";
 
 const mailingContactSchema = z.object({
   Id_Tel_Num: z.number().optional(),
@@ -140,6 +142,56 @@ function addConsigneGuards(data: Record<string, unknown>, ctx: z.RefinementCtx) 
       message: "Le retard d'alarme bas doit etre strictement superieur a 0.",
     })
   }
+
+  const liveEmt = computeEmt({
+    mode: typeof data.EMT_Mode === "string" ? data.EMT_Mode : null,
+    emtValue: typeof data.EMT_Valeur === "number" ? data.EMT_Valeur : null,
+    consigne: typeof data.Consigne === "number" ? data.Consigne : null,
+    consigneSup: typeof data.Consigne_Sup === "number" ? data.Consigne_Sup : null,
+    consigneInf: typeof data.Consigne_Inf === "number" ? data.Consigne_Inf : null,
+    isConsigneSupActive: data.Est_Consigne_Sup_Active === true,
+    isConsigneInfActive: data.Est_Consigne_Inf_Active === true,
+    incertitude: typeof data.Incertitude === "number" ? data.Incertitude : null,
+    erreurJustesse: typeof data.Erreur_Justesse === "number" ? data.Erreur_Justesse : null,
+    derive: typeof data.Derive === "number" ? data.Derive : null,
+    includeDeriveInUncertainty:
+      data.EMT_Mode === "quart" || data.EMT_Mode === "manuel"
+        ? true
+        : data.Prendre_En_Compte_Derive === true,
+    correctAccuracyError: data.Corriger_Erreur_Justesse === true,
+  })
+
+  const criticalIssues = buildCriticalThresholdIssues({
+    consigne: typeof data.Consigne === "number" ? data.Consigne : null,
+    effectiveHigh: supActive
+      ? liveEmt.toleranceSup ??
+        (typeof data.Tolerance_Surveillance_Sup === "number"
+          ? data.Tolerance_Surveillance_Sup
+          : typeof data.Consigne_Sup === "number"
+            ? data.Consigne_Sup
+            : null)
+      : null,
+    effectiveLow: infActive
+      ? liveEmt.toleranceInf ??
+        (typeof data.Tolerance_Surveillance_Inf === "number"
+          ? data.Tolerance_Surveillance_Inf
+          : typeof data.Consigne_Inf === "number"
+            ? data.Consigne_Inf
+            : null)
+      : null,
+    criticalHigh: typeof data.Seuil_Critique_Haut === "number" ? data.Seuil_Critique_Haut : null,
+    criticalHighActive: data.Est_Seuil_Critique_Haut_Active === true,
+    criticalLow: typeof data.Seuil_Critique_Bas === "number" ? data.Seuil_Critique_Bas : null,
+    criticalLowActive: data.Est_Seuil_Critique_Bas_Active === true,
+  })
+
+  for (const issue of criticalIssues) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: issue.path,
+      message: issue.message,
+    })
+  }
 }
 
 export const locationFormSchema = z.object({
@@ -156,11 +208,15 @@ export const locationFormSchema = z.object({
   Est_Consigne_Sup_Active: z.boolean().optional(),
   Consigne_Sup_Pre_Alarme: z.number().optional().nullable(),
   Est_Consigne_Sup_Pre_Alarme_Active: z.boolean().optional(),
+  Seuil_Critique_Haut: z.number().optional().nullable(),
+  Est_Seuil_Critique_Haut_Active: z.boolean().optional(),
   Retard_Alarme_Haut: z.number().optional().nullable(),
   Consigne_Inf: z.number().optional().nullable(),
   Est_Consigne_Inf_Active: z.boolean().optional(),
   Consigne_Inf_Pre_Alarme: z.number().optional().nullable(),
   Est_Consigne_Inf_Pre_Alarme_Active: z.boolean().optional(),
+  Seuil_Critique_Bas: z.number().optional().nullable(),
+  Est_Seuil_Critique_Bas_Active: z.boolean().optional(),
   Retard_Alarme_Bas: z.number().optional().nullable(),
   Retard_Non_Reponse: z.number().optional().nullable(),
   Retard_Alarme_Changement_Consigne: z.number().optional().nullable(),

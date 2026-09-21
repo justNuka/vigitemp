@@ -23,9 +23,44 @@ La procédure complète d'upgrade des installations existantes est documentée d
 
 ## [Unreleased]
 
-- Aucun changement de schéma.
-- Ajout dans les seeds MySQL et SQL Server du paramètre `SECURITE_EMAIL:SMTP_CONFIRME=false` pour les nouvelles installations.
-- Les installations existantes ne nécessitent pas de migration de schéma : le paramètre est créé automatiquement lors de la première modification SMTP. Une configuration historique complète sans ce paramètre est considérée confirmée jusqu'à sa prochaine modification.
+Aucun changement supplémentaire documenté depuis la préparation du schéma 0.91.0.
+
+## [0.91.0] — 2026-09-21
+
+Cette révision ajoute les seuils critiques de lieu utilisés par le Web 1.2.0 et le Serveur 1.1.0. Les seeds MySQL / SQL Server et les migrations d'installations existantes restent alignés.
+
+### Colonnes ajoutées
+
+| Table | Colonne | MySQL | SQL Server | Nullabilité / défaut | Rôle |
+| --- | --- | --- | --- | --- | --- |
+| `t_lieu` | `Seuil_Critique_Haut` | `float` | `FLOAT` | NULL, défaut NULL | valeur au-dessus de laquelle l'alarme haute doit partir immédiatement |
+| `t_lieu` | `Est_Seuil_Critique_Haut_Active` | `tinyint(1)` | `BIT` | NOT NULL, défaut `0` | active le seuil critique haut |
+| `t_lieu` | `Seuil_Critique_Bas` | `float` | `FLOAT` | NULL, défaut NULL | valeur au-dessous de laquelle l'alarme basse doit partir immédiatement |
+| `t_lieu` | `Est_Seuil_Critique_Bas_Active` | `tinyint(1)` | `BIT` | NOT NULL, défaut `0` | active le seuil critique bas |
+| `t_lieu_template` | `Seuil_Critique_Haut` | `decimal(10,2)` | `DECIMAL(10,2)` | NULL, défaut NULL | seuil critique haut recopiable depuis un template |
+| `t_lieu_template` | `Seuil_Critique_Bas` | `decimal(10,2)` | `DECIMAL(10,2)` | NULL, défaut NULL | seuil critique bas recopiable depuis un template |
+| `t_lieu_template` | `Est_Seuil_Critique_Haut_Active` | `tinyint(1)` | `BIT` | NOT NULL, défaut `0` | activation du seuil critique haut dans le template |
+| `t_lieu_template` | `Est_Seuil_Critique_Bas_Active` | `tinyint(1)` | `BIT` | NOT NULL, défaut `0` | activation du seuil critique bas dans le template |
+
+### Alarmes GSO
+
+- Le trigger historique `TRG_GSO_BEF_UPD_LIEU_ALARME` est remplacé sur MySQL et SQL Server afin d'évaluer les nouveaux seuils critiques avant la logique de retard d'alarme normale.
+- Un franchissement critique crée ou transitionne immédiatement vers une alarme `B` / `H` datée de la mesure courante.
+- Le type d'alarme historique reste donc compatible : aucun nouveau code d'alarme n'est introduit.
+- La logique normale, les pré-alarmes et les retards existants restent inchangés hors franchissement critique.
+
+### Migration des installations existantes
+
+- MySQL : `db/migrations/0.91.0/mysql.sql`.
+- SQL Server : `db/migrations/0.91.0/mssql.sql`.
+- Les scripts ajoutent les huit colonnes de manière conditionnelle, réinstallent le trigger GSO adapté puis mettent `VERSION / SCHEMA_VERSION` à `0.91.0`.
+- Le marqueur de version n'est mis à jour qu'après application des objets nécessaires à la fonctionnalité.
+- Les migrations `0.90.2` puis `0.91.0` doivent être exécutées dans l'ordre lorsqu'une base part d'une révision antérieure.
+
+### Données initiales
+
+- Le paramètre `SECURITE_EMAIL:SMTP_CONFIRME=false`, ajouté après le schéma 0.90.2 pour les nouvelles installations, est conservé dans les seeds 0.91.0.
+- Les installations historiques sans ce paramètre conservent le mécanisme de compatibilité Web existant ; aucune colonne SMTP supplémentaire n'est ajoutée par 0.91.0.
 
 ## [0.90.2] — 2026-09-18
 
