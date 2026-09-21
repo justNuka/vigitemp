@@ -2,14 +2,11 @@
 
 import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
-import { useTranslations } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import { formatNumber } from '@/lib/number-display'
 import type { UseFormRegister } from 'react-hook-form'
 
 import type { LocationFormData } from '../location-form-types'
-
-const formatEmtNumber = (value: number) =>
-  formatNumber(value, { decimals: 4, locale: "en-US", grouping: false })
 
 interface EmtModeSectionProps {
   isExpertEdition: boolean
@@ -35,6 +32,16 @@ export function EmtModeSection({
   register,
 }: EmtModeSectionProps) {
   const t = useTranslations('locationsForm.metrology')
+  const locale = useLocale()
+  const localeTag = locale === 'fr' ? 'fr-FR' : locale
+  const formatEmtNumber = (value: number | null | undefined) =>
+    formatNumber(value, {
+      minimumDecimals: 0,
+      maximumDecimals: 4,
+      locale: localeTag,
+      grouping: false,
+      fallback: '',
+    })
 
   return (
     <>
@@ -48,7 +55,7 @@ export function EmtModeSection({
               <div className="text-sm text-muted-foreground">{t('emt.option.quart.description')}</div>
               {formData.EMT_Mode === 'quart' && (
                 <div className="mt-2 space-y-2">
-                  <Input type="number" step="0.01" disabled value={emtPreview.emtSonde ?? ''} className="bg-muted" placeholder={t('emt.decimals_placeholder')} />
+                  <Input type="text" disabled value={formatEmtNumber(emtPreview.emtSonde)} className="bg-muted" placeholder={t('emt.decimals_placeholder')} />
                 </div>
               )}
             </div>
@@ -90,12 +97,12 @@ export function EmtModeSection({
                 {!formData.Prendre_En_Compte_Derive && formData.Corriger_Erreur_Justesse ? (
                   <>
                     <span className="font-medium">I<sub>mes</sub> = I<sub>et</sub></span>
-                    <div className="text-xs text-muted-foreground">{`I_et = ${iEtalonnage}`}</div>
+                    <div className="text-xs text-muted-foreground">{`I_et = ${formatEmtNumber(iEtalonnage)}`}</div>
                   </>
                 ) : !formData.Prendre_En_Compte_Derive ? (
                   <>
                     <span className="font-medium">I<sub>mes</sub> = |EJ| + I<sub>etalonnage</sub></span>
-                    <div className="text-xs text-muted-foreground">{`I_mes = |${absEj}| + ${iEtalonnage} = ${formatEmtNumber(absEj + iEtalonnage)}`}</div>
+                    <div className="text-xs text-muted-foreground">{`I_mes = |${formatEmtNumber(absEj)}| + ${formatEmtNumber(iEtalonnage)} = ${formatEmtNumber(absEj + iEtalonnage)}`}</div>
                   </>
                 ) : formData.Corriger_Erreur_Justesse ? (
                   <>
@@ -107,13 +114,13 @@ export function EmtModeSection({
                   <>
                     <span className="font-medium">I<sub>mes</sub> = |EJ| + 2 * sqrt((I<sub>et</sub>/2)<sup>2</sup> + (Derive/sqrt(3))<sup>2</sup>)</span>
                     <div className="text-xs text-muted-foreground">{`I_et = ${iEtalonnage}`}</div>
-                    <div className="text-xs text-muted-foreground">{`I_mes = |${absEj}| + ${formatEmtNumber(withDerivePart)} = ${formatEmtNumber(absEj + withDerivePart)}`}</div>
+                    <div className="text-xs text-muted-foreground">{`I_mes = |${formatEmtNumber(absEj)}| + ${formatEmtNumber(withDerivePart)} = ${formatEmtNumber(absEj + withDerivePart)}`}</div>
                   </>
                 )}
               </div>
               {formData.EMT_Mode === 'uncertainties' && (
                 <div className="mt-2 space-y-2">
-                  <Input type="number" step="0.01" disabled value={emtPreview.emtSonde ?? ''} className="bg-muted" placeholder={t('emt.decimals_placeholder')} />
+                  <Input type="text" disabled value={formatEmtNumber(emtPreview.emtSonde)} className="bg-muted" placeholder={t('emt.decimals_placeholder')} />
                 </div>
               )}
             </div>
