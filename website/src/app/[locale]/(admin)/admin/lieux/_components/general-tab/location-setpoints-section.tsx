@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { fetchJson } from '@/lib/http'
+import { computeEmt } from '@/lib/emt'
 import { formatNumber } from '@/lib/number-display'
 import type { SensorValueRange } from '@/lib/sensor-value-range-contract'
 import { cn } from '@/lib/utils'
@@ -132,11 +133,28 @@ export function LocationSetpointsSection({
     return `≤ ${formatNumber(sensorRange.max, { maximumDecimals: 3, locale: localeTag })}${sensorRange.unit ? ` ${sensorRange.unit}` : ''}`
   }
 
+  const liveEmt = computeEmt({
+    mode: formData.EMT_Mode,
+    emtValue: formData.EMT_Valeur ?? null,
+    consigne: formData.Consigne ?? null,
+    consigneSup: formData.Consigne_Sup ?? null,
+    consigneInf: formData.Consigne_Inf ?? null,
+    isConsigneSupActive: formData.Est_Consigne_Sup_Active ?? false,
+    isConsigneInfActive: formData.Est_Consigne_Inf_Active ?? false,
+    incertitude: formData.Incertitude ?? null,
+    erreurJustesse: formData.Erreur_Justesse ?? null,
+    derive: formData.Derive ?? null,
+    includeDeriveInUncertainty:
+      formData.EMT_Mode === 'quart' || formData.EMT_Mode === 'manuel'
+        ? true
+        : (formData.Prendre_En_Compte_Derive ?? false),
+    correctAccuracyError: formData.Corriger_Erreur_Justesse ?? false,
+  })
   const effectiveHigh = formData.Est_Consigne_Sup_Active
-    ? (formData.Tolerance_Surveillance_Sup ?? formData.Consigne_Sup ?? null)
+    ? (liveEmt.toleranceSup ?? formData.Tolerance_Surveillance_Sup ?? formData.Consigne_Sup ?? null)
     : null
   const effectiveLow = formData.Est_Consigne_Inf_Active
-    ? (formData.Tolerance_Surveillance_Inf ?? formData.Consigne_Inf ?? null)
+    ? (liveEmt.toleranceInf ?? formData.Tolerance_Surveillance_Inf ?? formData.Consigne_Inf ?? null)
     : null
 
   return (
