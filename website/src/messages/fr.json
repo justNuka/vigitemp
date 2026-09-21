@@ -1756,7 +1756,7 @@
       "dateTo": "Au",
       "clearFilters": "Effacer les filtres",
       "action": "Action",
-      "today_limit_hint": "Affichage du jour en cours. Pour une période plus precise, ajustez les dates. La liste reste limitée à 100 entrées."
+      "today_limit_hint": "Affichage du jour en cours. Ajustez les dates pour changer de période ; les événements sont chargés par pages."
     },
     "expandedDetails": "Détails complets",
     "actions": {
@@ -1789,7 +1789,17 @@
       "PS": "Redémarrage port série",
       "SACT": "Module alarme retiré",
       "AACT": "Module alarme associé",
-      "unknown": "Action inconnue ({code})"
+      "unknown": "Action inconnue ({code})",
+      "GRPH": "Ouverture d'un graphique",
+      "MAIL": "Email d'alarme envoyé",
+      "ALARM_RESOLVED": "Fin d'alarme",
+      "ETAP": "Étalonnage appliqué",
+      "VLOG": "Action VigiLog",
+      "FERMSURV": "Fermeture de la surveillance",
+      "IMP": "Import de données",
+      "PLAN": "Modification du planning",
+      "TEL": "Système",
+      "UT": "Événement système"
     },
     "filters": {
       "site": "Site",
@@ -1819,7 +1829,66 @@
       "from": "De : {value}",
       "to": "Vers : {value}",
       "action": "Action : {action}",
-      "ip": "IP : {ip}"
+      "ip": "IP : {ip}",
+      "resources": {
+        "audit_graph_openings": "Affichage des ouvertures de graphiques"
+      },
+      "fields": {
+        "address": "Adresse",
+        "connectedAt": "Connecté le",
+        "machineName": "Machine",
+        "authEngine": "Moteur d'authentification",
+        "newToleranceSup": "Tolérance supérieure",
+        "newToleranceInf": "Tolérance inférieure",
+        "simAlarms": "Alarmes simulées",
+        "realAlarms": "Alarmes réelles",
+        "dateRange": "Période",
+        "alarmId": "N° alarme",
+        "acknowledgedAt": "Acquitté le",
+        "from": "Avant",
+        "to": "Après",
+        "forced": "Forcé",
+        "description": "Description",
+        "format": "Format",
+        "Nom_Lieu": "Nom du lieu",
+        "Tolerance_Sup": "Tolérance supérieure",
+        "Tolerance_Inf": "Tolérance inférieure",
+        "Consigne_Sup": "Consigne supérieure",
+        "Consigne_Inf": "Consigne inférieure",
+        "Est_Son_Alarme_Active": "Son d'alarme",
+        "Nom_Sonde": "Nom de la sonde",
+        "Frequence_Mesure": "Fréquence de mesure (s)",
+        "Retard_Alarme": "Retard d'alarme (s)",
+        "Hysteresis": "Hystérésis",
+        "disabled": "Surveillance désactivée",
+        "durationMinutes": "Durée (min)",
+        "reactivationAt": "Réactivation prévue",
+        "updated": "Lieux modifiés",
+        "lieuIds": "Lieux concernés",
+        "groupOrLiaisonId": "Groupe / liaison",
+        "emailEvent": "Événement email",
+        "emailStatus": "Statut email",
+        "recipient": "Destinataire",
+        "attempts": "Tentatives",
+        "usedSystemFallback": "Destinataires système utilisés"
+      },
+      "values": {
+        "yes": "Oui",
+        "no": "Non",
+        "before": "Avant",
+        "after": "Après",
+        "auth_legacy": "legacy",
+        "auth_new": "new",
+        "action_create": "Création",
+        "action_update": "Modification",
+        "action_delete": "Suppression",
+        "action_enable": "Activation",
+        "action_disable": "Désactivation",
+        "email_triggered": "Alarme déclenchée",
+        "email_ended": "Fin d'alarme",
+        "email_acknowledged": "Acquittement d'alarme",
+        "email_sent": "Envoyé"
+      }
     }
   },
   "profilePage": {
@@ -2943,7 +3012,10 @@
       "password_label": "Mot de passe",
       "password_placeholder": "Votre mot de passe",
       "reset_email_label": "Adresse email",
-      "reset_email_placeholder": "votre@email.com"
+      "reset_email_placeholder": "votre@email.com",
+      "show_password": "Afficher le mot de passe",
+      "hide_password": "Masquer le mot de passe",
+      "caps_lock_warning": "Verr. Maj est activé"
     },
     "buttons": {
       "sign_in": "Se connecter",
