@@ -1116,6 +1116,7 @@
         "monitoring_requires_sensor": "Sans sonde sélectionnée, la surveillance est désactivée automatiquement."
       },
       "group_fallback": "Groupe {id}",
+      "sensor_range": "Plage de mesure de la sonde sélectionnée : {range}",
       "planning_lock": {
         "title": "Consignes pilotées par le planning",
         "description": "Des règles de planning sont actives pour ce lieu. Les consignes de base sont verrouillées ici. Modifiez le planning si vous devez changer les consignes appliquées.",

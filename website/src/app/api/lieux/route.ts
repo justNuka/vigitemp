@@ -359,7 +359,12 @@ export const POST = withLogging(async (req: NextRequest) => {
     const sensorTypeRange = await getSensorTypeValueRangeBySerial(sondeNumeroSerie)
     const rangeIssues = buildLocationValueRangeIssues(validated, sensorTypeRange)
     if (rangeIssues.length > 0) {
-      return apiError(400, "validation_error", "Validation impossible", { issues: rangeIssues })
+      return apiError(
+        400,
+        "validation_error",
+        rangeIssues[0]?.message ?? "Validation impossible",
+        { issues: rangeIssues },
+      )
     }
 
     const frequencySeconds =
@@ -693,7 +698,12 @@ export const POST = withLogging(async (req: NextRequest) => {
       return apiError(400, "invalid_calibration_date", "Date d'étalonnage invalide")
     }
     if (error instanceof z.ZodError) {
-      return apiError(400, "validation_error", "Validation impossible", { issues: error.issues })
+      return apiError(
+        400,
+        "validation_error",
+        error.issues[0]?.message ?? "Validation impossible",
+        { issues: error.issues },
+      )
     }
     log.error("lieux", "lieu_create_error", { error: error });
     return apiError(500, "lieu_create_failed", "Erreur lors de la création du lieu")

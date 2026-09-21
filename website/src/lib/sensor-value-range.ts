@@ -1,37 +1,22 @@
+import { Prisma } from "../generated/@prisma-db-main"
 import { prisma } from "@/lib/prisma"
 import { isMssqlProvider } from "@/lib/sql-provider"
+import { buildLocationValueRangeIssues, type SensorValueRange } from "@/lib/sensor-value-range-contract"
+
+export { buildLocationValueRangeIssues } from "@/lib/sensor-value-range-contract"
 
 type SensorTypeRangeRow = {
   valeurMin: number | null
   valeurMax: number | null
+  unite: string | null
 }
 
-type LocationValueIssue = {
-  code: "custom"
-  path: [string]
-  message: string
+type SensorTypeDefinitionRangeRow = {
+  sondeType: string | null
+  valeurMin: number | null
+  valeurMax: number | null
+  unite: string | null
 }
-
-type LocationValuesPayload = Partial<Record<
-  | "Consigne"
-  | "Consigne_Sup"
-  | "Consigne_Inf"
-  | "Consigne_Sup_Pre_Alarme"
-  | "Consigne_Inf_Pre_Alarme"
-  | "Tolerance_Surveillance_Sup"
-  | "Tolerance_Surveillance_Inf",
-  number | null | undefined
->>
-
-const RANGE_FIELDS: Array<{ key: keyof LocationValuesPayload; label: string }> = [
-  { key: "Consigne", label: "La consigne" },
-  { key: "Consigne_Sup", label: "La consigne superieure" },
-  { key: "Consigne_Inf", label: "La consigne inferieure" },
-  { key: "Consigne_Sup_Pre_Alarme", label: "La pre-alarme superieure" },
-  { key: "Consigne_Inf_Pre_Alarme", label: "La pre-alarme inferieure" },
-  { key: "Tolerance_Surveillance_Sup", label: "La tolerance superieure" },
-  { key: "Tolerance_Surveillance_Inf", label: "La tolerance inferieure" },
-]
 
 function isMissingSensorTypeRangeColumnError(error: unknown) {
   if (error instanceof Error) {
@@ -39,6 +24,54 @@ function isMissingSensorTypeRangeColumnError(error: unknown) {
   }
 
   return false
+}
+
+export async function getSensorTypeValueRangesByCodes(
+  typeCodes: Array<string | null | undefined>,
+) {
+  const normalized = Array.from(
+    new Set(
+      typeCodes
+        .map((value) => value?.trim())
+        .filter((value): value is string => Boolean(value)),
+    ),
+  )
+
+  if (normalized.length === 0) {
+    return new Map<string, SensorValueRange>()
+  }
+
+  try {
+    const rows = await prisma.$queryRaw<SensorTypeDefinitionRangeRow[]>(
+      Prisma.sql`
+        SELECT
+          Sonde_Type AS sondeType,
+          Valeur_Min AS valeurMin,
+          Valeur_Max AS valeurMax,
+          Unite AS unite
+        FROM t_sonde_type
+        WHERE Sonde_Type IN (${Prisma.join(normalized)})
+      `,
+    )
+
+    return new Map(
+      rows
+        .filter((row) => Boolean(row.sondeType))
+        .map((row) => [
+          row.sondeType as string,
+          {
+            min: row.valeurMin ?? null,
+            max: row.valeurMax ?? null,
+            unit: row.unite ?? null,
+          } satisfies SensorValueRange,
+        ]),
+    )
+  } catch (error) {
+    if (isMissingSensorTypeRangeColumnError(error)) {
+      return new Map<string, SensorValueRange>()
+    }
+    throw error
+  }
 }
 
 export async function getSensorTypeValueRangeBySerial(serialNumber: string | null | undefined) {
@@ -49,7 +82,9 @@ export async function getSensorTypeValueRangeBySerial(serialNumber: string | nul
       ? await prisma.$queryRaw<SensorTypeRangeRow[]>`
           SELECT TOP 1
             st.Valeur_Min AS valeurMin,
-            st.Valeur_Max AS valeurMax
+            st.Valeur_Max AS valeurMax,
+            st.Unite AS unite,
+            st.Unite AS unite
           FROM t_sonde s
           LEFT JOIN t_sonde_type st ON st.Sonde_Type = s.Sonde_Type
           WHERE s.Sonde_Numero_Serie = ${serialNumber}
@@ -70,43 +105,12 @@ export async function getSensorTypeValueRangeBySerial(serialNumber: string | nul
     return {
       min: row.valeurMin ?? null,
       max: row.valeurMax ?? null,
-    }
+      unit: row.unite ?? null,
+    } satisfies SensorValueRange
   } catch (error) {
     if (isMissingSensorTypeRangeColumnError(error)) {
       return null
     }
     throw error
   }
-}
-
-export function buildLocationValueRangeIssues(
-  values: LocationValuesPayload,
-  range: { min: number | null; max: number | null } | null,
-) {
-  if (!range || (range.min == null && range.max == null)) return [] as LocationValueIssue[]
-
-  const issues: LocationValueIssue[] = []
-
-  for (const field of RANGE_FIELDS) {
-    const value = values[field.key]
-    if (value == null || Number.isNaN(Number(value))) continue
-
-    if (range.min != null && Number(value) < range.min) {
-      issues.push({
-        code: "custom",
-        path: [field.key],
-        message: `${field.label} doit etre superieure ou egale a ${range.min}.`,
-      })
-    }
-
-    if (range.max != null && Number(value) > range.max) {
-      issues.push({
-        code: "custom",
-        path: [field.key],
-        message: `${field.label} doit etre inferieure ou egale a ${range.max}.`,
-      })
-    }
-  }
-
-  return issues
 }

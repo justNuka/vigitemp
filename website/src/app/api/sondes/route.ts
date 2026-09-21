@@ -10,6 +10,7 @@ import { log } from "@/lib/logger"
 import { getPermissionAliases } from "@/lib/permissions"
 import { buildSensorSerialsFromInput, extractProbeAddressFromSerial, getSensorFamilyFromTypeCode } from "@/lib/sensor-naming"
 import { z } from "zod"
+import { getSensorTypeValueRangesByCodes } from "@/lib/sensor-value-range"
 
 const SENSOR_ACCESS_CODES = getPermissionAliases("HARDWARE_CONFIG_ACCESS")
 
@@ -57,6 +58,12 @@ export const GET = withOneOrHigherAnyAuthorizationLogging(SENSOR_ACCESS_CODES, a
 
     const moduleById = new Map(modules.map((module) => [module.Id_Module, module]))
 
+    const sensorTypeByCode = await getSensorTypeValueRangesByCodes(
+      sondes.map(
+        (sonde) => (sonde as { Sonde_Type?: string | null }).Sonde_Type,
+      ),
+    )
+
     const latestEtalonnages = serials.length
       ? await prisma.t_etalonnage.findMany({
           where: { Sonde_Numero_Serie: { in: serials } },
@@ -77,14 +84,24 @@ export const GET = withOneOrHigherAnyAuthorizationLogging(SENSOR_ACCESS_CODES, a
       }
     }
 
-    const formatted = sondes.map((sonde) => ({
+    const formatted = sondes.map((sonde) => {
+      const sensorTypeCode =
+        (sonde as { Sonde_Type?: string | null }).Sonde_Type ?? null
+      const sensorType = sensorTypeCode
+        ? sensorTypeByCode.get(sensorTypeCode)
+        : null
+
+      return {
       Id_Sonde: sonde.Id_Sonde,
       Adresse_Sonde: sonde.Adresse_Sonde,
       Sonde_Numero_Serie: sonde.Sonde_Numero_Serie,
       Port_Serie: sonde.Port_Serie,
       // Sonde_Type may not be in the generated Prisma type for t_sonde; access via type assertion.
-      Sonde_Type: (sonde as { Sonde_Type?: string | null }).Sonde_Type ?? null,
-      Famille_Sonde: getSensorFamilyFromTypeCode((sonde as { Sonde_Type?: string | null }).Sonde_Type),
+      Sonde_Type: sensorTypeCode,
+      Famille_Sonde: getSensorFamilyFromTypeCode(sensorTypeCode),
+      Valeur_Min: sensorType?.min ?? null,
+      Valeur_Max: sensorType?.max ?? null,
+      Unite_Type: sensorType?.unit ?? null,
       Est_Sonde_GSO: sonde.Est_Sonde_GSO,
       Surveillance_Etat: sonde.Surveillance_Etat ?? sonde.t_etat_surveillance?.Surveillance_Etat ?? null,
       Surveillance_Etat_Libelle:
@@ -104,7 +121,8 @@ export const GET = withOneOrHigherAnyAuthorizationLogging(SENSOR_ACCESS_CODES, a
       Date_Validite_Etalonnage: sonde.Sonde_Numero_Serie
         ? latestValidityBySerial.get(sonde.Sonde_Numero_Serie) ?? null
         : null,
-    }))
+      }
+    })
 
     return apiOk(formatted)
   } catch (error) {

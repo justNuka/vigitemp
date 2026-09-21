@@ -19,6 +19,7 @@ La convention de versioning est décrite dans [`docs/versioning.md`](docs/versio
 - Administration > Paramètres est réorganisée par onglets afin de séparer les réglages généraux, sécurité, alarmes/notifications et services.
 - Toute modification réelle de la configuration SMTP invalide sa confirmation et exige désormais la saisie d'un code reçu par email via la nouvelle configuration avant que les emails métier puissent repartir.
 - L'activation globale du Mailing est déplacée sur la card SMTP ; le guide reste disponible même lorsque le service est désactivé.
+- La création/édition d'un lieu affiche et valide désormais la plage de mesure de la sonde sélectionnée avant l'envoi ; les erreurs de consigne hors plage ne sont plus masquées derrière un générique « Validation impossible ».
 
 ## Livraison VigiSensys 1.0.0 — 2026-09-18
 

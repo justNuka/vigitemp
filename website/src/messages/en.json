@@ -789,6 +789,7 @@
         "monitoring_requires_sensor": "Without a selected sensor, monitoring is automatically disabled."
       },
       "group_fallback": "Group {id}",
+      "sensor_range": "Selected sensor measurement range: {range}",
       "planning_lock": {
         "title": "Setpoints driven by planning",
         "description": "Planning rules are active for this location. Base setpoints are locked here. Edit the planning if you need to change the applied setpoints.",

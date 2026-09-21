@@ -5,6 +5,7 @@ import { apiError, apiOk } from "@/lib/api-response"
 import { prisma } from "@/lib/prisma"
 import { getSensorFamilyFromTypeCode } from "@/lib/sensor-naming"
 import { log } from "@/lib/logger"
+import { getSensorTypeValueRangesByCodes } from "@/lib/sensor-value-range"
 
 /**
  * GET /api/sondes/unassigned?page=1&limit=20
@@ -54,7 +55,16 @@ export const GET = withAdminLogging(async (req: NextRequest) => {
       take: limit,
     })
 
-    const formatted = sondes.map((sonde) => ({
+    const sensorTypeByCode = await getSensorTypeValueRangesByCodes(
+      sondes.map((sonde) => sonde.Sonde_Type),
+    )
+
+    const formatted = sondes.map((sonde) => {
+      const sensorType = sonde.Sonde_Type
+        ? sensorTypeByCode.get(sonde.Sonde_Type)
+        : null
+
+      return {
       Id_Sonde: sonde.Id_Sonde,
       Adresse_Sonde: sonde.Adresse_Sonde,
       Sonde_Numero_Serie: sonde.Sonde_Numero_Serie,
@@ -62,12 +72,16 @@ export const GET = withAdminLogging(async (req: NextRequest) => {
       Sonde_Offset: sonde.Sonde_Offset,
       Sonde_Type: sonde.Sonde_Type ?? null,
       Famille_Sonde: getSensorFamilyFromTypeCode(sonde.Sonde_Type),
+      Valeur_Min: sensorType?.min ?? null,
+      Valeur_Max: sensorType?.max ?? null,
+      Unite_Type: sensorType?.unit ?? null,
       Est_Sonde_GSO: sonde.Est_Sonde_GSO ?? null,
       Lieu: null,
       Port_Serie: null,
       Surveillance_Etat: null,
       Surveillance_Etat_Libelle: null,
-    }))
+      }
+    })
 
     return apiOk({
       data: formatted,

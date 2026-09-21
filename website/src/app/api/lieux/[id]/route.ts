@@ -546,7 +546,12 @@ export const PATCH = withAnyAuthorizationLogging(
       const sensorTypeRange = await getSensorTypeValueRangeBySerial(effectiveSensorSerialForRange)
       const rangeIssues = buildLocationValueRangeIssues(validated, sensorTypeRange)
       if (rangeIssues.length > 0) {
-        return apiError(400, "validation_error", "Validation impossible", { issues: rangeIssues })
+        return apiError(
+          400,
+          "validation_error",
+          rangeIssues[0]?.message ?? "Validation impossible",
+          { issues: rangeIssues },
+        )
       }
 
       const ip = getClientIp(req)

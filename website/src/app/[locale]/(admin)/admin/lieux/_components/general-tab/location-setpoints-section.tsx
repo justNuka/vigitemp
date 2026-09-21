@@ -13,13 +13,29 @@ import { useTranslations } from 'next-intl'
 import { fetchJson } from '@/lib/http'
 
 import type { LocationFormData } from '../location-form-types'
+import type { SensorValueRange } from '@/lib/sensor-value-range-contract'
 import { toOptionalNonNegativeInteger, toOptionalNumber } from './location-form-parsers'
 
 type PlanningRegleLite = { Id_Regle: number }
 
-export function LocationSetpointsSection({ isGsoSensor, idLieu, onGoToPlanning }: { isGsoSensor: boolean; idLieu: number | null; onGoToPlanning?: () => void }) {
+export function LocationSetpointsSection({
+  isGsoSensor,
+  idLieu,
+  onGoToPlanning,
+  sensorRange,
+}: {
+  isGsoSensor: boolean
+  idLieu: number | null
+  onGoToPlanning?: () => void
+  sensorRange?: SensorValueRange | null
+}) {
   const t = useTranslations('locationsForm.general')
-  const { register, watch, setValue } = useFormContext<LocationFormData>()
+  const {
+    register,
+    watch,
+    setValue,
+    formState: { errors },
+  } = useFormContext<LocationFormData>()
   const formData = watch()
 
   const { data: planningRegles = [] } = useQuery<PlanningRegleLite[]>({
@@ -35,6 +51,18 @@ export function LocationSetpointsSection({ isGsoSensor, idLieu, onGoToPlanning }
       <div className="flex items-center justify-between gap-3">
         <h3 className="font-semibold">{t('sections.setpoints')}</h3>
       </div>
+      {sensorRange && (sensorRange.min != null || sensorRange.max != null) ? (
+        <div className="rounded-md border border-sky-200 bg-sky-50 px-4 py-2 text-sm text-sky-900 dark:border-sky-500/40 dark:bg-sky-500/10 dark:text-sky-100">
+          {t('sensor_range', {
+            range:
+              sensorRange.min != null && sensorRange.max != null
+                ? `${sensorRange.min} – ${sensorRange.max}${sensorRange.unit ? ` ${sensorRange.unit}` : ''}`
+                : sensorRange.min != null
+                  ? `≥ ${sensorRange.min}${sensorRange.unit ? ` ${sensorRange.unit}` : ''}`
+                  : `≤ ${sensorRange.max}${sensorRange.unit ? ` ${sensorRange.unit}` : ''}`,
+          })}
+        </div>
+      ) : null}
       {planningLocked ? (
         <div className="rounded-md border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-900 dark:border-sky-500/40 dark:bg-sky-500/10 dark:text-sky-100">
           <p className="font-medium">{t('planning_lock.title')}</p>
@@ -173,7 +201,16 @@ export function LocationSetpointsSection({ isGsoSensor, idLieu, onGoToPlanning }
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>{t('labels.setpoint')}</Label>
-              <Input type="number" step="any" {...register('Consigne', { setValueAs: toOptionalNumber })} placeholder={t('placeholders.numeric')} />
+              <Input
+                type="number"
+                step="any"
+                {...register('Consigne', { setValueAs: toOptionalNumber })}
+                placeholder={t('placeholders.numeric')}
+                aria-invalid={!!errors.Consigne}
+              />
+              {errors.Consigne?.message ? (
+                <p className="text-sm text-destructive">{String(errors.Consigne.message)}</p>
+              ) : null}
             </div>
             <div className="space-y-2">
               <Label>{t('labels.frequency')}</Label>
@@ -242,7 +279,16 @@ export function LocationSetpointsSection({ isGsoSensor, idLieu, onGoToPlanning }
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>{t('labels.upper_max')}</Label>
-                  <Input type="number" step="any" {...register('Consigne_Sup', { setValueAs: toOptionalNumber })} placeholder={t('placeholders.numeric')} />
+                  <Input
+                    type="number"
+                    step="any"
+                    {...register('Consigne_Sup', { setValueAs: toOptionalNumber })}
+                    placeholder={t('placeholders.numeric')}
+                    aria-invalid={!!errors.Consigne_Sup}
+                  />
+                  {errors.Consigne_Sup?.message ? (
+                    <p className="text-sm text-destructive">{String(errors.Consigne_Sup.message)}</p>
+                  ) : null}
                 </div>
                 <div className="space-y-2">
                   <Label>{t('labels.alarm_delay_minutes')}</Label>
@@ -256,7 +302,16 @@ export function LocationSetpointsSection({ isGsoSensor, idLieu, onGoToPlanning }
               {formData.Est_Consigne_Sup_Pre_Alarme_Active && (
                 <div className="space-y-2 pl-6">
                   <Label>{t('labels.upper_pre_label')}</Label>
-                  <Input type="number" step="any" {...register('Consigne_Sup_Pre_Alarme', { setValueAs: toOptionalNumber })} placeholder={t('placeholders.numeric')} />
+                  <Input
+                    type="number"
+                    step="any"
+                    {...register('Consigne_Sup_Pre_Alarme', { setValueAs: toOptionalNumber })}
+                    placeholder={t('placeholders.numeric')}
+                    aria-invalid={!!errors.Consigne_Sup_Pre_Alarme}
+                  />
+                  {errors.Consigne_Sup_Pre_Alarme?.message ? (
+                    <p className="text-sm text-destructive">{String(errors.Consigne_Sup_Pre_Alarme.message)}</p>
+                  ) : null}
                 </div>
               )}
             </div>
@@ -277,13 +332,31 @@ export function LocationSetpointsSection({ isGsoSensor, idLieu, onGoToPlanning }
               {formData.Est_Consigne_Inf_Pre_Alarme_Active && (
                 <div className="space-y-2 pl-6">
                   <Label>{t('labels.lower_pre_label')}</Label>
-                  <Input type="number" step="any" {...register('Consigne_Inf_Pre_Alarme', { setValueAs: toOptionalNumber })} placeholder={t('placeholders.numeric')} />
+                  <Input
+                    type="number"
+                    step="any"
+                    {...register('Consigne_Inf_Pre_Alarme', { setValueAs: toOptionalNumber })}
+                    placeholder={t('placeholders.numeric')}
+                    aria-invalid={!!errors.Consigne_Inf_Pre_Alarme}
+                  />
+                  {errors.Consigne_Inf_Pre_Alarme?.message ? (
+                    <p className="text-sm text-destructive">{String(errors.Consigne_Inf_Pre_Alarme.message)}</p>
+                  ) : null}
                 </div>
               )}
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>{t('labels.lower_min')}</Label>
-                  <Input type="number" step="any" {...register('Consigne_Inf', { setValueAs: toOptionalNumber })} placeholder={t('placeholders.numeric')} />
+                  <Input
+                    type="number"
+                    step="any"
+                    {...register('Consigne_Inf', { setValueAs: toOptionalNumber })}
+                    placeholder={t('placeholders.numeric')}
+                    aria-invalid={!!errors.Consigne_Inf}
+                  />
+                  {errors.Consigne_Inf?.message ? (
+                    <p className="text-sm text-destructive">{String(errors.Consigne_Inf.message)}</p>
+                  ) : null}
                 </div>
                 <div className="space-y-2">
                   <Label>{t('labels.alarm_delay_minutes')}</Label>

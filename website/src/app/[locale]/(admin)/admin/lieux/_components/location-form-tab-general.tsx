@@ -171,7 +171,20 @@ export function LocationFormTabGeneral({ sites, groups, availableSensors, module
         hasSondeSelected={hasSondeSelected}
         standardSensorSerials={standardSensorSerials}
       />
-      <LocationSetpointsSection isGsoSensor={isGsoSensor} idLieu={formData.Id_Lieu ?? null} onGoToPlanning={onGoToPlanning} />
+      <LocationSetpointsSection
+        isGsoSensor={isGsoSensor}
+        idLieu={formData.Id_Lieu ?? null}
+        onGoToPlanning={onGoToPlanning}
+        sensorRange={
+          selectedSensor
+            ? {
+                min: selectedSensor.Valeur_Min ?? null,
+                max: selectedSensor.Valeur_Max ?? null,
+                unit: selectedSensor.Unite_Type ?? formData.Unite ?? null,
+              }
+            : null
+        }
+      />
     </TabsContent>
   )
 }
