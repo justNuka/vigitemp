@@ -21,6 +21,7 @@
     "test:db": "tsx scripts/test-db-connection.ts",
     "test:date-display": "tsx scripts/test-date-display.ts",
     "test:number-display": "tsx scripts/test-number-display.ts",
+    "test:location-thresholds-ux": "tsx scripts/test-location-thresholds-ux.ts",
     "hash:passwords": "tsx scripts/hash-passwords.ts",
     "prisma:prepare": "tsx scripts/prepare-prisma-provider.ts",
     "prisma:prepare:mysql": "tsx scripts/prepare-prisma-provider.ts mysql",
