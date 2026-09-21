@@ -762,7 +762,7 @@
       "related_type_filter_all": "Tous les types",
       "related_alarms_empty": "Aucune alarme ne correspond au filtre.",
       "comment_loading": "Chargement...",
-      "characters": "caractères"
+      "characters_count": "{count}/{max} caractères"
     },
     "status": {
       "active": "En cours",
