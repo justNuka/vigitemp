@@ -1449,7 +1449,7 @@ Les anciens placeholders `%1`, `%2`, `%3` ainsi que les signatures de mauvais en
 
 ## R21-001 — Trier le suivi métrologique par prochain étalonnage
 
-**Statut : `EN_COURS` — branche `fix/metrology-next-calibration-sort`**
+**Statut : `PR_OUVERTE` — branche `fix/metrology-next-calibration-sort` — PR #137**
 
 ### Retour — 21/09/2026
 
