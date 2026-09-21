@@ -26,14 +26,15 @@ export function useMonitoringRangeMeasurements(
     rangeStart: Date | null
     rangeEnd: Date | null
     includeNullNonResponse: boolean
+    limitTodayRange?: boolean
   },
 ) {
-  const { enabled, rangeStart, rangeEnd, includeNullNonResponse } = options
+  const { enabled, rangeStart, rangeEnd, includeNullNonResponse, limitTodayRange = true } = options
   const [data, setData] = useState<MeasureData[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const useDefaultTodayLimit = useMemo(
-    () => isTodayRange(rangeStart, rangeEnd),
-    [rangeEnd, rangeStart],
+    () => limitTodayRange && isTodayRange(rangeStart, rangeEnd),
+    [limitTodayRange, rangeEnd, rangeStart],
   )
 
   useEffect(() => {
