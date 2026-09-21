@@ -135,7 +135,9 @@ jobs:
 
       - name: Restore legacy server packages
         shell: powershell
-        run: nuget restore ".\Vigitemp Serveur\Vigitemp Serveur.sln"
+        run: |
+          nuget restore ".\Vigitemp Serveur\Vigitemp Serveur\packages.config" -PackagesDirectory ".\Vigitemp Serveur\packages"
+          nuget restore ".\Vigitemp Serveur\Vigitemp License Generator\packages.config" -PackagesDirectory ".\Vigitemp Serveur\packages"
 
       - name: Build VigiSensys Server
         shell: powershell
