@@ -35,6 +35,7 @@ interface MonitoringTableTabProps {
   presentationRows: PresentationExportRow[]
   t: (key: string) => string
   maxHeight?: string
+  showExportActions?: boolean
 }
 
 type TableRow = {
@@ -69,6 +70,7 @@ export function MonitoringTableTab({
   presentationRows,
   t,
   maxHeight = "calc(100vh - 26rem)",
+  showExportActions = true,
 }: MonitoringTableTabProps) {
   const [isExportingMultiTabs, setIsExportingMultiTabs] = useState(false)
 
@@ -252,8 +254,9 @@ export function MonitoringTableTab({
         isLoading={rangeLoading}
         exportFileName={exportFileName}
         promptExportCount
-        enableExportColumnSelection
-        toolbarRight={
+        enableExport={showExportActions}
+        enableExportColumnSelection={showExportActions}
+        toolbarRight={showExportActions ? (
           <Button
             type="button"
             size="sm"
@@ -263,7 +266,7 @@ export function MonitoringTableTab({
           >
             {isExportingMultiTabs ? t("table.multi_tabs.button_loading") : t("table.multi_tabs.button")}
           </Button>
-        }
+        ) : undefined}
         manualPagination
         manualSorting
         pageCount={pageCount}
