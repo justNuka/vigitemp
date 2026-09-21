@@ -382,6 +382,9 @@ export function LoginForm() {
                       signingIn: t("buttons.signing_in"),
                       signIn: t("buttons.sign_in"),
                       forgotPassword: t("buttons.forgot_password"),
+                      showPassword: t("fields.show_password"),
+                      hidePassword: t("fields.hide_password"),
+                      capsLockWarning: t("fields.caps_lock_warning"),
                     }}
                   />
                 </>
