@@ -122,8 +122,17 @@ export function LocationFormTabGeneral({ sites, groups, availableSensors, module
             placeholder={t('placeholders.name')}
             maxLength={30}
             aria-invalid={!!errors.Nom_Lieu}
-            aria-describedby={errors.Nom_Lieu ? 'nom-lieu-error' : undefined}
+            aria-describedby={errors.Nom_Lieu ? 'nom-lieu-error nom-lieu-counter' : 'nom-lieu-counter'}
           />
+          <div id="nom-lieu-counter" className="flex items-center justify-between gap-3 text-xs text-muted-foreground">
+            <span>{t('name_limit', { max: 30 })}</span>
+            <span className="tabular-nums">
+              {t('name_remaining', {
+                remaining: Math.max(0, 30 - (formData.Nom_Lieu?.length ?? 0)),
+                max: 30,
+              })}
+            </span>
+          </div>
           {errors.Nom_Lieu?.message && (
             <p id="nom-lieu-error" className="text-sm text-destructive">
               {String(errors.Nom_Lieu.message)}
