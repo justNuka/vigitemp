@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo } from 'react'
+import { useId, useMemo } from 'react'
 import { CircleHelp, TimerReset, Zap } from 'lucide-react'
 import { m, useReducedMotion } from 'motion/react'
 import { useLocale, useTranslations } from 'next-intl'
@@ -34,6 +34,7 @@ export function LocationAlarmPreview({
   const locale = useLocale()
   const localeTag = locale === 'fr' ? 'fr-FR' : locale
   const reduceMotion = useReducedMotion()
+  const gradientId = useId().replace(/:/g, '')
   const { watch } = useFormContext<LocationFormData>()
   const data = watch()
 
@@ -204,17 +205,30 @@ export function LocationAlarmPreview({
   const highPeak = criticalHigh ?? highAlarmLevel + Math.max((domain.max - domain.min) * 0.12, 0.4)
   const lowPeak = criticalLow ?? lowAlarmLevel - Math.max((domain.max - domain.min) * 0.12, 0.4)
 
+  const delaySpan = (value: number | null | undefined) => {
+    const minutes = finite(value) ?? 0
+    const normalized = Math.min(Math.max(minutes, 0), 120) / 120
+    return 8 + normalized * 14
+  }
+
+  const highDelayStart = 24
+  const highDelayEnd = highDelayStart + delaySpan(data.Retard_Alarme_Haut)
+  const highDelayMiddle = (highDelayStart + highDelayEnd) / 2
+  const lowDelayStart = 68
+  const lowDelayEnd = Math.min(90, lowDelayStart + delaySpan(data.Retard_Alarme_Bas))
+  const lowDelayMiddle = (lowDelayStart + lowDelayEnd) / 2
+
   const points = [
     [6, baseline],
     [18, baseline],
-    [26, highAlarmLevel + (highPeak - highAlarmLevel) * 0.12],
-    [38, highAlarmLevel + (highPeak - highAlarmLevel) * 0.22],
-    [48, highAlarmLevel + (highPeak - highAlarmLevel) * 0.28],
-    [57, highPeak],
-    [66, baseline],
-    [74, lowAlarmLevel + (lowPeak - lowAlarmLevel) * 0.12],
-    [84, lowAlarmLevel + (lowPeak - lowAlarmLevel) * 0.22],
-    [91, lowAlarmLevel + (lowPeak - lowAlarmLevel) * 0.28],
+    [highDelayStart, highAlarmLevel + (highPeak - highAlarmLevel) * 0.12],
+    [highDelayMiddle, highAlarmLevel + (highPeak - highAlarmLevel) * 0.22],
+    [highDelayEnd, highAlarmLevel + (highPeak - highAlarmLevel) * 0.28],
+    [54, highPeak],
+    [62, baseline],
+    [lowDelayStart, lowAlarmLevel + (lowPeak - lowAlarmLevel) * 0.12],
+    [lowDelayMiddle, lowAlarmLevel + (lowPeak - lowAlarmLevel) * 0.22],
+    [lowDelayEnd, lowAlarmLevel + (lowPeak - lowAlarmLevel) * 0.28],
     [96, lowPeak],
   ] as const
 
@@ -255,7 +269,7 @@ export function LocationAlarmPreview({
           preserveAspectRatio="none"
         >
           <defs>
-            <linearGradient id="alarm-preview-curve" x1="0" x2="1">
+            <linearGradient id={gradientId} x1="0" x2="1">
               <stop offset="0%" stopColor="currentColor" stopOpacity="0.45" />
               <stop offset="45%" stopColor="currentColor" stopOpacity="0.9" />
               <stop offset="100%" stopColor="currentColor" stopOpacity="0.55" />
@@ -301,7 +315,7 @@ export function LocationAlarmPreview({
             animate={{ d: path }}
             transition={reduceMotion ? { duration: 0 } : { duration: 0.45, ease: 'easeOut' }}
             fill="none"
-            stroke="url(#alarm-preview-curve)"
+            stroke={`url(#${gradientId})`}
             className="text-primary"
             strokeWidth="2"
             vectorEffect="non-scaling-stroke"
@@ -309,10 +323,9 @@ export function LocationAlarmPreview({
 
           {points.map(([xValue, value], index) => (
             <m.circle
-              key={xValue}
-              cx={xValue}
+              key={index}
               initial={false}
-              animate={{ cy: y(value) }}
+              animate={{ cx: xValue, cy: y(value) }}
               transition={transition}
               r={index === 5 || index === 10 ? 2.2 : 1.2}
               className={index === 5 || index === 10 ? 'fill-destructive' : 'fill-primary'}
@@ -321,23 +334,85 @@ export function LocationAlarmPreview({
 
           {normalHigh !== null ? (
             <>
-              <line x1="26" x2="48" y1="20" y2="20" className="stroke-orange-500" strokeWidth="0.8" />
-              <line x1="26" x2="26" y1="17" y2="23" className="stroke-orange-500" strokeWidth="0.8" />
-              <line x1="48" x2="48" y1="17" y2="23" className="stroke-orange-500" strokeWidth="0.8" />
-              <text x="37" y="14" textAnchor="middle" className="fill-orange-600 text-[4px] dark:fill-orange-300">
+              <m.line
+                initial={false}
+                animate={{ x1: highDelayStart, x2: highDelayEnd }}
+                transition={transition}
+                y1="20"
+                y2="20"
+                className="stroke-orange-500"
+                strokeWidth="0.8"
+              />
+              <m.line
+                initial={false}
+                animate={{ x1: highDelayStart, x2: highDelayStart }}
+                transition={transition}
+                y1="17"
+                y2="23"
+                className="stroke-orange-500"
+                strokeWidth="0.8"
+              />
+              <m.line
+                initial={false}
+                animate={{ x1: highDelayEnd, x2: highDelayEnd }}
+                transition={transition}
+                y1="17"
+                y2="23"
+                className="stroke-orange-500"
+                strokeWidth="0.8"
+              />
+              <m.text
+                initial={false}
+                animate={{ x: highDelayMiddle }}
+                transition={transition}
+                y="14"
+                textAnchor="middle"
+                className="fill-orange-600 text-[4px] dark:fill-orange-300"
+              >
                 {t('delay_short', { value: data.Retard_Alarme_Haut ?? 0 })}
-              </text>
+              </m.text>
             </>
           ) : null}
 
           {normalLow !== null ? (
             <>
-              <line x1="74" x2="91" y1="178" y2="178" className="stroke-orange-500" strokeWidth="0.8" />
-              <line x1="74" x2="74" y1="175" y2="181" className="stroke-orange-500" strokeWidth="0.8" />
-              <line x1="91" x2="91" y1="175" y2="181" className="stroke-orange-500" strokeWidth="0.8" />
-              <text x="82.5" y="174" textAnchor="middle" className="fill-orange-600 text-[4px] dark:fill-orange-300">
+              <m.line
+                initial={false}
+                animate={{ x1: lowDelayStart, x2: lowDelayEnd }}
+                transition={transition}
+                y1="178"
+                y2="178"
+                className="stroke-orange-500"
+                strokeWidth="0.8"
+              />
+              <m.line
+                initial={false}
+                animate={{ x1: lowDelayStart, x2: lowDelayStart }}
+                transition={transition}
+                y1="175"
+                y2="181"
+                className="stroke-orange-500"
+                strokeWidth="0.8"
+              />
+              <m.line
+                initial={false}
+                animate={{ x1: lowDelayEnd, x2: lowDelayEnd }}
+                transition={transition}
+                y1="175"
+                y2="181"
+                className="stroke-orange-500"
+                strokeWidth="0.8"
+              />
+              <m.text
+                initial={false}
+                animate={{ x: lowDelayMiddle }}
+                transition={transition}
+                y="174"
+                textAnchor="middle"
+                className="fill-orange-600 text-[4px] dark:fill-orange-300"
+              >
                 {t('delay_short', { value: data.Retard_Alarme_Bas ?? 0 })}
-              </text>
+              </m.text>
             </>
           ) : null}
         </svg>
