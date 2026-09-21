@@ -1059,7 +1059,8 @@
     "general": {
       "sections": {
         "sensor": "Sonde",
-        "setpoints": "Consignes"
+        "setpoints": "Consignes",
+        "measurement_timing": "Mesure et temporisation"
       },
       "labels": {
         "name": "Nom du lieu",
@@ -1075,20 +1076,22 @@
         "sensor_state": "État de la sonde",
         "setpoint": "Consigne",
         "frequency": "Fréquence de mesure (min)",
-        "upper_enable": "Activation consigne sup",
-        "upper_max": "Maximum",
+        "upper_enable": "Activer le seuil haut",
+        "upper_max": "Seuil haut",
         "alarm_delay_minutes": "Retard d'alarme (mn)",
-        "upper_pre_enable": "Activation consigne sup pré-alarme",
-        "upper_pre_label": "Pré-alarme sup.",
-        "lower_enable": "Activation consigne inf",
-        "lower_min": "Minimum",
-        "lower_pre_enable": "Activation consigne inf pré-alarme",
-        "lower_pre_label": "Pré-alarme inf.",
+        "upper_pre_enable": "Activer la pré-alarme haute",
+        "upper_pre_label": "Pré-alarme haute",
+        "lower_enable": "Activer le seuil bas",
+        "lower_min": "Seuil bas",
+        "lower_pre_enable": "Activer la pré-alarme basse",
+        "lower_pre_label": "Pré-alarme basse",
         "retrigger_delay_measures": "Temporisation redéclenchement (mesures)",
         "module_select": "Module",
         "enabled": "Activé",
         "disabled": "Désactivé",
-        "observations": "Observations"
+        "observations": "Observations",
+        "lower_threshold": "Seuil bas",
+        "upper_threshold": "Seuil haut"
       },
       "placeholders": {
         "name": "Ex: Stockage A",
@@ -1135,7 +1138,10 @@
         "title": "Consignes pilotées par le planning",
         "description": "Des règles de planning sont actives pour ce lieu. Les consignes de base sont verrouillées ici. Modifiez le planning si vous devez changer les consignes appliquées.",
         "go_to_planning": "Aller au planning"
-      }
+      },
+      "measurement_timing_description": "Réglages de cadence de mesure et de redéclenchement des alarmes.",
+      "setpoints_description": "Définissez la consigne centrale puis les limites basse et haute de surveillance.",
+      "threshold_disabled_hint": "Ce seuil est désactivé pour ce lieu."
     },
     "metrology": {
       "sections": {
