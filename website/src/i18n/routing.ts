@@ -152,6 +152,10 @@ export const routing = defineRouting({
       fr: '/services',
       en: '/services',
     },
+    '/help': {
+      fr: '/aide',
+      en: '/help',
+    },
     '/services/upgrade-licence': {
       fr: '/services/upgrade-licence',
       en: '/services/upgrade-licence',
