@@ -781,6 +781,22 @@ async function deliverQueuedAlarmEmail(notificationId: number) {
         Est_Archive: true,
       },
     });
+
+    const deliveredInput = deserializeAlarmEmailInput(claimedPayload.input);
+    log.audit("MAIL", {
+      user: "SYSTEM",
+      userProfile: "system",
+      lieuId: deliveredInput.idLieu ?? undefined,
+      changes: {
+        emailEvent: deliveredInput.eventType,
+        emailStatus: "sent",
+        alarmId: deliveredInput.alarmId ?? null,
+        recipient: claimedPayload.recipient,
+        attempts: claimedPayload.attempts,
+        usedSystemFallback: claimedPayload.usedSystemFallback,
+      },
+    });
+
     return true;
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
