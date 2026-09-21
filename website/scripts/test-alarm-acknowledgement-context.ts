@@ -10,8 +10,9 @@ assert.match(api, /locationId: z\.coerce\.number\(\)\.int\(\)\.positive\(\)\.opt
 assert.match(api, /parsed\.data\.locationId \? \{ Id_Lieu: parsed\.data\.locationId \} : \{\}/)
 
 const monitoring = read("src/components/monitoring-card.tsx")
-assert.match(monitoring, /candidateLocationId=\{idLieu\}/)
-assert.match(monitoring, /relatedAlarmsInitiallyOpen=\{false\}/)
+assert.match(monitoring, /\/alarmes\/analyse\?locationId=/)
+assert.match(monitoring, /onAcknowledge=\{handleAcknowledgeOpen\}/)
+assert.doesNotMatch(monitoring, /AlarmAcknowledgeDialog/)
 
 const dialog = read("src/components/alarm-acknowledge-dialog/alarm-acknowledge-dialog.tsx")
 assert.match(dialog, /acknowledgement-candidates\$\{candidateQuery\}/)
