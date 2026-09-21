@@ -297,9 +297,12 @@ export default function AdminDashboard() {
               helper={`${t("backup.last.label")}: ${lastBackupLabel}\n${backupStoragePath}`}
               icon={<BookOpen className="h-5 w-5 text-violet-600" />}
               badge={latestBackupBadge}
+              onClick={() => setIsBackupLogOpen(true)}
+              ariaLabel={t("backup.log.open")}
             />
           </m.div>
         </LazyMotion>
+        {backupDialog}
       </div>
     )
   }
@@ -329,9 +332,12 @@ export default function AdminDashboard() {
             latestBackupEtat: latestBackup?.etat ?? null,
             backupStoragePath,
             backupLogFilePath,
+            upcomingCalibrationCount,
             hideStandards,
           }}
+          onOpenBackupLog={() => setIsBackupLogOpen(true)}
         />
+        {backupDialog}
       </div>
     )
   }
@@ -383,7 +389,7 @@ export default function AdminDashboard() {
 
           <SummaryCard
             title={t("acknowledgments.title")}
-            description={t("acknowledgments.description", { total: acknowledgmentsTotal, max: 50 })}
+            description={t("acknowledgments.description_recent", { total: acknowledgmentsTotal, days: 7 })}
             value={String(acknowledgmentsTotal)}
             helper={`${t("acknowledgments.columns.date_time")}: ${latestAck}`}
             href={`/admin/alarmes/acquittements`}
@@ -418,6 +424,8 @@ export default function AdminDashboard() {
             helper={`${t("backup.last.label")}: ${lastBackupLabel}\n${backupStoragePath}`}
             icon={<BookOpen className="h-5 w-5 text-violet-600" />}
             badge={latestBackupBadge}
+            onClick={() => setIsBackupLogOpen(true)}
+            ariaLabel={t("backup.log.open")}
           />
 
           <SummaryCard
@@ -431,9 +439,10 @@ export default function AdminDashboard() {
 
           {!hideStandards ? (
             <SummaryCard
-              title={t("links.etalons.title")}
-              description={t("links.etalons.description")}
-              value="-"
+              title={t("metrology.title")}
+              description={t("metrology.description", { days: 15 })}
+              value={String(upcomingCalibrationCount)}
+              helper={t("metrology.helper", { days: 15 })}
               href={`/admin/metrologie`}
               hrefLabel={accessLabel}
               icon={<Ruler className="h-5 w-5 text-cyan-600" />}
@@ -441,6 +450,7 @@ export default function AdminDashboard() {
           ) : null}
         </m.div>
       </LazyMotion>
+      {backupDialog}
     </div>
   )
 }
