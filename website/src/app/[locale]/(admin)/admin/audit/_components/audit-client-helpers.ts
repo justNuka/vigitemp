@@ -141,6 +141,7 @@ export function parseAuditDetails(
     const machineName = typeof changes.machineName === 'string' ? changes.machineName : null
     const address = typeof changes.address === 'string' ? changes.address : null
     const connectedAt = typeof changes.connectedAt === 'string' ? changes.connectedAt : null
+    const emailEvent = typeof changes.emailEvent === 'string' ? changes.emailEvent : null
     const from = changes.from
     const to = changes.to
     const action = typeof changes.action === 'string' ? changes.action : null
@@ -156,6 +157,14 @@ export function parseAuditDetails(
       if (formatted) {
         subtitleParts.push(t('details.connection', { date: formatted }))
       }
+    }
+
+    if (emailEvent) {
+      subtitleParts.push(
+        t('details.email_event', {
+          event: formatFieldValue('emailEvent', emailEvent, localeTag, timezone, t),
+        }),
+      )
     }
 
     if (from !== undefined || to !== undefined) {
