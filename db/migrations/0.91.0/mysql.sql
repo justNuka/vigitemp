@@ -131,7 +131,7 @@ DELIMITER ;;
 
     DECLARE v_TypeAlarme CHAR(1);
 
-    
+
 
     /* =========================================================================================
 
@@ -145,7 +145,7 @@ DELIMITER ;;
 
 	END IF;
 
-    
+
 
     /* =========================================================================================
 
@@ -301,7 +301,7 @@ DELIMITER ;;
         SET NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee_T1 = 0;
         LEAVE main_block;
     END IF;
-	
+
 
 
 
@@ -315,9 +315,9 @@ DELIMITER ;;
 
     IF v_Id_Alarme IS NULL THEN
 
-	
 
-	
+
+
 
 
 
@@ -427,7 +427,7 @@ DELIMITER ;;
 
         END IF;
 
-		
+
 
 		/* --- ALARME NON REPONSE --- */
 
@@ -483,9 +483,9 @@ DELIMITER ;;
 
         END IF;
 
-		
 
-		
+
+
 
 
 
@@ -497,7 +497,7 @@ DELIMITER ;;
 
     ELSE
 
-		
+
 
 		/* --- TRANSITION N, Est_Acq_Auto_Alarme_NR=0 > BAS --- */
 
@@ -525,7 +525,7 @@ DELIMITER ;;
 
             WHERE Id_Alarme = v_Id_Alarme;
 
-			
+
 
 			INSERT INTO t_alarme
 
@@ -563,7 +563,7 @@ DELIMITER ;;
 
             LEAVE main_block;
 
-            
+
 
       /* --- TRANSITION N, Est_Acq_Auto_Alarme_NR=1 > BAS --- */
 
@@ -593,7 +593,7 @@ DELIMITER ;;
 
          DELETE FROM t_alarme WHERE Id_Alarme = v_Id_Alarme;
 
-			
+
 
 			INSERT INTO t_alarme
 
@@ -631,7 +631,7 @@ DELIMITER ;;
 
             LEAVE main_block;
 
-			
+
 
 		/* --- TRANSITION N, Est_Acq_Auto_Alarme_NR=0 > HAUT --- */
 
@@ -659,7 +659,7 @@ DELIMITER ;;
 
             WHERE Id_Alarme = v_Id_Alarme;
 
-			
+
 
 			INSERT INTO t_alarme
 
@@ -691,13 +691,13 @@ DELIMITER ;;
 
             SET NEW.Est_Lieu_En_Pre_Alarme = 0;
 
-            SET NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee = 0;	
+            SET NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee = 0;
 
             SET NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee_T1 = 0;
 
             LEAVE main_block;
 
-            
+
 
 		/* --- TRANSITION N, Est_Acq_Auto_Alarme_NR=1 > HAUT --- */
 
@@ -727,7 +727,7 @@ DELIMITER ;;
 
             DELETE FROM t_alarme WHERE Id_Alarme = v_Id_Alarme;
 
-			
+
 
 			INSERT INTO t_alarme
 
@@ -759,13 +759,13 @@ DELIMITER ;;
 
             SET NEW.Est_Lieu_En_Pre_Alarme = 0;
 
-            SET NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee = 0;	
+            SET NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee = 0;
 
             SET NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee_T1 = 0;
 
-            LEAVE main_block;            
+            LEAVE main_block;
 
-		
+
 
 		/* --- TRANSITION BAS → N --- */
 
@@ -901,9 +901,9 @@ DELIMITER ;;
 
             LEAVE main_block;
 
-			
 
-		
+
+
 
         /* --- TRANSITION BAS → HAUT --- */
 
@@ -1027,7 +1027,7 @@ DELIMITER ;;
 
             LEAVE main_block;
 
-			
+
 
 			/* --- ALARME TOUJOURS ACTIVE N --- */
 
@@ -1045,7 +1045,7 @@ DELIMITER ;;
 
 		WHERE Id_Alarme = v_Id_Alarme;
 
-		
+
 
 		SET NEW.Id_Alarme = v_Id_Alarme;
 
@@ -1097,7 +1097,7 @@ DELIMITER ;;
 
             LEAVE main_block;
 
-			
+
 
         /* --- FIN D’ALARME N, Est_Acq_Auto_Alarme_NR=0  --- */
 
@@ -1129,7 +1129,7 @@ DELIMITER ;;
 
 		LEAVE main_block;
 
-		
+
 
 		/* --- FIN D’ALARME N, Est_Acq_Auto_Alarme_NR=1  --- */
 
@@ -1169,7 +1169,7 @@ DELIMITER ;;
 
 /* --- FIN D’ALARME B/H --- */
 
-	ELSEIF v_TypeAlarme IN('B','H') THEN 
+	ELSEIF v_TypeAlarme IN('B','H') THEN
 
 		UPDATE t_alarme
 
@@ -1193,9 +1193,9 @@ DELIMITER ;;
 
 		LEAVE main_block;
 
-		
 
-		
+
+
 
         END IF;
 
@@ -1203,11 +1203,11 @@ DELIMITER ;;
 
     END IF;
 
-    
+
 
     IF NEW.Est_Lieu_En_Alarme = 0 THEN
 
-    
+
 
     /* =======================================================
 
@@ -1229,13 +1229,13 @@ IF NEW.Est_Consigne_Inf_Pre_Alarme_Active = 1 THEN
 
         SET NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee=0; SET NEW.Est_Lieu_En_Pre_Alarme = 1; SET NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee_T1 = 1;
 
-        
+
 
        /* Entrée en pré-alarme basse d'un lieu sans etat d'alarme */
 
     ELSEIF NEW.Derniere_Valeur < NEW.Consigne_Inf_Pre_Alarme THEN
 
-        SET NEW.Est_Lieu_En_Pre_Alarme = 1;     
+        SET NEW.Est_Lieu_En_Pre_Alarme = 1;
 
 
 
@@ -1245,13 +1245,13 @@ IF NEW.Est_Consigne_Inf_Pre_Alarme_Active = 1 THEN
 
         SET NEW.Est_Lieu_En_Pre_Alarme = 0; SET NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee=1; SET NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee_T1 = 0;
 
-        
+
 
      /* Sortie de pré-alarme basse (retour zone normale) sans retour a TermineeNonAcquitee */
 
     ELSEIF NEW.Derniere_Valeur >= NEW.Consigne_Inf_Pre_Alarme AND NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee_T1 = 0 THEN
 
-        SET NEW.Est_Lieu_En_Pre_Alarme = 0;    
+        SET NEW.Est_Lieu_En_Pre_Alarme = 0;
 
     END IF;
 
@@ -1275,13 +1275,13 @@ IF NEW.Est_Consigne_Sup_Pre_Alarme_Active = 1 THEN
 
         SET NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee=0; SET NEW.Est_Lieu_En_Pre_Alarme = 1; SET NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee_T1 = 1;
 
-        
+
 
        /* Entrée en pré-alarme haute d'un lieu sans etat d'alarme */
 
     ELSEIF NEW.Derniere_Valeur > NEW.Consigne_Sup_Pre_Alarme THEN
 
-        SET NEW.Est_Lieu_En_Pre_Alarme = 1;     
+        SET NEW.Est_Lieu_En_Pre_Alarme = 1;
 
 
 
@@ -1291,13 +1291,13 @@ IF NEW.Est_Consigne_Sup_Pre_Alarme_Active = 1 THEN
 
         SET NEW.Est_Lieu_En_Pre_Alarme = 0; SET NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee=1; SET NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee_T1 = 0;
 
-        
+
 
      /* Sortie de pré-alarme haute (retour zone normale) sans retour a TermineeNonAcquitee */
 
     ELSEIF NEW.Derniere_Valeur <= NEW.Consigne_Sup_Pre_Alarme AND NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee_T1 = 0 THEN
 
-        SET NEW.Est_Lieu_En_Pre_Alarme = 0;    
+        SET NEW.Est_Lieu_En_Pre_Alarme = 0;
 
     END IF;
 
