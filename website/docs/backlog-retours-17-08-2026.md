@@ -1564,5 +1564,5 @@ La page doit :
 - [ ] cliquer sur **Nous écrire** et contrôler le sujet + corps préremplis dans l'application de messagerie ;
 - [ ] vérifier que la version Web affichée dans le modèle correspond à la version courante ;
 - [ ] confirmer que la console Hotline technique `/hotline/[slug]` reste inchangée et séparée de cette page ;
-- [ ] exécuter `pnpm test:help-support`, `pnpm i18n:check`, `pnpm lint`, `pnpm exec tsc --noEmit` et `pnpm build`.
+- [x] validation automatisée GitHub Actions — run `35660771998` : diff check, `pnpm test:help-support`, ESLint ciblé, i18n, TypeScript MySQL, TypeScript SQL Server et build production réussis.
 
