@@ -58,6 +58,9 @@ jobs:
       - name: Critical threshold contract
         run: pnpm test:location-critical-thresholds
 
+      - name: Sensor range regression
+        run: pnpm exec tsx scripts/test-location-sensor-range.ts
+
       - name: Number display regression
         run: pnpm test:number-display
 
@@ -79,8 +82,10 @@ jobs:
           "src/hooks/useLocations.ts"
           "src/hooks/useLocationTemplates.ts"
           "src/lib/location-critical-threshold-contract.ts"
+          "src/lib/sensor-value-range.ts"
           "src/lib/sensor-value-range-contract.ts"
           "scripts/test-location-critical-thresholds.ts"
+          "scripts/test-location-sensor-range.ts"
 
       - name: TypeScript MySQL
         run: pnpm exec tsc --noEmit
