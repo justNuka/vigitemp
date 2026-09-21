@@ -12,6 +12,12 @@ type StyledExcelExportOptions = {
   dataSheetName: string
   presentationHeaders: [string, string]
   presentationRows: PresentationRow[]
+  presentationImage?: {
+    dataUrl: string
+    title?: string
+    width?: number
+    height?: number
+  } | null
   dataHeaders: string[]
   dataRows: ExcelCell[][]
 }
@@ -99,6 +105,34 @@ export async function exportStyledExcel(options: StyledExcelExportOptions) {
     }
     row.alignment = { vertical: "top", wrapText: true }
   })
+
+  if (options.presentationImage?.dataUrl) {
+    presentationSheet.addRow([])
+    const imageTitleRow = presentationSheet.addRow([])
+    presentationSheet.mergeCells(`A${imageTitleRow.number}:B${imageTitleRow.number}`)
+    const imageTitleCell = presentationSheet.getCell(`A${imageTitleRow.number}`)
+    imageTitleCell.value = options.presentationImage.title ?? "Graphique"
+    imageTitleCell.font = { bold: true, size: 13, color: { argb: HEADER_COLOR } }
+
+    const imageId = workbook.addImage({
+      base64: options.presentationImage.dataUrl,
+      extension: "png",
+    })
+    const imageStartRow = imageTitleRow.number + 1
+    const imageHeight = options.presentationImage.height ?? 420
+    presentationSheet.addImage(imageId, {
+      tl: { col: 0, row: imageStartRow - 1 },
+      ext: {
+        width: options.presentationImage.width ?? 900,
+        height: imageHeight,
+      },
+    })
+
+    const reservedRows = Math.max(18, Math.ceil(imageHeight / 20))
+    for (let rowNumber = imageStartRow; rowNumber < imageStartRow + reservedRows; rowNumber += 1) {
+      presentationSheet.getRow(rowNumber).height = 15
+    }
+  }
 
   const dataSheet = workbook.addWorksheet(safeSheetName(options.dataSheetName, "Donnees"), {
     views: [{ state: "frozen", ySplit: 1 }],

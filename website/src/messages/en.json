@@ -213,7 +213,7 @@
   "alarmsPage": {
     "analysis": {
       "title": "Alarm analysis",
-      "description": "Detailed analysis of an alarm, its measurements, and its audit trail.",
+      "description": "Acknowledge and analyse location alarms over the relevant alarm period.",
       "back": "Back to alarms",
       "backToMonitoring": "Back to monitoring",
       "acknowledge": "Acknowledge",
@@ -228,7 +228,19 @@
       "focusTitle": "Selected alarm",
       "refocus": "Refocus on alarm",
       "statusActive": "Active",
-      "statusResolved": "Resolved"
+      "statusResolved": "Resolved",
+      "exportXlsx": "Export XLSX",
+      "exportingXlsx": "Exporting XLSX...",
+      "exportError": "Unable to export measurements to XLSX.",
+      "partialAcknowledgeError": "Some alarms could not be acknowledged.",
+      "selectAllForAcknowledgement": "Select all (multiple acknowledgement)",
+      "selectAlarmAria": "Select alarm {id}",
+      "noSelection": "Select an alarm from the list to display its details.",
+      "multipleSelectionTitle": "Selected alarms ({count})",
+      "multipleSelectionDescription": "The chart is hidden during multiple selection. Review the alarms before acknowledging them together.",
+      "acknowledgeMany": "Acknowledge ({count})",
+      "acknowledgeManyDialogTitle": "Acknowledge {count} alarms",
+      "acknowledgeDialogDescription": "Optionally add a comment that will be attached to the acknowledgement."
     },
     "title": "Alarm management",
     "description": "Follow-up and handling of alarms",
@@ -387,7 +399,9 @@
       "deselect_all": "Clear all",
       "related_type_filter_placeholder": "Filter by type",
       "related_type_filter_all": "All types",
-      "related_alarms_empty": "No alarms match the current filter."
+      "related_alarms_empty": "No alarms match the current filter.",
+      "comment_loading": "Loading...",
+      "characters_count": "{count}/{max} characters"
     },
     "status": {
       "active": "Active",
@@ -3400,15 +3414,15 @@
   },
   "versionChangelog": {
     "title": "VigiSensys {version}",
-    "description": "Version 1.0: key functional, technical and reliability improvements.",
+    "description": "Version 1.1: redesigned alarm acknowledgement, secured SMTP configuration and clearer location validation.",
     "sections": {
       "surveillance": {
         "title": "Monitoring and alarms",
         "items": {
-          "0": "Monitoring cards now include a compact battery indicator with exact value on hover and low/critical states.",
-          "1": "Alarm acknowledgment now keeps the current location and alarm context, with other alarms moved to a secondary section.",
-          "2": "Monitoring audits and details are easier to read, with consistent date and number formatting throughout the Web app.",
-          "3": "Diagnostic tools now rely on measurements actually produced by the server instead of browser-side simulations."
+          "0": "From Monitoring, the acknowledgement action now opens the alarm and location analysis directly.",
+          "1": "Location alarms remain visible on the left, can be selected together and stay greyed as “Acknowledged” until the page is refreshed.",
+          "2": "Analysis now focuses only on the actual alarm period, without a date-range selector or Audit tab.",
+          "3": "Analysis export is now a single XLSX with Presentation, measurements and the embedded chart when available."
         }
       },
       "metrology": {
@@ -3424,11 +3438,11 @@
       "admin": {
         "title": "Administration",
         "items": {
-          "0": "The Admin Dashboard now reports Web, server, database and backup health with a dedicated detailed diagnostic page.",
-          "1": "Mailing and Telephony cards show activation and configuration readiness while respecting license options.",
-          "2": "System health now includes an email delivery audit for sent, queued and failed messages without storing bodies or SMTP secrets.",
-          "3": "A location configuration can be duplicated from the list or used as the starting point for a new location.",
-          "4": "Admin Settings and SMTP configuration have been hardened and include a Gmail / Microsoft 365 setup guide."
+          "0": "Administration > Settings is organised into General, Security, Alarms & notifications, and Services tabs.",
+          "1": "Any SMTP change must now be confirmed with a 6-digit code sent through the new configuration before business emails resume.",
+          "2": "Mailing activation is available directly on its card and its validation state is visible from the Admin Dashboard.",
+          "3": "Creating or editing a location displays the selected probe range and blocks out-of-range setpoints, thresholds or pre-alarms before submission.",
+          "4": "Location APIs also return the precise out-of-range reason instead of a generic validation message."
         }
       },
       "security": {
@@ -3451,10 +3465,10 @@
       "platform": {
         "title": "Platform and reliability",
         "items": {
-          "0": "The Server improves GSP and IC/IP/IH protocol reliability, including binary frames and ECON commands capped at 60 characters.",
-          "1": "GSP probes with pending configuration are synchronized before their first Monitoring measurement.",
-          "2": "MySQL and SQL Server remain supported with formal migrations, aligned seeds and safer UTF-8 SQL Server bootstrap.",
-          "3": "This delivery marks the first finalized VigiSensys 1.0.0 product release."
+          "0": "The Web component moves to version 1.1.0; Server, Agent and database revisions remain independently versioned.",
+          "1": "The new acknowledgement flow preserves existing permission checks and invalidates application caches after processing.",
+          "2": "Alarm chart loading covers the complete relevant period, including alarms fully contained within the current day.",
+          "3": "This update requires no database schema migration and remains compatible with MySQL and SQL Server."
         }
       }
     }

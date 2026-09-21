@@ -1284,7 +1284,7 @@ Revalidation finale GitHub Actions `35362593764` ✅ après mise à jour documen
 
 ## 21/09/2026 — Création de lieu : erreur générique sur une consigne hors plage sonde
 
-**Statut : PR_OUVERTE — PR #132, validation terrain à réaliser**
+**Statut : MERGE — PR #132, validation terrain à réaliser**
 
 - branche : `fix/location-sensor-range-validation` ;
 - PR : #132 ;
@@ -1411,5 +1411,188 @@ Revalidation finale GitHub Actions `35571682951` ✅ :
 - [ ] sélectionner un type sans plage configurée : aucun blocage arbitraire ne doit apparaître ;
 - [ ] vérifier une autre sonde disposant de bornes : les bornes de son propre type doivent être utilisées ;
 - [ ] vérifier FR/EN ;
+- [ ] valider MySQL et SQL Server.
+
+---
+
+## 21/09/2026 — Refonte du parcours d’acquittement et de l’analyse d’alarme
+
+**Statut : PR_OUVERTE — PR #133, validation terrain à réaliser**
+
+- branche : feature/alarm-acknowledgement-analysis-flow ;
+- PR : #133 ;
+- base : dev au commit b3af96d07f459d3d690641c56d6a9d8a865104d1 (merge PR #132) ;
+- version Web : 1.1.0 ;
+- aucun changement de schéma BDD.
+
+### Retour réunion
+
+Le parcours d’acquittement doit redevenir centré sur la page d’analyse du lieu, avec une interface proche de l’ancienne vue montrée dans les captures de réunion :
+
+- toutes les alarmes à traiter du lieu restent visibles dans une colonne à gauche ;
+- le bouton Acquitter se trouve dans le bandeau Alarme sélectionnée ;
+- l’acquittement ouvre ensuite une petite dialog dédiée au commentaire ;
+- après acquittement, une ou plusieurs alarmes restent visibles et grisées avec l’état Acquittée jusqu’au rafraîchissement de la page ;
+- la page ne doit plus permettre de choisir arbitrairement une période d’historique ;
+- l’onglet Audit et l’option d’affichage des audits sur la courbe sont retirés ;
+- le graphique et le tableau utilisent uniquement la période réelle de l’alarme ;
+- en sélection multiple, la zone centrale n’affiche plus le graphique mais une liste de résumés des alarmes sélectionnées ;
+- les boutons d’impression sont retirés ;
+- l’export de cette page devient uniquement XLSX, avec la courbe intégrée à la feuille Présentation lorsqu’elle existe.
+
+### Implémentation retenue
+
+#### Entrée depuis Surveillance
+
+L’action Acquitter d’une carte Surveillance ne déclenche plus la grande popup multi-alarmes.
+
+Elle ouvre directement :
+
+/[locale]/alarmes/analyse?locationId=<lieu>&alarmId=<alarme>
+
+Le contrôle de droit ALARM_ACK_ACCESS reste appliqué avant d’exposer l’action.
+
+#### Liste des alarmes du lieu
+
+La page d’analyse reprend une colonne gauche fixe :
+
+- chargement scoppé au locationId ;
+- alarmes déjà acquittées côté serveur filtrées au chargement ;
+- sélection exclusive en cliquant une ligne ;
+- cases permettant de construire une sélection multiple ;
+- action Tout cocher pour les alarmes acquittables du lieu.
+
+Lorsqu’un acquittement réussit pendant la session courante, la ligne n’est pas supprimée : son état local passe à acknowledged, son rendu devient grisé et la case est désactivée.
+
+Un rafraîchissement complet recharge ensuite le serveur et retire naturellement les alarmes acquittées.
+
+#### Alarme unique
+
+Avec une seule alarme sélectionnée :
+
+- le bandeau Alarme sélectionnée présente type, dernière valeur, début et fin ;
+- Acquitter est directement disponible dans ce bandeau ;
+- les onglets disponibles sont uniquement Graphique et Tableau des mesures.
+
+La dialog d’acquittement dédiée contient uniquement :
+
+- sélection d’un commentaire pré-existant ;
+- commentaire libre optionnel, limité à 200 caractères ;
+- Annuler ;
+- Acquitter.
+
+La logique complexe de sélection de candidats de l’ancien composant partagé n’est pas dupliquée dans cette dialog.
+
+#### Sélection multiple
+
+Avec plusieurs alarmes sélectionnées :
+
+- le graphique et le tableau sont masqués ;
+- chaque alarme est résumée sur une ligne avec son identifiant/type, sa sonde, sa dernière valeur, son début, sa fin et son état ;
+- un bouton Acquitter indique le nombre de lignes concernées ;
+- un même commentaire est appliqué ;
+- les requêtes d’acquittement sont exécutées séquentiellement afin d’éviter un burst de writes et de conserver un résultat partiel lisible en cas d’échec.
+
+#### Période de mesures
+
+La page ne possède plus de DateRangePicker.
+
+La période est construite exclusivement depuis l’alarme :
+
+- triggeredAt comme borne de début ;
+- endedAt comme borne de fin ;
+- instant courant pour une alarme encore active.
+
+Le helper de chargement des mesures accepte maintenant limitTodayRange=false afin qu’une alarme située entièrement sur la journée courante ne soit pas tronquée à la limite d’aperçu habituelle.
+
+Cette option est opt-in : les autres écrans conservent le comportement historique par défaut.
+
+#### Audit et impressions
+
+Retirés de la page :
+
+- onglet Audit ;
+- récupération des événements d’audit ;
+- switch Afficher les audits sur le graphique ;
+- impression navigateur ;
+- export audit ;
+- export CSV/PDF/PNG depuis cette page.
+
+L’audit métier en base n’est pas supprimé : seul son affichage dans cette vue est retiré.
+
+#### Export XLSX
+
+Un seul export est proposé.
+
+Le fichier contient :
+
+- feuille Présentation ;
+- feuille Mesures avec toutes les mesures de la période d’alarme ;
+- courbe PNG insérée dans Présentation lorsque Chart.js dispose d’un graphique exploitable.
+
+Le helper Excel partagé accepte désormais une image de présentation optionnelle sans modifier les exports existants qui ne l’utilisent pas.
+
+#### Droits et cohérence des caches
+
+- ALARM_ACK_ACCESS conditionne les cases et boutons d’acquittement ;
+- l’API reste la barrière d’autorisation finale ;
+- après succès, le cache paginé Surveillance est marqué acquitté ;
+- les queries Alarmes, Surveillance, Dashboard Admin et Dashboard utilisateur sont invalidées ;
+- cette synchronisation n’empêche pas la ligne de rester volontairement visible et grisée localement jusqu’au refresh de l’analyse.
+
+### Principaux fichiers
+
+- website/src/app/[locale]/(dashboard)/alarmes/analyse/page-client.tsx ;
+- website/src/app/[locale]/(dashboard)/alarmes/analyse/alarm-acknowledgement-comment-dialog.tsx ;
+- website/src/components/monitoring-card.tsx ;
+- website/src/components/monitoring-details/monitoring-graph-tab.tsx ;
+- website/src/components/monitoring-details/monitoring-table-tab.tsx ;
+- website/src/components/monitoring-details/use-monitoring-range-measurements.ts ;
+- website/src/lib/excel-export.ts ;
+- website/src/messages/fr.json ;
+- website/src/messages/en.json ;
+- website/scripts/test-alarm-acknowledgement-context.ts ;
+- docs/guide-utilisateur-vigisensys.md ;
+- CHANGELOG.md ;
+- website/CHANGELOG.md.
+
+### Validation technique
+
+Validation applicative GitHub Actions **35615763256** ✅, puis revalidation complète après mise à jour de la PR/backlog **35616883576** ✅ :
+
+- [x] `git diff --check origin/dev...HEAD` ;
+- [x] génération Prisma MySQL ;
+- [x] contrat statique du nouveau parcours : navigation, sélection multiple, état local acquitté, droits/cache, période exacte, absence d’Audit/print/CSV et export XLSX ;
+- [x] ESLint ciblé : 0 erreur ; les warnings React refs déjà présents dans le composant graphique restent non bloquants ;
+- [x] TypeScript MySQL ;
+- [x] contrôle i18n : aucune nouvelle dette dans les fichiers du lot ; le checker global conserve uniquement des occurrences historiques hors périmètre ;
+- [x] génération Prisma SQL Server ;
+- [x] TypeScript SQL Server ;
+- [x] restauration Prisma MySQL ;
+- [x] build Next.js production ;
+- [x] contrôle du diff : aucun changement BDD/Serveur/Agent ni lockfile ;
+- [x] workflow temporaire supprimé du diff final après la revalidation complète.
+
+### Checklist terrain
+
+- [ ] depuis une carte Surveillance en alarme, cliquer Acquitter et vérifier l’ouverture directe de la page Analyse sur le bon lieu et la bonne alarme ;
+- [ ] vérifier que la colonne gauche contient les autres alarmes non acquittées du même lieu et aucune alarme d’un autre lieu ;
+- [ ] sélectionner une seule alarme et vérifier le bandeau Alarme sélectionnée ainsi que le bouton Acquitter ;
+- [ ] ouvrir la dialog : vérifier commentaire pré-existant, commentaire libre, Annuler et Acquitter, sans liste de candidats ni Acquitter et rester ;
+- [ ] acquitter une alarme active puis une alarme terminée : elles doivent rester visibles grisées avec le badge Acquittée ;
+- [ ] rafraîchir la page : les alarmes acquittées doivent alors disparaître de la liste à traiter ;
+- [ ] sélectionner plusieurs alarmes : le graphique/tableau doit être remplacé par les lignes de résumé ;
+- [ ] acquitter plusieurs alarmes avec un commentaire commun et vérifier le grisage de chaque succès ;
+- [ ] provoquer si possible un échec sur une des alarmes d’un multi-acquittement et vérifier que les succès/échecs restent cohérents ;
+- [ ] vérifier l’absence de sélecteur de période ;
+- [ ] vérifier que la borne du graphique correspond exactement au début/fin de l’alarme, ou à maintenant si elle est active ;
+- [ ] vérifier une alarme longue sur la journée courante et confirmer que les mesures ne sont pas tronquées aux 125 dernières ;
+- [ ] vérifier qu’il n’existe plus d’onglet Audit ni de switch audit sur le graphique ;
+- [ ] vérifier qu’aucun bouton Imprimer, export Audit, CSV, PDF ou PNG n’est proposé sur cette page ;
+- [ ] exporter le XLSX et contrôler les feuilles Présentation/Mesures ;
+- [ ] avec une courbe disponible, vérifier son insertion dans la feuille Présentation ;
+- [ ] vérifier le XLSX sans mesure exploitable : aucun échec si aucune courbe n’est insérée ;
+- [ ] avec un profil sans ALARM_ACK_ACCESS, vérifier que l’analyse reste consultable mais qu’aucun acquittement n’est possible ;
+- [ ] vérifier FR/EN, clair/sombre et petite largeur ;
 - [ ] valider MySQL et SQL Server.
 

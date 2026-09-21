@@ -1,12 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
+import { useRouter } from 'next/navigation'
 import { Chart as ChartJS, CategoryScale, Filler, Legend, LineElement, LinearScale, PointElement, Title, Tooltip } from 'chart.js'
 import { BatteryWarning, History, Power, PowerOff, Settings } from 'lucide-react'
 import { m } from 'motion/react'
-import { useQueryClient } from '@tanstack/react-query'
 
 import { useAppAccess } from '@/components/access/app-access-provider'
-import { AlarmAcknowledgeDialog, type AcknowledgeDialogAlarm } from '@/components/alarm-acknowledge-dialog'
 import MonitoringDetailsModal from '@/components/monitoring-details-modal'
 import { MonitoringCardChartPreview } from '@/components/monitoring-card/monitoring-card-chart-preview'
 import { MonitoringCardHeader } from '@/components/monitoring-card/monitoring-card-header'
@@ -24,7 +23,6 @@ import type { LieuTypeValue } from '@/lib/lieu-types'
 import { calculateYDomain, formatMeasureValue, getMeasureSummary, sortMeasuresChronologically } from '@/lib/measurements'
 import { cn } from '@/lib/utils'
 import { fadeInUp } from '@/lib/motion-variants'
-import { markAlarmAcknowledgedInPaginatedSensorsCache } from '@/lib/surveillance-cache'
 import type { SensorStatus } from '@/lib/surveillance-status'
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Filler)
@@ -123,7 +121,7 @@ export default function MonitoringCard({
   const isMobile = useIsMobile()
   const locale = useLocale()
   const localeTag = locale === 'fr' ? 'fr-FR' : locale
-  const queryClient = useQueryClient()
+  const router = useRouter()
   const isAdjustmentInProgress = lieuEtat === 'A'
   const shouldLoadCardMeasurements = !isMobile && !backgroundPaused && !isAdjustmentInProgress
 
@@ -202,19 +200,16 @@ export default function MonitoringCard({
 
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [showConfirmModal, setShowConfirmModal] = useState(false)
-  const [showAcknowledgeModal, setShowAcknowledgeModal] = useState(false)
-  const [ackComment, setAckComment] = useState('')
   const [actionComment, setActionComment] = useState('')
   const [actionCommentError, setActionCommentError] = useState<string | null>(null)
   const [disableDuration, setDisableDuration] = useState<string>('60')
   const [actionType, setActionType] = useState<'surveillance' | 'alarms'>('surveillance')
   const [isSurveillanceActive, setIsSurveillanceActive] = useState(surveillanceDisabled !== undefined ? !surveillanceDisabled : lieuEtat !== 'D')
   const [isAlarmActive, setIsAlarmActive] = useState(!alarmDisabled)
-  const [locallyAcknowledgedAlarmId, setLocallyAcknowledgedAlarmId] = useState<number | null>(null)
 
-  const effectiveAlarmId = locallyAcknowledgedAlarmId !== null && alarmId === locallyAcknowledgedAlarmId ? null : alarmId
-  const effectiveAlarmType = locallyAcknowledgedAlarmId !== null && alarmId === locallyAcknowledgedAlarmId ? null : alarmType
-  const effectiveStatus = locallyAcknowledgedAlarmId !== null && alarmId === locallyAcknowledgedAlarmId ? 'ok' : status
+  const effectiveAlarmId = alarmId
+  const effectiveAlarmType = alarmType
+  const effectiveStatus = status
   const resolvedLieuType = lieuType ?? meta?.lieuType ?? null
 
   useEffect(() => {
@@ -255,9 +250,11 @@ export default function MonitoringCard({
   }, [idLieu, isModalOpen, onDetailsModalStateChange])
 
   const handleAcknowledgeOpen = useCallback(() => {
-    setAckComment('')
-    setShowAcknowledgeModal(true)
-  }, [])
+    if (!effectiveAlarmId) return
+    router.push(
+      `/${locale}/alarmes/analyse?locationId=${encodeURIComponent(String(idLieu))}&alarmId=${encodeURIComponent(String(effectiveAlarmId))}`,
+    )
+  }, [effectiveAlarmId, idLieu, locale, router])
 
   const confirmSurveillanceToggle = () => {
     if (!hasPermission('LOCATION_DISABLE_ACCESS')) {
@@ -466,34 +463,6 @@ export default function MonitoringCard({
       return "ring-1 ring-amber-500/20 shadow-[0_4px_20px_-6px_rgba(245,158,11,0.25)]"
     return ""
   })()
-
-  const acknowledgeDialogAlarm: AcknowledgeDialogAlarm | null = canAcknowledge && effectiveAlarmId
-    ? {
-        id: String(effectiveAlarmId),
-        locationId: String(idLieu),
-        locationName: nomLieu,
-        sensorName: sondeNumeroSerie || nomLieu,
-        type:
-          effectiveAlarmType === 'H'
-            ? 'high'
-            : effectiveAlarmType === 'B'
-              ? 'low'
-              : effectiveAlarmType === 'N'
-                ? 'no-response'
-                : effectiveAlarmType === 'S'
-                  ? 'sector'
-                  : effectiveAlarmType === 'M'
-                    ? 'module'
-                : effectiveStatus === 'ended' || effectiveAlarmType === 'T'
-                  ? 'ended'
-                  : undefined,
-        currentValue: typeof lastValue === 'number' ? lastValue : null,
-        value: typeof lastValue === 'number' ? lastValue : null,
-        unit: unite,
-        minThreshold: consigneInf,
-        maxThreshold: consigneSup,
-      }
-    : null
 
   return (
     <>
@@ -810,43 +779,6 @@ export default function MonitoringCard({
         />
       ) : null}
 
-      <AlarmAcknowledgeDialog
-        open={showAcknowledgeModal}
-        alarm={acknowledgeDialogAlarm}
-        onOpenChange={(open) => {
-          setShowAcknowledgeModal(open)
-          if (!open) setAckComment('')
-        }}
-        candidateLocationId={idLieu}
-        relatedAlarmsInitiallyOpen={false}
-        onConfirm={async (ackAlarmIds, commentValue, options) => {
-          try {
-            for (const ackAlarmId of ackAlarmIds) {
-              const response = await fetch(`/api/alarmes/${ackAlarmId}/acknowledge`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ comment: commentValue || ackComment || undefined }),
-              })
-              if (!response.ok) {
-                console.error('Acknowledge alarm error', await response.text())
-                return
-              }
-              const acknowledgedId = Number(ackAlarmId)
-              if (Number.isFinite(acknowledgedId)) {
-                setLocallyAcknowledgedAlarmId(acknowledgedId)
-                markAlarmAcknowledgedInPaginatedSensorsCache(queryClient, acknowledgedId)
-              }
-            }
-            if (options?.closeAfter !== false) {
-              setShowAcknowledgeModal(false)
-              setAckComment('')
-            }
-            reload(true)
-          } catch (error) {
-            console.error('Acknowledge alarm error', error)
-          }
-        }}
-      />
     </>
   )
 }

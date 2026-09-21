@@ -68,16 +68,6 @@ export function VersionChangelogModal() {
         ],
       },
       {
-        title: t("sections.metrology.title"),
-        details: [
-          t("sections.metrology.items.0"),
-          t("sections.metrology.items.1"),
-          t("sections.metrology.items.2"),
-          t("sections.metrology.items.3"),
-          t("sections.metrology.items.4"),
-        ],
-      },
-      {
         title: t("sections.admin.title"),
         details: [
           t("sections.admin.items.0"),
@@ -85,23 +75,6 @@ export function VersionChangelogModal() {
           t("sections.admin.items.2"),
           t("sections.admin.items.3"),
           t("sections.admin.items.4"),
-        ],
-      },
-      {
-        title: t("sections.security.title"),
-        details: [
-          t("sections.security.items.0"),
-          t("sections.security.items.1"),
-          t("sections.security.items.2"),
-          t("sections.security.items.3"),
-        ],
-      },
-      {
-        title: t("sections.telephony.title"),
-        details: [
-          t("sections.telephony.items.0"),
-          t("sections.telephony.items.1"),
-          t("sections.telephony.items.2"),
         ],
       },
       {

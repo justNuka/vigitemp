@@ -1,5 +1,5 @@
 import type { RefObject } from "react"
-import { useMemo } from "react"
+import { useEffect, useMemo } from "react"
 
 import { Button } from "@/components/ui/button"
 import { Switch } from "@/components/ui/switch"
@@ -49,6 +49,9 @@ interface MonitoringGraphTabProps {
   t: (key: string, values?: Record<string, string | number>) => string
   graphHeightClassName?: string
   exportFileName: string
+  showAuditControls?: boolean
+  allowImageExport?: boolean
+  onChartImageReady?: (dataUrl: string) => void
 }
 
 function normalizeGuideValue(value: number | null): number | null {
@@ -140,6 +143,9 @@ export function MonitoringGraphTab({
   t,
   graphHeightClassName,
   exportFileName,
+  showAuditControls = true,
+  allowImageExport = true,
+  onChartImageReady,
 }: MonitoringGraphTabProps) {
   const localeTag = locale === "fr" ? "fr-FR" : locale
   const auditMarkerLabel = t("chart.audit_markers")
@@ -323,6 +329,19 @@ export function MonitoringGraphTab({
     [orderedData],
   )
 
+  useEffect(() => {
+    if (!onChartImageReady || !hasPlottedMeasures) return
+
+    const frame = window.requestAnimationFrame(() => {
+      const chart = chartRef.current
+      if (!chart) return
+      const image = chart.toBase64Image("image/png", 1)
+      if (image) onChartImageReady(image)
+    })
+
+    return () => window.cancelAnimationFrame(frame)
+  }, [axisLabels, chartRef, hasPlottedMeasures, onChartImageReady, orderedData])
+
   const exportChartImage = () => {
     const chart = chartRef.current
     if (!chart) return
@@ -361,16 +380,20 @@ export function MonitoringGraphTab({
               <span>{t("table.legend.memory")}</span>
             </span>
           ) : null}
-          <label className="inline-flex items-center gap-2 rounded-md border px-2.5 py-1.5 text-xs text-muted-foreground">
-            <Switch checked={showAuditMarkers} onCheckedChange={onShowAuditMarkersChange} disabled={!hasPlottedMeasures} />
-            <span>{t("chart.show_audit_markers")}</span>
-          </label>
+          {showAuditControls ? (
+            <label className="inline-flex items-center gap-2 rounded-md border px-2.5 py-1.5 text-xs text-muted-foreground">
+              <Switch checked={showAuditMarkers} onCheckedChange={onShowAuditMarkersChange} disabled={!hasPlottedMeasures} />
+              <span>{t("chart.show_audit_markers")}</span>
+            </label>
+          ) : null}
           <Button type="button" variant="outline" size="sm" onClick={resetChartZoom} disabled={!hasPlottedMeasures}>
             {t("chart.reset_zoom")}
           </Button>
-          <Button type="button" variant="outline" size="sm" onClick={exportChartImage} disabled={!hasPlottedMeasures}>
-            {t("chart.export_image")}
-          </Button>
+          {allowImageExport ? (
+            <Button type="button" variant="outline" size="sm" onClick={exportChartImage} disabled={!hasPlottedMeasures}>
+              {t("chart.export_image")}
+            </Button>
+          ) : null}
         </div>
       </div>
 

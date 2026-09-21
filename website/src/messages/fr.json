@@ -575,7 +575,7 @@
   "alarmsPage": {
     "analysis": {
       "title": "Analyse d'alarme",
-      "description": "Analyse détaillée d'une alarme, de ses mesures et de son audit.",
+      "description": "Acquittement et analyse des alarmes du lieu sur leur période concernée.",
       "back": "Retour aux alarmes",
       "backToMonitoring": "Retour à la surveillance",
       "acknowledge": "Acquitter",
@@ -590,7 +590,19 @@
       "focusTitle": "Alarme sélectionnée",
       "refocus": "Recentrer sur l'alarme",
       "statusActive": "Active",
-      "statusResolved": "Terminée"
+      "statusResolved": "Terminée",
+      "exportXlsx": "Exporter XLSX",
+      "exportingXlsx": "Export XLSX...",
+      "exportError": "Impossible d'exporter les mesures en XLSX.",
+      "partialAcknowledgeError": "Certaines alarmes n'ont pas pu être acquittées.",
+      "selectAllForAcknowledgement": "Tout cocher (acquittement multiple)",
+      "selectAlarmAria": "Sélectionner l'alarme {id}",
+      "noSelection": "Sélectionnez une alarme dans la liste pour afficher son détail.",
+      "multipleSelectionTitle": "Alarmes sélectionnées ({count})",
+      "multipleSelectionDescription": "Le graphique est masqué pendant une sélection multiple. Vérifiez les alarmes avant de les acquitter ensemble.",
+      "acknowledgeMany": "Acquitter ({count})",
+      "acknowledgeManyDialogTitle": "Acquitter {count} alarmes",
+      "acknowledgeDialogDescription": "Ajoutez si besoin un commentaire qui sera associé à l'acquittement."
     },
     "title": "Gestion des alarmes",
     "description": "Suivi et traitement des alarmes",
@@ -748,7 +760,9 @@
       "deselect_all": "Tout décocher",
       "related_type_filter_placeholder": "Filtrer par type",
       "related_type_filter_all": "Tous les types",
-      "related_alarms_empty": "Aucune alarme ne correspond au filtre."
+      "related_alarms_empty": "Aucune alarme ne correspond au filtre.",
+      "comment_loading": "Chargement...",
+      "characters_count": "{count}/{max} caractères"
     },
     "status": {
       "active": "En cours",
@@ -3404,15 +3418,15 @@
   },
   "versionChangelog": {
     "title": "VigiSensys {version}",
-    "description": "Version 1.0 : principales évolutions fonctionnelles, techniques et de fiabilité.",
+    "description": "Version 1.1 : nouveau parcours d’acquittement, configuration SMTP sécurisée et validations de lieux plus explicites.",
     "sections": {
       "surveillance": {
         "title": "Surveillance et alarmes",
         "items": {
-          "0": "Les cartes de Surveillance gagnent un indicateur batterie compact avec valeur exacte au survol et états faible/critique.",
-          "1": "L'acquittement conserve désormais le contexte du lieu et de l'alarme, avec les autres alarmes reléguées dans une section secondaire.",
-          "2": "Les audits et détails de Surveillance ont été rendus plus lisibles et les formats de dates/nombres sont désormais homogènes.",
-          "3": "Les outils de diagnostic utilisent les mesures réellement produites par le serveur au lieu de simulations côté Web."
+          "0": "Depuis Surveillance, l’action d’acquittement ouvre directement l’analyse de l’alarme et de son lieu.",
+          "1": "Les alarmes du lieu restent visibles à gauche, peuvent être sélectionnées à plusieurs et restent grisées « Acquittée » jusqu’au rafraîchissement.",
+          "2": "L’analyse se concentre uniquement sur la période réelle de l’alarme, sans sélecteur de période ni onglet Audit.",
+          "3": "L’export de l’analyse est désormais un XLSX unique avec feuille Présentation, mesures et courbe intégrée lorsqu’elle est disponible."
         }
       },
       "metrology": {
@@ -3428,11 +3442,11 @@
       "admin": {
         "title": "Administration",
         "items": {
-          "0": "Le Dashboard Admin affiche maintenant la santé du Web, du serveur, des bases et des sauvegardes, avec une page de diagnostic détaillée.",
-          "1": "Des cards Mailing et Téléphonie indiquent l'activation et la complétude de leur configuration, en respectant les licences.",
-          "2": "La Santé système inclut un audit des emails envoyés, en attente ou en échec, sans stocker leur contenu ni les secrets SMTP.",
-          "3": "La configuration d'un lieu peut être dupliquée depuis la liste ou utilisée comme base lors de la création d'un nouveau lieu.",
-          "4": "La page Paramètres et la configuration SMTP ont été fiabilisées et complétées par un guide Gmail / Microsoft 365."
+          "0": "Administration > Paramètres est organisée en quatre onglets : Général, Sécurité, Alarmes & notifications et Services.",
+          "1": "Toute modification SMTP doit maintenant être confirmée par un code à 6 chiffres envoyé avec la nouvelle configuration avant la reprise des emails métier.",
+          "2": "L’activation du Mailing est directement disponible sur sa card et son état de validation est visible depuis le Dashboard Admin.",
+          "3": "La création et l’édition d’un lieu affichent la plage de mesure de la sonde sélectionnée et bloquent les consignes, seuils ou pré-alarmes hors plage avant l’envoi.",
+          "4": "Les APIs Lieux renvoient également le motif précis d’une valeur hors plage au lieu d’un message générique."
         }
       },
       "security": {
@@ -3455,10 +3469,10 @@
       "platform": {
         "title": "Plateforme et fiabilité",
         "items": {
-          "0": "Le Serveur fiabilise les protocoles GSP et les sondes IC/IP/IH, y compris les trames binaires et les ECON limitées à 60 caractères.",
-          "1": "Les GSP dont la configuration est en attente sont synchronisées avant leur première mesure de Surveillance.",
-          "2": "MySQL et SQL Server restent supportés avec migrations formalisées, seeds harmonisés et exécution UTF-8 renforcée sous SQL Server.",
-          "3": "Cette livraison marque la première version produit finalisée VigiSensys 1.0.0."
+          "0": "Le Web passe en version 1.1.0 ; le Serveur, l’Agent et la révision BDD restent indépendants.",
+          "1": "Le nouveau parcours d’acquittement conserve les contrôles de droits existants et invalide les caches applicatifs après traitement.",
+          "2": "Le chargement du graphique d’alarme couvre toute la période concernée, y compris lorsqu’elle se situe entièrement sur la journée courante.",
+          "3": "Cette évolution ne nécessite aucune migration de schéma BDD et reste compatible MySQL et SQL Server."
         }
       }
     }

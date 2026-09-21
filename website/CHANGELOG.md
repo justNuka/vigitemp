@@ -8,24 +8,50 @@ Les versions suivent `MAJOR.MINOR.PATCH` sans zéros de tête. La source de vers
 
 ## [Unreleased]
 
+Aucun changement supplémentaire documenté depuis la préparation de la version Web 1.1.0.
+
+## [1.1.0] — 2026-09-21
+
+Cette version Web regroupe les évolutions intégrées après la release 1.0.0 : sécurisation de la configuration SMTP, validation explicite des plages de sondes dans les lieux et refonte du parcours d’acquittement/analyse des alarmes.
+
+### Alarmes / acquittement
+
+- Depuis une carte Surveillance, l’action **Acquitter** ouvre directement la page d’analyse de l’alarme et de son lieu au lieu de passer d’abord par la grande popup d’acquittement.
+- La page d’analyse retrouve une colonne gauche persistante avec les alarmes non acquittées du lieu et permet la sélection multiple.
+- Le bouton **Acquitter** est placé dans le bandeau **Alarme sélectionnée** ; l’acquittement ouvre une petite dialog dédiée au commentaire libre ou pré-existant.
+- Après succès, les alarmes restent visibles localement dans la liste, grisées et marquées **Acquittée**, jusqu’au rafraîchissement de la page. Le rafraîchissement recharge ensuite la source serveur et retire les alarmes déjà acquittées.
+- Une sélection multiple remplace le graphique par une liste de résumés des alarmes sélectionnées et applique le même commentaire aux acquittements traités séquentiellement.
+- L’analyse n’offre plus de recherche/plage historique : le graphique et le tableau utilisent uniquement la période réelle de l’alarme, du début à la fin ou jusqu’à l’instant courant pour une alarme active.
+- Le chargement de graphique peut désactiver la limite « journée courante » afin de conserver toute la période d’une alarme longue sans tronquer ses mesures.
+- L’onglet Audit, les marqueurs d’audit sur le graphique, l’impression et les exports CSV/PDF/PNG propres à cette page sont supprimés.
+- L’export restant est un fichier **XLSX** : feuille Présentation, feuille Mesures et courbe insérée dans Présentation lorsqu’un graphique exploitable existe.
+- La permission **ALARM_ACK_ACCESS** reste appliquée ; les caches Surveillance/Dashboard sont invalidés après acquittement sans retirer prématurément les lignes grisées de la page d’analyse.
+
 ### Administration / Paramètres
 
 - La page Paramètres est organisée en quatre onglets : Général, Sécurité, Alarmes & notifications et Services.
-- La card Configuration Email porte désormais le switch global `SMTP_ACTIVATION`. Lorsqu'il est désactivé, la configuration et le warning sont masqués mais le guide SMTP reste toujours accessible.
+- La card Configuration Email porte désormais le switch global SMTP_ACTIVATION. Lorsqu'il est désactivé, la configuration et le warning sont masqués mais le guide SMTP reste toujours accessible.
 - Le warning SMTP devient destructif/rouge lorsque le service est activé.
-- Toute modification réelle de l'hôte, du port, de l'utilisateur, du mot de passe ou de l'expéditeur invalide `SMTP_CONFIRME`.
+- Toute modification réelle de l'hôte, du port, de l'utilisateur, du mot de passe ou de l'expéditeur invalide SMTP_CONFIRME.
 - Après enregistrement, VigiSensys envoie un code à 6 chiffres via les nouveaux paramètres SMTP ; la configuration ne redevient utilisable par les emails métier qu'après saisie correcte du code.
 - Les codes sont hachés côté serveur, expirent après 10 minutes et sont limités à 5 tentatives. Aucun code en clair n'est persisté.
-- Les installations historiques sans paramètre `SMTP_CONFIRME` conservent leur comportement actuel tant que leur configuration SMTP n'est pas modifiée.
+- Les installations historiques sans paramètre SMTP_CONFIRME conservent leur comportement actuel tant que leur configuration SMTP n'est pas modifiée.
 - Le Dashboard Admin distingue désormais une configuration Mailing techniquement complète mais encore non confirmée.
 
 ### Lieux / sondes
 
-- Le formulaire de création et d'édition d'un lieu reçoit désormais les bornes `Valeur_Min` / `Valeur_Max` du type de sonde sélectionné et affiche sa plage de mesure dans l'onglet Général.
-- La même validation de plage est partagée entre le frontend et les APIs `POST/PATCH /api/lieux`, afin d'éviter toute divergence de règle métier.
-- Une valeur hors plage est bloquée avant le POST et l'erreur est associée directement au champ concerné ; l'API renvoie également le premier motif précis au lieu du générique `Validation impossible`.
-- Cas terrain verrouillé : une `SOET` reste limitée à `-40 … 125 °C` conformément aux données produit du dépôt ; une consigne `-80 °C` est refusée explicitement au lieu d'échouer sans explication.
+- Le formulaire de création et d'édition d'un lieu reçoit désormais les bornes Valeur_Min / Valeur_Max du type de sonde sélectionné et affiche sa plage de mesure dans l'onglet Général.
+- La même validation de plage est partagée entre le frontend et les APIs POST/PATCH /api/lieux, afin d'éviter toute divergence de règle métier.
+- Une valeur hors plage est bloquée avant le POST et l'erreur est associée directement au champ concerné ; l'API renvoie également le premier motif précis au lieu du générique « Validation impossible ».
+- Cas terrain verrouillé : une SOET reste limitée à -40 … 125 °C conformément aux données produit du dépôt ; une consigne -80 °C est refusée explicitement au lieu d'échouer sans explication.
 - Les plages des sondes disponibles sont chargées par type en une requête batch, sans N+1, et restent compatibles avec les installations où les colonnes de plage historiques sont absentes.
+
+### Compatibilité
+
+- Version Web : **1.1.0**.
+- Aucune migration de schéma BDD liée au parcours d’acquittement ou à la validation des plages.
+- La révision BDD de référence reste **0.90.2**.
+- MySQL et SQL Server restent supportés.
 
 ## [1.0.0] — 2026-09-18
 
