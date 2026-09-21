@@ -1417,7 +1417,7 @@
       "dateTo": "To",
       "clearFilters": "Clear filters",
       "action": "Action",
-      "today_limit_hint": "Showing the current day. Adjust the dates for a more precise period. The list stays limited to 100 entries."
+      "today_limit_hint": "Showing the current day. Adjust the dates to change the period; events are loaded page by page."
     },
     "expandedDetails": "Full details",
     "actions": {
@@ -1450,7 +1450,17 @@
       "PS": "Serial port restart",
       "SACT": "Alarm module removed",
       "AACT": "Alarm module added",
-      "unknown": "Unknown action ({code})"
+      "unknown": "Unknown action ({code})",
+      "GRPH": "Graph opened",
+      "MAIL": "Alarm email sent",
+      "ALARM_RESOLVED": "Alarm ended",
+      "ETAP": "Calibration applied",
+      "VLOG": "VigiLog action",
+      "FERMSURV": "Monitoring window closed",
+      "IMP": "Data import",
+      "PLAN": "Planning update",
+      "TEL": "System",
+      "UT": "System event"
     },
     "filters": {
       "code_all": "All codes",
@@ -1473,7 +1483,66 @@
       "from": "From: {value}",
       "to": "To: {value}",
       "action": "Action: {action}",
-      "ip": "IP: {ip}"
+      "ip": "IP: {ip}",
+      "resources": {
+        "audit_graph_openings": "Display graph openings"
+      },
+      "fields": {
+        "address": "Address",
+        "connectedAt": "Connected at",
+        "machineName": "Machine",
+        "authEngine": "Authentication engine",
+        "newToleranceSup": "Upper tolerance",
+        "newToleranceInf": "Lower tolerance",
+        "simAlarms": "Simulated alarms",
+        "realAlarms": "Real alarms",
+        "dateRange": "Period",
+        "alarmId": "Alarm #",
+        "acknowledgedAt": "Acknowledged at",
+        "from": "Before",
+        "to": "After",
+        "forced": "Forced",
+        "description": "Description",
+        "format": "Format",
+        "Nom_Lieu": "Location name",
+        "Tolerance_Sup": "Upper tolerance",
+        "Tolerance_Inf": "Lower tolerance",
+        "Consigne_Sup": "Upper setpoint",
+        "Consigne_Inf": "Lower setpoint",
+        "Est_Son_Alarme_Active": "Alarm sound",
+        "Nom_Sonde": "Sensor name",
+        "Frequence_Mesure": "Measurement frequency (s)",
+        "Retard_Alarme": "Alarm delay (s)",
+        "Hysteresis": "Hysteresis",
+        "disabled": "Monitoring disabled",
+        "durationMinutes": "Duration (min)",
+        "reactivationAt": "Scheduled reactivation",
+        "updated": "Updated locations",
+        "lieuIds": "Locations",
+        "groupOrLiaisonId": "Group / link",
+        "emailEvent": "Email event",
+        "emailStatus": "Email status",
+        "recipient": "Recipient",
+        "attempts": "Attempts",
+        "usedSystemFallback": "System recipients used"
+      },
+      "values": {
+        "yes": "Yes",
+        "no": "No",
+        "before": "Before",
+        "after": "After",
+        "auth_legacy": "legacy",
+        "auth_new": "new",
+        "action_create": "Creation",
+        "action_update": "Update",
+        "action_delete": "Deletion",
+        "action_enable": "Enable",
+        "action_disable": "Disable",
+        "email_triggered": "Alarm triggered",
+        "email_ended": "Alarm ended",
+        "email_acknowledged": "Alarm acknowledged",
+        "email_sent": "Sent"
+      }
     }
   },
   "profilePage": {
@@ -2940,7 +3009,10 @@
       "password_label": "Password",
       "password_placeholder": "Your password",
       "reset_email_label": "Email address",
-      "reset_email_placeholder": "your@email.com"
+      "reset_email_placeholder": "your@email.com",
+      "show_password": "Show password",
+      "hide_password": "Hide password",
+      "caps_lock_warning": "Caps Lock is on"
     },
     "buttons": {
       "sign_in": "Sign in",
