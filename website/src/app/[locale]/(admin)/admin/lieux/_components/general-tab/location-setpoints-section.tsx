@@ -153,7 +153,7 @@ export function LocationSetpointsSection({
             </div>
           </div>
 
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
               <HelpLabel label={t('labels.frequency')} help={isGsoSensor ? t('tooltips.frequency_gso') : t('tooltips.frequency')} />
               <Input
@@ -164,50 +164,6 @@ export function LocationSetpointsSection({
                 placeholder={t('placeholders.frequency')}
                 disabled={isGsoSensor}
                 className={isGsoSensor ? 'bg-muted' : ''}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <HelpLabel label={t('labels.alarm_delay_high')} help={t('tooltips.alarm_delay_high')} />
-              <Input
-                type="number"
-                min={1}
-                step="1"
-                {...register('Retard_Alarme_Haut', { setValueAs: toOptionalNumber })}
-                placeholder={t('placeholders.delay')}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <HelpLabel label={t('labels.alarm_delay_low')} help={t('tooltips.alarm_delay_low')} />
-              <Input
-                type="number"
-                min={1}
-                step="1"
-                {...register('Retard_Alarme_Bas', { setValueAs: toOptionalNumber })}
-                placeholder={t('placeholders.delay')}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <HelpLabel label={t('labels.no_response_delay')} help={t('tooltips.no_response_delay')} />
-              <Input
-                type="number"
-                min={1}
-                step="1"
-                {...register('Retard_Non_Reponse', { setValueAs: toOptionalNumber })}
-                placeholder={t('placeholders.delay')}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <HelpLabel label={t('labels.setpoint_change_delay')} help={t('tooltips.setpoint_change_delay')} />
-              <Input
-                type="number"
-                min={0}
-                step="1"
-                {...register('Retard_Alarme_Changement_Consigne', { setValueAs: toOptionalNumber })}
-                placeholder={t('placeholders.delay')}
               />
             </div>
 
@@ -330,6 +286,18 @@ export function LocationSetpointsSection({
                           value={formData.Est_Consigne_Sup_Pre_Alarme_Active ? formatValue(formData.Consigne_Sup_Pre_Alarme) : '-'}
                           help={t('tooltips.prealarm')}
                         />
+                        {formData.Est_Consigne_Sup_Active ? (
+                          <div className="col-span-2 space-y-2">
+                            <HelpLabel label={t('labels.alarm_delay_high')} help={t('tooltips.alarm_delay_high')} />
+                            <Input
+                              type="number"
+                              min={1}
+                              step="1"
+                              {...register('Retard_Alarme_Haut', { setValueAs: toOptionalNumber })}
+                              placeholder={t('placeholders.delay')}
+                            />
+                          </div>
+                        ) : null}
                       </div>
                     ) : formData.Est_Consigne_Sup_Active ? (
                       <>
@@ -351,6 +319,16 @@ export function LocationSetpointsSection({
                             help={t('tooltips.effective_threshold')}
                             className="text-orange-700 dark:text-orange-300"
                           />
+                          <div className="space-y-2 pt-1">
+                            <HelpLabel label={t('labels.alarm_delay_high')} help={t('tooltips.alarm_delay_high')} />
+                            <Input
+                              type="number"
+                              min={1}
+                              step="1"
+                              {...register('Retard_Alarme_Haut', { setValueAs: toOptionalNumber })}
+                              placeholder={t('placeholders.delay')}
+                            />
+                          </div>
                         </div>
 
                         <div className="space-y-2 rounded-lg border bg-background/70 p-3">
@@ -454,6 +432,18 @@ export function LocationSetpointsSection({
                           value={formData.Est_Consigne_Inf_Pre_Alarme_Active ? formatValue(formData.Consigne_Inf_Pre_Alarme) : '-'}
                           help={t('tooltips.prealarm')}
                         />
+                        {formData.Est_Consigne_Inf_Active ? (
+                          <div className="col-span-2 space-y-2">
+                            <HelpLabel label={t('labels.alarm_delay_low')} help={t('tooltips.alarm_delay_low')} />
+                            <Input
+                              type="number"
+                              min={1}
+                              step="1"
+                              {...register('Retard_Alarme_Bas', { setValueAs: toOptionalNumber })}
+                              placeholder={t('placeholders.delay')}
+                            />
+                          </div>
+                        ) : null}
                       </div>
                     ) : formData.Est_Consigne_Inf_Active ? (
                       <>
@@ -475,6 +465,16 @@ export function LocationSetpointsSection({
                             help={t('tooltips.effective_threshold')}
                             className="text-sky-700 dark:text-sky-300"
                           />
+                          <div className="space-y-2 pt-1">
+                            <HelpLabel label={t('labels.alarm_delay_low')} help={t('tooltips.alarm_delay_low')} />
+                            <Input
+                              type="number"
+                              min={1}
+                              step="1"
+                              {...register('Retard_Alarme_Bas', { setValueAs: toOptionalNumber })}
+                              placeholder={t('placeholders.delay')}
+                            />
+                          </div>
                         </div>
 
                         <div className="space-y-2 rounded-lg border bg-background/70 p-3">
