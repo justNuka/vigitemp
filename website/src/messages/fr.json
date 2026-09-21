@@ -1046,7 +1046,8 @@
         "create_saving": "Création...",
         "toast_apply_success": "Template \"{name}\" appliqué.",
         "toast_create_success": "Template de lieu créé.",
-        "toast_create_error": "Erreur lors de la création du template."
+        "toast_create_error": "Erreur lors de la création du template.",
+        "manage": "Gérer les templates"
       },
       "current_location_label": "Lieu en cours :",
       "action_comment_label": "Commentaire de l'action",
@@ -4384,7 +4385,8 @@
         "action": "Action",
         "sensor": "Sonde",
         "alarm": "Alarme"
-      }
+      },
+      "description_recent": "{total, plural, =0 {Aucun acquittement sur les {days} derniers jours} one {# acquittement sur les {days} derniers jours} other {# acquittements sur les {days} derniers jours}}"
     },
     "connected_users": {
       "title": "Connexions récentes",
@@ -4431,7 +4433,19 @@
       "actions": {
         "run": "Lancer sauvegarde"
       },
-      "empty": "Aucun historique de sauvegarde disponible"
+      "empty": "Aucun historique de sauvegarde disponible",
+      "log": {
+        "open": "Afficher le journal de sauvegarde",
+        "title": "Journal de sauvegarde système",
+        "description": "Dernières lignes du journal de sauvegarde, présentées par date et état.",
+        "file": "Fichier journal",
+        "lines": "{count, plural, one {# ligne} other {# lignes}}",
+        "last_lines": "{count} dernières affichées",
+        "truncated": "Le journal contient {total} lignes. Les {shown} dernières sont affichées.",
+        "empty": "Le journal de sauvegarde est vide ou indisponible.",
+        "unavailable": "Indisponible",
+        "time_unknown": "Sans horodatage"
+      }
     },
     "backups": {
       "columns": {
@@ -4480,6 +4494,11 @@
       "alarms_title": "Alarmes",
       "alarms_description": "Alarmes en cours : {inProgress}",
       "alarms_helper": "Alarmes terminées en attente d'acquittement : {pending}"
+    },
+    "metrology": {
+      "title": "Métrologie",
+      "description": "Étalonnages arrivant à échéance dans les {days} prochains jours",
+      "helper": "Sondes actives dont la dernière validité expire entre aujourd’hui et J+{days}."
     }
   },
   "cacheControls": {
