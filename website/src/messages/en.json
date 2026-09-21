@@ -3541,15 +3541,15 @@
   },
   "versionChangelog": {
     "title": "VigiSensys {version}",
-    "description": "Version 1.3: streamlined Admin navigation, a cleaner dashboard and focused operational indicators.",
+    "description": "Version 1.4: easier sign-in and a localized, paginated audit trail enriched with alarm email events.",
     "sections": {
       "surveillance": {
-        "title": "Navigation and locations",
+        "title": "Sign-in and usability",
         "items": {
-          "0": "The Admin dock is now limited to the primary pages actually represented in its navigation.",
-          "1": "Baths & standards and Location templates were removed from the dock to keep secondary pages uncluttered.",
-          "2": "Location creation now provides a direct link to template management next to the existing template selector.",
-          "3": "Metrology, Audit, System health, Settings and other subpages keep their full workspace without an unnecessary dock."
+          "0": "The sign-in password can now be shown or hidden with an eye button.",
+          "1": "A warning immediately indicates when Caps Lock is active while typing the password.",
+          "2": "The audited authentication engine now uses only the legacy or new values.",
+          "3": "Historical Better Auth transition values are still normalized correctly when audit records are displayed."
         }
       },
       "metrology": {
@@ -3563,13 +3563,13 @@
         }
       },
       "admin": {
-        "title": "Admin dashboard",
+        "title": "Audit trail",
         "items": {
-          "0": "The System backup card now opens a readable log with timestamps, successes and errors.",
-          "1": "The Alarm acknowledgments log now counts acknowledgments from the last 7 days only.",
-          "2": "The Metrology card shows active sensors whose calibration expires within the next 15 days.",
-          "3": "Dashboard cards now use consistent heights with aligned actions.",
-          "4": "The Expert dashboard exposes the Metrology widget again with the same D+15 indicator."
+          "0": "Known audit labels, values and details now use FR/EN translations with corrected French accents.",
+          "1": "GRPH and the other known runtime codes now have explicit labels instead of Unknown action.",
+          "2": "Server pagination can now really load 200, 500 or 1000 events per page beyond the previous 100-row limit.",
+          "3": "The action-code selector is scrollable and cleanly separates codes from labels.",
+          "4": "Triggered, ended and acknowledged alarm emails are visible in both the global audit and the related location audit."
         }
       },
       "security": {
@@ -3592,10 +3592,10 @@
       "platform": {
         "title": "Version and compatibility",
         "items": {
-          "0": "The Web component moves to version 1.3.0.",
+          "0": "The Web component moves to version 1.4.0.",
           "1": "Server 1.1.0, Agent 1.0.1 and database schema 0.91.0 remain unchanged.",
-          "2": "The Metrology count uses an aggregate query on each sensor’s latest calibration to keep the dashboard lightweight.",
-          "3": "No additional database migration is required and both MySQL and SQL Server remain supported."
+          "2": "The Audit API keeps its legacy response shape for existing consumers and adds pagination as an opt-in mode.",
+          "3": "No database migration is required; MySQL and SQL Server remain supported."
         }
       }
     }
