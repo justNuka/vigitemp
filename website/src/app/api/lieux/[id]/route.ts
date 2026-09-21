@@ -547,6 +547,8 @@ export const PATCH = withAnyAuthorizationLogging(
           Consigne: true,
           Consigne_Sup: true,
           Consigne_Inf: true,
+          Est_Consigne_Sup_Active: true,
+          Est_Consigne_Inf_Active: true,
           Tolerance_Surveillance_Sup: true,
           Tolerance_Surveillance_Inf: true,
           Seuil_Critique_Haut: true,
@@ -586,16 +588,29 @@ export const PATCH = withAnyAuthorizationLogging(
         return lieuPatch[field] === true
       }
 
+      const effectiveHighActive = resolvePatchedBoolean(
+        "Est_Consigne_Sup_Active",
+        currentLieuForRange.Est_Consigne_Sup_Active,
+      )
+      const effectiveLowActive = resolvePatchedBoolean(
+        "Est_Consigne_Inf_Active",
+        currentLieuForRange.Est_Consigne_Inf_Active,
+      )
+
       const criticalIssues = buildCriticalThresholdIssues({
         consigne: resolvePatchedNumber("Consigne", currentLieuForRange.Consigne),
-        effectiveHigh: resolvePatchedNumber(
-          "Tolerance_Surveillance_Sup",
-          currentLieuForRange.Tolerance_Surveillance_Sup ?? currentLieuForRange.Consigne_Sup,
-        ),
-        effectiveLow: resolvePatchedNumber(
-          "Tolerance_Surveillance_Inf",
-          currentLieuForRange.Tolerance_Surveillance_Inf ?? currentLieuForRange.Consigne_Inf,
-        ),
+        effectiveHigh: effectiveHighActive
+          ? resolvePatchedNumber(
+              "Tolerance_Surveillance_Sup",
+              currentLieuForRange.Tolerance_Surveillance_Sup ?? currentLieuForRange.Consigne_Sup,
+            )
+          : null,
+        effectiveLow: effectiveLowActive
+          ? resolvePatchedNumber(
+              "Tolerance_Surveillance_Inf",
+              currentLieuForRange.Tolerance_Surveillance_Inf ?? currentLieuForRange.Consigne_Inf,
+            )
+          : null,
         criticalHigh: resolvePatchedNumber("Seuil_Critique_Haut", currentLieuForRange.Seuil_Critique_Haut),
         criticalHighActive: resolvePatchedBoolean(
           "Est_Seuil_Critique_Haut_Active",
