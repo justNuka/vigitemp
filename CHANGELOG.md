@@ -16,6 +16,10 @@ La convention de versioning est décrite dans [`docs/versioning.md`](docs/versio
 
 ## [Unreleased]
 
+- Le composant Web passe à **1.1.0** ; Serveur 1.0.0, Agent 1.0.1 et BDD 0.90.2 restent indépendants et inchangés par ce lot Web.
+- Le parcours d’acquittement depuis Surveillance ouvre directement l’analyse du lieu : liste des alarmes à gauche, acquittement dans le bandeau sélectionné, dialog commentaire compacte et sélection multiple avec résumés.
+- Une alarme acquittée reste temporairement visible et grisée dans la liste jusqu’au rafraîchissement, afin de conserver le contexte de traitement de l’opérateur.
+- L’analyse d’alarme se limite désormais à la période réelle de l’alarme, sans sélection de période ni Audit ; l’impression et les exports multiples sont remplacés par un XLSX unique avec la courbe intégrée dans la présentation lorsqu’elle existe.
 - Administration > Paramètres est réorganisée par onglets afin de séparer les réglages généraux, sécurité, alarmes/notifications et services.
 - Toute modification réelle de la configuration SMTP invalide sa confirmation et exige désormais la saisie d'un code reçu par email via la nouvelle configuration avant que les emails métier puissent repartir.
 - L'activation globale du Mailing est déplacée sur la card SMTP ; le guide reste disponible même lorsque le service est désactivé.
