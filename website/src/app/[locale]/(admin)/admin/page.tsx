@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo } from "react"
+import { useMemo, useState } from "react"
 import { LazyMotion, domAnimation, m } from "motion/react"
 import { Link } from "@/i18n/navigation"
 import { useLocale, useTranslations } from "next-intl"
@@ -33,9 +33,11 @@ import {
   useAuditLogs,
   useBackups,
   useConnectedUsers,
+  useUpcomingCalibrationCount,
 } from "@/hooks/useAdminData"
 import { useUnassignedSensors } from "@/hooks/useSensors"
 import { AdminSystemHealthCard } from "./_components/admin-system-health-card"
+import { AdminBackupLogDialog } from "./_components/admin-backup-log-dialog"
 import { AdminServiceCards } from "./_components/admin-service-cards"
 import { ExpertAdminDashboard } from "./_components/expert-admin-dashboard"
 import { staggerContainer, fadeInUp } from "@/lib/motion-variants"
@@ -50,6 +52,8 @@ type SummaryCardProps = {
   icon: React.ReactNode
   badge?: React.ReactNode
   helper?: string
+  onClick?: () => void
+  ariaLabel?: string
 }
 
 function SummaryCard({
@@ -61,10 +65,28 @@ function SummaryCard({
   icon,
   badge,
   helper,
+  onClick,
+  ariaLabel,
 }: SummaryCardProps) {
   return (
-    <m.div variants={fadeInUp}>
-      <Card className="card-interactive overflow-hidden border-border/60 bg-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md dark:bg-card/95 dark:shadow-black/20">
+    <m.div variants={fadeInUp} className="h-full">
+      <Card
+        className={`card-interactive flex h-full flex-col overflow-hidden border-border/60 bg-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md dark:bg-card/95 dark:shadow-black/20 ${onClick ? "cursor-pointer" : ""}`}
+        role={onClick ? "button" : undefined}
+        tabIndex={onClick ? 0 : undefined}
+        aria-label={onClick ? ariaLabel ?? title : undefined}
+        onClick={onClick}
+        onKeyDown={
+          onClick
+            ? (event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault()
+                  onClick()
+                }
+              }
+            : undefined
+        }
+      >
         <CardHeader className="border-b border-border/50 bg-white/90 pb-2 dark:bg-card/90">
           <div className="flex items-start justify-between gap-3">
             <div>
@@ -77,13 +99,13 @@ function SummaryCard({
             {badge}
           </div>
         </CardHeader>
-        <CardContent className="space-y-2 pt-4">
+        <CardContent className="flex flex-1 flex-col space-y-2 pt-4">
           <div className="text-3xl font-bold tabular-nums">{value}</div>
           {helper ? <p className="whitespace-pre-line break-all text-sm text-muted-foreground">{helper}</p> : null}
           {href && hrefLabel ? (
             <Link
               href={href as any}
-              className="inline-flex items-center gap-1 text-sm font-medium text-primary transition-colors hover:text-primary/80"
+              className="mt-auto inline-flex items-center gap-1 pt-2 text-sm font-medium text-primary transition-colors hover:text-primary/80"
             >
               {hrefLabel}
               <ArrowRight className="h-4 w-4" />
@@ -97,6 +119,7 @@ function SummaryCard({
 
 export default function AdminDashboard() {
   const t = useTranslations("adminDashboard")
+  const [isBackupLogOpen, setIsBackupLogOpen] = useState(false)
   const locale = useLocale()
   const timezone = useAppTimezone()
   const { license } = useLicense()
@@ -110,9 +133,10 @@ export default function AdminDashboard() {
   const activeAlarmsQuery = useActiveAlarms(1)
   const alarmsActiveCountQuery = useAlarmCount("active")
   const alarmsResolvedCountQuery = useAlarmCount("resolved")
-  const acknowledgmentsQuery = useAcknowledgments(1)
+  const acknowledgmentsQuery = useAcknowledgments(1, 7)
   const systemLogsQuery = useAuditLogs()
   const backupsQuery = useBackups()
+  const upcomingCalibrationQuery = useUpcomingCalibrationCount(15, !hideStandards)
   const unassignedSensorsQuery = useUnassignedSensors({ page: 1, limit: 20 })
 
   const activeAlarmsTotal = activeAlarmsQuery.data?.pagination.total || 0
@@ -123,6 +147,7 @@ export default function AdminDashboard() {
   const systemLogsTotal = systemLogsQuery.data?.pagination.total || 0
   const unassignedTotal = unassignedSensorsQuery.data?.pagination.total || 0
   const backupsTotal = backupsQuery.data?.summary.archiveCount ?? 0
+  const upcomingCalibrationCount = upcomingCalibrationQuery.data?.count ?? 0
   const accessLabel = t("actions.open_page")
   const alarmsAccessLabel = `${accessLabel} (${alarmsInProgressTotal})`
   const backupStoragePath = backupsQuery.data?.summary.storagePath ?? "-"
@@ -170,6 +195,14 @@ export default function AdminDashboard() {
           .join(", ")
       : "-"
 
+  const backupDialog = (
+    <AdminBackupLogDialog
+      open={isBackupLogOpen}
+      onOpenChange={setIsBackupLogOpen}
+      summary={backupsQuery.data?.summary}
+    />
+  )
+
   const isInitialLoading = useMemo(() => {
     return (
       connectedUsersQuery.isLoading &&
@@ -179,7 +212,8 @@ export default function AdminDashboard() {
       acknowledgmentsQuery.isLoading &&
       systemLogsQuery.isLoading &&
       backupsQuery.isLoading &&
-      unassignedSensorsQuery.isLoading
+      unassignedSensorsQuery.isLoading &&
+      (hideStandards || upcomingCalibrationQuery.isLoading)
     )
   }, [
     acknowledgmentsQuery.isLoading,
@@ -189,7 +223,9 @@ export default function AdminDashboard() {
     connectedUsersQuery.isLoading,
     systemLogsQuery.isLoading,
     backupsQuery.isLoading,
+    hideStandards,
     unassignedSensorsQuery.isLoading,
+    upcomingCalibrationQuery.isLoading,
   ])
 
   if (isBasicDashboard) {
