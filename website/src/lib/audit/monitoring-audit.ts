@@ -13,30 +13,35 @@ const AUDIT_FIELD_LABELS: Record<string, string> = {
   Consigne: "Consigne",
   Consigne_Sup: "Consigne sup.",
   Consigne_Inf: "Consigne inf.",
-  Tolerance_Surveillance_Sup: "Tolerance sup.",
-  Tolerance_Surveillance_Inf: "Tolerance inf.",
+  Tolerance_Surveillance_Sup: "Tolérance sup.",
+  Tolerance_Surveillance_Inf: "Tolérance inf.",
   Retard_Alarme_Haut: "Retard alarme haut",
   Retard_Alarme_Bas: "Retard alarme bas",
-  Retard_Non_Reponse: "Retard non reponse",
-  Frequence: "Frequence",
+  Retard_Non_Reponse: "Retard non-réponse",
+  Fréquence: "Fréquence",
   idSite: "Site",
   groupIds: "Groupes",
   idModule: "Module",
   mailingContactsCount: "Contacts mail",
   dateHeureSurveillanceOn: "Date activation surveillance",
-  dateHeureSurveillanceOff: "Date desactivation surveillance",
+  dateHeureSurveillanceOff: "Date désactivation surveillance",
   acknowledgedAt: "Date d'acquittement",
   reason: "Motif",
   from: "Avant",
-  to: "Apres",
+  to: "Après",
+  emailEvent: "Événement email",
+  emailStatus: "Statut email",
+  recipient: "Destinataire",
+  attempts: "Tentatives",
+  usedSystemFallback: "Destinataires système utilisés",
 }
 
 const AUDIT_ACTION_LABELS: Record<string, string> = {
-  create: "Creation",
+  create: "Création",
   update: "Modification",
   delete: "Suppression",
   enable: "Activation",
-  disable: "Desactivation",
+  disable: "Désactivation",
 }
 
 export function sanitizeMonitoringAuditText(value: string | null | undefined) {
@@ -59,6 +64,12 @@ export function formatMonitoringAuditValue(key: string, value: unknown) {
   if (Array.isArray(value)) return value.length > 0 ? value.join(", ") : "-"
   if (typeof value === "string") {
     if (key === "action") return AUDIT_ACTION_LABELS[value] ?? value
+    if (key === "emailEvent") {
+      if (value === "triggered") return "Alarme déclenchée"
+      if (value === "ended") return "Fin d'alarme"
+      if (value === "acknowledged") return "Acquittement d'alarme"
+    }
+    if (key === "emailStatus" && value === "sent") return "Envoyé"
 
     const lowered = key.toLowerCase()
     if (lowered.endsWith("at") || lowered.includes("date") || lowered.includes("time")) {
@@ -112,7 +123,7 @@ export function buildMonitoringAuditRows(raw: string | null | undefined) {
         if (isFromToChange(value)) {
           return {
             label,
-            value: `Avant: ${formatMonitoringAuditValue("from", value.from)} | Apres: ${formatMonitoringAuditValue("to", value.to)}`,
+            value: `Avant: ${formatMonitoringAuditValue("from", value.from)} | Après: ${formatMonitoringAuditValue("to", value.to)}`,
           }
         }
 
