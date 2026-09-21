@@ -1494,7 +1494,7 @@ Le tableau expose déjà la colonne **Date prochain étalonnage** via `dateProch
 
 ## R21-002 — Page Hotline & aide orientée utilisateur
 
-**Statut : `EN_COURS` — branche `feature/hotline-user-help`**
+**Statut : `PR_OUVERTE` — branche `feature/hotline-user-help` — PR #138**
 
 ### Retour — 21/09/2026
 
