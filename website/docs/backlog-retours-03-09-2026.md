@@ -1558,7 +1558,7 @@ Le helper Excel partagé accepte désormais une image de présentation optionnel
 
 ### Validation technique
 
-Validation applicative GitHub Actions **35615763256** ✅ :
+Validation applicative GitHub Actions **35615763256** ✅, puis revalidation complète après mise à jour de la PR/backlog **35616883576** ✅ :
 
 - [x] `git diff --check origin/dev...HEAD` ;
 - [x] génération Prisma MySQL ;
@@ -1571,7 +1571,7 @@ Validation applicative GitHub Actions **35615763256** ✅ :
 - [x] restauration Prisma MySQL ;
 - [x] build Next.js production ;
 - [x] contrôle du diff : aucun changement BDD/Serveur/Agent ni lockfile ;
-- [ ] workflow temporaire à supprimer du diff final après la dernière revalidation documentaire.
+- [x] workflow temporaire supprimé du diff final après la revalidation complète.
 
 ### Checklist terrain
 
