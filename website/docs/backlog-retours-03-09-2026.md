@@ -2021,10 +2021,11 @@ Le diff final de la PR #135 ne contient plus le workflow temporaire et reste lim
 
 ## 21/09/2026 — Connexion : visibilité mot de passe + refonte Audit trail
 
-**Statut : EN_COURS — branche `fix/login-password-audit-trail`, PR à ouvrir**
+**Statut : PR_OUVERTE — branche `fix/login-password-audit-trail` — PR #136, validation terrain à réaliser**
 
 - base : `dev` au commit `62abc407dfbff446b7b0d526705d85d43ffbc915` (squash merge PR #135) ;
 - branche : `fix/login-password-audit-trail` ;
+- PR : **#136** ;
 - version Web cible : **1.4.0** ;
 - Serveur **1.1.0**, Agent **1.0.1**, BDD **0.91.0** inchangés ;
 - aucune migration BDD.
@@ -2181,6 +2182,8 @@ GitHub Actions **35653944150** ✅ sur l'implémentation, puis revalidation fina
 - [x] build Next.js production ;
 - [x] revalidation finale après version/changelog/backlog ;
 - [x] suppression du workflow temporaire avant PR.
+
+Le diff final de la PR #136 est limité au Web + documentation, sans migration ni changement Serveur / Agent / BDD.
 
 ### Checklist terrain
 
