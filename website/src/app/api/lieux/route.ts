@@ -424,8 +424,12 @@ export const POST = withLogging(async (req: NextRequest) => {
 
     const criticalIssues = buildCriticalThresholdIssues({
       consigne: validated.Consigne ?? null,
-      effectiveHigh: toleranceSup ?? validated.Consigne_Sup ?? null,
-      effectiveLow: toleranceInf ?? validated.Consigne_Inf ?? null,
+      effectiveHigh: validated.Est_Consigne_Sup_Active
+        ? toleranceSup ?? validated.Consigne_Sup ?? null
+        : null,
+      effectiveLow: validated.Est_Consigne_Inf_Active
+        ? toleranceInf ?? validated.Consigne_Inf ?? null
+        : null,
       criticalHigh: validated.Seuil_Critique_Haut ?? null,
       criticalHighActive: validated.Est_Seuil_Critique_Haut_Active ?? false,
       criticalLow: validated.Seuil_Critique_Bas ?? null,
