@@ -935,7 +935,101 @@ DELIMITER ;;
 
       AND Date_Heure_Fin IS NULL
 
-    LIMIT 1;	
+    LIMIT 1;
+
+    /* ==========================================================
+       2b. SEUILS CRITIQUES : déclenchement immédiat
+       ========================================================== */
+    IF NEW.Lieu_Etat = 'S'
+       AND TIMESTAMPDIFF(SECOND, NEW.Date_Heure_Derniere_Reponse, NOW()) <= NEW.Retard_Non_Reponse * 60
+       AND COALESCE(NEW.Est_Seuil_Critique_Bas_Active, 0) = 1
+       AND NEW.Seuil_Critique_Bas IS NOT NULL
+       AND NEW.Derniere_Valeur < NEW.Seuil_Critique_Bas
+    THEN
+        IF v_Id_Alarme IS NOT NULL AND v_TypeAlarme = 'B' THEN
+            UPDATE t_alarme
+            SET Valeur = NEW.Derniere_Valeur,
+                Date_Heure_Derniere_Mesure = NEW.Derniere_Date_Heure
+            WHERE Id_Alarme = v_Id_Alarme;
+
+            SET NEW.Id_Alarme = v_Id_Alarme;
+            SET NEW.Est_Lieu_En_Alarme = 1;
+            SET NEW.Est_Lieu_En_Pre_Alarme = 0;
+            SET NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee = 0;
+            SET NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee_T1 = 0;
+            LEAVE main_block;
+        END IF;
+
+        IF v_Id_Alarme IS NOT NULL THEN
+            UPDATE t_alarme
+            SET Date_Heure_Fin = NEW.Derniere_Date_Heure,
+                Valeur = NEW.Derniere_Valeur,
+                Date_Heure_Derniere_Mesure = NEW.Derniere_Date_Heure
+            WHERE Id_Alarme = v_Id_Alarme;
+
+            IF v_TypeAlarme = 'N' AND NEW.Est_Acq_Auto_Alarme_NR = 1 THEN
+                DELETE FROM t_alarme WHERE Id_Alarme = v_Id_Alarme;
+            END IF;
+        END IF;
+
+        INSERT INTO t_alarme
+            (Date_Heure_Debut, Valeur, Type, Id_Lieu, Sonde_Numero_Serie, Date_Heure_Derniere_Mesure, Unite)
+        VALUES
+            (NEW.Derniere_Date_Heure, NEW.Derniere_Valeur, 'B', NEW.Id_Lieu, NEW.Sonde_Numero_Serie, NEW.Derniere_Date_Heure, NEW.Derniere_Unite);
+
+        SET NEW.Id_Alarme = LAST_INSERT_ID();
+        SET NEW.Est_Lieu_En_Alarme = 1;
+        SET NEW.Est_Lieu_En_Pre_Alarme = 0;
+        SET NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee = 0;
+        SET NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee_T1 = 0;
+        LEAVE main_block;
+    END IF;
+
+    IF NEW.Lieu_Etat = 'S'
+       AND TIMESTAMPDIFF(SECOND, NEW.Date_Heure_Derniere_Reponse, NOW()) <= NEW.Retard_Non_Reponse * 60
+       AND COALESCE(NEW.Est_Seuil_Critique_Haut_Active, 0) = 1
+       AND NEW.Seuil_Critique_Haut IS NOT NULL
+       AND NEW.Derniere_Valeur > NEW.Seuil_Critique_Haut
+    THEN
+        IF v_Id_Alarme IS NOT NULL AND v_TypeAlarme = 'H' THEN
+            UPDATE t_alarme
+            SET Valeur = NEW.Derniere_Valeur,
+                Date_Heure_Derniere_Mesure = NEW.Derniere_Date_Heure
+            WHERE Id_Alarme = v_Id_Alarme;
+
+            SET NEW.Id_Alarme = v_Id_Alarme;
+            SET NEW.Est_Lieu_En_Alarme = 1;
+            SET NEW.Est_Lieu_En_Pre_Alarme = 0;
+            SET NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee = 0;
+            SET NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee_T1 = 0;
+            LEAVE main_block;
+        END IF;
+
+        IF v_Id_Alarme IS NOT NULL THEN
+            UPDATE t_alarme
+            SET Date_Heure_Fin = NEW.Derniere_Date_Heure,
+                Valeur = NEW.Derniere_Valeur,
+                Date_Heure_Derniere_Mesure = NEW.Derniere_Date_Heure
+            WHERE Id_Alarme = v_Id_Alarme;
+
+            IF v_TypeAlarme = 'N' AND NEW.Est_Acq_Auto_Alarme_NR = 1 THEN
+                DELETE FROM t_alarme WHERE Id_Alarme = v_Id_Alarme;
+            END IF;
+        END IF;
+
+        INSERT INTO t_alarme
+            (Date_Heure_Debut, Valeur, Type, Id_Lieu, Sonde_Numero_Serie, Date_Heure_Derniere_Mesure, Unite)
+        VALUES
+            (NEW.Derniere_Date_Heure, NEW.Derniere_Valeur, 'H', NEW.Id_Lieu, NEW.Sonde_Numero_Serie, NEW.Derniere_Date_Heure, NEW.Derniere_Unite);
+
+        SET NEW.Id_Alarme = LAST_INSERT_ID();
+        SET NEW.Est_Lieu_En_Alarme = 1;
+        SET NEW.Est_Lieu_En_Pre_Alarme = 0;
+        SET NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee = 0;
+        SET NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee_T1 = 0;
+        LEAVE main_block;
+    END IF;
+	
 
 
 
