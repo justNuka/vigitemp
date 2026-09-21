@@ -174,7 +174,6 @@ export function LocationFormTabGeneral({ sites, groups, availableSensors, module
       />
       <LocationTimingSection isGsoSensor={isGsoSensor} />
       <LocationSetpointsSection
-        isGsoSensor={isGsoSensor}
         idLieu={formData.Id_Lieu ?? null}
         onGoToPlanning={onGoToPlanning}
         sensorRange={
