@@ -264,6 +264,7 @@ export function AlarmAnalysisClient() {
     rangeStart: explicitRangeStart,
     rangeEnd: explicitRangeEnd,
     includeNullNonResponse: true,
+    limitTodayRange: false,
   })
 
   const measurementSortBy = tableSorting[0]?.id === "value" ? "value" : tableSorting[0]?.id === "date" ? "date" : null
