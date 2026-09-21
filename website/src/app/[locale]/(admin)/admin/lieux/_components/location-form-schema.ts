@@ -163,20 +163,22 @@ function addConsigneGuards(data: Record<string, unknown>, ctx: z.RefinementCtx) 
 
   const criticalIssues = buildCriticalThresholdIssues({
     consigne: typeof data.Consigne === "number" ? data.Consigne : null,
-    effectiveHigh:
-      liveEmt.toleranceSup ??
-      (typeof data.Tolerance_Surveillance_Sup === "number"
-        ? data.Tolerance_Surveillance_Sup
-        : typeof data.Consigne_Sup === "number"
-          ? data.Consigne_Sup
-          : null),
-    effectiveLow:
-      liveEmt.toleranceInf ??
-      (typeof data.Tolerance_Surveillance_Inf === "number"
-        ? data.Tolerance_Surveillance_Inf
-        : typeof data.Consigne_Inf === "number"
-          ? data.Consigne_Inf
-          : null),
+    effectiveHigh: supActive
+      ? liveEmt.toleranceSup ??
+        (typeof data.Tolerance_Surveillance_Sup === "number"
+          ? data.Tolerance_Surveillance_Sup
+          : typeof data.Consigne_Sup === "number"
+            ? data.Consigne_Sup
+            : null)
+      : null,
+    effectiveLow: infActive
+      ? liveEmt.toleranceInf ??
+        (typeof data.Tolerance_Surveillance_Inf === "number"
+          ? data.Tolerance_Surveillance_Inf
+          : typeof data.Consigne_Inf === "number"
+            ? data.Consigne_Inf
+            : null)
+      : null,
     criticalHigh: typeof data.Seuil_Critique_Haut === "number" ? data.Seuil_Critique_Haut : null,
     criticalHighActive: data.Est_Seuil_Critique_Haut_Active === true,
     criticalLow: typeof data.Seuil_Critique_Bas === "number" ? data.Seuil_Critique_Bas : null,
