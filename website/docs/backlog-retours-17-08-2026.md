@@ -1729,7 +1729,7 @@ GitHub Actions run `35701478085` : **succès complet**.
 
 ## R22-001 — Harmoniser impression et formats d'export
 
-**Statut : `EN_COURS` — branche `feature/export-format-standardization` — base `dev` `00f2778993e81faf959aa4879fb8433ddcaf88c5`**
+**Statut : `PR_OUVERTE` — branche `feature/export-format-standardization` — PR #140 — base `dev` `00f2778993e81faf959aa4879fb8433ddcaf88c5`**
 
 ### Retour — 22/09/2026
 
