@@ -695,6 +695,7 @@
         "last_value": "Dernière valeur",
         "triggered_value": "Valeur de déclenchement",
         "thresholds": "Consignes sup/inf",
+        "group": "Groupe",
         "triggered_at": "Déclenchée",
         "status": "Statut",
         "actions": "Actions"
