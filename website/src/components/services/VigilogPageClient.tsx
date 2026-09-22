@@ -2341,7 +2341,6 @@ export function VigilogPageClient() {
                     data={filteredHistory}
                     showSearch={false}
                     enableExport={false}
-                    enablePrint={false}
                     emptyMessage={t("history.empty")}
                     pageSize={200}
                     showPagination={filteredHistory.length > 8}
