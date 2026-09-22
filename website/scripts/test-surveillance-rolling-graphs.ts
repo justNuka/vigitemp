@@ -77,6 +77,7 @@ for (let index = 1; index < sampled.measurements.length; index += 1) {
 
 const card = read("src/components/monitoring-card.tsx")
 assert.match(card, /rollingHours:\s*24/)
+assert.match(card, /source:\\s*"graphique"/)
 assert.match(card, /MONITORING_CARD_GRAPH_MAX_POINTS/)
 assert.match(card, /rangeStartMs=\{chartRangeStartMs\}/)
 assert.match(card, /rangeEndMs=\{chartRangeEndMs\}/)
