@@ -2243,7 +2243,7 @@ Modifications :
 
 ### Validation automatisée
 
-GitHub Actions run `35732335802`, attempt 2 : **succès complet**.
+GitHub Actions run `35733062303` : **succès complet** sur le HEAD fonctionnel incluant également l'accès Mailing.
 
 - [x] `git diff --check origin/dev...HEAD` ;
 - [x] `pnpm test:pack-one-license-access` ;
@@ -2259,7 +2259,7 @@ GitHub Actions run `35732335802`, attempt 2 : **succès complet**.
 - [x] restauration Prisma MySQL ;
 - [x] build production Next.js.
 
-Le premier attempt du même run a été interrompu pendant le build sans échec de code ; l'attempt 2 a été relancé sans modification fonctionnelle et s'est terminé avec succès.
+Le workflow temporaire a ensuite été retiré de la branche ; les commits postérieurs au run ne concernent que cette suppression et la documentation de validation.
 
 ### Validation terrain
 
