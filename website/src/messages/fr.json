@@ -2068,8 +2068,7 @@
       "dateTo": "Date de fin",
       "allSites": "Tous les sites",
       "allTypes": "Tous les types",
-      "selected_range": "Plage sélectionnée : {range}",
-      "last_24_hours": "24 dernières heures"
+      "selected_range": "Plage sélectionnée : {range}"
     },
     "table": {
       "simTitle": "Alarmes simulées ({count})",
