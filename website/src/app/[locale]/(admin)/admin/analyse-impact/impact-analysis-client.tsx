@@ -1,20 +1,15 @@
 "use client"
 
 import { useState, useEffect, useCallback, useRef, useMemo } from "react"
-import { TrendingUp, Save, Download, Printer } from "lucide-react"
+import { TrendingUp, Save, Download } from "lucide-react"
 import { useTranslations, useLocale } from "next-intl"
 import type { Chart as ChartJS } from "chart.js"
 import { fetchJson } from "@/lib/http"
 import { formatDbDateTime } from "@/lib/date-display"
+import { exportStyledExcel } from "@/lib/excel-export"
 import { toApiUtcDateTime } from "@/lib/date-range-api"
 import { useMonitoringRangeMeasurements } from "@/components/monitoring-details/use-monitoring-range-measurements"
 import { Button } from "@/components/ui/button"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
 import { LieuDateSelector } from "./_components/lieu-date-selector"
 import { ImpactSummaryCard } from "./_components/impact-summary-card"
 import { ImpactChart, type RealAlarm } from "./_components/impact-chart"
@@ -49,15 +44,6 @@ function getDefaultTolerances(lieu: SelectedLieu): { sup: string; inf: string } 
   }
 }
 
-function downloadBlob(blob: Blob, filename: string): void {
-  const url = URL.createObjectURL(blob)
-  const link = document.createElement("a")
-  link.href = url
-  link.download = filename
-  link.click()
-  URL.revokeObjectURL(url)
-}
-
 export function ImpactAnalysisClient() {
   const t = useTranslations("impactAnalysis")
   const locale = useLocale()
@@ -69,6 +55,7 @@ export function ImpactAnalysisClient() {
   const [realAlarms, setRealAlarms] = useState<RealAlarm[]>([])
   const [alarmsLoading, setAlarmsLoading] = useState(false)
   const [saveDialogOpen, setSaveDialogOpen] = useState(false)
+  const [isExportingExcel, setIsExportingExcel] = useState(false)
 
   const chartRef = useRef<ChartJS<"line"> | null>(null)
 
@@ -175,100 +162,107 @@ export function ImpactAnalysisClient() {
     [measurements, newSupNum, newInfNum, actualSup, actualInf, hasValidationError],
   )
 
-  const handleExportCSV = useCallback(() => {
-    const header = "Debut,Fin,Duree(min),Points\n"
-    const rows = simZones.map((zone) => {
-      const diffMs = new Date(zone.end).getTime() - new Date(zone.start).getTime()
-      const durationMin = Math.round(diffMs / 60000)
-      const points = measurements.filter(
-        (m) =>
-          (m.DateHeureMesureIso ?? m.DateHeureMesure) >= zone.start &&
-          (m.DateHeureMesureIso ?? m.DateHeureMesure) <= zone.end,
-      ).length
-      return `${zone.start},${zone.end},${durationMin},${points}`
-    })
-    const csv = header + rows.join("\n")
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" })
-    downloadBlob(blob, `analyse-impact-${lieu?.nom ?? "export"}.csv`)
-  }, [simZones, measurements, lieu])
+  const handleExportExcel = useCallback(async () => {
+    if (!lieu || isExportingExcel) return
 
-  const handleExportImage = useCallback(() => {
-    const chart = chartRef.current
-    if (!chart) return
-    const dataUrl = chart.toBase64Image("image/png", 1)
-    const link = document.createElement("a")
-    link.href = dataUrl
-    link.download = `analyse-impact-${lieu?.nom ?? "graphique"}.png`
-    link.click()
-  }, [lieu])
+    setIsExportingExcel(true)
+    try {
+      const localeTag = locale === "fr" ? "fr-FR" : locale
+      const chartDataUrl = chartRef.current?.toBase64Image("image/png", 1) ?? null
+      const formatDurationMinutes = (start: string, end: string | null) => {
+        if (!end) return ""
+        const startDate = new Date(start)
+        const endDate = new Date(end)
+        if (Number.isNaN(startDate.getTime()) || Number.isNaN(endDate.getTime())) return ""
+        return Math.max(0, Math.round((endDate.getTime() - startDate.getTime()) / 60000))
+      }
+      const countZonePoints = (start: string, end: string) =>
+        measurements.filter((measure) => {
+          const timestamp = measure.DateHeureMesureIso ?? measure.DateHeureMesure
+          return timestamp >= start && timestamp <= end
+        }).length
 
-  const handlePrint = useCallback(() => {
-    window.print()
-  }, [])
-
-  const handleExportPdf = useCallback(async () => {
-    if (!lieu) return
-
-    const { jsPDF } = await import("jspdf")
-    const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" })
-    const chart = chartRef.current
-    const chartDataUrl = chart ? chart.toBase64Image("image/png", 1) : null
-
-    const pageWidth = doc.internal.pageSize.getWidth()
-    const margin = 14
-    let y = 16
-
-    const writeLine = (label: string, value: string) => {
-      doc.setFont("helvetica", "bold")
-      doc.text(label, margin, y)
-      doc.setFont("helvetica", "normal")
-      doc.text(value || "-", margin + 52, y)
-      y += 6
+      await exportStyledExcel({
+        fileName: `analyse-impact-${lieu.nom.replace(/[^a-zA-Z0-9-_]+/g, "-")}`,
+        title: `${t("title")} - ${lieu.nom}`,
+        presentationSheetName: t("export.presentation_sheet"),
+        dataSheetName: t("export.data_sheet"),
+        presentationHeaders: [
+          t("export.presentation_columns.label"),
+          t("export.presentation_columns.value"),
+        ],
+        presentationRows: [
+          {
+            label: t("export.exported_at"),
+            value: formatDbDateTime(new Date(), { format: "dateTimeSeconds", locale: localeTag }),
+          },
+          {
+            label: t("selector.dateRangeLabel"),
+            value: dateRange
+              ? `${formatDbDateTime(dateRange.from, { format: "dateTimeSeconds", locale: localeTag })} → ${formatDbDateTime(dateRange.to, { format: "dateTimeSeconds", locale: localeTag })}`
+              : "-",
+          },
+          { label: t("summary.consigne"), value: lieu.consigne ?? "-" },
+          { label: t("summary.toleranceSup"), value: actualSup ?? "-" },
+          { label: t("summary.toleranceInf"), value: actualInf ?? "-" },
+          { label: t("summary.newToleranceSup"), value: newSupNum ?? "-" },
+          { label: t("summary.newToleranceInf"), value: newInfNum ?? "-" },
+          { label: t("summary.measureCount"), value: measurements.length },
+          { label: t("table.simTitle", { count: simZones.length }), value: simZones.length },
+          { label: t("table.realTitle", { count: realAlarms.length }), value: realAlarms.length },
+        ],
+        presentationImage: chartDataUrl
+          ? {
+              dataUrl: chartDataUrl,
+              title: t("chart.title"),
+            }
+          : null,
+        dataHeaders: [
+          t("export.columns.kind"),
+          t("table.colStart"),
+          t("table.colEnd"),
+          t("export.columns.duration_minutes"),
+          t("table.colPoints"),
+          t("table.colType"),
+        ],
+        dataRows: [
+          ...simZones.map((zone) => [
+            t("export.kinds.simulated"),
+            formatDbDateTime(zone.start, { format: "dateTimeSeconds", locale: localeTag }),
+            formatDbDateTime(zone.end, { format: "dateTimeSeconds", locale: localeTag }),
+            formatDurationMinutes(zone.start, zone.end),
+            countZonePoints(zone.start, zone.end),
+            "",
+          ]),
+          ...realAlarms.map((alarm) => [
+            t("export.kinds.real"),
+            formatDbDateTime(alarm.Date_Heure_Debut, { format: "dateTimeSeconds", locale: localeTag }),
+            alarm.Date_Heure_Fin
+              ? formatDbDateTime(alarm.Date_Heure_Fin, { format: "dateTimeSeconds", locale: localeTag })
+              : "",
+            formatDurationMinutes(alarm.Date_Heure_Debut, alarm.Date_Heure_Fin),
+            "",
+            alarm.Type ?? "",
+          ]),
+        ],
+      })
+    } finally {
+      setIsExportingExcel(false)
     }
-
-    doc.setFont("helvetica", "bold")
-    doc.setFontSize(16)
-    doc.text(t("title"), margin, y)
-    y += 8
-
-    doc.setFont("helvetica", "normal")
-    doc.setFontSize(10)
-    doc.text(`${lieu.nom} - ${formatDbDateTime(new Date(), { format: "dateTimeSeconds", locale: locale === "fr" ? "fr-FR" : locale })}`, margin, y)
-    y += 10
-
-    doc.setFontSize(11)
-    writeLine(t("summary.consigne"), lieu.consigne !== null ? `${lieu.consigne} ${lieu.unit}` : "-")
-    writeLine(t("summary.toleranceSup"), actualSup !== null ? `${actualSup} ${lieu.unit}` : "-")
-    writeLine(t("summary.toleranceInf"), actualInf !== null ? `${actualInf} ${lieu.unit}` : "-")
-    writeLine(t("summary.newToleranceSup"), newSupNum !== null ? `${newSupNum} ${lieu.unit}` : "-")
-    writeLine(t("summary.newToleranceInf"), newInfNum !== null ? `${newInfNum} ${lieu.unit}` : "-")
-    writeLine(t("summary.measureCount"), String(measurements.length))
-    writeLine(t("table.simTitle", { count: simZones.length }), String(simZones.length))
-    writeLine(t("table.realTitle", { count: realAlarms.length }), String(realAlarms.length))
-
-    if (chartDataUrl) {
-      y += 4
-      doc.setDrawColor(220, 220, 220)
-      doc.roundedRect(margin, y, pageWidth - margin * 2, 86, 3, 3)
-      doc.addImage(chartDataUrl, "PNG", margin + 3, y + 3, pageWidth - margin * 2 - 6, 80)
-      y += 94
-    }
-
-    doc.setFont("helvetica", "bold")
-    doc.text(t("table.realTitle", { count: realAlarms.length }), margin, y)
-    y += 6
-    doc.setFont("helvetica", "normal")
-
-    for (const alarm of realAlarms.slice(0, 10)) {
-      const start = formatDbDateTime(alarm.Date_Heure_Debut, { format: "dateTimeSeconds", locale: locale === "fr" ? "fr-FR" : locale })
-      const end = formatDbDateTime(alarm.Date_Heure_Fin, { format: "dateTimeSeconds", locale: locale === "fr" ? "fr-FR" : locale })
-      doc.text(`${alarm.Type ?? "-"} | ${start} -> ${end}`, margin, y)
-      y += 5
-      if (y > 280) break
-    }
-
-    doc.save(`analyse-impact-${lieu.nom.replace(/[^a-zA-Z0-9-_]+/g, "-")}.pdf`)
-  }, [actualInf, actualSup, lieu, locale, measurements.length, newInfNum, newSupNum, realAlarms, simZones.length, t])
+  }, [
+    actualInf,
+    actualSup,
+    dateRange,
+    isExportingExcel,
+    lieu,
+    locale,
+    measurements,
+    newInfNum,
+    newSupNum,
+    realAlarms,
+    simZones,
+    t,
+  ])
 
   return (
     <div className="flex flex-col pb-6">
@@ -304,40 +298,22 @@ export function ImpactAnalysisClient() {
             <Button
               variant="outline"
               size="sm"
-              onClick={handlePrint}
-              className="flex items-center gap-1.5"
-            >
-              <Printer className="h-4 w-4" />
-              {t("print")}
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
               onClick={() => setSaveDialogOpen(true)}
               className="flex items-center gap-1.5"
             >
               <Save className="h-4 w-4" />
               {t("save.button")}
             </Button>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm" className="flex items-center gap-1.5">
-                  <Download className="h-4 w-4" />
-                  {t("export.button")}
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={handleExportCSV}>
-                  {t("export.csv")}
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleExportImage}>
-                  {t("export.image")}
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => void handleExportPdf()}>
-                  {t("export.pdf")}
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={isExportingExcel}
+              onClick={() => void handleExportExcel()}
+              className="flex items-center gap-1.5"
+            >
+              <Download className="h-4 w-4" />
+              {isExportingExcel ? t("export.loading") : t("export.excel")}
+            </Button>
           </div>
 
           <ImpactChart
