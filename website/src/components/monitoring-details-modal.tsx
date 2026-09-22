@@ -29,9 +29,9 @@ import { DateRangePicker } from "@/components/ui/date-range-picker";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useLieuMeasurements } from "@/hooks/useLieuMeasurements";
 import { useLieuMeasurementsPaged } from "@/hooks/useLieuMeasurementsPaged";
 import { calculateYDomain, getMeasureSummary, sortMeasuresChronologically } from "@/lib/measurements";
+import { MONITORING_DETAIL_GRAPH_MAX_POINTS } from "@/lib/measurement-downsampling";
 import { formatNumber } from "@/lib/number-display";
 import { cn } from "@/lib/utils";
 import type { MeasureData } from "@/lib/measurements";
@@ -59,7 +59,6 @@ interface MonitoringDetailsModalProps {
   estConsigneInfPreAlarmeActive?: boolean | null;
   unite: string;
   isSurveillanceActive: boolean;
-  measurements?: MeasureData[];
   initialRange?: DateRangeValue;
   showNullNonResponse?: boolean;
 }
@@ -72,10 +71,13 @@ type GuidePositions = {
   preInf: number | null;
 };
 
-function getTodayRange(): DateRangeValue {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  return { from: today, to: today };
+const ROLLING_GRAPH_HOURS = 24;
+
+function getRollingGraphRange(now = new Date()): DateRangeValue {
+  return {
+    from: new Date(now.getTime() - ROLLING_GRAPH_HOURS * 60 * 60 * 1000),
+    to: now,
+  };
 }
 
 export default function MonitoringDetailsModal({
@@ -96,7 +98,6 @@ export default function MonitoringDetailsModal({
   estConsigneInfPreAlarmeActive,
   unite: initialUnite,
   isSurveillanceActive,
-  measurements: initialMeasurements,
   initialRange,
   showNullNonResponse: controlledShowNullNonResponse,
 }: MonitoringDetailsModalProps) {
@@ -123,7 +124,8 @@ export default function MonitoringDetailsModal({
     };
   }, []);
 
-  const [dateRange, setDateRange] = useState<DateRangeValue | null>(() => initialRange ?? getTodayRange());
+  const [dateRange, setDateRange] = useState<DateRangeValue | null>(() => initialRange ?? null);
+  const [rollingGraphRange, setRollingGraphRange] = useState<DateRangeValue>(() => getRollingGraphRange());
   const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 200 });
   const [guidePositions, setGuidePositions] = useState<GuidePositions>({
     sup: null,
@@ -160,7 +162,8 @@ export default function MonitoringDetailsModal({
 
   useEffect(() => {
     if (!isOpen) return;
-    setDateRange(initialRange ?? getTodayRange());
+    setDateRange(initialRange ?? null);
+    setRollingGraphRange(getRollingGraphRange());
   }, [idLieu, initialRange, isOpen]);
 
   useEffect(() => {
@@ -201,16 +204,18 @@ export default function MonitoringDetailsModal({
     return end;
   }, [effectiveRange]);
 
-  const rangeEnabled = Boolean(explicitRangeStart && explicitRangeEnd);
+  const hasExplicitRange = Boolean(explicitRangeStart && explicitRangeEnd);
+  const graphRangeStart = explicitRangeStart ?? rollingGraphRange.from;
+  const graphRangeEnd = explicitRangeEnd ?? rollingGraphRange.to ?? rollingGraphRange.from;
 
   const selectedRangeLabel = useMemo(() => {
-    if (!effectiveRange?.from) return null;
+    if (!effectiveRange?.from) return t("filters.last24Hours");
     const formatter = new Intl.DateTimeFormat(localeTag, { dateStyle: "medium" });
     const fromLabel = formatter.format(effectiveRange.from);
     const toLabel = formatter.format(effectiveRange.to ?? effectiveRange.from);
     if (fromLabel === toLabel) return fromLabel;
     return `${fromLabel} -> ${toLabel}`;
-  }, [effectiveRange, localeTag]);
+  }, [effectiveRange, localeTag, t]);
 
   const exportFileName = useMemo(() => {
     const baseName = nomLieu.trim().length > 0 ? nomLieu.trim() : `lieu-${idLieu}`;
@@ -225,41 +230,27 @@ export default function MonitoringDetailsModal({
   const {
     data: rangeGraphData,
     isLoading: rangeGraphLoading,
-    useDefaultTodayLimit,
+    sourceCount: graphSourceCount,
+    isSampled: isGraphSampled,
   } = useMonitoringRangeMeasurements(idLieu, {
-    enabled: isOpen && rangeEnabled,
-    rangeStart: explicitRangeStart,
-    rangeEnd: explicitRangeEnd,
+    enabled: isOpen,
+    rangeStart: graphRangeStart,
+    rangeEnd: graphRangeEnd,
     includeNullNonResponse: showNullNonResponse,
+    limitTodayRange: false,
+    maxGraphPoints: MONITORING_DETAIL_GRAPH_MAX_POINTS,
   });
 
-  const hasLocalMeasurements = Boolean(initialMeasurements?.length);
-  const shouldLoadBase = isOpen && isSurveillanceActive;
-  const { data: fetchedData, isLoading } = useLieuMeasurements(idLieu, {
-    enabled: shouldLoadBase && !rangeEnabled,
-    source: "mesures",
-    includeNullNonResponse: showNullNonResponse,
-  });
-
-  const hasFetchedMeasurements = fetchedData.length > 0;
-  const baseLoading = isSurveillanceActive && shouldLoadBase && !rangeEnabled && isLoading && !hasLocalMeasurements;
-  const baseData = isSurveillanceActive
-    ? hasFetchedMeasurements
-      ? fetchedData
-      : hasLocalMeasurements
-        ? initialMeasurements ?? []
-        : []
-    : rangeGraphData;
-  const data = rangeEnabled ? rangeGraphData : baseData;
-  const historyRangeStart = rangeEnabled ? explicitRangeStart : null;
-  const historyRangeEnd = rangeEnabled ? explicitRangeEnd : null;
+  const data = rangeGraphData;
+  const historyRangeStart = graphRangeStart;
+  const historyRangeEnd = graphRangeEnd;
 
   const measurementSortBy = tableSorting[0]?.id === "value" ? "value" : tableSorting[0]?.id === "date" ? "date" : null;
   const measurementSortDirection =
     tableSorting[0]?.desc === true ? "desc" : tableSorting[0] ? "asc" : null;
 
   const { data: historyData, isLoading: isHistoryLoading, totalRows, pageCount } = useLieuMeasurementsPaged(idLieu, {
-    enabled: isOpen && !baseLoading,
+    enabled: isOpen,
     pageIndex: pagination.pageIndex,
     pageSize: pagination.pageSize,
     startDate: historyRangeStart,
@@ -392,12 +383,12 @@ export default function MonitoringDetailsModal({
     if (!isOpen) return;
     setPagination((prev) => ({ ...prev, pageIndex: 0 }));
     setTableSorting([]);
-  }, [idLieu, isOpen, rangeEnabled]);
+  }, [idLieu, isOpen, hasExplicitRange]);
 
   const shouldLoadAuditLogs =
     isOpen &&
     (activeTab === "audit" || (activeTab === "graph" && showGraphAudits)) &&
-    (isSurveillanceActive || rangeEnabled);
+    Boolean(historyRangeStart && historyRangeEnd);
 
   const { logs: auditLogs, isLoading: auditLoading, error: auditError, reset: resetAuditState } = useMonitoringAuditLogs(idLieu, {
     enabled: shouldLoadAuditLogs,
@@ -415,7 +406,7 @@ export default function MonitoringDetailsModal({
   useEffect(() => {
     if (!isOpen) return;
     resetAuditState();
-  }, [isOpen, isSurveillanceActive, rangeEnabled, explicitRangeStart, explicitRangeEnd, resetAuditState]);
+  }, [isOpen, isSurveillanceActive, hasExplicitRange, graphRangeStart, graphRangeEnd, resetAuditState]);
 
   const captureZoomBounds = useCallback((chart: ChartJS<"line">) => {
     const xScale = chart.scales?.x;
@@ -451,13 +442,12 @@ export default function MonitoringDetailsModal({
   useEffect(() => {
     if (!isOpen) return;
     setZoomBounds(null);
-  }, [idLieu, isOpen, rangeEnabled, explicitRangeStart, explicitRangeEnd]);
+  }, [idLieu, isOpen, hasExplicitRange, graphRangeStart, graphRangeEnd]);
 
   const [detailsSize, setDetailsSize] = useState<"standard" | "expanded">("standard");
-  const isDialogLoading = rangeEnabled ? rangeGraphLoading : baseLoading;
+  const isDialogLoading = rangeGraphLoading;
   const expandedHistoryLayout =
-    detailsSize === "expanded" ||
-    (rangeEnabled && (activeTab === "graph" || activeTab === "table"));
+    detailsSize === "expanded" || activeTab === "graph" || activeTab === "table";
   const tabContentMaxHeight =
     detailsSize === "expanded"
       ? "calc(100vh - 18rem)"
@@ -535,24 +525,41 @@ export default function MonitoringDetailsModal({
           <div className="flex min-h-0 flex-1 flex-col gap-4">
             <div className="flex w-full flex-wrap items-center justify-between gap-3">
               <div className="w-full max-w-5xl flex-1 space-y-2">
-                <DateRangePicker
-                  allowEmpty
-                  initialDateFrom={dateRange?.from}
-                  initialDateTo={dateRange?.to ?? dateRange?.from}
-                  onUpdate={({ range }) => {
-                    if (!range.from) {
-                      setDateRange(null);
-                      return;
-                    }
-                    setDateRange({ from: range.from, to: range.to ?? range.from });
-                  }}
-                  align="start"
-                  locale={localeTag}
-                  showCompare={false}
-                  matchTriggerWidth={false}
-                  popoverClassName="w-[min(1280px,calc(100vw-1rem))]"
-                  triggerLabel={selectedRangeLabel ?? undefined}
-                />
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                  <DateRangePicker
+                    key={hasExplicitRange ? `custom-${explicitRangeStart?.getTime()}-${explicitRangeEnd?.getTime()}` : "rolling-24-hours"}
+                    allowEmpty
+                    initialDateFrom={dateRange?.from}
+                    initialDateTo={dateRange?.to ?? dateRange?.from}
+                    onUpdate={({ range }) => {
+                      if (!range.from) {
+                        setDateRange(null);
+                        setRollingGraphRange(getRollingGraphRange());
+                        return;
+                      }
+                      setDateRange({ from: range.from, to: range.to ?? range.from });
+                    }}
+                    align="start"
+                    locale={localeTag}
+                    showCompare={false}
+                    matchTriggerWidth={false}
+                    popoverClassName="w-[min(1280px,calc(100vw-1rem))]"
+                    triggerLabel={selectedRangeLabel}
+                  />
+                  {hasExplicitRange ? (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setDateRange(null);
+                        setRollingGraphRange(getRollingGraphRange());
+                      }}
+                    >
+                      {t("actions.last24Hours")}
+                    </Button>
+                  ) : null}
+                </div>
               </div>
               <Button
                 type="button"
@@ -586,8 +593,10 @@ export default function MonitoringDetailsModal({
                 <MonitoringGraphTab
                   chartRef={chartRef}
                   orderedData={orderedData}
-                  graphMeasureCount={orderedData.length}
-                  isRangeSelected={rangeEnabled && !useDefaultTodayLimit}
+                  graphMeasureCount={graphSourceCount || orderedData.length}
+                  displayedPointCount={orderedData.length}
+                  isSampled={isGraphSampled}
+                  isRangeSelected={hasExplicitRange}
                   auditLogs={auditLogs}
                   showAuditMarkers={showGraphAudits}
                   onShowAuditMarkersChange={setShowGraphAudits}
@@ -602,6 +611,8 @@ export default function MonitoringDetailsModal({
                   guidePositions={guidePositions}
                   yMin={yMin}
                   yMax={yMax}
+                  xRangeStart={graphRangeStart}
+                  xRangeEnd={graphRangeEnd}
                   zoomBounds={zoomBounds}
                   resetChartZoom={resetChartZoom}
                   captureZoomBounds={captureZoomBounds}
@@ -628,7 +639,7 @@ export default function MonitoringDetailsModal({
                   sorting={tableSorting}
                   onSortingChange={handleTableSortingChange}
                   isSurveillanceActive={isSurveillanceActive}
-                  rangeEnabled={rangeEnabled}
+                  rangeEnabled={true}
                   presentationRows={presentationRows}
                   t={t}
                   maxHeight={tabContentMaxHeight}
