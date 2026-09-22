@@ -1,10 +1,11 @@
 import { Line } from 'react-chartjs-2'
 
 import { Skeleton } from '@/components/ui/skeleton'
+import { getMeasureTimestamp, type MeasureData } from '@/lib/measurements'
 
 interface MonitoringCardChartPreviewProps {
   isLoading: boolean
-  orderedData: Array<{ DateHeureMesureXaxis: string; Valeur: number | null }>
+  orderedData: MeasureData[]
   chartDatasets: {
     label: string
     data: Array<number | null>
@@ -62,7 +63,7 @@ export function MonitoringCardChartPreview({
             datasets: chartDatasets.map((dataset) => {
               const points = orderedData
                 .map((point, index) => {
-                  const timestamp = point.DateHeureMesureXaxis ? Number(point.DateHeureMesureXaxis) : Number.NaN
+                  const timestamp = getMeasureTimestamp(point)
                   return {
                     x: timestamp,
                     y: dataset.data[index] ?? null,
