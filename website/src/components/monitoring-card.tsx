@@ -129,21 +129,21 @@ export default function MonitoringCard({
   const { data, isLoading, reload, meta } = useLieuMeasurements(idLieu, {
     enabled: shouldLoadCardMeasurements,
     includeMeta: true,
-    source: "mesures",
+    source: "graphique",
     includeNullNonResponse: showNullNonResponse,
     rollingHours: 24,
     graphMaxPoints: MONITORING_CARD_GRAPH_MAX_POINTS,
   })
 
   const orderedData = useMemo(() => sortMeasuresChronologically(data), [data])
-  const chartRangeStartMs = useMemo(() => {
-    const parsed = parseDbDateTime(meta?.graphRangeStart ?? null)
-    return parsed?.getTime() ?? Date.now() - 24 * 60 * 60 * 1000
-  }, [meta?.graphRangeStart])
-  const chartRangeEndMs = useMemo(() => {
-    const parsed = parseDbDateTime(meta?.graphRangeEnd ?? null)
-    return parsed?.getTime() ?? Date.now()
-  }, [meta?.graphRangeEnd])
+  const chartRangeStartMs = useMemo(
+    () => parseDbDateTime(meta?.graphRangeStart ?? null)?.getTime() ?? 0,
+    [meta?.graphRangeStart],
+  )
+  const chartRangeEndMs = useMemo(
+    () => parseDbDateTime(meta?.graphRangeEnd ?? null)?.getTime() ?? 1,
+    [meta?.graphRangeEnd],
+  )
   const liveMeasurementDate = useMemo(() => {
     if (!lastMeasurement) return null
     const parsed = parseDbDateTime(lastMeasurement)
