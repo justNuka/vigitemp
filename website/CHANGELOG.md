@@ -8,7 +8,45 @@ Les versions suivent `MAJOR.MINOR.PATCH` sans zéros de tête. La source de vers
 
 ## [Unreleased]
 
-Aucun changement supplémentaire documenté depuis la préparation de la version Web 1.6.0.
+Aucun changement supplémentaire documenté depuis la préparation de la version Web 1.7.0.
+
+## [1.7.0] — 2026-09-22
+
+Cette version harmonise les fonctions d'impression et d'export du Web autour de formats bureautiques cohérents.
+
+### Politique d'export
+
+- Les boutons et actions **Imprimer** sont retirés des écrans applicatifs.
+- Le tableau générique ne propose plus l'export CSV ni l'option d'impression.
+- Les tableaux simples exportables proposent désormais **Excel (.xlsx)** et **PDF** par défaut.
+- Les écrans complexes regroupant plusieurs blocs, graphiques ou synthèses utilisent un **export Excel unique** plutôt qu'une combinaison impression / CSV / image / PDF.
+
+### Tableaux simples
+
+- Audit trail : export PDF ou Excel, sans impression.
+- Historique des acquittements d'alarmes : export PDF ou Excel, sans CSV.
+- Les tableaux basés sur `TanStackTable` héritent de la même politique par défaut.
+- Le tableau de mesures d'un lieu conserve un export PDF du tableau et un export Excel enrichi multi-onglets.
+
+### Écrans complexes
+
+- **Analyse d'alarme par lieu** : le comportement déjà présent est conservé — un XLSX unique avec résumé et courbe intégrée dans le premier onglet **Présentation**, puis les mesures complètes dans l'onglet dédié.
+- **Analyse d'impact** : les anciens exports CSV / image / PDF et l'impression sont remplacés par un XLSX unique ; l'onglet Présentation contient le résumé des tolérances et la courbe, l'onglet Alarmes regroupe les alarmes simulées et réelles.
+- **Superposition de courbes** : l'impression et le CSV sont remplacés par un XLSX avec la courbe dans Présentation et les valeurs de chaque lieu dans le second onglet.
+- **VigiLog — détail d'une tournée** : l'export CSV isolé est remplacé par un XLSX avec résumé et courbe dans Présentation puis les mesures importées dans le second onglet.
+- Les sous-tableaux de l'Analyse d'impact ne proposent plus d'exports indépendants : l'export reste centralisé au niveau de l'analyse complète.
+
+### Prévention des régressions
+
+- Un test dédié parcourt les sources Web et refuse le retour d'un bouton d'impression, de l'ancienne option `enablePrint` ou d'un export CSV utilisateur.
+- Le même test vérifie les formats attendus des tableaux simples et la présence des exports Excel enrichis avec courbe sur les vues complexes concernées.
+
+### Compatibilité
+
+- Version Web : **1.7.0**.
+- Serveur **1.1.0**, Agent **1.0.1** et BDD **0.91.0** restent inchangés.
+- Aucune migration BDD n'est requise.
+- MySQL et SQL Server restent supportés.
 
 ## [1.6.0] — 2026-09-22
 
