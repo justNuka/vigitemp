@@ -3950,8 +3950,8 @@
           "badge": "Standard"
         },
         "4": {
-          "title": "Pilotage collaboratif",
-          "description": "Dashboard admin, messagerie et analyse d'impact.",
+          "title": "Pilotage qualité",
+          "description": "Analyse d'impact, conformité et pilotage qualité avancé.",
           "badge": "Standard"
         },
         "5": {
@@ -4166,7 +4166,7 @@
           "title": "Pilotage & collaboration",
           "bullets": {
             "0": "Dashboard administrateur",
-            "1": "Messagerie inter-utilisateurs",
+            "1": "Pilotage qualité avancé",
             "2": "Notifications avancées",
             "3": "Conformité opérationnelle"
           }
