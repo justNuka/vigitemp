@@ -155,13 +155,11 @@ export function SettingsClient({ settings: initialSettings }: Props) {
         </TabsContent>
 
         <TabsContent value="services" className="mt-6 space-y-6">
-          {isStandardOrExpert(license) ? (
-            <MessagingSettingsCard
-              settings={messagingSettings}
-              loadingKeys={loadingKeys}
-              onToggle={toggleDraft}
-            />
-          ) : null}
+          <MessagingSettingsCard
+            settings={messagingSettings}
+            loadingKeys={loadingKeys}
+            onToggle={toggleDraft}
+          />
 
           <SmtpSettingsCard
             onOpenSmtpModal={() => setSmtpModalOpen(true)}
