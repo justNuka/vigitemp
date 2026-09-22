@@ -1570,7 +1570,7 @@ La page doit :
 
 ## R21-003 — Surveillance : cards, fenêtre 24 h et réduction des grands graphiques
 
-**Statut : `PR_OUVERTE` — branche `feature/surveillance-rolling-graphs` — PR #139 — base `dev` `93a46e690edf8ea79c358b9e53d1cc2ca2fbaf9b`**
+**Statut : `CORRIGE_DEV` — PR #139 — squash merge `00f2778993e81faf959aa4879fb8433ddcaf88c5`**
 
 ### Retour — 21/09/2026
 
@@ -1724,4 +1724,191 @@ GitHub Actions run `35701478085` : **succès complet**.
 - [ ] contrôler que le tableau de mesures reste paginé et complet ;
 - [ ] tester FR/EN, clair/sombre et largeur réduite ;
 - [ ] contrôler MySQL puis SQL Server sur une installation représentative.
+
+---
+
+## R22-001 — Harmoniser impression et formats d'export
+
+**Statut : `EN_COURS` — branche `feature/export-format-standardization` — base `dev` `00f2778993e81faf959aa4879fb8433ddcaf88c5`**
+
+### Retour — 22/09/2026
+
+Revoir de manière globale les actions **Imprimer / Exporter** du Web :
+
+- retirer tous les boutons/actions **Imprimer** ;
+- lorsqu'un écran correspond à un tableau ou à un contenu facilement représentable en PDF, proposer **PDF + Excel** ;
+- pour les vues plus complexes, proposer uniquement **Excel** ;
+- pour l'analyse d'une alarme par lieu, intégrer directement la courbe dans l'export Excel, sur le premier onglet.
+
+### État vérifié avant correction
+
+Le comportement n'était pas homogène :
+
+- `TanStackTable` exposait encore `enablePrint` et proposait par défaut **CSV + Excel + PDF** ;
+- l'Audit trail activait explicitement l'option d'impression ;
+- l'historique des acquittements proposait encore **CSV + Excel + PDF** ;
+- Analyse d'impact proposait quatre actions distinctes : impression navigateur, CSV des alarmes, image de la courbe et PDF ;
+- la superposition de courbes proposait CSV + impression de la courbe ;
+- le détail d'une tournée VigiLog disposait d'un export CSV isolé ;
+- le tableau de mesures d'un lieu proposait l'export générique en plus d'un export Excel multi-onglets.
+
+L'**Analyse d'alarme par lieu** avait en revanche déjà été refondue auparavant :
+
+- un seul export XLSX ;
+- premier onglet **Présentation** avec les informations de l'alarme ;
+- image de la courbe Chart.js intégrée directement dans cet onglet ;
+- second onglet avec toutes les mesures de la période.
+
+Ce comportement existant a donc été conservé plutôt que réimplémenté.
+
+### Politique retenue
+
+#### Tableaux simples
+
+Les tableaux exportables standards proposent :
+
+- **PDF** ;
+- **Excel (.xlsx)**.
+
+Ne sont plus proposés :
+
+- CSV ;
+- impression navigateur.
+
+La règle par défaut est portée par `TanStackTable`, afin que les écrans existants et futurs héritent du même comportement.
+
+Exemples concernés :
+
+- Audit trail ;
+- historique des acquittements d'alarmes ;
+- tableaux d'administration utilisant le composant générique ;
+- tableaux simples des services.
+
+Le tableau historique des mesures d'un lieu conserve :
+
+- PDF via le tableau générique ;
+- Excel via l'export enrichi existant, renommé explicitement **Exporter Excel**.
+
+#### Vues complexes — Excel uniquement
+
+Les vues contenant un ensemble de résumé + graphique + données utilisent un XLSX unique structuré.
+
+**Analyse d'alarme par lieu**
+
+- comportement déjà conforme dans `dev` avant ce lot ;
+- aucun export PDF / CSV / impression ajouté ;
+- onglet Présentation avec la courbe ;
+- onglet Mesures avec les valeurs complètes.
+
+**Analyse d'impact**
+
+- suppression de l'impression navigateur ;
+- suppression du CSV ;
+- suppression de l'export image séparé ;
+- suppression du PDF ;
+- un seul export Excel ;
+- onglet Présentation : lieu, période, seuils/tolérances actuels et simulés, compteurs et courbe ;
+- onglet Alarmes : alarmes simulées et réelles.
+
+**Superposition de courbes**
+
+- suppression de l'impression ;
+- suppression du CSV ;
+- un seul XLSX ;
+- onglet Présentation : période, lieux sélectionnés et image de la superposition ;
+- onglet Courbes : horodatage + valeur de chaque lieu.
+
+**VigiLog — détail d'une tournée**
+
+- remplacement du CSV de mesures par un XLSX ;
+- onglet Présentation : configuration, VigiLog, trajet, consigne, limites, dates et courbe ;
+- onglet Mesures : mesures importées et leurs statuts.
+
+Les deux sous-tableaux **Alarmes simulées / Alarmes réelles** de l'Analyse d'impact ont leur export individuel désactivé pour éviter de proposer trois exports différents sur le même écran complexe.
+
+### Composant générique
+
+`website/src/components/data-table/tanstack-table.tsx` :
+
+- suppression du contrat `enablePrint` ;
+- suppression complète de la génération CSV utilisateur ;
+- formats autorisés : `xlsx | pdf` ;
+- valeur par défaut : `["xlsx", "pdf"]` ;
+- conservation de la sélection de colonnes et du choix du nombre de lignes à exporter.
+
+### Excel enrichi
+
+Le helper existant `website/src/lib/excel-export.ts` est réutilisé plutôt que dupliquer la génération XLSX.
+
+Il permet :
+
+- logo VigiSensys ;
+- onglet Présentation ;
+- tableau de métadonnées ;
+- intégration facultative d'une image de courbe ;
+- onglet de données stylisé avec filtres et largeurs adaptées.
+
+### Prévention des régressions
+
+Nouveau test `website/scripts/test-export-format-policy.ts` :
+
+- parcourt tous les fichiers TypeScript/TSX de `website/src` ;
+- refuse les appels `window.print()` / `popup.print()` et les usages de l'icône `Printer` ;
+- refuse le retour de `enablePrint` ;
+- refuse les exports utilisateur `text/csv;charset...` ;
+- vérifie que le tableau générique est limité à PDF + XLSX ;
+- vérifie l'Excel enrichi de l'analyse d'alarme, de l'analyse d'impact, de la superposition de courbes et de VigiLog ;
+- vérifie que la courbe est bien transmise via `presentationImage` sur les écrans complexes concernés.
+
+Les fichiers CSV en **entrée** ou les références techniques à ce format (pièces jointes, configuration CSV, documentation historique) ne sont pas concernés : seule la politique d'export utilisateur est modifiée.
+
+### Fichiers principaux
+
+- `website/src/components/data-table/tanstack-table.tsx` ;
+- `website/src/components/monitoring-details/monitoring-table-tab.tsx` ;
+- `website/src/app/[locale]/(admin)/admin/audit/audit-client.tsx` ;
+- `website/src/app/[locale]/(dashboard)/alarmes/acquittements/page-client.tsx` ;
+- `website/src/app/[locale]/(admin)/admin/analyse-impact/impact-analysis-client.tsx` ;
+- `website/src/app/[locale]/(admin)/admin/analyse-impact/_components/impact-alarms-table.tsx` ;
+- `website/src/app/[locale]/(dashboard)/surveillance/_components/curves-overlay-modal.tsx` ;
+- `website/src/components/services/vigilog/vigilog-tournee-detail-dialog.tsx` ;
+- `website/src/messages/fr.json` ;
+- `website/src/messages/en.json` ;
+- `website/scripts/test-export-format-policy.ts`.
+
+### Version
+
+- Web : **1.7.0** ;
+- Serveur : **1.1.0** — inchangé ;
+- Agent : **1.0.1** — inchangé ;
+- BDD : **0.91.0** — inchangée ;
+- aucune migration BDD.
+
+### Validation automatisée
+
+GitHub Actions run `35704323198` :
+
+- [x] `git diff --check origin/dev...HEAD` ;
+- [x] `pnpm test:export-format-policy` ;
+- [x] ESLint ciblé ;
+- [x] TypeScript avec Prisma MySQL ;
+- [x] contrôle i18n sans nouvelle dette dans les sources du lot ;
+- [x] génération Prisma SQL Server ;
+- [x] TypeScript avec Prisma SQL Server ;
+- [x] restauration Prisma MySQL ;
+- [x] build production Next.js.
+
+### Validation terrain
+
+- [ ] parcourir les principales pages et confirmer l'absence de tout bouton **Imprimer** ;
+- [ ] Audit trail : vérifier uniquement PDF + Excel ;
+- [ ] Historique acquittements : vérifier uniquement PDF + Excel ;
+- [ ] tableau de mesures Surveillance : vérifier PDF + bouton **Exporter Excel** ;
+- [ ] Analyse d'alarme par lieu : vérifier XLSX unique, courbe lisible dans le premier onglet et mesures complètes dans le second ;
+- [ ] Analyse d'impact : vérifier XLSX unique, courbe dans Présentation et alarmes simulées/réelles dans le second onglet ;
+- [ ] Superposition de courbes : vérifier XLSX unique, courbe dans Présentation et valeurs multi-lieux dans le second onglet ;
+- [ ] VigiLog — détail tournée : vérifier XLSX unique, courbe dans Présentation et mesures importées dans le second onglet ;
+- [ ] tester les libellés FR/EN ;
+- [ ] ouvrir les PDF simples et vérifier la lisibilité des tableaux ;
+- [ ] ouvrir les XLSX avec Excel ou LibreOffice et contrôler les onglets, images et filtres.
 
