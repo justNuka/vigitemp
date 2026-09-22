@@ -5759,7 +5759,14 @@
         "title": "Aucune mesure importée",
         "description": "Cette tournée a été réceptionnée, mais le VigiLog ne contenait aucune mesure exploitable."
       },
-      "export": "Exporter les mesures"
+      "export": "Exporter Excel",
+      "exportLoading": "Export Excel...",
+      "exportPresentationSheet": "Présentation",
+      "exportDataSheet": "Mesures",
+      "exportPresentationColumns": {
+        "label": "Information",
+        "value": "Valeur"
+      }
     },
     "loggers": {
       "title": "Registre des VigiLog",
