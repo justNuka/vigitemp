@@ -8,7 +8,33 @@ Les versions suivent `MAJOR.MINOR.PATCH` sans zéros de tête. La source de vers
 
 ## [Unreleased]
 
-Aucun changement supplémentaire documenté depuis la préparation de la version Web 1.8.1.
+Aucun changement supplémentaire documenté depuis la préparation de la version Web 1.8.2.
+
+## [1.8.2] — 2026-09-22
+
+Cette version corrige deux restrictions de licence incorrectes pour les éditions Pack et One.
+
+### Lieux — Pack / One
+
+- Les formulaires de création et modification n'envoient plus les champs métrologiques réservés à Standard/Expert lorsque la licence active est Pack ou One.
+- La correction couvre Administration > Lieux ainsi que l'édition d'un lieu depuis Surveillance.
+- Les protections API restent strictes : un appel direct qui tente d'envoyer des champs EMT avec Pack/One reçoit toujours un refus de licence.
+- Les champs métier standards du lieu (nom, sonde, groupes, consignes, retards, planning, etc.) restent disponibles selon les droits utilisateur.
+
+### Messagerie — toutes éditions
+
+- La Messagerie inter-utilisateurs est désormais disponible pour Pack, One, Standard et Expert.
+- Le garde serveur Chat vérifie toujours la validité de la licence mais ne restreint plus l'édition.
+- Le paramètre `messaging:enabled` n'est plus classé Standard-only et peut être lu/modifié sur Pack/One par un utilisateur autorisé.
+- La sidebar conserve le contrôle de permission `CONVERSATION_ACCESS` ; l'accès reste également conditionné au toggle global Messagerie.
+- La matrice de licences et la page Upgrade sont alignées avec cette nouvelle règle.
+
+### Compatibilité
+
+- Version Web : **1.8.2**.
+- Serveur **1.1.0**, Agent **1.0.1** et BDD **0.91.0** restent inchangés.
+- Aucune migration BDD n'est requise.
+- MySQL et SQL Server restent supportés.
 
 ## [1.8.1] — 2026-09-22
 
