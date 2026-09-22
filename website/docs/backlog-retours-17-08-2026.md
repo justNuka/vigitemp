@@ -1729,7 +1729,7 @@ GitHub Actions run `35701478085` : **succès complet**.
 
 ## R22-001 — Harmoniser impression et formats d'export
 
-**Statut : `PR_OUVERTE` — branche `feature/export-format-standardization` — PR #140 — base `dev` `00f2778993e81faf959aa4879fb8433ddcaf88c5`**
+**Statut : `CORRIGE_DEV` — PR #140 — squash merge `4e5cf37a4fb8a46aba1ac68a93d31589e7277f90`**
 
 ### Retour — 22/09/2026
 
@@ -1911,4 +1911,125 @@ GitHub Actions run `35704323198` :
 - [ ] tester les libellés FR/EN ;
 - [ ] ouvrir les PDF simples et vérifier la lisibilité des tableaux ;
 - [ ] ouvrir les XLSX avec Excel ou LibreOffice et contrôler les onglets, images et filtres.
+
+---
+
+## R22-002 — Ajouter le groupe au tableau des alarmes
+
+**Statut : `PR_OUVERTE` — branche `feature/alarm-group-column` — PR #141 — base `dev` `4e5cf37a4fb8a46aba1ac68a93d31589e7277f90`**
+
+### Retour — 22/09/2026
+
+Sur la page **Alarmes**, ajouter une colonne **Groupe** :
+
+- affichée dans le tableau principal ;
+- triable ;
+- recherchable via la barre de recherche existante.
+
+La capture de référence place cette colonne entre **Consignes sup/inf** et **Déclenchée**.
+
+### État vérifié avant correction
+
+- le tableau ne possédait aucune colonne Groupe ;
+- `ServerAlarms()` chargeait le lieu mais pas ses relations `t_lieu_groupe` ;
+- `location.siteGroup` était forcé à `null` dans ce parcours ;
+- la recherche de `TanStackTable` reposait sur les champs par défaut de la ligne et ne pouvait donc pas retrouver un groupe absent des données ;
+- un lieu peut être affecté à plusieurs groupes via la table de liaison `t_lieu_groupe`.
+
+### Implémentation
+
+#### Chargement des groupes
+
+Le `select` Prisma déjà utilisé par `ServerAlarms()` est étendu avec :
+
+- `t_lieu_groupe` ;
+- `t_groupe.Nom_Groupe`.
+
+Les groupes sont donc récupérés avec le chargement des alarmes, sans ajouter de boucle de requêtes applicatives par ligne.
+
+Les noms sont exposés via `location.groupNames`, propriété déjà prévue par le type `Location`.
+
+La propriété historique `location.siteGroup` reste à `null` dans ce parcours : elle n'est pas réutilisée pour stocker les groupes métier, car elle possède une sémantique différente dans d'autres parties du Web.
+
+#### Normalisation multi-groupes
+
+Nouveau helper `alarm-groups.ts` :
+
+- suppression des valeurs vides ;
+- trim ;
+- déduplication insensible à la casse ;
+- tri alphabétique avec tri numérique naturel ;
+- format d'affichage `Groupe A, Groupe B`.
+
+Un lieu sans groupe affiche `-`.
+
+#### Tableau
+
+La colonne **Groupe / Group** :
+
+- est placée après **Consignes sup/inf** et avant **Déclenchée** ;
+- utilise `accessorKey: "groups"`, ce qui la rend triable nativement par TanStack ;
+- affiche jusqu'à deux lignes dans la cellule avec la valeur complète au survol ;
+- est incluse automatiquement dans les exports PDF / Excel du tableau.
+
+#### Recherche
+
+Chaque ligne construit un champ interne `searchText` contenant :
+
+- nom du lieu ;
+- numéro de série de la sonde ;
+- groupes ;
+- statut.
+
+Le tableau utilise ce champ comme source de la recherche globale. Rechercher tout ou partie du nom d'un groupe filtre donc les alarmes correspondantes, tout en conservant la recherche lieu/sonde/statut existante.
+
+### Fichiers principaux
+
+- `website/src/app/[locale]/(dashboard)/alarmes/server-alarms.tsx` ;
+- `website/src/app/[locale]/(dashboard)/alarmes/alarms-client.tsx` ;
+- `website/src/app/[locale]/(dashboard)/alarmes/alarm-groups.ts` ;
+- `website/src/messages/fr.json` ;
+- `website/src/messages/en.json` ;
+- `website/scripts/test-alarm-group-column.ts`.
+
+### Version
+
+- Web : **1.8.0** ;
+- Serveur : **1.1.0** — inchangé ;
+- Agent : **1.0.1** — inchangé ;
+- BDD : **0.91.0** — inchangée ;
+- aucune migration BDD.
+
+### Validation automatisée
+
+GitHub Actions run `35723651236` : **succès complet**.
+
+- [x] `git diff --check origin/dev...HEAD` ;
+- [x] `pnpm test:alarm-group-column` ;
+- [x] helper multi-groupes : trim, déduplication et ordre naturel couverts ;
+- [x] position de la colonne Groupe couverte par le test ;
+- [x] liaison de la recherche à `searchText` couverte ;
+- [x] ESLint ciblé ;
+- [x] TypeScript avec Prisma MySQL ;
+- [x] contrôle i18n sans nouvelle dette du lot ;
+- [x] génération Prisma SQL Server ;
+- [x] TypeScript avec Prisma SQL Server ;
+- [x] restauration Prisma MySQL ;
+- [x] build production Next.js.
+
+### Validation terrain
+
+- [ ] ouvrir la page Alarmes avec plusieurs alarmes de groupes différents ;
+- [ ] vérifier la colonne **Groupe** entre **Consignes sup/inf** et **Déclenchée** ;
+- [ ] vérifier un lieu sans groupe : `-` ;
+- [ ] vérifier un lieu avec un seul groupe ;
+- [ ] vérifier un lieu appartenant à plusieurs groupes ;
+- [ ] cliquer sur l'en-tête Groupe et contrôler les tris ascendant / descendant ;
+- [ ] rechercher le nom complet d'un groupe ;
+- [ ] rechercher une partie du nom d'un groupe ;
+- [ ] vérifier que la recherche par lieu et sonde fonctionne toujours ;
+- [ ] vérifier les onglets Alarmes actives / À acquitter ;
+- [ ] vérifier l'export PDF et Excel avec la colonne Groupe ;
+- [ ] vérifier FR/EN ;
+- [ ] vérifier sur MySQL puis SQL Server.
 
