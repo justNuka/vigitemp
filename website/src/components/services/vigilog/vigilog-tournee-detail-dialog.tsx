@@ -553,7 +553,6 @@ export function VigilogTourneeDetailDialog({ open, pending = false, detail, onOp
                 data={measures}
                 showSearch={false}
                 enableExport={false}
-                enablePrint={false}
                 showPagination={measures.length > 10}
                 pageSize={200}
                 maxHeight="420px"
