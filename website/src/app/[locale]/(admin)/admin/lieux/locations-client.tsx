@@ -36,6 +36,8 @@ import { mapLocationToFormData } from './_components/location-form-mappers'
 import { buildLocationConfigCopy } from './_components/location-config-copy'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useTranslations } from 'next-intl'
+import { useLicense } from '@/components/license/license-provider'
+import { prepareLocationPayloadForLicense } from '@/lib/location-license-payload'
 import { MapPin } from 'lucide-react'
 
 export function LocationsClient() {
@@ -43,6 +45,7 @@ export function LocationsClient() {
   const tCommon = useTranslations('common')
   const queryClient = useQueryClient()
   const router = useRouter()
+  const { license } = useLicense()
   const { data: locations = [], isLoading } = useLocations()
   const didPrefetchRef = useRef(false)
   const [selectedLocation, setSelectedLocation] = useState<LocationRow | null>(null)
@@ -101,11 +104,15 @@ export function LocationsClient() {
   }, [isLoading, queryClient])
 
   const resetForm = () => form.reset(getDefaultLocationFormData())
-  const normalizePayload = (data: LocationFormData, forceInactive = false): Partial<LocationRow> => ({
-    ...data,
-    Sonde_Numero_Serie: data.Sonde_Numero_Serie ? data.Sonde_Numero_Serie : null,
-    Lieu_Etat: forceInactive || !data.Sonde_Numero_Serie ? 'D' : data.Lieu_Etat ?? null,
-  })
+  const normalizePayload = (data: LocationFormData, forceInactive = false): Partial<LocationRow> => {
+    const payload = {
+      ...data,
+      Sonde_Numero_Serie: data.Sonde_Numero_Serie ? data.Sonde_Numero_Serie : null,
+      Lieu_Etat: forceInactive || !data.Sonde_Numero_Serie ? 'D' : data.Lieu_Etat ?? null,
+    }
+
+    return prepareLocationPayloadForLicense(payload, license) as Partial<LocationRow>
+  }
 
   const createMutation = useMutation({
     mutationFn: async (data: Partial<LocationRow>) => postJson<LocationRow>('/api/lieux', data),
