@@ -2241,6 +2241,26 @@ Modifications :
 - BDD : **0.91.0** — inchangée ;
 - aucune migration BDD.
 
+### Validation automatisée
+
+GitHub Actions run `35732335802`, attempt 2 : **succès complet**.
+
+- [x] `git diff --check origin/dev...HEAD` ;
+- [x] `pnpm test:pack-one-license-access` ;
+- [x] payload Pack / One sans champs EMT réservés ;
+- [x] protections API EMT Standard / Expert conservées ;
+- [x] Messagerie disponible pour toute licence valide dans le contrat runtime ;
+- [x] permission `CONVERSATION_ACCESS` et toggle `messaging:enabled` conservés ;
+- [x] ESLint ciblé ;
+- [x] contrôle i18n sans nouvelle dette dans le lot ;
+- [x] TypeScript avec Prisma MySQL ;
+- [x] génération Prisma SQL Server ;
+- [x] TypeScript avec Prisma SQL Server ;
+- [x] restauration Prisma MySQL ;
+- [x] build production Next.js.
+
+Le premier attempt du même run a été interrompu pendant le build sans échec de code ; l'attempt 2 a été relancé sans modification fonctionnelle et s'est terminé avec succès.
+
 ### Validation terrain
 
 - [ ] licence Pack sans option mail : vérifier que l'onglet Mailing reste masqué ;
