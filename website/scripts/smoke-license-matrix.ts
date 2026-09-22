@@ -180,6 +180,22 @@ const CASES: SmokeCase[] = [
     note: "Doit rester accessible a toutes licences (pas 403)",
   },
   {
+    id: "lieux-post-basic",
+    method: "POST",
+    path: "/api/lieux",
+    buildBody: () => JSON.stringify({}),
+    contentType: "application/json",
+    expected: { pack: [400], one: [400], standard: [400], expert: [400] },
+    note: "Creation de lieu hors EMT accessible a toutes les editions; payload volontairement invalide",
+  },
+  {
+    id: "messaging-enabled",
+    method: "GET",
+    path: "/api/settings/messaging-enabled",
+    expected: { pack: [200], one: [200], standard: [200], expert: [200] },
+    note: "Le parametre Messagerie n'est plus reserve a Standard/Expert",
+  },
+  {
     id: "lieux-post-emt",
     method: "POST",
     path: "/api/lieux",
