@@ -16,7 +16,6 @@ import {
 } from "chart.js";
 import { Maximize2, Minimize2 } from "lucide-react";
 
-import { TanStackTable } from "@/components/data-table/tanstack-table";
 import { MonitoringAuditTab } from "@/components/monitoring-details/monitoring-audit-tab";
 import { MonitoringGraphTab } from "@/components/monitoring-details/monitoring-graph-tab";
 import { MonitoringTableTab } from "@/components/monitoring-details/monitoring-table-tab";
