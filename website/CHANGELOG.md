@@ -20,6 +20,7 @@ Cette version corrige deux restrictions de licence incorrectes pour les édition
 - La correction couvre Administration > Lieux ainsi que l'édition d'un lieu depuis Surveillance.
 - Les protections API restent strictes : un appel direct qui tente d'envoyer des champs EMT avec Pack/One reçoit toujours un refus de licence.
 - Les champs métier standards du lieu (nom, sonde, groupes, consignes, retards, planning, etc.) restent disponibles selon les droits utilisateur.
+- L'onglet **Mailing** du formulaire Lieu n'est plus lié à la licence Métrologie : il est disponible sur One/Standard/Expert et sur Pack lorsque l'option mail est présente.
 
 ### Messagerie — toutes éditions
 
