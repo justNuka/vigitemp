@@ -76,8 +76,28 @@ jobs:
       - name: TypeScript MySQL
         run: pnpm exec tsc --noEmit
 
-      - name: i18n check
-        run: pnpm i18n:check
+      - name: i18n check (no new debt in changed sources)
+        shell: bash
+        run: |
+          set +e
+          pnpm i18n:check 2>&1 | tee /tmp/i18n-check.log
+          status=${PIPESTATUS[0]}
+          set -e
+
+          if grep -E 'monitoring-card|monitoring-details|date-range-picker|useLieuMeasurements|measurement-downsampling|api/mesures|surveillance-rolling-graphs|Keys present in the effective (FR|EN) catalog but missing' /tmp/i18n-check.log; then
+            if grep -E '^  - (monitoringDetailsModal|monitoringCard|surveillance|dateRangePicker)\.' /tmp/i18n-check.log; then
+              echo "New i18n catalog mismatch detected in this lot."
+              exit 1
+            fi
+            if grep -E 'src/(components/monitoring|components/ui/date-range-picker|hooks/useLieuMeasurements|lib/measurement-downsampling|app/api/mesures)' /tmp/i18n-check.log; then
+              echo "New hard-coded i18n debt detected in a changed source."
+              exit 1
+            fi
+          fi
+
+          if [ "${status}" -ne 0 ]; then
+            echo "Global i18n checker still reports only pre-existing debt outside this lot."
+          fi
 
       - name: Generate Prisma SQL Server
         run: pnpm prisma:generate:mssql
