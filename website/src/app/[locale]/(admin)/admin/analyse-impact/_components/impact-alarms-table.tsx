@@ -136,7 +136,6 @@ export function ImpactAlarmsTable({
             showSearch={false}
             showPagination={true}
             enableExport={false}
-            enableExport={false}
           />
         </div>
 
@@ -158,6 +157,7 @@ export function ImpactAlarmsTable({
             emptyMessage={t("table.noRealAlarms")}
             showSearch={false}
             showPagination={true}
+            enableExport={false}
           />
         </div>
       </CardContent>
