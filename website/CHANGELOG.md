@@ -8,7 +8,24 @@ Les versions suivent `MAJOR.MINOR.PATCH` sans zéros de tête. La source de vers
 
 ## [Unreleased]
 
-Aucun changement supplémentaire documenté depuis la préparation de la version Web 1.8.0.
+Aucun changement supplémentaire documenté depuis la préparation de la version Web 1.8.1.
+
+## [1.8.1] — 2026-09-22
+
+Cette version corrige la navigation du Dashboard Admin pour les licences One / Pack.
+
+### Dashboard Admin
+
+- Les cards de navigation du dashboard basique utilisent désormais le `Link` localisé fourni par `@/i18n/navigation` au lieu de `next/link`.
+- Les URLs générées conservent donc systématiquement le préfixe de locale : `/fr/admin/...` ou `/en/admin/...`.
+- Les routes anglaises localisées restent prises en compte, par exemple `/en/admin/sensors`, `/en/admin/groups`, `/en/admin/locations` et `/en/admin/tools`.
+- Aucun changement de droits, licence ou destination fonctionnelle des cards n'est introduit.
+
+### Compatibilité
+
+- Version Web : **1.8.1**.
+- Serveur **1.1.0**, Agent **1.0.1** et BDD **0.91.0** restent inchangés.
+- Aucune migration BDD n'est requise.
 
 ## [1.8.0] — 2026-09-22
 
