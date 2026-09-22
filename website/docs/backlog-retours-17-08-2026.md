@@ -2360,7 +2360,7 @@ Le workflow temporaire de validation a été retiré du diff final.
 
 ## R22-006 — Fiabiliser le type des sondes importées et le retour vers Sondes
 
-**Statut : `EN_COURS` — branche `fix/sensor-import-type-detection` — base `dev` `0b3bf3e6575d166d60a98b89219fb55825e248e2`**
+**Statut : `PR_OUVERTE` — branche `fix/sensor-import-type-detection` — PR #144 — base `dev` `0b3bf3e6575d166d60a98b89219fb55825e248e2`**
 
 ### Retour — 22/09/2026
 
