@@ -420,11 +420,7 @@ export function AlarmsClient({ alarms, statusFilter, initialLocationId = null, s
       return typeFilters.some((type) => alarm.type === type);
     })
     .map((alarm) => {
-      const groups = formatAlarmGroupNames(
-        alarm.location.groupNames?.length
-          ? alarm.location.groupNames
-          : [alarm.location.siteGroup],
-      );
+      const groups = formatAlarmGroupNames(alarm.location.groupNames ?? []);
 
       return {
         id: alarm.id,
