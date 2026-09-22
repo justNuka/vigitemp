@@ -1916,7 +1916,7 @@ GitHub Actions run `35704323198` :
 
 ## R22-002 — Ajouter le groupe au tableau des alarmes
 
-**Statut : `PR_OUVERTE` — branche `feature/alarm-group-column` — PR #141 — base `dev` `4e5cf37a4fb8a46aba1ac68a93d31589e7277f90`**
+**Statut : `CORRIGE_DEV` — PR #141 — squash merge `d2dccf996405f3e39ac2eb8593071aa2fe1b3a95`**
 
 ### Retour — 22/09/2026
 
@@ -2032,4 +2032,71 @@ GitHub Actions run `35723651236` : **succès complet**.
 - [ ] vérifier l'export PDF et Excel avec la colonne Groupe ;
 - [ ] vérifier FR/EN ;
 - [ ] vérifier sur MySQL puis SQL Server.
+
+---
+
+## R22-003 — Conserver la locale dans les liens du Dashboard Admin One / Pack
+
+**Statut : `EN_COURS` — branche `fix/admin-dashboard-locale-links` — base `dev` `d2dccf996405f3e39ac2eb8593071aa2fe1b3a95`**
+
+### Retour — 22/09/2026
+
+Sur le Dashboard Admin avec une licence **One**, les cards de navigation ouvraient des URLs sans préfixe de locale :
+
+- observé : `/admin/...` ;
+- attendu : `/fr/admin/...` ou `/en/admin/...`.
+
+Le même dashboard basique est utilisé par les licences **One / Pack**.
+
+### État vérifié avant correction
+
+- les cards One / Pack sont rendues par `DashboardLinkCard` ;
+- `DashboardLinkCard` importait directement `next/link` ;
+- les destinations de la page Admin sont volontairement écrites sous forme de routes canoniques, par exemple `/admin/sondes`, `/admin/groupes`, `/admin/lieux` ;
+- contrairement au wrapper `@/i18n/navigation`, `next/link` ne transforme pas ces routes selon la locale du projet ;
+- le reste du Dashboard Admin utilise déjà majoritairement le wrapper next-intl.
+
+### Correctif
+
+`website/src/components/dashboard-link-card.tsx` utilise désormais :
+
+- `Link` depuis `@/i18n/navigation` ;
+- les routes canoniques existantes restent inchangées.
+
+Le routage next-intl ajoute donc automatiquement le préfixe et la traduction de chemin :
+
+- FR : `/admin/sondes` → `/fr/admin/sondes` ;
+- EN : `/admin/sondes` → `/en/admin/sensors` ;
+- FR : `/admin/groupes` → `/fr/admin/groupes` ;
+- EN : `/admin/groupes` → `/en/admin/groups` ;
+- FR : `/admin/lieux` → `/fr/admin/lieux` ;
+- EN : `/admin/lieux` → `/en/admin/locations`.
+
+Aucun préfixe `/fr` ou `/en` n'est concaténé manuellement.
+
+### Fichiers principaux
+
+- `website/src/components/dashboard-link-card.tsx` ;
+- `website/scripts/test-admin-dashboard-locale-links.ts` ;
+- `website/package.json` ;
+- `website/CHANGELOG.md` ;
+- `CHANGELOG.md`.
+
+### Version
+
+- Web : **1.8.1** ;
+- Serveur : **1.1.0** — inchangé ;
+- Agent : **1.0.1** — inchangé ;
+- BDD : **0.91.0** — inchangée ;
+- aucune migration BDD.
+
+### Validation terrain
+
+- [ ] se connecter en licence One avec locale FR puis ouvrir chaque card du Dashboard Admin ;
+- [ ] confirmer que l'URL reste sous `/fr/admin/...` ;
+- [ ] passer en EN puis ouvrir les mêmes cards ;
+- [ ] confirmer `/en/admin/sensors`, `/en/admin/groups`, `/en/admin/locations`, `/en/admin/tools` selon la card ;
+- [ ] vérifier la licence Pack, qui utilise le même dashboard basique ;
+- [ ] vérifier que les cards Services / Santé système restent fonctionnelles ;
+- [ ] revenir sur le Dashboard Admin via la sidebar et confirmer que la locale est conservée.
 
