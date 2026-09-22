@@ -60,7 +60,6 @@ const COLORS = ["#ef4444", "#3b82f6", "#10b981", "#f59e0b", "#8b5cf6", "#06b6d4"
 
 export function CurvesOverlayModal({ open, onOpenChange, locations }: Props) {
   const t = useTranslations("surveillance")
-  const tCommon = useTranslations("common")
   const locale = useLocale()
   const localeTag = locale === "fr" ? "fr-FR" : locale
 
