@@ -5756,7 +5756,14 @@
         "title": "No measurements imported",
         "description": "This run was received, but the VigiLog did not contain any usable measurements."
       },
-      "export": "Export measures"
+      "export": "Export Excel",
+      "exportLoading": "Exporting Excel...",
+      "exportPresentationSheet": "Presentation",
+      "exportDataSheet": "Measurements",
+      "exportPresentationColumns": {
+        "label": "Information",
+        "value": "Value"
+      }
     },
     "loggers": {
       "title": "VigiLog registry",
