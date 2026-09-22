@@ -2434,13 +2434,24 @@ Le bouton utilise désormais la route canonique `/admin/sondes` avec le wrapper 
 
 ### Validation automatisée
 
-- [x] test ciblé `pnpm test:sensor-import-type-detection` ;
+GitHub Actions run `35746073802` : **succès complet** sur le HEAD fonctionnel du lot.
+
+- [x] `git diff --check origin/dev...HEAD` ;
+- [x] `pnpm test:sensor-import-type-detection` ;
 - [x] cas `IN` / `IEE` classiques ;
 - [x] cas GSO détaillés ;
 - [x] cas GSP détaillés ;
 - [x] exclusion des types agrégés `GSO` / `GSP` du contrat d'import ;
 - [x] route localisée `/admin/sondes` FR/EN ;
-- [ ] validation GitHub Actions finale complète à renseigner avant ouverture de la PR.
+- [x] ESLint ciblé ;
+- [x] contrôle i18n ;
+- [x] TypeScript avec Prisma MySQL ;
+- [x] génération Prisma SQL Server ;
+- [x] TypeScript avec Prisma SQL Server ;
+- [x] restauration Prisma MySQL ;
+- [x] build production Next.js.
+
+Le workflow temporaire de validation a été retiré du diff final.
 
 ### Validation terrain
 
