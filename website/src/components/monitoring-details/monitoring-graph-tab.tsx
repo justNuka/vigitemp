@@ -123,13 +123,13 @@ function buildMergedAxisLabels(
   return Array.from(labels)
     .filter((label) => Number.isFinite(parseDbDateTime(label)?.getTime() ?? Number.NaN))
     .sort((left, right) => {
-    const leftTs = parseDbDateTime(left)?.getTime() ?? Number.NaN
-    const rightTs = parseDbDateTime(right)?.getTime() ?? Number.NaN
-    if (!Number.isFinite(leftTs) || !Number.isFinite(rightTs)) {
-      return left.localeCompare(right)
-    }
-    return leftTs - rightTs
-  })
+      const leftTs = parseDbDateTime(left)?.getTime() ?? Number.NaN
+      const rightTs = parseDbDateTime(right)?.getTime() ?? Number.NaN
+      if (!Number.isFinite(leftTs) || !Number.isFinite(rightTs)) {
+        return left.localeCompare(right)
+      }
+      return leftTs - rightTs
+    })
 }
 
 export function MonitoringGraphTab({
