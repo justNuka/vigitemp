@@ -8,7 +8,7 @@
 * Notification Mail
 * Nombre de sondes limité (limites à definir dans la licence) -> 5, 10, 15, 20, 25, manuel
 * Mail en option dans la licence uniquement (si pas dans la licence, pas de mail)
-* Pas de chat
+* Messagerie inter-utilisateurs
 
 ---
 
@@ -37,7 +37,6 @@ Tout ce qui est dans **Pack et One**, plus :
 * Superposition des courbes
 * Analyse d’impact
 * Dashboard administrateur
-* Messagerie inter-utilisateurs
 * Fonctionnement CFR 21 part 11
 
 ---
