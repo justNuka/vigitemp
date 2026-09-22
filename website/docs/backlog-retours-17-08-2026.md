@@ -2210,10 +2210,14 @@ Modifications :
 - la card Messagerie des Paramètres est visible pour toutes les éditions ;
 - la matrice de licences et la page Upgrade sont alignées ;
 - les protections Standard / Expert des fonctions réellement métrologiques restent inchangées.
+- l'onglet Mailing du formulaire Lieu est dissocié du garde Métrologie : One/Standard/Expert y accèdent par défaut, Pack uniquement avec l'option mail de licence.
 
 ### Fichiers principaux
 
 - `website/src/lib/location-license-payload.ts` ;
+- `website/src/lib/license-access.ts` ;
+- `website/src/lib/license-email.ts` ;
+- `website/src/app/[locale]/(admin)/admin/lieux/_components/location-form-dialog.tsx` ;
 - `website/src/app/api/lieux/route.ts` ;
 - `website/src/app/api/lieux/[id]/route.ts` ;
 - `website/src/app/[locale]/(admin)/admin/lieux/locations-client.tsx` ;
@@ -2239,6 +2243,9 @@ Modifications :
 
 ### Validation terrain
 
+- [ ] licence Pack sans option mail : vérifier que l'onglet Mailing reste masqué ;
+- [ ] licence Pack avec option mail : vérifier que l'onglet Mailing est disponible ;
+- [ ] licence One : vérifier que l'onglet Mailing est disponible ;
 - [ ] licence Pack : créer un lieu sans champs EMT ;
 - [ ] licence Pack : modifier nom, sonde, groupes, consignes, retards et planning d'un lieu ;
 - [ ] licence One : mêmes tests création / modification ;
