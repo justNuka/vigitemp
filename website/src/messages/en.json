@@ -3420,8 +3420,8 @@
         "serial": "Serial number"
       },
       "multi_tabs": {
-        "button": "Multi-tab export",
-        "button_loading": "Export...",
+        "button": "Export Excel",
+        "button_loading": "Exporting Excel...",
         "presentation_sheet": "Presentation",
         "measurements_sheet": "Measurements",
         "presentation_columns": {
