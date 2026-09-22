@@ -302,7 +302,8 @@
       "dateTo": "End date",
       "allSites": "All sites",
       "allTypes": "All types",
-      "selected_range": "Selected range: {range}"
+      "selected_range": "Selected range: {range}",
+      "last_24_hours": "Last 24 hours"
     },
     "toast": {
       "na": "-",
@@ -3374,7 +3375,8 @@
     },
     "actions": {
       "expanded_size": "Expanded view",
-      "standard_size": "Standard view"
+      "standard_size": "Standard view",
+      "last_24_hours": "Back to the last 24 hours"
     },
     "filters": {
       "site": "Site",
@@ -3454,8 +3456,10 @@
       "audit_marker_count": "{count} audit event(s)",
       "show_audit_markers": "Show audits on chart",
       "show_no_response": "Show no-response values",
-      "measure_count": "Points in chart: {count}",
+      "measure_count": "Measurements in chart: {count}",
       "latest_measure_count": "Latest {count} measurements",
+      "rolling_measure_count": "{count} measurements over the last 24 hours",
+      "sampled_measure_count": "{source} measurements in range · {displayed} displayed points",
       "drag_zoom_hint": "Use the wheel to zoom, drag to pan, and double-click to reset.",
       "reset_zoom": "Reset zoom",
       "export_image": "Export chart",
