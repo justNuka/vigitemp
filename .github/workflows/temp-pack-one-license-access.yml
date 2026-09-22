@@ -62,6 +62,9 @@ jobs:
         run: >-
           pnpm exec eslint
           "src/lib/location-license-payload.ts"
+          "src/lib/license-access.ts"
+          "src/lib/license-email.ts"
+          "src/app/[locale]/(admin)/admin/lieux/_components/location-form-dialog.tsx"
           "src/app/api/lieux/route.ts"
           "src/app/api/lieux/[id]/route.ts"
           "src/app/[locale]/(admin)/admin/lieux/locations-client.tsx"
