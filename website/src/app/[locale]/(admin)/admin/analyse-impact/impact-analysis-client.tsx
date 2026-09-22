@@ -5,7 +5,7 @@ import { TrendingUp, Save, Download } from "lucide-react"
 import { useTranslations, useLocale } from "next-intl"
 import type { Chart as ChartJS } from "chart.js"
 import { fetchJson } from "@/lib/http"
-import { formatDbDateTime } from "@/lib/date-display"
+import { formatDbDateTime, parseDbDateTime } from "@/lib/date-display"
 import { exportStyledExcel } from "@/lib/excel-export"
 import { toApiUtcDateTime } from "@/lib/date-range-api"
 import { useMonitoringRangeMeasurements } from "@/components/monitoring-details/use-monitoring-range-measurements"
@@ -171,9 +171,9 @@ export function ImpactAnalysisClient() {
       const chartDataUrl = chartRef.current?.toBase64Image("image/png", 1) ?? null
       const formatDurationMinutes = (start: string, end: string | null) => {
         if (!end) return ""
-        const startDate = new Date(start)
-        const endDate = new Date(end)
-        if (Number.isNaN(startDate.getTime()) || Number.isNaN(endDate.getTime())) return ""
+        const startDate = parseDbDateTime(start)
+        const endDate = parseDbDateTime(end)
+        if (!startDate || !endDate) return ""
         return Math.max(0, Math.round((endDate.getTime() - startDate.getTime()) / 60000))
       }
       const countZonePoints = (start: string, end: string) =>
