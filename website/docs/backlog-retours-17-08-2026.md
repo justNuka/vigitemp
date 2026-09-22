@@ -2280,3 +2280,61 @@ Le workflow temporaire a ensuite été retiré de la branche ; les commits post�
 - [ ] vérifier Standard / Expert sans régression ;
 - [ ] vérifier MySQL puis SQL Server.
 
+---
+
+## R22-005 — Conserver la locale vers Alarmes depuis le dashboard utilisateur
+
+**Statut : `PR_OUVERTE` — intégré à la branche `fix/pack-one-license-access` — PR #143 — base `dev` `207ed69ffc4a2a0100836e9f2e17dbc19527cb9d`**
+
+### Retour — 22/09/2026
+
+Depuis le dashboard utilisateur, un clic sur le bandeau d'alarmes pouvait ouvrir :
+
+- observé : `/alarmes` ;
+- attendu en FR : `/fr/alarmes` ;
+- attendu en EN : `/en/alarms`.
+
+### État vérifié avant correction
+
+Le bloc **Voir toutes les alarmes** du contenu principal utilisait déjà le wrapper localisé avec la route canonique `/alarmes`.
+
+Le problème restant se trouvait dans `PageHeaderBase` :
+
+- le composant importait correctement `Link` depuis `@/i18n/navigation` ;
+- mais les deux variantes du bandeau utilisaient `href="alarmes"`, donc un chemin **relatif** ;
+- depuis une URL comme `/fr`, le navigateur pouvait résoudre ce chemin en `/alarmes`, en perdant le préfixe de locale.
+
+### Correctif
+
+Les deux liens du header utilisent désormais la route canonique `/alarmes`.
+
+Le wrapper next-intl applique ensuite la locale et la traduction de pathname :
+
+- FR : `/fr/alarmes` ;
+- EN : `/en/alarms`.
+
+Aucune concaténation manuelle de `/fr` ou `/en` n'est introduite.
+
+### Fichiers principaux
+
+- `website/src/components/page-header-base.tsx` ;
+- `website/scripts/test-user-dashboard-locale-links.ts` ;
+- `website/package.json` ;
+- `website/CHANGELOG.md` ;
+- `CHANGELOG.md`.
+
+### Version
+
+- Web : **1.8.3** ;
+- Serveur : **1.1.0** — inchangé ;
+- Agent : **1.0.1** — inchangé ;
+- BDD : **0.91.0** — inchangée ;
+- aucune migration BDD.
+
+### Validation terrain
+
+- [ ] ouvrir le dashboard utilisateur en FR avec au moins une alarme active ;
+- [ ] cliquer sur le bandeau rouge du header et confirmer `/fr/alarmes` ;
+- [ ] revenir au dashboard puis tester le bouton **Voir toutes** du bloc Alarmes actives ;
+- [ ] passer en EN et confirmer `/en/alarms` ;
+- [ ] vérifier que le bandeau reste non cliquable lorsque l'utilisateur est déjà sur la page Alarmes.
