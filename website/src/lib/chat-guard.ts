@@ -2,7 +2,6 @@ import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { prismaChat } from "@/lib/prisma-chat"
 import { validateLicense } from "@/lib/license-server"
-import { isStandardOrExpert } from "@/lib/license-access"
 import { apiError } from "@/lib/api-response"
 
 export type ChatGuardResult =
@@ -12,10 +11,10 @@ export type ChatGuardResult =
 export async function checkChatAccess(): Promise<ChatGuardResult> {
   const license = await validateLicense()
 
-  if (!license.ok || !isStandardOrExpert(license)) {
+  if (!license.ok) {
     return {
       ok: false,
-      response: apiError(403, "license_insufficient", "Licence Standard ou Expert requise"),
+      response: apiError(403, "license_invalid", "Licence invalide"),
     }
   }
 

@@ -3946,8 +3946,8 @@
           "badge": "Standard"
         },
         "4": {
-          "title": "Collaborative control",
-          "description": "Admin dashboard, messaging, and impact analysis.",
+          "title": "Quality control",
+          "description": "Impact analysis, compliance, and advanced quality control.",
           "badge": "Standard"
         },
         "5": {
@@ -4162,7 +4162,7 @@
           "title": "Control & collaboration",
           "bullets": {
             "0": "Admin dashboard",
-            "1": "User messaging",
+            "1": "Advanced quality control",
             "2": "Advanced notifications",
             "3": "Operational compliance"
           }

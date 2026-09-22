@@ -1,6 +1,6 @@
 {
   "name": "vigitemp1.1",
-  "version": "1.8.1",
+  "version": "1.8.3",
   "private": true,
   "type": "module",
   "scripts": {
@@ -25,6 +25,7 @@
     "test:export-format-policy": "tsx scripts/test-export-format-policy.ts",
     "test:alarm-group-column": "tsx scripts/test-alarm-group-column.ts",
     "test:admin-dashboard-locale-links": "tsx scripts/test-admin-dashboard-locale-links.ts",
+    "test:pack-one-license-access": "tsx scripts/test-pack-one-license-access.ts",
     "test:better-auth-foundation": "tsx scripts/test-better-auth-cookie-bridge.ts && tsx scripts/test-better-auth-foundation.ts",
     "test:db": "tsx scripts/test-db-connection.ts",
     "test:date-display": "tsx scripts/test-date-display.ts",
@@ -48,7 +49,8 @@
     "email-dev": "email dev",
     "smtp:encrypt-passwords": "tsx scripts/encrypt-smtp-passwords.ts",
     "test:license-smoke": "tsx scripts/smoke-license-matrix.ts",
-    "seed:mesures:journal-codes": "tsx scripts/seed-mesures-journal-codes.ts"
+    "seed:mesures:journal-codes": "tsx scripts/seed-mesures-journal-codes.ts",
+    "test:user-dashboard-locale-links": "tsx scripts/test-user-dashboard-locale-links.ts"
   },
   "dependencies": {
     "@heroui/react": "^3.0.2",

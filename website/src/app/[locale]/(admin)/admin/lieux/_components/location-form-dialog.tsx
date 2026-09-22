@@ -31,7 +31,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useLicense } from "@/components/license/license-provider";
-import { isExpert, isStandardOrExpert } from "@/lib/license-access";
+import { hasApplicationEmailAccess, isExpert, isStandardOrExpert } from "@/lib/license-access";
 import { ArrowUpRight, Check, ChevronDown, Copy, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import type { Dispatch, SetStateAction } from "react";
@@ -117,6 +117,7 @@ export function LocationFormDialog({
   const isEdit = mode === 'edit';
   const { license } = useLicense();
   const hasMetrologyTabs = isStandardOrExpert(license);
+  const hasMailingTab = license?.ok === true && hasApplicationEmailAccess(license);
   const isExpertEdition = isExpert(license);
   const t = useTranslations('locationsForm.dialog');
   const tCommon = useTranslations('common');
@@ -425,7 +426,7 @@ export function LocationFormDialog({
                 </div>
               ) : null}
               <TabsList
-                className={`grid w-full ${hasMetrologyTabs ? "grid-cols-4" : "grid-cols-2"} bg-[#26A5DA]/10 text-[#26A5DA] border border-[#26A5DA]/30`}
+                className={`grid w-full ${hasMetrologyTabs ? "grid-cols-4" : hasMailingTab ? "grid-cols-3" : "grid-cols-2"} bg-[#26A5DA]/10 text-[#26A5DA] border border-[#26A5DA]/30`}
               >
                 <TabsTrigger
                   value="general"
@@ -441,7 +442,7 @@ export function LocationFormDialog({
                     {t('tabs.metrology')}
                   </TabsTrigger>
                 )}
-                {hasMetrologyTabs && (
+                {hasMailingTab && (
                   <TabsTrigger
                     value="telephonie"
                     className="data-[state=active]:bg-[#26A5DA] data-[state=active]:text-sidebar-foreground hover:bg-[#26A5DA]/15"
@@ -465,7 +466,7 @@ export function LocationFormDialog({
                 onGoToPlanning={() => setActiveTab('planning')}
               />
               {hasMetrologyTabs && <LocationFormTabMetrology isExpertEdition={isExpertEdition} />}
-              {hasMetrologyTabs && <LocationFormTabTelephony users={mailingUsers} />}
+              {hasMailingTab && <LocationFormTabTelephony users={mailingUsers} />}
               <TabsContent value="planning">
                 <LocationFormTabPlanning
                   idLieu={resolvedForm.watch('Id_Lieu') ?? null}

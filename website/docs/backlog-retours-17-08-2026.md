@@ -2037,7 +2037,7 @@ GitHub Actions run `35723651236` : **succès complet**.
 
 ## R22-003 — Conserver la locale dans les liens du Dashboard Admin One / Pack
 
-**Statut : `PR_OUVERTE` — branche `fix/admin-dashboard-locale-links` — PR #142 — base `dev` `d2dccf996405f3e39ac2eb8593071aa2fe1b3a95`**
+**Statut : `CORRIGE_DEV` — PR #142 — squash merge `207ed69ffc4a2a0100836e9f2e17dbc19527cb9d`**
 
 ### Retour — 22/09/2026
 
@@ -2114,3 +2114,244 @@ GitHub Actions run `35728689698` : **succès complet**.
 - [ ] vérifier que les cards Services / Santé système restent fonctionnelles ;
 - [ ] revenir sur le Dashboard Admin via la sidebar et confirmer que la locale est conservée.
 
+---
+
+## R22-004 — Corriger les accès Pack / One aux lieux et à la messagerie
+
+**Statut : `PR_OUVERTE` — branche `fix/pack-one-license-access` — PR #143 — base `dev` `207ed69ffc4a2a0100836e9f2e17dbc19527cb9d`**
+
+### Retour — 22/09/2026
+
+Retour terrain sur une licence **One**, à vérifier également pour **Pack** :
+
+- impossible de créer un lieu ;
+- impossible de modifier les paramètres d'un lieu ;
+- erreur affichée : fonctionnalité réservée aux licences Standard et Expert ;
+- même problème constaté pour l'accès à la **Messagerie**.
+
+### État vérifié avant correction
+
+#### Lieux
+
+La matrice produit du repo indiquait déjà que Pack / One doivent pouvoir utiliser les lieux, seuls les champs métrologiques EMT étant réservés à Standard / Expert.
+
+Le bug venait du payload Web :
+
+- `getDefaultLocationFormData()` initialise toujours les champs métrologiques :
+  - `EMT_Mode` ;
+  - `EMT_Valeur` ;
+  - `Corriger_Erreur_Justesse` ;
+  - `Prendre_En_Compte_Derive` ;
+  - `Derniere_Date_Etalonnage` ;
+  - `Applied_Etalonnage_Id` ;
+  - `Unite` ;
+  - `Erreur_Justesse` ;
+  - `Incertitude` ;
+  - `Derive` ;
+- même lorsque l'onglet Métrologie est masqué en Pack / One, `normalizePayload()` envoyait tout le formulaire via `...data` ;
+- les API `POST /api/lieux` et `PATCH /api/lieux/[id]` utilisent volontairement `requireStandardOrExpertIfFieldsUsed()` ;
+- ce garde vérifie la **présence des clés**, pas seulement leur valeur ;
+- Pack / One étaient donc refusés avant même la validation métier du lieu.
+
+Le même risque existait pour l'édition d'un lieu depuis la page Surveillance.
+
+#### Messagerie
+
+Le runtime contenait plusieurs restrictions d'édition Standard / Expert :
+
+- `useMessagingEnabled()` retournait `false` sur Pack / One ;
+- `checkChatAccess()` renvoyait un 403 `Licence Standard ou Expert requise` ;
+- `GET /api/settings/messaging-enabled` désactivait la Messagerie hors Standard / Expert ;
+- `MESSAGING:ENABLED` était classé comme paramètre Standard-only ;
+- la card de paramétrage Messagerie était masquée sur Pack / One ;
+- la page de comparaison des licences présentait également la Messagerie comme fonctionnalité Standard.
+
+Les autorisations utilisateur `ACCES_CONVERSATION` / `MODULE_CONVERSATION` existent déjà dans les seeds MySQL et SQL Server ; aucun changement BDD n'est nécessaire.
+
+### Correctif — Lieux
+
+Nouveau contrat central :
+
+`website/src/lib/location-license-payload.ts`
+
+Il contient la liste canonique des champs métrologiques Standard / Expert, réutilisée à la fois :
+
+- côté API pour refuser un appel direct Pack / One qui tenterait réellement d'envoyer ces champs ;
+- côté UI pour retirer ces clés du payload lorsque la licence active est Pack ou One.
+
+Parcours couverts :
+
+- Administration > Lieux — création ;
+- Administration > Lieux — modification ;
+- Surveillance — modification des paramètres d'un lieu.
+
+Les autres champs restent envoyés normalement : nom, sonde, groupes, site, consignes, seuils, retards, planning, notifications, etc.
+
+### Correctif — Messagerie
+
+La Messagerie est désormais disponible sur :
+
+- Pack ;
+- One ;
+- Standard ;
+- Expert.
+
+Conditions conservées :
+
+- licence valide ;
+- paramètre global `messaging:enabled` actif ;
+- permission utilisateur `CONVERSATION_ACCESS` pour afficher l'entrée dans la sidebar.
+
+Modifications :
+
+- le garde Chat ne filtre plus l'édition ;
+- `useMessagingEnabled()` fonctionne avec toute licence valide ;
+- le paramètre `MESSAGING:ENABLED` n'est plus Standard-only ;
+- la card Messagerie des Paramètres est visible pour toutes les éditions ;
+- la matrice de licences et la page Upgrade sont alignées ;
+- les protections Standard / Expert des fonctions réellement métrologiques restent inchangées.
+- l'onglet Mailing du formulaire Lieu est dissocié du garde Métrologie : One/Standard/Expert y accèdent par défaut, Pack uniquement avec l'option mail de licence.
+
+### Fichiers principaux
+
+- `website/src/lib/location-license-payload.ts` ;
+- `website/src/lib/license-access.ts` ;
+- `website/src/lib/license-email.ts` ;
+- `website/src/app/[locale]/(admin)/admin/lieux/_components/location-form-dialog.tsx` ;
+- `website/src/app/api/lieux/route.ts` ;
+- `website/src/app/api/lieux/[id]/route.ts` ;
+- `website/src/app/[locale]/(admin)/admin/lieux/locations-client.tsx` ;
+- `website/src/app/[locale]/(dashboard)/surveillance/_components/page-client/use-surveillance-location-editor.ts` ;
+- `website/src/lib/chat-guard.ts` ;
+- `website/src/hooks/useMessagingEnabled.ts` ;
+- `website/src/app/api/settings/messaging-enabled/route.ts` ;
+- `website/src/lib/parameter-license-guards.ts` ;
+- `website/src/app/[locale]/(admin)/admin/parametres/_components/settings-client.tsx` ;
+- `website/src/components/upgrade/upgradeContent.ts` ;
+- `website/docs/matrice-licences-acces.md` ;
+- `website/docs/infos-licences.md` ;
+- `website/scripts/smoke-license-matrix.ts` ;
+- `website/scripts/test-pack-one-license-access.ts`.
+
+### Version
+
+- Web : **1.8.2** ;
+- Serveur : **1.1.0** — inchangé ;
+- Agent : **1.0.1** — inchangé ;
+- BDD : **0.91.0** — inchangée ;
+- aucune migration BDD.
+
+### Validation automatisée
+
+GitHub Actions run `35733062303` : **succès complet** sur le HEAD fonctionnel incluant également l'accès Mailing.
+
+- [x] `git diff --check origin/dev...HEAD` ;
+- [x] `pnpm test:pack-one-license-access` ;
+- [x] payload Pack / One sans champs EMT réservés ;
+- [x] protections API EMT Standard / Expert conservées ;
+- [x] Messagerie disponible pour toute licence valide dans le contrat runtime ;
+- [x] permission `CONVERSATION_ACCESS` et toggle `messaging:enabled` conservés ;
+- [x] ESLint ciblé ;
+- [x] contrôle i18n sans nouvelle dette dans le lot ;
+- [x] TypeScript avec Prisma MySQL ;
+- [x] génération Prisma SQL Server ;
+- [x] TypeScript avec Prisma SQL Server ;
+- [x] restauration Prisma MySQL ;
+- [x] build production Next.js.
+
+Le workflow temporaire a ensuite été retiré de la branche ; les commits postérieurs au run ne concernent que cette suppression et la documentation de validation.
+
+### Validation terrain
+
+- [ ] licence Pack sans option mail : vérifier que l'onglet Mailing reste masqué ;
+- [ ] licence Pack avec option mail : vérifier que l'onglet Mailing est disponible ;
+- [ ] licence One : vérifier que l'onglet Mailing est disponible ;
+- [ ] licence Pack : créer un lieu sans champs EMT ;
+- [ ] licence Pack : modifier nom, sonde, groupes, consignes, retards et planning d'un lieu ;
+- [ ] licence One : mêmes tests création / modification ;
+- [ ] depuis Surveillance en Pack / One, modifier les paramètres d'un lieu ;
+- [ ] vérifier que l'onglet Métrologie reste absent en Pack / One ;
+- [ ] appel direct Pack / One vers `POST/PATCH /api/lieux` avec `EMT_Mode` : vérifier le 403 ;
+- [ ] licence Pack avec `CONVERSATION_ACCESS` : entrée Messagerie visible et page accessible ;
+- [ ] licence One avec `CONVERSATION_ACCESS` : entrée Messagerie visible et page accessible ;
+- [ ] profil sans `CONVERSATION_ACCESS` : entrée Messagerie absente ;
+- [ ] désactiver `messaging:enabled` : entrée/page Messagerie désactivées ;
+- [ ] réactiver `messaging:enabled` depuis Paramètres en Pack / One ;
+- [ ] vérifier Standard / Expert sans régression ;
+- [ ] vérifier MySQL puis SQL Server.
+
+---
+
+## R22-005 — Conserver la locale vers Alarmes depuis le dashboard utilisateur
+
+**Statut : `PR_OUVERTE` — intégré à la branche `fix/pack-one-license-access` — PR #143 — base `dev` `207ed69ffc4a2a0100836e9f2e17dbc19527cb9d`**
+
+### Retour — 22/09/2026
+
+Depuis le dashboard utilisateur, un clic sur le bandeau d'alarmes pouvait ouvrir :
+
+- observé : `/alarmes` ;
+- attendu en FR : `/fr/alarmes` ;
+- attendu en EN : `/en/alarms`.
+
+### État vérifié avant correction
+
+Le bloc **Voir toutes les alarmes** du contenu principal utilisait déjà le wrapper localisé avec la route canonique `/alarmes`.
+
+Le problème restant se trouvait dans `PageHeaderBase` :
+
+- le composant importait correctement `Link` depuis `@/i18n/navigation` ;
+- mais les deux variantes du bandeau utilisaient `href="alarmes"`, donc un chemin **relatif** ;
+- depuis une URL comme `/fr`, le navigateur pouvait résoudre ce chemin en `/alarmes`, en perdant le préfixe de locale.
+
+### Correctif
+
+Les deux liens du header utilisent désormais la route canonique `/alarmes`.
+
+Le wrapper next-intl applique ensuite la locale et la traduction de pathname :
+
+- FR : `/fr/alarmes` ;
+- EN : `/en/alarms`.
+
+Aucune concaténation manuelle de `/fr` ou `/en` n'est introduite.
+
+### Fichiers principaux
+
+- `website/src/components/page-header-base.tsx` ;
+- `website/scripts/test-user-dashboard-locale-links.ts` ;
+- `website/package.json` ;
+- `website/CHANGELOG.md` ;
+- `CHANGELOG.md`.
+
+### Version
+
+- Web : **1.8.3** ;
+- Serveur : **1.1.0** — inchangé ;
+- Agent : **1.0.1** — inchangé ;
+- BDD : **0.91.0** — inchangée ;
+- aucune migration BDD.
+
+### Validation automatisée
+
+GitHub Actions run `35739118522` : **succès complet**.
+
+- [x] `git diff --check origin/dev...HEAD` ;
+- [x] `pnpm test:pack-one-license-access` ;
+- [x] `pnpm test:user-dashboard-locale-links` ;
+- [x] ESLint ciblé ;
+- [x] contrôle i18n sans nouvelle dette dans les sources du lot ;
+- [x] TypeScript avec Prisma MySQL ;
+- [x] génération Prisma SQL Server ;
+- [x] TypeScript avec Prisma SQL Server ;
+- [x] restauration Prisma MySQL ;
+- [x] build production Next.js.
+
+Le workflow temporaire de validation a été retiré du diff final.
+
+### Validation terrain
+
+- [ ] ouvrir le dashboard utilisateur en FR avec au moins une alarme active ;
+- [ ] cliquer sur le bandeau rouge du header et confirmer `/fr/alarmes` ;
+- [ ] revenir au dashboard puis tester le bouton **Voir toutes** du bloc Alarmes actives ;
+- [ ] passer en EN et confirmer `/en/alarms` ;
+- [ ] vérifier que le bandeau reste non cliquable lorsque l'utilisateur est déjà sur la page Alarmes.

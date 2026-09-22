@@ -4,6 +4,8 @@ import { patchJson } from '@/lib/http'
 import { getDefaultLocationFormData } from '@/app/[locale]/(admin)/admin/lieux/_components/location-form-defaults'
 import { mapLocationToFormData } from '@/app/[locale]/(admin)/admin/lieux/_components/location-form-mappers'
 import type { LocationFormData } from '@/app/[locale]/(admin)/admin/lieux/_components/location-form-types'
+import { useLicense } from '@/components/license/license-provider'
+import { prepareLocationPayloadForLicense } from '@/lib/location-license-payload'
 
 export function useSurveillanceLocationEditor({
   locations,
@@ -18,6 +20,7 @@ export function useSurveillanceLocationEditor({
   t: (key: string) => string
   requireActionComment: boolean
 }) {
+  const { license } = useLicense()
   const [selectedLocationId, setSelectedLocationId] = useState<number | null>(null)
   const [isEditLocationOpen, setIsEditLocationOpen] = useState(false)
   const [isLocationSaving, setIsLocationSaving] = useState(false)
@@ -43,11 +46,13 @@ export function useSurveillanceLocationEditor({
 
     setIsLocationSaving(true)
     try {
-      await patchJson(`/api/lieux/${selectedLocationId}`, {
+      const payload = prepareLocationPayloadForLicense({
         ...values,
         Sonde_Numero_Serie: values.Sonde_Numero_Serie ? values.Sonde_Numero_Serie : null,
         Commentaire_Action: actionComment || null,
-      })
+      }, license)
+
+      await patchJson(`/api/lieux/${selectedLocationId}`, payload)
       if (submitMode === "close") {
         setIsEditLocationOpen(false)
       }
@@ -62,7 +67,7 @@ export function useSurveillanceLocationEditor({
     } finally {
       setIsLocationSaving(false)
     }
-  }, [queryClient, requireActionComment, selectedLocationId, t])
+  }, [license, queryClient, requireActionComment, selectedLocationId, t])
 
   const closeEditor = useCallback(() => {
     setSelectedLocationId(null)
