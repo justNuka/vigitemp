@@ -34,7 +34,6 @@ import { calculateYDomain, getMeasureSummary, sortMeasuresChronologically } from
 import { MONITORING_DETAIL_GRAPH_MAX_POINTS } from "@/lib/measurement-downsampling";
 import { formatNumber } from "@/lib/number-display";
 import { cn } from "@/lib/utils";
-import type { MeasureData } from "@/lib/measurements";
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, ChartTooltip, Legend, Filler);
 
@@ -597,6 +596,7 @@ export default function MonitoringDetailsModal({
                   displayedPointCount={orderedData.length}
                   isSampled={isGraphSampled}
                   isRangeSelected={hasExplicitRange}
+                  isRollingWindow={!hasExplicitRange}
                   auditLogs={auditLogs}
                   showAuditMarkers={showGraphAudits}
                   onShowAuditMarkersChange={setShowGraphAudits}
