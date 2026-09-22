@@ -3424,8 +3424,8 @@
         "serial": "Numéro de série"
       },
       "multi_tabs": {
-        "button": "Export multi-onglets",
-        "button_loading": "Export...",
+        "button": "Exporter Excel",
+        "button_loading": "Export Excel...",
         "presentation_sheet": "Présentation",
         "measurements_sheet": "Mesures",
         "presentation_columns": {
