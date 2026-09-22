@@ -1449,7 +1449,7 @@ Les anciens placeholders `%1`, `%2`, `%3` ainsi que les signatures de mauvais en
 
 ## R21-001 — Trier le suivi métrologique par prochain étalonnage
 
-**Statut : `PR_OUVERTE` — branche `fix/metrology-next-calibration-sort` — PR #137**
+**Statut : `CORRIGE_DEV` — PR #137 — squash merge `0c7d7ea4ea07bc4e39613c304e33aec5f3d0cb40`**
 
 ### Retour — 21/09/2026
 
@@ -1489,4 +1489,80 @@ Le tableau expose déjà la colonne **Date prochain étalonnage** via `dateProch
 - [ ] vérifier que les lignes sans prochaine date restent visibles en fin de tableau ;
 - [ ] cliquer sur d'autres colonnes et confirmer que le tri manuel du tableau reste fonctionnel ;
 - [ ] contrôler le rendu FR/EN des dates.
+
+---
+
+## R21-002 — Page Hotline & aide orientée utilisateur
+
+**Statut : `PR_OUVERTE` — branche `feature/hotline-user-help` — PR #138**
+
+### Retour — 21/09/2026
+
+Ajouter dans la sidebar un accès **Hotline & aide** menant vers une page orientée utilisateur, distincte de la console Hotline technique.
+
+La page doit :
+
+- expliquer le fonctionnement global de VigiSensys et les notions Site / Groupe / Lieu / Sonde / Surveillance / Alarme ;
+- proposer des procédures courantes, notamment la mise en surveillance d'une sonde encore non affectée à un lieu ;
+- expliquer dès le haut de page que le guide est volontairement centré sur l'usage et que la hotline MC2 reste disponible lorsqu'un besoin n'est pas couvert ;
+- afficher en bas de page l'email et le numéro de téléphone Hotline ;
+- proposer un bouton **Nous écrire** ouvrant l'application de messagerie du poste avec un modèle de demande prérempli.
+
+### État vérifié avant correction
+
+- la sidebar utilisateur ne disposait d'aucune entrée Hotline/Aide ; seul le hub **Services** était présent dans le footer ;
+- la route `/hotline/[slug]` existante est une console de diagnostic technique et ne doit pas être exposée comme guide utilisateur ;
+- aucune page applicative ne regroupait les concepts VigiSensys et les procédures opérateur demandées ;
+- les routes localisées ne déclaraient pas de chemin `/aide` / `/help`.
+
+### Implémentation du lot
+
+- nouvelle route canonique `/help`, localisée en `/fr/aide` et `/en/help` ;
+- nouvelle entrée **Hotline & aide** dans le footer de la sidebar, en conservant l'accès **Services** ;
+- présentation des concepts Site, Groupe, Lieu, Sonde, Surveillance et Alarme ;
+- procédures pas à pas :
+  - créer/configurer un lieu à partir d'une sonde non affectée puis activer sa surveillance ;
+  - analyser et acquitter une alarme ;
+  - désactiver puis réactiver temporairement la surveillance ;
+  - consulter le graphique et l'historique d'un lieu ;
+- rappel des restrictions liées aux droits et à la licence ;
+- bloc Hotline avec email cliquable, téléphone cliquable et bouton **Nous écrire** ;
+- modèle `mailto:` prérempli avec établissement, contact, téléphone, version Web VigiSensys, page, lieu, sonde, objet, description, étapes de reproduction et message d'erreur ;
+- traductions FR/EN isolées dans un supplément i18n dédié ;
+- coordonnées Hotline centralisées dans `website/src/lib/support-contact.ts`.
+
+### Coordonnées affichées
+
+- email : `contact@mc2lab.fr` ;
+- téléphone : `04 73 28 99 99`.
+
+### Fichiers principaux
+
+- `website/src/app/[locale]/(dashboard)/help/page.tsx` ;
+- `website/src/app/[locale]/(dashboard)/help/help-support-page-client.tsx` ;
+- `website/src/components/app-sidebar.tsx` ;
+- `website/src/i18n/routing.ts` ;
+- `website/src/i18n/request.ts` ;
+- `website/src/messages/help-support-supplements.ts` ;
+- `website/src/lib/support-contact.ts` ;
+- `website/scripts/test-help-support-page.ts`.
+
+### Version
+
+- Web : **1.5.0** ;
+- Serveur : **1.1.0** — inchangé ;
+- Agent : **1.0.1** — inchangé ;
+- BDD : **0.91.0** — inchangée.
+
+### Validation terrain
+
+- [ ] vérifier l'entrée **Hotline & aide** dans la sidebar desktop et mobile ;
+- [ ] vérifier `/fr/aide` et `/en/help` ;
+- [ ] relire les concepts et les quatre procédures avec un profil utilisateur standard ;
+- [ ] confirmer que le guide reste lisible en clair/sombre et sur largeur mobile ;
+- [ ] vérifier les liens email et téléphone ;
+- [ ] cliquer sur **Nous écrire** et contrôler le sujet + corps préremplis dans l'application de messagerie ;
+- [ ] vérifier que la version Web affichée dans le modèle correspond à la version courante ;
+- [ ] confirmer que la console Hotline technique `/hotline/[slug]` reste inchangée et séparée de cette page ;
+- [x] validation automatisée GitHub Actions — run `35660771998` : diff check, `pnpm test:help-support`, ESLint ciblé, i18n, TypeScript MySQL, TypeScript SQL Server et build production réussis.
 
