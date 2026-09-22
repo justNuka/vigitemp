@@ -336,7 +336,7 @@ export const getLicenseFeatures = (t: UpgradeTranslator): LicenseFeature[] => [
   { name: t("upgrade.licenses.features.17"), pack: false, one: false, standard: true, expert: true },
   { name: t("upgrade.licenses.features.18"), pack: false, one: false, standard: true, expert: true },
   { name: t("upgrade.licenses.features.19"), pack: false, one: false, standard: true, expert: true },
-  { name: t("upgrade.licenses.features.20"), pack: false, one: false, standard: true, expert: true },
+  { name: t("upgrade.licenses.features.20"), pack: true, one: true, standard: true, expert: true },
   { name: t("upgrade.licenses.features.21"), pack: false, one: false, standard: true, expert: true },
   { name: t("upgrade.licenses.features.22"), pack: false, one: false, standard: false, expert: true },
   { name: t("upgrade.licenses.features.23"), pack: false, one: false, standard: false, expert: true },
