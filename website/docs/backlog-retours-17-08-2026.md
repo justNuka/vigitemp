@@ -1916,7 +1916,7 @@ GitHub Actions run `35704323198` :
 
 ## R22-002 — Ajouter le groupe au tableau des alarmes
 
-**Statut : `EN_COURS` — branche `feature/alarm-group-column` — base `dev` `4e5cf37a4fb8a46aba1ac68a93d31589e7277f90`**
+**Statut : `PR_OUVERTE` — branche `feature/alarm-group-column` — PR #141 — base `dev` `4e5cf37a4fb8a46aba1ac68a93d31589e7277f90`**
 
 ### Retour — 22/09/2026
 
