@@ -3378,7 +3378,8 @@
     },
     "actions": {
       "expanded_size": "Affichage agrandi",
-      "standard_size": "Affichage standard"
+      "standard_size": "Affichage standard",
+      "last_24_hours": "Revenir aux 24 dernières heures"
     },
     "filters": {
       "site": "Site",
@@ -3387,7 +3388,8 @@
       "dateTo": "Date de fin",
       "allSites": "Tous les sites",
       "allTypes": "Tous les types",
-      "selected_range": "Plage sélectionnée : {range}"
+      "selected_range": "Plage sélectionnée : {range}",
+      "last_24_hours": "24 dernières heures"
     },
     "table": {
       "columns": {
@@ -3458,8 +3460,10 @@
       "audit_marker_count": "{count} événement(s) d'audit",
       "show_audit_markers": "Afficher les audits sur le graphique",
       "show_no_response": "Afficher les non-réponses",
-      "measure_count": "Mesures dans le graphique: {count}",
-      "latest_measure_count": "{count} dernieres mesures",
+      "measure_count": "Mesures dans le graphique : {count}",
+      "latest_measure_count": "{count} dernières mesures",
+      "rolling_measure_count": "{count} mesures sur les 24 dernières heures",
+      "sampled_measure_count": "{source} mesures sur la période · {displayed} points affichés",
       "drag_zoom_hint": "Molette pour zoomer, glisser pour se déplacer, double-clic pour réinitialiser.",
       "reset_zoom": "Réinitialiser le zoom",
       "export_image": "Exporter la courbe",

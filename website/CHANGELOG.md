@@ -8,7 +8,43 @@ Les versions suivent `MAJOR.MINOR.PATCH` sans zéros de tête. La source de vers
 
 ## [Unreleased]
 
-Aucun changement supplémentaire documenté depuis la préparation de la version Web 1.5.0.
+Aucun changement supplémentaire documenté depuis la préparation de la version Web 1.6.0.
+
+## [1.6.0] — 2026-09-22
+
+Cette version améliore la lisibilité et les performances des graphiques de Surveillance.
+
+### Cards Surveillance
+
+- L'identité de la card affiche maintenant le **numéro de série de la sonde** en première ligne et le **nom du lieu** en dessous, au lieu du format concaténé `Lieu - Sonde`.
+- Le mini-graphe représente désormais une vraie fenêtre glissante correspondant aux **24 dernières heures** au moment du chargement.
+- L'axe X du mini-graphe utilise les horodatages réels : lorsqu'une sonde ne répond plus, la courbe s'arrête à la dernière mesure au lieu d'être artificiellement étirée jusqu'au bord droit.
+- Les mini-graphes utilisent `tm_graphique`, cache de mesures récent déjà maintenu par la BDD et purgé au-delà de 72 h, afin d'éviter de solliciter l'historique complet pour chaque card.
+- Les points des mini-graphes sont plafonnés à **180** après réduction serveur lorsque la fenêtre 24 h contient davantage de mesures.
+
+### Grand graphique / historique
+
+- À l'ouverture du détail d'un lieu, le graphique affiche par défaut **maintenant - 24 h → maintenant**, au lieu de la journée civile en cours.
+- Le sélecteur de dates reste disponible pour analyser une période personnalisée, avec une action permettant de revenir aux 24 dernières heures.
+- L'axe X du grand graphique est désormais temporel et borné par la période demandée : les absences de remontée occupent donc leur vraie durée visuelle.
+- Pour une période volumineuse, le Web demande une réponse graphique plafonnée à **600 points** ; le nombre total de mesures de la période est conservé et affiché séparément.
+- Le downsampling est effectué côté API Web avant l'envoi au navigateur et conserve par tranche les bords, minima, maxima ainsi qu'un point significatif de non-réponse, remontée mémoire ou changement de consigne.
+- Les trous de non-réponse ne sont jamais reconnectés artificiellement lorsque la courbe a été réduite.
+- Le tableau détaillé reste indépendant et **paginé sur les mesures complètes** : aucune donnée historique n'est supprimée ou moyennée pour les consultations/export tabulaires.
+- L'analyse d'impact et l'analyse d'alarme conservent leur chargement pleine résolution existant ; le downsampling est opt-in et réservé aux graphiques concernés.
+
+### API mesures
+
+- `GET /api/mesures/[idLieu]` accepte désormais `graphMaxPoints` avec une plage explicite pour obtenir une représentation graphique réduite.
+- La réponse enrichie expose `graphSourceCount`, `graphMeasureCount`, `graphSampled` et les bornes de période lorsque ce mode est utilisé.
+- La pagination historique existante reste inchangée et prioritaire lorsqu'elle est demandée.
+
+### Compatibilité
+
+- Version Web : **1.6.0**.
+- Serveur **1.1.0**, Agent **1.0.1** et BDD **0.91.0** restent inchangés.
+- Aucune migration BDD n'est requise.
+- MySQL et SQL Server restent supportés.
 
 ## [1.5.0] — 2026-09-21
 

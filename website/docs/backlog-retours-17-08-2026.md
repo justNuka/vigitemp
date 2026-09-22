@@ -1494,7 +1494,7 @@ Le tableau expose déjà la colonne **Date prochain étalonnage** via `dateProch
 
 ## R21-002 — Page Hotline & aide orientée utilisateur
 
-**Statut : `PR_OUVERTE` — branche `feature/hotline-user-help` — PR #138**
+**Statut : `CORRIGE_DEV` — PR #138 — squash merge `93a46e690edf8ea79c358b9e53d1cc2ca2fbaf9b`**
 
 ### Retour — 21/09/2026
 
@@ -1565,4 +1565,163 @@ La page doit :
 - [ ] vérifier que la version Web affichée dans le modèle correspond à la version courante ;
 - [ ] confirmer que la console Hotline technique `/hotline/[slug]` reste inchangée et séparée de cette page ;
 - [x] validation automatisée GitHub Actions — run `35660771998` : diff check, `pnpm test:help-support`, ESLint ciblé, i18n, TypeScript MySQL, TypeScript SQL Server et build production réussis.
+
+---
+
+## R21-003 — Surveillance : cards, fenêtre 24 h et réduction des grands graphiques
+
+**Statut : `PR_OUVERTE` — branche `feature/surveillance-rolling-graphs` — PR #139 — base `dev` `93a46e690edf8ea79c358b9e53d1cc2ca2fbaf9b`**
+
+### Retour — 21/09/2026
+
+Trois évolutions liées à l'affichage Surveillance doivent être traitées ensemble :
+
+1. dans les cards, afficher la **sonde** en première ligne puis le **nom du lieu** en dessous, au lieu de `Lieu - Sonde` ;
+2. mini-graphe et grand graphe : afficher par défaut les **24 dernières heures glissantes**, par exemple 08:00 J-1 → 08:00 aujourd'hui ;
+3. lorsqu'une longue plage est sélectionnée dans le détail d'un lieu, éviter de transférer et rendre plusieurs milliers de points dans Chart.js.
+
+Le retour terrain mentionne également que, lors d'une non-réponse de plusieurs heures, le mini-graphe occupait encore toute la largeur comme si la courbe arrivait jusqu'à l'heure courante.
+
+### État vérifié avant correction
+
+Cards :
+
+- le header concaténait `nomLieu - sondeNumeroSerie` ;
+- chaque card demandait les **125 dernières mesures** sans borne temporelle 24 h ;
+- l'axe X du mini-graphe était un axe Chart.js catégoriel masqué : les points étaient répartis uniformément sur toute la largeur, indépendamment de l'intervalle réel entre deux mesures ;
+- ce fonctionnement expliquait pourquoi une dernière mesure vieille de plusieurs heures pouvait visuellement arriver jusqu'au bord droit.
+
+Détail du lieu :
+
+- la modal s'initialisait sur la **journée civile courante**, de 00:00 à 23:59:59 ;
+- le hook graphique utilisait une limite spéciale de 125 points pour la journée courante ;
+- sur une plage plus large, `useMonitoringRangeMeasurements` parcourait toutes les pages de 500 lignes jusqu'à charger l'intégralité des mesures dans le navigateur ;
+- une période de plusieurs semaines/mois pouvait donc transmettre puis rendre plusieurs milliers de points ;
+- le tableau détaillé disposait déjà d'une pagination serveur séparée et ne nécessitait pas ce chargement global.
+
+BDD :
+
+- `tm_graphique` est le cache récent prévu pour les courbes de Surveillance ;
+- les seeds MySQL et les jobs SQL Server suppriment les lignes de `tm_graphique` âgées de plus de **72 heures** ;
+- cette table peut donc servir aux mini-courbes 24 h sans interroger inutilement tout `tm_mesures`.
+
+### Implémentation du lot
+
+#### Identité des cards
+
+- numéro de série de sonde en première ligne ;
+- nom du lieu en seconde ligne ;
+- fallback sur le nom du lieu si aucun numéro de série n'est disponible.
+
+#### Mini-graphe — 24 h glissantes
+
+- requête bornée à `maintenant - 24 h → maintenant` à chaque chargement/rafraîchissement ;
+- source `tm_graphique`, adaptée à cette fenêtre courte ;
+- maximum **180 points** envoyés au mini-graphe lorsque davantage de lignes existent ;
+- axe X linéaire basé sur les vrais timestamps et borné sur les 24 h demandées ;
+- une absence de remontée est donc représentée par un espace temporel réel à droite de la dernière mesure ;
+- les consignes continuent d'être prolongées sur toute la fenêtre pour conserver les guides visuels.
+
+#### Grand graphe — 24 h par défaut
+
+- ouverture du détail sans plage explicite : `maintenant - 24 h → maintenant` ;
+- le sélecteur de dates reste disponible pour les périodes personnalisées ;
+- bouton **Revenir aux 24 dernières heures** après sélection d'une plage ;
+- axe X linéaire temporel borné sur la période demandée ;
+- le tableau et l'audit utilisent la même fenêtre par défaut dans la modal, puis la plage explicitement sélectionnée lorsqu'elle existe.
+
+#### Downsampling des longues périodes
+
+- nouveau paramètre API opt-in `graphMaxPoints` ;
+- grand graphe limité à **600 points affichés** ;
+- l'API charge la plage historique puis réduit le payload **avant l'envoi au navigateur** ;
+- par tranches temporelles, l'algorithme conserve :
+  - premier et dernier point utiles ;
+  - minimum local ;
+  - maximum local ;
+  - un point significatif de non-réponse, remontée mémoire ou changement de consigne ;
+- le premier et le dernier point de la période de mesures sont toujours conservés ;
+- le nombre de mesures sources est renvoyé séparément afin d'afficher, par exemple, `4000 mesures sur la période · 600 points affichés` ;
+- une courbe downsamplée ne reconnecte jamais automatiquement les trous de non-réponse, car le nombre de points réduits ne représente plus la durée réelle du trou.
+
+Le downsampling est volontairement limité aux parcours graphiques qui le demandent. Les consommateurs qui effectuent des calculs sur les valeurs complètes, notamment **Analyse d'impact** et **Analyse d'alarme**, conservent le comportement pleine résolution existant.
+
+#### Historique détaillé
+
+Le tableau de mesures reste sur `useLieuMeasurementsPaged` :
+
+- pagination serveur ;
+- valeurs complètes ;
+- tri existant ;
+- aucune moyenne ni suppression de mesures dans le tableau ;
+- le downsampling graphique n'altère donc ni la BDD ni les exports/consultations tabulaires.
+
+### API
+
+`GET /api/mesures/[idLieu]` accepte désormais `graphMaxPoints` lorsqu'une plage `startDate/endDate` est fournie.
+
+Dans ce mode, la réponse expose notamment :
+
+- `measurements` : points réellement destinés au graphe ;
+- `graphSourceCount` : nombre de mesures avant réduction ;
+- `graphMeasureCount` : nombre de points transmis ;
+- `graphSampled` : indique si une réduction a réellement eu lieu ;
+- `graphRangeStart` / `graphRangeEnd` : bornes utilisées par le graphe.
+
+La pagination `page/pageSize` conserve son comportement existant et n'est jamais downsamplée.
+
+### Fichiers principaux
+
+- `website/src/app/api/mesures/[idLieu]/route.ts` ;
+- `website/src/components/monitoring-card.tsx` ;
+- `website/src/components/monitoring-card/monitoring-card-header.tsx` ;
+- `website/src/components/monitoring-card/monitoring-card-chart-preview.tsx` ;
+- `website/src/components/monitoring-details-modal.tsx` ;
+- `website/src/components/monitoring-details/monitoring-graph-tab.tsx` ;
+- `website/src/components/monitoring-details/use-monitoring-range-measurements.ts` ;
+- `website/src/components/ui/date-range-picker.tsx` ;
+- `website/src/hooks/useLieuMeasurements.ts` ;
+- `website/src/lib/measurement-downsampling.ts` ;
+- `website/scripts/test-surveillance-rolling-graphs.ts` ;
+- `website/src/messages/fr.json` ;
+- `website/src/messages/en.json`.
+
+### Version
+
+- Web : **1.6.0** ;
+- Serveur : **1.1.0** — inchangé ;
+- Agent : **1.0.1** — inchangé ;
+- BDD : **0.91.0** — inchangée ;
+- aucune migration BDD.
+
+### Validation automatisée
+
+GitHub Actions run `35701478085` : **succès complet**.
+
+- [x] `git diff --check origin/dev...HEAD` ;
+- [x] test ciblé `pnpm test:surveillance-rolling-graphs` ;
+- [x] downsampling : limite, ordre chronologique, premier/dernier point, pic extrême et non-réponse couverts ;
+- [x] ESLint ciblé ;
+- [x] TypeScript avec Prisma MySQL ;
+- [x] contrôle i18n sans nouvelle dette dans les sources du lot ;
+- [x] génération Prisma SQL Server ;
+- [x] TypeScript avec Prisma SQL Server ;
+- [x] restauration Prisma MySQL ;
+- [x] build production Next.js.
+
+### Validation terrain
+
+- [ ] card : vérifier **sonde** puis **lieu** sur deux lignes ;
+- [ ] ouvrir Surveillance vers 08:00 et confirmer que le mini-graphe couvre environ 08:00 J-1 → 08:00 aujourd'hui ;
+- [ ] provoquer/observer une sonde sans nouvelle mesure depuis plusieurs heures et vérifier que la courbe s'arrête à la vraie heure de dernière mesure ;
+- [ ] vérifier une sonde avec points de non-réponse explicites ;
+- [ ] ouvrir le détail d'un lieu et confirmer la plage par défaut **24 dernières heures** ;
+- [ ] sélectionner une journée civile puis plusieurs jours et confirmer les bornes du graphe ;
+- [ ] utiliser **Revenir aux 24 dernières heures** ;
+- [ ] tester une période d'environ 2 mois contenant plusieurs milliers de mesures : interface fluide et compteur source/points affichés cohérent ;
+- [ ] sur cette longue période, vérifier qu'un pic haut/bas reste visible après réduction ;
+- [ ] sur cette longue période, vérifier qu'une non-réponse reste un trou et n'est pas reconnectée ;
+- [ ] contrôler que le tableau de mesures reste paginé et complet ;
+- [ ] tester FR/EN, clair/sombre et largeur réduite ;
+- [ ] contrôler MySQL puis SQL Server sur une installation représentative.
 

@@ -1,6 +1,6 @@
 {
   "name": "vigitemp1.1",
-  "version": "1.5.0",
+  "version": "1.6.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -21,6 +21,7 @@
     "test:admin-dashboard-refinements": "tsx scripts/test-admin-dashboard-refinements.ts",
     "test:login-audit-trail": "tsx scripts/test-login-audit-trail.ts",
     "test:help-support": "tsx scripts/test-help-support-page.ts",
+    "test:surveillance-rolling-graphs": "tsx scripts/test-surveillance-rolling-graphs.ts",
     "test:better-auth-foundation": "tsx scripts/test-better-auth-cookie-bridge.ts && tsx scripts/test-better-auth-foundation.ts",
     "test:db": "tsx scripts/test-db-connection.ts",
     "test:date-display": "tsx scripts/test-date-display.ts",

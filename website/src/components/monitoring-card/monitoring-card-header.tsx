@@ -145,10 +145,15 @@ export function MonitoringCardHeader({
             </UITooltip>
           </TooltipProvider>
           {groupName ? <div className="max-w-full truncate">{groupName}</div> : null}
-          <div className="flex min-w-0 items-start gap-2">
+          <div className="min-w-0 space-y-0.5">
             <div className="line-clamp-2 wrap-break-word text-[15px] leading-tight font-semibold">
-              {sondeNumeroSerie ? `${nomLieu} - ${sondeNumeroSerie}` : nomLieu}
+              {sondeNumeroSerie || nomLieu}
             </div>
+            {sondeNumeroSerie ? (
+              <div className="line-clamp-2 wrap-break-word text-[12px] leading-tight opacity-90">
+                {nomLieu}
+              </div>
+            ) : null}
           </div>
           {surveillanceDisabledLabel ? (
             <div className={`inline-flex items-center max-w-full gap-1.5 rounded-full text-[11px] font-medium px-2.5 py-1 ${alarmBadgeClassName}`}>
