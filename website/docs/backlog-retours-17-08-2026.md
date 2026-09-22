@@ -2118,7 +2118,7 @@ GitHub Actions run `35728689698` : **succès complet**.
 
 ## R22-004 — Corriger les accès Pack / One aux lieux et à la messagerie
 
-**Statut : `EN_COURS` — branche `fix/pack-one-license-access` — base `dev` `207ed69ffc4a2a0100836e9f2e17dbc19527cb9d`**
+**Statut : `PR_OUVERTE` — branche `fix/pack-one-license-access` — PR #143 — base `dev` `207ed69ffc4a2a0100836e9f2e17dbc19527cb9d`**
 
 ### Retour — 22/09/2026
 
