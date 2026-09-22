@@ -1736,12 +1736,24 @@
       "noSimAlarms": "No simulated alarms with these tolerances.",
       "noRealAlarms": "No real alarms during this period."
     },
-    "print": "Print",
     "export": {
-      "button": "Export",
-      "csv": "Export CSV (alarms)",
-      "image": "Export chart",
-      "pdf": "Export PDF"
+      "excel": "Export Excel",
+      "loading": "Exporting Excel...",
+      "presentation_sheet": "Presentation",
+      "data_sheet": "Alarms",
+      "exported_at": "Export date",
+      "presentation_columns": {
+        "label": "Information",
+        "value": "Value"
+      },
+      "columns": {
+        "kind": "Source",
+        "duration_minutes": "Duration (min)"
+      },
+      "kinds": {
+        "simulated": "Simulated alarm",
+        "real": "Real alarm"
+      }
     },
     "save": {
       "button": "Save analysis",
