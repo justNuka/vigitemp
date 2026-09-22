@@ -2331,6 +2331,23 @@ Aucune concaténation manuelle de `/fr` ou `/en` n'est introduite.
 - BDD : **0.91.0** — inchangée ;
 - aucune migration BDD.
 
+### Validation automatisée
+
+GitHub Actions run `35739118522` : **succès complet**.
+
+- [x] `git diff --check origin/dev...HEAD` ;
+- [x] `pnpm test:pack-one-license-access` ;
+- [x] `pnpm test:user-dashboard-locale-links` ;
+- [x] ESLint ciblé ;
+- [x] contrôle i18n sans nouvelle dette dans les sources du lot ;
+- [x] TypeScript avec Prisma MySQL ;
+- [x] génération Prisma SQL Server ;
+- [x] TypeScript avec Prisma SQL Server ;
+- [x] restauration Prisma MySQL ;
+- [x] build production Next.js.
+
+Le workflow temporaire de validation a été retiré du diff final.
+
 ### Validation terrain
 
 - [ ] ouvrir le dashboard utilisateur en FR avec au moins une alarme active ;
