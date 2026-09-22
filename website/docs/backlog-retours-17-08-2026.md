@@ -2090,6 +2090,20 @@ Aucun préfixe `/fr` ou `/en` n'est concaténé manuellement.
 - BDD : **0.91.0** — inchangée ;
 - aucune migration BDD.
 
+### Validation automatisée
+
+GitHub Actions run `35728689698` : **succès complet**.
+
+- [x] `git diff --check origin/dev...HEAD` ;
+- [x] `pnpm test:admin-dashboard-locale-links` ;
+- [x] routes FR / EN vérifiées par le test ;
+- [x] ESLint ciblé ;
+- [x] TypeScript avec Prisma MySQL ;
+- [x] génération Prisma SQL Server ;
+- [x] TypeScript avec Prisma SQL Server ;
+- [x] restauration Prisma MySQL ;
+- [x] build production Next.js.
+
 ### Validation terrain
 
 - [ ] se connecter en licence One avec locale FR puis ouvrir chaque card du Dashboard Admin ;
