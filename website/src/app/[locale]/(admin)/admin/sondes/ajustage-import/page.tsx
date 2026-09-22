@@ -48,7 +48,7 @@ export default function AjustageImportPage() {
       <div className="space-y-6 p-6">
         <div className="flex items-center justify-end">
           <Button asChild variant="outline" size="sm">
-            <Link href="/sondes">{t("page.back_to_sensors")}</Link>
+            <Link href="/admin/sondes">{t("page.back_to_sensors")}</Link>
           </Button>
         </div>
 
