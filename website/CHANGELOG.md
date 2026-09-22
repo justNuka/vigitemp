@@ -8,7 +8,28 @@ Les versions suivent `MAJOR.MINOR.PATCH` sans zéros de tête. La source de vers
 
 ## [Unreleased]
 
-Aucun changement supplémentaire documenté depuis la préparation de la version Web 1.7.0.
+Aucun changement supplémentaire documenté depuis la préparation de la version Web 1.8.0.
+
+## [1.8.0] — 2026-09-22
+
+Cette version enrichit le tableau principal des Alarmes avec l'appartenance des lieux aux groupes.
+
+### Page Alarmes
+
+- Une nouvelle colonne **Groupe** est affichée entre les consignes et la date de déclenchement.
+- Un lieu appartenant à plusieurs groupes affiche tous ses groupes, dédupliqués et triés alphabétiquement.
+- La colonne Groupe est triable avec le comportement TanStack existant.
+- La barre de recherche de la page recherche désormais simultanément le nom du lieu, la sonde, les groupes et le statut.
+- Les exports PDF / Excel du tableau incluent automatiquement la nouvelle colonne Groupe.
+- Les groupes sont chargés dans le `select` Prisma existant avec les alarmes ; aucune requête métier supplémentaire par ligne n'est ajoutée.
+- `Location.siteGroup` n'est pas détourné : la donnée utilise exclusivement `Location.groupNames`, afin de préserver la sémantique historique de `siteGroup` dans les autres écrans.
+
+### Compatibilité
+
+- Version Web : **1.8.0**.
+- Serveur **1.1.0**, Agent **1.0.1** et BDD **0.91.0** restent inchangés.
+- Aucune migration BDD n'est requise.
+- MySQL et SQL Server restent supportés.
 
 ## [1.7.0] — 2026-09-22
 
