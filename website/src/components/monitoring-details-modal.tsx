@@ -208,7 +208,7 @@ export default function MonitoringDetailsModal({
   const graphRangeEnd = explicitRangeEnd ?? rollingGraphRange.to ?? rollingGraphRange.from;
 
   const selectedRangeLabel = useMemo(() => {
-    if (!effectiveRange?.from) return t("filters.last24Hours");
+    if (!effectiveRange?.from) return t("filters.last_24_hours");
     const formatter = new Intl.DateTimeFormat(localeTag, { dateStyle: "medium" });
     const fromLabel = formatter.format(effectiveRange.from);
     const toLabel = formatter.format(effectiveRange.to ?? effectiveRange.from);
@@ -555,7 +555,7 @@ export default function MonitoringDetailsModal({
                         setRollingGraphRange(getRollingGraphRange());
                       }}
                     >
-                      {t("actions.last24Hours")}
+                      {t("actions.last_24_hours")}
                     </Button>
                   ) : null}
                 </div>
