@@ -41,7 +41,6 @@ export const GET = withAuthLogging(
       const rowNumber = Math.min(rowNumberParam, maxRowNumber)
       const usePagination = source === "mesures" && (searchParams.has("page") || searchParams.has("pageSize"))
       const useGraphDownsampling =
-        source === "mesures" &&
         !usePagination &&
         graphMaxPoints !== null &&
         Boolean(startDate && endDate)
@@ -145,7 +144,7 @@ export const GET = withAuthLogging(
                 ...whereClause,
                 ...(includeNullNonResponse ? {} : { Est_Valeur_Null: false }),
               },
-              take: rowNumber,
+              take: useGraphDownsampling ? undefined : rowNumber,
               orderBy: { Date_Heure_Mesure: "desc" },
               select: {
                 Id_Graphique: true,
