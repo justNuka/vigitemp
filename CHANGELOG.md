@@ -16,7 +16,7 @@ La convention de versioning est décrite dans [`docs/versioning.md`](docs/versio
 
 ## [Unreleased]
 
-- État intégré courant : **Web 1.6.0**, **Serveur / installateur 1.1.0**, **BDD 0.91.0**, **Agent 1.0.1**.
+- État intégré courant : **Web 1.7.0**, **Serveur / installateur 1.1.0**, **BDD 0.91.0**, **Agent 1.0.1**.
 - Le parcours d’acquittement depuis Surveillance ouvre directement l’analyse du lieu : liste des alarmes à gauche, acquittement dans le bandeau sélectionné, dialog commentaire compacte et sélection multiple avec résumés.
 - Une alarme acquittée reste temporairement visible et grisée dans la liste jusqu’au rafraîchissement, afin de conserver le contexte de traitement de l’opérateur.
 - L’analyse d’alarme se limite désormais à la période réelle de l’alarme, sans sélection de période ni Audit ; l’impression et les exports multiples sont remplacés par un XLSX unique avec la courbe intégrée dans la présentation lorsqu’elle existe.
@@ -36,6 +36,7 @@ La convention de versioning est décrite dans [`docs/versioning.md`](docs/versio
 - Le suivi métrologique Web 1.4.1 affiche par défaut les échéances de prochain étalonnage de la plus proche à la plus lointaine, avec les échéances absentes en fin de tableau.
 - Le Web 1.5.0 ajoute une page **Hotline & aide** orientée utilisateur, avec guide des concepts VigiSensys, procédures courantes et contact MC2 via téléphone/email avec modèle de demande prérempli.
 - Le Web 1.6.0 fait passer les mini/grands graphiques de Surveillance sur des fenêtres temporelles réelles de 24 h et ajoute un downsampling serveur plafonné à 600 points pour les longues périodes, sans réduire le tableau historique paginé.
+- Le Web 1.7.0 retire les impressions et harmonise les exports : PDF + Excel pour les tableaux simples, Excel enrichi uniquement pour les vues complexes, avec intégration des courbes dans les onglets Présentation concernés.
 
 ## Livraison VigiSensys 1.0.0 — 2026-09-18
 
