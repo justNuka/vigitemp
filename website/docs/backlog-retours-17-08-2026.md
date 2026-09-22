@@ -2037,7 +2037,7 @@ GitHub Actions run `35723651236` : **succès complet**.
 
 ## R22-003 — Conserver la locale dans les liens du Dashboard Admin One / Pack
 
-**Statut : `EN_COURS` — branche `fix/admin-dashboard-locale-links` — base `dev` `d2dccf996405f3e39ac2eb8593071aa2fe1b3a95`**
+**Statut : `PR_OUVERTE` — branche `fix/admin-dashboard-locale-links` — PR #142 — base `dev` `d2dccf996405f3e39ac2eb8593071aa2fe1b3a95`**
 
 ### Retour — 22/09/2026
 
