@@ -13,7 +13,6 @@ const STANDARD_ONLY_SECTIONS = new Set(["CFR21", "STATISTICS_MONTHLY_REPORT"]);
 
 const STANDARD_ONLY_KEYS = new Set([
   "DASHBOARD:SURVEILLANCE_REFRESH",
-  "MESSAGING:ENABLED",
 ]);
 
 function normalizePart(value: string | null | undefined) {
