@@ -9,6 +9,7 @@ import { log } from "@/lib/logger"
 import { extractAddressFromSerial, getSensorFamilyFromSerial, isGsoType } from "@/lib/sensor-naming"
 import { computeEmt, emtModeToDb, emtModeFromDb } from "@/lib/emt"
 import { requireStandardOrExpertIfFieldsUsed } from "@/lib/license-guards"
+import { STANDARD_METROLOGY_LOCATION_FIELDS } from "@/lib/location-license-payload"
 import { applyAccessFilter, buildLieuAccessFilter, getUserLocationScope } from "@/lib/location-access-scope"
 import { findLocationNameConflict, normalizeLocationName } from "@/lib/location-name-conflicts"
 import { buildCriticalThresholdIssues } from "@/lib/location-critical-threshold-contract"
@@ -24,19 +25,6 @@ const mailingContactSchema = z.object({
   Est_Via_Telephone: z.boolean().optional(),
   Est_Via_Email: z.boolean().optional(),
 })
-
-const STANDARD_METROLOGY_FIELDS = [
-  "EMT_Mode",
-  "EMT_Valeur",
-  "Corriger_Erreur_Justesse",
-  "Prendre_En_Compte_Derive",
-  "Derniere_Date_Etalonnage",
-  "Applied_Etalonnage_Id",
-  "Unite",
-  "Erreur_Justesse",
-  "Incertitude",
-  "Derive",
-] as const
 
 const GSO_FIXED_FREQUENCY_SECONDS = 15 * 60
 
@@ -324,7 +312,7 @@ export const POST = withLogging(async (req: NextRequest) => {
 
   try {
     const body = await req.json()
-    const metrologyGuard = await requireStandardOrExpertIfFieldsUsed(body as Record<string, unknown>, STANDARD_METROLOGY_FIELDS)
+    const metrologyGuard = await requireStandardOrExpertIfFieldsUsed(body as Record<string, unknown>, STANDARD_METROLOGY_LOCATION_FIELDS)
     if (metrologyGuard) return metrologyGuard
 
     const validated = createLieuSchema.parse(body)
