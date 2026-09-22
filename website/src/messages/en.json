@@ -323,6 +323,7 @@
         "last_value": "Last value",
         "triggered_value": "Triggering value",
         "thresholds": "Upper/Lower thresholds",
+        "group": "Group",
         "triggered_at": "Triggered",
         "status": "Status",
         "actions": "Actions"
