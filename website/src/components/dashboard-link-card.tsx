@@ -1,6 +1,6 @@
 "use client"
 
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import { ArrowRight } from "lucide-react";
 import { ReactNode } from "react";
 import { m } from "motion/react";
@@ -43,7 +43,7 @@ export function DashboardLinkCard({
           ) : null}
           <div className="space-y-1">
             <Link
-              href={href}
+              href={href as never}
               className="inline-flex items-center gap-2 text-base font-semibold text-foreground transition-colors group-hover:text-primary"
             >
               {title}
