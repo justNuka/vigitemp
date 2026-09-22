@@ -7,6 +7,7 @@ import {
   prepareLocationPayloadForLicense,
   STANDARD_METROLOGY_LOCATION_FIELDS,
 } from "../src/lib/location-license-payload"
+import { hasApplicationEmailAccess } from "../src/lib/license-access"
 
 const root = process.cwd()
 const read = (relative: string) => fs.readFileSync(path.join(root, relative), "utf8")
@@ -15,6 +16,13 @@ const defaults = getDefaultLocationFormData()
 assert.equal(defaults.EMT_Mode, "sans-objet")
 assert.equal(defaults.Corriger_Erreur_Justesse, false)
 assert.equal(defaults.Prendre_En_Compte_Derive, false)
+
+assert.equal(hasApplicationEmailAccess({ edition: "pack", options: [] }), false)
+assert.equal(hasApplicationEmailAccess({ edition: "pack", options: ["mail"] }), true)
+assert.equal(hasApplicationEmailAccess({ edition: "pack", options: ["ALARM_EMAIL"] }), true)
+assert.equal(hasApplicationEmailAccess({ edition: "one", options: [] }), true)
+assert.equal(hasApplicationEmailAccess({ edition: "standard", options: [] }), true)
+assert.equal(hasApplicationEmailAccess({ edition: "expert", options: [] }), true)
 
 const locationPayload = {
   Nom_Lieu: "Test",
@@ -59,6 +67,11 @@ for (const edition of ["standard", "expert"] as const) {
 
 const locationsClient = read("src/app/[locale]/(admin)/admin/lieux/locations-client.tsx")
 assert.match(locationsClient, /prepareLocationPayloadForLicense\(payload, license\)/)
+
+const locationDialog = read("src/app/[locale]/(admin)/admin/lieux/_components/location-form-dialog.tsx")
+assert.match(locationDialog, /hasApplicationEmailAccess\(license\)/)
+assert.match(locationDialog, /hasMailingTab && \(/)
+assert.match(locationDialog, /hasMailingTab && <LocationFormTabTelephony/)
 
 const surveillanceEditor = read(
   "src/app/[locale]/(dashboard)/surveillance/_components/page-client/use-surveillance-location-editor.ts",
