@@ -228,6 +228,8 @@ export function MonitoringGraphTab({
     return typeof point?.Valeur === "number" ? point.Valeur : null
   })
   const shortNoResponseConnectorDatasets = useMemo(() => {
+    if (isSampled) return []
+
     const ranges = buildRanges(
       orderedData,
       (point) =>
@@ -267,7 +269,7 @@ export function MonitoringGraphTab({
         }
       })
       .filter((dataset): dataset is NonNullable<typeof dataset> => dataset !== null)
-  }, [axisLabels, orderedData])
+  }, [axisLabels, isSampled, orderedData])
   const memoryRangeDatasets = useMemo(
     () =>
       memoryMeasureRanges.map((range, rangeIndex) => {
