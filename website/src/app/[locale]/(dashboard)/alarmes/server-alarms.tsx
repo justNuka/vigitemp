@@ -130,7 +130,7 @@ export async function ServerAlarms(status: ServerAlarmStatus = "active") {
         id: alarm.Id_Lieu?.toString() || "0",
         name: alarm.t_lieu?.Nom_Lieu || alarm.t_lieu?.Sonde_Numero_Serie || t("fallback.unknown_name"),
         description: null,
-        siteGroup: groupNames.length > 0 ? groupNames.join(", ") : null,
+        siteGroup: null,
         groupNames,
         isActive: true,
       },
