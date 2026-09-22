@@ -85,8 +85,7 @@ export interface TanStackTableProps<TData> {
   exportFileName?: string;
   exportExcludeColumnIds?: string[];
   enableExport?: boolean;
-  enablePrint?: boolean;
-  exportFormats?: Array<"csv" | "xlsx" | "pdf">;
+  exportFormats?: Array<"xlsx" | "pdf">;
   promptExportCount?: boolean;
   enableExportColumnSelection?: boolean;
   exportData?: TData[];
@@ -150,8 +149,7 @@ export function TanStackTable<TData extends Record<string, any>>({
   exportFileName = "export",
   exportExcludeColumnIds = ["actions", "action", "select"],
   enableExport = true,
-  enablePrint = false,
-  exportFormats = ["csv", "xlsx", "pdf"],
+  exportFormats = ["xlsx", "pdf"],
   promptExportCount = false,
   enableExportColumnSelection = false,
   exportData,
@@ -292,7 +290,7 @@ export function TanStackTable<TData extends Record<string, any>>({
 
   const [selectedExportColumnIds, setSelectedExportColumnIds] = useState<string[]>([]);
   const [exportDialogOpen, setExportDialogOpen] = useState(false);
-  const [pendingExportFormat, setPendingExportFormat] = useState<"csv" | "xlsx" | "pdf" | null>(null);
+  const [pendingExportFormat, setPendingExportFormat] = useState<"xlsx" | "pdf" | null>(null);
   const [exportCountInput, setExportCountInput] = useState("");
 
   const availableExportColumnIds = useMemo(() => {
@@ -440,7 +438,7 @@ export function TanStackTable<TData extends Record<string, any>>({
     });
   }
 
-  function requestExport(format: "csv" | "xlsx" | "pdf") {
+  function requestExport(format: "xlsx" | "pdf") {
     if (promptExportCount && exportRowCount > 0) {
       setPendingExportFormat(format);
       setExportCountInput(String(exportRowCount));
@@ -448,10 +446,6 @@ export function TanStackTable<TData extends Record<string, any>>({
       return;
     }
 
-    if (format === "csv") {
-      exportCsv();
-      return;
-    }
     if (format === "xlsx") {
       void exportExcel();
       return;
@@ -467,9 +461,7 @@ export function TanStackTable<TData extends Record<string, any>>({
       return;
     }
 
-    if (pendingExportFormat === "csv") {
-      exportCsv(parsedCount);
-    } else if (pendingExportFormat === "xlsx") {
+    if (pendingExportFormat === "xlsx") {
       void exportExcel(parsedCount);
     } else {
       void exportPdf(parsedCount);
@@ -477,38 +469,6 @@ export function TanStackTable<TData extends Record<string, any>>({
 
     setExportDialogOpen(false);
     setPendingExportFormat(null);
-  }
-
-  function downloadBlob(blob: Blob, filename: string) {
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(url);
-  }
-
-  function exportCsv(requestedCount?: number | null) {
-    const rowsToExport = resolveRowsToExport(requestedCount);
-    if (!rowsToExport) return;
-
-    const { headers, rows } = buildExportMatrixForRows(rowsToExport);
-    const delimiter = ";";
-    const escape = (value: string) => {
-      const needsQuotes = value.includes("\"") || value.includes("\n") || value.includes("\r") || value.includes(delimiter);
-      const escaped = value.replace(/\"/g, "\"\"");
-      return needsQuotes ? `"${escaped}"` : escaped;
-    };
-
-    const lines = [
-      headers.map((h) => escape(String(h))).join(delimiter),
-      ...rows.map((r) => r.map((v) => escape(String(v))).join(delimiter)),
-    ];
-
-    const blob = new Blob([lines.join("\r\n")], { type: "text/csv;charset=utf-8" });
-    downloadBlob(blob, `${exportFileName}.csv`);
   }
 
   async function exportExcel(requestedCount?: number | null) {
@@ -566,7 +526,7 @@ export function TanStackTable<TData extends Record<string, any>>({
     <>
       <div className="space-y-4 w-full">
       {/* Barre d'outils - conditionnelle */}
-      {(showSearch || enableExport || enablePrint || toolbarRight) && (
+      {(showSearch || enableExport || toolbarRight) && (
         <div className={cn("flex items-center gap-2 flex-wrap", toolbarClassName)}>
           {showSearch && (
             <>
@@ -593,7 +553,7 @@ export function TanStackTable<TData extends Record<string, any>>({
               </span>
             </>
           )}
-          {(enableExport || enablePrint || toolbarRight) && (
+          {(enableExport || toolbarRight) && (
             <div className="ml-auto flex items-center gap-2">
               {enableExport && (
                 <DropdownMenu>
@@ -608,9 +568,6 @@ export function TanStackTable<TData extends Record<string, any>>({
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
-                    {exportFormats.includes("csv") ? (
-                <DropdownMenuItem onClick={() => requestExport("csv")}>CSV</DropdownMenuItem>
-                    ) : null}
                     {exportFormats.includes("xlsx") ? (
                       <DropdownMenuItem onClick={() => requestExport("xlsx")}>Excel</DropdownMenuItem>
                     ) : null}

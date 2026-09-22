@@ -30,6 +30,7 @@ import {
 import { AlertTriangle } from "lucide-react"
 import { formatDbDateTime } from "@/lib/date-display"
 import { formatNumber as formatDisplayNumber } from "@/lib/number-display"
+import { exportStyledExcel } from "@/lib/excel-export"
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend, Filler)
 
@@ -49,14 +50,6 @@ function formatDate(value: string | null, locale: string) {
 
 function formatNumber(value: number | null) {
   return formatDisplayNumber(value, { decimals: 2, locale: "en-US", grouping: false, fallback: "-" })
-}
-
-function escapeCsv(value: string | number | null | undefined) {
-  const normalized = value == null ? "" : String(value)
-  if (/[",;\n\r]/.test(normalized)) {
-    return `"${normalized.replace(/"/g, '""')}"`
-  }
-  return normalized
 }
 
 function formatDuration(totalSeconds: number) {
@@ -120,6 +113,7 @@ export function VigilogTourneeDetailDialog({ open, pending = false, detail, onOp
     high: null,
     target: null,
   })
+  const [isExportingExcel, setIsExportingExcel] = useState(false)
 
   const tournee = detail?.tournee ?? null
   const measures = useMemo(() => detail?.measures ?? [], [detail?.measures])
@@ -338,33 +332,61 @@ export function VigilogTourneeDetailDialog({ open, pending = false, detail, onOp
     }
   }, [chartData, tournee])
 
-  const exportMeasuresAsCsv = () => {
-    if (!tournee || measures.length === 0) return
+  const exportMeasuresAsExcel = async () => {
+    if (!tournee || measures.length === 0 || isExportingExcel) return
 
-    const headers = ["Ordre", "DateHeure", "Valeur", "HorsLimites", "EnAlarme", "Marqueur", "Details"]
-    const rows = measures.map((measure) => [
-      measure.order ?? "",
-      measure.measuredAt,
-      measure.value ?? "",
-      measure.outOfLimit ? "1" : "0",
-      measure.inAlarm ? "1" : "0",
-      measure.marker ? "1" : "0",
-      measure.details ?? "",
-    ])
+    setIsExportingExcel(true)
+    try {
+      const chartDataUrl = chartRef.current?.toBase64Image("image/png", 1) ?? null
 
-    const csv = [headers, ...rows]
-      .map((row) => row.map((value) => escapeCsv(value)).join(";"))
-      .join("\r\n")
-
-    const blob = new Blob([`\ufeff${csv}`], { type: "text/csv;charset=utf-8;" })
-    const url = URL.createObjectURL(blob)
-    const anchor = document.createElement("a")
-    anchor.href = url
-    anchor.download = `vigilog-${tournee.reference}-mesures.csv`
-    document.body.appendChild(anchor)
-    anchor.click()
-    document.body.removeChild(anchor)
-    URL.revokeObjectURL(url)
+      await exportStyledExcel({
+        fileName: `vigilog-${tournee.reference}-mesures`,
+        title: `${t("detail.title")} - ${tournee.reference}`,
+        presentationSheetName: t("detail.exportPresentationSheet"),
+        dataSheetName: t("detail.exportDataSheet"),
+        presentationHeaders: [
+          t("detail.exportPresentationColumns.label"),
+          t("detail.exportPresentationColumns.value"),
+        ],
+        presentationRows: [
+          { label: t("detail.snapshot.configuration"), value: tournee.configurationName },
+          { label: t("detail.snapshot.logger"), value: tournee.loggerSerial },
+          { label: t("detail.cards.route"), value: `${tournee.departureSite.name || "-"} → ${tournee.arrivalSite.name || "-"}` },
+          { label: t("detail.snapshot.target"), value: formatNumber(tournee.target) },
+          { label: t("detail.snapshot.lowLimit"), value: tournee.lowLimitActive ? formatNumber(tournee.lowLimit) : "-" },
+          { label: t("detail.snapshot.highLimit"), value: tournee.highLimitActive ? formatNumber(tournee.highLimit) : "-" },
+          { label: t("detail.snapshot.departureAt"), value: formatDateTime(tournee.departureAt, locale) },
+          { label: t("detail.snapshot.arrivalAt"), value: formatDateTime(tournee.arrivalAt, locale) },
+          { label: t("detail.measuresTitle"), value: measures.length },
+        ],
+        presentationImage: chartDataUrl
+          ? {
+              dataUrl: chartDataUrl,
+              title: t("detail.chart.title"),
+            }
+          : null,
+        dataHeaders: [
+          "#",
+          t("detail.columns.measuredAt"),
+          t("detail.columns.value"),
+          t("detail.columns.outOfLimit"),
+          t("detail.columns.alarm"),
+          t("detail.columns.marker"),
+          t("detail.columns.details"),
+        ],
+        dataRows: measures.map((measure) => [
+          measure.order ?? "",
+          formatDateTime(measure.measuredAt, locale),
+          measure.value ?? "",
+          measure.outOfLimit ? t("detail.yes") : t("detail.no"),
+          measure.inAlarm ? t("detail.yes") : t("detail.no"),
+          measure.marker ? t("detail.yes") : t("detail.no"),
+          measure.details ?? "",
+        ]),
+      })
+    } finally {
+      setIsExportingExcel(false)
+    }
   }
 
   return (
@@ -542,10 +564,10 @@ export function VigilogTourneeDetailDialog({ open, pending = false, detail, onOp
                   type="button"
                   variant="outline"
                   size="sm"
-                  onClick={exportMeasuresAsCsv}
-                  disabled={measures.length === 0}
+                  onClick={() => void exportMeasuresAsExcel()}
+                  disabled={measures.length === 0 || isExportingExcel}
                 >
-                  {t("detail.export")}
+                  {isExportingExcel ? t("detail.exportLoading") : t("detail.export")}
                 </Button>
               </div>
               <TanStackTable
@@ -553,7 +575,6 @@ export function VigilogTourneeDetailDialog({ open, pending = false, detail, onOp
                 data={measures}
                 showSearch={false}
                 enableExport={false}
-                enablePrint={false}
                 showPagination={measures.length > 10}
                 pageSize={200}
                 maxHeight="420px"

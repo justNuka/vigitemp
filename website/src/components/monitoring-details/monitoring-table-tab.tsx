@@ -255,6 +255,7 @@ export function MonitoringTableTab({
         exportFileName={exportFileName}
         promptExportCount
         enableExport={showExportActions}
+        exportFormats={["pdf"]}
         enableExportColumnSelection={showExportActions}
         toolbarRight={showExportActions ? (
           <Button

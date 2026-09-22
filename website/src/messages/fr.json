@@ -278,7 +278,18 @@
       "load": "Afficher la superposition",
       "hint": "Selectionnez au moins 2 lieux",
       "hint_range": "Selectionnez d'abord une plage de dates",
-      "empty": "Selectionnez 2 lieux puis cliquez sur afficher"
+      "empty": "Selectionnez 2 lieux puis cliquez sur afficher",
+      "export": {
+        "excel": "Exporter Excel",
+        "loading": "Export Excel...",
+        "presentation_sheet": "Présentation",
+        "data_sheet": "Courbes",
+        "date_column": "Date / heure",
+        "presentation_columns": {
+          "label": "Information",
+          "value": "Valeur"
+        }
+      }
     },
     "load_more": "Charger plus",
     "open_details": "Voir les détails",
@@ -2082,12 +2093,24 @@
       "noSimAlarms": "Aucune alarme simulée avec ces tolérances.",
       "noRealAlarms": "Aucune alarme réelle sur cette période."
     },
-    "print": "Imprimer",
     "export": {
-      "button": "Exporter",
-      "csv": "Exporter CSV (alarmes)",
-      "image": "Exporter le graphique",
-      "pdf": "Exporter PDF"
+      "excel": "Exporter Excel",
+      "loading": "Export Excel...",
+      "presentation_sheet": "Présentation",
+      "data_sheet": "Alarmes",
+      "exported_at": "Date d'export",
+      "presentation_columns": {
+        "label": "Information",
+        "value": "Valeur"
+      },
+      "columns": {
+        "kind": "Origine",
+        "duration_minutes": "Durée (min)"
+      },
+      "kinds": {
+        "simulated": "Alarme simulée",
+        "real": "Alarme réelle"
+      }
     },
     "save": {
       "button": "Enregistrer l'analyse",
@@ -3401,8 +3424,8 @@
         "serial": "Numéro de série"
       },
       "multi_tabs": {
-        "button": "Export multi-onglets",
-        "button_loading": "Export...",
+        "button": "Exporter Excel",
+        "button_loading": "Export Excel...",
         "presentation_sheet": "Présentation",
         "measurements_sheet": "Mesures",
         "presentation_columns": {
@@ -5736,7 +5759,14 @@
         "title": "Aucune mesure importée",
         "description": "Cette tournée a été réceptionnée, mais le VigiLog ne contenait aucune mesure exploitable."
       },
-      "export": "Exporter les mesures"
+      "export": "Exporter Excel",
+      "exportLoading": "Export Excel...",
+      "exportPresentationSheet": "Présentation",
+      "exportDataSheet": "Mesures",
+      "exportPresentationColumns": {
+        "label": "Information",
+        "value": "Valeur"
+      }
     },
     "loggers": {
       "title": "Registre des VigiLog",

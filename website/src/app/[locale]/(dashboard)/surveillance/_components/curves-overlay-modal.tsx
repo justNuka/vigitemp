@@ -1,7 +1,7 @@
 "use client"
 
 import { useMemo, useRef, useState } from "react"
-import { Loader2, Layers3, Download, Printer } from "lucide-react"
+import { Loader2, Layers3, Download } from "lucide-react"
 import { useLocale, useTranslations } from "next-intl"
 import { Line } from "react-chartjs-2"
 import {
@@ -22,6 +22,7 @@ import { getJson } from "@/lib/http"
 import { toApiUtcDateTime } from "@/lib/date-range-api"
 import { formatMeasureValue, formatTimeAxisLabel, normalizeMeasureNumber } from "@/lib/measurements"
 import { formatDbDateTime, parseDbDateTime } from "@/lib/date-display"
+import { exportStyledExcel } from "@/lib/excel-export"
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend)
 
@@ -59,8 +60,6 @@ const COLORS = ["#ef4444", "#3b82f6", "#10b981", "#f59e0b", "#8b5cf6", "#06b6d4"
 
 export function CurvesOverlayModal({ open, onOpenChange, locations }: Props) {
   const t = useTranslations("surveillance")
-  const tCommon = useTranslations("common")
-  const tButtons = useTranslations("buttons")
   const locale = useLocale()
   const localeTag = locale === "fr" ? "fr-FR" : locale
 
@@ -69,6 +68,7 @@ export function CurvesOverlayModal({ open, onOpenChange, locations }: Props) {
   const [dateRange, setDateRange] = useState<DateRangeValue | null>(null)
   const [appliedRange, setAppliedRange] = useState<DateRangeValue | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const [isExportingExcel, setIsExportingExcel] = useState(false)
   const [dataByLocation, setDataByLocation] = useState<Record<number, OverlayMeasurement[]>>({})
   const chartRef = useRef<ChartJS<"line"> | null>(null)
 
@@ -211,69 +211,59 @@ export function CurvesOverlayModal({ open, onOpenChange, locations }: Props) {
     return Math.max(0, last - first)
   }, [chartPayload.labels])
 
-  const downloadBlob = (content: string, mimeType: string, filename: string) => {
-    const blob = new Blob([content], { type: mimeType })
-    const url = URL.createObjectURL(blob)
-    const anchor = document.createElement("a")
-    anchor.href = url
-    anchor.download = filename
-    anchor.click()
-    URL.revokeObjectURL(url)
-  }
+  const handleExportExcel = async () => {
+    if (!canExport || isExportingExcel) return
 
-  const handleExportCsv = () => {
-    if (!canExport) return
+    setIsExportingExcel(true)
+    try {
+      const chartDataUrl = chartRef.current?.toBase64Image("image/png", 1) ?? null
+      const rangeLabel = appliedRange?.from
+        ? `${formatDbDateTime(appliedRange.from, { format: "date", locale: localeTag })} → ${formatDbDateTime(appliedRange.to ?? appliedRange.from, { format: "date", locale: localeTag })}`
+        : "-"
 
-    const headers = ["Date", ...chartPayload.datasets.map((dataset) => dataset.label)]
-    const rows = chartPayload.labels.map((label, rowIndex) => {
-      const values = chartPayload.datasets.map((dataset) => {
-        const value = dataset.data[rowIndex]
-        return value === null || value === undefined ? "" : formatMeasureValue(value, null, localeTag)
+      await exportStyledExcel({
+        fileName: "superposition-courbes",
+        title: t("overlay.title"),
+        presentationSheetName: t("overlay.export.presentation_sheet"),
+        dataSheetName: t("overlay.export.data_sheet"),
+        presentationHeaders: [
+          t("overlay.export.presentation_columns.label"),
+          t("overlay.export.presentation_columns.value"),
+        ],
+        presentationRows: [
+          { label: t("overlay.range"), value: rangeLabel },
+          {
+            label: t("overlay.locations"),
+            value: appliedLocations.map((location) => location.name).join(", "),
+          },
+        ],
+        presentationImage: chartDataUrl
+          ? {
+              dataUrl: chartDataUrl,
+              title: t("overlay.title"),
+            }
+          : null,
+        dataHeaders: [
+          t("overlay.export.date_column"),
+          ...chartPayload.datasets.map((dataset) => dataset.label),
+        ],
+        dataRows: chartPayload.labels.map((label, rowIndex) => [
+          formatDbDateTime(label, {
+            format: "dateTimeSeconds",
+            locale: localeTag,
+            fallback: label,
+          }),
+          ...chartPayload.datasets.map((dataset) => {
+            const value = dataset.data[rowIndex]
+            return value === null || value === undefined
+              ? ""
+              : formatMeasureValue(value, null, localeTag)
+          }),
+        ]),
       })
-      return [formatDbDateTime(label, { format: "dateTimeSeconds", locale: localeTag, fallback: label }), ...values]
-    })
-
-    const escapeCell = (value: string) => {
-      const normalized = value.replace(/"/g, '""')
-      return /[";\n]/.test(normalized) ? `"${normalized}"` : normalized
+    } finally {
+      setIsExportingExcel(false)
     }
-
-    const csv = [headers, ...rows]
-      .map((line) => line.map((cell) => escapeCell(String(cell))).join(";"))
-      .join("\n")
-
-    downloadBlob(csv, "text/csv;charset=utf-8", "superposition-courbes.csv")
-  }
-
-  const handlePrintChart = () => {
-    if (!canExport) return
-    const chart = chartRef.current
-    if (!chart) return
-
-    const imageDataUrl = chart.toBase64Image("image/png", 1)
-    const popup = window.open("", "_blank", "width=1100,height=760")
-    if (!popup) return
-
-    popup.document.write(`
-      <html>
-        <head>
-          <title>${t("overlay.title")}</title>
-          <style>
-            body { font-family: Arial, sans-serif; margin: 16px; }
-            .meta { margin-bottom: 12px; color: #475569; font-size: 12px; }
-            img { width: 100%; height: auto; border: 1px solid #e2e8f0; border-radius: 8px; }
-          </style>
-        </head>
-        <body>
-          <h2>${t("overlay.title")}</h2>
-          <div class="meta">${formatDbDateTime(new Date(), { format: "dateTimeSeconds", locale: localeTag })}</div>
-          <img src="${imageDataUrl}" alt="overlay" />
-        </body>
-      </html>
-    `)
-    popup.document.close()
-    popup.focus()
-    popup.print()
   }
 
   return (
@@ -352,13 +342,14 @@ export function CurvesOverlayModal({ open, onOpenChange, locations }: Props) {
 
           <div className="rounded-md border p-3 h-full overflow-hidden flex flex-col">
             <div className="mb-3 flex justify-end gap-2">
-              <Button variant="outline" size="sm" onClick={handleExportCsv} disabled={!canExport}>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => void handleExportExcel()}
+                disabled={!canExport || isExportingExcel}
+              >
                 <Download className="mr-2 h-4 w-4" />
-                {tCommon("export")}
-              </Button>
-              <Button variant="outline" size="sm" onClick={handlePrintChart} disabled={!canExport}>
-                <Printer className="mr-2 h-4 w-4" />
-                {tButtons("print")}
+                {isExportingExcel ? t("overlay.export.loading") : t("overlay.export.excel")}
               </Button>
             </div>
             {chartPayload.datasets.length >= 2 && chartPayload.labels.length > 0 ? (

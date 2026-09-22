@@ -103,7 +103,6 @@ export function StandardMeasurementsTable({
         showSearch={false}
         showPagination={false}
         enableExport={false}
-        enablePrint={false}
         maxHeight="16rem"
         emptyMessage={t('measurements.empty')}
       />

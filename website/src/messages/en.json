@@ -575,7 +575,18 @@
       "load": "Display overlay",
       "hint": "Select at least 2 locations",
       "hint_range": "Select a date range first",
-      "empty": "Select 2 locations and click display"
+      "empty": "Select 2 locations and click display",
+      "export": {
+        "excel": "Export Excel",
+        "loading": "Exporting Excel...",
+        "presentation_sheet": "Presentation",
+        "data_sheet": "Curves",
+        "date_column": "Date / time",
+        "presentation_columns": {
+          "label": "Information",
+          "value": "Value"
+        }
+      }
     },
     "load_more": "Load more",
     "stats": {
@@ -1736,12 +1747,24 @@
       "noSimAlarms": "No simulated alarms with these tolerances.",
       "noRealAlarms": "No real alarms during this period."
     },
-    "print": "Print",
     "export": {
-      "button": "Export",
-      "csv": "Export CSV (alarms)",
-      "image": "Export chart",
-      "pdf": "Export PDF"
+      "excel": "Export Excel",
+      "loading": "Exporting Excel...",
+      "presentation_sheet": "Presentation",
+      "data_sheet": "Alarms",
+      "exported_at": "Export date",
+      "presentation_columns": {
+        "label": "Information",
+        "value": "Value"
+      },
+      "columns": {
+        "kind": "Source",
+        "duration_minutes": "Duration (min)"
+      },
+      "kinds": {
+        "simulated": "Simulated alarm",
+        "real": "Real alarm"
+      }
     },
     "save": {
       "button": "Save analysis",
@@ -3397,8 +3420,8 @@
         "serial": "Serial number"
       },
       "multi_tabs": {
-        "button": "Multi-tab export",
-        "button_loading": "Export...",
+        "button": "Export Excel",
+        "button_loading": "Exporting Excel...",
         "presentation_sheet": "Presentation",
         "measurements_sheet": "Measurements",
         "presentation_columns": {
@@ -5733,7 +5756,14 @@
         "title": "No measurements imported",
         "description": "This run was received, but the VigiLog did not contain any usable measurements."
       },
-      "export": "Export measures"
+      "export": "Export Excel",
+      "exportLoading": "Exporting Excel...",
+      "exportPresentationSheet": "Presentation",
+      "exportDataSheet": "Measurements",
+      "exportPresentationColumns": {
+        "label": "Information",
+        "value": "Value"
+      }
     },
     "loggers": {
       "title": "VigiLog registry",

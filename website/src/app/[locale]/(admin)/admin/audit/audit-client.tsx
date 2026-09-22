@@ -368,7 +368,6 @@ export function AuditClient() {
             }
             showPagination
             enableExport
-            enablePrint
             containerClassName="border border-sidebar-border/40"
             tableClassName="border-separate border-spacing-0 [&_thead_th]:text-sidebar-foreground [&_thead_th]:!border-r [&_thead_th]:!border-white/25 [&_thead_th:last-child]:!border-r-0"
           />
