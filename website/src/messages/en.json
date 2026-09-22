@@ -302,8 +302,7 @@
       "dateTo": "End date",
       "allSites": "All sites",
       "allTypes": "All types",
-      "selected_range": "Selected range: {range}",
-      "last_24_hours": "Last 24 hours"
+      "selected_range": "Selected range: {range}"
     },
     "toast": {
       "na": "-",
