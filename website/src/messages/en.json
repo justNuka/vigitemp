@@ -575,7 +575,18 @@
       "load": "Display overlay",
       "hint": "Select at least 2 locations",
       "hint_range": "Select a date range first",
-      "empty": "Select 2 locations and click display"
+      "empty": "Select 2 locations and click display",
+      "export": {
+        "excel": "Export Excel",
+        "loading": "Exporting Excel...",
+        "presentation_sheet": "Presentation",
+        "data_sheet": "Curves",
+        "date_column": "Date / time",
+        "presentation_columns": {
+          "label": "Information",
+          "value": "Value"
+        }
+      }
     },
     "load_more": "Load more",
     "stats": {
