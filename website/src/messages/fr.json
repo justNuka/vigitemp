@@ -278,7 +278,18 @@
       "load": "Afficher la superposition",
       "hint": "Selectionnez au moins 2 lieux",
       "hint_range": "Selectionnez d'abord une plage de dates",
-      "empty": "Selectionnez 2 lieux puis cliquez sur afficher"
+      "empty": "Selectionnez 2 lieux puis cliquez sur afficher",
+      "export": {
+        "excel": "Exporter Excel",
+        "loading": "Export Excel...",
+        "presentation_sheet": "Présentation",
+        "data_sheet": "Courbes",
+        "date_column": "Date / heure",
+        "presentation_columns": {
+          "label": "Information",
+          "value": "Valeur"
+        }
+      }
     },
     "load_more": "Charger plus",
     "open_details": "Voir les détails",
