@@ -1570,7 +1570,7 @@ La page doit :
 
 ## R21-003 — Surveillance : cards, fenêtre 24 h et réduction des grands graphiques
 
-**Statut : `EN_COURS` — branche `feature/surveillance-rolling-graphs` — base `dev` `93a46e690edf8ea79c358b9e53d1cc2ca2fbaf9b`**
+**Statut : `PR_OUVERTE` — branche `feature/surveillance-rolling-graphs` — PR #139 — base `dev` `93a46e690edf8ea79c358b9e53d1cc2ca2fbaf9b`**
 
 ### Retour — 21/09/2026
 
