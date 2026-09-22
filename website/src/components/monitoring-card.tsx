@@ -21,6 +21,7 @@ import { useLieuMeasurements } from '@/hooks/useLieuMeasurements'
 import { formatDbDateTime, parseDbDateTime, serializeDbDateTime } from '@/lib/date-display'
 import type { LieuTypeValue } from '@/lib/lieu-types'
 import { calculateYDomain, formatMeasureValue, getMeasureSummary, sortMeasuresChronologically } from '@/lib/measurements'
+import { MONITORING_CARD_GRAPH_MAX_POINTS } from '@/lib/measurement-downsampling'
 import { cn } from '@/lib/utils'
 import { fadeInUp } from '@/lib/motion-variants'
 import type { SensorStatus } from '@/lib/surveillance-status'
@@ -130,9 +131,19 @@ export default function MonitoringCard({
     includeMeta: true,
     source: "mesures",
     includeNullNonResponse: showNullNonResponse,
+    rollingHours: 24,
+    graphMaxPoints: MONITORING_CARD_GRAPH_MAX_POINTS,
   })
 
   const orderedData = useMemo(() => sortMeasuresChronologically(data), [data])
+  const chartRangeStartMs = useMemo(() => {
+    const parsed = parseDbDateTime(meta?.graphRangeStart ?? null)
+    return parsed?.getTime() ?? Date.now() - 24 * 60 * 60 * 1000
+  }, [meta?.graphRangeStart])
+  const chartRangeEndMs = useMemo(() => {
+    const parsed = parseDbDateTime(meta?.graphRangeEnd ?? null)
+    return parsed?.getTime() ?? Date.now()
+  }, [meta?.graphRangeEnd])
   const liveMeasurementDate = useMemo(() => {
     if (!lastMeasurement) return null
     const parsed = parseDbDateTime(lastMeasurement)
@@ -527,6 +538,8 @@ export default function MonitoringCard({
                     formattedConsigneSup={formattedConsigneSup}
                     formattedConsigneInf={formattedConsigneInf}
                     unite={unite}
+                    rangeStartMs={chartRangeStartMs}
+                    rangeEndMs={chartRangeEndMs}
                   />
                 )}
               </div>
@@ -774,7 +787,6 @@ export default function MonitoringCard({
           estConsigneInfPreAlarmeActive={estConsigneInfPreAlarmeActive ?? false}
           unite={unite}
           isSurveillanceActive={isSurveillanceActive}
-          measurements={isSurveillanceActive && shouldLoadCardMeasurements ? previewData : []}
           showNullNonResponse={showNullNonResponse}
         />
       ) : null}
