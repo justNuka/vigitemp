@@ -8,7 +8,24 @@ Les versions suivent `MAJOR.MINOR.PATCH` sans zéros de tête. La source de vers
 
 ## [Unreleased]
 
-Aucun changement supplémentaire documenté depuis la préparation de la version Web 1.8.2.
+Aucun changement supplémentaire documenté depuis la préparation de la version Web 1.8.3.
+
+## [1.8.3] — 2026-09-22
+
+Cette version corrige les liens vers la page Alarmes depuis le header du dashboard utilisateur.
+
+### Dashboard utilisateur
+
+- Le bandeau d'alarmes actives du header utilise désormais la route canonique `/alarmes` au lieu du chemin relatif `alarmes`.
+- Le wrapper de navigation next-intl conserve donc systématiquement la locale active : `/fr/alarmes` en français et `/en/alarms` en anglais.
+- Les deux variantes du bandeau (widget principal et bannière historique) sont couvertes.
+- Un test dédié vérifie le contrat de navigation localisée afin d'éviter le retour d'un lien relatif.
+
+### Compatibilité
+
+- Version Web : **1.8.3**.
+- Serveur **1.1.0**, Agent **1.0.1** et BDD **0.91.0** restent inchangés.
+- Aucune migration BDD n'est requise.
 
 ## [1.8.2] — 2026-09-22
 
