@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo } from "react"
+import { useEffect, useMemo } from "react"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -51,12 +51,23 @@ export function SurveillanceFilters({ filters: controlledFilters, onFilterChange
 
   const disabledGroupIds = useMemo(() => {
     const disabled = new Set<number>()
-    if (!allowedGroupIds) return disabled
     for (const group of groups) {
-      if (!allowedGroupIds.has(group.id)) disabled.add(group.id)
+      if (group.disabled || (allowedGroupIds && !allowedGroupIds.has(group.id))) {
+        disabled.add(group.id)
+      }
     }
     return disabled
   }, [allowedGroupIds, groups])
+
+  useEffect(() => {
+    const sanitizedGroupIds = controlledFilters.groupIds.filter((id) => !disabledGroupIds.has(id))
+    if (sanitizedGroupIds.length === controlledFilters.groupIds.length) return
+
+    onFilterChange({
+      ...controlledFilters,
+      groupIds: sanitizedGroupIds,
+    })
+  }, [controlledFilters, disabledGroupIds, onFilterChange])
 
   const hasActiveFilters =
     filters.siteIds.length > 0 ||
@@ -85,7 +96,9 @@ export function SurveillanceFilters({ filters: controlledFilters, onFilterChange
     setFilters((prev) => ({
       ...prev,
       siteIds: normalizedSiteIds,
-      groupIds: nextAllowed ? prev.groupIds.filter((id) => nextAllowed.has(id)) : [],
+      groupIds: prev.groupIds.filter(
+        (id) => !groups.find((group) => group.id === id)?.disabled && (!nextAllowed || nextAllowed.has(id)),
+      ),
     }))
   }
 
@@ -143,7 +156,7 @@ export function SurveillanceFilters({ filters: controlledFilters, onFilterChange
 
             setFilters((prev) => ({
               ...prev,
-              groupIds: allowedGroupIds ? groupIds.filter((id) => allowedGroupIds.has(id)) : groupIds,
+              groupIds: groupIds.filter((id) => !disabledGroupIds.has(id)),
             }))
           }}
           placeholder={t('groups.placeholder')}
