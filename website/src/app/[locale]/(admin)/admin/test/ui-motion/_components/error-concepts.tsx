@@ -117,7 +117,7 @@ function ErrorPreviewFrame({
   );
 }
 
-function LostSensorScene() {
+function LostSensorScene({ status }: { status: string }) {
   const reduceMotion = useReducedMotion();
 
   return (
@@ -157,7 +157,7 @@ function LostSensorScene() {
       })}
 
       <motion.div
-        className="absolute right-[4%] top-[62%] flex h-14 w-14 items-center justify-center rounded-2xl border border-red-500/30 bg-red-500/8 shadow-sm"
+        className="absolute right-[4%] top-[62%] flex h-14 w-14 items-center justify-center rounded-2xl border border-red-500/30 bg-red-500/10 shadow-sm"
         animate={
           reduceMotion
             ? undefined
@@ -173,7 +173,7 @@ function LostSensorScene() {
           d="M210 132 C280 130 305 150 356 190"
           fill="none"
           stroke="currentColor"
-          className="text-red-500/45"
+          className="text-red-500/40"
           strokeWidth="2"
           strokeDasharray="7 7"
           animate={reduceMotion ? undefined : { strokeDashoffset: [0, -28] }}
@@ -186,13 +186,13 @@ function LostSensorScene() {
         animate={reduceMotion ? undefined : { opacity: [0.55, 1, 0.55] }}
         transition={{ duration: 1.8, repeat: Infinity }}
       >
-        route introuvable
+        {status}
       </motion.div>
     </div>
   );
 }
 
-function ServerIncidentScene() {
+function ServerIncidentScene({ status }: { status: string }) {
   const reduceMotion = useReducedMotion();
 
   return (
@@ -236,12 +236,12 @@ function ServerIncidentScene() {
       </svg>
 
       <motion.div
-        className="absolute bottom-4 right-5 flex items-center gap-2 rounded-full border border-red-500/25 bg-red-500/8 px-3 py-1 text-[11px] font-medium text-red-500"
+        className="absolute bottom-4 right-5 flex items-center gap-2 rounded-full border border-red-500/25 bg-red-500/10 px-3 py-1 text-[11px] font-medium text-red-500"
         animate={reduceMotion ? undefined : { scale: [1, 1.03, 1] }}
         transition={{ duration: 1.5, repeat: Infinity }}
       >
         <AlertTriangle className="h-3.5 w-3.5" />
-        incident applicatif
+        {status}
       </motion.div>
     </div>
   );
@@ -525,7 +525,7 @@ export function useErrorConcepts(): ErrorConceptDefinition[] {
           title={t("errors.notFound.title")}
           description={t("errors.notFound.description")}
           actions={<ErrorActionButtons home back />}
-          illustration={<LostSensorScene />}
+          illustration={<LostSensorScene status={t("errors.notFound.scene_status")} />}
         />
       ),
     },
@@ -542,7 +542,7 @@ export function useErrorConcepts(): ErrorConceptDefinition[] {
           description={t("errors.server.description")}
           accent="red"
           actions={<ErrorActionButtons retry back />}
-          illustration={<ServerIncidentScene />}
+          illustration={<ServerIncidentScene status={t("errors.server.scene_status")} />}
         />
       ),
     },
