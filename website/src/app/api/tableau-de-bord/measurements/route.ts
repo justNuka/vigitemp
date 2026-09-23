@@ -4,7 +4,7 @@ import { withAuthLogging } from "@/lib/api-wrappers"
 import { apiError, apiOk } from "@/lib/api-response"
 import { prismaMesure } from "@/lib/prisma"
 import { log } from "@/lib/logger"
-import { serializeDbDateTime } from "@/lib/date-display"
+import { serializeDbDateTime, serializeStoredDbDateTime } from "@/lib/date-display"
 
 export const GET = withAuthLogging(async (req: NextRequest) => {
   try {
@@ -26,7 +26,7 @@ export const GET = withAuthLogging(async (req: NextRequest) => {
     const formatted = measurements.map((m) => ({
       id: String(m.Id_Mesure),
       sensorId: String(m.Id_Lieu),
-      timestamp: serializeDbDateTime(m.Date_Heure_Mesure) || serializeDbDateTime(new Date()) || null,
+      timestamp: serializeStoredDbDateTime(m.Date_Heure_Mesure) || serializeDbDateTime(new Date()) || null,
       value: m.Valeur !== null ? parseFloat(m.Valeur.toString()) : 0,
     }))
 

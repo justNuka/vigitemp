@@ -155,11 +155,7 @@ export function serializeDbDateTime(value: DbDateInput): string | null {
  * while the stored components already represent the local wall-clock value.
  * Reading UTC components prevents adding the browser/server timezone offset.
  */
-export function serializeStoredDbDateTime(value: DbDateInput): string | null {
-  if (!(value instanceof Date)) {
-    return serializeDbDateTime(value);
-  }
-
+const serializeUtcDateComponents = (value: Date): string | null => {
   if (Number.isNaN(value.getTime())) return null;
 
   const year = value.getUTCFullYear();
@@ -170,6 +166,50 @@ export function serializeStoredDbDateTime(value: DbDateInput): string | null {
   const seconds = pad2(value.getUTCSeconds());
 
   return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
+};
+
+export function serializeStoredDbDateTime(value: DbDateInput): string | null {
+  if (value instanceof Date) {
+    return serializeUtcDateComponents(value);
+  }
+
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    if (!trimmed) return null;
+
+    // A Prisma DATETIME may have crossed a JSON boundary and therefore arrive
+    // with a Z / explicit offset. For a stored timezone-less DATETIME the
+    // written calendar/time components are the source of truth: ignore the
+    // transport timezone instead of converting the value as a real instant.
+    const zonedStoredMatch = trimmed.match(
+      /^(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2}:\d{2})(?:\.\d+)?(?:Z|[+-]\d{2}:?\d{2})$/i,
+    );
+    if (zonedStoredMatch) {
+      return `${zonedStoredMatch[1]}T${zonedStoredMatch[2]}`;
+    }
+  }
+
+  return serializeDbDateTime(value);
+}
+
+export function parseStoredDbDateTime(value: DbDateInput): Date | null {
+  const serialized = serializeStoredDbDateTime(value);
+  return serialized ? parseDbDateTime(serialized) : null;
+}
+
+export function formatStoredDbDateTime(
+  value: DbDateInput,
+  options: DateDisplayOptions = {},
+): string {
+  const serialized = serializeStoredDbDateTime(value);
+  if (!serialized) return options.fallback ?? "-";
+
+  // Stored DATETIME values already represent a local wall-clock value.
+  // Never apply an additional timezone conversion while formatting them.
+  return formatDbDateTime(
+    serialized,
+    options.timeZone ? { ...options, timeZone: undefined } : options,
+  );
 }
 
 const maybeAlreadyFormatted = (value: string) => {

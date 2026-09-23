@@ -81,6 +81,29 @@ formatDbDateTimeIntl(value, {
 
 La résolution runtime du preset reste défensive : si une valeur `format` invalide contourne le typage TypeScript, le helper retombe sur le comportement legacy au lieu de retourner une valeur indéfinie.
 
+### DATETIME stockés sans fuseau
+
+Pour les colonnes MySQL / SQL Server `DATETIME` qui représentent une heure murale locale, utiliser les variantes dédiées :
+
+- `serializeStoredDbDateTime(value)` : sérialise les composantes stockées sans ajouter de fuseau ;
+- `parseStoredDbDateTime(value)` : transforme cette représentation en `Date` locale uniquement pour tri/calcul d'axe ;
+- `formatStoredDbDateTime(value, options)` : applique les presets d'affichage tout en interdisant une reconversion de fuseau.
+
+Le helper prend aussi en charge le cas où un `Date` Prisma a déjà traversé une frontière JSON et arrive sous forme ISO avec `Z` ou offset explicite : les composantes écrites `YYYY-MM-DD HH:mm:ss` restent la source de vérité.
+
+Important : `formatStoredDbDateTime` ignore volontairement `timeZone`. Un `DATETIME` historique sans fuseau ne doit jamais être déplacé de +1/+2 h par une conversion `Intl`.
+
+Exemple :
+
+```ts
+formatStoredDbDateTime("2026-09-23T10:36:17.000Z", {
+  format: "dateTimeSeconds",
+  locale: "fr-FR",
+  timeZone: "Europe/Paris",
+})
+// 23/09/2026 10:36:17 — jamais 12:36:17
+```
+
 ### Étape 3 — migration de tous les appels applicatifs date
 
 Branche : `refactor/date-display-call-sites`.
