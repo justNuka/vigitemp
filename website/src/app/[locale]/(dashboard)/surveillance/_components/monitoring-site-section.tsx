@@ -11,7 +11,7 @@ import { sortSensors, type SurveillanceSortMode } from "../_helpers/monitoring-d
 import { formatAlarmes, formatAlarmesTerminees, formatGroupes, formatPreAlarmes, formatSondes } from "../_helpers/monitoring-labels"
 import { SurveillanceTreeStatsBadges } from "./monitoring-tree-stats-badges"
 import { buildMonitoringCardProps } from "./monitoring-card-props"
-import { formatDbDateTime, parseDbDateTime } from "@/lib/date-display"
+import { formatStoredDbDateTime, parseStoredDbDateTime } from "@/lib/date-display"
 import type { StatusCounts } from "@/lib/surveillance-status"
 import type { SurveillanceTreeCounterStats } from "@/lib/api"
 
@@ -26,7 +26,6 @@ type MonitoringSiteSectionProps = {
   toggleSite: (key: string) => void
   toggleGroup: (key: string) => void
   locale: string
-  timezone?: string
   t: Translate
   onSurveillanceToggle?: (
     idLieu: number,
@@ -51,14 +50,12 @@ type MonitoringSiteSectionProps = {
 function formatDisabledSinceLabel(
   disabledUntil: Date | string | null,
   locale: string,
-  timezone: string | undefined,
   t: Translate,
 ) {
   if (!disabledUntil) return t("grid.disabled_badge")
-  const formatted = formatDbDateTime(disabledUntil, {
+  const formatted = formatStoredDbDateTime(disabledUntil, {
     format: "dateTime",
     locale,
-    timeZone: timezone,
     fallback: "",
   })
   if (!formatted) return t("grid.disabled_badge")
@@ -69,7 +66,7 @@ function getLatestDisabledSince(sensors: SensorWithLocation[]) {
   return sensors
     .map((sensor) => sensor.location.surveillanceDisabledSince)
     .filter((value) => value !== null && value !== undefined)
-    .map((value) => parseDbDateTime(value as string | number | Date))
+    .map((value) => parseStoredDbDateTime(value as string | number | Date))
     .filter((date): date is Date => date !== null)
     .filter((date) => !Number.isNaN(date.getTime()))
     .reduce<Date | null>((latest, current) => {
@@ -116,7 +113,6 @@ export function MonitoringSiteSection({
   toggleSite,
   toggleGroup,
   locale,
-  timezone,
   t,
   onSurveillanceToggle,
   onGroupSurveillanceToggle,
