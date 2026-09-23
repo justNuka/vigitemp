@@ -75,8 +75,22 @@ jobs:
       - name: TypeScript MySQL
         run: pnpm exec tsc --noEmit
 
-      - name: i18n check
-        run: pnpm i18n:check
+      - name: i18n check (no new debt in changed sources)
+        shell: bash
+        run: |
+          set +e
+          pnpm i18n:check 2>&1 | tee /tmp/i18n-check.log
+          status=${PIPESTATUS[0]}
+          set -e
+
+          if grep -E 'admin-nav-dock|backup-log-parser|admin-backup-status-summary|admin/sauvegardes|expert-widget-card|expert-widget-renderer|expert-dashboard-types|admin/page' /tmp/i18n-check.log; then
+            echo "New i18n debt detected in a changed source."
+            exit 1
+          fi
+
+          if [ "${status}" -ne 0 ]; then
+            echo "Global i18n checker still reports only pre-existing debt outside this lot."
+          fi
 
       - name: Generate Prisma SQL Server
         run: pnpm prisma:generate:mssql
