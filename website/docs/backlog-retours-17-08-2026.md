@@ -2620,7 +2620,7 @@ Le workflow temporaire de validation a été retiré du diff final.
 
 ## R23-002 — Navigation Admin persistante et double état de sauvegarde
 
-**Statut : `EN_COURS` — branche `fix/admin-nav-backup-status` — base `dev` `c6ef7d87243d147bdceb1414c5f6a1c521a5d2bc`**
+**Statut : `PR_OUVERTE` — branche `fix/admin-nav-backup-status` — PR #146 — base finale `dev` `14de48a5a20a990b4898f9aa3de2b0da5ee3af6c`**
 
 ### Retour — 23/09/2026
 
