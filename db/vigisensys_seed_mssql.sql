@@ -1,6 +1,6 @@
 -- =====================================================================
 -- BOOTSTRAP SQL SERVER VigiSensys
--- Version produit / seed : 0.91.0
+-- Version produit / seed : 0.91.1
 -- DDL traduit depuis le dump schema courant MySQL du 2026-08-25.
 -- Les FK MySQL ne sont pas reproduites: SQL Server ne prend pas en
 -- charge ON UPDATE CASCADE et refuse certains chemins de cascade multiples.
@@ -1119,15 +1119,15 @@ BEGIN
     [Retard_Alarme_Bas] INT NULL,
     [Retard_Non_Reponse] INT NULL DEFAULT('60'),
     [Retard_Alarme_Changement_Consigne] INT NULL,
-    [Consigne] DECIMAL(10,2) NULL,
-    [Consigne_Sup] DECIMAL(10,2) NULL,
-    [Consigne_Inf] DECIMAL(10,2) NULL,
-    [Tolerance_Surveillance_Sup] DECIMAL(10,2) NULL,
-    [Tolerance_Surveillance_Inf] DECIMAL(10,2) NULL,
-    [Consigne_Sup_Pre_Alarme] DECIMAL(10,2) NULL,
-    [Consigne_Inf_Pre_Alarme] DECIMAL(10,2) NULL,
-    [Seuil_Critique_Haut] DECIMAL(10,2) NULL,
-    [Seuil_Critique_Bas] DECIMAL(10,2) NULL,
+    [Consigne] FLOAT NULL,
+    [Consigne_Sup] FLOAT NULL,
+    [Consigne_Inf] FLOAT NULL,
+    [Tolerance_Surveillance_Sup] FLOAT NULL,
+    [Tolerance_Surveillance_Inf] FLOAT NULL,
+    [Consigne_Sup_Pre_Alarme] FLOAT NULL,
+    [Consigne_Inf_Pre_Alarme] FLOAT NULL,
+    [Seuil_Critique_Haut] FLOAT NULL,
+    [Seuil_Critique_Bas] FLOAT NULL,
     [Est_Consigne_Sup_Active] BIT NOT NULL DEFAULT('0'),
     [Est_Consigne_Inf_Active] BIT NOT NULL DEFAULT('0'),
     [Est_Consigne_Sup_Pre_Alarme_Active] BIT NOT NULL DEFAULT('0'),
@@ -2985,7 +2985,7 @@ DECLARE @RecentParams TABLE (
 );
 
 INSERT INTO @RecentParams (Section, Mot_Cle, Valeur, Commentaire) VALUES
-(N'VERSION',N'SCHEMA_VERSION',N'0.91.0',N'Version de schéma VigiSensys'),
+(N'VERSION',N'SCHEMA_VERSION',N'0.91.1',N'Version de schéma VigiSensys'),
 (N'GENERAL',N'TIMEZONE',N'Europe/Paris',N'Fuseau horaire par defaut'),
 (N'DASHBOARD',N'AUDIT_GRAPH_OPENINGS',N'false',N'Activer l audit trail a l ouverture des graphiques'),
 (N'DASHBOARD',N'ETALONNAGE_WARNING_DAYS',N'90',N'Délai alerte validité étalonnage en jours'),
@@ -3821,10 +3821,6 @@ BEGIN
     @Derniere_Valeur FLOAT,
     @Tolerance_Surveillance_Inf FLOAT,
     @Tolerance_Surveillance_Sup FLOAT,
-    @Seuil_Critique_Bas FLOAT,
-    @Est_Seuil_Critique_Bas_Active BIT,
-    @Seuil_Critique_Haut FLOAT,
-    @Est_Seuil_Critique_Haut_Active BIT,
     @Retard_Alarme_Bas INT,
     @Retard_Alarme_Haut INT,
     @Sonde_Numero_Serie VARCHAR(50),
@@ -3864,10 +3860,6 @@ BEGIN
       i.[Derniere_Valeur],
       i.[Tolerance_Surveillance_Inf],
       i.[Tolerance_Surveillance_Sup],
-      i.[Seuil_Critique_Bas],
-      ISNULL(i.[Est_Seuil_Critique_Bas_Active], 0),
-      i.[Seuil_Critique_Haut],
-      ISNULL(i.[Est_Seuil_Critique_Haut_Active], 0),
       ISNULL(i.[Retard_Alarme_Bas], 0),
       ISNULL(i.[Retard_Alarme_Haut], 0),
       i.[Sonde_Numero_Serie],
@@ -3889,7 +3881,7 @@ BEGIN
   FETCH NEXT FROM cur INTO
     @Id_Lieu,@Est_Lieu_GSO,@Lieu_Etat,@Date_Heure_Dernier_Acquittement_En_Cours,@Derniere_Date_Heure,@Date_Heure_Derniere_Reponse,@Retard_Non_Reponse,
     @Est_Acq_Auto_Alarme_NR,
-    @Derniere_Valeur,@Tolerance_Surveillance_Inf,@Tolerance_Surveillance_Sup,@Seuil_Critique_Bas,@Est_Seuil_Critique_Bas_Active,@Seuil_Critique_Haut,@Est_Seuil_Critique_Haut_Active,@Retard_Alarme_Bas,@Retard_Alarme_Haut,@Sonde_Numero_Serie,
+    @Derniere_Valeur,@Tolerance_Surveillance_Inf,@Tolerance_Surveillance_Sup,@Retard_Alarme_Bas,@Retard_Alarme_Haut,@Sonde_Numero_Serie,
     @Date_Heure_Last_Update_EVT_GSO,@Derniere_Unite,@Date_Heure_Derniere_Reponse_Recue_OK,@Id_Alarme,@Est_Lieu_En_Alarme,@Est_Lieu_En_Pre_Alarme,
     @Est_Lieu_Alarme_Terminee_Non_Acquittee,@Est_Lieu_Alarme_Terminee_Non_Acquittee_T1,@Est_Consigne_Inf_Pre_Alarme_Active,@Consigne_Inf_Pre_Alarme,
     @Est_Consigne_Sup_Pre_Alarme_Active,@Consigne_Sup_Pre_Alarme;
@@ -3926,79 +3918,7 @@ BEGIN
           AND [Type] IN ('B','H','N')
           AND [Date_Heure_Fin] IS NULL;
 
-        IF @Lieu_Etat = 'S'
-           AND DATEDIFF(SECOND, @Date_Heure_Derniere_Reponse, GETDATE()) <= @Retard_Non_Reponse * 60
-           AND @Est_Seuil_Critique_Bas_Active = 1
-           AND @Seuil_Critique_Bas IS NOT NULL
-           AND @Derniere_Valeur < @Seuil_Critique_Bas
-        BEGIN
-          IF @v_Id_Alarme IS NOT NULL AND @v_TypeAlarme = 'B'
-          BEGIN
-            UPDATE dbo.[t_alarme]
-            SET [Valeur] = @Derniere_Valeur,
-                [Date_Heure_Derniere_Mesure] = @Derniere_Date_Heure
-            WHERE [Id_Alarme] = @v_Id_Alarme;
-            SET @New_Id_Alarme = @v_Id_Alarme;
-          END
-          ELSE
-          BEGIN
-            IF @v_Id_Alarme IS NOT NULL
-            BEGIN
-              UPDATE dbo.[t_alarme]
-              SET [Date_Heure_Fin] = @Derniere_Date_Heure,
-                  [Valeur] = @Derniere_Valeur,
-                  [Date_Heure_Derniere_Mesure] = @Derniere_Date_Heure
-              WHERE [Id_Alarme] = @v_Id_Alarme;
-              IF @v_TypeAlarme = 'N' AND @Est_Acq_Auto_Alarme_NR = 1
-                DELETE FROM dbo.[t_alarme] WHERE [Id_Alarme] = @v_Id_Alarme;
-            END
-            INSERT INTO dbo.[t_alarme]([Date_Heure_Debut],[Valeur],[Type],[Id_Lieu],[Sonde_Numero_Serie],[Date_Heure_Derniere_Mesure],[Unite])
-            VALUES(@Derniere_Date_Heure,@Derniere_Valeur,'B',@Id_Lieu,@Sonde_Numero_Serie,@Derniere_Date_Heure,@Derniere_Unite);
-            SET @New_Id_Alarme = CONVERT(INT, SCOPE_IDENTITY());
-          END
-          SET @New_Est_Lieu_En_Alarme = 1;
-          SET @New_Est_Lieu_En_Pre_Alarme = 0;
-          SET @New_Est_Lieu_Alarme_Terminee_Non_Acquittee = 0;
-          SET @New_Est_Lieu_Alarme_Terminee_Non_Acquittee_T1 = 0;
-          SET @ApplyUpdate = 1;
-        END
-        ELSE IF @Lieu_Etat = 'S'
-           AND DATEDIFF(SECOND, @Date_Heure_Derniere_Reponse, GETDATE()) <= @Retard_Non_Reponse * 60
-           AND @Est_Seuil_Critique_Haut_Active = 1
-           AND @Seuil_Critique_Haut IS NOT NULL
-           AND @Derniere_Valeur > @Seuil_Critique_Haut
-        BEGIN
-          IF @v_Id_Alarme IS NOT NULL AND @v_TypeAlarme = 'H'
-          BEGIN
-            UPDATE dbo.[t_alarme]
-            SET [Valeur] = @Derniere_Valeur,
-                [Date_Heure_Derniere_Mesure] = @Derniere_Date_Heure
-            WHERE [Id_Alarme] = @v_Id_Alarme;
-            SET @New_Id_Alarme = @v_Id_Alarme;
-          END
-          ELSE
-          BEGIN
-            IF @v_Id_Alarme IS NOT NULL
-            BEGIN
-              UPDATE dbo.[t_alarme]
-              SET [Date_Heure_Fin] = @Derniere_Date_Heure,
-                  [Valeur] = @Derniere_Valeur,
-                  [Date_Heure_Derniere_Mesure] = @Derniere_Date_Heure
-              WHERE [Id_Alarme] = @v_Id_Alarme;
-              IF @v_TypeAlarme = 'N' AND @Est_Acq_Auto_Alarme_NR = 1
-                DELETE FROM dbo.[t_alarme] WHERE [Id_Alarme] = @v_Id_Alarme;
-            END
-            INSERT INTO dbo.[t_alarme]([Date_Heure_Debut],[Valeur],[Type],[Id_Lieu],[Sonde_Numero_Serie],[Date_Heure_Derniere_Mesure],[Unite])
-            VALUES(@Derniere_Date_Heure,@Derniere_Valeur,'H',@Id_Lieu,@Sonde_Numero_Serie,@Derniere_Date_Heure,@Derniere_Unite);
-            SET @New_Id_Alarme = CONVERT(INT, SCOPE_IDENTITY());
-          END
-          SET @New_Est_Lieu_En_Alarme = 1;
-          SET @New_Est_Lieu_En_Pre_Alarme = 0;
-          SET @New_Est_Lieu_Alarme_Terminee_Non_Acquittee = 0;
-          SET @New_Est_Lieu_Alarme_Terminee_Non_Acquittee_T1 = 0;
-          SET @ApplyUpdate = 1;
-        END
-        ELSE IF @v_Id_Alarme IS NULL
+        IF @v_Id_Alarme IS NULL
         BEGIN
           IF @Lieu_Etat = 'S'
              AND DATEDIFF(SECOND, @Date_Heure_Derniere_Reponse, GETDATE()) <= @Retard_Non_Reponse * 60
@@ -4221,7 +4141,7 @@ BEGIN
     FETCH NEXT FROM cur INTO
       @Id_Lieu,@Est_Lieu_GSO,@Lieu_Etat,@Date_Heure_Dernier_Acquittement_En_Cours,@Derniere_Date_Heure,@Date_Heure_Derniere_Reponse,@Retard_Non_Reponse,
       @Est_Acq_Auto_Alarme_NR,
-      @Derniere_Valeur,@Tolerance_Surveillance_Inf,@Tolerance_Surveillance_Sup,@Seuil_Critique_Bas,@Est_Seuil_Critique_Bas_Active,@Seuil_Critique_Haut,@Est_Seuil_Critique_Haut_Active,@Retard_Alarme_Bas,@Retard_Alarme_Haut,@Sonde_Numero_Serie,
+      @Derniere_Valeur,@Tolerance_Surveillance_Inf,@Tolerance_Surveillance_Sup,@Retard_Alarme_Bas,@Retard_Alarme_Haut,@Sonde_Numero_Serie,
       @Date_Heure_Last_Update_EVT_GSO,@Derniere_Unite,@Date_Heure_Derniere_Reponse_Recue_OK,@Id_Alarme,@Est_Lieu_En_Alarme,@Est_Lieu_En_Pre_Alarme,
       @Est_Lieu_Alarme_Terminee_Non_Acquittee,@Est_Lieu_Alarme_Terminee_Non_Acquittee_T1,@Est_Consigne_Inf_Pre_Alarme_Active,@Consigne_Inf_Pre_Alarme,
       @Est_Consigne_Sup_Pre_Alarme_Active,@Consigne_Sup_Pre_Alarme;
