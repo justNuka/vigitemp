@@ -146,4 +146,16 @@ const alarmRangeSource = read("src/app/api/alarmes/range/route.ts")
 assert.ok(alarmRangeSource.includes("toPrismaStoredDbDateTime(startDate)"))
 assert.ok(alarmRangeSource.includes("toPrismaStoredDbDateTime(endDate)"))
 
+const dashboardMeasurementsSource = read("src/app/api/tableau-de-bord/measurements/route.ts")
+assert.ok(dashboardMeasurementsSource.includes("serializePrismaStoredDbDateTime(m.Date_Heure_Mesure)"))
+
+const sensorMeasurementsSource = read("src/app/api/sondes/[idSonde]/mesures/route.ts")
+assert.ok(sensorMeasurementsSource.includes("serializePrismaStoredDbDateTime"))
+
+const sensorListSource = read("src/app/api/capteurs/route.ts")
+assert.ok(sensorListSource.includes("serializePrismaStoredDbDateTime(lieu.Derniere_Date_Heure)"))
+
+const sensorDetailSource = read("src/app/api/capteurs/[id]/route.ts")
+assert.ok(sensorDetailSource.includes("serializePrismaStoredDbDateTime(lieu.Derniere_Date_Heure)"))
+
 console.log("surveillance-measurement-timezone: OK")
