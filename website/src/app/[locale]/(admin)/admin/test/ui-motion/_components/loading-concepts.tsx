@@ -416,7 +416,7 @@ function GraphTraceLoader({ speed }: LoaderMotionProps) {
           </svg>
 
           <motion.div
-            className="pointer-events-none absolute inset-y-0 w-20 bg-linear-to-r from-transparent via-primary/8 to-transparent"
+            className="pointer-events-none absolute inset-y-0 w-20 bg-linear-to-r from-transparent via-primary/10 to-transparent"
             animate={reduceMotion ? undefined : { left: ["-20%", "110%"] }}
             transition={{ duration: 2.8 * speed, repeat: Infinity, ease: "linear" }}
           />
