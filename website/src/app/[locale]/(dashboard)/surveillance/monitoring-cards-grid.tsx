@@ -6,7 +6,6 @@ import { useState } from "react"
 import { useLocale, useTranslations } from "next-intl"
 
 import { MonitoringCardSkeleton } from "@/components/monitoring-card-skeleton"
-import { useAppTimezone } from "@/components/timezone-provider"
 import type { SensorWithLocation, SurveillanceTreeSiteCounter } from "@/lib/api"
 
 import { SurveillanceEmptyState } from "./_components/monitoring-empty-state"
@@ -97,7 +96,6 @@ export function MonitoringCardsGrid({
   const t = useTranslations("surveillance")
   const [disabledExpanded, setDisabledExpanded] = useState(false)
   const locale = useLocale()
-  const timezone = useAppTimezone()
   const { value: expandedSites, toggle: toggleSite } = usePersistentStringSet("surveillance-expanded-sites")
   const { value: expandedGroups, toggle: toggleGroup } = usePersistentStringSet("surveillance-expanded-groups")
 
@@ -207,7 +205,6 @@ export function MonitoringCardsGrid({
                     toggleSite={toggleSite}
                     toggleGroup={toggleGroup}
                     locale={locale}
-                    timezone={timezone}
                     t={t}
                     onSurveillanceToggle={handleSurveillanceToggle}
                     onGroupSurveillanceToggle={onGroupSurveillanceToggle}
