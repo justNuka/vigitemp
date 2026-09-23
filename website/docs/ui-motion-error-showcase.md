@@ -34,12 +34,13 @@ La route réutilise le mécanisme des pages de test existantes et n'est disponib
 ENABLE_TEST_PAGES=true
 ```
 
-Le build de validation correspondant est :
+Pour ouvrir la galerie en développement :
 
 ```bash
-pnpm build:test
-pnpm start:test
+ENABLE_TEST_PAGES=true pnpm dev
 ```
+
+Le build de production conserve `ENABLE_TEST_PAGES` désactivé : la route de laboratoire retourne alors une 404 conformément au garde-fou prévu.
 
 L'accès reste soumis aux contrôles du layout Administration, notamment au droit Dashboard Admin déjà utilisé pour `/admin/test`.
 
