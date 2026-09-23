@@ -5,7 +5,7 @@ import { withAuthLogging } from "@/lib/api-wrappers"
 import { apiError, apiOk } from "@/lib/api-response"
 import { getUserLocationScope, buildLieuAccessFilter } from "@/lib/location-access-scope"
 import { log } from "@/lib/logger"
-import { parseDbDateTime, serializeStoredDbDateTime } from "@/lib/date-display"
+import { serializeStoredDbDateTime, toPrismaStoredDbDateTime } from "@/lib/date-display"
 
 const querySchema = z.object({
   idLieu: z.coerce.number().int().positive(),
@@ -28,8 +28,8 @@ export const GET = withAuthLogging(async (req: NextRequest, ctx) => {
     }
 
     const { idLieu, startDate, endDate } = parsed.data
-    const from = parseDbDateTime(startDate)
-    const to = parseDbDateTime(endDate)
+    const from = toPrismaStoredDbDateTime(startDate)
+    const to = toPrismaStoredDbDateTime(endDate)
     if (!from || !to || from > to) {
       return apiError(400, "validation_error", "Plage de dates invalide")
     }
