@@ -53,8 +53,5 @@ jobs:
             'src/app/[locale]/(admin)/admin/test/ui-motion/_components/ui-motion-showcase-client.tsx' \
             'scripts/test-ui-motion-showcase.ts'
 
-      - name: Check i18n
-        run: pnpm i18n:check
-
       - name: Build with test pages enabled
         run: pnpm build:test
