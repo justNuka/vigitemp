@@ -5218,6 +5218,16 @@
         "step3_description": "In each page folder, rename `page.tsx` and `page-old.tsx` to test the client-only version (without optimization).",
         "build_title": "Full test build",
         "build_description": "Measure real production timings (~5-15ms with cache)."
+      },
+      "design": {
+        "title": "UI lab",
+        "description": "Isolated mockups for validating animations, loaders and system screens before any integration into real user flows.",
+        "cards": {
+          "ui_motion": {
+            "title": "Motion & system pages",
+            "description": "VigiSensys loaders, domain animations and 404 / 500 / maintenance / network concepts."
+          }
+        }
       }
     },
     "monitoring": {
@@ -5366,6 +5376,143 @@
       },
       "more": "+ {count} more",
       "loaded_count": "{count} user{count, plural, one {} other {s}} loaded in <strong>{duration}ms</strong>"
+    },
+    "uiMotion": {
+      "page_title": "Motion & system pages lab",
+      "page_description": "This test page gathers VigiSensys visual concepts without replacing any skeleton, loader or error page currently used by the application.",
+      "hero": {
+        "badge": "Isolated concepts",
+        "title": "VigiSensys domain animations and errors",
+        "description": "The loaders reuse the visual language of Monitoring, measurements, charts and sensors. Error pages stay imaginative while keeping the tone of professional monitoring software."
+      },
+      "controls": {
+        "speed": "Speed",
+        "speed_values": {
+          "fast": "Fast",
+          "normal": "Normal",
+          "slow": "Slow"
+        },
+        "replay": "Replay"
+      },
+      "principles": {
+        "isolated_title": "No automatic integration",
+        "isolated_description": "The gallery only exists inside test pages and does not alter any production loading state.",
+        "performance_title": "Motion before 3D",
+        "performance_description": "The concepts favor Motion, SVG and CSS. Three.js should remain reserved for a visual need that truly justifies its cost.",
+        "production_title": "Preview before adoption",
+        "production_description": "Each concept can be adopted independently after UX, performance and accessibility validation."
+      },
+      "tabs": {
+        "loaders": "Loaders",
+        "errors": "Error pages"
+      },
+      "loaders": {
+        "intro_title": "Domain loaders",
+        "intro_description": "Six directions are shown independently. Current speed: {speed}. The Replay button restarts their intro sequences.",
+        "kinetic": {
+          "title": "Telemetry orbiter",
+          "description": "A monitoring core receives values orbiting around it. The kinetic movement suggests continuous acquisition without relying on a generic spinner.",
+          "usage": "Monitoring / dashboard",
+          "stage": "Live acquisition",
+          "status": "Receiving latest measurements"
+        },
+        "morph": {
+          "title": "Morphing signal",
+          "description": "The central shape transforms while data is synchronized. This is the most abstract concept, intended for short loads that need a recognizable VigiSensys signature.",
+          "usage": "Global loading",
+          "stage": "Morphing",
+          "status": "Synchronizing signal"
+        },
+        "cards": {
+          "title": "Monitoring cards assembling",
+          "description": "Cards appear layer by layer: header, value, chart and metadata. The screen feels like it is being assembled as data arrives.",
+          "usage": "Monitoring",
+          "stage": "Building cards"
+        },
+        "graph": {
+          "title": "Chart trace",
+          "description": "Thresholds appear first, then the measurement line is drawn with a reading point and subtle scan. Useful for detailed charts and range changes.",
+          "usage": "Charts",
+          "stage": "Drawing measurements",
+          "chart_title": "Cold room temperature",
+          "chart_subtitle": "Preparing time series",
+          "live": "Loading data"
+        },
+        "sensors": {
+          "title": "Sensor discovery",
+          "description": "A gateway progressively scans several sensor families. The visual language evokes hardware and communication instead of a generic skeleton.",
+          "usage": "Administration / sensors",
+          "stage": "Hardware scan",
+          "status": "Searching and identifying sensors"
+        },
+        "stream": {
+          "title": "Measurement stream",
+          "description": "Value packets converge toward application storage. This concept fits imports, history pages or screens aggregating a large amount of data.",
+          "usage": "Measurements / history",
+          "stage": "Data pipeline",
+          "target": "VigiSensys storage",
+          "status": "Aggregating measurements"
+        }
+      },
+      "errors": {
+        "intro_title": "Illustrated system pages",
+        "intro_description": "These screens are mockups only. Current 404/500 pages remain unchanged until a concept is explicitly approved for integration.",
+        "brand": "VigiSensys · environmental monitoring",
+        "actions": {
+          "home": "Back to home",
+          "back": "Back",
+          "retry": "Try again"
+        },
+        "notFound": {
+          "concept_title": "404 · Lost sensor",
+          "concept_description": "The requested resource visually drifts out of the monitoring network: more expressive than plain text while staying tied to the product domain.",
+          "usage": "404",
+          "title": "This route left the network",
+          "description": "The requested page cannot be found. Monitoring continues to operate normally.",
+          "scene_status": "Route not found"
+        },
+        "server": {
+          "concept_title": "500 · Measurement chain interrupted",
+          "concept_description": "A signal line becomes unstable between server building blocks. The illustration suggests a technical incident without implying that real data has been lost.",
+          "usage": "500",
+          "title": "A signal was interrupted",
+          "description": "VigiSensys encountered an error while processing this page. You can retry the operation.",
+          "scene_status": "Application incident"
+        },
+        "maintenance": {
+          "concept_title": "Maintenance · Technical bench",
+          "concept_description": "A sensor sits in the middle of a small animated maintenance bench. The tone stays calm and reassuring for planned downtime.",
+          "usage": "Maintenance",
+          "code": "MAINT.",
+          "title": "Maintenance in progress",
+          "description": "VigiSensys is performing a planned operation. Access will be restored as soon as the intervention is complete.",
+          "footer": "No action is required while this operation is running."
+        },
+        "network": {
+          "concept_title": "Network · Embedded diagnostic",
+          "concept_description": "The screen combines a simplified topology with a real mini diagnostic of the browser, Web origin and API, triggered only on request.",
+          "usage": "Network",
+          "code": "NETWORK",
+          "title": "The network link is unavailable",
+          "description": "The page clearly states what can be checked locally and avoids blaming the database or another service without evidence.",
+          "footer": "The diagnostic does not modify data and only performs availability requests.",
+          "diagnostic_title": "Quick diagnostic",
+          "diagnostic_description": "Three read-only availability checks",
+          "run": "Run test",
+          "checks": {
+            "browser": "Browser-reported connectivity",
+            "origin": "VigiSensys Web server",
+            "api": "VigiSensys API"
+          },
+          "details": {
+            "waiting": "Waiting",
+            "online": "The browser reports an active connection",
+            "offline": "The browser reports offline mode",
+            "skipped": "Not tested: browser connectivity is unavailable",
+            "unreachable": "No response before the timeout"
+          }
+        }
+      }
     }
   },
   "servicesVigilog": {
@@ -6387,4 +6534,4 @@
       }
     }
   }
-}
+}\n
