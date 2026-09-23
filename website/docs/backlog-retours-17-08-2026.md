@@ -2977,7 +2977,7 @@ Le workflow temporaire de validation a été retiré du diff final. Les changeme
 
 ## R23-004 — Aligner le seed SQL Server sur les derniers changements MySQL
 
-**Statut : `EN_COURS` — branche `fix/mssql-seed-parity` — base `dev` `412675643cbf531316c8a90565b4ca3df0a7594b`**
+**Statut : `PR_OUVERTE` — branche `fix/mssql-seed-parity` — PR #148 — base `dev` `412675643cbf531316c8a90565b4ca3df0a7594b`**
 
 ### Demande — 23/09/2026
 
