@@ -5415,14 +5415,21 @@
           "description": "Four measurement families change shape and position around an acquisition core. The choreography is intentionally geometric, precise and continuous.",
           "usage": "Monitoring / dashboard",
           "stage": "Live acquisition",
-          "status": "Receiving latest measurements"
+          "status": "Receiving latest measurements",
+          "sample": "sample"
         },
         "morph": {
           "title": "Morphing signal",
           "description": "A signal genuinely morphs through several silhouettes while decoding states evolve. A more graphic direction for short loading states.",
           "usage": "Global loading",
           "stage": "Morphing",
-          "status": "Synchronizing signal"
+          "status": "Synchronizing signal",
+          "telemetry": "telemetry",
+          "metrics": {
+            "signal": "signal",
+            "decode": "decode",
+            "buffer": "buffer"
+          }
         },
         "cards": {
           "title": "Monitoring cards assembling",
@@ -5444,7 +5451,8 @@
           "description": "A central radar sweeps the sensors and animates their links. The motion directly evokes field modules, sensors and communications.",
           "usage": "Administration / sensors",
           "stage": "Hardware scan",
-          "status": "Searching and identifying sensors"
+          "status": "Searching and identifying sensors",
+          "hub": "hub"
         },
         "stream": {
           "title": "Measurement stream",
@@ -5487,7 +5495,10 @@
           "code": "MAINT.",
           "title": "Maintenance in progress",
           "description": "VigiSensys is performing a planned operation. Access will be restored as soon as the intervention is complete.",
-          "footer": "No action is required while this operation is running."
+          "footer": "No action is required while this operation is running.",
+          "planned": "planned service",
+          "service_cycle": "service cycle",
+          "running": "running"
         },
         "network": {
           "concept_title": "Network · Embedded diagnostic",
@@ -5511,9 +5522,15 @@
             "offline": "The browser reports offline mode",
             "skipped": "Not tested: browser connectivity is unavailable",
             "unreachable": "No response before the timeout"
+          },
+          "labels": {
+            "web": "web",
+            "network": "network",
+            "interrupted": "link interrupted"
           }
         }
-      }
+      },
+      "lab_label": "VigiSensys Motion Lab"
     }
   },
   "servicesVigilog": {
