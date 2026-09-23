@@ -2473,7 +2473,7 @@ Le workflow temporaire de validation a été retiré du diff final.
 
 ## R23-001 — Respecter les groupes utilisateur dans les filtres et l’arborescence Surveillance
 
-**Statut : `PR_OUVERTE` — branche `fix/surveillance-group-access` — PR #145 — base `dev` `9e67fd3a8b42bf9da305533b4c87c9e0d95f45b6`**
+**Statut : `CORRIGE_DEV` — PR #145 — squash merge `c6ef7d87243d147bdceb1414c5f6a1c521a5d2bc`**
 
 ### Retour — 23/09/2026
 
@@ -2613,4 +2613,202 @@ Le workflow temporaire de validation a été retiré du diff final.
 - [ ] tester un utilisateur sans Site ni Groupe : tous les lieux doivent rester visibles ;
 - [ ] vérifier les compteurs Surveillance et Dashboard ;
 - [ ] vérifier la page Alarmes avec le même utilisateur ;
+- [ ] valider MySQL puis SQL Server.
+
+
+---
+
+## R23-002 — Navigation Admin persistante et double état de sauvegarde
+
+**Statut : `PR_OUVERTE` — branche `fix/admin-nav-backup-status` — PR #146 — base finale `dev` `14de48a5a20a990b4898f9aa3de2b0da5ee3af6c`**
+
+### Retour — 23/09/2026
+
+Deux évolutions sont demandées sur l'Administration :
+
+1. le dock de navigation Admin doit être visible :
+   - sur le Dashboard Admin ;
+   - sur les pages accessibles depuis ce dock ;
+   - sur les sous-pages de ces sections.
+
+2. la card **Sauvegarde système** doit distinguer :
+   - l'état de la sauvegarde principale ;
+   - l'état de la copie secondaire Robocopy lorsqu'un second répertoire est configuré.
+
+Le journal détaillé actuel est jugé correct et ne doit pas être modifié visuellement.
+
+### Navigation Admin — état vérifié avant correction
+
+`AdminNavDock` contient les destinations :
+
+- Sondes ;
+- Modules ;
+- Actionneurs ;
+- Groupes ;
+- Lieux ;
+- Sites ;
+- Outils.
+
+Cependant `shouldShowAdminNavDock()` n'acceptait que les correspondances exactes.
+
+Conséquences :
+
+- le dock était absent de `/admin` ;
+- il disparaissait dès qu'on entrait dans une sous-page, par exemple une sous-page de Sondes, Lieux ou Outils.
+
+### Navigation Admin — correctif
+
+Le dock est maintenant affiché :
+
+- sur `/admin` ;
+- sur chaque destination principale ;
+- sur leurs descendants via `pathname.startsWith(<route>/)`.
+
+Les autres pages Admin hors du menu restent inchangées : Paramètres, Audit, Métrologie, Santé système, etc.
+
+L'élément actif du dock suit également les sous-pages.
+
+### Sauvegarde système — problème identifié
+
+Le parser historique calculait un seul état par run.
+
+Toute ligne contenant une erreur faisait passer le run complet en `failed`.
+
+Exemple terrain :
+
+- les dumps MySQL sont OK ;
+- l'archive `7zip DUMP JOUR vers J : OK (code=0)` est créée ;
+- puis la copie secondaire échoue :
+  `ERREUR robocopy Repertoire principal vers Repertoire Secondaire (code=16)`.
+
+L'UI affichait donc la sauvegarde complète en échec alors que la sauvegarde principale était réussie.
+
+### Sauvegarde système — nouveau contrat
+
+La réponse `GET /api/admin/sauvegardes` expose désormais deux états indépendants :
+
+#### Sauvegarde principale
+
+- `success` lorsqu'une archive journalière 7zip a été créée sans erreur préalable ;
+- `failed` lorsqu'une erreur intervient pendant la phase principale ;
+- `in_progress` tant que la phase principale n'est pas terminée.
+
+Une erreur de copie secondaire n'altère plus cet état.
+
+#### Copie secondaire
+
+Le chemin est lu dans le journal depuis la ligne :
+
+`Repertoire secondaire de sauvegarde (si defini) : "..."`
+
+Une variante anglaise est également reconnue.
+
+- chemin vide `""` → `not_configured` ;
+- chemin défini + Robocopy réussi → `success` ;
+- chemin défini + Robocopy en attente / en cours → état dédié ;
+- code Robocopy en échec → `failed`.
+
+### Robocopy
+
+Le parser ne dépend plus uniquement du texte localisé.
+
+Les erreurs suivantes sont reconnues :
+
+- `ERREUR` ;
+- `ERROR` ;
+- `FAILED` ;
+- `FAILURE` ;
+- `ECHEC` / `ÉCHEC`.
+
+Le code Robocopy reste la source de vérité pour la copie secondaire :
+
+- codes `0–7` : non bloquants ;
+- codes `>= 8` : échec.
+
+La card fournit un message explicite pour chaque code `0–16`.
+
+Exemple attendu avec le log terrain :
+
+- Sauvegarde principale : **Réussie** ;
+- Copie secondaire : **Échec** ;
+- Répertoire : `Z:\Temp` ;
+- Code Robocopy 16 : erreur grave, copie secondaire non réalisée.
+
+### Affichage
+
+La card Sauvegarde système affiche deux blocs compacts :
+
+- **Sauvegarde principale** :
+  - état ;
+  - dernière exécution ;
+  - répertoire principal.
+
+- **Copie secondaire** :
+  - état ;
+  - répertoire secondaire si configuré ;
+  - code + explication Robocopy lorsqu'il existe.
+
+La dialog du journal conserve son affichage existant.
+
+Le rendu est partagé par les dashboards Basic / Standard / Expert.
+
+### Fichiers principaux
+
+- `website/src/components/admin-nav-dock.tsx` ;
+- `website/src/lib/backup-log-parser.ts` ;
+- `website/src/types/backup-types.ts` ;
+- `website/src/app/api/admin/sauvegardes/route.ts` ;
+- `website/src/app/[locale]/(admin)/admin/_components/admin-backup-status-summary.tsx` ;
+- `website/src/app/[locale]/(admin)/admin/page.tsx` ;
+- `website/src/app/[locale]/(admin)/admin/_components/expert-dashboard/expert-widget-card.tsx` ;
+- `website/src/app/[locale]/(admin)/admin/_components/expert-dashboard/expert-widget-renderer.tsx` ;
+- `website/src/app/[locale]/(admin)/admin/_components/expert-dashboard/expert-dashboard-types.ts` ;
+- `website/src/messages/fr.json` ;
+- `website/src/messages/en.json` ;
+- `website/scripts/test-admin-nav-backup-status.ts`.
+
+### Version
+
+- Web : **1.8.6** ;
+- Serveur : **1.1.0** — inchangé ;
+- Agent : **1.0.1** — inchangé ;
+- BDD : **0.91.0** — inchangée ;
+- aucune migration BDD.
+
+### Validation automatisée
+
+GitHub Actions run `35846548157` : **succès complet** après réintégration du dernier `dev` (`14de48a5a20a990b4898f9aa3de2b0da5ee3af6c`).
+
+- [x] `git diff --check origin/dev...HEAD` ;
+- [x] `pnpm test:admin-nav-backup-status` ;
+- [x] log terrain avec sauvegarde principale OK + Robocopy secondaire code 16 ;
+- [x] erreur anglaise `ERROR` ;
+- [x] répertoire secondaire vide ;
+- [x] codes Robocopy 0–7 non bloquants ;
+- [x] codes Robocopy 8–16 en échec ;
+- [x] dock sur `/admin` ;
+- [x] dock sur destinations + sous-pages ;
+- [x] absence du dock sur les autres pages Admin ;
+- [x] ESLint ciblé ;
+- [x] contrôle i18n sans nouvelle dette dans les sources du lot ;
+- [x] TypeScript Prisma MySQL ;
+- [x] génération Prisma SQL Server ;
+- [x] TypeScript Prisma SQL Server ;
+- [x] restauration Prisma MySQL ;
+- [x] build production Next.js.
+
+Le checker i18n global signale encore uniquement de la dette préexistante hors de ce lot (workflow d'étalonnage et mention légale). Le workflow temporaire de validation a été retiré du diff final.
+
+### Validation terrain
+
+- [ ] ouvrir le Dashboard Admin et vérifier la présence du dock ;
+- [ ] tester Sondes, Modules, Actionneurs, Groupes, Lieux, Sites et Outils ;
+- [ ] ouvrir une sous-page de Sondes / Lieux / Outils et vérifier que le dock reste visible ;
+- [ ] vérifier qu'Audit, Paramètres, Métrologie et Santé système ne récupèrent pas le dock par erreur ;
+- [ ] avec sauvegarde secondaire désactivée (`""`) : état **Non configurée** ;
+- [ ] avec copie secondaire réussie : état et code Robocopy cohérents ;
+- [ ] reproduire un code Robocopy 16 : principale **Réussie**, secondaire **Échec** ;
+- [ ] vérifier un Windows FR et un Windows EN ;
+- [ ] ouvrir la dialog du journal et confirmer que son affichage est inchangé ;
+- [ ] vérifier dashboards Basic / Standard / Expert ;
 - [ ] valider MySQL puis SQL Server.

@@ -4,6 +4,13 @@ import path from "path"
 
 import { withAdminLogging } from "@/lib/api-wrappers"
 import { apiError, apiOk } from "@/lib/api-response"
+import {
+  buildSecondaryCopySummary,
+  isBackupErrorLine,
+  parseBackupLogStatus,
+  parseBackupTimestamp,
+  type ParsedBackupRun,
+} from "@/lib/backup-log-parser"
 import { log } from "@/lib/logger"
 import { getCompatEnv } from "@/lib/vigisensys-compat"
 import { appDataPath, firstExistingPath, legacyAppDataPath } from "@/lib/vigisensys-paths"
@@ -25,28 +32,6 @@ function resolveBackupLogPath(backupRoot: string) {
   return path.join(backupRoot, "backup_bdd_vigisensys.log")
 }
 
-type ParsedRun = {
-  startedAt: string
-  endedAt: string | null
-  status: BackupRecord["etat"]
-  details: string
-}
-
-function parseFrenchTimestamp(value: string): string | null {
-  const match = value.match(/^(\d{2})\/(\d{2})\/(\d{4})\s+(\d{2}):(\d{2}):(\d{2})$/)
-  if (!match) return null
-
-  const [, day, month, year, hour, minute, second] = match
-  return new Date(
-    Number(year),
-    Number(month) - 1,
-    Number(day),
-    Number(hour),
-    Number(minute),
-    Number(second),
-  ).toISOString()
-}
-
 function formatBytes(bytes: number) {
   if (!Number.isFinite(bytes) || bytes <= 0) return "0 B"
 
@@ -62,82 +47,18 @@ function formatBytes(bytes: number) {
   return `${value.toFixed(digits)} ${units[unitIndex]}`
 }
 
-function summarizeRunLines(lines: string[]) {
-  const dumpErrors = lines.filter((line) => /:\s*Erreur\b/i.test(line))
-  const warningLine = dumpErrors[0] ?? lines.find((line) => /\bERREUR\b|\bERROR\b/i.test(line)) ?? null
-  if (warningLine) return warningLine.replace(/^\[[^\]]+\]\s*/, "")
-
-  const zipLine = lines.find((line) => /7zip .*: OK/i.test(line))
-  if (zipLine) return zipLine.replace(/^\[[^\]]+\]\s*/, "")
-
-  const dumpOkCount = lines.filter((line) => /DUMP .*: OK/i.test(line)).length
-  if (dumpOkCount > 0) return `${dumpOkCount} dump(s) termines`;
-
-  return lines[lines.length - 1]?.replace(/^\[[^\]]+\]\s*/, "") || "Execution detectee"
-}
-
-function parseBackupRuns(rawLog: string): ParsedRun[] {
-  const lines = rawLog.split(/\r?\n/).map((line) => line.trim()).filter(Boolean)
-  const runs: ParsedRun[] = []
-  let currentLines: string[] = []
-  let startedAt: string | null = null
-  let endedAt: string | null = null
-
-  const flushCurrentRun = () => {
-    if (!startedAt || currentLines.length === 0) return
-
-    const hasError = currentLines.some((line) => /:\s*Erreur\b/i.test(line) || /\bERREUR\b|\bERROR\b/i.test(line))
-    const hasFinished = currentLines.some((line) => /## FIN PROCESS BACKUP ##/i.test(line))
-    const hasZipOk = currentLines.some((line) => /7zip .*: OK/i.test(line))
-
-    runs.push({
-      startedAt,
-      endedAt,
-      status: hasFinished ? (hasError ? "failed" : "success") : (hasZipOk ? "success" : "in_progress"),
-      details: summarizeRunLines(currentLines),
-    })
-
-    currentLines = []
-    startedAt = null
-    endedAt = null
-  }
-
-  for (const line of lines) {
-    const timestampMatch = line.match(/^\[([^\]]+)\]/)
-    const parsedTimestamp = timestampMatch ? parseFrenchTimestamp(timestampMatch[1]) : null
-
-    if (/## DEBUT PROCESS BACKUP ##/i.test(line)) {
-      flushCurrentRun()
-      startedAt = parsedTimestamp
-      currentLines = [line]
-      endedAt = null
-      continue
-    }
-
-    if (!startedAt) continue
-
-    currentLines.push(line)
-    if (/## FIN PROCESS BACKUP ##/i.test(line) && parsedTimestamp) {
-      endedAt = parsedTimestamp
-    }
-  }
-
-  flushCurrentRun()
-  return runs.sort((a, b) => Date.parse(b.startedAt) - Date.parse(a.startedAt))
-}
-
 function toBackupLogEntry(line: string): BackupLogEntry {
   const timestampMatch = line.match(/^\[([^\]]+)\]\s*(.*)$/)
-  const timestamp = timestampMatch ? parseFrenchTimestamp(timestampMatch[1]) : null
+  const timestamp = timestampMatch ? parseBackupTimestamp(timestampMatch[1]) : null
   const rawMessage = (timestampMatch?.[2] ?? line).trim()
   const message = rawMessage.replace(/^#+\s*/, "").replace(/\s*#+$/, "").trim() || rawMessage
 
   const level: BackupLogEntry["level"] =
     /DEBUT PROCESS BACKUP|FIN PROCESS BACKUP/i.test(rawMessage)
       ? "section"
-      : /:\s*Erreur\b|\bERREUR\b|\bERROR\b/i.test(rawMessage)
+      : isBackupErrorLine(rawMessage)
         ? "error"
-        : /:\s*OK\b/i.test(rawMessage)
+        : /:\s*(?:OK|SUCCESS)\b/i.test(rawMessage)
           ? "success"
           : "info"
 
@@ -152,16 +73,24 @@ async function readBackupLog(backupLogPath: string) {
       .map((line) => line.trim())
       .filter(Boolean)
     const selectedLines = meaningfulLines.slice(-MAX_BACKUP_LOG_ENTRIES)
+    const parsedStatus = parseBackupLogStatus(rawLog)
 
     return {
-      runs: parseBackupRuns(rawLog),
+      runs: parsedStatus.runs,
+      secondaryCopy: buildSecondaryCopySummary(parsedStatus),
       entries: selectedLines.map(toBackupLogEntry),
       totalLineCount: meaningfulLines.length,
       truncated: meaningfulLines.length > selectedLines.length,
     }
   } catch {
     return {
-      runs: [] as ParsedRun[],
+      runs: [] as ParsedBackupRun[],
+      secondaryCopy: {
+        configured: false,
+        path: null,
+        etat: "not_configured" as const,
+        robocopyCode: null,
+      },
       entries: [] as BackupLogEntry[],
       totalLineCount: 0,
       truncated: false,
@@ -206,13 +135,15 @@ export const GET = withAdminLogging(async (_req: NextRequest) => {
 
     const runRecords: BackupRecord[] = backupLog.runs.map((run, index) => ({
       id: `run:${index}:${run.startedAt}`,
-      etat: run.status,
+      etat: run.primaryStatus,
       dateHeure: run.endedAt ?? run.startedAt,
-      details: run.details,
+      details: run.primaryDetails,
     }))
 
     const merged = [...archiveRecords]
-    const seenKeys = new Set(archiveRecords.map((record) => `${record.etat}:${record.dateHeure}:${record.details}`))
+    const seenKeys = new Set(
+      archiveRecords.map((record) => `${record.etat}:${record.dateHeure}:${record.details}`),
+    )
     for (const record of runRecords) {
       const key = `${record.etat}:${record.dateHeure}:${record.details}`
       if (seenKeys.has(key)) continue
@@ -230,6 +161,7 @@ export const GET = withAdminLogging(async (_req: NextRequest) => {
         archiveCount: archiveRecords.length,
         slotCount: BACKUP_SLOT_NAMES.length,
         latestRun: runRecords[0] ?? null,
+        secondaryCopy: backupLog.secondaryCopy,
         logEntries: backupLog.entries,
         logLineCount: backupLog.totalLineCount,
         logTruncated: backupLog.truncated,

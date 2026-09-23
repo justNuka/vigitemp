@@ -28,7 +28,14 @@ export const ADMIN_NAV_DOCK_PATHS = [
 ] as const;
 
 export function shouldShowAdminNavDock(pathname: string) {
-  return ADMIN_NAV_DOCK_PATHS.some((path) => pathname === path);
+  if (pathname === "/admin") return true;
+  return ADMIN_NAV_DOCK_PATHS.some(
+    (path) => pathname === path || pathname.startsWith(`${path}/`),
+  );
+}
+
+function isAdminNavItemActive(pathname: string, targetPathname: string) {
+  return pathname === targetPathname || pathname.startsWith(`${targetPathname}/`);
 }
 
 export function AdminNavDock() {
@@ -47,49 +54,49 @@ export function AdminNavDock() {
       icon: <Gauge size={20} />,
       label: tDock("sondes"),
       onClick: () => router.push("/admin/sondes"),
-      isActive: normalizedPathname === getLocalizedPathname("/admin/sondes", locale as any),
+      isActive: isAdminNavItemActive(normalizedPathname, getLocalizedPathname("/admin/sondes", locale as any)),
     },
     {
       key: "modules",
       icon: <WifiCog size={20} />,
       label: tDock("modules"),
       onClick: () => router.push("/admin/modules"),
-      isActive: normalizedPathname === getLocalizedPathname("/admin/modules", locale as any),
+      isActive: isAdminNavItemActive(normalizedPathname, getLocalizedPathname("/admin/modules", locale as any)),
     },
     {
       key: "actionneurs",
       icon: <Radio size={20} />,
       label: tDock("actionneurs"),
       onClick: () => router.push("/admin/actionneurs"),
-      isActive: normalizedPathname === getLocalizedPathname("/admin/actionneurs", locale as any),
+      isActive: isAdminNavItemActive(normalizedPathname, getLocalizedPathname("/admin/actionneurs", locale as any)),
     },
     {
       key: "groupes",
       icon: <Users size={20} />,
       label: tDock("groupes"),
       onClick: () => router.push("/admin/groupes"),
-      isActive: normalizedPathname === getLocalizedPathname("/admin/groupes", locale as any),
+      isActive: isAdminNavItemActive(normalizedPathname, getLocalizedPathname("/admin/groupes", locale as any)),
     },
     {
       key: "lieux",
       icon: <MapPin size={20} />,
       label: tDock("lieux"),
       onClick: () => router.push("/admin/lieux"),
-      isActive: normalizedPathname === getLocalizedPathname("/admin/lieux", locale as any),
+      isActive: isAdminNavItemActive(normalizedPathname, getLocalizedPathname("/admin/lieux", locale as any)),
     },
     {
       key: "sites",
       icon: <Globe size={20} />,
       label: tDock("sites"),
       onClick: () => router.push("/admin/sites"),
-      isActive: normalizedPathname === getLocalizedPathname("/admin/sites", locale as any),
+      isActive: isAdminNavItemActive(normalizedPathname, getLocalizedPathname("/admin/sites", locale as any)),
     },
     {
       key: "outils",
       icon: <Wrench size={20} />,
       label: tDock("outils"),
       onClick: () => router.push("/admin/outils"),
-      isActive: normalizedPathname.startsWith(getLocalizedPathname("/admin/outils", locale as any)),
+      isActive: isAdminNavItemActive(normalizedPathname, getLocalizedPathname("/admin/outils", locale as any)),
     },
   ];
 

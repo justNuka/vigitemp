@@ -8,7 +8,36 @@ Les versions suivent `MAJOR.MINOR.PATCH` sans zéros de tête. La source de vers
 
 ## [Unreleased]
 
-Aucun changement supplémentaire documenté depuis la préparation de la version Web 1.8.5.
+Aucun changement supplémentaire documenté depuis la préparation de la version Web 1.8.6.
+
+## [1.8.6] — 2026-09-23
+
+Cette version améliore la navigation Administration et distingue la sauvegarde principale de sa copie secondaire.
+
+### Navigation Administration
+
+- Le dock de navigation Admin est désormais visible sur le Dashboard Admin `/admin`.
+- Il reste visible sur les pages principales du dock et leurs sous-pages : Sondes, Modules, Actionneurs, Groupes, Lieux, Sites et Outils.
+- Les pages Admin hors de ce menu (Paramètres, Audit, Métrologie, Santé système, etc.) conservent leur comportement actuel.
+- L'élément actif du dock reste cohérent sur les sous-pages d'une section.
+
+### Sauvegarde système
+
+- La card affiche désormais deux états indépendants :
+  - **Sauvegarde principale** ;
+  - **Copie secondaire** via Robocopy lorsqu'un répertoire secondaire est configuré.
+- Un échec de copie secondaire n'écrase plus l'état de la sauvegarde principale.
+- Le répertoire secondaire est détecté à partir de la ligne de configuration du journal ; une valeur vide `""` est affichée comme **Non configurée**.
+- Les erreurs FR/EN sont reconnues (`ERREUR`, `ERROR`, ainsi que `FAILED` / `FAILURE`).
+- Les codes Robocopy `0–7` sont considérés comme non bloquants ; les codes `>= 8` sont considérés comme des échecs.
+- La card affiche un message explicite pour chaque code Robocopy `0–16`.
+- La fenêtre détaillée du journal n'est pas modifiée.
+
+### Compatibilité
+
+- Version Web : **1.8.6**.
+- Serveur **1.1.0**, Agent **1.0.1** et BDD **0.91.0** restent inchangés.
+- Aucune migration BDD n'est requise.
 
 ## [1.8.5] — 2026-09-23
 
