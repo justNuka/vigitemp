@@ -197,6 +197,53 @@ export function parseStoredDbDateTime(value: DbDateInput): Date | null {
   return serialized ? parseDbDateTime(serialized) : null;
 }
 
+/**
+ * Builds the Date wrapper expected by Prisma when querying/writing a
+ * timezone-less MySQL/MSSQL DATETIME.
+ *
+ * Prisma serializes JavaScript Date values as UTC instants. For a DB wall-clock
+ * boundary such as 15:00 local, the wrapper therefore has to represent
+ * 15:00:00Z, not the real instant corresponding to 15:00 in the browser
+ * timezone (13:00:00Z in Europe/Paris during summer).
+ */
+export function toPrismaStoredDbDateTime(value: DbDateInput): Date | null {
+  if (value === null || value === undefined) return null;
+
+  const toUtcWrapper = (date: Date) => {
+    if (Number.isNaN(date.getTime())) return null;
+    return new Date(
+      Date.UTC(
+        date.getFullYear(),
+        date.getMonth(),
+        date.getDate(),
+        date.getHours(),
+        date.getMinutes(),
+        date.getSeconds(),
+        date.getMilliseconds(),
+      ),
+    );
+  };
+
+  if (value instanceof Date) {
+    return toUtcWrapper(value);
+  }
+
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    if (!trimmed) return null;
+
+    const transportedStored = trimmed.match(
+      /^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?)(?:Z|[+-]\d{2}:?\d{2})$/i,
+    );
+    const wallClockValue = transportedStored?.[1] ?? trimmed;
+    const localDateTime = parseLocalDateTimeParts(wallClockValue);
+    if (localDateTime) return toUtcWrapper(localDateTime);
+  }
+
+  const parsed = parseDbDateTime(value);
+  return parsed ? toUtcWrapper(parsed) : null;
+}
+
 export function formatStoredDbDateTime(
   value: DbDateInput,
   options: DateDisplayOptions = {},
