@@ -17,14 +17,14 @@ Cette version ajoute un laboratoire UI isolé pour concevoir les futurs loaders 
 ### Laboratoire Motion
 
 - Nouvelle route de test `/[locale]/admin/test/ui-motion`, disponible uniquement lorsque `ENABLE_TEST_PAGES=true`.
-- Six directions de loaders sont proposées : orbiteur télémétrique, signal morphing, construction progressive des cards Surveillance, tracé de graphique, découverte des sondes et flux de mesures.
+- Six directions de loaders sont proposées et ont été retravaillées comme de vraies chorégraphies métier : formes cinétiques, morphing, cards Surveillance dessinées progressivement, graphe en couches, radar de sondes et pipeline de mesures.
 - Les animations utilisent Motion, SVG et CSS/Tailwind ; Three.js n'est pas ajouté tant qu'un besoin 3D ne justifie pas son coût.
-- Les prototypes prennent en compte `prefers-reduced-motion` afin de proposer une présentation stable lorsque les animations réduites sont demandées.
+- Le laboratoire force explicitement Motion (`reducedMotion="never"`) pour que les concepts restent animés même si le poste demande des animations réduites ; cette exception est limitée à la galerie de conception. Toute intégration en production devra de nouveau respecter `prefers-reduced-motion`.
 - La galerie permet d'ajuster la vitesse et de rejouer les séquences d'introduction.
 
 ### Pages système
 
-- Quatre concepts distincts sont disponibles : 404, 500, maintenance et erreur réseau.
+- Quatre concepts distincts sont disponibles : 404 spatial/technique avec code monumental, 500 illustré avec robot et racks serveur, maintenance sur banc technique et erreur réseau avec liaison visuellement rompue.
 - La page réseau inclut un mini diagnostic manuel et sans écriture : état `navigator.onLine`, disponibilité de l'origine Web et disponibilité de `/api/me`, avec timeout et latence.
 - Le diagnostic ne conclut pas à une panne de base, du Serveur Windows ou d'un équipement matériel à partir d'un simple échec réseau.
 
