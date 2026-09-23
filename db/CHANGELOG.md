@@ -23,7 +23,43 @@ La procédure complète d'upgrade des installations existantes est documentée d
 
 ## [Unreleased]
 
-Aucun changement supplémentaire documenté depuis la préparation du schéma 0.91.0.
+Aucun changement supplémentaire documenté depuis la préparation du schéma 0.91.1.
+
+## [0.91.1] — 2026-09-23
+
+Cette révision aligne le seed SQL Server sur les modifications déjà appliquées au seed MySQL et formalise leur migration pour les installations existantes.
+
+### `t_lieu_template` — types numériques
+
+Les neuf colonnes suivantes passent de `DECIMAL(10,2)` à `FLOAT` dans les deux moteurs :
+
+- `Consigne` ;
+- `Consigne_Sup` ;
+- `Consigne_Inf` ;
+- `Tolerance_Surveillance_Sup` ;
+- `Tolerance_Surveillance_Inf` ;
+- `Consigne_Sup_Pre_Alarme` ;
+- `Consigne_Inf_Pre_Alarme` ;
+- `Seuil_Critique_Haut` ;
+- `Seuil_Critique_Bas`.
+
+La nullabilité reste `NULL` et aucune valeur par défaut métier n'est ajoutée.
+
+### Trigger GSO
+
+Le trigger `TRG_GSO_BEF_UPD_LIEU_ALARME` n'évalue plus directement les seuils critiques `Seuil_Critique_Bas` / `Seuil_Critique_Haut`.
+
+Les variables, colonnes de curseur et branches de déclenchement immédiat correspondantes sont retirées du seed SQL Server afin de reproduire le comportement du seed MySQL courant.
+
+La logique historique restante est conservée : alarmes basse/haute temporisées, non-réponse, transitions, fins d'alarme et pré-alarmes.
+
+### Seeds / migrations
+
+- MySQL seed : version portée à **0.91.1** ; les changements métier préexistaient déjà dans le fichier.
+- SQL Server seed : types `FLOAT` + trigger GSO alignée + version **0.91.1**.
+- Migration MySQL : `db/migrations/0.91.1/mysql.sql`.
+- Migration SQL Server : `db/migrations/0.91.1/mssql.sql`.
+- Les deux migrations mettent `VERSION / SCHEMA_VERSION` à `0.91.1` uniquement après les modifications.
 
 ## [0.91.0] — 2026-09-21
 

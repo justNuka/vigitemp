@@ -2971,3 +2971,108 @@ Le workflow temporaire de validation a été retiré du diff final. Les changeme
 - [ ] vérifier les badges de Surveillance désactivée / réactivation programmée ;
 - [ ] refaire le contrôle sur une date en heure d'été et une date en heure d'hiver ;
 - [ ] valider MySQL puis SQL Server.
+
+
+---
+
+## R23-004 — Aligner le seed SQL Server sur les derniers changements MySQL
+
+**Statut : `PR_OUVERTE` — branche `fix/mssql-seed-parity` — PR #148 — base `dev` `412675643cbf531316c8a90565b4ca3df0a7594b`**
+
+### Demande — 23/09/2026
+
+Deux modifications ont été réalisées directement dans `db/vigisensys_seed.sql` et doivent être reproduites côté SQL Server :
+
+1. modification des types numériques de `t_lieu_template` ;
+2. modification de `TRG_GSO_BEF_UPD_LIEU_ALARME`.
+
+Commits MySQL analysés :
+
+- `14de48a5a20a990b4898f9aa3de2b0da5ee3af6c` — `Update des types de données du t_lieu_template` ;
+- `850fc17a515ffed98507b3357ea076905cb3bec2` — `Update trigger TRG_GSO_BEF_UPD_LIEU_ALARME`.
+
+### Changement de types
+
+Les neuf colonnes suivantes de `t_lieu_template` passent de `DECIMAL(10,2)` à `FLOAT` sur SQL Server, comme elles le sont déjà dans le seed MySQL :
+
+- `Consigne` ;
+- `Consigne_Sup` ;
+- `Consigne_Inf` ;
+- `Tolerance_Surveillance_Sup` ;
+- `Tolerance_Surveillance_Inf` ;
+- `Consigne_Sup_Pre_Alarme` ;
+- `Consigne_Inf_Pre_Alarme` ;
+- `Seuil_Critique_Haut` ;
+- `Seuil_Critique_Bas`.
+
+La nullabilité reste `NULL`.
+
+### Trigger GSO
+
+Le changement métier réellement identifié dans le commit MySQL est le retrait du bloc **seuils critiques immédiats** de `TRG_GSO_BEF_UPD_LIEU_ALARME`.
+
+Le gros diff du commit contient également beaucoup de suppressions de lignes vides, qui ne constituent pas un changement métier.
+
+Le seed SQL Server est aligné en retirant :
+
+- les quatre variables liées aux seuils critiques ;
+- les quatre champs correspondants du curseur `inserted` ;
+- les variables correspondantes des deux `FETCH NEXT` ;
+- les deux branches qui créaient/transitaient immédiatement vers une alarme `B` / `H` sur franchissement d'un seuil critique.
+
+La logique restante du trigger est conservée : alarmes temporisées B/H, non-réponse, transitions, fins d'alarme et pré-alarmes.
+
+### Version BDD et migrations
+
+Le lot formalise la révision BDD **0.91.1** :
+
+- `db/vigisensys_seed.sql` : comportement métier inchangé, marqueur porté à `0.91.1` ;
+- `db/vigisensys_seed_mssql.sql` : types + trigger alignés et marqueur `0.91.1` ;
+- `db/migrations/0.91.1/mysql.sql` : applique aux bases MySQL existantes les changements déjà présents dans le seed ;
+- `db/migrations/0.91.1/mssql.sql` : applique les mêmes changements aux bases SQL Server existantes.
+
+Les triggers des migrations sont générés depuis les triggers courantes des seeds pour éviter toute divergence.
+
+### Fichiers principaux
+
+- `db/vigisensys_seed.sql` ;
+- `db/vigisensys_seed_mssql.sql` ;
+- `db/migrations/0.91.1/mysql.sql` ;
+- `db/migrations/0.91.1/mssql.sql` ;
+- `db/migrations/README.md` ;
+- `db/CHANGELOG.md` ;
+- `CHANGELOG.md`.
+
+### Version
+
+- BDD : **0.91.1** ;
+- Web : **1.8.7** — inchangé ;
+- Serveur : **1.1.0** — inchangé ;
+- Agent : **1.0.1** — inchangé.
+
+### Validation automatisée
+
+GitHub Actions run `35864102588` : **succès complet**.
+
+- [x] `git diff --check origin/dev...HEAD` ;
+- [x] les 9 colonnes sont `FLOAT` dans les deux seeds ;
+- [x] les deux triggers GSO ne contiennent plus `Seuil_Critique_*` ;
+- [x] trigger MySQL migration = trigger MySQL seed (hors espaces de fin de ligne) ;
+- [x] trigger MSSQL migration = trigger MSSQL seed (hors espaces de fin de ligne) ;
+- [x] le curseur MSSQL et ses deux `FETCH NEXT` utilisent le même nombre de champs ;
+- [x] `SCHEMA_VERSION = 0.91.1` dans les deux seeds et migrations ;
+- [x] le seed MySQL ne reçoit aucune modification métier supplémentaire dans cette branche : uniquement le passage de version `0.91.0 -> 0.91.1`.
+
+Le workflow temporaire de validation a été retiré du diff final.
+
+### Validation terrain / BDD
+
+- [ ] nouvelle base MySQL : vérifier les types de `t_lieu_template` et le trigger ;
+- [ ] nouvelle base SQL Server : vérifier les mêmes objets ;
+- [ ] migration d'une base MySQL 0.91.0 vers 0.91.1 ;
+- [ ] migration d'une base SQL Server 0.91.0 vers 0.91.1 ;
+- [ ] vérifier que les données existantes de `t_lieu_template` sont conservées ;
+- [ ] tester une alarme GSO basse / haute avec retard normal ;
+- [ ] tester une non-réponse GSO ;
+- [ ] tester une fin d'alarme et une pré-alarme ;
+- [ ] confirmer que les seuils critiques ne déclenchent plus directement via le trigger GSO.
