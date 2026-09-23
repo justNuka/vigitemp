@@ -2473,7 +2473,7 @@ Le workflow temporaire de validation a été retiré du diff final.
 
 ## R23-001 — Respecter les groupes utilisateur dans les filtres et l’arborescence Surveillance
 
-**Statut : `EN_COURS` — branche `fix/surveillance-group-access` — base `dev` `9e67fd3a8b42bf9da305533b4c87c9e0d95f45b6`**
+**Statut : `PR_OUVERTE` — branche `fix/surveillance-group-access` — PR #145 — base `dev` `9e67fd3a8b42bf9da305533b4c87c9e0d95f45b6`**
 
 ### Retour — 23/09/2026
 
