@@ -6,7 +6,6 @@ import { apiError, apiOk } from "@/lib/api-response"
 import {
   formatDbDateTime,
   serializeDbDateTime,
-  toPrismaStoredDbDateTime,
   serializeStoredDbDateTime,
 } from "@/lib/date-display"
 import { getGlobalNonResponseDefault } from "@/lib/non-response-preference"
@@ -15,6 +14,7 @@ import { log } from "@/lib/logger"
 import { normalizeMeasureNumber } from "@/lib/measurements"
 import { downsampleMeasurementsForGraph } from "@/lib/measurement-downsampling"
 import { resolveSensorDisplayUnit } from "@/lib/sensor-unit"
+import { serializePrismaStoredDbDateTime, toPrismaStoredDbDateTime } from "@/lib/sql-provider"
 
 export const GET = withAuthLogging(
   async (req: NextRequest, ctx: HandlerContext, { params }: { params: Promise<{ idLieu: string }> }) => {
@@ -233,7 +233,7 @@ export const GET = withAuthLogging(
 
       const formattedMeasurements = chronologicalMeasurements.map((m) => {
         const dateHeure =
-          serializeStoredDbDateTime(m.Date_Heure_Mesure) ??
+          serializePrismaStoredDbDateTime(m.Date_Heure_Mesure) ??
           serializeDbDateTime(new Date()) ??
           ""
         const isNullMeasurement =
