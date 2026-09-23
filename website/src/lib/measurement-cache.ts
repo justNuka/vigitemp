@@ -1,3 +1,5 @@
+import { getMeasureTimestamp } from "@/lib/measurements"
+
 /**
  * Intelligent measurement cache that keeps measurements in memory
  * and only fetches new ones as they arrive (every ~15 minutes)
@@ -76,11 +78,7 @@ export function setCachedMeasurements(idLieu: number, newMeasurements: MeasureDa
     
     // Keep only the latest 125, sorted by date (newest first after reversal)
     const merged = Array.from(uniqueMap.values())
-      .sort((a, b) => {
-        const dateA = a.DateHeureMesureIso ? Date.parse(a.DateHeureMesureIso) : Date.parse(a.DateHeureMesure);
-        const dateB = b.DateHeureMesureIso ? Date.parse(b.DateHeureMesureIso) : Date.parse(b.DateHeureMesure);
-        return dateA - dateB;
-      })
+      .sort((a, b) => getMeasureTimestamp(a) - getMeasureTimestamp(b))
       .slice(-MAX_MEASUREMENTS);
     
     const lastMeasureTimestamp = newMeasurements.length > 0
