@@ -1,4 +1,4 @@
-import { formatDbDateTime, parseDbDateTime } from "@/lib/date-display"
+import { formatStoredDbDateTime, parseStoredDbDateTime } from "@/lib/date-display"
 import { formatNumber } from "@/lib/number-display"
 
 export type MeasureData = {
@@ -46,7 +46,7 @@ export function normalizeUnitLabel(unit: string | null | undefined): string {
 export function getMeasureTimestamp(
   measure: Pick<MeasureData, "DateHeureMesureIso" | "DateHeureMesure">,
 ): number {
-  const parsed = parseDbDateTime(measure.DateHeureMesureIso ?? measure.DateHeureMesure)
+  const parsed = parseStoredDbDateTime(measure.DateHeureMesureIso ?? measure.DateHeureMesure)
   return parsed ? parsed.getTime() : Number.NaN
 }
 
@@ -111,7 +111,7 @@ export function getMeasureSummary(
   const formattedValue = lastWithValue ? formatMeasureValue(lastWithValue.Valeur, decimals) : ""
   const lastMeasureText = lastWithValue ? `${formattedValue}${normalizeUnitLabel(lastWithValue.Unite || unite)}` : "N/A"
   const lastDateTime = last
-    ? formatDbDateTime(last.DateHeureMesureIso ?? last.DateHeureMesure, {
+    ? formatStoredDbDateTime(last.DateHeureMesureIso ?? last.DateHeureMesure, {
         format: "dateTime",
         fallback: "",
       })
@@ -190,17 +190,17 @@ export function formatTimeAxisLabel(
   locale = "fr-FR",
   spanMs = 0,
 ): string | string[] {
-  const date = parseDbDateTime(value)
+  const date = parseStoredDbDateTime(value)
   if (!date) {
     return typeof value === "string" ? value : ""
   }
 
   if (spanMs >= 24 * 60 * 60 * 1000) {
     return [
-      formatDbDateTime(date, { format: "dateShort", locale }),
-      formatDbDateTime(date, { format: "time", locale }),
+      formatStoredDbDateTime(value, { format: "dateShort", locale }),
+      formatStoredDbDateTime(value, { format: "time", locale }),
     ]
   }
 
-  return formatDbDateTime(date, { format: "time", locale })
+  return formatStoredDbDateTime(value, { format: "time", locale })
 }
