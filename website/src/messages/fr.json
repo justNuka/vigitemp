@@ -4535,6 +4535,50 @@
         "run": "Lancer sauvegarde"
       },
       "empty": "Aucun historique de sauvegarde disponible",
+      "primary": {
+        "label": "Sauvegarde principale"
+      },
+      "secondary": {
+        "label": "Copie secondaire",
+        "not_configured_description": "Aucun répertoire secondaire n'est défini.",
+        "not_run_description": "La copie secondaire n'a pas été exécutée pour cette sauvegarde.",
+        "pending_description": "La copie secondaire démarrera après la sauvegarde principale.",
+        "in_progress_description": "La copie vers le répertoire secondaire est en cours.",
+        "unknown_description": "Le journal ne permet pas de déterminer l'état de la copie secondaire."
+      },
+      "states": {
+        "success": "Réussie",
+        "in_progress": "En cours",
+        "failed": "Échec",
+        "pending": "En attente",
+        "not_run": "Non exécutée",
+        "not_configured": "Non configurée",
+        "unknown": "Indéterminée",
+        "none": "Aucune donnée"
+      },
+      "robocopy": {
+        "code": "Code Robocopy {code}",
+        "codes": {
+          "0": "Destination déjà à jour : aucun fichier à copier.",
+          "1": "Copie effectuée avec succès.",
+          "2": "Des fichiers supplémentaires existent dans la destination ; aucune erreur de copie.",
+          "3": "Copie effectuée ; des fichiers supplémentaires existent dans la destination.",
+          "4": "Des différences de fichiers ou de répertoires ont été détectées.",
+          "5": "Copie effectuée ; certaines différences ont été détectées.",
+          "6": "Des fichiers supplémentaires et des différences ont été détectés ; aucune erreur de copie.",
+          "7": "Copie effectuée avec des fichiers supplémentaires et des différences détectées.",
+          "8": "Au moins un fichier ou répertoire n'a pas pu être copié.",
+          "9": "Des fichiers ont été copiés, mais au moins une copie a échoué.",
+          "10": "Des fichiers supplémentaires existent et au moins une copie a échoué.",
+          "11": "Des fichiers ont été copiés, des fichiers supplémentaires existent et au moins une copie a échoué.",
+          "12": "Des différences ont été détectées et au moins une copie a échoué.",
+          "13": "Des fichiers ont été copiés, des différences ont été détectées et au moins une copie a échoué.",
+          "14": "Des fichiers supplémentaires et des différences ont été détectés, avec au moins une erreur de copie.",
+          "15": "Copie partielle avec fichiers supplémentaires, différences et au moins une erreur.",
+          "16": "Erreur Robocopy grave : la copie secondaire n'a pas pu être réalisée.",
+          "other": "Robocopy a retourné le code {code}, considéré comme un échec."
+        }
+      },
       "log": {
         "open": "Afficher le journal de sauvegarde",
         "title": "Journal de sauvegarde système",
