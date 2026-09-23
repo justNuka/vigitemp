@@ -4532,6 +4532,50 @@
         "run": "Run backup"
       },
       "empty": "No backup history available",
+      "primary": {
+        "label": "Primary backup"
+      },
+      "secondary": {
+        "label": "Secondary copy",
+        "not_configured_description": "No secondary backup directory is configured.",
+        "not_run_description": "The secondary copy was not run for this backup.",
+        "pending_description": "The secondary copy will start after the primary backup.",
+        "in_progress_description": "The copy to the secondary directory is in progress.",
+        "unknown_description": "The log does not provide enough information to determine the secondary copy status."
+      },
+      "states": {
+        "success": "Success",
+        "in_progress": "In progress",
+        "failed": "Failed",
+        "pending": "Pending",
+        "not_run": "Not run",
+        "not_configured": "Not configured",
+        "unknown": "Unknown",
+        "none": "No data"
+      },
+      "robocopy": {
+        "code": "Robocopy code {code}",
+        "codes": {
+          "0": "Destination already up to date; no files needed copying.",
+          "1": "Copy completed successfully.",
+          "2": "Extra files exist in the destination; no copy failure occurred.",
+          "3": "Files were copied and extra files exist in the destination.",
+          "4": "File or directory mismatches were detected.",
+          "5": "Files were copied and some mismatches were detected.",
+          "6": "Extra files and mismatches were detected; no copy failure occurred.",
+          "7": "Files were copied with extra files and mismatches detected.",
+          "8": "At least one file or directory could not be copied.",
+          "9": "Files were copied, but at least one copy operation failed.",
+          "10": "Extra files exist and at least one copy operation failed.",
+          "11": "Files were copied, extra files exist, and at least one copy operation failed.",
+          "12": "Mismatches were detected and at least one copy operation failed.",
+          "13": "Files were copied, mismatches were detected, and at least one copy operation failed.",
+          "14": "Extra files and mismatches were detected, with at least one copy failure.",
+          "15": "Partial copy with extra files, mismatches, and at least one failure.",
+          "16": "Serious Robocopy error: the secondary copy could not be completed.",
+          "other": "Robocopy returned code {code}, which is treated as a failure."
+        }
+      },
       "log": {
         "open": "Show backup log",
         "title": "System backup log",
