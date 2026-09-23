@@ -13,7 +13,7 @@ function assert(condition: unknown, message: string): asserts condition {
 
 function collectLeafPaths(value: unknown, prefix = ""): string[] {
   if (value === null || typeof value !== "object" || Array.isArray(value)) {
-    return [prefix];
+    return prefix ? [prefix] : [];
   }
 
   return Object.entries(value as Record<string, unknown>).flatMap(([key, child]) =>
@@ -61,17 +61,35 @@ assert(errorConcepts.includes('cache: "no-store"'), "Network probes must bypass 
 
 const fr = JSON.parse(read("src/messages/fr.json"));
 const en = JSON.parse(read("src/messages/en.json"));
-const frPaths = collectLeafPaths(fr.testPages?.uiMotion).sort();
-const enPaths = collectLeafPaths(en.testPages?.uiMotion).sort();
-assert(frPaths.length > 0, "French UI motion translations are missing.");
-assert(
-  JSON.stringify(frPaths) === JSON.stringify(enPaths),
-  "French and English UI motion translation keys must stay aligned.",
+function assertLocalizedScopeParity(
+  frScope: unknown,
+  enScope: unknown,
+  label: string,
+) {
+  const frPaths = collectLeafPaths(frScope).sort();
+  const enPaths = collectLeafPaths(enScope).sort();
+  assert(frPaths.length > 0, `French translations are missing for ${label}.`);
+  assert(
+    JSON.stringify(frPaths) === JSON.stringify(enPaths),
+    `French and English translation keys must stay aligned for ${label}.`,
+  );
+  return frPaths.length;
+}
+
+const uiMotionKeyCount = assertLocalizedScopeParity(
+  fr.testPages?.uiMotion,
+  en.testPages?.uiMotion,
+  "testPages.uiMotion",
+);
+assertLocalizedScopeParity(
+  fr.testPages?.index?.design,
+  en.testPages?.index?.design,
+  "testPages.index.design",
 );
 
 const pkg = JSON.parse(read("package.json"));
 assert(pkg.version === "1.9.0", `Expected Web version 1.9.0, got ${pkg.version ?? "missing"}.`);
 
 console.log(
-  `UI motion showcase validation passed: 6 loaders, 4 system pages, ${frPaths.length} localized leaf keys.`,
+  `UI motion showcase validation passed: 6 loaders, 4 system pages, ${uiMotionKeyCount} localized UI-motion leaf keys.`,
 );
