@@ -7,6 +7,7 @@ import {
   formatDbDateTime,
   parseDbDateTime,
   serializeDbDateTime,
+  toPrismaStoredDbDateTime,
   serializeStoredDbDateTime,
 } from "@/lib/date-display"
 import { getGlobalNonResponseDefault } from "@/lib/non-response-preference"
@@ -102,8 +103,8 @@ export const GET = withAuthLogging(
           : [{ Date_Heure_Mesure: sortBy === "date" ? sortDirection : "desc" }]
 
       if (startDate && endDate) {
-        const parsedStartDate = parseDbDateTime(startDate)
-        const parsedEndDate = parseDbDateTime(endDate)
+        const parsedStartDate = toPrismaStoredDbDateTime(startDate)
+        const parsedEndDate = toPrismaStoredDbDateTime(endDate)
         if (!parsedStartDate || !parsedEndDate) {
           return apiError(400, "invalid_date_range", "Invalid date range")
         }
