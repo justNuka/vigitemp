@@ -2777,23 +2777,27 @@ Le rendu est partagé par les dashboards Basic / Standard / Expert.
 
 ### Validation automatisée
 
-- [ ] `git diff --check origin/dev...HEAD` ;
-- [ ] `pnpm test:admin-nav-backup-status` ;
-- [ ] log terrain avec sauvegarde principale OK + Robocopy secondaire code 16 ;
-- [ ] erreur anglaise `ERROR` ;
-- [ ] répertoire secondaire vide ;
-- [ ] codes Robocopy 0–7 non bloquants ;
-- [ ] codes Robocopy 8–16 en échec ;
-- [ ] dock sur `/admin` ;
-- [ ] dock sur destinations + sous-pages ;
-- [ ] absence du dock sur les autres pages Admin ;
-- [ ] ESLint ciblé ;
-- [ ] contrôle i18n ;
-- [ ] TypeScript Prisma MySQL ;
-- [ ] génération Prisma SQL Server ;
-- [ ] TypeScript Prisma SQL Server ;
-- [ ] restauration Prisma MySQL ;
-- [ ] build production Next.js.
+GitHub Actions run `35845733046` : **succès complet** sur le HEAD fonctionnel du lot.
+
+- [x] `git diff --check origin/dev...HEAD` ;
+- [x] `pnpm test:admin-nav-backup-status` ;
+- [x] log terrain avec sauvegarde principale OK + Robocopy secondaire code 16 ;
+- [x] erreur anglaise `ERROR` ;
+- [x] répertoire secondaire vide ;
+- [x] codes Robocopy 0–7 non bloquants ;
+- [x] codes Robocopy 8–16 en échec ;
+- [x] dock sur `/admin` ;
+- [x] dock sur destinations + sous-pages ;
+- [x] absence du dock sur les autres pages Admin ;
+- [x] ESLint ciblé ;
+- [x] contrôle i18n sans nouvelle dette dans les sources du lot ;
+- [x] TypeScript Prisma MySQL ;
+- [x] génération Prisma SQL Server ;
+- [x] TypeScript Prisma SQL Server ;
+- [x] restauration Prisma MySQL ;
+- [x] build production Next.js.
+
+Le checker i18n global signale encore uniquement de la dette préexistante hors de ce lot (workflow d'étalonnage et mention légale). Le workflow temporaire de validation a été retiré du diff final.
 
 ### Validation terrain
 
