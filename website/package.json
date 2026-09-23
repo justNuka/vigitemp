@@ -1,6 +1,6 @@
 {
   "name": "vigitemp1.1",
-  "version": "1.8.5",
+  "version": "1.8.6",
   "private": true,
   "type": "module",
   "scripts": {
@@ -52,7 +52,8 @@
     "seed:mesures:journal-codes": "tsx scripts/seed-mesures-journal-codes.ts",
     "test:user-dashboard-locale-links": "tsx scripts/test-user-dashboard-locale-links.ts",
     "test:sensor-import-type-detection": "tsx scripts/test-sensor-import-type-detection.ts",
-    "test:surveillance-group-access": "tsx scripts/test-surveillance-group-access.ts"
+    "test:surveillance-group-access": "tsx scripts/test-surveillance-group-access.ts",
+    "test:admin-nav-backup-status": "tsx scripts/test-admin-nav-backup-status.ts"
   },
   "dependencies": {
     "@heroui/react": "^3.0.2",
