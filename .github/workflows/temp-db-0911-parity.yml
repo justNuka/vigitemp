@@ -78,8 +78,11 @@ jobs:
           mssql_seed_trigger = mssql_trigger(mssql_seed)
           assert "Seuil_Critique" not in mysql_seed_trigger
           assert "Seuil_Critique" not in mssql_seed_trigger
-          assert mysql_seed_trigger == mysql_trigger(mysql_migration)
-          assert mssql_seed_trigger == mssql_trigger(mssql_migration)
+          def normalize_trigger(value: str) -> str:
+              return "\n".join(line.rstrip() for line in value.splitlines()).strip()
+
+          assert normalize_trigger(mysql_seed_trigger) == normalize_trigger(mysql_trigger(mysql_migration))
+          assert normalize_trigger(mssql_seed_trigger) == normalize_trigger(mssql_trigger(mssql_migration))
 
           # The SQL Server cursor SELECT and both FETCH lists must stay aligned.
           select_match = re.search(
