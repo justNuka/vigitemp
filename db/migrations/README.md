@@ -17,6 +17,9 @@ db/migrations/
   0.91.0/
     mysql.sql
     mssql.sql
+  0.91.1/
+    mysql.sql
+    mssql.sql
   <version-suivante>/
     mysql.sql
     mssql.sql
@@ -81,12 +84,18 @@ La première migration formalisée dans cette arborescence est `0.90.2`. Elle co
 
 Better Auth reste désactivé dans le runtime de cette version : ces tables sont uniquement préparées pour la trajectoire de migration future.
 
-La dernière révision de schéma est `0.91.0`. Elle ajoute :
+La révision `0.91.0` ajoute :
 
 - `t_lieu.Seuil_Critique_Haut` / `Est_Seuil_Critique_Haut_Active` ;
 - `t_lieu.Seuil_Critique_Bas` / `Est_Seuil_Critique_Bas_Active` ;
 - les quatre champs correspondants dans `t_lieu_template` ;
-- la mise à jour du trigger GSO `TRG_GSO_BEF_UPD_LIEU_ALARME` sur MySQL et SQL Server pour déclencher immédiatement une alarme haute/basse lors d'un franchissement critique ;
-- le passage de `SCHEMA_VERSION` à `0.91.0` uniquement après application des changements.
+- la mise à jour initiale du trigger GSO `TRG_GSO_BEF_UPD_LIEU_ALARME` ;
+- le passage de `SCHEMA_VERSION` à `0.91.0`.
 
-Une installation déjà en `0.90.2` exécute uniquement `0.91.0/<moteur>.sql`. Une installation plus ancienne exécute toutes les révisions manquantes dans l'ordre.
+La dernière révision de schéma est `0.91.1`. Elle :
+
+- convertit en `FLOAT` les neuf champs numériques de consigne/tolérance/pré-alarme/seuil critique de `t_lieu_template` ;
+- réaligne `TRG_GSO_BEF_UPD_LIEU_ALARME` sur le comportement courant sans traitement direct des seuils critiques ;
+- porte `SCHEMA_VERSION` à `0.91.1`.
+
+Une installation en `0.91.0` exécute uniquement `0.91.1/<moteur>.sql`. Une installation plus ancienne exécute toutes les révisions manquantes dans l'ordre.
