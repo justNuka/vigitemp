@@ -178,10 +178,14 @@ export function serializeStoredDbDateTime(value: DbDateInput): string | null {
     if (!trimmed) return null;
 
     // A Prisma DATETIME may have crossed a JSON boundary and therefore arrive
-    // as an ISO instant ending in Z / an explicit offset. Its UTC components
-    // still represent the timezone-less wall-clock value stored in the DB.
-    if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:?\d{2})$/i.test(trimmed)) {
-      return serializeUtcDateComponents(new Date(trimmed));
+    // with a Z / explicit offset. For a stored timezone-less DATETIME the
+    // written calendar/time components are the source of truth: ignore the
+    // transport timezone instead of converting the value as a real instant.
+    const zonedStoredMatch = trimmed.match(
+      /^(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2}:\d{2})(?:\.\d+)?(?:Z|[+-]\d{2}:?\d{2})$/i,
+    );
+    if (zonedStoredMatch) {
+      return `${zonedStoredMatch[1]}T${zonedStoredMatch[2]}`;
     }
   }
 
