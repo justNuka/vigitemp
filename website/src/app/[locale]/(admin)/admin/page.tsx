@@ -3,8 +3,7 @@
 import { useMemo, useState } from "react"
 import { LazyMotion, domAnimation, m } from "motion/react"
 import { Link } from "@/i18n/navigation"
-import { useLocale, useTranslations } from "next-intl"
-import { useAppTimezone } from "@/components/timezone-provider"
+import { useTranslations } from "next-intl"
 import {
   AlertTriangle,
   ArrowRight,
@@ -38,6 +37,7 @@ import {
 import { useUnassignedSensors } from "@/hooks/useSensors"
 import { AdminSystemHealthCard } from "./_components/admin-system-health-card"
 import { AdminBackupLogDialog } from "./_components/admin-backup-log-dialog"
+import { AdminBackupStatusSummary } from "./_components/admin-backup-status-summary"
 import { AdminServiceCards } from "./_components/admin-service-cards"
 import { ExpertAdminDashboard } from "./_components/expert-admin-dashboard"
 import { staggerContainer, fadeInUp } from "@/lib/motion-variants"
@@ -46,7 +46,8 @@ import { formatDbDateTime } from "@/lib/date-display"
 type SummaryCardProps = {
   title: string
   description: string
-  value: string
+  value?: string
+  content?: React.ReactNode
   href?: string
   hrefLabel?: string
   icon: React.ReactNode
@@ -60,6 +61,7 @@ function SummaryCard({
   title,
   description,
   value,
+  content,
   href,
   hrefLabel,
   icon,
@@ -100,8 +102,12 @@ function SummaryCard({
           </div>
         </CardHeader>
         <CardContent className="flex flex-1 flex-col space-y-2 pt-4">
-          <div className="text-3xl font-bold tabular-nums">{value}</div>
-          {helper ? <p className="whitespace-pre-line break-all text-sm text-muted-foreground">{helper}</p> : null}
+          {content ?? (
+            <>
+              <div className="text-3xl font-bold tabular-nums">{value}</div>
+              {helper ? <p className="whitespace-pre-line break-all text-sm text-muted-foreground">{helper}</p> : null}
+            </>
+          )}
           {href && hrefLabel ? (
             <Link
               href={href as any}
@@ -120,8 +126,6 @@ function SummaryCard({
 export default function AdminDashboard() {
   const t = useTranslations("adminDashboard")
   const [isBackupLogOpen, setIsBackupLogOpen] = useState(false)
-  const locale = useLocale()
-  const timezone = useAppTimezone()
   const { license } = useLicense()
 
   const edition = getLicenseEdition(license, "standard")
@@ -150,39 +154,7 @@ export default function AdminDashboard() {
   const upcomingCalibrationCount = upcomingCalibrationQuery.data?.count ?? 0
   const accessLabel = t("actions.open_page")
   const alarmsAccessLabel = `${accessLabel} (${alarmsInProgressTotal})`
-  const backupStoragePath = backupsQuery.data?.summary.storagePath ?? "-"
-  const backupLogFilePath = backupsQuery.data?.summary.logFilePath ?? "-"
-  const latestBackup = backupsQuery.data?.summary.latestRun ?? backupsQuery.data?.data?.[0]
-  const lastBackupLabel = latestBackup?.dateHeure
-    ? new Intl.DateTimeFormat(locale, {
-        dateStyle: "short",
-        timeStyle: "medium",
-        timeZone: timezone,
-      }).format(new Date(latestBackup.dateHeure))
-    : t("backup.last.none")
-  const latestBackupStatus = latestBackup
-    ? t(`backups.status.${latestBackup.etat}`)
-    : t("backup.last.none")
-  const latestBackupBadge = latestBackup ? (
-    <Badge
-      variant={
-        latestBackup.etat === "success"
-          ? "default"
-          : latestBackup.etat === "failed"
-            ? "destructive"
-            : "secondary"
-      }
-      className={
-        latestBackup.etat === "success"
-          ? "bg-emerald-600 text-white hover:bg-emerald-600"
-          : latestBackup.etat === "in_progress"
-            ? "bg-amber-100 text-amber-800 hover:bg-amber-100 dark:bg-amber-950 dark:text-amber-300"
-            : undefined
-      }
-    >
-      {latestBackupStatus}
-    </Badge>
-  ) : undefined
+  const backupSummary = backupsQuery.data?.summary ?? null
 
   const latestAckRaw = acknowledgmentsQuery.data?.data?.[0]?.dateHeure || null
   const latestAck = latestAckRaw ? formatDbDateTime(latestAckRaw, { format: "dateTimeSeconds" }) : "-"
@@ -293,10 +265,8 @@ export default function AdminDashboard() {
             <SummaryCard
               title={t("backup.title")}
               description={t("backup.description", { total: backupsTotal })}
-              value={latestBackupStatus}
-              helper={`${t("backup.last.label")}: ${lastBackupLabel}\n${backupStoragePath}`}
+              content={<AdminBackupStatusSummary summary={backupSummary} />}
               icon={<BookOpen className="h-5 w-5 text-violet-600" />}
-              badge={latestBackupBadge}
               onClick={() => setIsBackupLogOpen(true)}
               ariaLabel={t("backup.log.open")}
             />
@@ -327,11 +297,7 @@ export default function AdminDashboard() {
             latestAck,
             latestAuditAction,
             latestConnectedLabel,
-            lastBackupLabel,
-            latestBackupStatus,
-            latestBackupEtat: latestBackup?.etat ?? null,
-            backupStoragePath,
-            backupLogFilePath,
+            backupSummary,
             upcomingCalibrationCount,
             hideStandards,
           }}
@@ -420,10 +386,8 @@ export default function AdminDashboard() {
           <SummaryCard
             title={t("backup.title")}
             description={t("backup.description", { total: backupsTotal })}
-            value={latestBackupStatus}
-            helper={`${t("backup.last.label")}: ${lastBackupLabel}\n${backupStoragePath}`}
+            content={<AdminBackupStatusSummary summary={backupSummary} />}
             icon={<BookOpen className="h-5 w-5 text-violet-600" />}
-            badge={latestBackupBadge}
             onClick={() => setIsBackupLogOpen(true)}
             ariaLabel={t("backup.log.open")}
           />
