@@ -8,7 +8,36 @@ Les versions suivent `MAJOR.MINOR.PATCH` sans zéros de tête. La source de vers
 
 ## [Unreleased]
 
-Aucun changement supplémentaire documenté depuis la préparation de la version Web 1.8.4.
+Aucun changement supplémentaire documenté depuis la préparation de la version Web 1.8.5.
+
+## [1.8.5] — 2026-09-23
+
+Cette version fiabilise l'application des restrictions Sites / Groupes dans Surveillance.
+
+### Droits de visibilité
+
+- Lorsqu'un utilisateur possède à la fois des sites et des groupes affectés, les deux dimensions sont désormais appliquées ensemble : un lieu doit appartenir à un **site autorisé ET à au moins un groupe autorisé**.
+- Avec uniquement des sites affectés, les groupes de ces sites restent accessibles.
+- Avec uniquement des groupes affectés, seuls les lieux appartenant à ces groupes restent accessibles, quel que soit leur site.
+- Sans site ni groupe affecté, le comportement historique reste inchangé : tous les lieux sont visibles.
+
+### Filtres Surveillance
+
+- Les groupes présents dans le périmètre des sites mais non affectés à l'utilisateur restent visibles dans le sélecteur **Groupes**, mais sont grisés et non sélectionnables.
+- Un filtre non autorisé conservé dans le localStorage est automatiquement retiré.
+- L'API paginée réapplique systématiquement le scope utilisateur, y compris lorsqu'un filtre Site ou Groupe explicite est envoyé.
+
+### Arborescence
+
+- Les métadonnées de groupes renvoyées avec les lieux sont limitées aux groupes réellement autorisés pour l'utilisateur.
+- Un lieu multi-groupes autorisé via un groupe ne peut donc plus réapparaître sous un autre groupe non autorisé dans l'Arborescence.
+- Les compteurs de l'Arborescence suivent le même filtrage.
+
+### Compatibilité
+
+- Version Web : **1.8.5**.
+- Serveur **1.1.0**, Agent **1.0.1** et BDD **0.91.0** restent inchangés.
+- Aucune migration BDD n'est requise.
 
 ## [1.8.4] — 2026-09-22
 
