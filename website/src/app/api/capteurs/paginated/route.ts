@@ -4,6 +4,7 @@ import { Prisma } from "../../../../generated/@prisma-db-mesures"
 
 import { withAuthLogging } from "@/lib/api-wrappers"
 import { apiError, apiOk } from "@/lib/api-response"
+import { buildLieuAccessFilter, getUserLocationScope } from "@/lib/location-access-scope"
 import { prisma, prismaMesure } from "@/lib/prisma"
 import { log } from "@/lib/logger"
 import { serializeStoredDbDateTime } from "@/lib/date-display"
@@ -90,68 +91,25 @@ export const GET = withAuthLogging(async (request: NextRequest, ctx) => {
 
     const skip = (page - 1) * limit
 
+    const scope = await getUserLocationScope(ctx.user.userId)
+    const accessFilter = buildLieuAccessFilter(scope)
     const whereAnd: Record<string, unknown>[] = [{ Est_Archive: false }]
-
-    const [assignedSites, assignedGroups] = await Promise.all([
-      prisma.t_liaison_utilisateur_site.findMany({
-        where: { Id_Utilisateur: ctx.user.userId },
-        select: { Id_Site: true },
-      }),
-      prisma.t_liaison_utilisateur_groupe.findMany({
-        where: { Id_Utilisateur: ctx.user.userId },
-        select: { Id_Groupe: true },
-      }),
-    ])
-
-    const assignedSiteIds = assignedSites.map((site) => site.Id_Site).filter((id): id is number => !!id)
-    const assignedGroupIds = assignedGroups
-      .map((group) => group.Id_Groupe)
-      .filter((id): id is number => !!id)
-
-    const hasAssignedSites = assignedSiteIds.length > 0
-    const hasAssignedGroups = assignedGroupIds.length > 0
-    const hasFilters = siteIds.length > 0 || groupIds.length > 0
+    if (accessFilter) {
+      whereAnd.push(accessFilter)
+    }
 
     if (siteIds.length > 0) {
-      const allowedSiteIds = hasAssignedSites
-        ? siteIds.filter((id) => assignedSiteIds.includes(id))
-        : siteIds
-      if (allowedSiteIds.length === 0) {
-        return apiOk({ total: 0, page, limit, totalPages: 0, sensors: [] }, { headers: NO_STORE_HEADERS })
-      }
-      whereAnd.push({ Id_Site: { in: allowedSiteIds } })
+      whereAnd.push({ Id_Site: { in: siteIds } })
     }
 
     if (groupIds.length > 0) {
-      const allowedGroupIds = hasAssignedGroups
-        ? groupIds.filter((id) => assignedGroupIds.includes(id))
-        : groupIds
-      if (allowedGroupIds.length === 0) {
-        return apiOk({ total: 0, page, limit, totalPages: 0, sensors: [] }, { headers: NO_STORE_HEADERS })
-      }
       whereAnd.push({
-        OR: [
-        { t_lieu_groupe: { some: { Id_Groupe: { in: allowedGroupIds } } } },
-        ],
+        t_lieu_groupe: { some: { Id_Groupe: { in: groupIds } } },
       })
     }
 
-    if (!hasFilters && (hasAssignedSites || hasAssignedGroups)) {
-      const accessOr: Record<string, unknown>[] = []
-      if (hasAssignedSites) {
-        accessOr.push({ Id_Site: { in: assignedSiteIds } })
-      }
-      if (hasAssignedGroups) {
-        accessOr.push({
-          OR: [
-            { t_lieu_groupe: { some: { Id_Groupe: { in: assignedGroupIds } } } },
-          ],
-        })
-      }
-      if (accessOr.length > 0) {
-        whereAnd.push({ OR: accessOr })
-      }
-    }
+    const visibleGroupMembershipWhere =
+      scope.groupIds.length > 0 ? { Id_Groupe: { in: scope.groupIds } } : undefined
 
     if (surveillanceDisabledFilter === "disabled") {
       whereAnd.push({ Lieu_Etat: "D" })
@@ -185,7 +143,10 @@ export const GET = withAuthLogging(async (request: NextRequest, ctx) => {
         Est_Lieu_Alarme_Terminee_Non_Acquittee: true,
         Est_Lieu_Alarme_Terminee_Non_Acquittee_T1: true,
         t_site: { select: { Libelle_Site: true } },
-        t_lieu_groupe: { include: { t_groupe: { select: { Id_Groupe: true, Nom_Groupe: true } } } },
+        t_lieu_groupe: {
+          ...(visibleGroupMembershipWhere ? { where: visibleGroupMembershipWhere } : {}),
+          include: { t_groupe: { select: { Id_Groupe: true, Nom_Groupe: true } } },
+        },
       },
     })
 
@@ -286,7 +247,10 @@ export const GET = withAuthLogging(async (request: NextRequest, ctx) => {
           },
         },
         t_site: { select: { Libelle_Site: true } },
-        t_lieu_groupe: { include: { t_groupe: { select: { Id_Groupe: true, Nom_Groupe: true } } } },
+        t_lieu_groupe: {
+          ...(visibleGroupMembershipWhere ? { where: visibleGroupMembershipWhere } : {}),
+          include: { t_groupe: { select: { Id_Groupe: true, Nom_Groupe: true } } },
+        },
       },
       skip,
       take: limit,
