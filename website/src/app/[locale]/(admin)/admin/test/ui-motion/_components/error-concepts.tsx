@@ -358,7 +358,7 @@ function NetworkDiagnosticScene() {
     setChecks(makeChecks());
 
     updateCheck("browser", { status: "running" });
-    await new Promise((resolve) => window.setTimeout(resolve, 220));
+    await new Promise<void>((resolve) => window.setTimeout(resolve, 220));
     const browserOnline = navigator.onLine;
     updateCheck("browser", {
       status: browserOnline ? "ok" : "error",
