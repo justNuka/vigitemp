@@ -9,7 +9,7 @@ import { withAuthLogging } from "@/lib/api-wrappers"
 
 import { apiError, apiOk } from "@/lib/api-response"
 import { log } from "@/lib/logger"
-import { serializeDbDateTime, serializeStoredDbDateTime } from "@/lib/date-display"
+import { serializeDbDateTime, serializeStoredDbDateTime, toPrismaStoredDbDateTime } from "@/lib/date-display"
 
 const alarmsQuerySchema = z.object({
   status: z.enum(["active", "acknowledged", "resolved"]).optional(),
@@ -224,6 +224,7 @@ export const GET = withAuthLogging(async (req: NextRequest, ctx) => {
     const startDate = new Date()
 
     startDate.setDate(startDate.getDate() - 30)
+    const storedStartDate = toPrismaStoredDbDateTime(startDate) ?? startDate
 
 
 
@@ -248,7 +249,7 @@ export const GET = withAuthLogging(async (req: NextRequest, ctx) => {
           prisma.t_alarme.findMany({
             where: {
               Id_Lieu: { in: lieuIds },
-              Date_Heure_Debut: { gte: startDate },
+              Date_Heure_Debut: { gte: storedStartDate },
             },
             select: {
               Id_Lieu: true,
@@ -257,7 +258,7 @@ export const GET = withAuthLogging(async (req: NextRequest, ctx) => {
           prisma.t_alarme_histo.findMany({
             where: {
               Id_Lieu: { in: lieuIds },
-              Date_Heure_Debut: { gte: startDate },
+              Date_Heure_Debut: { gte: storedStartDate },
             },
             select: {
               Id_Lieu: true,
