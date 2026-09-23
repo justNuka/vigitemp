@@ -155,11 +155,7 @@ export function serializeDbDateTime(value: DbDateInput): string | null {
  * while the stored components already represent the local wall-clock value.
  * Reading UTC components prevents adding the browser/server timezone offset.
  */
-export function serializeStoredDbDateTime(value: DbDateInput): string | null {
-  if (!(value instanceof Date)) {
-    return serializeDbDateTime(value);
-  }
-
+const serializeUtcDateComponents = (value: Date): string | null => {
   if (Number.isNaN(value.getTime())) return null;
 
   const year = value.getUTCFullYear();
@@ -170,6 +166,39 @@ export function serializeStoredDbDateTime(value: DbDateInput): string | null {
   const seconds = pad2(value.getUTCSeconds());
 
   return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
+};
+
+export function serializeStoredDbDateTime(value: DbDateInput): string | null {
+  if (value instanceof Date) {
+    return serializeUtcDateComponents(value);
+  }
+
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    if (!trimmed) return null;
+
+    // A Prisma DATETIME may have crossed a JSON boundary and therefore arrive
+    // as an ISO instant ending in Z / an explicit offset. Its UTC components
+    // still represent the timezone-less wall-clock value stored in the DB.
+    if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:?\d{2})$/i.test(trimmed)) {
+      return serializeUtcDateComponents(new Date(trimmed));
+    }
+  }
+
+  return serializeDbDateTime(value);
+}
+
+export function parseStoredDbDateTime(value: DbDateInput): Date | null {
+  const serialized = serializeStoredDbDateTime(value);
+  return serialized ? parseDbDateTime(serialized) : null;
+}
+
+export function formatStoredDbDateTime(
+  value: DbDateInput,
+  options: DateDisplayOptions = {},
+): string {
+  const serialized = serializeStoredDbDateTime(value);
+  return serialized ? formatDbDateTime(serialized, options) : (options.fallback ?? "-");
 }
 
 const maybeAlreadyFormatted = (value: string) => {
