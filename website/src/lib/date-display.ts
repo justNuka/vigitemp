@@ -202,7 +202,14 @@ export function formatStoredDbDateTime(
   options: DateDisplayOptions = {},
 ): string {
   const serialized = serializeStoredDbDateTime(value);
-  return serialized ? formatDbDateTime(serialized, options) : (options.fallback ?? "-");
+  if (!serialized) return options.fallback ?? "-";
+
+  // Stored DATETIME values already represent a local wall-clock value.
+  // Never apply an additional timezone conversion while formatting them.
+  return formatDbDateTime(
+    serialized,
+    options.timeZone ? { ...options, timeZone: undefined } : options,
+  );
 }
 
 const maybeAlreadyFormatted = (value: string) => {
