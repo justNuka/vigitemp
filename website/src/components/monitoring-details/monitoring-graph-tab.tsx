@@ -123,8 +123,8 @@ function buildMergedAxisLabels(
   return Array.from(labels)
     .filter((label) => Number.isFinite(parseStoredDbDateTime(label)?.getTime() ?? Number.NaN))
     .sort((left, right) => {
-      const leftTs = parseDbDateTime(left)?.getTime() ?? Number.NaN
-      const rightTs = parseDbDateTime(right)?.getTime() ?? Number.NaN
+      const leftTs = parseStoredDbDateTime(left)?.getTime() ?? Number.NaN
+      const rightTs = parseStoredDbDateTime(right)?.getTime() ?? Number.NaN
       if (!Number.isFinite(leftTs) || !Number.isFinite(rightTs)) {
         return left.localeCompare(right)
       }
