@@ -1,0 +1,46 @@
+name: UI motion showcase validation
+
+on:
+  push:
+    branches:
+      - feature/ui-motion-showcase
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: website
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: website/pnpm-lock.yaml
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Showcase contract
+        run: pnpm test:ui-motion-showcase
+
+      - name: ESLint UI motion files
+        run: >
+          pnpm exec eslint
+          "src/app/[locale]/(admin)/admin/test/ui-motion/**/*.{ts,tsx}"
+          "src/app/[locale]/(admin)/admin/test/page.tsx"
+          "scripts/test-ui-motion-showcase.ts"
+
+      - name: i18n check
+        run: pnpm i18n:check
+
+      - name: Build test pages
+        run: pnpm build:test
