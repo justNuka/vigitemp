@@ -3,11 +3,11 @@ import { z } from "zod"
 
 import { withAuthLogging } from "@/lib/api-wrappers"
 import { apiError, apiOk } from "@/lib/api-response"
-import { serializeStoredDbDateTime } from "@/lib/date-display"
 import { applyAccessFilter, buildAlarmAccessFilter, getUserLocationScope } from "@/lib/location-access-scope"
 import { log } from "@/lib/logger"
 import { normalizeMeasureNumber } from "@/lib/measurements"
 import { prisma } from "@/lib/prisma"
+import { serializePrismaStoredDbDateTime } from "@/lib/sql-provider"
 
 function mapAlarmType(type: string | null | undefined) {
   switch ((type ?? "").trim().toUpperCase()) {
@@ -96,8 +96,8 @@ export const GET = withAuthLogging(async (req: NextRequest, ctx) => {
           locationId: alarm.Id_Lieu,
           type: mapAlarmType(alarm.Type),
           status: alarm.Date_Heure_Fin ? ("resolved" as const) : ("active" as const),
-          timestamp: serializeStoredDbDateTime(alarm.Date_Heure_Debut) || null,
-          resolvedAt: serializeStoredDbDateTime(alarm.Date_Heure_Fin) || null,
+          timestamp: serializePrismaStoredDbDateTime(alarm.Date_Heure_Debut) || null,
+          resolvedAt: serializePrismaStoredDbDateTime(alarm.Date_Heure_Fin) || null,
           currentValue: technicalType
             ? null
             : normalizeMeasureNumber(alarm.t_lieu?.Derniere_Valeur ?? alarm.Valeur ?? null, 2),
