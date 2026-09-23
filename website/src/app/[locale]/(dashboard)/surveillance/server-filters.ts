@@ -27,9 +27,9 @@ export async function ServerFilterOptions() {
     const scope = await getUserLocationScope(userId)
     const lieuAccessFilter = buildLieuAccessFilter(scope)
 
-    const groupCandidateWhere: Record<string, unknown> = { Est_Archive: false }
-    if (scope.siteIds.length > 0) {
-      groupCandidateWhere.Id_Site = { in: scope.siteIds }
+    const groupCandidateWhere = {
+      Est_Archive: false,
+      ...(scope.siteIds.length > 0 ? { Id_Site: { in: scope.siteIds } } : {}),
     }
 
     const [lieuxData, groupCandidateLocations] = await Promise.all([
