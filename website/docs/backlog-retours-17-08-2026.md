@@ -3088,7 +3088,7 @@ Les retours suivants ont été fournis à la fois sous forme de texte et de capt
 
 ### R23-005-A — Décalages horaires Surveillance / graphes / acquittements
 
-**Statut : `EN_COURS` — branche `fix/monitoring-range-timezone` — base `dev` `ab753d85e1832dab7878158b7f2463d570772a87`**
+**Statut : `PR_OUVERTE` — branche `fix/monitoring-range-timezone` — PR #149 — base `dev` `ab753d85e1832dab7878158b7f2463d570772a87`**
 
 Retours :
 
