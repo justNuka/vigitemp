@@ -5418,14 +5418,21 @@
           "description": "Quatre familles de mesures changent de forme et de position autour d'un noyau d'acquisition. La chorégraphie est volontairement géométrique, précise et continue.",
           "usage": "Surveillance / dashboard",
           "stage": "Acquisition live",
-          "status": "Réception des dernières mesures"
+          "status": "Réception des dernières mesures",
+          "sample": "mesure"
         },
         "morph": {
           "title": "Signal morphing",
           "description": "Un signal se déforme réellement entre plusieurs silhouettes pendant que les états de décodage évoluent. Une direction plus graphique pour les chargements courts.",
           "usage": "Chargement global",
           "stage": "Morphing",
-          "status": "Synchronisation du signal"
+          "status": "Synchronisation du signal",
+          "telemetry": "télémétrie",
+          "metrics": {
+            "signal": "signal",
+            "decode": "décodage",
+            "buffer": "tampon"
+          }
         },
         "cards": {
           "title": "Cards de Surveillance qui se construisent",
@@ -5447,7 +5454,8 @@
           "description": "Un radar central balaie les sondes et fait vivre leurs liaisons. L'animation rappelle directement les modules, sondes et communications terrain.",
           "usage": "Administration / sondes",
           "stage": "Scan matériel",
-          "status": "Recherche et identification des sondes"
+          "status": "Recherche et identification des sondes",
+          "hub": "module"
         },
         "stream": {
           "title": "Flux de mesures",
@@ -5490,7 +5498,10 @@
           "code": "MAINT.",
           "title": "Maintenance en cours",
           "description": "VigiSensys effectue une opération planifiée. L'accès sera rétabli dès la fin de l'intervention.",
-          "footer": "Aucune action n'est nécessaire pendant cette opération."
+          "footer": "Aucune action n'est nécessaire pendant cette opération.",
+          "planned": "maintenance planifiée",
+          "service_cycle": "cycle de service",
+          "running": "en cours"
         },
         "network": {
           "concept_title": "Réseau · Diagnostic embarqué",
@@ -5514,9 +5525,15 @@
             "offline": "Le navigateur signale un mode hors ligne",
             "skipped": "Non testé : connexion navigateur absente",
             "unreachable": "Aucune réponse avant expiration du délai"
+          },
+          "labels": {
+            "web": "web",
+            "network": "réseau",
+            "interrupted": "liaison interrompue"
           }
         }
-      }
+      },
+      "lab_label": "Laboratoire Motion VigiSensys"
     }
   },
   "servicesVigilog": {
