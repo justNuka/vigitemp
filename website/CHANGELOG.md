@@ -8,7 +8,38 @@ Les versions suivent `MAJOR.MINOR.PATCH` sans zéros de tête. La source de vers
 
 ## [Unreleased]
 
-Aucun changement supplémentaire documenté depuis la préparation de la version Web 1.8.7.
+Aucun changement supplémentaire documenté depuis la préparation de la version Web 1.9.0.
+
+## [1.9.0] — 2026-09-23
+
+Cette version ajoute un laboratoire UI isolé pour concevoir les futurs loaders et pages système VigiSensys avant toute intégration dans les parcours de production.
+
+### Laboratoire Motion
+
+- Nouvelle route de test `/[locale]/admin/test/ui-motion`, disponible uniquement lorsque `ENABLE_TEST_PAGES=true`.
+- Six directions de loaders sont proposées : orbiteur télémétrique, signal morphing, construction progressive des cards Surveillance, tracé de graphique, découverte des sondes et flux de mesures.
+- Les animations utilisent Motion, SVG et CSS/Tailwind ; Three.js n'est pas ajouté tant qu'un besoin 3D ne justifie pas son coût.
+- Les prototypes prennent en compte `prefers-reduced-motion` afin de proposer une présentation stable lorsque les animations réduites sont demandées.
+- La galerie permet d'ajuster la vitesse et de rejouer les séquences d'introduction.
+
+### Pages système
+
+- Quatre concepts distincts sont disponibles : 404, 500, maintenance et erreur réseau.
+- La page réseau inclut un mini diagnostic manuel et sans écriture : état `navigator.onLine`, disponibilité de l'origine Web et disponibilité de `/api/me`, avec timeout et latence.
+- Le diagnostic ne conclut pas à une panne de base, du Serveur Windows ou d'un équipement matériel à partir d'un simple échec réseau.
+
+### Isolation et validation
+
+- Les loaders, skeletons, pages 404 et pages 500 réellement utilisés par VigiSensys restent inchangés dans ce lot.
+- Le laboratoire est localisé en français et en anglais.
+- `pnpm test:ui-motion-showcase` vérifie le feature flag, l'isolation vis-à-vis des pages de production, la présence des concepts et la parité des clés i18n.
+- La documentation `website/docs/ui-motion-error-showcase.md` décrit les concepts et la checklist à appliquer avant une future intégration.
+
+### Compatibilité
+
+- Version Web : **1.9.0**.
+- Serveur **1.1.0**, Agent **1.0.1** et BDD **0.91.1** restent inchangés.
+- Aucune migration BDD n'est requise.
 
 ## [1.8.7] — 2026-09-23
 
