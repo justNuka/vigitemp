@@ -3111,7 +3111,7 @@ Deux régressions en découlent si le provider n'est pas pris en compte :
 1. **lecture MySQL** : un `DATETIME 13:36` peut être porté par un objet `Date` local 13:36, dont les composantes UTC valent 11:36 ; lire systématiquement `getUTCHours()` produit donc le `-2 h` visible sur la card ;
 2. **borne de requête** : un objet UI local 15:00 représente réellement `13:00Z` en été. S'il est transmis tel quel à un provider qui sérialise en UTC, le filtre SQL peut s'arrêter à 13:00.
 
-#### Correctif en cours
+#### Correctif
 
 Le helper date est séparé en deux niveaux :
 
@@ -3131,9 +3131,35 @@ Parcours alignés dans ce lot :
 - `GET /api/alarmes/[id]` utilisé par l'analyse d'acquittement ;
 - candidats d'acquittement ;
 - `GET /api/capteurs/paginated` pour les dates des cards Surveillance ;
+- `GET /api/capteurs` et `GET /api/capteurs/[id]` ;
+- `GET /api/sondes/[idSonde]/mesures` ;
+- `GET /api/tableau-de-bord/measurements` ;
 - dashboard serveur.
 
 Aucune correction fixe `+2 h` / `-2 h` n'est utilisée.
+
+#### Validation automatisée du lot A
+
+GitHub Actions run `35876030438` : **succès complet** sur le HEAD fonctionnel final avant retrait du workflow temporaire.
+
+- [x] `git diff --check origin/dev...HEAD` ;
+- [x] `pnpm test:date-display` ;
+- [x] `pnpm test:surveillance-measurement-timezone` ;
+- [x] simulation Europe/Paris en heure d'été ;
+- [x] lecture MariaDB : `13:36` reste `13:36` ;
+- [x] lecture SQL Server : composantes UTC du wrapper conservées ;
+- [x] borne UI MySQL `15:00` conservée comme heure murale `15:00` ;
+- [x] borne UI SQL Server enveloppée en `15:00Z` pour `useUTC=true` ;
+- [x] contrats source des APIs mesures, alarmes, cards et endpoints historiques ;
+- [x] ESLint ciblé ;
+- [x] TypeScript Prisma MySQL ;
+- [x] contrôle i18n sans nouvelle dette dans les sources du lot ;
+- [x] génération Prisma SQL Server ;
+- [x] TypeScript Prisma SQL Server ;
+- [x] restauration Prisma MySQL ;
+- [x] build production Next.js.
+
+Le workflow temporaire a été retiré du diff final après ce run.
 
 #### Validation terrain du lot A
 
