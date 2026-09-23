@@ -5,8 +5,9 @@ import { getRequestContext } from "@/lib/api-logger"
 import { withAuthLogging, type HandlerContext } from "@/lib/api-wrappers"
 import { apiError, apiOk } from "@/lib/api-response"
 import { log } from "@/lib/logger"
+import { serializePrismaStoredDbDateTime } from "@/lib/sql-provider"
 import { prisma } from "@/lib/prisma"
-import { serializeDbDateTime, serializeStoredDbDateTime } from "@/lib/date-display"
+import { serializeDbDateTime } from "@/lib/date-display"
 import { normalizeMeasureNumber } from "@/lib/measurements"
 
 const updateSensorSchema = z.object({
@@ -72,7 +73,7 @@ export const GET = withAuthLogging(
         value: normalizeMeasureNumber(lieu.Derniere_Valeur, lieu.Derniere_Nb_Decimal ?? 2),
         unit: lieu.Derniere_Unite || "°C",
         lastUpdate:
-          serializeStoredDbDateTime(lieu.Derniere_Date_Heure) ||
+          serializePrismaStoredDbDateTime(lieu.Derniere_Date_Heure) ||
           serializeDbDateTime(new Date()) ||
           null,
         location: {
