@@ -8,7 +8,39 @@ Les versions suivent `MAJOR.MINOR.PATCH` sans zéros de tête. La source de vers
 
 ## [Unreleased]
 
-Aucun changement supplémentaire documenté depuis la préparation de la version Web 1.8.7.
+Aucun changement supplémentaire documenté depuis la préparation de la version Web 1.8.8.
+
+## [1.8.8] — 2026-09-23
+
+Cette version corrige la seconde moitié du problème de fuseau des `DATETIME` historiques : la frontière Prisma/driver utilisée pour les lectures et les filtres SQL.
+
+### Plages de graphes et acquittements
+
+- Une plage UI terminant à `15:00` filtre désormais les mesures jusqu'à `15:00` en base, au lieu de pouvoir devenir `13:00` en heure d'été.
+- `GET /api/mesures/[idLieu]` utilise un wrapper Prisma provider-aware pour les bornes `startDate` / `endDate`.
+- `GET /api/alarmes/range` utilise le même contrat pour les graphes et marqueurs d'alarmes.
+- L'analyse d'acquittement récupère des dates d'alarme correctement sérialisées avant de construire sa plage de mesures.
+
+### Cards Surveillance / alarmes
+
+- Les `Date` Prisma sont sérialisées selon le provider :
+  - MariaDB : composantes locales du `DATETIME` ;
+  - SQL Server/node-mssql : composantes UTC du wrapper `Date`.
+- Une mesure MySQL stockée à `13:36` reste donc `13:36` sur la card, au lieu de devenir `11:36`.
+- L'API paginée Surveillance, le dashboard serveur et les APIs Alarmes utilisent désormais le bridge serveur `serializePrismaStoredDbDateTime`.
+
+### Helper date / provider SQL
+
+- Ajout du bridge pur provider-aware dans `date-display.ts`.
+- Ajout des wrappers serveur `serializePrismaStoredDbDateTime` et `toPrismaStoredDbDateTime` dans `sql-provider.ts`.
+- Aucun changement global de timezone de connexion n'est appliqué : les triggers SQL et les vrais instants techniques conservent leur contrat existant.
+- Les tests couvrent explicitement Europe/Paris en heure d'été, MariaDB et SQL Server.
+
+### Compatibilité
+
+- Version Web : **1.8.8**.
+- Serveur **1.1.0**, Agent **1.0.1** et BDD **0.91.1** restent inchangés.
+- Aucune migration BDD n'est requise.
 
 ## [1.8.7] — 2026-09-23
 

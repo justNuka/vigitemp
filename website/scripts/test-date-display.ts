@@ -56,7 +56,7 @@ const cases: TestCase[] = [
     },
   },
   {
-    name: "serializeStoredDbDateTime preserves Prisma DATETIME wall-clock components",
+    name: "serializeStoredDbDateTime preserves UTC-wrapped stored DATETIME components",
     run: () => {
       const prismaDateWrapper = new Date("2026-08-31T14:05:06.000Z");
       assert.equal(serializeStoredDbDateTime(prismaDateWrapper), "2026-08-31T14:05:06");

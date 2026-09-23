@@ -2,7 +2,6 @@ import { unstable_noStore } from "next/cache";
 import { getTranslations } from "next-intl/server";
 
 import { formatLocalDateKey } from "@/lib/date-range-api"
-import { serializeStoredDbDateTime } from "@/lib/date-display"
 
 
 
@@ -27,6 +26,7 @@ import {
 
 
 import { getServerAuthenticatedUserId } from "@/lib/server-auth"
+import { serializePrismaStoredDbDateTime } from "@/lib/sql-provider"
 import { getCompatEnv } from "@/lib/vigisensys-compat"
 
 
@@ -334,7 +334,7 @@ export async function ServerCriticalSensors() {
     maxThreshold: lieu.Tolerance_Surveillance_Sup ?? 30,
 
 
-    lastMeasurement: serializeStoredDbDateTime(lieu.Derniere_Date_Heure),
+    lastMeasurement: serializePrismaStoredDbDateTime(lieu.Derniere_Date_Heure),
 
 
     isActive: !lieu.Est_Archive,
@@ -662,7 +662,7 @@ export async function ServerActiveAlarms() {
       alarmDelay: 0,
 
 
-      lastMeasurement: serializeStoredDbDateTime(alarm.t_lieu?.Derniere_Date_Heure),
+      lastMeasurement: serializePrismaStoredDbDateTime(alarm.t_lieu?.Derniere_Date_Heure),
 
 
       isActive: !alarm.t_lieu?.Est_Archive,
@@ -989,7 +989,7 @@ export async function ServerSensorOverview() {
       maxThreshold: lieu.Tolerance_Surveillance_Sup ?? 30,
 
 
-      lastMeasurement: serializeStoredDbDateTime(lieu.Derniere_Date_Heure),
+      lastMeasurement: serializePrismaStoredDbDateTime(lieu.Derniere_Date_Heure),
 
 
       isActive: !lieu.Est_Archive,

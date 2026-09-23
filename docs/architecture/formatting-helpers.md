@@ -93,6 +93,13 @@ Le helper prend aussi en charge le cas où un `Date` Prisma a déjà traversé u
 
 Important : `formatStoredDbDateTime` ignore volontairement `timeZone`. Un `DATETIME` historique sans fuseau ne doit jamais être déplacé de +1/+2 h par une conversion `Intl`.
 
+À la frontière serveur Prisma, la représentation `Date` dépend du driver. Utiliser les wrappers de `src/lib/sql-provider.ts` :
+
+- `serializePrismaStoredDbDateTime(value)` pour convertir un `Date` lu par Prisma en chaîne murale sans fuseau ;
+- `toPrismaStoredDbDateTime(value)` pour construire une borne/valeur `Date` adaptée au provider avant un filtre ou une écriture Prisma.
+
+Ces wrappers distinguent MariaDB (composantes locales) de SQL Server/node-mssql (composantes UTC par défaut). Ne pas remplacer ce mécanisme par une correction fixe `+2 h` / `-2 h`, car elle serait fausse en heure d'hiver et sur l'autre provider.
+
 Exemple :
 
 ```ts

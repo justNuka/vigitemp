@@ -4,7 +4,8 @@ import { withAuthLogging, type HandlerContext } from "@/lib/api-wrappers"
 import { apiError, apiOk } from "@/lib/api-response"
 import { prismaMesure } from "@/lib/prisma"
 import { log } from "@/lib/logger"
-import { serializeDbDateTime, serializeStoredDbDateTime } from "@/lib/date-display"
+import { serializePrismaStoredDbDateTime } from "@/lib/sql-provider"
+import { serializeDbDateTime } from "@/lib/date-display"
 
 /**
  * GET /api/sondes/[idSonde]/mesures
@@ -43,14 +44,14 @@ export const GET = withAuthLogging(
       })
 
       const derniereMaj =
-        serializeStoredDbDateTime(mesures[0]?.Date_Heure_Mesure) ?? serializeDbDateTime(new Date())
+        serializePrismaStoredDbDateTime(mesures[0]?.Date_Heure_Mesure) ?? serializeDbDateTime(new Date())
 
       mesures.reverse()
 
       const response = apiOk({
         mesures: mesures.map((mesure) => ({
           ...mesure,
-          Date_Heure_Mesure: serializeStoredDbDateTime(mesure.Date_Heure_Mesure),
+          Date_Heure_Mesure: serializePrismaStoredDbDateTime(mesure.Date_Heure_Mesure),
         })),
         derniereMaj,
       })

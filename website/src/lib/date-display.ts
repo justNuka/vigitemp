@@ -149,11 +149,12 @@ export function serializeDbDateTime(value: DbDateInput): string | null {
 }
 
 /**
- * Serializes a timezone-less DATETIME returned by Prisma.
+ * Serializes UTC components from a Date wrapper.
  *
- * Prisma exposes MySQL/MSSQL DATETIME columns as Date objects backed by UTC,
- * while the stored components already represent the local wall-clock value.
- * Reading UTC components prevents adding the browser/server timezone offset.
+ * This is used for transported stored-DATETIME values and for providers such
+ * as node-mssql that expose timezone-less DATETIME values with UTC semantics.
+ * Server code reading a Date directly from Prisma must use the provider-aware
+ * bridge from sql-provider.ts instead of assuming one Date representation.
  */
 const serializeUtcDateComponents = (value: Date): string | null => {
   if (Number.isNaN(value.getTime())) return null;
@@ -195,6 +196,81 @@ export function serializeStoredDbDateTime(value: DbDateInput): string | null {
 export function parseStoredDbDateTime(value: DbDateInput): Date | null {
   const serialized = serializeStoredDbDateTime(value);
   return serialized ? parseDbDateTime(serialized) : null;
+}
+
+export type StoredDbPrismaProvider = "mysql" | "mssql";
+
+const toUtcWallClockWrapper = (date: Date): Date | null => {
+  if (Number.isNaN(date.getTime())) return null;
+  return new Date(
+    Date.UTC(
+      date.getFullYear(),
+      date.getMonth(),
+      date.getDate(),
+      date.getHours(),
+      date.getMinutes(),
+      date.getSeconds(),
+      date.getMilliseconds(),
+    ),
+  );
+};
+
+/**
+ * Serializes a timezone-less DATETIME Date wrapper returned by a Prisma driver.
+ *
+ * MariaDB's Node connector defaults to timezone=local and exposes DATETIME
+ * values using local Date components. node-mssql defaults to useUTC=true.
+ * The provider therefore has to be known at this server-side boundary.
+ */
+export function serializePrismaStoredDbDateTimeForProvider(
+  value: DbDateInput,
+  provider: StoredDbPrismaProvider,
+): string | null {
+  if (!(value instanceof Date)) {
+    return serializeStoredDbDateTime(value);
+  }
+
+  return provider === "mssql"
+    ? serializeUtcDateComponents(value)
+    : serializeDbDateTime(value);
+}
+
+/**
+ * Builds the Date wrapper expected by Prisma when filtering/writing a
+ * timezone-less DATETIME.
+ *
+ * MySQL/MariaDB keeps the local Date components. SQL Server (node-mssql,
+ * useUTC=true) needs a UTC wrapper whose UTC components equal the DB wall
+ * clock components.
+ */
+export function toPrismaStoredDbDateTimeForProvider(
+  value: DbDateInput,
+  provider: StoredDbPrismaProvider,
+): Date | null {
+  if (value === null || value === undefined) return null;
+
+  let wallClockDate: Date | null = null;
+
+  if (value instanceof Date) {
+    wallClockDate = Number.isNaN(value.getTime()) ? null : new Date(value.getTime());
+  } else if (typeof value === "string") {
+    const trimmed = value.trim();
+    if (!trimmed) return null;
+
+    const transportedStored = trimmed.match(
+      /^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?)(?:Z|[+-]\d{2}:?\d{2})$/i,
+    );
+    const wallClockValue = transportedStored?.[1] ?? trimmed;
+    wallClockDate = parseLocalDateTimeParts(wallClockValue) ?? parseDbDateTime(wallClockValue);
+  } else {
+    wallClockDate = parseDbDateTime(value);
+  }
+
+  if (!wallClockDate || Number.isNaN(wallClockDate.getTime())) return null;
+
+  return provider === "mssql"
+    ? toUtcWallClockWrapper(wallClockDate)
+    : new Date(wallClockDate.getTime());
 }
 
 export function formatStoredDbDateTime(

@@ -5,7 +5,6 @@ import { getCachedMeasurements, setCachedMeasurements } from "@/lib/measurement-
 import { apiError, apiOk } from "@/lib/api-response"
 import {
   formatDbDateTime,
-  parseDbDateTime,
   serializeDbDateTime,
   serializeStoredDbDateTime,
 } from "@/lib/date-display"
@@ -15,6 +14,7 @@ import { log } from "@/lib/logger"
 import { normalizeMeasureNumber } from "@/lib/measurements"
 import { downsampleMeasurementsForGraph } from "@/lib/measurement-downsampling"
 import { resolveSensorDisplayUnit } from "@/lib/sensor-unit"
+import { serializePrismaStoredDbDateTime, toPrismaStoredDbDateTime } from "@/lib/sql-provider"
 
 export const GET = withAuthLogging(
   async (req: NextRequest, ctx: HandlerContext, { params }: { params: Promise<{ idLieu: string }> }) => {
@@ -102,8 +102,8 @@ export const GET = withAuthLogging(
           : [{ Date_Heure_Mesure: sortBy === "date" ? sortDirection : "desc" }]
 
       if (startDate && endDate) {
-        const parsedStartDate = parseDbDateTime(startDate)
-        const parsedEndDate = parseDbDateTime(endDate)
+        const parsedStartDate = toPrismaStoredDbDateTime(startDate)
+        const parsedEndDate = toPrismaStoredDbDateTime(endDate)
         if (!parsedStartDate || !parsedEndDate) {
           return apiError(400, "invalid_date_range", "Invalid date range")
         }
@@ -233,7 +233,7 @@ export const GET = withAuthLogging(
 
       const formattedMeasurements = chronologicalMeasurements.map((m) => {
         const dateHeure =
-          serializeStoredDbDateTime(m.Date_Heure_Mesure) ??
+          serializePrismaStoredDbDateTime(m.Date_Heure_Mesure) ??
           serializeDbDateTime(new Date()) ??
           ""
         const isNullMeasurement =

@@ -7,9 +7,9 @@ import { apiError, apiOk } from "@/lib/api-response"
 import { buildLieuAccessFilter, getUserLocationScope } from "@/lib/location-access-scope"
 import { prisma, prismaMesure } from "@/lib/prisma"
 import { log } from "@/lib/logger"
-import { serializeStoredDbDateTime } from "@/lib/date-display"
 import { normalizeMeasureNumber } from "@/lib/measurements"
 import { resolveSensorDisplayUnit } from "@/lib/sensor-unit"
+import { serializePrismaStoredDbDateTime } from "@/lib/sql-provider"
 
 const NO_STORE_HEADERS = {
   "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
@@ -496,7 +496,7 @@ export const GET = withAuthLogging(async (request: NextRequest, ctx) => {
           currentValue: normalizeMeasureNumber(lastMeasurement?.Valeur ?? null, resolvedDecimals),
           minThreshold: normalizeMeasureNumber(minThreshold, 2),
           maxThreshold: normalizeMeasureNumber(maxThreshold, 2),
-          lastMeasurement: serializeStoredDbDateTime(lastMeasurement?.Date_Heure_Mesure),
+          lastMeasurement: serializePrismaStoredDbDateTime(lastMeasurement?.Date_Heure_Mesure),
           isActive: !location.Est_Archive,
           status,
           location: {
@@ -507,13 +507,13 @@ export const GET = withAuthLogging(async (request: NextRequest, ctx) => {
             isActive: !location.Est_Archive,
             alarmDisabled,
             estSonAlarmeActive: location.Est_Son_Alarme_Active ?? true,
-            alarmDisabledUntil: serializeStoredDbDateTime(location.Date_Heure_Reactivation_Alarme),
+            alarmDisabledUntil: serializePrismaStoredDbDateTime(location.Date_Heure_Reactivation_Alarme),
             lieuEtat: location.Lieu_Etat ?? null,
             surveillanceDisabled,
-            surveillanceDisabledSince: serializeStoredDbDateTime(
+            surveillanceDisabledSince: serializePrismaStoredDbDateTime(
               location.Date_Heure_Surveillance_Off ?? disabledAudit?.disabledAt ?? null,
             ),
-            surveillanceDisabledUntil: serializeStoredDbDateTime(location.Date_Heure_Reactivation_Surveillance),
+            surveillanceDisabledUntil: serializePrismaStoredDbDateTime(location.Date_Heure_Reactivation_Surveillance),
             surveillanceDisabledBy: disabledAudit?.disabledBy ?? null,
             surveillanceDisabledComment: disabledAudit?.disabledComment ?? null,
             lieuType: location.Type_Lieu ?? null,
