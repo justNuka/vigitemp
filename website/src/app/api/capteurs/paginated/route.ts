@@ -99,12 +99,28 @@ export const GET = withAuthLogging(async (request: NextRequest, ctx) => {
     }
 
     if (siteIds.length > 0) {
-      whereAnd.push({ Id_Site: { in: siteIds } })
+      const effectiveSiteIds =
+        scope.siteIds.length > 0 ? siteIds.filter((id) => scope.siteIds.includes(id)) : siteIds
+      if (effectiveSiteIds.length === 0) {
+        return apiOk(
+          { total: 0, page, limit, totalPages: 0, treeCounters: [], sensors: [] },
+          { headers: NO_STORE_HEADERS },
+        )
+      }
+      whereAnd.push({ Id_Site: { in: effectiveSiteIds } })
     }
 
     if (groupIds.length > 0) {
+      const effectiveGroupIds =
+        scope.groupIds.length > 0 ? groupIds.filter((id) => scope.groupIds.includes(id)) : groupIds
+      if (effectiveGroupIds.length === 0) {
+        return apiOk(
+          { total: 0, page, limit, totalPages: 0, treeCounters: [], sensors: [] },
+          { headers: NO_STORE_HEADERS },
+        )
+      }
       whereAnd.push({
-        t_lieu_groupe: { some: { Id_Groupe: { in: groupIds } } },
+        t_lieu_groupe: { some: { Id_Groupe: { in: effectiveGroupIds } } },
       })
     }
 
