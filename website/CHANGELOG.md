@@ -8,7 +8,30 @@ Les versions suivent `MAJOR.MINOR.PATCH` sans zéros de tête. La source de vers
 
 ## [Unreleased]
 
-Aucun changement supplémentaire documenté depuis la préparation de la version Web 1.8.3.
+Aucun changement supplémentaire documenté depuis la préparation de la version Web 1.8.4.
+
+## [1.8.4] — 2026-09-22
+
+Cette version fiabilise la détection des types de sondes lors de l'import d'ajustages/calibrages et corrige le retour vers l'administration des sondes.
+
+### Import de sondes
+
+- La famille est désormais déterminée en priorité par le début du numéro de série : `SO...` pour GSO, `SP...` pour GSP et `E/G/H/I/R/V...` pour les sondes classiques.
+- Les anciennes références classiques telles que `IN...` et `IEE...` sont donc rattachées au type classique `I` au lieu d'être interprétées comme un type spécifique inconnu.
+- Pour GSO/GSP, le code détaillé est conservé lorsqu'il existe dans `t_sonde_type`, par exemple `SOIT`, `SOIH`, `SPNB` ou `SPFP`.
+- Les anciens types agrégés `GSO` et `GSP` (IDs historiques 7 et 8) sont ignorés par le flux d'import ; ils ne sont pas supprimés de la BDD dans ce lot.
+- La même résolution d'identité reste partagée par les imports d'ajustage et d'étalonnage.
+
+### Navigation
+
+- Le bouton **Retour aux sondes** de l'import d'ajustage pointe désormais vers la route canonique `/admin/sondes`.
+- Avec next-intl, la navigation produit `/fr/admin/sondes` en français et `/en/admin/sensors` en anglais.
+
+### Compatibilité
+
+- Version Web : **1.8.4**.
+- Serveur **1.1.0**, Agent **1.0.1** et BDD **0.91.0** restent inchangés.
+- Aucune migration BDD n'est requise.
 
 ## [1.8.3] — 2026-09-22
 

@@ -14,6 +14,7 @@ import {
   resolveImportedSensorIdentity,
 } from "@/lib/sensor-naming";
 import { parseDbDateTime } from "@/lib/date-display";
+import { isLegacyGenericSensorTypeCode } from "@/lib/sensor-types";
 import {
   buildAdjustmentImportModuleAssignments,
   resolveEffectiveImportModuleId,
@@ -85,11 +86,14 @@ export const POST = withOneOrHigherAnyAuthorizationLogging(getPermissionAliases(
     const sensorTypes = await prisma.t_sonde_type.findMany({
       select: { Sonde_Type: true, Famille_Sonde: true },
     });
-    const knownTypeCodes = sensorTypes
+    const importSensorTypes = sensorTypes.filter(
+      (row) => !isLegacyGenericSensorTypeCode(row.Sonde_Type),
+    );
+    const knownTypeCodes = importSensorTypes
       .map((row) => row.Sonde_Type)
       .filter((row): row is string => Boolean(row));
     const familyByType = new Map(
-      sensorTypes
+      importSensorTypes
         .filter((row): row is typeof row & { Sonde_Type: string } => Boolean(row.Sonde_Type))
         .map((row) => [row.Sonde_Type, row.Famille_Sonde]),
     );

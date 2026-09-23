@@ -2118,7 +2118,7 @@ GitHub Actions run `35728689698` : **succès complet**.
 
 ## R22-004 — Corriger les accès Pack / One aux lieux et à la messagerie
 
-**Statut : `PR_OUVERTE` — branche `fix/pack-one-license-access` — PR #143 — base `dev` `207ed69ffc4a2a0100836e9f2e17dbc19527cb9d`**
+**Statut : `CORRIGE_DEV` — PR #143 — squash merge `0b3bf3e6575d166d60a98b89219fb55825e248e2`**
 
 ### Retour — 22/09/2026
 
@@ -2284,7 +2284,7 @@ Le workflow temporaire a ensuite été retiré de la branche ; les commits post�
 
 ## R22-005 — Conserver la locale vers Alarmes depuis le dashboard utilisateur
 
-**Statut : `PR_OUVERTE` — intégré à la branche `fix/pack-one-license-access` — PR #143 — base `dev` `207ed69ffc4a2a0100836e9f2e17dbc19527cb9d`**
+**Statut : `CORRIGE_DEV` — PR #143 — squash merge `0b3bf3e6575d166d60a98b89219fb55825e248e2`**
 
 ### Retour — 22/09/2026
 
@@ -2355,3 +2355,115 @@ Le workflow temporaire de validation a été retiré du diff final.
 - [ ] revenir au dashboard puis tester le bouton **Voir toutes** du bloc Alarmes actives ;
 - [ ] passer en EN et confirmer `/en/alarms` ;
 - [ ] vérifier que le bandeau reste non cliquable lorsque l'utilisateur est déjà sur la page Alarmes.
+
+---
+
+## R22-006 — Fiabiliser le type des sondes importées et le retour vers Sondes
+
+**Statut : `PR_OUVERTE` — branche `fix/sensor-import-type-detection` — PR #144 — base `dev` `0b3bf3e6575d166d60a98b89219fb55825e248e2`**
+
+### Retour — 22/09/2026
+
+Deux correctifs sont demandés autour de l'import des sondes :
+
+- les anciennes références classiques, notamment `IN...` et `IEE...`, peuvent être mal détectées lors de l'import et ne doivent jamais être assimilées à des GSP ;
+- le bouton **Retour aux sondes** de la page d'import d'ajustage ouvre `/fr/sondes` au lieu de `/fr/admin/sondes`.
+
+La règle métier fournie pour la détection est basée sur le début du numéro de série :
+
+- `SO...` → famille **GSO** ;
+- `SP...` → famille **GSP** ;
+- `E...`, `G...`, `H...`, `I...`, `R...`, `V...` → famille **CLASSIC**.
+
+Les anciens types agrégés `GSO` et `GSP` de `t_sonde_type` (IDs historiques 7 et 8) ne doivent pas intervenir dans cette détection.
+
+### État vérifié avant correction
+
+Le flux partagé d'import passe par `resolveImportedSensorIdentity()` dans `sensor-naming.ts`. La fonction générique `extractTypeCodeFromSerial()` donnait priorité à tout le texte avant le premier tiret. Une ancienne série telle que `IEE-123456` pouvait donc produire le pseudo-type `IEE` au lieu du type classique `I`.
+
+Le bulk d'import d'ajustage chargeait par ailleurs tous les codes de `t_sonde_type`, y compris les deux anciens codes agrégés `GSO` et `GSP`, pour construire ses listes de types et familles autorisées.
+
+Enfin, la page `admin/sondes/ajustage-import` utilisait bien le wrapper localisé `@/i18n/navigation`, mais avec la route canonique incorrecte `/sondes`.
+
+### Correctif — détection du type à l'import
+
+Un extracteur dédié aux imports applique maintenant la priorité métier sur les préfixes :
+
+- `SO...` : recherche du sous-type GSO détaillé connu (`SOIT`, `SOIH`, `SOET`, `SOEH`) ;
+- `SP...` : recherche du sous-type GSP détaillé connu (`SPNB`, `SPNG`, `SPPS`, `SPFP`, etc.) ;
+- sinon, si la première lettre est `E`, `G`, `H`, `I`, `R` ou `V`, cette lettre devient directement `Sonde_Type` ;
+- les deux types agrégés `GSO` / `GSP` sont retirés des codes candidats utilisés par l'import.
+
+Exemples couverts :
+
+- `IN123456` / `IN-123456` → type `I`, famille `CLASSIC` ;
+- `IEE123456` / `IEE-123456` → type `I`, famille `CLASSIC` ;
+- `SOIT-123456` → type `SOIT`, famille `GSO` ;
+- `SOIH-123456-T` → type `SOIH`, famille `GSO` ;
+- `SPNB-123456` → type `SPNB`, famille `GSP` ;
+- `SPFP123456` → type `SPFP`, famille `GSP`.
+
+`resolveImportedSensorIdentity()` reste le point d'entrée partagé par les parseurs d'ajustage et d'étalonnage, ce qui évite deux règles de détection divergentes.
+
+Les lignes historiques `GSO` / `GSP` ne sont **pas supprimées de la BDD** dans ce lot : elles sont seulement ignorées par l'import. Leur suppression éventuelle sera un changement BDD distinct si elle est confirmée.
+
+### Correctif — bouton Retour aux sondes
+
+Le bouton utilise désormais la route canonique `/admin/sondes` avec le wrapper next-intl :
+
+- FR : `/fr/admin/sondes` ;
+- EN : `/en/admin/sensors`.
+
+### Fichiers principaux
+
+- `website/src/lib/sensor-naming.ts` ;
+- `website/src/app/api/sondes/ajustages/bulk/route.ts` ;
+- `website/src/app/[locale]/(admin)/admin/sondes/ajustage-import/page.tsx` ;
+- `website/scripts/test-sensor-import-type-detection.ts` ;
+- `website/package.json` ;
+- `website/CHANGELOG.md` ;
+- `CHANGELOG.md`.
+
+### Version
+
+- Web : **1.8.4** ;
+- Serveur : **1.1.0** — inchangé ;
+- Agent : **1.0.1** — inchangé ;
+- BDD : **0.91.0** — inchangée ;
+- aucune migration BDD.
+
+### Validation automatisée
+
+GitHub Actions run `35746073802` : **succès complet** sur le HEAD fonctionnel du lot.
+
+- [x] `git diff --check origin/dev...HEAD` ;
+- [x] `pnpm test:sensor-import-type-detection` ;
+- [x] cas `IN` / `IEE` classiques ;
+- [x] cas GSO détaillés ;
+- [x] cas GSP détaillés ;
+- [x] exclusion des types agrégés `GSO` / `GSP` du contrat d'import ;
+- [x] route localisée `/admin/sondes` FR/EN ;
+- [x] ESLint ciblé ;
+- [x] contrôle i18n ;
+- [x] TypeScript avec Prisma MySQL ;
+- [x] génération Prisma SQL Server ;
+- [x] TypeScript avec Prisma SQL Server ;
+- [x] restauration Prisma MySQL ;
+- [x] build production Next.js.
+
+Le workflow temporaire de validation a été retiré du diff final.
+
+### Validation terrain
+
+- [ ] importer une ancienne sonde `IN...` sans tiret et vérifier `Sonde_Type = I` ;
+- [ ] importer une ancienne sonde `IN-...` et vérifier `Sonde_Type = I` ;
+- [ ] importer une ancienne sonde `IEE...` / `IEE-...` et vérifier `Sonde_Type = I` ;
+- [ ] contrôler un exemple de chaque préfixe classique `E/G/H/I/R/V` ;
+- [ ] importer un `SOIT` puis un `SOIH` et contrôler type, famille, série et adresse ;
+- [ ] importer un `SPNB` puis un autre GSP détaillé tel que `SPFP` ;
+- [ ] avec les lignes historiques IDs 7/8 encore présentes, confirmer qu'elles ne sont jamais choisies par l'import ;
+- [ ] tester une sonde déjà existante puis une nouvelle sonde créée par l'import ;
+- [ ] vérifier l'affectation de module, `Est_Sonde_GSO`, `Sonde_Type` et `Adresse_Sonde` après insertion ;
+- [ ] FR : cliquer sur **Retour aux sondes** et confirmer `/fr/admin/sondes` ;
+- [ ] EN : confirmer `/en/admin/sensors` ;
+- [ ] valider MySQL puis SQL Server.

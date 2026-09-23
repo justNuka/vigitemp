@@ -16,7 +16,7 @@ La convention de versioning est décrite dans [`docs/versioning.md`](docs/versio
 
 ## [Unreleased]
 
-- État intégré courant : **Web 1.8.3**, **Serveur / installateur 1.1.0**, **BDD 0.91.0**, **Agent 1.0.1**.
+- État intégré courant : **Web 1.8.4**, **Serveur / installateur 1.1.0**, **BDD 0.91.0**, **Agent 1.0.1**.
 - Le parcours d’acquittement depuis Surveillance ouvre directement l’analyse du lieu : liste des alarmes à gauche, acquittement dans le bandeau sélectionné, dialog commentaire compacte et sélection multiple avec résumés.
 - Une alarme acquittée reste temporairement visible et grisée dans la liste jusqu’au rafraîchissement, afin de conserver le contexte de traitement de l’opérateur.
 - L’analyse d’alarme se limite désormais à la période réelle de l’alarme, sans sélection de période ni Audit ; l’impression et les exports multiples sont remplacés par un XLSX unique avec la courbe intégrée dans la présentation lorsqu’elle existe.
@@ -41,6 +41,7 @@ La convention de versioning est décrite dans [`docs/versioning.md`](docs/versio
 - Le Web 1.8.1 corrige les liens du Dashboard Admin One / Pack afin de toujours conserver le préfixe de locale (`/fr` ou `/en`).
 - Le Web 1.8.2 rétablit la création/modification des lieux pour Pack/One hors champs EMT et ouvre la Messagerie aux quatre éditions, tout en conservant les droits utilisateur et le toggle global.
 - Le Web 1.8.3 corrige les liens du bandeau d'alarmes du dashboard utilisateur afin de conserver la locale active et les routes traduites.
+- Le Web 1.8.4 fiabilise la détection des familles/types lors des imports de sondes à partir des préfixes de série et corrige le retour vers Administration > Sondes.
 
 ## Livraison VigiSensys 1.0.0 — 2026-09-18
 

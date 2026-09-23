@@ -1,6 +1,6 @@
 {
   "name": "vigitemp1.1",
-  "version": "1.8.3",
+  "version": "1.8.4",
   "private": true,
   "type": "module",
   "scripts": {
@@ -50,7 +50,8 @@
     "smtp:encrypt-passwords": "tsx scripts/encrypt-smtp-passwords.ts",
     "test:license-smoke": "tsx scripts/smoke-license-matrix.ts",
     "seed:mesures:journal-codes": "tsx scripts/seed-mesures-journal-codes.ts",
-    "test:user-dashboard-locale-links": "tsx scripts/test-user-dashboard-locale-links.ts"
+    "test:user-dashboard-locale-links": "tsx scripts/test-user-dashboard-locale-links.ts",
+    "test:sensor-import-type-detection": "tsx scripts/test-sensor-import-type-detection.ts"
   },
   "dependencies": {
     "@heroui/react": "^3.0.2",
