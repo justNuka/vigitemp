@@ -43,6 +43,8 @@ function MotionStage({
   children: ReactNode;
   label: string;
 }) {
+  const t = useTranslations("testPages.uiMotion");
+
   return (
     <div className="relative min-h-[330px] overflow-hidden rounded-2xl border border-slate-800 bg-[#07131f] text-slate-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
       <div
@@ -65,7 +67,7 @@ function MotionStage({
           <div className="flex items-center gap-2">
             <span className="h-2 w-2 rounded-full bg-cyan-400 shadow-[0_0_12px_rgba(34,211,238,.7)]" />
             <span className="text-[10px] font-semibold uppercase tracking-[0.23em] text-slate-400">
-              VigiSensys motion lab
+              {t("lab_label")}
             </span>
           </div>
           <span className="rounded-full border border-white/8 bg-white/3 px-2.5 py-1 text-[10px] uppercase tracking-[0.16em] text-slate-400">
@@ -190,7 +192,7 @@ function KineticTelemetryLoader({ speed }: LoaderMotionProps) {
             23,4
           </motion.span>
           <span className="relative text-[9px] uppercase tracking-[0.16em] text-slate-500">
-            sample
+            {t("loaders.kinetic.sample")}
           </span>
         </motion.div>
 
@@ -319,16 +321,16 @@ function MorphingSignalLoader({ speed }: LoaderMotionProps) {
                 010110
               </motion.span>
               <span className="pb-1 text-[10px] uppercase tracking-[0.18em] text-slate-500">
-                telemetry
+                {t("loaders.morph.telemetry")}
               </span>
             </div>
           </div>
 
           <div className="space-y-2">
             {[
-              ["signal", "78%"],
-              ["decode", "54%"],
-              ["buffer", "91%"],
+              [t("loaders.morph.metrics.signal"), "78%"],
+              [t("loaders.morph.metrics.decode"), "54%"],
+              [t("loaders.morph.metrics.buffer"), "91%"],
             ].map(([name, width], index) => (
               <div key={name}>
                 <div className="mb-1 flex justify-between text-[10px] uppercase tracking-[0.14em] text-slate-500">
@@ -723,7 +725,7 @@ function SensorDiscoveryLoader({ speed }: LoaderMotionProps) {
         >
           <RadioTower className="mb-1 h-7 w-7 text-cyan-300" />
           <span className="text-[9px] uppercase tracking-[0.18em] text-slate-400">
-            HUB
+            {t("loaders.sensors.hub")}
           </span>
         </motion.div>
 
