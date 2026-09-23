@@ -3052,13 +3052,18 @@ Les triggers des migrations sont générés depuis les triggers courantes des se
 
 ### Validation automatisée
 
-- [ ] `git diff --check origin/dev...HEAD` ;
-- [ ] les 9 colonnes sont `FLOAT` dans les deux seeds ;
-- [ ] les deux triggers GSO ne contiennent plus `Seuil_Critique_*` ;
-- [ ] trigger MySQL migration = trigger MySQL seed ;
-- [ ] trigger MSSQL migration = trigger MSSQL seed ;
-- [ ] `SCHEMA_VERSION = 0.91.1` dans les deux seeds et migrations ;
-- [ ] absence de modification métier supplémentaire dans le seed MySQL.
+GitHub Actions run `35864102588` : **succès complet**.
+
+- [x] `git diff --check origin/dev...HEAD` ;
+- [x] les 9 colonnes sont `FLOAT` dans les deux seeds ;
+- [x] les deux triggers GSO ne contiennent plus `Seuil_Critique_*` ;
+- [x] trigger MySQL migration = trigger MySQL seed (hors espaces de fin de ligne) ;
+- [x] trigger MSSQL migration = trigger MSSQL seed (hors espaces de fin de ligne) ;
+- [x] le curseur MSSQL et ses deux `FETCH NEXT` utilisent le même nombre de champs ;
+- [x] `SCHEMA_VERSION = 0.91.1` dans les deux seeds et migrations ;
+- [x] le seed MySQL ne reçoit aucune modification métier supplémentaire dans cette branche : uniquement le passage de version `0.91.0 -> 0.91.1`.
+
+Le workflow temporaire de validation a été retiré du diff final.
 
 ### Validation terrain / BDD
 
