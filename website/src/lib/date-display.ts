@@ -149,11 +149,12 @@ export function serializeDbDateTime(value: DbDateInput): string | null {
 }
 
 /**
- * Serializes a timezone-less DATETIME returned by Prisma.
+ * Serializes UTC components from a Date wrapper.
  *
- * Prisma exposes MySQL/MSSQL DATETIME columns as Date objects backed by UTC,
- * while the stored components already represent the local wall-clock value.
- * Reading UTC components prevents adding the browser/server timezone offset.
+ * This is used for transported stored-DATETIME values and for providers such
+ * as node-mssql that expose timezone-less DATETIME values with UTC semantics.
+ * Server code reading a Date directly from Prisma must use the provider-aware
+ * bridge from sql-provider.ts instead of assuming one Date representation.
  */
 const serializeUtcDateComponents = (value: Date): string | null => {
   if (Number.isNaN(value.getTime())) return null;
