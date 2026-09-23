@@ -53,5 +53,8 @@ jobs:
             'src/app/[locale]/(admin)/admin/test/ui-motion/_components/ui-motion-showcase-client.tsx' \
             'scripts/test-ui-motion-showcase.ts'
 
+      - name: Generate Prisma clients
+        run: pnpm prisma:generate:mysql
+
       - name: Build with test pages enabled
         run: pnpm build:test
