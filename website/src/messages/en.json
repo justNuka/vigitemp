@@ -5383,7 +5383,8 @@
       "hero": {
         "badge": "Isolated concepts",
         "title": "VigiSensys domain animations and errors",
-        "description": "The loaders reuse the visual language of Monitoring, measurements, charts and sensors. Error pages stay imaginative while keeping the tone of professional monitoring software."
+        "description": "The concepts are now treated as real VigiSensys visual directions: kinetic choreography, progressive card and chart drawing, hardware radar and illustrated system pages inspired by the supplied references.",
+        "motion_forced": "Motion forced in lab"
       },
       "controls": {
         "speed": "Speed",
@@ -5411,27 +5412,27 @@
         "intro_description": "Six directions are shown independently. Current speed: {speed}. The Replay button restarts their intro sequences.",
         "kinetic": {
           "title": "Telemetry orbiter",
-          "description": "A monitoring core receives values orbiting around it. The kinetic movement suggests continuous acquisition without relying on a generic spinner.",
+          "description": "Four measurement families change shape and position around an acquisition core. The choreography is intentionally geometric, precise and continuous.",
           "usage": "Monitoring / dashboard",
           "stage": "Live acquisition",
           "status": "Receiving latest measurements"
         },
         "morph": {
           "title": "Morphing signal",
-          "description": "The central shape transforms while data is synchronized. This is the most abstract concept, intended for short loads that need a recognizable VigiSensys signature.",
+          "description": "A signal genuinely morphs through several silhouettes while decoding states evolve. A more graphic direction for short loading states.",
           "usage": "Global loading",
           "stage": "Morphing",
           "status": "Synchronizing signal"
         },
         "cards": {
           "title": "Monitoring cards assembling",
-          "description": "Cards appear layer by layer: header, value, chart and metadata. The screen feels like it is being assembled as data arrives.",
+          "description": "Monitoring cards are drawn like a technical blueprint: outline, header, value, thresholds, chart and then metadata.",
           "usage": "Monitoring",
           "stage": "Building cards"
         },
         "graph": {
           "title": "Chart trace",
-          "description": "Thresholds appear first, then the measurement line is drawn with a reading point and subtle scan. Useful for detailed charts and range changes.",
+          "description": "The chart builds in layers with grid, thresholds, glowing trace, points and scan line. The sequence loops so loading stays perceptible.",
           "usage": "Charts",
           "stage": "Drawing measurements",
           "chart_title": "Cold room temperature",
@@ -5440,7 +5441,7 @@
         },
         "sensors": {
           "title": "Sensor discovery",
-          "description": "A gateway progressively scans several sensor families. The visual language evokes hardware and communication instead of a generic skeleton.",
+          "description": "A central radar sweeps the sensors and animates their links. The motion directly evokes field modules, sensors and communications.",
           "usage": "Administration / sensors",
           "stage": "Hardware scan",
           "status": "Searching and identifying sensors"
@@ -5465,7 +5466,7 @@
         },
         "notFound": {
           "concept_title": "404 · Lost sensor",
-          "concept_description": "The requested resource visually drifts out of the monitoring network: more expressive than plain text while staying tied to the product domain.",
+          "concept_description": "A true full-screen 404 composition: blue technical space, planets, monumental 404 and a moving object crossing the zero, inspired by the supplied reference.",
           "usage": "404",
           "title": "This route left the network",
           "description": "The requested page cannot be found. Monitoring continues to operate normally.",
@@ -5473,7 +5474,7 @@
         },
         "server": {
           "concept_title": "500 · Measurement chain interrupted",
-          "concept_description": "A signal line becomes unstable between server building blocks. The illustration suggests a technical incident without implying that real data has been lost.",
+          "concept_description": "A light 500 screen set against VigiSensys blue, with a small robot between two server racks attempting to restore the link.",
           "usage": "500",
           "title": "A signal was interrupted",
           "description": "VigiSensys encountered an error while processing this page. You can retry the operation.",
@@ -5481,7 +5482,7 @@
         },
         "maintenance": {
           "concept_title": "Maintenance · Technical bench",
-          "concept_description": "A sensor sits in the middle of a small animated maintenance bench. The tone stays calm and reassuring for planned downtime.",
+          "concept_description": "A dark technical-bench scene where the robot services a sensor, with animated service cycle, tools and progress.",
           "usage": "Maintenance",
           "code": "MAINT.",
           "title": "Maintenance in progress",
@@ -5490,7 +5491,7 @@
         },
         "network": {
           "concept_title": "Network · Embedded diagnostic",
-          "concept_description": "The screen combines a simplified topology with a real mini diagnostic of the browser, Web origin and API, triggered only on request.",
+          "concept_description": "A visibly broken link between Web and network, with packets stopping at the break and a real mini diagnostic available on demand.",
           "usage": "Network",
           "code": "NETWORK",
           "title": "The network link is unavailable",
