@@ -1,4 +1,4 @@
-import { formatStoredDbDateTime, parseStoredDbDateTime } from "@/lib/date-display"
+import { formatDbDateTime, formatStoredDbDateTime, parseDbDateTime, parseStoredDbDateTime } from "@/lib/date-display"
 import { formatNumber } from "@/lib/number-display"
 
 export type MeasureData = {
@@ -190,17 +190,25 @@ export function formatTimeAxisLabel(
   locale = "fr-FR",
   spanMs = 0,
 ): string | string[] {
-  const date = parseStoredDbDateTime(value)
+  // Raw measurement strings represent timezone-less DB wall-clock values.
+  // Chart.js tick callbacks, however, pass Date instances reconstructed from
+  // the numeric axis and must keep their local components.
+  const isAxisDate = value instanceof Date
+  const date = isAxisDate ? parseDbDateTime(value) : parseStoredDbDateTime(value)
   if (!date) {
     return typeof value === "string" ? value : ""
   }
 
+  const formatValue = (
+    format: "dateShort" | "time",
+  ) =>
+    isAxisDate
+      ? formatDbDateTime(value, { format, locale })
+      : formatStoredDbDateTime(value, { format, locale })
+
   if (spanMs >= 24 * 60 * 60 * 1000) {
-    return [
-      formatStoredDbDateTime(value, { format: "dateShort", locale }),
-      formatStoredDbDateTime(value, { format: "time", locale }),
-    ]
+    return [formatValue("dateShort"), formatValue("time")]
   }
 
-  return formatStoredDbDateTime(value, { format: "time", locale })
+  return formatValue("time")
 }
