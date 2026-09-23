@@ -8,7 +8,33 @@ Les versions suivent `MAJOR.MINOR.PATCH` sans zéros de tête. La source de vers
 
 ## [Unreleased]
 
-Aucun changement supplémentaire documenté depuis la préparation de la version Web 1.8.6.
+Aucun changement supplémentaire documenté depuis la préparation de la version Web 1.8.7.
+
+## [1.8.7] — 2026-09-23
+
+Cette version corrige les décalages horaires des mesures dans Surveillance.
+
+### Surveillance / mesures
+
+- Les dates des mesures sont désormais interprétées comme des `DATETIME` stockés sans fuseau sur les cards Surveillance, les graphes détaillés et le tableau des mesures.
+- Une valeur stockée à `10:36:17` reste affichée à `10:36:17`, même si un objet `Date` Prisma a traversé JSON sous la forme `...10:36:17.000Z`.
+- Les tooltips, axes temporels, tris chronologiques et exports de la superposition de courbes réutilisent le helper date canonique avec la sémantique « stored DATETIME ».
+- Les dates d'activation/désactivation de Surveillance et d'alarmes renvoyées par l'API paginée sont sérialisées avec `serializeStoredDbDateTime`.
+- Le cache des mesures n'utilise plus `Date.parse()` directement pour trier les timestamps.
+- L'endpoint historique `/api/tableau-de-bord/measurements` est aligné sur la même sérialisation.
+
+### Helper date
+
+- Ajout de `parseStoredDbDateTime` et `formatStoredDbDateTime` dans `date-display.ts`.
+- `formatStoredDbDateTime` ignore volontairement l'option `timeZone` afin de ne jamais convertir une heure murale déjà stockée en base.
+- Les chaînes ISO avec `Z` ou offset explicite issues d'un `DATETIME` stocké conservent leurs composantes écrites au lieu d'être converties comme des instants UTC.
+- Les tests couvrent l'heure d'été Europe/Paris et le cas de régression +2 h.
+
+### Compatibilité
+
+- Version Web : **1.8.7**.
+- Serveur **1.1.0**, Agent **1.0.1** et BDD **0.91.0** restent inchangés.
+- Aucune migration BDD n'est requise.
 
 ## [1.8.6] — 2026-09-23
 
