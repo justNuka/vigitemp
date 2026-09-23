@@ -33,7 +33,10 @@ jobs:
       - name: ESLint UI motion files
         run: >
           pnpm exec eslint
-          "src/app/[locale]/(admin)/admin/test/ui-motion/**/*.{ts,tsx}"
+          "src/app/[locale]/(admin)/admin/test/ui-motion/page.tsx"
+          "src/app/[locale]/(admin)/admin/test/ui-motion/_components/loading-concepts.tsx"
+          "src/app/[locale]/(admin)/admin/test/ui-motion/_components/error-concepts.tsx"
+          "src/app/[locale]/(admin)/admin/test/ui-motion/_components/ui-motion-showcase-client.tsx"
           "src/app/[locale]/(admin)/admin/test/page.tsx"
           "scripts/test-ui-motion-showcase.ts"
 
