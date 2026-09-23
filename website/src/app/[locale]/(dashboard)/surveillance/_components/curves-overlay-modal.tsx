@@ -21,7 +21,7 @@ import { DateRangePicker } from "@/components/ui/date-range-picker"
 import { getJson } from "@/lib/http"
 import { toApiUtcDateTime } from "@/lib/date-range-api"
 import { formatMeasureValue, formatTimeAxisLabel, normalizeMeasureNumber } from "@/lib/measurements"
-import { formatDbDateTime, parseDbDateTime } from "@/lib/date-display"
+import { formatDbDateTime, formatStoredDbDateTime, parseStoredDbDateTime } from "@/lib/date-display"
 import { exportStyledExcel } from "@/lib/excel-export"
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend)
@@ -105,8 +105,8 @@ export function CurvesOverlayModal({ open, onOpenChange, locations }: Props) {
 
     const labels = Array.from(labelIsoMap.entries())
       .sort((a, b) => {
-        const dateA = parseDbDateTime(a[1])
-        const dateB = parseDbDateTime(b[1])
+        const dateA = parseStoredDbDateTime(a[1])
+        const dateB = parseStoredDbDateTime(b[1])
         return (dateA?.getTime() ?? 0) - (dateB?.getTime() ?? 0)
       })
       .map(([, iso]) => iso)
@@ -205,8 +205,8 @@ export function CurvesOverlayModal({ open, onOpenChange, locations }: Props) {
 
   const chartSpanMs = useMemo(() => {
     if (chartPayload.labels.length <= 1) return 0
-    const first = parseDbDateTime(chartPayload.labels[0])?.getTime() ?? Number.NaN
-    const last = parseDbDateTime(chartPayload.labels[chartPayload.labels.length - 1])?.getTime() ?? Number.NaN
+    const first = parseStoredDbDateTime(chartPayload.labels[0])?.getTime() ?? Number.NaN
+    const last = parseStoredDbDateTime(chartPayload.labels[chartPayload.labels.length - 1])?.getTime() ?? Number.NaN
     if (!Number.isFinite(first) || !Number.isFinite(last)) return 0
     return Math.max(0, last - first)
   }, [chartPayload.labels])
@@ -248,7 +248,7 @@ export function CurvesOverlayModal({ open, onOpenChange, locations }: Props) {
           ...chartPayload.datasets.map((dataset) => dataset.label),
         ],
         dataRows: chartPayload.labels.map((label, rowIndex) => [
-          formatDbDateTime(label, {
+          formatStoredDbDateTime(label, {
             format: "dateTimeSeconds",
             locale: localeTag,
             fallback: label,
