@@ -13,12 +13,29 @@ export interface BackupRecord {
   details?: string
 }
 
+export type BackupSecondaryCopyState =
+  | "success"
+  | "in_progress"
+  | "failed"
+  | "pending"
+  | "not_run"
+  | "not_configured"
+  | "unknown"
+
+export interface BackupSecondaryCopyStatus {
+  configured: boolean
+  path: string | null
+  etat: BackupSecondaryCopyState
+  robocopyCode: number | null
+}
+
 export interface BackupSummary {
   storagePath: string
   logFilePath: string
   archiveCount: number
   slotCount: number
   latestRun?: BackupRecord | null
+  secondaryCopy: BackupSecondaryCopyStatus
   logEntries: BackupLogEntry[]
   logLineCount: number
   logTruncated: boolean
