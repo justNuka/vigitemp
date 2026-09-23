@@ -1,0 +1,60 @@
+name: UI motion showcase validation
+
+on:
+  push:
+    branches:
+      - feature/ui-motion-showcase
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    defaults:
+      run:
+        working-directory: website
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install pnpm
+        run: npm install --global pnpm@10
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Check branch diff whitespace
+        working-directory: .
+        run: |
+          git fetch origin dev
+          git diff --check origin/dev...HEAD
+
+      - name: Validate UI motion showcase contract
+        run: pnpm test:ui-motion-showcase
+
+      - name: Lint changed TypeScript
+        run: |
+          pnpm exec eslint \
+            'src/app/[locale]/(admin)/admin/test/page.tsx' \
+            'src/app/[locale]/(admin)/admin/test/ui-motion/page.tsx' \
+            'src/app/[locale]/(admin)/admin/test/ui-motion/_components/loading-concepts.tsx' \
+            'src/app/[locale]/(admin)/admin/test/ui-motion/_components/error-concepts.tsx' \
+            'src/app/[locale]/(admin)/admin/test/ui-motion/_components/ui-motion-showcase-client.tsx' \
+            'scripts/test-ui-motion-showcase.ts'
+
+      - name: Check i18n
+        run: pnpm i18n:check
+
+      - name: Build with test pages enabled
+        run: pnpm build:test
