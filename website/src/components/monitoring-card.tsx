@@ -18,7 +18,12 @@ import { Textarea } from '@/components/ui/textarea'
 import { Tooltip as UITooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { useIsMobile } from '@/hooks/useIsMobile'
 import { useLieuMeasurements } from '@/hooks/useLieuMeasurements'
-import { formatDbDateTime, parseDbDateTime, serializeDbDateTime } from '@/lib/date-display'
+import {
+  formatStoredDbDateTime,
+  parseDbDateTime,
+  parseStoredDbDateTime,
+  serializeStoredDbDateTime,
+} from '@/lib/date-display'
 import type { LieuTypeValue } from '@/lib/lieu-types'
 import { calculateYDomain, formatMeasureValue, getMeasureSummary, sortMeasuresChronologically } from '@/lib/measurements'
 import { MONITORING_CARD_GRAPH_MAX_POINTS } from '@/lib/measurement-downsampling'
@@ -144,17 +149,21 @@ export default function MonitoringCard({
     () => parseDbDateTime(meta?.graphRangeEnd ?? null)?.getTime() ?? 1,
     [meta?.graphRangeEnd],
   )
-  const liveMeasurementDate = useMemo(() => {
-    if (!lastMeasurement) return null
-    const parsed = parseDbDateTime(lastMeasurement)
-    if (!parsed) return null
-    return Number.isNaN(parsed.getTime()) ? null : parsed
-  }, [lastMeasurement])
+  const liveMeasurementIso = useMemo(
+    () => serializeStoredDbDateTime(lastMeasurement),
+    [lastMeasurement],
+  )
+  const liveMeasurementDate = useMemo(
+    () => (liveMeasurementIso ? parseDbDateTime(liveMeasurementIso) : null),
+    [liveMeasurementIso],
+  )
 
   const previewData = useMemo(() => {
     if (!liveMeasurementDate) return orderedData
     const lastPoint = orderedData[orderedData.length - 1]
-    const lastPointDate = lastPoint?.DateHeureMesureIso ? parseDbDateTime(lastPoint.DateHeureMesureIso) : null
+    const lastPointDate = lastPoint?.DateHeureMesureIso
+      ? parseStoredDbDateTime(lastPoint.DateHeureMesureIso)
+      : null
     const isLiveNullNonResponse = currentValue === null && (alarmType === "N" || alarmType === "M" || status === "technical")
 
     if (currentValue === null && !isLiveNullNonResponse) {
@@ -162,12 +171,12 @@ export default function MonitoringCard({
     }
 
     const template = lastPoint ?? null
-    const serializedDate = serializeDbDateTime(liveMeasurementDate) ?? ""
-    const timeLabel = formatDbDateTime(serializedDate, {
+    const serializedDate = liveMeasurementIso ?? ""
+    const timeLabel = formatStoredDbDateTime(serializedDate, {
       format: "time",
       locale: localeTag,
     })
-    const dateLabel = formatDbDateTime(serializedDate, { format: "dateTime" })
+    const dateLabel = formatStoredDbDateTime(serializedDate, { format: "dateTime" })
     const livePoint = {
       id: `live-${idLieu}-${serializedDate}`,
       Valeur: currentValue,
@@ -204,7 +213,7 @@ export default function MonitoringCard({
     }
 
     return [...orderedData, livePoint]
-  }, [alarmType, currentValue, idLieu, liveMeasurementDate, localeTag, orderedData, sondeNumeroSerie, status, unit])
+  }, [alarmType, currentValue, idLieu, liveMeasurementDate, liveMeasurementIso, localeTag, orderedData, sondeNumeroSerie, status, unit])
 
   const summary = useMemo(() => getMeasureSummary(previewData), [previewData])
   const { consigneSup, consigneInf, consigne, unite, frequence, lastMeasureText, lastDateTime, decimals, lastValue } = summary
@@ -304,28 +313,32 @@ export default function MonitoringCard({
   const surveillanceDisabledLabel = useMemo(() => {
     if (isSurveillanceActive) return null
     if (surveillanceDisabledUntil) {
-      const untilDate = parseDbDateTime(surveillanceDisabledUntil)
-      if (untilDate && !Number.isNaN(untilDate.getTime())) {
-        return t('surveillance.disabled_until', {
-          date: formatDbDateTime(untilDate, { format: "dateTime" }),
-        })
+      const formattedUntil = formatStoredDbDateTime(surveillanceDisabledUntil, {
+        format: "dateTime",
+        fallback: "",
+      })
+      if (formattedUntil) {
+        return t('surveillance.disabled_until', { date: formattedUntil })
       }
     }
     if (!surveillanceDisabledSince) return t('surveillance.disabled')
-    const date = parseDbDateTime(surveillanceDisabledSince)
-    if (!date || Number.isNaN(date.getTime())) return t('surveillance.disabled')
-    return t('surveillance.disabled_since', {
-      date: formatDbDateTime(date, { format: "dateTime" }),
+    const formattedSince = formatStoredDbDateTime(surveillanceDisabledSince, {
+      format: "dateTime",
+      fallback: "",
     })
+    if (!formattedSince) return t('surveillance.disabled')
+    return t('surveillance.disabled_since', { date: formattedSince })
   }, [isSurveillanceActive, surveillanceDisabledSince, surveillanceDisabledUntil, t])
 
   const alarmDisabledLabel = useMemo(() => {
     if (isAlarmActive) return null
     if (!alarmDisabledUntil) return t('alarms.disabled')
-    const date = parseDbDateTime(alarmDisabledUntil)
-    if (!date) return t('alarms.disabled')
-    if (Number.isNaN(date.getTime())) return t('alarms.disabled')
-    return t('alarms.disabled_until', { date: formatDbDateTime(date, { format: "dateTime" }) })
+    const formattedUntil = formatStoredDbDateTime(alarmDisabledUntil, {
+      format: "dateTime",
+      fallback: "",
+    })
+    if (!formattedUntil) return t('alarms.disabled')
+    return t('alarms.disabled_until', { date: formattedUntil })
   }, [alarmDisabledUntil, isAlarmActive, t])
 
   const contentTextClassName = 'text-muted-foreground'
