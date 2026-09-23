@@ -56,5 +56,5 @@ jobs:
       - name: Generate Prisma clients
         run: pnpm prisma:generate:mysql
 
-      - name: Build test configuration
-        run: pnpm build:test
+      - name: Build production configuration
+        run: pnpm build
