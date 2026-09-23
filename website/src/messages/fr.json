@@ -5386,7 +5386,8 @@
       "hero": {
         "badge": "Concepts isolés",
         "title": "Animations métier et erreurs VigiSensys",
-        "description": "Les loaders s'appuient sur les codes visuels de Surveillance, des mesures, des graphiques et des sondes. Les pages d'erreur restent fantaisistes sans perdre le ton d'un logiciel de supervision professionnel."
+        "description": "Les concepts sont désormais traités comme de vraies directions visuelles VigiSensys : chorégraphies cinétiques, dessins progressifs des cards et graphes, radar matériel et pages système illustrées inspirées des références fournies.",
+        "motion_forced": "Animations forcées dans le labo"
       },
       "controls": {
         "speed": "Vitesse",
@@ -5414,27 +5415,27 @@
         "intro_description": "Six directions sont présentées séparément. Vitesse actuelle : {speed}. Le bouton Rejouer relance leurs séquences d'introduction.",
         "kinetic": {
           "title": "Orbiteur télémétrique",
-          "description": "Un noyau de supervision reçoit des valeurs qui gravitent autour de lui. Le mouvement cinétique rappelle l'acquisition continue sans utiliser un spinner générique.",
+          "description": "Quatre familles de mesures changent de forme et de position autour d'un noyau d'acquisition. La chorégraphie est volontairement géométrique, précise et continue.",
           "usage": "Surveillance / dashboard",
           "stage": "Acquisition live",
           "status": "Réception des dernières mesures"
         },
         "morph": {
           "title": "Signal morphing",
-          "description": "La forme centrale se transforme pendant la synchronisation. C'est le concept le plus abstrait, pensé pour les chargements courts où il faut une signature visuelle VigiSensys.",
+          "description": "Un signal se déforme réellement entre plusieurs silhouettes pendant que les états de décodage évoluent. Une direction plus graphique pour les chargements courts.",
           "usage": "Chargement global",
           "stage": "Morphing",
           "status": "Synchronisation du signal"
         },
         "cards": {
           "title": "Cards de Surveillance qui se construisent",
-          "description": "Les cards apparaissent par couches : en-tête, valeur, courbe puis métadonnées. Le loader donne la sensation que l'écran se compose à mesure que les données arrivent.",
+          "description": "Les cards de Surveillance sont tracées comme sur une table à dessin : contour, header, valeur, seuils, courbe puis métadonnées.",
           "usage": "Surveillance",
           "stage": "Construction des cards"
         },
         "graph": {
           "title": "Tracé de courbe",
-          "description": "Les seuils apparaissent, puis la mesure se dessine avec un point de lecture et un balayage discret. Adapté aux graphes détaillés et aux changements de période.",
+          "description": "Le graphe se construit par couches avec grille, seuils, halo de courbe, points et balayage. La séquence boucle pour rendre le chargement perceptible.",
           "usage": "Graphiques",
           "stage": "Tracé des mesures",
           "chart_title": "Température chambre froide",
@@ -5443,7 +5444,7 @@
         },
         "sensors": {
           "title": "Découverte des sondes",
-          "description": "Une passerelle interroge progressivement plusieurs familles de sondes. Le langage visuel évoque le matériel et la communication plutôt qu'un simple skeleton.",
+          "description": "Un radar central balaie les sondes et fait vivre leurs liaisons. L'animation rappelle directement les modules, sondes et communications terrain.",
           "usage": "Administration / sondes",
           "stage": "Scan matériel",
           "status": "Recherche et identification des sondes"
@@ -5468,7 +5469,7 @@
         },
         "notFound": {
           "concept_title": "404 · Sonde égarée",
-          "concept_description": "La ressource recherchée sort visuellement du réseau de supervision : plus expressive qu'un texte seul, mais toujours cohérente avec le métier.",
+          "concept_description": "Une vraie composition 404 plein écran : espace technique bleu, planètes, 404 monumental et objet en mouvement traversant le zéro comme dans la référence fournie.",
           "usage": "404",
           "title": "Cette route a quitté le réseau",
           "description": "La page demandée est introuvable. La supervision continue de fonctionner normalement.",
@@ -5476,7 +5477,7 @@
         },
         "server": {
           "concept_title": "500 · Chaîne de mesure interrompue",
-          "concept_description": "Une ligne de signal se dérègle entre les briques serveur. L'illustration évoque un incident technique sans donner l'impression que les données réelles sont perdues.",
+          "concept_description": "Un écran 500 clair posé sur le bleu VigiSensys, avec un petit robot entre deux racks serveur et une liaison qu'il tente de rétablir.",
           "usage": "500",
           "title": "Un signal s'est interrompu",
           "description": "VigiSensys a rencontré une erreur pendant le traitement de cette page. Vous pouvez relancer l'opération.",
@@ -5484,7 +5485,7 @@
         },
         "maintenance": {
           "concept_title": "Maintenance · Banc technique",
-          "concept_description": "La sonde est placée au centre d'un petit banc de maintenance animé. Le ton reste calme et rassurant pour une indisponibilité planifiée.",
+          "concept_description": "Une scène de banc technique sombre où le robot intervient sur une sonde, avec cycle de service, outils et progression animée.",
           "usage": "Maintenance",
           "code": "MAINT.",
           "title": "Maintenance en cours",
@@ -5493,7 +5494,7 @@
         },
         "network": {
           "concept_title": "Réseau · Diagnostic embarqué",
-          "concept_description": "L'écran combine une topologie simplifiée et un mini diagnostic réel du navigateur, de l'origine Web et de l'API, déclenché uniquement à la demande.",
+          "concept_description": "Une liaison visuellement rompue entre le Web et le réseau, avec paquets qui butent sur la coupure et un vrai mini diagnostic disponible à la demande.",
           "usage": "Réseau",
           "code": "RÉSEAU",
           "title": "La liaison réseau est indisponible",
