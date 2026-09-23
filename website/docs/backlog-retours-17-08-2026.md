@@ -2620,7 +2620,7 @@ Le workflow temporaire de validation a été retiré du diff final.
 
 ## R23-002 — Navigation Admin persistante et double état de sauvegarde
 
-**Statut : `PR_OUVERTE` — branche `fix/admin-nav-backup-status` — PR #146 — base finale `dev` `14de48a5a20a990b4898f9aa3de2b0da5ee3af6c`**
+**Statut : `CORRIGE_DEV` — PR #146 — squash merge `68cf48afd5bdd9d2541f20cde7af866b266cf623`**
 
 ### Retour — 23/09/2026
 
@@ -2811,4 +2811,156 @@ Le checker i18n global signale encore uniquement de la dette préexistante hors 
 - [ ] vérifier un Windows FR et un Windows EN ;
 - [ ] ouvrir la dialog du journal et confirmer que son affichage est inchangé ;
 - [ ] vérifier dashboards Basic / Standard / Expert ;
+- [ ] valider MySQL puis SQL Server.
+
+
+---
+
+## R23-003 — Surveillance : corriger le décalage horaire des mesures
+
+**Statut : `EN_COURS` — branche `fix/surveillance-measurement-timezone` — base `dev` `68cf48afd5bdd9d2541f20cde7af866b266cf623`**
+
+### Retour — 23/09/2026
+
+Décalage horaire constaté sur plusieurs affichages liés aux mesures :
+
+- page Surveillance ;
+- consultation des graphes ;
+- tableau des mesures.
+
+Le correctif doit réutiliser le helper date canonique et ne pas ajouter de compensation manuelle de type `-2 h`.
+
+### Cause / état vérifié
+
+Le dépôt avait déjà rencontré le même symptôme sur les alarmes dans **B17-001** : les colonnes MySQL `DATETIME` sans fuseau peuvent être exposées par Prisma sous forme de `Date` puis sérialisées en ISO `...Z`. Si cette valeur est ensuite traitée comme un vrai instant UTC, une heure stockée localement peut être affichée avec +1/+2 h.
+
+Le flux des mesures était partiellement correct avant ce lot :
+
+- `GET /api/mesures/[idLieu]` utilisait déjà `serializeStoredDbDateTime(m.Date_Heure_Mesure)` ;
+- `GET /api/capteurs/paginated` sérialisait déjà correctement la dernière mesure.
+
+Cependant plusieurs consommateurs reparsaient ensuite les timestamps avec la sémantique générique `parseDbDateTime()`, et certains autres `DATETIME` de Surveillance traversaient encore JSON comme des objets `Date` standards.
+
+Autres points identifiés :
+
+- le tableau des mesures utilisait `formatDbDateTime()` / `parseDbDateTime()` sur les timestamps de mesure ;
+- le grand graphe utilisait ces mêmes helpers génériques pour ses labels et tooltips ;
+- le cache des mesures triait avec `Date.parse()` directement ;
+- les dates de désactivation/réactivation de Surveillance et alarmes étaient renvoyées brutes par l'API paginée ;
+- le résumé des lieux désactivés pouvait appliquer explicitement le `timeZone` applicatif à une heure murale déjà stockée ;
+- l'endpoint historique `/api/tableau-de-bord/measurements` utilisait encore `serializeDbDateTime()` sur un `Date` Prisma.
+
+### Correctif — helper date canonique
+
+`website/src/lib/date-display.ts` reste l'unique moteur date.
+
+Le contrat est complété par :
+
+- `parseStoredDbDateTime(value)` ;
+- `formatStoredDbDateTime(value, options)`.
+
+Ces helpers passent d'abord par `serializeStoredDbDateTime()` afin de préserver les composantes du `DATETIME` stocké.
+
+Lorsqu'une valeur a déjà traversé JSON sous une forme telle que :
+
+`2026-09-23T10:36:17.000Z`
+
+elle est interprétée comme l'heure murale stockée **10:36:17**, et non comme un instant à convertir vers 12:36:17 en Europe/Paris.
+
+`formatStoredDbDateTime()` ignore volontairement `timeZone` afin d'empêcher une seconde conversion de fuseau sur ce type de donnée.
+
+### Correctif — Surveillance
+
+Les cards utilisent désormais les helpers « stored » pour :
+
+- la dernière mesure ;
+- les comparaisons chronologiques avec le dernier point du mini-graphe ;
+- les dates de désactivation/réactivation affichées dans les badges.
+
+L'API paginée sérialise aussi avec `serializeStoredDbDateTime()` :
+
+- `Date_Heure_Reactivation_Alarme` ;
+- `Date_Heure_Surveillance_Off` ;
+- `Date_Heure_Reactivation_Surveillance`.
+
+Le résumé des sections désactivées n'applique plus de `timeZone` aux `DATETIME` stockés.
+
+### Correctif — graphes
+
+Le graphe détaillé utilise la sémantique `DATETIME` stocké pour :
+
+- tri des labels de mesures ;
+- timestamps des points ;
+- tooltips date/heure ;
+- marqueurs d'audit associés aux mesures.
+
+Les bornes de plage choisies par l'utilisateur restent des vrais objets `Date` et conservent le traitement générique existant.
+
+La superposition de courbes est également alignée pour le tri, l'axe et l'export Excel.
+
+### Correctif — tableau des mesures
+
+Le tableau détaillé :
+
+- affiche les dates via `formatStoredDbDateTime()` ;
+- trie la colonne Date via `parseStoredDbDateTime()`.
+
+Le cache serveur des mesures utilise le helper métier `getMeasureTimestamp()` au lieu de `Date.parse()`.
+
+### Non-régression complémentaire
+
+`GET /api/tableau-de-bord/measurements` utilise désormais `serializeStoredDbDateTime()` sur `Date_Heure_Mesure`, comme les autres endpoints de mesures.
+
+### Fichiers principaux
+
+- `website/src/lib/date-display.ts` ;
+- `website/src/lib/measurements.ts` ;
+- `website/src/lib/measurement-cache.ts` ;
+- `website/src/components/monitoring-card.tsx` ;
+- `website/src/components/monitoring-details/monitoring-graph-tab.tsx` ;
+- `website/src/components/monitoring-details/monitoring-table-tab.tsx` ;
+- `website/src/app/[locale]/(dashboard)/surveillance/_components/monitoring-site-section.tsx` ;
+- `website/src/app/[locale]/(dashboard)/surveillance/_components/curves-overlay-modal.tsx` ;
+- `website/src/app/api/capteurs/paginated/route.ts` ;
+- `website/src/app/api/tableau-de-bord/measurements/route.ts` ;
+- `website/scripts/test-date-display.ts` ;
+- `website/scripts/test-surveillance-measurement-timezone.ts`.
+
+### Version
+
+- Web : **1.8.7** ;
+- Serveur : **1.1.0** — inchangé ;
+- Agent : **1.0.1** — inchangé ;
+- BDD : **0.91.0** — inchangée ;
+- aucune migration BDD.
+
+### Validation automatisée
+
+- [ ] `pnpm test:date-display` ;
+- [ ] `pnpm test:surveillance-measurement-timezone` ;
+- [ ] heure d'été Europe/Paris : `10:36:17` reste `10:36:17` ;
+- [ ] chaîne JSON `...Z` issue d'un `DATETIME` stocké ;
+- [ ] chaîne avec offset explicite ;
+- [ ] mini-graphe Surveillance ;
+- [ ] graphe détaillé / tooltip ;
+- [ ] tableau des mesures / tri ;
+- [ ] superposition de courbes ;
+- [ ] dates de désactivation/réactivation ;
+- [ ] ESLint ciblé ;
+- [ ] TypeScript Prisma MySQL ;
+- [ ] génération Prisma SQL Server ;
+- [ ] TypeScript Prisma SQL Server ;
+- [ ] build production Next.js.
+
+### Validation terrain
+
+- [ ] prendre une mesure récente et noter exactement `Date_Heure_Mesure` en BDD ;
+- [ ] comparer l'heure affichée sur la card Surveillance ;
+- [ ] ouvrir le graphe et vérifier axe + tooltip sur la même mesure ;
+- [ ] ouvrir **Tableau des mesures** et vérifier la même heure ;
+- [ ] vérifier un tri ascendant / descendant sur Date ;
+- [ ] tester une plage personnalisée et les dernières 24 h ;
+- [ ] tester la superposition de courbes et son export Excel ;
+- [ ] vérifier les badges de Surveillance désactivée / réactivation programmée ;
+- [ ] refaire le contrôle sur une date en heure d'été et une date en heure d'hiver ;
 - [ ] valider MySQL puis SQL Server.
