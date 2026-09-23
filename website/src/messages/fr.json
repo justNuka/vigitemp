@@ -5221,6 +5221,16 @@
         "step3_description": "Dans chaque dossier de page, renommer `page.tsx` et `page-old.tsx` pour tester la version client-only (sans optimisation).",
         "build_title": "Build de test complet",
         "build_description": "Mesurer les temps réels de production (~5-15ms avec cache)."
+      },
+      "design": {
+        "title": "Laboratoire UI",
+        "description": "Maquettes isolées pour valider les animations, loaders et écrans système avant toute intégration dans les parcours réels.",
+        "cards": {
+          "ui_motion": {
+            "title": "Motion & pages système",
+            "description": "Loaders VigiSensys, animations métier et concepts 404 / 500 / maintenance / réseau."
+          }
+        }
       }
     },
     "monitoring": {
@@ -5369,6 +5379,143 @@
       },
       "more": "+ {count} autre{count, plural, one {} other {s}}",
       "loaded_count": "{count} utilisateur{count, plural, one {} other {s}} chargé{count, plural, one {} other {s}} en <strong>{duration}ms</strong>"
+    },
+    "uiMotion": {
+      "page_title": "Laboratoire Motion & pages système",
+      "page_description": "Cette page de test rassemble des concepts visuels VigiSensys sans remplacer les skeletons, loaders ni pages d'erreur actuellement utilisés par l'application.",
+      "hero": {
+        "badge": "Concepts isolés",
+        "title": "Animations métier et erreurs VigiSensys",
+        "description": "Les loaders s'appuient sur les codes visuels de Surveillance, des mesures, des graphiques et des sondes. Les pages d'erreur restent fantaisistes sans perdre le ton d'un logiciel de supervision professionnel."
+      },
+      "controls": {
+        "speed": "Vitesse",
+        "speed_values": {
+          "fast": "Rapide",
+          "normal": "Normale",
+          "slow": "Lente"
+        },
+        "replay": "Rejouer"
+      },
+      "principles": {
+        "isolated_title": "Aucune intégration automatique",
+        "isolated_description": "La galerie vit uniquement dans les pages de test et n'altère aucun chargement de production.",
+        "performance_title": "Motion avant 3D",
+        "performance_description": "Les concepts privilégient Motion, SVG et CSS. Three.js reste réservé à un besoin visuel qui justifierait réellement son coût.",
+        "production_title": "Prévisualisation avant adoption",
+        "production_description": "Chaque concept pourra être repris séparément après validation UX, performances et accessibilité."
+      },
+      "tabs": {
+        "loaders": "Loaders",
+        "errors": "Pages d'erreur"
+      },
+      "loaders": {
+        "intro_title": "Loaders métier",
+        "intro_description": "Six directions sont présentées séparément. Vitesse actuelle : {speed}. Le bouton Rejouer relance leurs séquences d'introduction.",
+        "kinetic": {
+          "title": "Orbiteur télémétrique",
+          "description": "Un noyau de supervision reçoit des valeurs qui gravitent autour de lui. Le mouvement cinétique rappelle l'acquisition continue sans utiliser un spinner générique.",
+          "usage": "Surveillance / dashboard",
+          "stage": "Acquisition live",
+          "status": "Réception des dernières mesures"
+        },
+        "morph": {
+          "title": "Signal morphing",
+          "description": "La forme centrale se transforme pendant la synchronisation. C'est le concept le plus abstrait, pensé pour les chargements courts où il faut une signature visuelle VigiSensys.",
+          "usage": "Chargement global",
+          "stage": "Morphing",
+          "status": "Synchronisation du signal"
+        },
+        "cards": {
+          "title": "Cards de Surveillance qui se construisent",
+          "description": "Les cards apparaissent par couches : en-tête, valeur, courbe puis métadonnées. Le loader donne la sensation que l'écran se compose à mesure que les données arrivent.",
+          "usage": "Surveillance",
+          "stage": "Construction des cards"
+        },
+        "graph": {
+          "title": "Tracé de courbe",
+          "description": "Les seuils apparaissent, puis la mesure se dessine avec un point de lecture et un balayage discret. Adapté aux graphes détaillés et aux changements de période.",
+          "usage": "Graphiques",
+          "stage": "Tracé des mesures",
+          "chart_title": "Température chambre froide",
+          "chart_subtitle": "Préparation de la série temporelle",
+          "live": "Données en cours"
+        },
+        "sensors": {
+          "title": "Découverte des sondes",
+          "description": "Une passerelle interroge progressivement plusieurs familles de sondes. Le langage visuel évoque le matériel et la communication plutôt qu'un simple skeleton.",
+          "usage": "Administration / sondes",
+          "stage": "Scan matériel",
+          "status": "Recherche et identification des sondes"
+        },
+        "stream": {
+          "title": "Flux de mesures",
+          "description": "Des paquets de valeurs convergent vers le stockage applicatif. Ce concept convient aux imports, historiques ou écrans où l'on agrège beaucoup de données.",
+          "usage": "Mesures / historique",
+          "stage": "Pipeline de données",
+          "target": "Stockage VigiSensys",
+          "status": "Agrégation des mesures"
+        }
+      },
+      "errors": {
+        "intro_title": "Pages système illustrées",
+        "intro_description": "Ces écrans sont des maquettes uniquement. Les pages 404/500 actuelles restent inchangées tant qu'un concept n'est pas explicitement validé pour intégration.",
+        "brand": "VigiSensys · supervision environnementale",
+        "actions": {
+          "home": "Retour à l'accueil",
+          "back": "Retour",
+          "retry": "Réessayer"
+        },
+        "notFound": {
+          "concept_title": "404 · Sonde égarée",
+          "concept_description": "La ressource recherchée sort visuellement du réseau de supervision : plus expressive qu'un texte seul, mais toujours cohérente avec le métier.",
+          "usage": "404",
+          "title": "Cette route a quitté le réseau",
+          "description": "La page demandée est introuvable. La supervision continue de fonctionner normalement.",
+          "scene_status": "Route introuvable"
+        },
+        "server": {
+          "concept_title": "500 · Chaîne de mesure interrompue",
+          "concept_description": "Une ligne de signal se dérègle entre les briques serveur. L'illustration évoque un incident technique sans donner l'impression que les données réelles sont perdues.",
+          "usage": "500",
+          "title": "Un signal s'est interrompu",
+          "description": "VigiSensys a rencontré une erreur pendant le traitement de cette page. Vous pouvez relancer l'opération.",
+          "scene_status": "Incident applicatif"
+        },
+        "maintenance": {
+          "concept_title": "Maintenance · Banc technique",
+          "concept_description": "La sonde est placée au centre d'un petit banc de maintenance animé. Le ton reste calme et rassurant pour une indisponibilité planifiée.",
+          "usage": "Maintenance",
+          "code": "MAINT.",
+          "title": "Maintenance en cours",
+          "description": "VigiSensys effectue une opération planifiée. L'accès sera rétabli dès la fin de l'intervention.",
+          "footer": "Aucune action n'est nécessaire pendant cette opération."
+        },
+        "network": {
+          "concept_title": "Réseau · Diagnostic embarqué",
+          "concept_description": "L'écran combine une topologie simplifiée et un mini diagnostic réel du navigateur, de l'origine Web et de l'API, déclenché uniquement à la demande.",
+          "usage": "Réseau",
+          "code": "RÉSEAU",
+          "title": "La liaison réseau est indisponible",
+          "description": "La page reste explicite sur ce qui peut être vérifié localement et évite d'accuser la base ou un service sans preuve.",
+          "footer": "Le diagnostic ne modifie aucune donnée et n'effectue que des requêtes de disponibilité.",
+          "diagnostic_title": "Diagnostic rapide",
+          "diagnostic_description": "Trois vérifications sans écriture",
+          "run": "Lancer le test",
+          "checks": {
+            "browser": "Connexion déclarée par le navigateur",
+            "origin": "Serveur Web VigiSensys",
+            "api": "API VigiSensys"
+          },
+          "details": {
+            "waiting": "En attente",
+            "online": "Le navigateur signale une connexion active",
+            "offline": "Le navigateur signale un mode hors ligne",
+            "skipped": "Non testé : connexion navigateur absente",
+            "unreachable": "Aucune réponse avant expiration du délai"
+          }
+        }
+      }
     }
   },
   "servicesVigilog": {
@@ -6390,4 +6537,4 @@
       }
     }
   }
-}
+}\n
