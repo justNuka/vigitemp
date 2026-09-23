@@ -222,7 +222,7 @@ export function MonitoringSiteSection({
                     {groupDisabled ? (
                       <span
                         className="ml-2 inline-flex items-center rounded-full bg-orange-500/20 text-orange-900 dark:text-orange-100 text-[10px] px-2 py-0.5"
-                        title={formatDisabledSinceLabel(groupDisabledSince, locale, timezone, t)}
+                        title={formatDisabledSinceLabel(groupDisabledSince, locale, t)}
                       >
                         {t("grid.disabled_badge")}
                       </span>
