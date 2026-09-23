@@ -13,6 +13,7 @@ export function ExpertWidgetCard({
   hrefLabel,
   icon,
   badge,
+  content,
   onClick,
   ariaLabel,
 }: {
@@ -24,6 +25,7 @@ export function ExpertWidgetCard({
   hrefLabel?: string
   icon: ReactNode
   badge?: ReactNode
+  content?: ReactNode
   onClick?: () => void
   ariaLabel?: string
 }) {
@@ -58,8 +60,12 @@ export function ExpertWidgetCard({
         </div>
       </CardHeader>
       <CardContent className="space-y-2 overflow-hidden">
-        <div className="text-3xl font-bold text-slate-900 dark:text-slate-100">{value}</div>
-        {helper ? <p className="line-clamp-3 whitespace-pre-line break-all text-sm text-muted-foreground">{helper}</p> : null}
+        {content ?? (
+          <>
+            <div className="text-3xl font-bold text-slate-900 dark:text-slate-100">{value}</div>
+            {helper ? <p className="line-clamp-3 whitespace-pre-line break-all text-sm text-muted-foreground">{helper}</p> : null}
+          </>
+        )}
         {href && hrefLabel ? (
           <Link
             href={href as never}
