@@ -2577,22 +2577,26 @@ Un lieu multi-groupes accessible via un groupe autorisé ne peut donc plus être
 
 ### Validation automatisée
 
-- [ ] `git diff --check origin/dev...HEAD` ;
-- [ ] `pnpm test:surveillance-group-access` ;
-- [ ] scope sans restriction ;
-- [ ] scope Site seul ;
-- [ ] scope Groupe seul ;
-- [ ] scope Site + Groupe en `AND` ;
-- [ ] groupe non affecté visible mais désactivé dans les filtres ;
-- [ ] filtre localStorage non autorisé nettoyé ;
-- [ ] relations Arborescence limitées aux groupes autorisés ;
-- [ ] ESLint ciblé ;
-- [ ] contrôle i18n ;
-- [ ] TypeScript Prisma MySQL ;
-- [ ] génération Prisma SQL Server ;
-- [ ] TypeScript Prisma SQL Server ;
-- [ ] restauration Prisma MySQL ;
-- [ ] build production Next.js.
+GitHub Actions run `35830199009` : **succès complet** sur le HEAD fonctionnel du lot.
+
+- [x] `git diff --check origin/dev...HEAD` ;
+- [x] `pnpm test:surveillance-group-access` ;
+- [x] scope sans restriction ;
+- [x] scope Site seul ;
+- [x] scope Groupe seul ;
+- [x] scope Site + Groupe en `AND` ;
+- [x] groupe non affecté visible mais désactivé dans les filtres ;
+- [x] filtre localStorage non autorisé nettoyé ;
+- [x] relations Arborescence limitées aux groupes autorisés ;
+- [x] ESLint ciblé ;
+- [x] contrôle i18n sans nouvelle dette dans le lot ;
+- [x] TypeScript Prisma MySQL ;
+- [x] génération Prisma SQL Server ;
+- [x] TypeScript Prisma SQL Server ;
+- [x] restauration Prisma MySQL ;
+- [x] build production Next.js.
+
+Le workflow temporaire de validation a été retiré du diff final.
 
 ### Validation terrain
 
