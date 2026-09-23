@@ -91,7 +91,11 @@ jobs:
               re.S,
           )
           assert select_match
-          select_items = [item.strip() for item in select_match.group(1).split(",")]
+          select_items = [
+              line.strip().rstrip(",")
+              for line in select_match.group(1).splitlines()
+              if line.strip()
+          ]
 
           fetch_matches = re.findall(
               r"FETCH NEXT FROM cur INTO\s+(.*?);",
