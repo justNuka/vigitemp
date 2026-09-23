@@ -2777,7 +2777,7 @@ Le rendu est partagé par les dashboards Basic / Standard / Expert.
 
 ### Validation automatisée
 
-GitHub Actions run `35845733046` : **succès complet** sur le HEAD fonctionnel du lot.
+GitHub Actions run `35846548157` : **succès complet** après réintégration du dernier `dev` (`14de48a5a20a990b4898f9aa3de2b0da5ee3af6c`).
 
 - [x] `git diff --check origin/dev...HEAD` ;
 - [x] `pnpm test:admin-nav-backup-status` ;
