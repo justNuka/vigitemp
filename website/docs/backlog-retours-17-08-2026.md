@@ -2818,7 +2818,7 @@ Le checker i18n global signale encore uniquement de la dette préexistante hors 
 
 ## R23-003 — Surveillance : corriger le décalage horaire des mesures
 
-**Statut : `EN_COURS` — branche `fix/surveillance-measurement-timezone` — base finale `dev` `9151b14a315112363227a03467af45535e54a99e`**
+**Statut : `PR_OUVERTE` — branche `fix/surveillance-measurement-timezone` — PR #147 — base finale `dev` `9151b14a315112363227a03467af45535e54a99e`**
 
 ### Retour — 23/09/2026
 
