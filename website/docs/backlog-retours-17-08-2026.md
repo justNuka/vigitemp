@@ -2818,7 +2818,7 @@ Le checker i18n global signale encore uniquement de la dette préexistante hors 
 
 ## R23-003 — Surveillance : corriger le décalage horaire des mesures
 
-**Statut : `PR_OUVERTE` — branche `fix/surveillance-measurement-timezone` — PR #147 — base finale `dev` `9151b14a315112363227a03467af45535e54a99e`**
+**Statut : `CORRIGE_DEV` — PR #147 — squash merge `412675643cbf531316c8a90565b4ca3df0a7594b`**
 
 ### Retour — 23/09/2026
 
@@ -2977,7 +2977,7 @@ Le workflow temporaire de validation a été retiré du diff final. Les changeme
 
 ## R23-004 — Aligner le seed SQL Server sur les derniers changements MySQL
 
-**Statut : `PR_OUVERTE` — branche `fix/mssql-seed-parity` — PR #148 — base `dev` `412675643cbf531316c8a90565b4ca3df0a7594b`**
+**Statut : `CORRIGE_DEV` — PR #148 — squash merge `ab753d85e1832dab7878158b7f2463d570772a87`**
 
 ### Demande — 23/09/2026
 
@@ -3076,3 +3076,158 @@ Le workflow temporaire de validation a été retiré du diff final.
 - [ ] tester une non-réponse GSO ;
 - [ ] tester une fin d'alarme et une pré-alarme ;
 - [ ] confirmer que les seuils critiques ne déclenchent plus directement via le trigger GSO.
+
+
+---
+
+## R23-005 — Retours complémentaires Surveillance / alarmes / administration du 23/09/2026
+
+**Statut global : `EN_COURS` — traitement par lots séquentiels depuis `dev`**
+
+Les retours suivants ont été fournis à la fois sous forme de texte et de captures. Certains se recoupent ; cette section constitue la liste consolidée à reprendre lot par lot.
+
+### R23-005-A — Décalages horaires Surveillance / graphes / acquittements
+
+**Statut : `EN_COURS` — branche `fix/monitoring-range-timezone` — base `dev` `ab753d85e1832dab7878158b7f2463d570772a87`**
+
+Retours :
+
+- à l'ouverture du détail d'un lieu vers 15 h, le graphe pouvait ne charger les mesures que jusqu'à environ 13 h ;
+- même phénomène sur les graphes utilisés dans le parcours d'acquittement / analyse d'alarme ;
+- après la PR #147, une card Surveillance a affiché par exemple `23/09/2026 11:36` alors que l'heure réelle de la mesure était environ deux heures plus tard ;
+- revalider également le tableau des mesures, déjà traité en #147, afin de ne pas réintroduire de décalage.
+
+#### Cause complémentaire identifiée après #147
+
+La PR #147 a corrigé la sémantique des chaînes `DATETIME` côté affichage, mais supposait encore que les objets `Date` renvoyés par Prisma avaient la même représentation sur MySQL et SQL Server.
+
+Ce n'est pas le cas avec les adapters réellement utilisés :
+
+- `@prisma/adapter-mariadb` utilise le driver MariaDB dont la timezone par défaut est locale ;
+- `@prisma/adapter-mssql` s'appuie sur node-mssql, qui utilise UTC par défaut pour les dates sans offset.
+
+Deux régressions en découlent si le provider n'est pas pris en compte :
+
+1. **lecture MySQL** : un `DATETIME 13:36` peut être porté par un objet `Date` local 13:36, dont les composantes UTC valent 11:36 ; lire systématiquement `getUTCHours()` produit donc le `-2 h` visible sur la card ;
+2. **borne de requête** : un objet UI local 15:00 représente réellement `13:00Z` en été. S'il est transmis tel quel à un provider qui sérialise en UTC, le filtre SQL peut s'arrêter à 13:00.
+
+#### Correctif en cours
+
+Le helper date est séparé en deux niveaux :
+
+- côté client / JSON : chaînes murales sans fuseau via `formatStoredDbDateTime` / `parseStoredDbDateTime` ;
+- frontière serveur Prisma : bridge provider-aware exposé par `sql-provider.ts`.
+
+Nouveaux wrappers serveur :
+
+- `serializePrismaStoredDbDateTime(value)` — transforme un `Date` Prisma en chaîne murale correcte selon le provider ;
+- `toPrismaStoredDbDateTime(value)` — transforme une borne murale UI en objet `Date` adapté au provider avant filtre/écriture Prisma.
+
+Parcours alignés dans ce lot :
+
+- `GET /api/mesures/[idLieu]` ;
+- `GET /api/alarmes/range` ;
+- `GET /api/alarmes` pour la borne des 30 jours ;
+- `GET /api/alarmes/[id]` utilisé par l'analyse d'acquittement ;
+- candidats d'acquittement ;
+- `GET /api/capteurs/paginated` pour les dates des cards Surveillance ;
+- dashboard serveur.
+
+Aucune correction fixe `+2 h` / `-2 h` n'est utilisée.
+
+#### Validation terrain du lot A
+
+- [ ] comparer une `Date_Heure_Mesure` BDD avec l'heure affichée sur la card ;
+- [ ] ouvrir un lieu à une heure connue, par exemple 15 h, et vérifier que les dernières mesures vont bien jusqu'à ~15 h ;
+- [ ] vérifier axe et tooltip du graphe ;
+- [ ] vérifier le tableau des mesures ;
+- [ ] ouvrir l'analyse/acquittement d'une alarme et vérifier que la plage débute/termine aux vraies heures de l'alarme ;
+- [ ] tester une alarme encore en cours, dont la fin de plage suit l'heure actuelle ;
+- [ ] tester MySQL ;
+- [ ] tester SQL Server ;
+- [ ] refaire un contrôle en heure d'hiver.
+
+### R23-005-B — Présentation et signalétique Surveillance
+
+**Statut : `A_FAIRE`**
+
+Retours consolidés :
+
+- sur les cards, inverser la hiérarchie visuelle du **lieu** et de la **sonde** :
+  - lieu en premier et plus grand ;
+  - sonde en second et plus petit ;
+- rendre le point clignotant des cards en alarme nettement plus visible / flashy ;
+- remplacer le badge/libellé **« critiques »** par **« alarmes en cours »** là où ce compteur représente les alarmes actives.
+
+### R23-005-C — Emails d'alarme et formulation Paramètres
+
+**Statut : `A_FAIRE`**
+
+Retours :
+
+- créer un template d'email spécifique pour le déclenchement d'un **seuil critique** ;
+- sur un email de **fin d'alarme de non-réponse**, la dernière valeur apparaît `N/A` alors qu'une mesure a été reçue et que la trigger a été mise à jour : vérifier le backend de notification, la source de `Valeur` et le template ;
+- dans Administration > Paramètres > Alarmes / notifications, supprimer la formulation **« mail système »** au profit d'un libellé métier plus clair ;
+- conserver FR/EN.
+
+### R23-005-D — Graphes d'acquittement : transitions et zoom
+
+**Statut : `A_FAIRE`**
+
+Retours :
+
+- l'animation de dessin/changement d'alarme est trop lente ;
+- les transitions lors d'un changement d'alarme doivent être plus rapides ;
+- le zoom/dézoom est trop lent ;
+- après un dézoom important, il devient presque impossible de rezoomer : vérifier les bornes du plugin Chart.js Zoom, la capture/restauration de `zoomBounds` et les callbacks ;
+- ne pas dégrader le comportement des graphes Surveillance classiques.
+
+### R23-005-E — Preview des consignes / limites dans la modal d'un lieu
+
+**Statut : `A_FAIRE`**
+
+Retours consolidés du texte et de la capture :
+
+- lorsque l'utilisateur modifie certaines limites, c'est visuellement la **ligne Consigne** qui se déplace : corriger l'association dataset/guide ;
+- empêcher ou signaler immédiatement les valeurs incohérentes dans le formulaire, même si la validation finale les refuserait déjà ;
+- vérifier si une configuration incohérente doit bloquer la saisie ou au minimum rendre la validation impossible de manière visuellement explicite ;
+- le retard d'alarme doit commencer depuis le **dernier point encore valide**, et non depuis le premier point hors tolérance ;
+- revoir le visuel représentant la temporisation / le « Retard d'alarme » sur la preview ;
+- revoir les validations des **pré-alarmes avec EMT** ;
+- indiquer au-dessus des limites lorsqu'un **EMT** est inclus dans le seuil effectif ;
+- lorsqu'une consigne/limite change, la preview doit se mettre à jour sans déplacer une courbe qui ne correspond pas au champ modifié.
+
+### R23-005-F — Édition utilisateur
+
+**Statut : `A_FAIRE`**
+
+Retours de la capture :
+
+- à l'ouverture de **Modifier l'utilisateur**, le profil actuellement affecté n'est pas présélectionné ;
+- le champ apparaît vide et déclenche immédiatement « Le profil est requis » alors que l'utilisateur possède déjà un profil ;
+- vérifier le chargement/mapping `Id_Profil` entre la ligne utilisateur et le formulaire ;
+- étudier un affichage plus large / paysage de la fenêtre d'édition afin d'afficher davantage d'informations simultanément sans scroll excessif, tout en restant responsive.
+
+### R23-005-G — Card métrologie du Dashboard Admin
+
+**Statut : `A_FAIRE`**
+
+Retour :
+
+- la durée utilisée par la card métrologie / échéance d'étalonnage ne doit pas être une constante ;
+- récupérer la **durée de validité d'étalonnage** depuis le paramètre BDD existant ;
+- vérifier MySQL / SQL Server et le fallback historique si le paramètre est absent.
+
+### Ordre de traitement prévu
+
+Les lots restent séquentiels afin que chaque branche parte du `dev` effectivement mergé :
+
+1. **A — dates / graphes** ;
+2. **B — cards / signalétique Surveillance** ;
+3. **C — emails / paramètres alarmes** ;
+4. **D — UX graphes acquittement** ;
+5. **E — preview limites / EMT / validations** ;
+6. **F — édition utilisateur** ;
+7. **G — card métrologie**.
+
+L'ordre pourra être ajusté sur demande, mais aucune branche suivante ne doit être créée depuis un `dev` obsolète.
