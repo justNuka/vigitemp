@@ -2818,7 +2818,7 @@ Le checker i18n global signale encore uniquement de la dette préexistante hors 
 
 ## R23-003 — Surveillance : corriger le décalage horaire des mesures
 
-**Statut : `EN_COURS` — branche `fix/surveillance-measurement-timezone` — base `dev` `68cf48afd5bdd9d2541f20cde7af866b266cf623`**
+**Statut : `EN_COURS` — branche `fix/surveillance-measurement-timezone` — base finale `dev` `9151b14a315112363227a03467af45535e54a99e`**
 
 ### Retour — 23/09/2026
 
@@ -2936,21 +2936,28 @@ Le cache serveur des mesures utilise le helper métier `getMeasureTimestamp()` a
 
 ### Validation automatisée
 
-- [ ] `pnpm test:date-display` ;
-- [ ] `pnpm test:surveillance-measurement-timezone` ;
-- [ ] heure d'été Europe/Paris : `10:36:17` reste `10:36:17` ;
-- [ ] chaîne JSON `...Z` issue d'un `DATETIME` stocké ;
-- [ ] chaîne avec offset explicite ;
-- [ ] mini-graphe Surveillance ;
-- [ ] graphe détaillé / tooltip ;
-- [ ] tableau des mesures / tri ;
-- [ ] superposition de courbes ;
-- [ ] dates de désactivation/réactivation ;
-- [ ] ESLint ciblé ;
-- [ ] TypeScript Prisma MySQL ;
-- [ ] génération Prisma SQL Server ;
-- [ ] TypeScript Prisma SQL Server ;
-- [ ] build production Next.js.
+GitHub Actions run `35860494426` : **succès complet** après réintégration du dernier `dev` (`9151b14a315112363227a03467af45535e54a99e`).
+
+- [x] `git diff --check origin/dev...HEAD` ;
+- [x] `pnpm test:date-display` ;
+- [x] `pnpm test:surveillance-measurement-timezone` ;
+- [x] heure d'été Europe/Paris : `10:36:17` reste `10:36:17` ;
+- [x] chaîne JSON `...Z` issue d'un `DATETIME` stocké ;
+- [x] chaîne avec offset explicite ;
+- [x] mini-graphe Surveillance ;
+- [x] graphe détaillé / tooltip ;
+- [x] tableau des mesures / tri ;
+- [x] superposition de courbes ;
+- [x] dates de désactivation/réactivation ;
+- [x] ESLint ciblé ;
+- [x] contrôle i18n sans nouvelle dette dans les sources du lot ;
+- [x] TypeScript Prisma MySQL ;
+- [x] génération Prisma SQL Server ;
+- [x] TypeScript Prisma SQL Server ;
+- [x] restauration Prisma MySQL ;
+- [x] build production Next.js.
+
+Le workflow temporaire de validation a été retiré du diff final. Les changements postérieurs au run concernent uniquement ce nettoyage et la documentation de validation.
 
 ### Validation terrain
 
