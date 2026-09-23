@@ -19,7 +19,7 @@ export function ExpertWidgetCard({
 }: {
   title: string
   description: string
-  value: string
+  value?: string
   helper?: string
   href?: string
   hrefLabel?: string
