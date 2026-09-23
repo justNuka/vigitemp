@@ -43,15 +43,17 @@ export const getUserLocationScope = cache(async (userId: number): Promise<UserLo
 export function buildLieuAccessFilter(scope: UserLocationScope): WhereInput | null {
   if (!scope.hasRestrictions) return null
 
-  const or: WhereInput[] = []
+  const restrictions: WhereInput[] = []
   if (scope.siteIds.length > 0) {
-    or.push({ Id_Site: { in: scope.siteIds } })
+    restrictions.push({ Id_Site: { in: scope.siteIds } })
   }
   if (scope.groupIds.length > 0) {
-    or.push({ t_lieu_groupe: { some: { Id_Groupe: { in: scope.groupIds } } } })
+    restrictions.push({ t_lieu_groupe: { some: { Id_Groupe: { in: scope.groupIds } } } })
   }
 
-  return or.length > 0 ? { OR: or } : null
+  if (restrictions.length === 0) return null
+  if (restrictions.length === 1) return restrictions[0]
+  return { AND: restrictions }
 }
 
 export function buildAlarmAccessFilter(scope: UserLocationScope): WhereInput | null {

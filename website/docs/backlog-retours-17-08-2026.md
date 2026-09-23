@@ -2360,7 +2360,7 @@ Le workflow temporaire de validation a été retiré du diff final.
 
 ## R22-006 — Fiabiliser le type des sondes importées et le retour vers Sondes
 
-**Statut : `PR_OUVERTE` — branche `fix/sensor-import-type-detection` — PR #144 — base `dev` `0b3bf3e6575d166d60a98b89219fb55825e248e2`**
+**Statut : `CORRIGE_DEV` — PR #144 — squash merge `9e67fd3a8b42bf9da305533b4c87c9e0d95f45b6`**
 
 ### Retour — 22/09/2026
 
@@ -2466,4 +2466,151 @@ Le workflow temporaire de validation a été retiré du diff final.
 - [ ] vérifier l'affectation de module, `Est_Sonde_GSO`, `Sonde_Type` et `Adresse_Sonde` après insertion ;
 - [ ] FR : cliquer sur **Retour aux sondes** et confirmer `/fr/admin/sondes` ;
 - [ ] EN : confirmer `/en/admin/sensors` ;
+- [ ] valider MySQL puis SQL Server.
+
+
+---
+
+## R23-001 — Respecter les groupes utilisateur dans les filtres et l’arborescence Surveillance
+
+**Statut : `PR_OUVERTE` — branche `fix/surveillance-group-access` — PR #145 — base `dev` `9e67fd3a8b42bf9da305533b4c87c9e0d95f45b6`**
+
+### Retour — 23/09/2026
+
+Retour terrain sur le périmètre de visibilité d'un utilisateur :
+
+- Administration > Utilisateurs permet d'affecter une liste de **Sites** et une liste de **Groupes** ;
+- sur Surveillance > Graphiques, un groupe non affecté ne doit donner accès à aucun lieu ;
+- dans le sélecteur **Groupes**, le nom d'un groupe non affecté doit néanmoins rester visible en **grisé / non sélectionnable** ;
+- en vue **Arborescence**, un groupe non affecté ne doit jamais réapparaître avec ses lieux.
+
+Cas reproduit avec le groupe `GSO_DEFAUT` : il n'est pas affecté à l'utilisateur, mais pouvait encore apparaître dans l'Arborescence.
+
+### État vérifié avant correction
+
+Trois causes se combinaient :
+
+1. `buildLieuAccessFilter()` combinait les restrictions Site et Groupe avec un `OR`.
+   - Si l'utilisateur avait un site affecté, un lieu de ce site restait donc accessible même si aucun de ses groupes n'était affecté.
+   - Cela rendait les deux dimensions de restriction incohérentes lorsqu'elles étaient toutes les deux configurées.
+
+2. `GET /api/capteurs/paginated` réimplémentait sa propre logique de droits.
+   - Les sites et groupes affectés étaient relus directement.
+   - Sans filtre explicite, les deux périmètres étaient eux aussi combinés avec un `OR`.
+   - Avec certains filtres explicites, la logique pouvait diverger du helper partagé.
+
+3. Les relations `t_lieu_groupe` retournées à l'Arborescence n'étaient pas filtrées.
+   - Un lieu autorisé via un groupe pouvait donc transporter également le nom d'un autre groupe non affecté.
+   - Le regroupement client dupliquait alors le même lieu sous ce groupe non autorisé.
+
+Le composant partagé `MultiSelectFilter` savait déjà afficher une option `disabled` en grisé : le manque venait des métadonnées d'accès fournies à la page Surveillance.
+
+### Règle métier retenue
+
+Le scope utilisateur suit désormais la règle suivante :
+
+- aucun site + aucun groupe affecté → tous les lieux restent visibles ;
+- sites uniquement → lieux appartenant aux sites affectés ;
+- groupes uniquement → lieux appartenant aux groupes affectés ;
+- sites **et** groupes affectés → le lieu doit satisfaire **les deux dimensions** :
+  - appartenir à un site affecté ;
+  - appartenir à au moins un groupe affecté.
+
+Cette règle est portée par le helper canonique `buildLieuAccessFilter()` et bénéficie donc aussi aux autres lectures qui réutilisent ce scope (Dashboard, Alarmes, résumés, etc.).
+
+### Correctif — filtre Groupes
+
+`ServerFilterOptions()` distingue maintenant :
+
+- les groupes candidats présents dans le périmètre des sites ;
+- les groupes réellement affectés à l'utilisateur.
+
+Lorsqu'une restriction Groupe existe :
+
+- groupe affecté → option active ;
+- groupe non affecté → option visible mais `disabled`, donc grisée par `MultiSelectFilter`.
+
+Le changement de filtre Site conserve uniquement les groupes encore valides.
+
+Un ancien groupe non autorisé conservé dans `localStorage` est automatiquement retiré des filtres actifs.
+
+### Correctif — API Surveillance
+
+`GET /api/capteurs/paginated` réutilise désormais :
+
+- `getUserLocationScope()` ;
+- `buildLieuAccessFilter()`.
+
+Les filtres explicites Site / Groupe sont ensuite appliqués **en plus** du scope utilisateur.
+
+Si un ID de filtre ne fait pas partie du scope configuré, il est neutralisé côté serveur et ne peut pas servir de contournement.
+
+### Correctif — Arborescence
+
+Lorsque l'utilisateur possède une restriction Groupe, les relations `t_lieu_groupe` renvoyées avec :
+
+- les lieux paginés ;
+- les compteurs globaux de l'Arborescence ;
+
+sont limitées aux groupes affectés.
+
+Un lieu multi-groupes accessible via un groupe autorisé ne peut donc plus être réaffiché sous un autre groupe non autorisé.
+
+### Fichiers principaux
+
+- `website/src/lib/location-access-scope.ts` ;
+- `website/src/app/api/capteurs/paginated/route.ts` ;
+- `website/src/app/[locale]/(dashboard)/surveillance/server-filters.ts` ;
+- `website/src/app/[locale]/(dashboard)/surveillance/monitoring-filters.tsx` ;
+- `website/scripts/test-surveillance-group-access.ts` ;
+- `website/package.json` ;
+- `website/CHANGELOG.md` ;
+- `CHANGELOG.md`.
+
+### Version
+
+- Web : **1.8.5** ;
+- Serveur : **1.1.0** — inchangé ;
+- Agent : **1.0.1** — inchangé ;
+- BDD : **0.91.0** — inchangée ;
+- aucune migration BDD.
+
+### Validation automatisée
+
+GitHub Actions run `35830199009` : **succès complet** sur le HEAD fonctionnel du lot.
+
+- [x] `git diff --check origin/dev...HEAD` ;
+- [x] `pnpm test:surveillance-group-access` ;
+- [x] scope sans restriction ;
+- [x] scope Site seul ;
+- [x] scope Groupe seul ;
+- [x] scope Site + Groupe en `AND` ;
+- [x] groupe non affecté visible mais désactivé dans les filtres ;
+- [x] filtre localStorage non autorisé nettoyé ;
+- [x] relations Arborescence limitées aux groupes autorisés ;
+- [x] ESLint ciblé ;
+- [x] contrôle i18n sans nouvelle dette dans le lot ;
+- [x] TypeScript Prisma MySQL ;
+- [x] génération Prisma SQL Server ;
+- [x] TypeScript Prisma SQL Server ;
+- [x] restauration Prisma MySQL ;
+- [x] build production Next.js.
+
+Le workflow temporaire de validation a été retiré du diff final.
+
+### Validation terrain
+
+- [ ] affecter plusieurs sites et plusieurs groupes à un utilisateur en laissant au moins un groupe décoché ;
+- [ ] se connecter avec cet utilisateur ;
+- [ ] ouvrir Surveillance > Graphiques ;
+- [ ] ouvrir le filtre Groupes et vérifier que le groupe non affecté est visible en grisé et non cliquable ;
+- [ ] vérifier que les groupes affectés restent sélectionnables ;
+- [ ] vérifier qu'aucun lieu appartenant uniquement au groupe non affecté n'est affiché ;
+- [ ] passer en vue Arborescence et confirmer l'absence du groupe non affecté ;
+- [ ] tester un lieu appartenant à deux groupes, dont un seul est affecté : le lieu doit apparaître uniquement sous le groupe autorisé ;
+- [ ] tester un utilisateur avec seulement des Sites affectés ;
+- [ ] tester un utilisateur avec seulement des Groupes affectés ;
+- [ ] tester un utilisateur sans Site ni Groupe : tous les lieux doivent rester visibles ;
+- [ ] vérifier les compteurs Surveillance et Dashboard ;
+- [ ] vérifier la page Alarmes avec le même utilisateur ;
 - [ ] valider MySQL puis SQL Server.
