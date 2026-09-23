@@ -4,7 +4,7 @@ import { FEATURE_FLAGS } from "@/lib/feature-flags"
 import { DevModeBadge } from "@/components/dev-mode-badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Beaker, Zap, Database, Clock } from "lucide-react"
+import { Beaker, Zap, Database, Clock, Sparkles } from "lucide-react"
 import { Link } from "@/i18n/navigation"
 
 export default async function TestIndexPage() {
@@ -44,6 +44,15 @@ export default async function TestIndexPage() {
       description: t("cards.users.description"),
       href: "/admin/test/users-perf",
       tags: ["users-data"],
+    },
+  ]
+
+  const designTools = [
+    {
+      title: t("design.cards.ui_motion.title"),
+      description: t("design.cards.ui_motion.description"),
+      href: "/admin/test/ui-motion",
+      tags: ["motion", "loaders", "error-pages"],
     },
   ]
 
@@ -99,6 +108,39 @@ export default async function TestIndexPage() {
                     <Button className="w-full" size="sm">
                       <Zap className="mr-2 h-4 w-4" />
                       {t("actions.test")}
+                    </Button>
+                  </Link>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <h2 className="text-2xl font-bold mb-2 flex items-center gap-2">
+            <Sparkles className="h-6 w-6 text-primary" />
+            {t("design.title")}
+          </h2>
+          <p className="text-muted-foreground mb-4">{t("design.description")}</p>
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {designTools.map((tool) => (
+              <Card key={tool.href} className="hover:shadow-lg transition-shadow">
+                <CardHeader>
+                  <CardTitle className="text-base">{tool.title}</CardTitle>
+                  <CardDescription className="text-xs">{tool.description}</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="flex flex-wrap gap-1">
+                    {tool.tags.map((tag) => (
+                      <span key={tag} className="text-xs px-2 py-1 bg-muted rounded">
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                  <Link href={tool.href}>
+                    <Button className="w-full" size="sm">
+                      <Sparkles className="mr-2 h-4 w-4" />
+                      {t("actions.open_tool", { title: tool.title })}
                     </Button>
                   </Link>
                 </CardContent>
