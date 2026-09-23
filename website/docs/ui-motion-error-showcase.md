@@ -54,13 +54,13 @@ Les prototypes utilisent principalement :
 
 Three.js n'est pas ajouté dans ce lot : aucune des animations proposées ne nécessite une scène 3D suffisamment complexe pour justifier le poids et la maintenance supplémentaires. Il pourra être envisagé pour un concept futur si la 3D apporte une vraie valeur fonctionnelle ou visuelle.
 
-Les concepts respectent `prefers-reduced-motion` via `useReducedMotion` : les mouvements continus sont supprimés ou réduits lorsque l'utilisateur demande moins d'animations.
+Le **laboratoire force volontairement les animations** avec `MotionConfig reducedMotion="never"`. Le but est d'éviter qu'un réglage OS/navigateur `prefers-reduced-motion` rende toutes les maquettes statiques pendant la phase de comparaison visuelle. Cette exception ne vaut que pour `/admin/test/ui-motion` : lorsqu'un concept sera intégré dans un vrai parcours, il devra respecter à nouveau `prefers-reduced-motion` et proposer un fallback stable.
 
 ## Concepts de loaders
 
 ### 1. Orbiteur télémétrique
 
-Un noyau de supervision central reçoit des valeurs qui orbitent autour de lui.
+Quatre familles de mesures suivent une chorégraphie géométrique autour d'un noyau de supervision : elles changent de position, de forme, de rotation et de taille pendant que des particules de télémétrie convergent vers le centre.
 
 Usage envisagé :
 
@@ -72,7 +72,7 @@ Intention : représenter une acquisition continue sans retomber sur un spinner g
 
 ### 2. Signal morphing
 
-Une forme centrale change progressivement de géométrie pendant une synchronisation.
+Une forme centrale se déforme réellement entre plusieurs silhouettes tandis que des particules tournent autour d'elle et que les états de signal/décodage/buffer évoluent.
 
 Usage envisagé :
 
@@ -84,7 +84,7 @@ Intention : créer une signature visuelle VigiSensys plus abstraite, inspirée d
 
 ### 3. Construction des cards Surveillance
 
-Les cards apparaissent par couches :
+Les cards sont désormais **dessinées comme sur une table à dessin technique** :
 
 1. structure ;
 2. en-tête ;
@@ -142,25 +142,25 @@ Intention : représenter un pipeline plutôt qu'un chargement abstrait.
 
 ### 404 — sonde égarée
 
-La ressource recherchée est représentée comme une sonde sortie du réseau de supervision.
+La maquette 404 reprend plus directement l'esprit des références fournies : composition plein écran sombre/bleue, planètes, étoiles, code `404` monumental et objet animé traversant le `0` traité comme un radar.
 
 Le message précise que la page est introuvable sans suggérer que la Surveillance elle-même est en panne.
 
 ### 500 — chaîne de mesure interrompue
 
-Une ligne de signal devient instable entre des briques Serveur / traitement / base.
+La maquette 500 reprend l'idée du robot de maintenance : grand code `500` dans une carte claire sur fond bleu VigiSensys, deux racks serveur et un petit robot qui tente de rétablir une liaison interrompue.
 
 Le visuel représente un incident applicatif sans affirmer que des données ont été perdues.
 
 ### Maintenance — banc technique
 
-Une sonde est placée dans un petit banc de maintenance animé avec outils et progression.
+La scène maintenance devient un véritable banc technique sombre : robot VigiSensys, sonde en cours d'intervention, outils orbitaux et cycle de service animé.
 
 Le ton doit rester calme et explicite pour une indisponibilité planifiée.
 
 ### Réseau — diagnostic embarqué
 
-La maquette réseau propose un diagnostic manuel et **sans écriture**.
+La maquette réseau représente d'abord la panne visuellement : paquets venant du Web et du réseau qui s'arrêtent sur une rupture centrale. Elle propose ensuite un diagnostic manuel et **sans écriture**.
 
 Lorsqu'on clique sur **Lancer le test**, trois vérifications sont effectuées :
 
