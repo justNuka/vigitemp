@@ -411,7 +411,7 @@ function MaintenanceScene() {
 
       <div className="absolute inset-x-0 top-10 text-center">
         <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-amber-300/70">
-          VigiSensys · planned service
+          VigiSensys · {t("errors.maintenance.planned")}
         </p>
         <h3 className="mt-3 text-4xl font-black tracking-[-0.045em] text-white/95 md:text-5xl">
           {t("errors.maintenance.title")}
@@ -462,12 +462,12 @@ function MaintenanceScene() {
 
       <div className="absolute inset-x-0 bottom-10 mx-auto w-64">
         <div className="mb-2 flex justify-between text-[9px] uppercase tracking-[0.18em] text-slate-500">
-          <span>service cycle</span>
+          <span>{t("errors.maintenance.service_cycle")}</span>
           <motion.span
             animate={{ opacity: [0.45, 1, 0.45] }}
             transition={{ duration: 1.2, repeat: Infinity }}
           >
-            running
+            {t("errors.maintenance.running")}
           </motion.span>
         </div>
         <div className="h-1.5 overflow-hidden rounded-full bg-white/7">
@@ -677,14 +677,14 @@ function NetworkScene() {
       <div className="absolute left-8 top-[46%] flex h-24 w-24 items-center justify-center rounded-3xl border border-sky-300/20 bg-[#0a2131] shadow-[0_0_35px_rgba(14,165,233,.10)]">
         <Server className="h-10 w-10 text-sky-300" />
         <span className="absolute -bottom-7 text-[9px] uppercase tracking-[0.16em] text-slate-500">
-          web
+          {t("errors.network.labels.web")}
         </span>
       </div>
 
       <div className="absolute right-8 top-[46%] flex h-24 w-24 items-center justify-center rounded-3xl border border-violet-300/20 bg-[#17152b] shadow-[0_0_35px_rgba(139,92,246,.10)]">
         <Router className="h-10 w-10 text-violet-300" />
         <span className="absolute -bottom-7 text-[9px] uppercase tracking-[0.16em] text-slate-500">
-          network
+          {t("errors.network.labels.network")}
         </span>
       </div>
 
@@ -755,7 +755,7 @@ function NetworkScene() {
         animate={{ opacity: [0.45, 1, 0.45] }}
         transition={{ duration: 1.25, repeat: Infinity }}
       >
-        link interrupted
+        {t("errors.network.labels.interrupted")}
       </motion.div>
 
       <div className="absolute bottom-6 left-6 right-6 md:left-auto md:w-[410px]">
