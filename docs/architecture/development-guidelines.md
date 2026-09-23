@@ -141,10 +141,14 @@ Fonctions à connaître :
 - `parseDbDateTime` ;
 - `serializeDbDateTime` ;
 - `serializeStoredDbDateTime` ;
+- `parseStoredDbDateTime` ;
+- `formatStoredDbDateTime` ;
 - `formatDbDateTime` ;
 - `formatDbDateTimeIntl`.
 
 `serializeStoredDbDateTime` est spécialement prévu pour les colonnes MySQL/MSSQL `DATETIME` sans fuseau exposées par Prisma sous forme de `Date`. Il lit les composantes UTC du wrapper afin de préserver les composantes d'heure stockées et d'éviter d'ajouter artificiellement le décalage du navigateur/serveur.
+
+`parseStoredDbDateTime` et `formatStoredDbDateTime` prolongent ce contrat côté consommateur lorsqu'une valeur stockée a déjà traversé JSON (par exemple une chaîne ISO terminée par `Z`). Ils préservent les composantes d'heure de la base ; `formatStoredDbDateTime` n'applique jamais de reconversion `timeZone`.
 
 Toujours distinguer deux catégories :
 
