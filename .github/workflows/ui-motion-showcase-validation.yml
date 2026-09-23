@@ -5,9 +5,14 @@ on:
     branches:
       - feature/ui-motion-showcase
 
+permissions:
+  contents: read
+
 jobs:
   validate:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
+
     defaults:
       run:
         working-directory: website
@@ -15,6 +20,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -27,21 +34,27 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Check branch diff whitespace
+        working-directory: .
+        run: |
+          git fetch origin dev
+          git diff --check origin/dev...HEAD
+
       - name: Showcase contract
         run: pnpm test:ui-motion-showcase
 
       - name: ESLint UI motion files
-        run: >
-          pnpm exec eslint
-          "src/app/[locale]/(admin)/admin/test/ui-motion/page.tsx"
-          "src/app/[locale]/(admin)/admin/test/ui-motion/_components/loading-concepts.tsx"
-          "src/app/[locale]/(admin)/admin/test/ui-motion/_components/error-concepts.tsx"
-          "src/app/[locale]/(admin)/admin/test/ui-motion/_components/ui-motion-showcase-client.tsx"
-          "src/app/[locale]/(admin)/admin/test/page.tsx"
-          "scripts/test-ui-motion-showcase.ts"
+        run: |
+          pnpm exec eslint \
+            'src/app/[locale]/(admin)/admin/test/page.tsx' \
+            'src/app/[locale]/(admin)/admin/test/ui-motion/page.tsx' \
+            'src/app/[locale]/(admin)/admin/test/ui-motion/_components/loading-concepts.tsx' \
+            'src/app/[locale]/(admin)/admin/test/ui-motion/_components/error-concepts.tsx' \
+            'src/app/[locale]/(admin)/admin/test/ui-motion/_components/ui-motion-showcase-client.tsx' \
+            'scripts/test-ui-motion-showcase.ts'
 
-      - name: i18n check
-        run: pnpm i18n:check
+      - name: Generate Prisma clients
+        run: pnpm prisma:generate:mysql
 
-      - name: Build test pages
+      - name: Build test configuration
         run: pnpm build:test
