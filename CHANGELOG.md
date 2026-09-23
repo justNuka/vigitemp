@@ -16,7 +16,7 @@ La convention de versioning est décrite dans [`docs/versioning.md`](docs/versio
 
 ## [Unreleased]
 
-- État intégré courant : **Web 1.8.7**, **Serveur / installateur 1.1.0**, **BDD 0.91.0**, **Agent 1.0.1**.
+- État intégré courant : **Web 1.8.7**, **Serveur / installateur 1.1.0**, **BDD 0.91.1**, **Agent 1.0.1**.
 - Le parcours d’acquittement depuis Surveillance ouvre directement l’analyse du lieu : liste des alarmes à gauche, acquittement dans le bandeau sélectionné, dialog commentaire compacte et sélection multiple avec résumés.
 - Une alarme acquittée reste temporairement visible et grisée dans la liste jusqu’au rafraîchissement, afin de conserver le contexte de traitement de l’opérateur.
 - L’analyse d’alarme se limite désormais à la période réelle de l’alarme, sans sélection de période ni Audit ; l’impression et les exports multiples sont remplacés par un XLSX unique avec la courbe intégrée dans la présentation lorsqu’elle existe.
@@ -45,6 +45,7 @@ La convention de versioning est décrite dans [`docs/versioning.md`](docs/versio
 - Le Web 1.8.5 applique conjointement les restrictions Sites / Groupes, grise les groupes non autorisés dans les filtres Surveillance et empêche leur réapparition dans l'Arborescence.
 - Le Web 1.8.6 réaffiche le dock sur le Dashboard Admin et ses sections principales, et sépare l'état de la sauvegarde principale de la copie secondaire Robocopy avec diagnostic par code.
 - Le Web 1.8.7 corrige le décalage horaire des mesures dans Surveillance, les graphes et le tableau historique en préservant les `DATETIME` sans fuseau via le helper date canonique.
+- La BDD 0.91.1 aligne MySQL / SQL Server : les valeurs numériques de `t_lieu_template` utilisent `FLOAT` et le trigger GSO n'applique plus directement les seuils critiques.
 
 ## Livraison VigiSensys 1.0.0 — 2026-09-18
 
