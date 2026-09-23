@@ -6,7 +6,7 @@ import { Switch } from "@/components/ui/switch"
 import { Line } from "react-chartjs-2"
 import type { Chart as ChartJS } from "chart.js"
 
-import { formatDbDateTime, parseDbDateTime, serializeDbDateTime } from "@/lib/date-display"
+import { formatStoredDbDateTime, parseDbDateTime, parseStoredDbDateTime, serializeDbDateTime } from "@/lib/date-display"
 import {
   formatMeasureValue,
   formatTimeAxisLabel,
@@ -121,7 +121,7 @@ function buildMergedAxisLabels(
   if (rangeEndLabel) labels.add(rangeEndLabel)
 
   return Array.from(labels)
-    .filter((label) => Number.isFinite(parseDbDateTime(label)?.getTime() ?? Number.NaN))
+    .filter((label) => Number.isFinite(parseStoredDbDateTime(label)?.getTime() ?? Number.NaN))
     .sort((left, right) => {
       const leftTs = parseDbDateTime(left)?.getTime() ?? Number.NaN
       const rightTs = parseDbDateTime(right)?.getTime() ?? Number.NaN
@@ -195,7 +195,7 @@ export function MonitoringGraphTab({
     [auditLogs, orderedData, showAuditMarkers, xRangeEnd, xRangeStart],
   )
   const axisTimestamps = useMemo(
-    () => axisLabels.map((label) => parseDbDateTime(label)?.getTime() ?? Number.NaN),
+    () => axisLabels.map((label) => parseStoredDbDateTime(label)?.getTime() ?? Number.NaN),
     [axisLabels],
   )
   const measurementByLabel = useMemo(() => {
@@ -313,13 +313,13 @@ export function MonitoringGraphTab({
     }
 
     const pointTimestamps = orderedData.map(
-      (point) => parseDbDateTime(point.DateHeureMesureIso ?? point.DateHeureMesure)?.getTime() ?? Number.NaN,
+      (point) => parseStoredDbDateTime(point.DateHeureMesureIso ?? point.DateHeureMesure)?.getTime() ?? Number.NaN,
     )
     const axisIndexByLabel = new Map(axisLabels.map((label, index) => [label, index]))
 
     for (const log of auditLogs) {
       if (!log.timestamp) continue
-      const logTs = parseDbDateTime(log.timestamp)?.getTime() ?? Number.NaN
+      const logTs = parseStoredDbDateTime(log.timestamp)?.getTime() ?? Number.NaN
       if (!Number.isFinite(logTs)) continue
 
       let nearestIndex = -1
@@ -631,7 +631,7 @@ export function MonitoringGraphTab({
                   title: (context) => {
                     const index = context?.[0]?.dataIndex
                     const dateValue = typeof index === "number" ? axisLabels[index] : ""
-                    return dateValue ? formatDbDateTime(dateValue, { format: "dateTimeSeconds" }) : ""
+                    return dateValue ? formatStoredDbDateTime(dateValue, { format: "dateTimeSeconds" }) : ""
                   },
                   label: (context) => {
                     const index = context?.dataIndex
