@@ -69,7 +69,8 @@ export function UsersClient({ users }: Props) {
 
   const shouldLoadFormData = isCreateDialogOpen || isEditDialogOpen;
   const { data: rules, isLoading: rulesLoading } = usePasswordRules(shouldLoadFormData);
-  const { data: profiles, isLoading: profilesLoading } = useProfiles(shouldLoadFormData);
+  const profileStatus = isEditDialogOpen ? "all" : "active";
+  const { data: profiles, isLoading: profilesLoading } = useProfiles(shouldLoadFormData, profileStatus);
   const { data: sites, isLoading: sitesLoading } = useSitesSimple(shouldLoadFormData);
   const { data: groups, isLoading: groupsLoading } = useGroups(undefined, shouldLoadFormData);
 
@@ -83,8 +84,8 @@ export function UsersClient({ users }: Props) {
       staleTime: 5 * 60 * 1000,
     });
     queryClient.prefetchQuery({
-      queryKey: ["profiles"],
-      queryFn: () => getJson("/api/profils"),
+      queryKey: ["profiles", "active"],
+      queryFn: () => getJson("/api/profils?status=active"),
     });
     queryClient.prefetchQuery({
       queryKey: ["sites-simple"],
