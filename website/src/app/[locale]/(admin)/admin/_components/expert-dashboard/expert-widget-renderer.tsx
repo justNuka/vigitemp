@@ -121,9 +121,9 @@ export function renderExpertWidget({
   return (
     <ExpertWidgetCard
       title={t("metrology.title")}
-      description={t("metrology.description", { days: 15 })}
+      description={t("metrology.description", { days: metrics.upcomingCalibrationDays })}
       value={String(metrics.upcomingCalibrationCount)}
-      helper={t("metrology.helper", { days: 15 })}
+      helper={t("metrology.helper", { days: metrics.upcomingCalibrationDays })}
       href="/admin/metrologie"
       hrefLabel={accessLabel}
       icon={<Ruler className="h-5 w-5 text-cyan-600" />}
