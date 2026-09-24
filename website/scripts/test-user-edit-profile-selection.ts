@@ -43,6 +43,8 @@ const usersClientSource = readFileSync(
 )
 assert.match(usersClientSource, /const profileStatus = isEditDialogOpen \? "all" : "active"/)
 assert.match(usersClientSource, /useProfiles\(shouldLoadFormData, profileStatus\)/)
+assert.match(usersClientSource, /profile\.estArchive !== true/)
+assert.match(usersClientSource, /profiles=\{editProfiles as any\}/)
 assert.match(usersClientSource, /queryKey: \["profiles", "active"\]/)
 assert.match(usersClientSource, /\/api\/profils\?status=active/)
 
