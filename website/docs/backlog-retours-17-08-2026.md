@@ -3288,6 +3288,15 @@ Cette acquisition imbriquée utilisait un `Mutex` Windows, dont le propriétaire
 - passer Serveur + installateur en **1.1.1** ;
 - documenter la validation terrain dans `website/docs/metrology-retours-26-08-2026.md`.
 
+### Validation automatisée
+
+GitHub Actions run `35970788192` : **succès**.
+
+- [x] restauration NuGet legacy ;
+- [x] build Serveur .NET Framework 4.8 Release ;
+- [x] build installateur Serveur 1.1.1 Release ;
+- [x] workflow temporaire retiré du diff final.
+
 ### Fichiers principaux
 
 - `Vigitemp Serveur/Vigitemp Serveur/Sensor.cs` ;
