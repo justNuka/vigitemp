@@ -58,21 +58,22 @@ export function SurveillanceHeaderControls({
   ]
 
   return (
-    <div className="flex w-full flex-col gap-4 rounded-lg border border-border/60 bg-white/85 p-3 shadow-sm dark:bg-card/95 dark:shadow-black/20">
-      <SurveillanceFilters filters={filters} onFilterChange={onFilterChange} sites={sites} groups={groups} />
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <div className="flex w-full flex-col gap-2">
+      <div className="flex flex-nowrap items-center gap-1.5 overflow-x-auto rounded-lg border border-border bg-card p-1.5 shadow-sm">
         <SurveillanceViewTabs value={viewMode} onChange={onViewModeChange} graphsLabel={graphsLabel} treeLabel={treeLabel} />
-        <div className="flex items-center gap-2 self-start sm:self-auto">
+        <span aria-hidden className="mx-1 hidden h-5 w-px shrink-0 bg-border lg:block" />
+        <SurveillanceFilters filters={filters} onFilterChange={onFilterChange} sites={sites} groups={groups} />
+        <div className="ml-auto flex shrink-0 items-center gap-1">
           {orderToggleLabel && onToggleOrder ? (
             <Button
-              variant="secondary"
-              size="sm"
+              variant="ghost"
+              size="icon"
               onClick={onToggleOrder}
-              className="gap-2 border border-primary/35 bg-primary/8 text-primary hover:bg-primary/14 dark:border-primary/40 dark:bg-primary/12 dark:text-primary-foreground"
+              className="h-8 w-8 shrink-0 text-muted-foreground hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
               data-testid="button-toggle-surveillance-order"
             >
               <ArrowUpDown className="h-4 w-4" />
-              {orderToggleLabel}
+              <span className="sr-only">{orderToggleLabel}</span>
             </Button>
           ) : null}
           {onOpenOverlay ? (
@@ -80,7 +81,7 @@ export function SurveillanceHeaderControls({
               variant="outline"
               size="sm"
               onClick={onOpenOverlay}
-              className="gap-2 border-primary/35 bg-primary/8 text-primary hover:bg-primary/14 dark:border-primary/40 dark:bg-primary/12 dark:text-primary-foreground"
+              className="h-8 min-h-8 gap-1.5 border-border bg-card px-2.5 text-xs text-foreground shadow-sm hover:border-[hsl(var(--border-strong))] hover:bg-muted/30 focus-visible:ring-2 focus-visible:ring-ring"
               data-testid="button-open-overlay-curves"
             >
               <Layers3 className="h-4 w-4" />
@@ -89,10 +90,10 @@ export function SurveillanceHeaderControls({
           ) : null}
           {onRefresh ? (
             <Button
-              variant="outline"
+              variant="secondary"
               size="sm"
               onClick={onRefresh}
-              className="gap-2 border-primary/35 bg-primary/8 text-primary hover:bg-primary/14 dark:border-primary/40 dark:bg-primary/12 dark:text-primary-foreground"
+              className="h-8 min-h-8 gap-1.5 border-border bg-card px-2.5 text-xs text-foreground shadow-sm hover:border-[hsl(var(--border-strong))] hover:bg-muted/30 focus-visible:ring-2 focus-visible:ring-ring"
               disabled={isRefreshing}
               data-testid="button-refresh-surveillance"
             >
@@ -102,7 +103,7 @@ export function SurveillanceHeaderControls({
           ) : null}
         </div>
       </div>
-      <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 px-1 text-xs text-muted-foreground">
         {legendItems.map((item) => (
           <span key={item.key} className="inline-flex items-center gap-1">
             <span className={`h-2 w-2 rounded-full ${item.dotClassName}`} aria-hidden="true" />
