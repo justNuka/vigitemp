@@ -165,8 +165,8 @@ export function SurveillanceFilters({ filters: controlledFilters, onFilterChange
         </Select>
       </div>
 
-      <div className="relative min-w-[220px] flex-1">
-        <Search className="pointer-events-none absolute left-2.5 top-1/2 z-10 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+      <div className="group/search relative min-w-[220px] flex-1">
+        <Search className="pointer-events-none absolute left-2.5 top-1/2 z-10 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground transition-colors duration-200 ease-out group-focus-within/search:text-[#26A5DA]" />
         <Input
           type="search"
           value={filters.searchTerm}
@@ -176,7 +176,7 @@ export function SurveillanceFilters({ filters: controlledFilters, onFilterChange
           }}
           placeholder={t('search.placeholder')}
           aria-label={t('search.label')}
-          className="h-8 border-border bg-card pl-8 pr-3 text-[13px] shadow-sm hover:border-[hsl(var(--border-strong))] focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/20 focus-visible:ring-offset-0"
+          className="h-8 border-border bg-card pl-8 pr-3 text-[13px] shadow-sm transition-[border-color,box-shadow,background-color] duration-200 ease-out hover:border-[hsl(var(--border-strong))] focus-visible:border-[#26A5DA]/65 focus-visible:ring-2 focus-visible:ring-[#26A5DA]/20 focus-visible:ring-offset-0"
         />
       </div>
 
