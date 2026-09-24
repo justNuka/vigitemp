@@ -73,6 +73,15 @@ export function UsersClient({ users }: Props) {
   const { data: profiles, isLoading: profilesLoading } = useProfiles(shouldLoadFormData, profileStatus);
   const { data: sites, isLoading: sitesLoading } = useSitesSimple(shouldLoadFormData);
   const { data: groups, isLoading: groupsLoading } = useGroups(undefined, shouldLoadFormData);
+  const editProfiles = useMemo(() => {
+    if (!profiles) return profiles;
+    const currentProfileName = selectedUser?.role?.trim().toLocaleLowerCase() ?? "";
+    return profiles.filter(
+      (profile) =>
+        profile.estArchive !== true ||
+        profile.name.trim().toLocaleLowerCase() === currentProfileName,
+    );
+  }, [profiles, selectedUser?.role]);
 
   useEffect(() => {
     if (didPrefetchRef.current) return;
@@ -275,7 +284,7 @@ export function UsersClient({ users }: Props) {
         open={isEditDialogOpen}
         onOpenChange={setIsEditDialogOpen}
         user={selectedUser}
-        profiles={profiles as any}
+        profiles={editProfiles as any}
         profilesLoading={profilesLoading}
         sites={sites as any}
         sitesLoading={sitesLoading}
