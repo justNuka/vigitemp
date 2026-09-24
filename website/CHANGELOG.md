@@ -8,7 +8,29 @@ Les versions suivent `MAJOR.MINOR.PATCH` sans zéros de tête. La source de vers
 
 ## [Unreleased]
 
-Aucun changement supplémentaire documenté depuis la préparation de la version Web 1.8.13.
+Aucun changement supplémentaire documenté depuis la préparation de la version Web 1.8.14.
+
+## [1.8.14] — 2026-09-24
+
+Cette version retire la fenêtre J+15 codée en dur de la card Métrologie du Dashboard Admin.
+
+### Dashboard Admin — échéances d'étalonnage
+
+- La métrique continue de s'appuyer sur la **Date_Validite du dernier étalonnage** de chaque sonde.
+- La fenêtre « à prévoir dans N jours » est désormais lue depuis le paramètre BDD existant `DASHBOARD / ETALONNAGE_WARNING_DAYS`.
+- Les variantes historiques de casse `dashboard:etalonnage_warning_days` / `DASHBOARD:ETALONNAGE_WARNING_DAYS` sont reconnues.
+- Le Dashboard Standard et le widget Expert affichent la même fenêtre renvoyée par l'API.
+- Le hook n'envoie plus `?days=15` : l'API Admin est désormais propriétaire de cette règle de configuration.
+- Si le paramètre est absent, vide ou invalide, VigiSensys conserve le comportement historique **J+15**.
+- Une valeur supérieure à 365 jours est plafonnée à 365, comme l'ancien contrat de l'API.
+- Le fallback de la page Administration > Paramètres est aligné sur les mêmes 15 jours.
+
+### Compatibilité
+
+- Version Web : **1.8.14**.
+- Serveur **1.1.1**, Agent **1.0.1** et BDD **0.91.1** restent inchangés.
+- Le paramètre `ETALONNAGE_WARNING_DAYS` existe déjà dans les seeds MySQL et SQL Server.
+- Aucune migration BDD n'est requise.
 
 ## [1.8.13] — 2026-09-24
 
