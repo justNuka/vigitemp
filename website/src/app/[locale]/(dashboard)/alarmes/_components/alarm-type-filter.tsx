@@ -18,7 +18,12 @@ export function AlarmTypeFilter({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="sm" className="gap-2" data-testid="button-filter-type">
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-8 min-h-8 gap-1.5 border-border bg-card px-2.5 text-xs text-foreground shadow-sm hover:border-[hsl(var(--border-strong))] hover:bg-muted/30 focus-visible:ring-2 focus-visible:ring-ring"
+          data-testid="button-filter-type"
+        >
           <Filter className="h-4 w-4" />
           <span className="hidden sm:inline">{t('filters.type_label')}</span>
         </Button>
