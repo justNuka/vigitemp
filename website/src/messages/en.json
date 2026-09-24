@@ -629,7 +629,7 @@
       "pre_alarm_locations": "Locations in pre-alarm",
       "ended_locations": "Locations with ended alarm awaiting acknowledgment",
       "alert_locations": "Locations in pre-alarm or alarm",
-      "critical_locations": "Locations in critical alarm or no response"
+      "critical_locations": "Locations with an alarm in progress"
     },
     "status": {
       "active": "Monitoring active",
