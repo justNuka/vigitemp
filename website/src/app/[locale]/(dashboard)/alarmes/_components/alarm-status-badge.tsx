@@ -11,16 +11,20 @@ type BadgeConfig = {
 export function AlarmStatusBadge({ status }: { status: string }) {
   const t = useTranslations('alarmsPage')
   const configs: Record<string, BadgeConfig> = {
-    active: { label: t('status.active'), variant: 'destructive' },
+    active: {
+      label: t('status.active'),
+      variant: 'outline',
+      className: 'border-[hsl(var(--status-critical))] bg-[hsl(var(--status-critical))] text-white',
+    },
     acknowledged: {
       label: t('status.acknowledged'),
       variant: 'outline',
-      className: 'border-amber-400 bg-amber-50 text-amber-700 dark:border-amber-300/60 dark:bg-amber-300/20 dark:text-amber-100',
+      className: 'border-border bg-muted/60 text-muted-foreground',
     },
     resolved: {
       label: t('status.resolved'),
       variant: 'outline',
-      className: 'border-green-400 bg-green-50 text-green-700 dark:border-emerald-300/60 dark:bg-emerald-300/20 dark:text-emerald-100',
+      className: 'border-[hsl(var(--status-ended)/0.25)] bg-[hsl(var(--status-ended)/0.10)] text-[hsl(var(--status-ended))]',
     },
   }
 
