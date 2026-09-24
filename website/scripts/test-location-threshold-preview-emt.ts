@@ -104,7 +104,9 @@ const previewSource = readFileSync(
   ),
   "utf8",
 )
-assert.match(previewSource, /fallbackDomainRef/)
+assert.match(previewSource, /const \[stableDomain, setStableDomain\] = useState/)
+assert.match(previewSource, /setStableDomain\(\(current\) =>/)
+assert.doesNotMatch(previewSource, /fallbackDomainRef/)
 assert.match(previewSource, /Never shrink the scale while the form is open/)
 assert.match(previewSource, /\[highDelayStart, highAlarmLevel\]/)
 assert.match(previewSource, /\[lowDelayStart, lowAlarmLevel\]/)
