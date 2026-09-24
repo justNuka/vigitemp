@@ -44,22 +44,10 @@ export function SurveillanceHeaderControls({
   onOpenOverlay,
 }: Props) {
   const t = useTranslations("surveillance")
-  const tStatus = useTranslations("surveillanceStatus")
-  const tCard = useTranslations("monitoringCard")
-
-  const legendItems = [
-    { key: "alarm_high", label: tCard("alarmTypes.high"), dotClassName: "bg-[hsl(var(--status-critical))]" },
-    { key: "alarm_low", label: tCard("alarmTypes.low"), dotClassName: "bg-[hsl(var(--status-low))]" },
-    { key: "warning", label: tStatus("warning"), dotClassName: "bg-[hsl(var(--status-warning))]" },
-    { key: "technical", label: t("legend.technical_alarm"), dotClassName: "bg-[hsl(var(--status-technical))] dark:bg-slate-100" },
-    { key: "ended", label: tStatus("ended"), dotClassName: "bg-[hsl(var(--status-ended))]" },
-    { key: "ok", label: tStatus("ok"), dotClassName: "bg-[hsl(var(--status-ok))]" },
-    { key: "inactive", label: tStatus("inactive"), dotClassName: "bg-[hsl(var(--status-inactive))]" },
-  ]
 
   return (
-    <div className="flex w-full flex-col gap-2">
-      <div className="flex flex-nowrap items-center gap-1.5 overflow-x-auto rounded-lg border border-border bg-card p-1.5 shadow-sm">
+    <div className="w-full">
+      <div className="flex flex-nowrap items-center gap-1.5 overflow-visible rounded-lg border border-[#26A5DA]/35 bg-[#26A5DA]/8 p-1.5 shadow-sm dark:border-[#26A5DA]/40 dark:bg-[#26A5DA]/10">
         <SurveillanceViewTabs value={viewMode} onChange={onViewModeChange} graphsLabel={graphsLabel} treeLabel={treeLabel} />
         <span aria-hidden className="mx-1 hidden h-5 w-px shrink-0 bg-border lg:block" />
         <SurveillanceFilters filters={filters} onFilterChange={onFilterChange} sites={sites} groups={groups} />
@@ -102,14 +90,6 @@ export function SurveillanceHeaderControls({
             </Button>
           ) : null}
         </div>
-      </div>
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 px-1 text-xs text-muted-foreground">
-        {legendItems.map((item) => (
-          <span key={item.key} className="inline-flex items-center gap-1">
-            <span className={`h-2 w-2 rounded-full ${item.dotClassName}`} aria-hidden="true" />
-            <span>{item.label}</span>
-          </span>
-        ))}
       </div>
     </div>
   )
