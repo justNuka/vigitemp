@@ -167,7 +167,7 @@ export function LocationAlarmPreview({
     target,
   ])
 
-  const domainKey = `${sensorRange?.min ?? 'na'}|${sensorRange?.max ?? 'na'}|${unit}`
+  const domainKey = `${data.Id_Lieu ?? 'new'}|${data.Sonde_Numero_Serie ?? 'no-sensor'}|${sensorRange?.min ?? 'na'}|${sensorRange?.max ?? 'na'}|${unit}`
   const candidateDomain = useMemo(() => {
     const rangeMin = finite(sensorRange?.min)
     const rangeMax = finite(sensorRange?.max)
