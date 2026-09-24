@@ -72,6 +72,9 @@ const dispatchSource = readFileSync(
 )
 
 assert.match(dispatchSource, /alarm\.Type === "N" && isEndedAlarmDispatch/)
+assert.match(dispatchSource, /getRecoveredMeasurementForEndedNoResponse/)
+assert.match(dispatchSource, /const attempts = 5/)
+assert.match(dispatchSource, /recoveredAt: alarm\.Date_Heure_Fin \?\? alarm\.Date_Heure_Debut/)
 assert.match(dispatchSource, /Est_Valeur_Null: 0/)
 assert.match(dispatchSource, /order: "desc"/)
 assert.match(dispatchSource, /criticalThreshold: criticalThresholdContext/)
