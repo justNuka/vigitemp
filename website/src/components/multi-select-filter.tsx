@@ -24,6 +24,8 @@ interface MultiSelectFilterProps {
   enableSearch?: boolean;
   searchPlaceholder?: string;
   dropdownMaxHeightClassName?: string;
+  compact?: boolean;
+  hideLabel?: boolean;
 }
 
 export function MultiSelectFilter({
@@ -36,6 +38,8 @@ export function MultiSelectFilter({
   enableSearch = false,
   searchPlaceholder,
   dropdownMaxHeightClassName = "max-h-72",
+  compact = false,
+  hideLabel = false,
 }: MultiSelectFilterProps) {
   const t = useTranslations('multiSelectFilter');
   const resolvedPlaceholder = placeholder ?? t('placeholder');
@@ -83,12 +87,18 @@ export function MultiSelectFilter({
   }, [enableSearch, options, search]);
 
   const hasSelection = selectedIds.length > 0;
+  const compactSummary =
+    selectedIds.length === 0
+      ? resolvedPlaceholder
+      : selectedIds.length === 1
+        ? selectedLabels[0] ?? resolvedPlaceholder
+        : `${label} (${selectedIds.length})`;
 
   const buttonClasses = hasSelection
-    ? "border-[#26A5DA]/70 bg-[#26A5DA]/15 text-[#075776] shadow-[0_0_0_1px_rgba(38,165,218,0.18)] hover:bg-[#26A5DA]/20 dark:border-[#26A5DA]/70 dark:bg-[#26A5DA]/20 dark:text-sky-50"
+    ? "border-primary/55 bg-card text-foreground shadow-sm hover:border-primary/75 hover:bg-muted/30 dark:bg-card"
     : tone === "primary"
       ? "border-primary/40 bg-primary/10 text-primary hover:bg-primary/20 dark:border-primary/50 dark:bg-primary/15 dark:text-primary-foreground/90"
-      : "border-border bg-muted/30 text-foreground hover:bg-muted/50 dark:bg-muted/20 dark:hover:bg-muted/30";
+      : "border-border bg-card text-foreground shadow-sm hover:border-[hsl(var(--border-strong))] hover:bg-muted/30 dark:bg-card";
 
   const countBadgeClasses =
     tone === "primary"
@@ -111,22 +121,28 @@ export function MultiSelectFilter({
       <Button
         type="button"
         variant="outline"
-        className={`w-full justify-between ${buttonClasses}`}
+        className={`w-full justify-between focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 focus-visible:ring-offset-0 ${compact ? "h-8 min-h-8 px-3 text-[13px]" : ""} ${buttonClasses}`}
         onClick={() => setIsOpen(!isOpen)}
         aria-expanded={isOpen}
         aria-controls={dropdownId}
         aria-haspopup="listbox"
       >
-        <div className="flex items-center gap-2 flex-1 text-left">
-          <span className="text-sm font-medium">{label}</span>
-          {selectedIds.length > 0 && (
-            <Badge variant="secondary" className={`ml-auto ${countBadgeClasses}`}>
-              {selectedIds.length}
-            </Badge>
+        <div className="flex min-w-0 flex-1 items-center gap-2 text-left">
+          {hideLabel ? (
+            <span className={`truncate ${hasSelection ? "text-foreground" : "text-muted-foreground"}`}>{compactSummary}</span>
+          ) : (
+            <>
+              <span className="text-sm font-medium">{label}</span>
+              {selectedIds.length > 0 && (
+                <Badge variant="secondary" className={`ml-auto ${countBadgeClasses}`}>
+                  {selectedIds.length}
+                </Badge>
+              )}
+              {selectedIds.length === 0 && placeholder ? (
+                <span className="ml-2 text-sm text-muted-foreground">{resolvedPlaceholder}</span>
+              ) : null}
+            </>
           )}
-          {selectedIds.length === 0 && placeholder ? (
-            <span className="ml-2 text-sm text-muted-foreground">{resolvedPlaceholder}</span>
-          ) : null}
         </div>
         <ChevronDown
           className={`h-4 w-4 transition-transform ${isOpen ? 'rotate-180' : ''}`}
