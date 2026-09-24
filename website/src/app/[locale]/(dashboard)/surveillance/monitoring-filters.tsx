@@ -185,7 +185,7 @@ export function SurveillanceFilters({ filters: controlledFilters, onFilterChange
           type="button"
           variant="ghost"
           size="sm"
-          className="h-8 min-h-8 shrink-0 px-2.5 text-xs text-muted-foreground hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
+          className="h-8 min-h-8 shrink-0 border border-[#26A5DA]/30 bg-[#26A5DA]/8 px-2.5 text-xs text-[#0B5F86] shadow-sm transition-[background-color,border-color,color] duration-200 ease-out hover:border-[#26A5DA]/50 hover:bg-[#26A5DA]/14 hover:text-[#075776] focus-visible:ring-2 focus-visible:ring-[#26A5DA]/30 dark:border-[#26A5DA]/40 dark:bg-[#26A5DA]/10 dark:text-sky-100"
           onClick={clearFilters}
         >
           <X className="h-3.5 w-3.5" />
