@@ -8,7 +8,33 @@ Les versions suivent `MAJOR.MINOR.PATCH` sans zéros de tête. La source de vers
 
 ## [Unreleased]
 
-Aucun changement supplémentaire documenté depuis la préparation de la version Web 1.8.10.
+Aucun changement supplémentaire documenté depuis la préparation de la version Web 1.8.11.
+
+## [1.8.11] — 2026-09-24
+
+Cette version accélère les graphes du parcours d'analyse/acquittement des alarmes et fiabilise leur zoom horizontal.
+
+### Analyse / acquittement
+
+- Le graphe d'analyse utilise désormais un profil d'interaction dédié, activé uniquement sur ce parcours.
+- Les animations Chart.js sont ramenées à **180 ms** afin que le changement d'alarme et le redessin du graphe restent rapides.
+- Le facteur de zoom de la molette passe de **0,1 à 0,25** pour ce profil.
+- Le seuil de déclenchement du pan horizontal passe de **10 px à 4 px**.
+- Le dézoom horizontal est borné à la plage réelle de l'alarme : début d'alarme jusqu'à fin d'alarme, ou jusqu'à maintenant pour une alarme encore active.
+- Le niveau de zoom maximal conserve une plage minimale dynamique, plafonnée à une minute, afin de rester utilisable y compris sur les alarmes courtes.
+- Le parcours d'acquittement ne persiste plus de bornes Y inutiles dans son `zoomBounds`.
+
+### Non-régression Surveillance
+
+- Le composant partagé conserve son comportement historique par défaut.
+- Les graphes Surveillance standards gardent leurs animations, vitesse de molette, seuil de pan et bornes précédents.
+- Le nouveau comportement n'est activé qu'avec le profil `alarm-analysis`.
+
+### Compatibilité
+
+- Version Web : **1.8.11**.
+- Serveur **1.1.1**, Agent **1.0.1** et BDD **0.91.1** restent inchangés.
+- Aucune migration BDD n'est requise.
 
 ## [1.8.10] — 2026-09-24
 
