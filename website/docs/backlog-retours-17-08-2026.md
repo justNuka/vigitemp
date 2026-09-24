@@ -3175,7 +3175,7 @@ Le workflow temporaire a été retiré du diff final après ce run.
 
 ### R23-005-B — Présentation et signalétique Surveillance
 
-**Statut : `PR_OUVERTE` — branche `fix/surveillance-cards-signaletique` — PR #151 — base `dev` `1d0655056fcd54a5b365ff9133c25b3cd8c835f9`**
+**Statut : `CORRIGE_DEV` — PR #151 — squash merge `a644a7f065d8cacc1626da5af37f540692665eab`**
 
 Retours consolidés :
 
@@ -3226,14 +3226,56 @@ Fichiers principaux :
 
 ### R23-005-C — Emails d'alarme et formulation Paramètres
 
-**Statut : `A_FAIRE`**
+**Statut : `EN_COURS` — branche `fix/alarm-email-notifications` — base `dev` `a644a7f065d8cacc1626da5af37f540692665eab`**
 
 Retours :
 
 - créer un template d'email spécifique pour le déclenchement d'un **seuil critique** ;
-- sur un email de **fin d'alarme de non-réponse**, la dernière valeur apparaît `N/A` alors qu'une mesure a été reçue et que la trigger a été mise à jour : vérifier le backend de notification, la source de `Valeur` et le template ;
+- sur un email de **fin d'alarme de non-réponse**, la dernière valeur apparaît `N/A` alors qu'une mesure a été reçue et que la trigger a été mise à jour ;
 - dans Administration > Paramètres > Alarmes / notifications, supprimer la formulation **« mail système »** au profit d'un libellé métier plus clair ;
 - conserver FR/EN.
+
+#### Diagnostic
+
+- les seuils critiques ne créent pas un nouveau type d'alarme : le Serveur conserve `H` / `B` et déclenche immédiatement lorsque `Seuil_Critique_Haut` / `Seuil_Critique_Bas` est franchi ;
+- le Web peut donc identifier un déclenchement critique en comparant la valeur de déclenchement au seuil critique actif du lieu avec les mêmes opérateurs stricts `>` / `<` ;
+- pour les fins de non-réponse, `/api/alarmes/dispatch` forçait explicitement `N/A` pour tous les types différents de `H` et `B`, sans relire la mesure valide ayant mis fin à l'alarme.
+
+#### Correctif
+
+- ajout de `emails/critical-threshold-alarm-notification.tsx`, template React Email dédié aux seuils critiques ;
+- sujet spécifique **SEUIL CRITIQUE DÉPASSÉ** / **CRITICAL THRESHOLD EXCEEDED** ;
+- mise en avant du seuil, de la valeur mesurée, du sens haut/bas et du contexte lieu/sonde ;
+- détection centralisée via `resolveCriticalThresholdContext()`, sans modifier les types `H` / `B` en BDD ou dans les APIs ;
+- sur une fin d'alarme `N`, récupération de la dernière mesure valide non nulle du lieu depuis `tm_mesures`, postérieure au début de l'alarme ;
+- la date et l'unité de cette mesure deviennent également la source de l'email lorsque la mesure de reprise est disponible ;
+- fallback `N/A` conservé si aucune mesure valide n'est retrouvée ;
+- remplacement des formulations « emails système » par **destinataires globaux** / **global recipients** dans Paramètres ;
+- le helper SMTP parle de **notifications automatiques** / **automated notifications** ;
+- correction des libellés anglais historiquement restés en français dans le template générique ;
+- Web passé en **1.8.10**.
+
+Fichiers principaux :
+
+- `website/src/app/api/alarmes/dispatch/route.ts` ;
+- `website/src/lib/alarm-email.ts` ;
+- `website/emails/alarm-event-notification.tsx` ;
+- `website/emails/critical-threshold-alarm-notification.tsx` ;
+- `website/src/messages/fr.json` ;
+- `website/src/messages/en.json` ;
+- `website/src/messages/admin-settings-supplements.ts` ;
+- `website/scripts/test-alarm-email-notifications.tsx`.
+
+#### Validation terrain
+
+- [ ] déclencher directement une alarme haute via le seuil critique haut : vérifier sujet et template critique ;
+- [ ] déclencher directement une alarme basse via le seuil critique bas : vérifier sujet et sens du seuil ;
+- [ ] déclencher une alarme H/B normale sans franchir le seuil critique : vérifier que le template standard reste utilisé ;
+- [ ] provoquer une non-réponse puis une reprise : l'email de fin doit afficher la vraie dernière valeur et son unité ;
+- [ ] vérifier que le fallback `N/A` reste propre si aucune mesure valide n'est disponible ;
+- [ ] vérifier les templates et libellés en français puis en anglais ;
+- [ ] vérifier dans Paramètres que « mail système » n'apparaît plus dans les libellés visibles du lot ;
+- [ ] vérifier MySQL et SQL Server.
 
 ### R23-005-D — Graphes d'acquittement : transitions et zoom
 
