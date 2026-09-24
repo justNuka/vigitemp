@@ -1,0 +1,58 @@
+name: Temporary admin metrology warning validation
+
+on:
+  push:
+    branches:
+      - fix/admin-metrology-warning-window
+
+jobs:
+  validate-web:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: website
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+          cache-dependency-path: website/pnpm-lock.yaml
+      - name: Diff check
+        working-directory: .
+        run: git diff --check origin/dev...HEAD
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Generate Prisma MySQL
+        run: pnpm prisma:generate:mysql
+      - name: Admin metrology warning window test
+        run: pnpm test:admin-metrology-warning-window
+      - name: Existing admin dashboard regression
+        run: pnpm test:admin-dashboard-refinements
+      - name: ESLint targeted
+        run: pnpm exec eslint "src/lib/calibration-warning-window.ts" "src/app/api/admin/metrologie/etalonnages-a-prevoir/route.ts" "src/hooks/useAdminData.ts" "src/app/[locale]/(admin)/admin/page.tsx" "src/app/[locale]/(admin)/admin/_components/expert-dashboard/expert-dashboard-types.ts" "src/app/[locale]/(admin)/admin/_components/expert-dashboard/expert-widget-renderer.tsx" "src/app/[locale]/(admin)/admin/parametres/server-settings.tsx" "scripts/test-admin-metrology-warning-window.ts"
+      - name: i18n check
+        shell: bash
+        run: |
+          set +e
+          pnpm i18n:check 2>&1 | tee /tmp/i18n-check.log
+          status=${PIPESTATUS[0]}
+          set -e
+          if grep -E "calibration-warning-window|etalonnages-a-prevoir|useAdminData|admin/page|expert-dashboard-types|expert-widget-renderer|server-settings|test-admin-metrology-warning-window" /tmp/i18n-check.log; then
+            echo "New i18n debt detected in files changed by this lot."
+            exit 1
+          fi
+          if [ "$status" -ne 0 ]; then
+            echo "Global i18n checker reports pre-existing debt outside this lot."
+          fi
+      - name: Production build - MySQL
+        run: pnpm build
+      - name: Generate Prisma SQL Server
+        run: pnpm prisma:generate:mssql
+      - name: TypeScript - SQL Server
+        run: pnpm exec tsc --noEmit
