@@ -8,7 +8,25 @@ Les versions suivent `MAJOR.MINOR.PATCH` sans zéros de tête. La source de vers
 
 ## [Unreleased]
 
-Aucun changement supplémentaire documenté depuis la préparation de la version Web 1.8.8.
+Aucun changement supplémentaire documenté depuis la préparation de la version Web 1.8.9.
+
+## [1.8.9] — 2026-09-24
+
+Cette version clarifie la hiérarchie visuelle et la signalétique des cards Surveillance.
+
+### Cards Surveillance
+
+- Le nom du **lieu** devient l'identifiant principal de la card : il est affiché en premier, plus grand et plus marqué.
+- Le numéro de série de la **sonde** passe en second plan avec une taille plus compacte.
+- Le point d'alarme du header utilise désormais un halo blanc et une pulsation expansive afin de rester immédiatement visible sur les fonds rouge, bleu ou noir.
+- Les compteurs et filtres correspondant aux alarmes actives utilisent le libellé métier **« alarmes en cours »** / **« alarms in progress »** au lieu de « critiques » / « critical ».
+- Le statut technique interne `critical` et les contrats API restent inchangés.
+
+### Compatibilité
+
+- Version Web : **1.8.9**.
+- Serveur **1.1.1**, Agent **1.0.1** et BDD **0.91.1** restent inchangés.
+- Aucune migration BDD n'est requise.
 
 ## [1.8.8] — 2026-09-23
 
