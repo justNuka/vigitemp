@@ -48,13 +48,13 @@ export function SurveillanceHeaderControls({
   const tCard = useTranslations("monitoringCard")
 
   const legendItems = [
-    { key: "alarm_high", label: tCard("alarmTypes.high"), dotClassName: "bg-red-600" },
-    { key: "alarm_low", label: tCard("alarmTypes.low"), dotClassName: "bg-blue-600" },
-    { key: "warning", label: tStatus("warning"), dotClassName: "bg-amber-500" },
-    { key: "technical", label: t("legend.technical_alarm"), dotClassName: "bg-black" },
-    { key: "ended", label: tStatus("ended"), dotClassName: "bg-violet-600" },
-    { key: "ok", label: tStatus("ok"), dotClassName: "bg-sky-400" },
-    { key: "inactive", label: tStatus("inactive"), dotClassName: "bg-slate-500" },
+    { key: "alarm_high", label: tCard("alarmTypes.high"), dotClassName: "bg-[hsl(var(--status-critical))]" },
+    { key: "alarm_low", label: tCard("alarmTypes.low"), dotClassName: "bg-[hsl(var(--status-low))]" },
+    { key: "warning", label: tStatus("warning"), dotClassName: "bg-[hsl(var(--status-warning))]" },
+    { key: "technical", label: t("legend.technical_alarm"), dotClassName: "bg-[hsl(var(--status-technical))] dark:bg-slate-100" },
+    { key: "ended", label: tStatus("ended"), dotClassName: "bg-[hsl(var(--status-ended))]" },
+    { key: "ok", label: tStatus("ok"), dotClassName: "bg-[hsl(var(--status-ok))]" },
+    { key: "inactive", label: tStatus("inactive"), dotClassName: "bg-[hsl(var(--status-inactive))]" },
   ]
 
   return (
