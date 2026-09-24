@@ -3255,6 +3255,21 @@ Retours :
 - correction des libellés anglais historiquement restés en français dans le template générique ;
 - Web passé en **1.8.10**.
 
+#### Validation automatisée
+
+GitHub Actions run `35992350323` : **succès complet**.
+
+- [x] `git diff --check origin/dev...HEAD` ;
+- [x] installation `pnpm` avec lockfile figé ;
+- [x] génération Prisma MySQL ;
+- [x] `pnpm test:alarm-email-notifications` ;
+- [x] ESLint ciblé sur le flux de dispatch, les templates, le moteur email et les messages Paramètres ;
+- [x] contrôle i18n sans nouvelle dette dans les fichiers du lot ;
+- [x] build production Next.js sur le provider MySQL ;
+- [x] génération Prisma SQL Server ;
+- [x] TypeScript `--noEmit` sur le provider SQL Server ;
+- [x] workflow temporaire retiré du diff final.
+
 Fichiers principaux :
 
 - `website/src/app/api/alarmes/dispatch/route.ts` ;
