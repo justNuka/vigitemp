@@ -12,7 +12,7 @@ import { requireStandardOrExpertIfFieldsUsed } from "@/lib/license-guards"
 import { STANDARD_METROLOGY_LOCATION_FIELDS } from "@/lib/location-license-payload"
 import { applyAccessFilter, buildLieuAccessFilter, getUserLocationScope } from "@/lib/location-access-scope"
 import { findLocationNameConflict, normalizeLocationName } from "@/lib/location-name-conflicts"
-import { buildCriticalThresholdIssues } from "@/lib/location-critical-threshold-contract"
+import { buildLocationAlarmThresholdIssues } from "@/lib/location-alarm-threshold-contract"
 import { buildLocationValueRangeIssues, getSensorTypeValueRangeBySerial } from "@/lib/sensor-value-range"
 import { getDbNow } from "@/lib/sql-provider"
 import { syncGspLocationConfiguration } from "@/lib/gsp-config-sync"
@@ -410,21 +410,32 @@ export const POST = withLogging(async (req: NextRequest) => {
         ? (validated.Est_Consigne_Inf_Active ? validated.Consigne_Inf : null)
         : validated.Tolerance_Surveillance_Inf
 
-    const criticalIssues = buildCriticalThresholdIssues({
-      consigne: validated.Consigne ?? null,
-      effectiveHigh: validated.Est_Consigne_Sup_Active
-        ? toleranceSup ?? validated.Consigne_Sup ?? null
-        : null,
-      effectiveLow: validated.Est_Consigne_Inf_Active
-        ? toleranceInf ?? validated.Consigne_Inf ?? null
-        : null,
-      criticalHigh: validated.Seuil_Critique_Haut ?? null,
+    const thresholdIssues = buildLocationAlarmThresholdIssues({
+      mode: validated.EMT_Mode,
+      emtValue: validated.EMT_Valeur,
+      consigne: validated.Consigne,
+      consigneSup: validated.Consigne_Sup,
+      consigneInf: validated.Consigne_Inf,
+      isConsigneSupActive: validated.Est_Consigne_Sup_Active ?? false,
+      isConsigneInfActive: validated.Est_Consigne_Inf_Active ?? false,
+      effectiveHigh: toleranceSup,
+      effectiveLow: toleranceInf,
+      preAlarmHigh: validated.Consigne_Sup_Pre_Alarme,
+      preAlarmHighActive: validated.Est_Consigne_Sup_Pre_Alarme_Active ?? false,
+      preAlarmLow: validated.Consigne_Inf_Pre_Alarme,
+      preAlarmLowActive: validated.Est_Consigne_Inf_Pre_Alarme_Active ?? false,
+      criticalHigh: validated.Seuil_Critique_Haut,
       criticalHighActive: validated.Est_Seuil_Critique_Haut_Active ?? false,
-      criticalLow: validated.Seuil_Critique_Bas ?? null,
+      criticalLow: validated.Seuil_Critique_Bas,
       criticalLowActive: validated.Est_Seuil_Critique_Bas_Active ?? false,
+      incertitude: validated.Incertitude,
+      erreurJustesse: validated.Erreur_Justesse,
+      derive: validated.Derive,
+      includeDeriveInUncertainty,
+      correctAccuracyError: validated.Corriger_Erreur_Justesse ?? false,
     })
-    if (criticalIssues.length > 0) {
-      return apiError(400, "validation_error", criticalIssues[0].message, { issues: criticalIssues })
+    if (thresholdIssues.length > 0) {
+      return apiError(400, "validation_error", thresholdIssues[0].message, { issues: thresholdIssues })
     }
 
     const lieu = await prisma.t_lieu.create({

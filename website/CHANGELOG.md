@@ -8,7 +8,42 @@ Les versions suivent `MAJOR.MINOR.PATCH` sans zéros de tête. La source de vers
 
 ## [Unreleased]
 
-Aucun changement supplémentaire documenté depuis la préparation de la version Web 1.8.11.
+Aucun changement supplémentaire documenté depuis la préparation de la version Web 1.8.12.
+
+## [1.8.12] — 2026-09-24
+
+Cette version fiabilise l'aperçu des consignes/limites dans la fiche d'un lieu et aligne les validations pré-alarmes avec les seuils effectifs après EMT.
+
+### Preview Consignes / alarmes
+
+- L'échelle verticale de la preview reste stable pendant l'édition : modifier une limite ne déplace plus artificiellement la ligne de consigne ou les autres guides.
+- La fenêtre locale peut encore s'agrandir si une valeur sort réellement du domaine visible, mais elle ne se réduit plus à chaque frappe.
+- L'échelle est réinitialisée lorsqu'on change réellement de lieu/sonde afin de ne pas réutiliser le domaine visuel d'un contexte précédent.
+- Le départ de la temporisation haute/basse est désormais placé exactement sur le dernier point encore valide, au seuil effectif.
+- La temporisation est matérialisée par une zone orange dédiée en plus du repère temporel, afin de mieux distinguer délai normal et déclenchement critique immédiat.
+
+### EMT / pré-alarmes
+
+- Les pré-alarmes sont désormais validées contre les **seuils effectifs** réellement utilisés après application de l'EMT.
+- Une pré-alarme haute doit rester entre la consigne et le seuil effectif haut.
+- Une pré-alarme basse doit rester entre le seuil effectif bas et la consigne.
+- Un EMT qui fait croiser un seuil effectif avec la consigne est signalé comme configuration incohérente.
+- Le formulaire indique explicitement au-dessus des limites lorsqu'une EMT est intégrée aux seuils effectifs.
+
+### Validation live / API
+
+- Nouveau contrat partagé `location-alarm-threshold-contract.ts` utilisé par le formulaire et les APIs Lieux.
+- Les incohérences consigne / limites / pré-alarmes / seuils critiques sont affichées immédiatement dans le formulaire avant l'enregistrement.
+- Désactiver un seuil haut/bas désactive automatiquement sa pré-alarme correspondante afin de ne pas conserver une configuration cachée incohérente.
+- Les erreurs live de pré-alarme sont affichées directement sous les champs concernés, avant tout submit.
+- Le submit et les APIs conservent le blocage serveur : la signalétique live n'est pas utilisée comme unique protection.
+- Les mises à jour partielles d'un lieu fusionnent les valeurs envoyées avec l'état BDD courant avant validation finale.
+
+### Compatibilité
+
+- Version Web : **1.8.12**.
+- Serveur **1.1.1**, Agent **1.0.1** et BDD **0.91.1** restent inchangés.
+- Aucune migration BDD n'est requise.
 
 ## [1.8.11] — 2026-09-24
 

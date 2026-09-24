@@ -13,7 +13,7 @@ import { isSurveillanceActionCommentRequired } from "@/lib/action-comment-policy
 import { withAnyAuthorizationLogging } from "@/lib/api-wrappers"
 import { getPermissionAliases } from "@/lib/permissions"
 import { findLocationNameConflict } from "@/lib/location-name-conflicts"
-import { buildCriticalThresholdIssues } from "@/lib/location-critical-threshold-contract"
+import { buildLocationAlarmThresholdIssues } from "@/lib/location-alarm-threshold-contract"
 import { buildLocationValueRangeIssues, getSensorTypeValueRangeBySerial } from "@/lib/sensor-value-range"
 import { getDbDatePlusMinutes, getDbNow } from "@/lib/sql-provider"
 import { syncGspLocationConfiguration } from "@/lib/gsp-config-sync"
@@ -537,6 +537,10 @@ export const PATCH = withAnyAuthorizationLogging(
           Consigne_Inf: true,
           Est_Consigne_Sup_Active: true,
           Est_Consigne_Inf_Active: true,
+          Consigne_Sup_Pre_Alarme: true,
+          Est_Consigne_Sup_Pre_Alarme_Active: true,
+          Consigne_Inf_Pre_Alarme: true,
+          Est_Consigne_Inf_Pre_Alarme_Active: true,
           Tolerance_Surveillance_Sup: true,
           Tolerance_Surveillance_Inf: true,
           Seuil_Critique_Haut: true,
@@ -585,8 +589,12 @@ export const PATCH = withAnyAuthorizationLogging(
         currentLieuForRange.Est_Consigne_Inf_Active,
       )
 
-      const criticalIssues = buildCriticalThresholdIssues({
+      const thresholdIssues = buildLocationAlarmThresholdIssues({
         consigne: resolvePatchedNumber("Consigne", currentLieuForRange.Consigne),
+        consigneSup: resolvePatchedNumber("Consigne_Sup", currentLieuForRange.Consigne_Sup),
+        consigneInf: resolvePatchedNumber("Consigne_Inf", currentLieuForRange.Consigne_Inf),
+        isConsigneSupActive: effectiveHighActive,
+        isConsigneInfActive: effectiveLowActive,
         effectiveHigh: effectiveHighActive
           ? resolvePatchedNumber(
               "Tolerance_Surveillance_Sup",
@@ -599,19 +607,41 @@ export const PATCH = withAnyAuthorizationLogging(
               currentLieuForRange.Tolerance_Surveillance_Inf ?? currentLieuForRange.Consigne_Inf,
             )
           : null,
-        criticalHigh: resolvePatchedNumber("Seuil_Critique_Haut", currentLieuForRange.Seuil_Critique_Haut),
+        preAlarmHigh: resolvePatchedNumber(
+          "Consigne_Sup_Pre_Alarme",
+          currentLieuForRange.Consigne_Sup_Pre_Alarme,
+        ),
+        preAlarmHighActive: resolvePatchedBoolean(
+          "Est_Consigne_Sup_Pre_Alarme_Active",
+          currentLieuForRange.Est_Consigne_Sup_Pre_Alarme_Active,
+        ),
+        preAlarmLow: resolvePatchedNumber(
+          "Consigne_Inf_Pre_Alarme",
+          currentLieuForRange.Consigne_Inf_Pre_Alarme,
+        ),
+        preAlarmLowActive: resolvePatchedBoolean(
+          "Est_Consigne_Inf_Pre_Alarme_Active",
+          currentLieuForRange.Est_Consigne_Inf_Pre_Alarme_Active,
+        ),
+        criticalHigh: resolvePatchedNumber(
+          "Seuil_Critique_Haut",
+          currentLieuForRange.Seuil_Critique_Haut,
+        ),
         criticalHighActive: resolvePatchedBoolean(
           "Est_Seuil_Critique_Haut_Active",
           currentLieuForRange.Est_Seuil_Critique_Haut_Active,
         ),
-        criticalLow: resolvePatchedNumber("Seuil_Critique_Bas", currentLieuForRange.Seuil_Critique_Bas),
+        criticalLow: resolvePatchedNumber(
+          "Seuil_Critique_Bas",
+          currentLieuForRange.Seuil_Critique_Bas,
+        ),
         criticalLowActive: resolvePatchedBoolean(
           "Est_Seuil_Critique_Bas_Active",
           currentLieuForRange.Est_Seuil_Critique_Bas_Active,
         ),
       })
-      if (criticalIssues.length > 0) {
-        return apiError(400, "validation_error", criticalIssues[0].message, { issues: criticalIssues })
+      if (thresholdIssues.length > 0) {
+        return apiError(400, "validation_error", thresholdIssues[0].message, { issues: thresholdIssues })
       }
 
       const ip = getClientIp(req)

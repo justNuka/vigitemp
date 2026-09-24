@@ -71,8 +71,13 @@ assert.deepEqual(
   ["Seuil_Critique_Bas", "Seuil_Critique_Haut"].sort(),
 )
 
+const thresholdContract = read("src/lib/location-alarm-threshold-contract.ts")
+assert.match(thresholdContract, /buildCriticalThresholdIssues/)
+assert.match(thresholdContract, /criticalHigh: state\.criticalHigh/)
+assert.match(thresholdContract, /criticalLow: state\.criticalLow/)
+
 const formSchema = read("src/app/[locale]/(admin)/admin/lieux/_components/location-form-schema.ts")
-assert.match(formSchema, /buildCriticalThresholdIssues/)
+assert.match(formSchema, /buildLocationAlarmThresholdIssues/)
 assert.match(formSchema, /Seuil_Critique_Haut: z\.number\(\)\.optional\(\)\.nullable\(\)/)
 assert.match(formSchema, /Est_Seuil_Critique_Bas_Active: z\.boolean\(\)\.optional\(\)/)
 
@@ -108,18 +113,19 @@ assert.match(emtInfo, /formatNumber/)
 assert.match(emtInfo, /formatMetrologyNumber\(formData\.Incertitude\)/)
 
 const createRoute = read("src/app/api/lieux/route.ts")
-assert.match(createRoute, /buildCriticalThresholdIssues/)
+assert.match(createRoute, /buildLocationAlarmThresholdIssues/)
 assert.match(createRoute, /Est_Seuil_Critique_Haut_Active/)
-assert.match(createRoute, /effectiveHigh: validated\.Est_Consigne_Sup_Active/)
-assert.match(createRoute, /effectiveLow: validated\.Est_Consigne_Inf_Active/)
-assert.match(createRoute, /Seuil_Critique_Bas: validated\.Seuil_Critique_Bas/)
+assert.match(createRoute, /effectiveHigh: toleranceSup/)
+assert.match(createRoute, /effectiveLow: toleranceInf/)
+assert.match(createRoute, /criticalLow: validated\.Seuil_Critique_Bas/)
 
 const updateRoute = read("src/app/api/lieux/[id]/route.ts")
-assert.match(updateRoute, /buildCriticalThresholdIssues/)
+assert.match(updateRoute, /buildLocationAlarmThresholdIssues/)
 assert.match(updateRoute, /effectiveHighActive/)
 assert.match(updateRoute, /effectiveLowActive/)
 assert.match(updateRoute, /Seuil_Critique_Haut: true/)
 assert.match(updateRoute, /"Est_Seuil_Critique_Bas_Active"/)
+assert.match(updateRoute, /preAlarmHigh: resolvePatchedNumber/)
 
 const templates = read("src/app/api/lieux/templates/route.ts")
 assert.match(templates, /Seuil_Critique_Haut/)

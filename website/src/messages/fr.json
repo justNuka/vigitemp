@@ -1175,7 +1175,10 @@
         "lower_title": "Limites basses",
         "lower_hint": "Pré-alerte, alarme temporisée et sécurité critique.",
         "normal_disabled": "Le seuil d'alarme normal est désactivé.",
-        "critical_hint": "Déclenchement immédiat, sans attendre le retard d'alarme normal."
+        "critical_hint": "Déclenchement immédiat, sans attendre le retard d'alarme normal.",
+        "invalid_title": "Configuration incohérente : l'enregistrement sera bloqué tant que ces valeurs ne sont pas corrigées.",
+        "emt_effective_title": "EMT prise en compte dans les seuils effectifs : {value}",
+        "emt_effective_description": "Le seuil haut effectif est rapproché de la consigne et le seuil bas effectif l'est également. Les pré-alarmes sont validées par rapport à ces seuils réellement utilisés."
       },
       "timing": {
         "description": "Cadence de mesure et délais utilisés avant les différents déclenchements."
@@ -1199,6 +1202,7 @@
         "critical_low": "Critique bas",
         "critical_description": "Seuil de sécurité : le franchissement déclenche immédiatement l'alarme.",
         "delay_short": "retard {value} min",
+        "delay_window": "temporisation {value} min",
         "normal_behavior": "Seuil normal franchi : la temporisation démarre, puis l'alarme se déclenche si le dépassement persiste.",
         "critical_behavior": "Seuil critique franchi : l'alarme est déclenchée immédiatement, sans temporisation."
       }

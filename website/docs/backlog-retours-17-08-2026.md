@@ -3297,7 +3297,7 @@ Fichiers principaux :
 
 ### R23-005-D — Graphes d'acquittement : transitions et zoom
 
-**Statut : `PR_OUVERTE` — branche `fix/alarm-analysis-chart-zoom` — PR #153 — base `dev` `0b562049aef35fb060cf56c62900d793956715a0`**
+**Statut : `CORRIGE_DEV` — PR #153 — squash merge `1aaa5bad34f04c316a986e378c9ad919818d38e6`**
 
 Retours :
 
@@ -3363,7 +3363,7 @@ Fichiers principaux :
 
 ### R23-005-E — Preview des consignes / limites dans la modal d'un lieu
 
-**Statut : `A_FAIRE`**
+**Statut : `PR_OUVERTE` — branche `fix/location-threshold-preview-emt` — PR #154 — base `dev` `1aaa5bad34f04c316a986e378c9ad919818d38e6`**
 
 Retours consolidés du texte et de la capture :
 
@@ -3375,6 +3375,75 @@ Retours consolidés du texte et de la capture :
 - revoir les validations des **pré-alarmes avec EMT** ;
 - indiquer au-dessus des limites lorsqu'un **EMT** est inclus dans le seuil effectif ;
 - lorsqu'une consigne/limite change, la preview doit se mettre à jour sans déplacer une courbe qui ne correspond pas au champ modifié.
+
+#### Diagnostic
+
+- la preview recalculait son domaine vertical à partir de toutes les lignes à chaque modification ; changer une limite modifiait donc l'échelle complète et donnait l'impression que la consigne se déplaçait ;
+- les pré-alarmes étaient validées contre `Consigne_Sup` / `Consigne_Inf` brutes, alors que la surveillance utilise les seuils effectifs `Tolerance_Surveillance_*` après EMT ;
+- le dessin de démonstration plaçait le premier point de la zone temporisée déjà hors tolérance : la temporisation semblait commencer après le franchissement au lieu de partir du dernier point valide ;
+- les validations étaient dupliquées entre formulaire, création API et modification API, avec un risque de divergence.
+
+#### Correctif
+
+- ajout du contrat partagé `website/src/lib/location-alarm-threshold-contract.ts` ;
+- calcul commun des limites brutes, seuils effectifs, pré-alarmes et critiques ;
+- validation des pré-alarmes contre les seuils effectifs après EMT ;
+- détection d'un EMT trop important faisant rejoindre/croiser la consigne ;
+- utilisation du même contrat par le formulaire, `POST /api/lieux` et `PATCH /api/lieux/[id]` ;
+- pour un PATCH partiel, fusion des valeurs modifiées avec les valeurs BDD avant contrôle final ;
+- bandeau rouge live dans le formulaire dès qu'une configuration devient incohérente ;
+- messages d'erreur live repris également sous les champs concernés ;
+- désactiver un seuil normal haut/bas désactive automatiquement la pré-alarme correspondante afin d'éviter une configuration masquée mais invalide ;
+- bandeau violet au-dessus des limites lorsque l'EMT est incluse dans le seuil effectif ;
+- échelle de preview stabilisée pendant toute la session d'édition ; elle ne s'agrandit que si une valeur sort réellement du domaine visible ;
+- la plage physique de la sonde, le lieu et la sonde sélectionnée participent à la clé de contexte : l'échelle est réinitialisée quand on change réellement de contexte, sans utiliser toute la plage physique comme zoom global ;
+- le premier point de temporisation est exactement positionné sur le seuil normal : il représente le dernier point encore valide ;
+- ajout d'une zone orange visuelle pour matérialiser la fenêtre de temporisation ;
+- FR/EN mis à jour ;
+- Web passé en **1.8.12**.
+
+#### Validation automatisée
+
+GitHub Actions run `35999158522` : **succès complet**.
+
+- [x] `git diff --check origin/dev...HEAD` ;
+- [x] installation `pnpm` avec lockfile figé ;
+- [x] génération Prisma MySQL ;
+- [x] `pnpm test:location-threshold-preview-emt` ;
+- [x] `pnpm test:location-critical-thresholds` après alignement du test historique sur le contrat partagé ;
+- [x] `pnpm test:number-display` ;
+- [x] ESLint ciblé sur le contrat, le formulaire, la preview, les APIs et les tests ;
+- [x] contrôle i18n sans nouvelle dette dans les fichiers du lot ;
+- [x] build production Next.js sur MySQL ;
+- [x] génération Prisma SQL Server ;
+- [x] TypeScript `--noEmit` sur SQL Server ;
+- [x] workflow temporaire retiré du diff final.
+
+Fichiers principaux :
+
+- `website/src/lib/location-alarm-threshold-contract.ts` ;
+- `website/src/app/[locale]/(admin)/admin/lieux/_components/location-form-schema.ts` ;
+- `website/src/app/[locale]/(admin)/admin/lieux/_components/general-tab/location-setpoints-section.tsx` ;
+- `website/src/app/[locale]/(admin)/admin/lieux/_components/general-tab/location-alarm-preview.tsx` ;
+- `website/src/app/api/lieux/route.ts` ;
+- `website/src/app/api/lieux/[id]/route.ts` ;
+- `website/scripts/test-location-threshold-preview-emt.ts`.
+
+#### Validation terrain
+
+- [ ] modifier uniquement la limite haute : la consigne et les guides bas ne doivent pas se déplacer artificiellement ;
+- [ ] modifier uniquement la limite basse : la consigne et les guides hauts ne doivent pas se déplacer artificiellement ;
+- [ ] modifier la consigne : seule sa ligne doit suivre la nouvelle valeur, les autres lignes conservant leur valeur propre ;
+- [ ] activer une EMT et vérifier le bandeau d'information au-dessus des limites ;
+- [ ] placer une pré-alarme haute entre le seuil brut et le seuil effectif EMT : le formulaire doit la refuser immédiatement ;
+- [ ] même test pour la pré-alarme basse ;
+- [ ] configurer une EMT trop grande faisant croiser le seuil effectif avec la consigne : bandeau rouge + blocage à l'enregistrement ;
+- [ ] vérifier le début de la zone de temporisation exactement sur le seuil normal ;
+- [ ] faire varier les retards haut/bas et vérifier la largeur des zones orange ;
+- [ ] vérifier qu'un seuil critique reste immédiat et visuellement distinct de la temporisation normale ;
+- [ ] vérifier création et modification de lieu ;
+- [ ] vérifier FR / EN, clair / sombre ;
+- [ ] vérifier MySQL et SQL Server.
 
 ### R23-005-F — Édition utilisateur
 

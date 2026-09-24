@@ -1,6 +1,6 @@
 'use client'
 
-import { useId, useMemo } from 'react'
+import { useEffect, useId, useMemo, useState } from 'react'
 import { CircleHelp, TimerReset, Zap } from 'lucide-react'
 import { m, useReducedMotion } from 'motion/react'
 import { useLocale, useTranslations } from 'next-intl'
@@ -35,6 +35,7 @@ export function LocationAlarmPreview({
   const localeTag = locale === 'fr' ? 'fr-FR' : locale
   const reduceMotion = useReducedMotion()
   const gradientId = useId().replace(/:/g, '')
+  const [stableDomain, setStableDomain] = useState<{ key: string; min: number; max: number } | null>(null)
   const { watch } = useFormContext<LocationFormData>()
   const data = watch()
 
@@ -166,11 +167,16 @@ export function LocationAlarmPreview({
     target,
   ])
 
-  const domain = useMemo(() => {
+  const domainKey = `${data.Id_Lieu ?? 'new'}|${data.Sonde_Numero_Serie ?? 'no-sensor'}|${sensorRange?.min ?? 'na'}|${sensorRange?.max ?? 'na'}|${unit}`
+  const candidateDomain = useMemo(() => {
+    const rangeMin = finite(sensorRange?.min)
+    const rangeMax = finite(sensorRange?.max)
     const values = lines.map((line) => line.value)
+
+    // Keep a useful local scale around the configured values. The sensor range
+    // identifies the current context, but using the full physical range would
+    // make small threshold edits visually unreadable on wide-range probes.
     if (values.length === 0) {
-      const rangeMin = finite(sensorRange?.min)
-      const rangeMax = finite(sensorRange?.max)
       if (rangeMin !== null && rangeMax !== null && rangeMax > rangeMin) {
         const center = (rangeMin + rangeMax) / 2
         const half = Math.max((rangeMax - rangeMin) * 0.15, 1)
@@ -188,6 +194,37 @@ export function LocationAlarmPreview({
     const padding = Math.max((max - min) * 0.18, 0.5)
     return { min: min - padding, max: max + padding }
   }, [lines, sensorRange?.max, sensorRange?.min])
+
+  useEffect(() => {
+    const values = lines.map((line) => line.value)
+    setStableDomain((current) => {
+      if (!current || current.key !== domainKey) {
+        return { key: domainKey, ...candidateDomain }
+      }
+
+      if (values.length === 0) return current
+
+      // Never shrink the scale while the form is open: editing one threshold
+      // must not visually move every other guide line. Expand only when needed.
+      let min = current.min
+      let max = current.max
+      const liveMin = Math.min(...values)
+      const liveMax = Math.max(...values)
+      const currentSpan = Math.max(max - min, 1)
+      const expansion = Math.max(currentSpan * 0.08, 0.5)
+      if (liveMin < min) min = liveMin - expansion
+      if (liveMax > max) max = liveMax + expansion
+
+      return min === current.min && max === current.max
+        ? current
+        : { key: current.key, min, max }
+    })
+  }, [candidateDomain, domainKey, lines])
+
+  const domain =
+    stableDomain?.key === domainKey
+      ? { min: stableDomain.min, max: stableDomain.max }
+      : candidateDomain
 
   const y = (value: number) => {
     const ratio = (value - domain.min) / Math.max(domain.max - domain.min, 0.0001)
@@ -221,13 +258,13 @@ export function LocationAlarmPreview({
   const points = [
     [6, baseline],
     [18, baseline],
-    [highDelayStart, highAlarmLevel + (highPeak - highAlarmLevel) * 0.12],
-    [highDelayMiddle, highAlarmLevel + (highPeak - highAlarmLevel) * 0.22],
+    [highDelayStart, highAlarmLevel],
+    [highDelayMiddle, highAlarmLevel + (highPeak - highAlarmLevel) * 0.18],
     [highDelayEnd, highAlarmLevel + (highPeak - highAlarmLevel) * 0.28],
     [54, highPeak],
     [62, baseline],
-    [lowDelayStart, lowAlarmLevel + (lowPeak - lowAlarmLevel) * 0.12],
-    [lowDelayMiddle, lowAlarmLevel + (lowPeak - lowAlarmLevel) * 0.22],
+    [lowDelayStart, lowAlarmLevel],
+    [lowDelayMiddle, lowAlarmLevel + (lowPeak - lowAlarmLevel) * 0.18],
     [lowDelayEnd, lowAlarmLevel + (lowPeak - lowAlarmLevel) * 0.28],
     [96, lowPeak],
   ] as const
@@ -287,6 +324,35 @@ export function LocationAlarmPreview({
               strokeWidth="0.45"
             />
           ))}
+
+          {normalHigh !== null ? (
+            <m.rect
+              initial={false}
+              animate={{ x: highDelayStart, width: Math.max(0, highDelayEnd - highDelayStart) }}
+              transition={transition}
+              y="28"
+              height="54"
+              rx="1.5"
+              fill="rgba(249, 115, 22, 0.08)"
+              stroke="rgba(249, 115, 22, 0.45)"
+              strokeWidth="0.5"
+              strokeDasharray="2 2"
+            />
+          ) : null}
+          {normalLow !== null ? (
+            <m.rect
+              initial={false}
+              animate={{ x: lowDelayStart, width: Math.max(0, lowDelayEnd - lowDelayStart) }}
+              transition={transition}
+              y="108"
+              height="54"
+              rx="1.5"
+              fill="rgba(249, 115, 22, 0.08)"
+              stroke="rgba(249, 115, 22, 0.45)"
+              strokeWidth="0.5"
+              strokeDasharray="2 2"
+            />
+          ) : null}
 
           {lines.map((line) => {
             const lineY = y(line.value)
@@ -369,7 +435,7 @@ export function LocationAlarmPreview({
                 textAnchor="middle"
                 className="fill-orange-600 text-[4px] dark:fill-orange-300"
               >
-                {t('delay_short', { value: data.Retard_Alarme_Haut ?? 0 })}
+                {t('delay_window', { value: data.Retard_Alarme_Haut ?? 0 })}
               </m.text>
             </>
           ) : null}
@@ -411,7 +477,7 @@ export function LocationAlarmPreview({
                 textAnchor="middle"
                 className="fill-orange-600 text-[4px] dark:fill-orange-300"
               >
-                {t('delay_short', { value: data.Retard_Alarme_Bas ?? 0 })}
+                {t('delay_window', { value: data.Retard_Alarme_Bas ?? 0 })}
               </m.text>
             </>
           ) : null}

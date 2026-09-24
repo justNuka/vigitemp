@@ -848,7 +848,10 @@
         "lower_title": "Lower limits",
         "lower_hint": "Pre-alert, delayed alarm and critical safety.",
         "normal_disabled": "The normal alarm threshold is disabled.",
-        "critical_hint": "Triggers immediately without waiting for the normal alarm delay."
+        "critical_hint": "Triggers immediately without waiting for the normal alarm delay.",
+        "invalid_title": "Inconsistent configuration: saving is blocked until these values are corrected.",
+        "emt_effective_title": "MPE included in effective thresholds: {value}",
+        "emt_effective_description": "The effective upper and lower thresholds move toward the setpoint. Pre-alarms are validated against these thresholds actually used by monitoring."
       },
       "timing": {
         "description": "Measurement cadence and delays used before the different alarm triggers."
@@ -872,6 +875,7 @@
         "critical_low": "Critical low",
         "critical_description": "Safety threshold: crossing it triggers the alarm immediately.",
         "delay_short": "{value} min delay",
+        "delay_window": "{value} min delay window",
         "normal_behavior": "Normal threshold crossed: the delay starts, then the alarm triggers if the excursion persists.",
         "critical_behavior": "Critical threshold crossed: the alarm triggers immediately with no delay."
       }
