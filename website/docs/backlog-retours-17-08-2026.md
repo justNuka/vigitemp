@@ -3401,6 +3401,23 @@ Retours consolidés du texte et de la capture :
 - FR/EN mis à jour ;
 - Web passé en **1.8.12**.
 
+#### Validation automatisée
+
+GitHub Actions run `35998174781` : **succès complet**.
+
+- [x] `git diff --check origin/dev...HEAD` ;
+- [x] installation `pnpm` avec lockfile figé ;
+- [x] génération Prisma MySQL ;
+- [x] `pnpm test:location-threshold-preview-emt` ;
+- [x] `pnpm test:location-critical-thresholds` après alignement du test historique sur le contrat partagé ;
+- [x] `pnpm test:number-display` ;
+- [x] ESLint ciblé sur le contrat, le formulaire, la preview, les APIs et les tests ;
+- [x] contrôle i18n sans nouvelle dette dans les fichiers du lot ;
+- [x] build production Next.js sur MySQL ;
+- [x] génération Prisma SQL Server ;
+- [x] TypeScript `--noEmit` sur SQL Server ;
+- [x] workflow temporaire retiré du diff final.
+
 Fichiers principaux :
 
 - `website/src/lib/location-alarm-threshold-contract.ts` ;
