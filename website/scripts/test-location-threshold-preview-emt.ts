@@ -105,6 +105,8 @@ const previewSource = readFileSync(
   "utf8",
 )
 assert.match(previewSource, /const \[stableDomain, setStableDomain\] = useState/)
+assert.match(previewSource, /data\.Id_Lieu \?\? 'new'/)
+assert.match(previewSource, /data\.Sonde_Numero_Serie \?\? 'no-sensor'/)
 assert.match(previewSource, /setStableDomain\(\(current\) =>/)
 assert.doesNotMatch(previewSource, /fallbackDomainRef/)
 assert.match(previewSource, /Never shrink the scale while the form is open/)
@@ -127,6 +129,10 @@ assert.match(setpointsSource, /setpoints\.invalid_title/)
 assert.match(setpointsSource, /setpoints\.emt_effective_title/)
 assert.match(setpointsSource, /getThresholdIssue\('Consigne_Sup_Pre_Alarme'\)/)
 assert.match(setpointsSource, /getThresholdIssue\('Consigne_Inf_Pre_Alarme'\)/)
+assert.match(setpointsSource, /Est_Consigne_Sup_Pre_Alarme_Active', false/)
+assert.match(setpointsSource, /Est_Consigne_Inf_Pre_Alarme_Active', false/)
+assert.match(setpointsSource, /errors\.Consigne_Sup_Pre_Alarme\?\.message \?\?/)
+assert.match(setpointsSource, /errors\.Consigne_Inf_Pre_Alarme\?\.message \?\?/)
 
 for (const relativePath of [
   "../src/app/api/lieux/route.ts",
