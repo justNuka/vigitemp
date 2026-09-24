@@ -171,20 +171,22 @@ export function LocationAlarmPreview({
   const domain = useMemo(() => {
     const rangeMin = finite(sensorRange?.min)
     const rangeMax = finite(sensorRange?.max)
+    const values = lines.map((line) => line.value)
 
-    if (rangeMin !== null && rangeMax !== null && rangeMax > rangeMin) {
-      const padding = Math.max((rangeMax - rangeMin) * 0.04, 0.5)
-      return { min: rangeMin - padding, max: rangeMax + padding }
+    // Keep a useful local scale around the configured values. The sensor range
+    // identifies the current context, but using the full physical range would
+    // make small threshold edits visually unreadable on wide-range probes.
+    if (values.length === 0) {
+      if (rangeMin !== null && rangeMax !== null && rangeMax > rangeMin) {
+        const center = (rangeMin + rangeMax) / 2
+        const half = Math.max((rangeMax - rangeMin) * 0.15, 1)
+        return { min: center - half, max: center + half }
+      }
+      return { min: -1, max: 1 }
     }
 
-    const values = [
-      ...lines.map((line) => line.value),
-      ...(rangeMin !== null ? [rangeMin] : []),
-      ...(rangeMax !== null ? [rangeMax] : []),
-    ]
-
-    let nextMin = values.length > 0 ? Math.min(...values) : -1
-    let nextMax = values.length > 0 ? Math.max(...values) : 1
+    let nextMin = Math.min(...values)
+    let nextMax = Math.max(...values)
     if (nextMin === nextMax) {
       nextMin -= 1
       nextMax += 1
@@ -199,18 +201,16 @@ export function LocationAlarmPreview({
       return { min: nextMin, max: nextMax }
     }
 
-    // Never shrink the fallback scale while the form is open: editing one
-    // threshold must not visually move every other guide line.
+    // Never shrink the scale while the form is open: editing one threshold
+    // must not visually move every other guide line. Expand only when needed.
     let stableMin = current.min
     let stableMax = current.max
-    if (values.length > 0) {
-      const liveMin = Math.min(...values)
-      const liveMax = Math.max(...values)
-      const currentSpan = Math.max(stableMax - stableMin, 1)
-      const expansion = Math.max(currentSpan * 0.08, 0.5)
-      if (liveMin < stableMin) stableMin = liveMin - expansion
-      if (liveMax > stableMax) stableMax = liveMax + expansion
-    }
+    const liveMin = Math.min(...values)
+    const liveMax = Math.max(...values)
+    const currentSpan = Math.max(stableMax - stableMin, 1)
+    const expansion = Math.max(currentSpan * 0.08, 0.5)
+    if (liveMin < stableMin) stableMin = liveMin - expansion
+    if (liveMax > stableMax) stableMax = liveMax + expansion
 
     if (stableMin !== current.min || stableMax !== current.max) {
       fallbackDomainRef.current = { key: domainKey, min: stableMin, max: stableMax }
