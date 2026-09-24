@@ -57,6 +57,7 @@ interface MonitoringGraphTabProps {
   showAuditControls?: boolean
   allowImageExport?: boolean
   onChartImageReady?: (dataUrl: string) => void
+  interactionProfile?: "default" | "alarm-analysis"
 }
 
 function normalizeGuideValue(value: number | null): number | null {
@@ -165,6 +166,7 @@ export function MonitoringGraphTab({
   showAuditControls = true,
   allowImageExport = true,
   onChartImageReady,
+  interactionProfile = "default",
 }: MonitoringGraphTabProps) {
   const localeTag = locale === "fr" ? "fr-FR" : locale
   const auditMarkerLabel = t("chart.audit_markers")
@@ -182,6 +184,11 @@ export function MonitoringGraphTab({
   const rangeEndMs = parseDbDateTime(xRangeEnd)?.getTime() ?? Number.NaN
   const hasExplicitAxisRange = Number.isFinite(rangeStartMs) && Number.isFinite(rangeEndMs) && rangeEndMs > rangeStartMs
   const timeAxisSpanMs = hasExplicitAxisRange ? rangeEndMs - rangeStartMs : getTimeAxisSpanMs(orderedData)
+  const isAlarmAnalysisInteraction = interactionProfile === "alarm-analysis"
+  const alarmAnalysisMinRangeMs =
+    isAlarmAnalysisInteraction && Number.isFinite(timeAxisSpanMs) && timeAxisSpanMs > 0
+      ? Math.max(1_000, Math.min(60_000, Math.floor(timeAxisSpanMs / 100)))
+      : 60_000
   const memoryMeasureRanges = useMemo(
     () =>
       buildRanges(
@@ -587,6 +594,12 @@ export function MonitoringGraphTab({
           options={{
             responsive: true,
             maintainAspectRatio: false,
+            animation: isAlarmAnalysisInteraction
+              ? {
+                  duration: 180,
+                  easing: "easeOutQuart",
+                }
+              : undefined,
             plugins: {
               legend: {
                 display: true,
@@ -689,16 +702,28 @@ export function MonitoringGraphTab({
                 },
               },
               zoom: {
-                limits: { x: { minRange: 60_000 } },
+                limits: {
+                  x: isAlarmAnalysisInteraction && hasExplicitAxisRange
+                    ? {
+                        min: rangeStartMs,
+                        max: rangeEndMs,
+                        minRange: alarmAnalysisMinRangeMs,
+                      }
+                    : { minRange: 60_000 },
+                },
                 pan: {
                   enabled: true,
                   mode: "x" as const,
+                  threshold: isAlarmAnalysisInteraction ? 4 : 10,
                   onPanComplete: ({ chart }: { chart: ChartJS<"line"> }) => captureZoomBounds(chart),
                 },
                 zoom: {
                   // Drag désactivé : le glissement est réservé au pan
                   drag: { enabled: false },
-                  wheel: { enabled: true },
+                  wheel: {
+                    enabled: true,
+                    speed: isAlarmAnalysisInteraction ? 0.25 : 0.1,
+                  },
                   pinch: { enabled: true },
                   mode: "x" as const,
                   onZoomComplete: ({ chart }: { chart: ChartJS<"line"> }) => captureZoomBounds(chart),
