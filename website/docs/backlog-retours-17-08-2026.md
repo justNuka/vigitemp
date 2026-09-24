@@ -3512,7 +3512,7 @@ Fichiers principaux :
 
 ### R23-005-G — Card métrologie du Dashboard Admin
 
-**Statut : `EN_COURS` — branche `fix/admin-metrology-warning-window` — base `dev` `1cc012ca9729eb1dbc906bd7b39b73e3f5ab01ef`**
+**Statut : `PR_OUVERTE` — branche `fix/admin-metrology-warning-window` — PR #156 — base `dev` `1cc012ca9729eb1dbc906bd7b39b73e3f5ab01ef`**
 
 Retour :
 
