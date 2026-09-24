@@ -146,12 +146,12 @@ export function MonitoringCardHeader({
           </TooltipProvider>
           {groupName ? <div className="max-w-full truncate">{groupName}</div> : null}
           <div className="min-w-0 space-y-0.5">
-            <div className="line-clamp-2 wrap-break-word text-[15px] leading-tight font-semibold">
-              {sondeNumeroSerie || nomLieu}
+            <div className="line-clamp-2 wrap-break-word text-[17px] leading-tight font-bold tracking-tight">
+              {nomLieu}
             </div>
             {sondeNumeroSerie ? (
-              <div className="line-clamp-2 wrap-break-word text-[12px] leading-tight opacity-90">
-                {nomLieu}
+              <div className="line-clamp-2 wrap-break-word text-[11px] leading-tight font-medium opacity-85">
+                {sondeNumeroSerie}
               </div>
             ) : null}
           </div>
@@ -195,9 +195,18 @@ export function MonitoringCardHeader({
               <UITooltip>
                 <TooltipTrigger asChild>
                   <span
-                    className={`inline-flex h-3 w-3 cursor-help rounded-full ${hasActiveAlarmCode ? 'bg-white/90 animate-pulse' : 'bg-white/40'}`}
+                    className="relative inline-flex h-4 w-4 cursor-help items-center justify-center"
                     aria-hidden="true"
-                  />
+                  >
+                    {hasActiveAlarmCode ? (
+                      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white/70 opacity-75" />
+                    ) : null}
+                    <span
+                      className={`relative inline-flex rounded-full ${hasActiveAlarmCode
+                        ? 'h-2.5 w-2.5 bg-white shadow-[0_0_0_2px_rgba(255,255,255,0.28),0_0_12px_4px_rgba(255,255,255,0.7)]'
+                        : 'h-2.5 w-2.5 bg-white/40'}`}
+                    />
+                  </span>
                 </TooltipTrigger>
                 <TooltipContent>
                   <p className="text-xs">{hasActiveAlarmCode ? (effectiveAlarmType === 'H' ? t('alarmTypes.high') : effectiveAlarmType === 'B' ? t('alarmTypes.low') : effectiveAlarmType === 'S' ? t('alarmTypes.sector') : effectiveAlarmType === 'M' ? t('alarmTypes.module') : effectiveAlarmType === 'T' ? t('alarmTypes.ended') : t('alarmTypes.no_response')) : t('status.ok')}</p>
