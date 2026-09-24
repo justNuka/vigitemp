@@ -229,7 +229,14 @@ export function AlarmsClient({ alarms, statusFilter, initialLocationId = null, s
   };
 
   const refreshButton = (
-    <Button variant="outline" size="sm" onClick={handleRefresh} className="gap-2" disabled={isRefreshing} data-testid="button-refresh">
+    <Button
+      variant="secondary"
+      size="sm"
+      onClick={handleRefresh}
+      className="h-8 min-h-8 gap-1.5 border-border bg-card px-2.5 text-xs text-foreground shadow-sm hover:border-[hsl(var(--border-strong))] hover:bg-muted/30 focus-visible:ring-2 focus-visible:ring-ring"
+      disabled={isRefreshing}
+      data-testid="button-refresh"
+    >
       <RefreshCw className={cn("h-4 w-4", isRefreshing && "animate-spin")} />
       <span className="hidden sm:inline">{isRefreshing ? t("refresh.loading") : t("refresh.label")}</span>
     </Button>
@@ -247,6 +254,39 @@ export function AlarmsClient({ alarms, statusFilter, initialLocationId = null, s
     setTypeFilters([]);
     router.replace(`/${locale}/alarmes?status=${statusFilter}`);
   }, [locale, router, statusFilter]);
+
+  const getAlarmTone = (type: AlarmRowType) => {
+    if (type === "high") {
+      return {
+        icon: "bg-[hsl(var(--status-critical)/0.10)] text-[hsl(var(--status-critical))]",
+        text: "text-[hsl(var(--status-critical))]",
+        dot: "bg-[hsl(var(--status-critical))]",
+        row: "border-l-[hsl(var(--status-critical))]",
+      };
+    }
+    if (type === "low") {
+      return {
+        icon: "bg-[hsl(var(--status-low)/0.10)] text-[hsl(var(--status-low))]",
+        text: "text-[hsl(var(--status-low))]",
+        dot: "bg-[hsl(var(--status-low))]",
+        row: "border-l-[hsl(var(--status-low))]",
+      };
+    }
+    if (type === "sector") {
+      return {
+        icon: "bg-[hsl(var(--status-warning)/0.10)] text-[hsl(var(--status-warning-text))]",
+        text: "text-[hsl(var(--status-warning-text))]",
+        dot: "bg-[hsl(var(--status-warning))]",
+        row: "border-l-[hsl(var(--status-warning))]",
+      };
+    }
+    return {
+      icon: "bg-[hsl(var(--status-technical)/0.08)] text-[hsl(var(--status-technical))] dark:bg-white/10 dark:text-white",
+      text: "text-[hsl(var(--status-technical))] dark:text-slate-100",
+      dot: "bg-[hsl(var(--status-technical))] dark:bg-slate-100",
+      row: "border-l-[hsl(var(--status-technical))] dark:border-l-slate-300",
+    };
+  };
 
   const getAlarmTypeExportLabel = (type: AlarmRowType) => {
     if (type === "high") return t("dialog.type_high");
@@ -286,15 +326,34 @@ export function AlarmsClient({ alarms, statusFilter, initialLocationId = null, s
         exportValue: (row: AlarmRow) => getAlarmTypeExportLabel(row.type),
       },
       cell: ({ row }) => {
+        const alarm = row.original;
         const type = row.getValue("type") as AlarmRowType;
-        if (type === "no-response" || type === "module") {
-          return <div className="p-1.5 rounded-md w-fit bg-black/10"><WifiOff className="h-4 w-4 text-black" /></div>;
-        }
-        if (type === "sector") {
-          return <div className="p-1.5 rounded-md w-fit bg-amber-100"><PowerOff className="h-4 w-4 text-amber-700" /></div>;
-        }
-        const isHigh = type === "high";
-        return <div className={cn("p-1.5 rounded-md w-fit", isHigh ? "bg-destructive/10" : "bg-[#26A5DA]/10")}>{isHigh ? <ArrowUp className="h-4 w-4 text-destructive" /> : <ArrowDown className="h-4 w-4 text-[#26A5DA]" />}</div>;
+        const tone = getAlarmTone(type);
+        const Icon =
+          type === "high"
+            ? ArrowUp
+            : type === "low"
+              ? ArrowDown
+              : type === "sector"
+                ? PowerOff
+                : WifiOff;
+
+        return (
+          <div className="flex items-center gap-2.5">
+            <span className={cn("inline-flex h-7 w-7 items-center justify-center rounded-md", tone.icon)}>
+              <Icon className="h-4 w-4" />
+            </span>
+            <span className={cn("whitespace-nowrap text-xs font-semibold", alarm.status === "active" ? tone.text : "text-muted-foreground")}>
+              {getAlarmTypeExportLabel(type)}
+            </span>
+            {alarm.status === "active" ? (
+              <span className={cn("relative inline-flex h-2.5 w-2.5 shrink-0 rounded-full", tone.dot)}>
+                <span className={cn("absolute inset-0 animate-ping rounded-full opacity-30 motion-reduce:hidden", tone.dot)} />
+                <span className={cn("absolute inset-[2px] rounded-full ring-1 ring-white/80", tone.dot)} />
+              </span>
+            ) : null}
+          </div>
+        );
       },
     },
     {
@@ -398,7 +457,11 @@ export function AlarmsClient({ alarms, statusFilter, initialLocationId = null, s
               </Button>
              ) : null}
             {canAcknowledgeAlarm && alarm.status === "active" ? (
-              <Button variant="outline" size="sm" className="gap-2 border-amber-300 bg-amber-50 text-amber-800 hover:bg-amber-100 hover:text-amber-900 dark:border-amber-300/60 dark:bg-amber-300/20 dark:text-amber-100 dark:hover:bg-amber-300/30" onClick={() => {
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-7 min-h-7 gap-1.5 border-[hsl(var(--status-warning)/0.50)] bg-[hsl(var(--status-warning)/0.10)] px-2.5 text-xs text-[hsl(var(--status-warning-text))] hover:bg-[hsl(var(--status-warning)/0.20)] focus-visible:ring-2 focus-visible:ring-ring"
+                onClick={() => {
                 const fullAlarm = alarms.find((item) => item.id === alarm.id);
                 if (fullAlarm) setSelectedAlarm(fullAlarm);
               }} data-testid={`button-acknowledge-${alarm.id}`}>
@@ -606,8 +669,12 @@ export function AlarmsClient({ alarms, statusFilter, initialLocationId = null, s
             onFilteredRowCountChange={setVisibleRowCount}
             maxHeight="calc(100dvh - 25rem)"
             headerClassName="!bg-sidebar !text-sidebar-foreground"
-            headerCellClassName="!bg-sidebar !text-sidebar-foreground !border-r !border-white/25 hover:!bg-sidebar-accent/80"
-            tableClassName="border-separate border-spacing-0 [&_thead_th]:!border-r [&_thead_th]:!border-white/25 [&_thead_th:last-child]:!border-r-0 [&_tbody_tr]:transition-colors [&_tbody_tr]:duration-150"
+            headerCellClassName="!bg-sidebar !text-sidebar-foreground !border-r !border-white/15 hover:!bg-sidebar-accent/80"
+            rowClassName={(row) => {
+              if (row.status !== "active") return "border-l-[3px] border-l-transparent";
+              return cn("border-l-[3px]", getAlarmTone(row.type).row);
+            }}
+            tableClassName="border-separate border-spacing-0 [&_thead_th]:!border-r [&_thead_th]:!border-white/15 [&_thead_th:last-child]:!border-r-0 [&_tbody_tr]:transition-colors [&_tbody_tr]:duration-150 [&_tbody_tr:hover]:bg-muted/30"
           />
       </CardContent>
     </Card>
