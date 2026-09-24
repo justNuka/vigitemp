@@ -11,7 +11,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { fetchJson } from '@/lib/http'
-import { computeEmt } from '@/lib/emt'
+import { buildLocationAlarmThresholdIssues, computeLocationAlarmThresholdState } from '@/lib/location-alarm-threshold-contract'
 import { formatNumber } from '@/lib/number-display'
 import type { SensorValueRange } from '@/lib/sensor-value-range-contract'
 import { cn } from '@/lib/utils'
@@ -133,7 +133,7 @@ export function LocationSetpointsSection({
     return `≤ ${formatNumber(sensorRange.max, { maximumDecimals: 3, locale: localeTag })}${sensorRange.unit ? ` ${sensorRange.unit}` : ''}`
   }
 
-  const liveEmt = computeEmt({
+  const thresholdValues = {
     mode: formData.EMT_Mode,
     emtValue: formData.EMT_Valeur ?? null,
     consigne: formData.Consigne ?? null,
@@ -141,6 +141,14 @@ export function LocationSetpointsSection({
     consigneInf: formData.Consigne_Inf ?? null,
     isConsigneSupActive: formData.Est_Consigne_Sup_Active ?? false,
     isConsigneInfActive: formData.Est_Consigne_Inf_Active ?? false,
+    preAlarmHigh: formData.Consigne_Sup_Pre_Alarme ?? null,
+    preAlarmHighActive: formData.Est_Consigne_Sup_Pre_Alarme_Active ?? false,
+    preAlarmLow: formData.Consigne_Inf_Pre_Alarme ?? null,
+    preAlarmLowActive: formData.Est_Consigne_Inf_Pre_Alarme_Active ?? false,
+    criticalHigh: formData.Seuil_Critique_Haut ?? null,
+    criticalHighActive: formData.Est_Seuil_Critique_Haut_Active ?? false,
+    criticalLow: formData.Seuil_Critique_Bas ?? null,
+    criticalLowActive: formData.Est_Seuil_Critique_Bas_Active ?? false,
     incertitude: formData.Incertitude ?? null,
     erreurJustesse: formData.Erreur_Justesse ?? null,
     derive: formData.Derive ?? null,
@@ -149,13 +157,21 @@ export function LocationSetpointsSection({
         ? true
         : (formData.Prendre_En_Compte_Derive ?? false),
     correctAccuracyError: formData.Corriger_Erreur_Justesse ?? false,
-  })
-  const effectiveHigh = formData.Est_Consigne_Sup_Active
-    ? (liveEmt.toleranceSup ?? formData.Tolerance_Surveillance_Sup ?? formData.Consigne_Sup ?? null)
-    : null
-  const effectiveLow = formData.Est_Consigne_Inf_Active
-    ? (liveEmt.toleranceInf ?? formData.Tolerance_Surveillance_Inf ?? formData.Consigne_Inf ?? null)
-    : null
+  }
+  const thresholdState = computeLocationAlarmThresholdState(thresholdValues)
+  const thresholdIssues = buildLocationAlarmThresholdIssues(
+    thresholdValues,
+    locale === 'en' ? 'en' : 'fr',
+  )
+  const liveEmt = thresholdState.emt
+  const effectiveHigh = thresholdState.effectiveHigh
+  const effectiveLow = thresholdState.effectiveLow
+  const getThresholdIssue = (field: string) =>
+    thresholdIssues.find((issue) => issue.path[0] === field)?.message
+  const hasEmtOnEffectiveThreshold =
+    liveEmt.emtSonde !== null &&
+    formData.EMT_Mode !== 'sans-objet' &&
+    (thresholdState.highActive || thresholdState.lowActive)
 
   return (
     <TooltipProvider delayDuration={120}>
@@ -228,6 +244,22 @@ export function LocationSetpointsSection({
             </div>
           ) : null}
 
+          {thresholdIssues.length > 0 ? (
+            <div className="mt-4 rounded-lg border border-destructive/40 bg-destructive/5 px-4 py-3 text-sm text-destructive">
+              <div className="flex items-start gap-2">
+                <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0" />
+                <div>
+                  <p className="font-semibold">{t('setpoints.invalid_title')}</p>
+                  <ul className="mt-1 list-disc space-y-0.5 pl-4 text-xs">
+                    {Array.from(new Set(thresholdIssues.map((issue) => issue.message)))
+                      .slice(0, 4)
+                      .map((issue) => <li key={issue}>{issue}</li>)}
+                  </ul>
+                </div>
+              </div>
+            </div>
+          ) : null}
+
           <div className="mt-5 grid gap-5 xl:grid-cols-[minmax(0,1.15fr)_minmax(360px,.85fr)]">
             <div className="space-y-4">
               <div className="rounded-xl border bg-muted/20 p-4">
@@ -254,14 +286,27 @@ export function LocationSetpointsSection({
                       step="any"
                       {...register('Consigne', { setValueAs: toOptionalNumber })}
                       placeholder={t('placeholders.numeric')}
-                      aria-invalid={!!errors.Consigne}
+                      aria-invalid={!!errors.Consigne || !!getThresholdIssue('Consigne')}
                     />
-                    {errors.Consigne?.message ? (
-                      <p className="text-sm text-destructive">{String(errors.Consigne.message)}</p>
+                    {errors.Consigne?.message || getThresholdIssue('Consigne') ? (
+                      <p className="text-sm text-destructive">
+                        {String(errors.Consigne?.message ?? getThresholdIssue('Consigne'))}
+                      </p>
                     ) : null}
                   </div>
                 )}
               </div>
+
+              {hasEmtOnEffectiveThreshold ? (
+                <div className="rounded-lg border border-violet-200 bg-violet-50/70 px-3 py-2 text-xs text-violet-950 dark:border-violet-500/30 dark:bg-violet-500/10 dark:text-violet-100">
+                  <p className="font-semibold">
+                    {t('setpoints.emt_effective_title', { value: formatValue(liveEmt.emtSonde) })}
+                  </p>
+                  <p className="mt-0.5 text-violet-800/80 dark:text-violet-200/80">
+                    {t('setpoints.emt_effective_description')}
+                  </p>
+                </div>
+              ) : null}
 
               <div className="grid gap-4 lg:grid-cols-2">
                 <div className="rounded-xl border border-orange-200/70 bg-orange-50/30 p-4 dark:border-orange-500/20 dark:bg-orange-500/5">
@@ -326,10 +371,12 @@ export function LocationSetpointsSection({
                             step="any"
                             {...register('Consigne_Sup', { setValueAs: toOptionalNumber })}
                             placeholder={t('placeholders.numeric')}
-                            aria-invalid={!!errors.Consigne_Sup}
+                            aria-invalid={!!errors.Consigne_Sup || !!getThresholdIssue('Consigne_Sup')}
                           />
-                          {errors.Consigne_Sup?.message ? (
-                            <p className="text-sm text-destructive">{String(errors.Consigne_Sup.message)}</p>
+                          {errors.Consigne_Sup?.message || getThresholdIssue('Consigne_Sup') ? (
+                            <p className="text-sm text-destructive">
+                              {String(errors.Consigne_Sup?.message ?? getThresholdIssue('Consigne_Sup'))}
+                            </p>
                           ) : null}
                           <ReadonlyValue
                             label={t('labels.effective_threshold')}
@@ -366,7 +413,7 @@ export function LocationSetpointsSection({
                                 step="any"
                                 {...register('Consigne_Sup_Pre_Alarme', { setValueAs: toOptionalNumber })}
                                 placeholder={t('placeholders.numeric')}
-                                aria-invalid={!!errors.Consigne_Sup_Pre_Alarme}
+                                aria-invalid={!!errors.Consigne_Sup_Pre_Alarme || !!getThresholdIssue('Consigne_Sup_Pre_Alarme')}
                               />
                               {errors.Consigne_Sup_Pre_Alarme?.message ? (
                                 <p className="text-sm text-destructive">{String(errors.Consigne_Sup_Pre_Alarme.message)}</p>
@@ -399,10 +446,12 @@ export function LocationSetpointsSection({
                             step="any"
                             {...register('Seuil_Critique_Haut', { setValueAs: toOptionalNumber })}
                             placeholder={t('placeholders.numeric')}
-                            aria-invalid={!!errors.Seuil_Critique_Haut}
+                            aria-invalid={!!errors.Seuil_Critique_Haut || !!getThresholdIssue('Seuil_Critique_Haut')}
                           />
-                          {errors.Seuil_Critique_Haut?.message ? (
-                            <p className="text-sm text-destructive">{String(errors.Seuil_Critique_Haut.message)}</p>
+                          {errors.Seuil_Critique_Haut?.message || getThresholdIssue('Seuil_Critique_Haut') ? (
+                            <p className="text-sm text-destructive">
+                              {String(errors.Seuil_Critique_Haut?.message ?? getThresholdIssue('Seuil_Critique_Haut'))}
+                            </p>
                           ) : null}
                         </>
                       ) : null}
@@ -472,10 +521,12 @@ export function LocationSetpointsSection({
                             step="any"
                             {...register('Consigne_Inf', { setValueAs: toOptionalNumber })}
                             placeholder={t('placeholders.numeric')}
-                            aria-invalid={!!errors.Consigne_Inf}
+                            aria-invalid={!!errors.Consigne_Inf || !!getThresholdIssue('Consigne_Inf')}
                           />
-                          {errors.Consigne_Inf?.message ? (
-                            <p className="text-sm text-destructive">{String(errors.Consigne_Inf.message)}</p>
+                          {errors.Consigne_Inf?.message || getThresholdIssue('Consigne_Inf') ? (
+                            <p className="text-sm text-destructive">
+                              {String(errors.Consigne_Inf?.message ?? getThresholdIssue('Consigne_Inf'))}
+                            </p>
                           ) : null}
                           <ReadonlyValue
                             label={t('labels.effective_threshold')}
@@ -512,7 +563,7 @@ export function LocationSetpointsSection({
                                 step="any"
                                 {...register('Consigne_Inf_Pre_Alarme', { setValueAs: toOptionalNumber })}
                                 placeholder={t('placeholders.numeric')}
-                                aria-invalid={!!errors.Consigne_Inf_Pre_Alarme}
+                                aria-invalid={!!errors.Consigne_Inf_Pre_Alarme || !!getThresholdIssue('Consigne_Inf_Pre_Alarme')}
                               />
                               {errors.Consigne_Inf_Pre_Alarme?.message ? (
                                 <p className="text-sm text-destructive">{String(errors.Consigne_Inf_Pre_Alarme.message)}</p>
@@ -545,10 +596,12 @@ export function LocationSetpointsSection({
                             step="any"
                             {...register('Seuil_Critique_Bas', { setValueAs: toOptionalNumber })}
                             placeholder={t('placeholders.numeric')}
-                            aria-invalid={!!errors.Seuil_Critique_Bas}
+                            aria-invalid={!!errors.Seuil_Critique_Bas || !!getThresholdIssue('Seuil_Critique_Bas')}
                           />
-                          {errors.Seuil_Critique_Bas?.message ? (
-                            <p className="text-sm text-destructive">{String(errors.Seuil_Critique_Bas.message)}</p>
+                          {errors.Seuil_Critique_Bas?.message || getThresholdIssue('Seuil_Critique_Bas') ? (
+                            <p className="text-sm text-destructive">
+                              {String(errors.Seuil_Critique_Bas?.message ?? getThresholdIssue('Seuil_Critique_Bas'))}
+                            </p>
                           ) : null}
                         </>
                       ) : null}
