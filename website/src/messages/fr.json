@@ -300,7 +300,7 @@
       "pre_alarm": "{count, plural, one {# pre-alarme} other {# pre-alarmes}}",
       "ended": "{count, plural, one {# terminee} other {# terminees}}",
       "warning": "{count, plural, one {# alerte} other {# alertes}}",
-      "critical": "{count, plural, one {# critique} other {# critiques}}"
+      "critical": "{count, plural, one {# alarme en cours} other {# alarmes en cours}}"
     },
     "footer": {
       "count": "{count, plural, one {# sonde} other {# sondes}}",
