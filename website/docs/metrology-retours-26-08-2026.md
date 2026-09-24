@@ -351,6 +351,15 @@ Le mutex Windows autorise une acquisition récursive par le même thread, mais s
 - Serveur et installateur passent en **1.1.1** ;
 - aucune migration BDD n'est requise.
 
+### Validation automatisée
+
+GitHub Actions run `35970788192` : **succès**.
+
+- [x] restauration des packages NuGet legacy `packages.config` ;
+- [x] build **VigiSensys Serveur** .NET Framework 4.8 en Release ;
+- [x] build **VigiSensysServerSetup** en Release ;
+- [x] workflow temporaire retiré du diff final.
+
 Fichiers principaux :
 
 - `Vigitemp Serveur/Vigitemp Serveur/Sensor.cs` ;
