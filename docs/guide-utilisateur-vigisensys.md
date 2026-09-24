@@ -93,7 +93,7 @@ En haut de page, les badges indiquent les principaux états :
 | --- | --- |
 | OK | Lieux en surveillance sans alarme |
 | Pré-alertes | Lieux en pré-alarme |
-| Critiques | Lieux en alarme active |
+| Alarmes en cours | Lieux en alarme active |
 | Terminées | Alarmes terminées à acquitter |
 | Désactivés | Lieux dont la surveillance est désactivée |
 

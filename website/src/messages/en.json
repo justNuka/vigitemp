@@ -522,7 +522,7 @@
         "ok": "OK",
         "preAlarm": "pre-alarms",
         "ended": "ended",
-        "critical": "critical"
+        "critical": "alarms in progress"
       },
       "actions": {
         "clear": "Reset"
@@ -597,7 +597,7 @@
       "pre_alarm": "{count, plural, one {# pre-alarm} other {# pre-alarms}}",
       "ended": "{count, plural, one {# ended alarm} other {# ended alarms}}",
       "warning": "{count, plural, one {# warning} other {# warnings}}",
-      "critical": "{count, plural, one {# critical} other {# critical}}"
+      "critical": "{count, plural, one {# alarm in progress} other {# alarms in progress}}"
     },
     "footer": {
       "count": "{count, plural, one {# sensor} other {# sensors}}",
@@ -629,7 +629,7 @@
       "pre_alarm_locations": "Locations in pre-alarm",
       "ended_locations": "Locations with ended alarm awaiting acknowledgment",
       "alert_locations": "Locations in pre-alarm or alarm",
-      "critical_locations": "Locations in critical alarm or no response"
+      "critical_locations": "Locations with an alarm in progress"
     },
     "status": {
       "active": "Monitoring active",

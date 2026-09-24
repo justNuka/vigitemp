@@ -3088,7 +3088,7 @@ Les retours suivants ont été fournis à la fois sous forme de texte et de capt
 
 ### R23-005-A — Décalages horaires Surveillance / graphes / acquittements
 
-**Statut : `PR_OUVERTE` — branche `fix/monitoring-range-timezone` — PR #149 — base `dev` `ab753d85e1832dab7878158b7f2463d570772a87`**
+**Statut : `CORRIGE_DEV` — PR #149 — squash merge `f4fbf7d7e709cabb47baa2c571b5fa4fb0866312`**
 
 Retours :
 
@@ -3175,7 +3175,7 @@ Le workflow temporaire a été retiré du diff final après ce run.
 
 ### R23-005-B — Présentation et signalétique Surveillance
 
-**Statut : `A_FAIRE`**
+**Statut : `PR_OUVERTE` — branche `fix/surveillance-cards-signaletique` — PR #151 — base `dev` `1d0655056fcd54a5b365ff9133c25b3cd8c835f9`**
 
 Retours consolidés :
 
@@ -3184,6 +3184,45 @@ Retours consolidés :
   - sonde en second et plus petit ;
 - rendre le point clignotant des cards en alarme nettement plus visible / flashy ;
 - remplacer le badge/libellé **« critiques »** par **« alarmes en cours »** là où ce compteur représente les alarmes actives.
+
+#### Correctif
+
+- le header des cards affiche maintenant le **lieu** en premier avec une taille et un poids supérieurs ;
+- le numéro de série de la **sonde** est affiché juste dessous avec une taille plus discrète ;
+- le point d'alarme combine un noyau blanc contrasté, un halo et une pulsation expansive pour rester visible sur tous les thèmes d'alarme ;
+- le compteur supérieur et le filtre de statut `critical` sont renommés **« alarmes en cours »** en FR et **« alarms in progress »** en EN ;
+- la clé/statut interne `critical` est conservée afin de ne modifier aucun contrat API ou calcul de compteur ;
+- le guide utilisateur est aligné avec le nouveau vocabulaire ;
+- le Web passe en **1.8.9**.
+
+#### Validation automatisée
+
+GitHub Actions run `35984641463` : **succès complet**.
+
+- [x] installation `pnpm` avec lockfile figé ;
+- [x] ESLint ciblé sur le header de card et les supplements i18n ;
+- [x] contrôle i18n : aucune nouvelle dette dans les fichiers du lot ;
+- [x] génération Prisma MySQL ;
+- [x] build production Next.js ;
+- [x] workflow temporaire retiré du diff final.
+
+Fichiers principaux :
+
+- `website/src/components/monitoring-card/monitoring-card-header.tsx` ;
+- `website/src/messages/fr.json` ;
+- `website/src/messages/en.json` ;
+- `website/src/messages/supplements.ts` ;
+- `docs/guide-utilisateur-vigisensys.md`.
+
+#### Validation terrain
+
+- [ ] vérifier une card avec sonde : le lieu doit être immédiatement plus visible que le numéro de série ;
+- [ ] vérifier une card sans numéro de série : le lieu reste correctement affiché sans ligne vide ;
+- [ ] vérifier le point sur une alarme haute, basse et non-réponse ;
+- [ ] vérifier la lisibilité du pulse sur les headers rouge, bleu et noir, en thème clair et sombre ;
+- [ ] vérifier le badge supérieur **Alarmes en cours** et son filtre au clic ;
+- [ ] vérifier le libellé anglais **Alarms in progress** ;
+- [ ] vérifier que les compteurs, filtres et statuts métier restent identiques.
 
 ### R23-005-C — Emails d'alarme et formulation Paramètres
 
@@ -3262,7 +3301,7 @@ L'ordre pourra être ajusté sur demande, mais aucune branche suivante ne doit �
 
 ## R24-001 — Métrologie : port série bloqué en `queued` après une interrogation
 
-**Statut : `PR_OUVERTE` — branche `fix/metrology-port-lock-deadlock` — PR #150 — base `dev` `f4fbf7d7e709cabb47baa2c571b5fa4fb0866312`**
+**Statut : `CORRIGE_DEV` — PR #150 — squash merge `1d0655056fcd54a5b365ff9133c25b3cd8c835f9`**
 
 ### Retour — 24/09/2026
 
