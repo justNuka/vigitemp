@@ -3240,6 +3240,7 @@ Retours :
 - les seuils critiques ne créent pas un nouveau type d'alarme : le Serveur conserve `H` / `B` et déclenche immédiatement lorsque `Seuil_Critique_Haut` / `Seuil_Critique_Bas` est franchi ;
 - le Web peut donc identifier un déclenchement critique en comparant la valeur de déclenchement au seuil critique actif du lieu avec les mêmes opérateurs stricts `>` / `<` ;
 - pour les fins de non-réponse, `/api/alarmes/dispatch` forçait explicitement `N/A` pour tous les types différents de `H` et `B`, sans relire la mesure valide ayant mis fin à l'alarme.
+- sur le chemin GSP, le Serveur appelle `HandleNoResponseAlarm(true)` avant `AddMesure(...)` : le dispatch de fin peut donc atteindre le Web quelques millisecondes avant que la mesure de reprise soit visible dans `tm_mesures`.
 
 #### Correctif
 
@@ -3247,7 +3248,9 @@ Retours :
 - sujet spécifique **SEUIL CRITIQUE DÉPASSÉ** / **CRITICAL THRESHOLD EXCEEDED** ;
 - mise en avant du seuil, de la valeur mesurée, du sens haut/bas et du contexte lieu/sonde ;
 - détection centralisée via `resolveCriticalThresholdContext()`, sans modifier les types `H` / `B` en BDD ou dans les APIs ;
-- sur une fin d'alarme `N`, récupération de la dernière mesure valide non nulle du lieu depuis `tm_mesures`, postérieure au début de l'alarme ;
+- sur une fin d'alarme `N`, récupération de la mesure valide non nulle de reprise depuis `tm_mesures`, à partir de `Date_Heure_Fin` ;
+- le Web retente jusqu'à 5 fois à 100 ms d'intervalle pour couvrir l'ordre Serveur `fin alarme -> AddMesure` sans déplacer cette responsabilité métier côté Serveur ;
+- une erreur de lecture de la base Mesures est journalisée mais ne bloque pas le reste du dispatch ;
 - la date et l'unité de cette mesure deviennent également la source de l'email lorsque la mesure de reprise est disponible ;
 - fallback `N/A` conservé si aucune mesure valide n'est retrouvée ;
 - remplacement des formulations « emails système » par **destinataires globaux** / **global recipients** dans Paramètres ;
