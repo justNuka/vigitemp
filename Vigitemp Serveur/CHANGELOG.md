@@ -8,7 +8,23 @@ La version produit de référence du Serveur est `AssemblyInformationalVersion("
 
 ## [Unreleased]
 
-Aucun changement supplémentaire documenté depuis la préparation de la version Serveur 1.1.0.
+Aucun changement supplémentaire documenté depuis la préparation de la version Serveur 1.1.1.
+
+## [1.1.1] — 2026-09-24
+
+### Métrologie — déblocage du port série partagé
+
+- Corrige un verrou série pouvant rester bloqué indéfiniment après une interrogation asynchrone.
+- La coordination globale Surveillance / Hotline / Ajustage / Étalonnage reste portée par le mutex nommé de `ThreadServeur.RunWithPortLockAsync`.
+- `Sensor.ExecuteWithPortLockAsync` ne reprend plus ce même mutex une seconde fois ; il conserve uniquement son sémaphore asynchrone local.
+- La cause était une acquisition récursive du `Mutex` Windows suivie d'un `await` : la continuation pouvait reprendre sur un autre thread, rendant `ReleaseMutex()` invalide et laissant une acquisition résiduelle sur le port.
+- Le protocole GSP, les commandes de métrologie et la priorité donnée à une mesure de Surveillance déjà engagée restent inchangés.
+
+### Version / compatibilité
+
+- Version produit Serveur : **1.1.1**.
+- Installateur Serveur : **1.1.1**.
+- Aucune migration BDD n'est requise.
 
 ## [1.1.0] — 2026-09-21
 

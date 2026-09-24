@@ -245,68 +245,21 @@ namespace Vigitemp_Serveur
                 : m_comPort.Trim().ToUpperInvariant();
             var portSemaphore = _portLocks.GetOrAdd(portKey, _ => new SemaphoreSlim(1, 1));
             await portSemaphore.WaitAsync().ConfigureAwait(false);
-            Mutex namedMutex = null;
-            var mutexAcquired = false;
             try
             {
-                namedMutex = new Mutex(false, BuildPortMutexName(portKey));
-                try
-                {
-                    mutexAcquired = namedMutex.WaitOne(TimeSpan.FromMinutes(5));
-                }
-                catch (AbandonedMutexException)
-                {
-                    mutexAcquired = true;
-                    VigitempServeur.Log($"[SONDE][PORT-LOCK] port={portKey} serial={m_sondeSerialNumber} status=abandoned-acquired");
-                }
-
-                if (!mutexAcquired)
-                {
-                    VigitempServeur.Log($"[SONDE][PORT-LOCK] port={portKey} serial={m_sondeSerialNumber} status=timeout");
-                    HandleNoResponseAlarm(false, "port-lock-timeout");
-                    return false;
-                }
-
+                // Le verrou global qui arbitre Surveillance / Hotline / métrologie
+                // est détenu par ThreadServeur.RunWithPortLockAsync.
+                //
+                // Ne pas reprendre le Mutex nommé ici : Mutex est lié au thread qui
+                // l'acquiert, alors que readAction est asynchrone. Après un await,
+                // la continuation peut reprendre sur un autre thread et ReleaseMutex()
+                // échoue alors, ce qui peut laisser le port série verrouillé indéfiniment.
                 return await readAction().ConfigureAwait(false);
             }
             finally
             {
-                if (mutexAcquired && namedMutex != null)
-                {
-                    try
-                    {
-                        namedMutex.ReleaseMutex();
-                    }
-                    catch (ApplicationException)
-                    {
-                        // Mutex deja relache ou non acquis: rien a faire.
-                    }
-                }
-
-                if (namedMutex != null)
-                {
-                    namedMutex.Dispose();
-                }
-
                 portSemaphore.Release();
             }
-        }
-
-        private static string BuildPortMutexName(string portKey)
-        {
-            var normalized = string.IsNullOrWhiteSpace(portKey)
-                ? "__NO_PORT__"
-                : portKey.Trim().ToUpperInvariant();
-            var chars = normalized.ToCharArray();
-            for (var i = 0; i < chars.Length; i++)
-            {
-                if (!char.IsLetterOrDigit(chars[i]))
-                {
-                    chars[i] = '_';
-                }
-            }
-
-            return @"Global\VigitempSerialPort_" + new string(chars);
         }
 
         protected bool TryCompleteRead()
