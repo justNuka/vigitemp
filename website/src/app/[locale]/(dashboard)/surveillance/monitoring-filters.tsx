@@ -106,7 +106,7 @@ export function SurveillanceFilters({ filters: controlledFilters, onFilterChange
           selectedIds={filters.siteIds || []}
           onChange={(selectedIds) => handleSiteChange((selectedIds || []) as number[])}
           placeholder={t('sites.placeholder')}
-          tone="default"
+          tone="primary"
           compact
           hideLabel
           dropdownMaxHeightClassName="max-h-80"
@@ -135,7 +135,7 @@ export function SurveillanceFilters({ filters: controlledFilters, onFilterChange
             }))
           }}
           placeholder={t('groups.placeholder')}
-          tone="default"
+          tone="primary"
           compact
           hideLabel
           dropdownMaxHeightClassName="max-h-80"
@@ -154,7 +154,7 @@ export function SurveillanceFilters({ filters: controlledFilters, onFilterChange
         >
           <SelectTrigger
             aria-label={t('sort.label')}
-            className="h-8 border-border bg-card px-3 text-[13px] text-foreground shadow-sm hover:border-[hsl(var(--border-strong))] hover:bg-muted/30 focus:ring-2 focus:ring-ring/30 focus:ring-offset-0"
+            className="h-8 border-[#26A5DA]/35 bg-[#26A5DA]/8 px-3 text-[13px] text-[#0B5F86] shadow-sm transition-[background-color,border-color,color,box-shadow] duration-200 ease-out hover:border-[#26A5DA]/55 hover:bg-[#26A5DA]/14 focus:ring-2 focus:ring-[#26A5DA]/25 focus:ring-offset-0 dark:border-[#26A5DA]/45 dark:bg-[#26A5DA]/12 dark:text-sky-100"
           >
             <SelectValue placeholder={t('sort.placeholder')} />
           </SelectTrigger>
@@ -176,7 +176,7 @@ export function SurveillanceFilters({ filters: controlledFilters, onFilterChange
           }}
           placeholder={t('search.placeholder')}
           aria-label={t('search.label')}
-          className="h-8 border-border bg-card pl-8 pr-3 text-[13px] shadow-sm transition-[border-color,box-shadow,background-color] duration-200 ease-out hover:border-[hsl(var(--border-strong))] focus-visible:border-[#26A5DA]/65 focus-visible:ring-2 focus-visible:ring-[#26A5DA]/20 focus-visible:ring-offset-0"
+          className="h-8 border-[#26A5DA]/30 bg-[#26A5DA]/8 pl-8 pr-3 text-[13px] shadow-sm transition-[border-color,box-shadow,background-color] duration-200 ease-out hover:border-[#26A5DA]/45 hover:bg-[#26A5DA]/10 focus-visible:border-[#26A5DA]/65 focus-visible:bg-[#26A5DA]/10 focus-visible:ring-2 focus-visible:ring-[#26A5DA]/20 focus-visible:ring-offset-0 dark:border-[#26A5DA]/40 dark:bg-[#26A5DA]/10"
         />
       </div>
 
