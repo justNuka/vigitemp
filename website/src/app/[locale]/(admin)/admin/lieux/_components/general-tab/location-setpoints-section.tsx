@@ -318,9 +318,16 @@ export function LocationSetpointsSection({
                     {!planningLocked ? (
                       <Checkbox
                         checked={formData.Est_Consigne_Sup_Active || false}
-                        onCheckedChange={(checked) =>
-                          setValue('Est_Consigne_Sup_Active', !!checked, { shouldDirty: true, shouldTouch: true })
-                        }
+                        onCheckedChange={(checked) => {
+                          const enabled = !!checked
+                          setValue('Est_Consigne_Sup_Active', enabled, { shouldDirty: true, shouldTouch: true })
+                          if (!enabled && formData.Est_Consigne_Sup_Pre_Alarme_Active) {
+                            setValue('Est_Consigne_Sup_Pre_Alarme_Active', false, {
+                              shouldDirty: true,
+                              shouldTouch: true,
+                            })
+                          }
+                        }}
                         aria-label={t('labels.upper_enable')}
                       />
                     ) : (
@@ -415,8 +422,13 @@ export function LocationSetpointsSection({
                                 placeholder={t('placeholders.numeric')}
                                 aria-invalid={!!errors.Consigne_Sup_Pre_Alarme || !!getThresholdIssue('Consigne_Sup_Pre_Alarme')}
                               />
-                              {errors.Consigne_Sup_Pre_Alarme?.message ? (
-                                <p className="text-sm text-destructive">{String(errors.Consigne_Sup_Pre_Alarme.message)}</p>
+                              {errors.Consigne_Sup_Pre_Alarme?.message || getThresholdIssue('Consigne_Sup_Pre_Alarme') ? (
+                                <p className="text-sm text-destructive">
+                                  {String(
+                                    errors.Consigne_Sup_Pre_Alarme?.message ??
+                                      getThresholdIssue('Consigne_Sup_Pre_Alarme'),
+                                  )}
+                                </p>
                               ) : null}
                             </>
                           ) : null}
@@ -468,9 +480,16 @@ export function LocationSetpointsSection({
                     {!planningLocked ? (
                       <Checkbox
                         checked={formData.Est_Consigne_Inf_Active || false}
-                        onCheckedChange={(checked) =>
-                          setValue('Est_Consigne_Inf_Active', !!checked, { shouldDirty: true, shouldTouch: true })
-                        }
+                        onCheckedChange={(checked) => {
+                          const enabled = !!checked
+                          setValue('Est_Consigne_Inf_Active', enabled, { shouldDirty: true, shouldTouch: true })
+                          if (!enabled && formData.Est_Consigne_Inf_Pre_Alarme_Active) {
+                            setValue('Est_Consigne_Inf_Pre_Alarme_Active', false, {
+                              shouldDirty: true,
+                              shouldTouch: true,
+                            })
+                          }
+                        }}
                         aria-label={t('labels.lower_enable')}
                       />
                     ) : (
@@ -565,8 +584,13 @@ export function LocationSetpointsSection({
                                 placeholder={t('placeholders.numeric')}
                                 aria-invalid={!!errors.Consigne_Inf_Pre_Alarme || !!getThresholdIssue('Consigne_Inf_Pre_Alarme')}
                               />
-                              {errors.Consigne_Inf_Pre_Alarme?.message ? (
-                                <p className="text-sm text-destructive">{String(errors.Consigne_Inf_Pre_Alarme.message)}</p>
+                              {errors.Consigne_Inf_Pre_Alarme?.message || getThresholdIssue('Consigne_Inf_Pre_Alarme') ? (
+                                <p className="text-sm text-destructive">
+                                  {String(
+                                    errors.Consigne_Inf_Pre_Alarme?.message ??
+                                      getThresholdIssue('Consigne_Inf_Pre_Alarme'),
+                                  )}
+                                </p>
                               ) : null}
                             </>
                           ) : null}
