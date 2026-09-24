@@ -3262,7 +3262,7 @@ L'ordre pourra être ajusté sur demande, mais aucune branche suivante ne doit �
 
 ## R24-001 — Métrologie : port série bloqué en `queued` après une interrogation
 
-**Statut : `EN_COURS` — branche `fix/metrology-port-lock-deadlock` — base `dev` `f4fbf7d7e709cabb47baa2c571b5fa4fb0866312`**
+**Statut : `PR_OUVERTE` — branche `fix/metrology-port-lock-deadlock` — PR #150 — base `dev` `f4fbf7d7e709cabb47baa2c571b5fa4fb0866312`**
 
 ### Retour — 24/09/2026
 
