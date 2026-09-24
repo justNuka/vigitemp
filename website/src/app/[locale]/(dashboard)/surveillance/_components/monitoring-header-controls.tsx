@@ -47,7 +47,7 @@ export function SurveillanceHeaderControls({
 
   return (
     <div className="w-full">
-      <div className="flex flex-nowrap items-center gap-1.5 overflow-visible rounded-lg border border-[#26A5DA]/35 bg-[#26A5DA]/8 p-1.5 shadow-sm dark:border-[#26A5DA]/40 dark:bg-[#26A5DA]/10">
+      <div className="flex flex-nowrap items-center gap-1.5 overflow-visible rounded-lg border border-border bg-card p-1.5 shadow-sm dark:bg-card">
         <SurveillanceViewTabs value={viewMode} onChange={onViewModeChange} graphsLabel={graphsLabel} treeLabel={treeLabel} />
         <span aria-hidden className="mx-1 hidden h-5 w-px shrink-0 bg-border lg:block" />
         <SurveillanceFilters filters={filters} onFilterChange={onFilterChange} sites={sites} groups={groups} />
@@ -57,7 +57,7 @@ export function SurveillanceHeaderControls({
               variant="ghost"
               size="icon"
               onClick={onToggleOrder}
-              className="h-8 w-8 shrink-0 text-muted-foreground hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
+              className="h-8 w-8 shrink-0 border border-[#26A5DA]/35 bg-[#26A5DA]/8 text-[#0B5F86] shadow-sm transition-[background-color,border-color,color,box-shadow] duration-200 ease-out hover:border-[#26A5DA]/55 hover:bg-[#26A5DA]/14 hover:text-[#075776] focus-visible:ring-2 focus-visible:ring-[#26A5DA]/30 dark:border-[#26A5DA]/45 dark:bg-[#26A5DA]/12 dark:text-sky-100"
               data-testid="button-toggle-surveillance-order"
             >
               <ArrowUpDown className="h-4 w-4" />
@@ -69,7 +69,7 @@ export function SurveillanceHeaderControls({
               variant="outline"
               size="sm"
               onClick={onOpenOverlay}
-              className="h-8 min-h-8 gap-1.5 border-border bg-card px-2.5 text-xs text-foreground shadow-sm hover:border-[hsl(var(--border-strong))] hover:bg-muted/30 focus-visible:ring-2 focus-visible:ring-ring"
+              className="h-8 min-h-8 gap-1.5 border-[#26A5DA]/35 bg-[#26A5DA]/8 px-2.5 text-xs text-[#0B5F86] shadow-sm transition-[background-color,border-color,color,box-shadow] duration-200 ease-out hover:border-[#26A5DA]/55 hover:bg-[#26A5DA]/14 hover:text-[#075776] focus-visible:ring-2 focus-visible:ring-[#26A5DA]/30 dark:border-[#26A5DA]/45 dark:bg-[#26A5DA]/12 dark:text-sky-100"
               data-testid="button-open-overlay-curves"
             >
               <Layers3 className="h-4 w-4" />
@@ -81,7 +81,7 @@ export function SurveillanceHeaderControls({
               variant="secondary"
               size="sm"
               onClick={onRefresh}
-              className="h-8 min-h-8 gap-1.5 border-border bg-card px-2.5 text-xs text-foreground shadow-sm hover:border-[hsl(var(--border-strong))] hover:bg-muted/30 focus-visible:ring-2 focus-visible:ring-ring"
+              className="h-8 min-h-8 gap-1.5 border-[#26A5DA]/35 bg-[#26A5DA]/8 px-2.5 text-xs text-[#0B5F86] shadow-sm transition-[background-color,border-color,color,box-shadow] duration-200 ease-out hover:border-[#26A5DA]/55 hover:bg-[#26A5DA]/14 hover:text-[#075776] focus-visible:ring-2 focus-visible:ring-[#26A5DA]/30 dark:border-[#26A5DA]/45 dark:bg-[#26A5DA]/12 dark:text-sky-100"
               disabled={isRefreshing}
               data-testid="button-refresh-surveillance"
             >
