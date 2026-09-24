@@ -26,7 +26,9 @@ jobs:
 
       - name: Diff check
         working-directory: .
-        run: git diff --check origin/dev...HEAD
+        run: |
+          git fetch origin dev:refs/remotes/origin/dev
+          git diff --check origin/dev...HEAD
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
