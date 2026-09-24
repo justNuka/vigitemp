@@ -3226,7 +3226,7 @@ Fichiers principaux :
 
 ### R23-005-C — Emails d'alarme et formulation Paramètres
 
-**Statut : `EN_COURS` — branche `fix/alarm-email-notifications` — base `dev` `a644a7f065d8cacc1626da5af37f540692665eab`**
+**Statut : `PR_OUVERTE` — branche `fix/alarm-email-notifications` — PR #152 — base `dev` `a644a7f065d8cacc1626da5af37f540692665eab`**
 
 Retours :
 
