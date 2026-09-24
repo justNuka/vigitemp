@@ -3328,6 +3328,21 @@ Retours :
 - le profil par défaut conserve exactement les valeurs historiques : vitesse 0,1, pan 10 px et `minRange` de 60 s ;
 - Web passé en **1.8.11**.
 
+#### Validation automatisée
+
+GitHub Actions run `35994624820` : **succès complet**.
+
+- [x] `git diff --check origin/dev...HEAD` ;
+- [x] installation `pnpm` avec lockfile figé ;
+- [x] génération Prisma MySQL ;
+- [x] `pnpm test:alarm-analysis-chart-ux` ;
+- [x] ESLint ciblé sur le graphe partagé, le parcours d'analyse et le test ;
+- [x] contrôle i18n sans nouvelle dette dans les fichiers du lot ;
+- [x] build production Next.js sur MySQL ;
+- [x] génération Prisma SQL Server ;
+- [x] TypeScript `--noEmit` sur SQL Server ;
+- [x] workflow temporaire retiré du diff final.
+
 Fichiers principaux :
 
 - `website/src/components/monitoring-details/monitoring-graph-tab.tsx` ;
