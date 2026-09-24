@@ -1,6 +1,6 @@
 'use client'
 
-import { useId, useMemo, useRef } from 'react'
+import { useEffect, useId, useMemo, useState } from 'react'
 import { CircleHelp, TimerReset, Zap } from 'lucide-react'
 import { m, useReducedMotion } from 'motion/react'
 import { useLocale, useTranslations } from 'next-intl'
@@ -35,7 +35,7 @@ export function LocationAlarmPreview({
   const localeTag = locale === 'fr' ? 'fr-FR' : locale
   const reduceMotion = useReducedMotion()
   const gradientId = useId().replace(/:/g, '')
-  const fallbackDomainRef = useRef<{ key: string; min: number; max: number } | null>(null)
+  const [stableDomain, setStableDomain] = useState<{ key: string; min: number; max: number } | null>(null)
   const { watch } = useFormContext<LocationFormData>()
   const data = watch()
 
@@ -168,7 +168,7 @@ export function LocationAlarmPreview({
   ])
 
   const domainKey = `${sensorRange?.min ?? 'na'}|${sensorRange?.max ?? 'na'}|${unit}`
-  const domain = useMemo(() => {
+  const candidateDomain = useMemo(() => {
     const rangeMin = finite(sensorRange?.min)
     const rangeMax = finite(sensorRange?.max)
     const values = lines.map((line) => line.value)
@@ -185,38 +185,46 @@ export function LocationAlarmPreview({
       return { min: -1, max: 1 }
     }
 
-    let nextMin = Math.min(...values)
-    let nextMax = Math.max(...values)
-    if (nextMin === nextMax) {
-      nextMin -= 1
-      nextMax += 1
+    let min = Math.min(...values)
+    let max = Math.max(...values)
+    if (min === max) {
+      min -= 1
+      max += 1
     }
-    const initialPadding = Math.max((nextMax - nextMin) * 0.18, 0.5)
-    nextMin -= initialPadding
-    nextMax += initialPadding
+    const padding = Math.max((max - min) * 0.18, 0.5)
+    return { min: min - padding, max: max + padding }
+  }, [lines, sensorRange?.max, sensorRange?.min])
 
-    const current = fallbackDomainRef.current
-    if (!current || current.key !== domainKey) {
-      fallbackDomainRef.current = { key: domainKey, min: nextMin, max: nextMax }
-      return { min: nextMin, max: nextMax }
-    }
+  useEffect(() => {
+    const values = lines.map((line) => line.value)
+    setStableDomain((current) => {
+      if (!current || current.key !== domainKey) {
+        return { key: domainKey, ...candidateDomain }
+      }
 
-    // Never shrink the scale while the form is open: editing one threshold
-    // must not visually move every other guide line. Expand only when needed.
-    let stableMin = current.min
-    let stableMax = current.max
-    const liveMin = Math.min(...values)
-    const liveMax = Math.max(...values)
-    const currentSpan = Math.max(stableMax - stableMin, 1)
-    const expansion = Math.max(currentSpan * 0.08, 0.5)
-    if (liveMin < stableMin) stableMin = liveMin - expansion
-    if (liveMax > stableMax) stableMax = liveMax + expansion
+      if (values.length === 0) return current
 
-    if (stableMin !== current.min || stableMax !== current.max) {
-      fallbackDomainRef.current = { key: domainKey, min: stableMin, max: stableMax }
-    }
-    return { min: stableMin, max: stableMax }
-  }, [domainKey, lines, sensorRange?.max, sensorRange?.min])
+      // Never shrink the scale while the form is open: editing one threshold
+      // must not visually move every other guide line. Expand only when needed.
+      let min = current.min
+      let max = current.max
+      const liveMin = Math.min(...values)
+      const liveMax = Math.max(...values)
+      const currentSpan = Math.max(max - min, 1)
+      const expansion = Math.max(currentSpan * 0.08, 0.5)
+      if (liveMin < min) min = liveMin - expansion
+      if (liveMax > max) max = liveMax + expansion
+
+      return min === current.min && max === current.max
+        ? current
+        : { key: current.key, min, max }
+    })
+  }, [candidateDomain, domainKey, lines])
+
+  const domain =
+    stableDomain?.key === domainKey
+      ? { min: stableDomain.min, max: stableDomain.max }
+      : candidateDomain
 
   const y = (value: number) => {
     const ratio = (value - domain.min) / Math.max(domain.max - domain.min, 0.0001)
