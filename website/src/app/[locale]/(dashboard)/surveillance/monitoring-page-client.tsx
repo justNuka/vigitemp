@@ -812,6 +812,14 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
   // which causes the app to fetch *every* page (and therefore "all sensors").
   // We keep manual "Charger plus" only.
 
+  const statusChipClass = (active: boolean) =>
+    cn(
+      "inline-flex h-7 items-center gap-1.5 whitespace-nowrap rounded-full border px-2.5 text-xs font-medium tabular-nums transition-[background-color,border-color,color] duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+      active
+        ? "border-foreground/70 bg-foreground text-background"
+        : "border-border bg-card text-foreground hover:border-[hsl(var(--border-strong))]",
+    );
+
   return (
     <>
       <PageHeader
@@ -833,11 +841,9 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
                     <button
                       type="button"
                       onClick={() => handleStatusFilterToggle("disabled")}
-                      className={cn(
-                        "inline-flex items-center gap-1.5 rounded-full bg-slate-50 px-3 py-1 font-medium text-slate-700 dark:bg-slate-500/10 dark:text-slate-300 hover:shadow-sm hover:-translate-y-0.5 transition-all duration-150",
-                        filters.statusFilter === "disabled" && "ring-2 ring-slate-400 ring-offset-1 dark:ring-slate-300",
-                      )}
+                      className={statusChipClass(filters.statusFilter === "disabled")}
                     >
+                      <span className="h-2 w-2 rounded-full bg-[hsl(var(--status-inactive))]" aria-hidden="true" />
                       {t("stats.disabled", { count: displayedVisibleStats.disabled })}
                     </button>
                   </TooltipTrigger>
@@ -848,12 +854,9 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
                     <button
                       type="button"
                       onClick={() => handleStatusFilterToggle("ok")}
-                      className={cn(
-                        "inline-flex items-center gap-1.5 rounded-full bg-blue-50 px-3 py-1 font-medium text-blue-700 dark:bg-blue-500/10 dark:text-blue-300 hover:shadow-sm hover:-translate-y-0.5 transition-all duration-150",
-                        filters.statusFilter === "ok" && "ring-2 ring-blue-400 ring-offset-1 dark:ring-blue-300",
-                      )}
+                      className={statusChipClass(filters.statusFilter === "ok")}
                     >
-                      <span className="h-2 w-2 rounded-full bg-blue-500" aria-hidden="true" />
+                      <span className="h-2 w-2 rounded-full bg-[hsl(var(--status-ok))]" aria-hidden="true" />
                       {t("stats.ok", { count: displayedVisibleStats.ok })}
                     </button>
                   </TooltipTrigger>
@@ -864,12 +867,9 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
                     <button
                       type="button"
                       onClick={() => handleStatusFilterToggle("preAlarm")}
-                      className={cn(
-                        "inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-3 py-1 font-medium text-amber-700 dark:bg-amber-500/10 dark:text-amber-400 hover:shadow-sm hover:-translate-y-0.5 transition-all duration-150",
-                        filters.statusFilter === "preAlarm" && "ring-2 ring-amber-400 ring-offset-1 dark:ring-amber-300",
-                      )}
+                      className={statusChipClass(filters.statusFilter === "preAlarm")}
                     >
-                      <span className="h-2 w-2 rounded-full bg-amber-500" aria-hidden="true" />
+                      <span className="h-2 w-2 rounded-full bg-[hsl(var(--status-warning))]" aria-hidden="true" />
                       {t("stats.pre_alarm", { count: displayedVisibleStats.preAlarm })}
                     </button>
                   </TooltipTrigger>
@@ -880,12 +880,9 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
                     <button
                       type="button"
                       onClick={() => handleStatusFilterToggle("ended")}
-                      className={cn(
-                        "inline-flex items-center gap-1.5 rounded-full bg-violet-50 px-3 py-1 font-medium text-violet-700 dark:bg-violet-500/10 dark:text-violet-300 hover:shadow-sm hover:-translate-y-0.5 transition-all duration-150",
-                        filters.statusFilter === "ended" && "ring-2 ring-violet-400 ring-offset-1 dark:ring-violet-300",
-                      )}
+                      className={statusChipClass(filters.statusFilter === "ended")}
                     >
-                      <span className="h-2 w-2 rounded-full bg-violet-500" aria-hidden="true" />
+                      <span className="h-2 w-2 rounded-full bg-[hsl(var(--status-ended))]" aria-hidden="true" />
                       {t("stats.ended", { count: displayedVisibleStats.ended })}
                     </button>
                   </TooltipTrigger>
@@ -896,13 +893,10 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
                     <button
                       type="button"
                       onClick={() => handleStatusFilterToggle("critical")}
-                      className={cn(
-                        "inline-flex items-center gap-1.5 rounded-full bg-red-50 px-3 py-1 font-medium text-red-700 dark:bg-red-500/10 dark:text-red-400 hover:shadow-sm hover:-translate-y-0.5 transition-all duration-150",
-                        filters.statusFilter === "critical" && "ring-2 ring-red-400 ring-offset-1 dark:ring-red-300",
-                      )}
+                      className={statusChipClass(filters.statusFilter === "critical")}
                     >
                       <span
-                        className={cn("h-2 w-2 rounded-full bg-red-500", displayedVisibleStats.critical > 0 && "animate-pulse")}
+                        className={cn("h-2 w-2 rounded-full bg-[hsl(var(--status-critical))]", displayedVisibleStats.critical > 0 && "animate-pulse")}
                         aria-hidden="true"
                       />
                       {t("stats.critical", { count: displayedVisibleStats.critical })}
