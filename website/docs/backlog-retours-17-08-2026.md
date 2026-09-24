@@ -3203,6 +3203,17 @@ Fichiers principaux :
 - `website/src/messages/supplements.ts` ;
 - `docs/guide-utilisateur-vigisensys.md`.
 
+#### Validation automatisée
+
+GitHub Actions run `35984641463` : **succès**.
+
+- [x] installation `pnpm --frozen-lockfile` ;
+- [x] ESLint ciblé sur le header de card et les supplements i18n ;
+- [x] contrôle i18n : dette globale préexistante identifiée hors lot, aucune nouvelle dette dans les fichiers modifiés ;
+- [x] génération des clients Prisma MySQL ;
+- [x] build production Next.js ;
+- [x] workflow temporaire retiré du diff final.
+
 #### Validation terrain
 
 - [ ] vérifier une card avec sonde : le lieu doit être immédiatement plus visible que le numéro de série ;
