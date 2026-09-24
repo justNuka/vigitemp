@@ -3257,3 +3257,53 @@ Les lots restent séquentiels afin que chaque branche parte du `dev` effectiveme
 7. **G — card métrologie**.
 
 L'ordre pourra être ajusté sur demande, mais aucune branche suivante ne doit être créée depuis un `dev` obsolète.
+
+---
+
+## R24-001 — Métrologie : port série bloqué en `queued` après une interrogation
+
+**Statut : `EN_COURS` — branche `fix/metrology-port-lock-deadlock` — base `dev` `f4fbf7d7e709cabb47baa2c571b5fa4fb0866312`**
+
+### Retour — 24/09/2026
+
+Lors d'une lecture de sonde en Étalonnage, le Serveur pouvait rester sur :
+
+- `[ETALONNAGE][LOCK] status=queued ... action=read-config; priority=surveillance-first` ;
+- `[ETALONNAGE][LOCK] status=queued ... action=read; priority=surveillance-first`.
+
+Le défaut persistait alors que toutes les GSP de Surveillance du banc avaient été désactivées : aucune valeur de métrologie n'arrivait et le port série n'était jamais repris par l'opération.
+
+### Diagnostic
+
+Le verrou global du port était acquis une première fois par `ThreadServeur.RunWithPortLockAsync`, puis une seconde fois dans `Sensor.ExecuteWithPortLockAsync`.
+
+Cette acquisition imbriquée utilisait un `Mutex` Windows, dont le propriétaire est le thread. Comme les lectures de sondes contiennent des `await`, la continuation pouvait reprendre sur un autre thread ; `ReleaseMutex()` échouait alors pour la seconde acquisition. L'exception était ignorée et le mutex global pouvait rester détenu indéfiniment.
+
+### Correctif en cours
+
+- conserver le mutex global dans `ThreadServeur.RunWithPortLockAsync`, qui arbitre Surveillance / Hotline / métrologie ;
+- supprimer la seconde acquisition du même mutex dans `Sensor.ExecuteWithPortLockAsync` ;
+- conserver dans `Sensor` uniquement le `SemaphoreSlim` local async-compatible ;
+- ne modifier ni les trames GSP ni la logique métier de lecture ;
+- passer Serveur + installateur en **1.1.1** ;
+- documenter la validation terrain dans `website/docs/metrology-retours-26-08-2026.md`.
+
+### Fichiers principaux
+
+- `Vigitemp Serveur/Vigitemp Serveur/Sensor.cs` ;
+- `Vigitemp Serveur/Vigitemp Serveur/Properties/AssemblyInfo.cs` ;
+- `Vigitemp Serveur/VigitempServerInstaller/VigitempServerInstaller.csproj` ;
+- `Vigitemp Serveur/CHANGELOG.md` ;
+- `CHANGELOG.md` ;
+- `website/docs/metrology-retours-26-08-2026.md`.
+
+### Validation terrain
+
+- [ ] redémarrer le service avec le binaire corrigé pour repartir sans mutex résiduel de l'ancienne version ;
+- [ ] vérifier une lecture métrologie sans GSP Surveillance active sur le port : acquisition immédiate ;
+- [ ] vérifier une lecture lancée pendant une mesure Surveillance : attente, puis `dequeued` et lecture ;
+- [ ] enchaîner plusieurs lectures sur le même port sans redémarrage ;
+- [ ] valider Ajustage et Étalonnage ;
+- [ ] valider plusieurs GSP sur le même module/COM ;
+- [ ] confirmer la reprise normale de la Surveillance après l'opération.
+
