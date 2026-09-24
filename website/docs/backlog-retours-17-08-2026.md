@@ -3476,6 +3476,21 @@ Retours de la capture :
 - le layout reste mono-colonne sur les petites largeurs ;
 - Web passé en **1.8.13**.
 
+#### Validation automatisée
+
+GitHub Actions run `36000641813` : **succès complet**.
+
+- [x] `git diff --check origin/dev...HEAD` ;
+- [x] installation `pnpm` avec lockfile figé ;
+- [x] génération Prisma MySQL ;
+- [x] `pnpm test:user-edit-profile-selection` ;
+- [x] ESLint ciblé sur le mapper, la modal, le client utilisateurs et le test ;
+- [x] contrôle i18n sans nouvelle dette dans les fichiers du lot ;
+- [x] build production Next.js sur MySQL ;
+- [x] génération Prisma SQL Server ;
+- [x] TypeScript `--noEmit` sur SQL Server ;
+- [x] workflow temporaire retiré du diff final.
+
 Fichiers principaux :
 
 - `website/src/app/[locale]/(admin)/admin/utilisateurs/_components/user-mappers.ts` ;
