@@ -8,7 +8,39 @@ Les versions suivent `MAJOR.MINOR.PATCH` sans zéros de tête. La source de vers
 
 ## [Unreleased]
 
-Aucun changement supplémentaire documenté depuis la préparation de la version Web 1.8.9.
+Aucun changement supplémentaire documenté depuis la préparation de la version Web 1.8.10.
+
+## [1.8.10] — 2026-09-24
+
+Cette version fiabilise les emails d'alarme et clarifie les libellés de destinataires dans Administration > Paramètres.
+
+### Seuils critiques
+
+- Un déclenchement H/B dont la valeur dépasse un **seuil critique actif** utilise désormais un template d'email dédié, distinct du template d'alarme standard.
+- Le template met en avant le seuil critique, la valeur mesurée, le sens haut/bas, le lieu, la sonde, l'heure et la courbe disponible.
+- La détection conserve les types métier historiques `H` / `B` et applique les mêmes comparaisons strictes que le Serveur : `>` pour le seuil critique haut et `<` pour le seuil critique bas.
+- Le sujet devient explicitement **SEUIL CRITIQUE DÉPASSÉ** / **CRITICAL THRESHOLD EXCEEDED**.
+
+### Fin de non-réponse
+
+- Les emails de fin d'alarme `N` ne forcent plus « Dernière valeur : N/A ».
+- Le Web recharge la mesure valide non nulle de reprise depuis `tm_mesures` et utilise sa valeur/unité/date dans l'email.
+- La fin de non-réponse étant dispatchée par le Serveur avant l'insertion de la mesure GSP, le Web applique une courte fenêtre de retry (5 lectures espacées de 100 ms) à partir de `Date_Heure_Fin` afin d'éviter une course intermittente vers `N/A`.
+- Une indisponibilité ponctuelle de la base Mesures n'empêche pas l'envoi de la notification : le fallback historique reste utilisé et l'erreur est journalisée.
+- Si aucune mesure valide n'est disponible, le fallback `N/A` historique reste conservé.
+
+### Paramètres / i18n
+
+- Les formulations « emails système » sont remplacées par **destinataires globaux** / **global recipients** dans l'onglet Alarmes & notifications.
+- Le helper SMTP parle désormais de **notifications automatiques** au lieu d'« emails système ».
+- Les libellés anglais encore restés en français dans le template générique d'alarme sont corrigés.
+- Un test ciblé couvre la détection des seuils critiques, le rendu du nouveau template et le contrat de récupération de la mesure de reprise.
+
+### Compatibilité
+
+- Version Web : **1.8.10**.
+- Serveur **1.1.1**, Agent **1.0.1** et BDD **0.91.1** restent inchangés.
+- Aucune migration BDD n'est requise.
 
 ## [1.8.9] — 2026-09-24
 

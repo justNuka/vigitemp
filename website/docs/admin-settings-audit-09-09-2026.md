@@ -69,7 +69,7 @@ Les cartes ayant leur propre API ou leur propre modèle de données gardent une 
 
 Aucun de ces réglages ne doit être persisté par le simple changement d'un switch/select/input.
 
-### 5. Emails système en copie affichés à `false`
+### 5. Destinataires globaux en copie affichés à `false`
 
 Certaines installations historiques peuvent contenir la chaîne `false` dans `NOTIFICATIONS:ALARM_EMAIL_RECIPIENTS` lorsqu'aucune adresse n'est configurée.
 
@@ -78,6 +78,7 @@ Après correctif :
 - l'interface affiche un champ vide pour `false`, `0`, `off` ou `no` ;
 - le moteur d'envoi ignore également ces anciennes valeurs sentinelles au lieu de les interpréter comme une adresse email ;
 - une saisie puis suppression du contenu permet de normaliser la valeur persistée vers une chaîne vide lors de l'enregistrement suivant.
+- l'interface emploie désormais le vocabulaire métier **destinataires globaux en copie** et **destinataires globaux de secours**, sans exposer la formulation technique « emails système ».
 
 Fichiers :
 

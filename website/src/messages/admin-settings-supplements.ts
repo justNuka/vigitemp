@@ -26,7 +26,7 @@ export const frAdminSettingsSupplements: MessageCatalog = {
       activation: {
         label: "Activer l'envoi d'emails",
         helper:
-          "Interrupteur global pour tous les emails VigiSensys (alarmes, réinitialisation de mot de passe et emails système). La configuration SMTP peut rester enregistrée lorsque l'envoi est désactivé.",
+          "Interrupteur global pour tous les emails VigiSensys (alarmes, réinitialisation de mot de passe et notifications automatiques). La configuration SMTP peut rester enregistrée lorsque l'envoi est désactivé.",
       },
       verification: {
         currently_confirmed:
@@ -83,7 +83,7 @@ export const enAdminSettingsSupplements: MessageCatalog = {
       activation: {
         label: "Enable email sending",
         helper:
-          "Global switch for all VigiSensys emails (alarms, password resets and system emails). SMTP settings remain saved when email sending is disabled.",
+          "Global switch for all VigiSensys emails (alarms, password resets and automated notifications). SMTP settings remain saved when email sending is disabled.",
       },
       verification: {
         currently_confirmed:

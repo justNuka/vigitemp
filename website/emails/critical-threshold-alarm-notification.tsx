@@ -14,128 +14,115 @@ import {
 } from "@react-email/components";
 
 type Locale = "fr" | "en";
+type CriticalDirection = "high" | "low";
 
-type AlarmEventEmailProps = {
-  eventType: "triggered" | "ended" | "acknowledged";
+type CriticalThresholdAlarmEmailProps = {
   locale?: Locale;
   site?: string;
   lieu: string;
   sonde?: string;
   alarmType: string;
   triggeredAt?: string;
-  endedAt?: string;
-  acknowledgedAt?: string;
-  acknowledgedBy?: string;
-  lastValue?: string;
+  measuredValue?: string;
+  criticalThreshold: string;
+  direction: CriticalDirection;
   details?: string;
   alarmUrl?: string;
   chartSrc?: string;
 };
 
-const EVENT_LABEL: Record<Locale, Record<AlarmEventEmailProps["eventType"], string>> = {
+const COPY = {
   fr: {
-    triggered: "ALARME DECLENCHEE",
-    ended: "ALARME TERMINEE",
-    acknowledged: "ALARME ACQUITTEE",
-  },
-  en: {
-    triggered: "ALARM TRIGGERED",
-    ended: "ALARM ENDED",
-    acknowledged: "ALARM ACKNOWLEDGED",
-  },
-};
-
-const EVENT_COLOR: Record<AlarmEventEmailProps["eventType"], string> = {
-  triggered: "#dc2626",
-  ended: "#7c3aed",
-  acknowledged: "#0284c7",
-};
-
-const COPY: Record<Locale, Record<string, string>> = {
-  fr: {
-    subjectPrefix: "[VIGISENSYS]",
-    title: "Notification d'alarme VigiSensys",
+    preview: "SEUIL CRITIQUE DEPASSE",
+    title: "Seuil critique dépassé",
+    subtitle: "Déclenchement immédiat d'une alarme VigiSensys",
     site: "Site",
     lieu: "Lieu",
     sonde: "Sonde",
     type: "Type",
-    triggeredAt: "Triggered at",
-    endedAt: "Date fin",
-    acknowledgedAt: "Date acquittement",
-    acknowledgedBy: "Acknowledged by",
-    lastValue: "Last value",
-    details: "Details",
+    triggeredAt: "Date de déclenchement",
+    measuredValue: "Valeur mesurée",
+    highThreshold: "Seuil critique haut",
+    lowThreshold: "Seuil critique bas",
+    details: "Détails",
     chart: "Courbe (extrait)",
     openAlarmPage: "Ouvrir la page des alarmes",
-    fallbackLink: "Si le bouton ne fonctionne pas, utilisez ce lien:",
-    noReply: "This email was sent automatically. Please do not reply.",
-    brand: "Environmental monitoring system",
+    fallbackLink: "Si le bouton ne fonctionne pas, utilisez ce lien :",
+    noReply: "Email automatique - merci de ne pas y répondre.",
+    brand: "Système de surveillance environnementale",
   },
   en: {
-    subjectPrefix: "[VIGISENSYS]",
-    title: "VigiSensys alarm notification",
+    preview: "CRITICAL THRESHOLD EXCEEDED",
+    title: "Critical threshold exceeded",
+    subtitle: "Immediate VigiSensys alarm trigger",
     site: "Site",
     lieu: "Location",
     sonde: "Sensor",
     type: "Type",
-    triggeredAt: "Date d\u00E9clenchement",
-    endedAt: "Ended at",
-    acknowledgedAt: "Acknowledged at",
-    acknowledgedBy: "Acquitt\u00E9e par",
-    lastValue: "Derni\u00E8re valeur",
-    details: "D\u00E9tails",
+    triggeredAt: "Triggered at",
+    measuredValue: "Measured value",
+    highThreshold: "High critical threshold",
+    lowThreshold: "Low critical threshold",
+    details: "Details",
     chart: "Chart (snapshot)",
     openAlarmPage: "Open alarms page",
     fallbackLink: "If the button does not work, use this link:",
-    noReply: "Email automatique - merci de ne pas y r\u00E9pondre.",
-    brand: "Syst\u00E8me de surveillance environnementale",
+    noReply: "This email was sent automatically. Please do not reply.",
+    brand: "Environmental monitoring system",
   },
-};
+} as const;
 
-export default function AlarmEventNotificationEmail({
-  eventType,
+export default function CriticalThresholdAlarmNotificationEmail({
   locale = "fr",
   site,
   lieu,
   sonde,
   alarmType,
   triggeredAt,
-  endedAt,
-  acknowledgedAt,
-  acknowledgedBy,
-  lastValue,
+  measuredValue,
+  criticalThreshold,
+  direction,
   details,
   alarmUrl,
   chartSrc,
-}: AlarmEventEmailProps) {
+}: CriticalThresholdAlarmEmailProps) {
   const lang: Locale = locale === "en" ? "en" : "fr";
   const copy = COPY[lang];
-  const eventLabel = EVENT_LABEL[lang][eventType];
-  const accent = EVENT_COLOR[eventType];
+  const thresholdLabel = direction === "high" ? copy.highThreshold : copy.lowThreshold;
 
   return (
     <Html>
       <Head />
-      <Preview>{`${copy.subjectPrefix} ${eventLabel} - ${lieu}`}</Preview>
+      <Preview>{`[VIGISENSYS] ${copy.preview} - ${lieu}`}</Preview>
       <Body style={styles.body}>
         <Container style={styles.container}>
-          <Section style={{ ...styles.header, borderTop: `4px solid ${accent}` }}>
-            <Text style={styles.kicker}>VIGISENSYS</Text>
+          <Section style={styles.header}>
+            <Text style={styles.kicker}>VIGISENSYS · CRITICAL</Text>
             <Heading style={styles.headerTitle}>{copy.title}</Heading>
-            <Text style={{ ...styles.headerSubtitle, color: accent }}>{eventLabel}</Text>
+            <Text style={styles.headerSubtitle}>{copy.subtitle}</Text>
           </Section>
 
           <Section style={styles.content}>
+            <Section style={styles.criticalCard}>
+              <Text style={styles.criticalLabel}>{thresholdLabel}</Text>
+              <Text style={styles.criticalValue}>{criticalThreshold}</Text>
+              {measuredValue ? (
+                <Text style={styles.measuredValue}>
+                  <strong>{copy.measuredValue}:</strong> {measuredValue}
+                </Text>
+              ) : null}
+            </Section>
+
             <Section style={styles.infoCard}>
               <Text style={styles.infoRow}><strong>{copy.site}:</strong> {site || "-"}</Text>
               <Text style={styles.infoRow}><strong>{copy.lieu}:</strong> {lieu}</Text>
               <Text style={styles.infoRow}><strong>{copy.sonde}:</strong> {sonde || "-"}</Text>
               <Text style={styles.infoRow}><strong>{copy.type}:</strong> {alarmType}</Text>
-              {triggeredAt ? <Text style={styles.infoRow}><strong>{copy.triggeredAt}:</strong> {triggeredAt}</Text> : null}
-              {endedAt ? <Text style={styles.infoRow}><strong>{copy.endedAt}:</strong> {endedAt}</Text> : null}
-              {acknowledgedAt ? <Text style={styles.infoRow}><strong>{copy.acknowledgedAt}:</strong> {acknowledgedAt}</Text> : null}
-              {acknowledgedBy ? <Text style={styles.infoRow}><strong>{copy.acknowledgedBy}:</strong> {acknowledgedBy}</Text> : null}
-              {lastValue ? <Text style={{ ...styles.infoRow, marginBottom: 0 }}><strong>{copy.lastValue}:</strong> {lastValue}</Text> : null}
+              {triggeredAt ? (
+                <Text style={{ ...styles.infoRow, marginBottom: 0 }}>
+                  <strong>{copy.triggeredAt}:</strong> {triggeredAt}
+                </Text>
+              ) : null}
             </Section>
 
             {details ? (
@@ -148,13 +135,13 @@ export default function AlarmEventNotificationEmail({
             {chartSrc ? (
               <Section style={styles.chartCard}>
                 <Text style={styles.detailsTitle}>{copy.chart}</Text>
-                <Img src={chartSrc} alt="Alarm chart" width="560" style={styles.chartImg} />
+                <Img src={chartSrc} alt="Critical alarm chart" width="560" style={styles.chartImg} />
               </Section>
             ) : null}
 
             {alarmUrl ? (
               <Section style={{ textAlign: "center", marginTop: "16px" }}>
-                <Button href={alarmUrl} style={{ ...styles.button, backgroundColor: accent }}>
+                <Button href={alarmUrl} style={styles.button}>
                   {copy.openAlarmPage}
                 </Button>
               </Section>
@@ -162,12 +149,8 @@ export default function AlarmEventNotificationEmail({
 
             {alarmUrl ? (
               <Section style={styles.linkBlock}>
-                <Text style={styles.linkHint}>
-                  {copy.fallbackLink}
-                </Text>
-                <Link href={alarmUrl} style={styles.link}>
-                  {alarmUrl}
-                </Link>
+                <Text style={styles.linkHint}>{copy.fallbackLink}</Text>
+                <Link href={alarmUrl} style={styles.link}>{alarmUrl}</Link>
               </Section>
             ) : null}
 
@@ -179,9 +162,7 @@ export default function AlarmEventNotificationEmail({
             <Text style={styles.footerBrand}>
               <strong>VigiSensys</strong> - {copy.brand}
               <br />
-              <Link href="https://www.mc2lab.fr" style={styles.footerLink}>
-                MC2 Lab
-              </Link>
+              <Link href="https://www.mc2lab.fr" style={styles.footerLink}>MC2 Lab</Link>
             </Text>
           </Section>
         </Container>
@@ -192,7 +173,7 @@ export default function AlarmEventNotificationEmail({
 
 const styles = {
   body: {
-    backgroundColor: "#f5f7fb",
+    backgroundColor: "#f8fafc",
     fontFamily: "Arial, sans-serif",
     margin: "0",
     padding: "24px 8px",
@@ -201,36 +182,62 @@ const styles = {
     maxWidth: "640px",
     margin: "0 auto",
     backgroundColor: "#ffffff",
-    border: "1px solid #e5e7eb",
+    border: "1px solid #fecaca",
     borderRadius: "10px",
     overflow: "hidden",
   },
   header: {
-    backgroundColor: "#0f172a",
-    padding: "16px 20px",
+    backgroundColor: "#450a0a",
+    borderTop: "5px solid #ef4444",
+    padding: "18px 20px",
   },
   kicker: {
-    color: "#93c5fd",
+    color: "#fca5a5",
     fontSize: "11px",
-    letterSpacing: "1.1px",
+    fontWeight: "700",
+    letterSpacing: "1.2px",
     margin: "0 0 6px 0",
-    textTransform: "uppercase" as const,
   },
   headerTitle: {
     color: "#ffffff",
-    fontSize: "20px",
+    fontSize: "22px",
     margin: 0,
   },
   headerSubtitle: {
+    color: "#fecaca",
     fontSize: "13px",
-    fontWeight: "700",
     margin: "8px 0 0 0",
   },
   content: {
     padding: "18px 20px",
   },
+  criticalCard: {
+    backgroundColor: "#fef2f2",
+    border: "1px solid #fca5a5",
+    borderRadius: "8px",
+    padding: "14px 16px",
+    textAlign: "center" as const,
+  },
+  criticalLabel: {
+    color: "#991b1b",
+    fontSize: "12px",
+    fontWeight: "700",
+    margin: "0 0 5px 0",
+    textTransform: "uppercase" as const,
+  },
+  criticalValue: {
+    color: "#7f1d1d",
+    fontSize: "28px",
+    fontWeight: "800",
+    margin: 0,
+  },
+  measuredValue: {
+    color: "#991b1b",
+    fontSize: "14px",
+    margin: "8px 0 0 0",
+  },
   infoCard: {
-    marginTop: "0",
+    marginTop: "12px",
     backgroundColor: "#f9fafb",
     border: "1px solid #e5e7eb",
     borderRadius: "8px",
@@ -274,6 +281,7 @@ const styles = {
     border: "1px solid #e5e7eb",
   },
   button: {
+    backgroundColor: "#b91c1c",
     color: "#ffffff",
     borderRadius: "6px",
     padding: "10px 14px",
@@ -295,7 +303,7 @@ const styles = {
     fontSize: "12px",
   },
   link: {
-    color: "#0284c7",
+    color: "#b91c1c",
     fontSize: "12px",
     wordBreak: "break-all" as const,
     textDecoration: "none",
@@ -323,21 +331,21 @@ const styles = {
     lineHeight: "1.45",
   },
   footerLink: {
-    color: "#0284c7",
+    color: "#b91c1c",
     textDecoration: "none",
   },
 };
 
-AlarmEventNotificationEmail.PreviewProps = {
-  eventType: "triggered",
+CriticalThresholdAlarmNotificationEmail.PreviewProps = {
   locale: "fr",
   site: "AUBIERE",
-  lieu: "TEST_GSO-RDC",
-  sonde: "10007203",
+  lieu: "Chambre froide 01",
+  sonde: "SPNB-26000059",
   alarmType: "ALARME HAUTE",
-  triggeredAt: "Date d\u00E9clenchement",
-  lastValue: "Derni\u00E8re valeur",
-  details: "D\u00E9tails",
+  triggeredAt: "24/09/2026 13:08:15",
+  measuredValue: "12,80°C",
+  criticalThreshold: "10,00°C",
+  direction: "high",
+  details: "Le seuil critique haut a été dépassé.",
   alarmUrl: "http://127.0.0.1:3000/fr/alarmes",
-  chartSrc: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHdpZHRoPSc2NDAnIGhlaWdodD0nMjQwJyB2aWV3Qm94PScwIDAgNjQwIDI0MCc+PHJlY3Qgd2lkdGg9JzY0MCcgaGVpZ2h0PScyNDAnIGZpbGw9JyNmZmZmZmYnLz48cmVjdCB4PScyNCcgeT0nMTYnIHdpZHRoPSc1OTInIGhlaWdodD0nMTk2JyBmaWxsPScjZjhmYWZjJyBzdHJva2U9JyNjYmQ1ZTEnLz48bGluZSB4MT0nMjQnIHkxPSc3MCcgeDI9JzYxNicgeTI9JzcwJyBzdHJva2U9JyNkYzI2MjYnIHN0cm9rZS1kYXNoYXJyYXk9JzYgNCcvPjxsaW5lIHgxPScyNCcgeTE9JzEyMCcgeDI9JzYxNicgeTI9JzEyMCcgc3Ryb2tlPScjMTExODI3Jy8+PGxpbmUgeDE9JzI0JyB5MT0nMTcwJyB4Mj0nNjE2JyB5Mj0nMTcwJyBzdHJva2U9JyNkYzI2MjYnIHN0cm9rZS1kYXNoYXJyYXk9JzYgNCcvPjxwYXRoIGQ9J00zMCAxNTAgTDkwIDE0NSBMMTUwIDEzNSBMMjEwIDk1IEwyNzAgODAgTDMzMCA4OCBMMzkwIDExMCBMNDUwIDEzMCBMNTEwIDE2MCBMNTcwIDE0MCBMNjEwIDEwMCcgZmlsbD0nbm9uZScgc3Ryb2tlPScjM2I4MmY2JyBzdHJva2Utd2lkdGg9JzIuNScvPjx0ZXh0IHg9JzYxMCcgeT0nNjYnIHRleHQtYW5jaG9yPSdlbmQnIGZvbnQtc2l6ZT0nMTEnIGZpbGw9JyNkYzI2MjYnPk1heDogMjJDPC90ZXh0Pjx0ZXh0IHg9JzYxMCcgeT0nMTE2JyB0ZXh0LWFuY2hvcj0nZW5kJyBmb250LXNpemU9JzExJyBmaWxsPScjMTExODI3Jz5Db25zaWduZTogMjBDPC90ZXh0Pjx0ZXh0IHg9JzYxMCcgeT0nMTY2JyB0ZXh0LWFuY2hvcj0nZW5kJyBmb250LXNpemU9JzExJyBmaWxsPScjZGMyNjI2Jz5NaW46IDE4QzwvdGV4dD48L3N2Zz4=",
-} as AlarmEventEmailProps;
+} as CriticalThresholdAlarmEmailProps;
