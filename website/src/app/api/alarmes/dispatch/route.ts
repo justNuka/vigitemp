@@ -253,23 +253,55 @@ async function getValidMeasurementForAlarm(input: {
   idLieu: number
   startedAt?: Date | null
   order: "asc" | "desc"
+  purpose: "critical-trigger" | "non-response-recovery"
 }) {
-  return prismaMesure.tm_mesures.findFirst({
-    where: {
-      Id_Lieu: input.idLieu,
-      Est_Valeur_Null: 0,
-      ...(input.startedAt ? { Date_Heure_Mesure: { gte: input.startedAt } } : {}),
-    },
-    orderBy: [
-      { Date_Heure_Mesure: input.order },
-      { Id_Mesure: input.order },
-    ],
-    select: {
-      Date_Heure_Mesure: true,
-      Valeur: true,
-      Unite: true,
-    },
-  })
+  try {
+    return await prismaMesure.tm_mesures.findFirst({
+      where: {
+        Id_Lieu: input.idLieu,
+        Est_Valeur_Null: 0,
+        ...(input.startedAt ? { Date_Heure_Mesure: { gte: input.startedAt } } : {}),
+      },
+      orderBy: [
+        { Date_Heure_Mesure: input.order },
+        { Id_Mesure: input.order },
+      ],
+      select: {
+        Date_Heure_Mesure: true,
+        Valeur: true,
+        Unite: true,
+      },
+    })
+  } catch (error) {
+    log.warn("ALARM_DISPATCH", "Could not load measurement context for alarm email", {
+      idLieu: input.idLieu,
+      purpose: input.purpose,
+      error: error instanceof Error ? error.message : String(error),
+    })
+    return null
+  }
+}
+
+async function getRecoveredMeasurementForEndedNoResponse(input: {
+  idLieu: number
+  recoveredAt?: Date | null
+}) {
+  const attempts = 5
+
+  for (let attempt = 0; attempt < attempts; attempt += 1) {
+    const measurement = await getValidMeasurementForAlarm({
+      idLieu: input.idLieu,
+      startedAt: input.recoveredAt,
+      order: "desc",
+      purpose: "non-response-recovery",
+    })
+    if (measurement) return measurement
+    if (attempt < attempts - 1) {
+      await new Promise((resolve) => setTimeout(resolve, 100))
+    }
+  }
+
+  return null
 }
 
 export const POST = withLogging(async (req: NextRequest) => {
@@ -428,10 +460,9 @@ export const POST = withLogging(async (req: NextRequest) => {
       let lastMeasurementAt = alarm.Date_Heure_Derniere_Mesure ?? null
 
       if (alarm.Type === "N" && isEndedAlarmDispatch && alarm.Id_Lieu) {
-        const recoveredMeasurement = await getValidMeasurementForAlarm({
+        const recoveredMeasurement = await getRecoveredMeasurementForEndedNoResponse({
           idLieu: alarm.Id_Lieu,
-          startedAt: alarm.Date_Heure_Debut,
-          order: "desc",
+          recoveredAt: alarm.Date_Heure_Fin ?? alarm.Date_Heure_Debut,
         })
         if (recoveredMeasurement?.Valeur != null) {
           displayUnit = normalizeUnit(recoveredMeasurement.Unite ?? alarm.Unite)
@@ -449,6 +480,7 @@ export const POST = withLogging(async (req: NextRequest) => {
           idLieu: alarm.Id_Lieu,
           startedAt: alarm.Date_Heure_Debut,
           order: "asc",
+          purpose: "critical-trigger",
         })
         if (triggerMeasurement?.Valeur != null && Number.isFinite(Number(triggerMeasurement.Valeur))) {
           criticalEvaluationValue = Number(triggerMeasurement.Valeur)
