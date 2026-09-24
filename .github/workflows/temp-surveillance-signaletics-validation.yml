@@ -39,5 +39,7 @@ jobs:
           if [ "$status" -ne 0 ]; then
             echo "Global i18n checker still reports pre-existing debt outside this lot."
           fi
+      - name: Generate Prisma clients
+        run: pnpm prisma:generate:mysql
       - name: Production build
         run: pnpm build
