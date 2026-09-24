@@ -1,6 +1,6 @@
 'use client'
 
-import { useId, useMemo } from 'react'
+import { useId, useMemo, useRef } from 'react'
 import { CircleHelp, TimerReset, Zap } from 'lucide-react'
 import { m, useReducedMotion } from 'motion/react'
 import { useLocale, useTranslations } from 'next-intl'
@@ -35,6 +35,7 @@ export function LocationAlarmPreview({
   const localeTag = locale === 'fr' ? 'fr-FR' : locale
   const reduceMotion = useReducedMotion()
   const gradientId = useId().replace(/:/g, '')
+  const fallbackDomainRef = useRef<{ key: string; min: number; max: number } | null>(null)
   const { watch } = useFormContext<LocationFormData>()
   const data = watch()
 
@@ -166,28 +167,56 @@ export function LocationAlarmPreview({
     target,
   ])
 
+  const domainKey = `${sensorRange?.min ?? 'na'}|${sensorRange?.max ?? 'na'}|${unit}`
   const domain = useMemo(() => {
-    const values = lines.map((line) => line.value)
-    if (values.length === 0) {
-      const rangeMin = finite(sensorRange?.min)
-      const rangeMax = finite(sensorRange?.max)
-      if (rangeMin !== null && rangeMax !== null && rangeMax > rangeMin) {
-        const center = (rangeMin + rangeMax) / 2
-        const half = Math.max((rangeMax - rangeMin) * 0.15, 1)
-        return { min: center - half, max: center + half }
-      }
-      return { min: -1, max: 1 }
+    const rangeMin = finite(sensorRange?.min)
+    const rangeMax = finite(sensorRange?.max)
+
+    if (rangeMin !== null && rangeMax !== null && rangeMax > rangeMin) {
+      const padding = Math.max((rangeMax - rangeMin) * 0.04, 0.5)
+      return { min: rangeMin - padding, max: rangeMax + padding }
     }
 
-    let min = Math.min(...values)
-    let max = Math.max(...values)
-    if (min === max) {
-      min -= 1
-      max += 1
+    const values = [
+      ...lines.map((line) => line.value),
+      ...(rangeMin !== null ? [rangeMin] : []),
+      ...(rangeMax !== null ? [rangeMax] : []),
+    ]
+
+    let nextMin = values.length > 0 ? Math.min(...values) : -1
+    let nextMax = values.length > 0 ? Math.max(...values) : 1
+    if (nextMin === nextMax) {
+      nextMin -= 1
+      nextMax += 1
     }
-    const padding = Math.max((max - min) * 0.18, 0.5)
-    return { min: min - padding, max: max + padding }
-  }, [lines, sensorRange?.max, sensorRange?.min])
+    const initialPadding = Math.max((nextMax - nextMin) * 0.18, 0.5)
+    nextMin -= initialPadding
+    nextMax += initialPadding
+
+    const current = fallbackDomainRef.current
+    if (!current || current.key !== domainKey) {
+      fallbackDomainRef.current = { key: domainKey, min: nextMin, max: nextMax }
+      return { min: nextMin, max: nextMax }
+    }
+
+    // Never shrink the fallback scale while the form is open: editing one
+    // threshold must not visually move every other guide line.
+    let stableMin = current.min
+    let stableMax = current.max
+    if (values.length > 0) {
+      const liveMin = Math.min(...values)
+      const liveMax = Math.max(...values)
+      const currentSpan = Math.max(stableMax - stableMin, 1)
+      const expansion = Math.max(currentSpan * 0.08, 0.5)
+      if (liveMin < stableMin) stableMin = liveMin - expansion
+      if (liveMax > stableMax) stableMax = liveMax + expansion
+    }
+
+    if (stableMin !== current.min || stableMax !== current.max) {
+      fallbackDomainRef.current = { key: domainKey, min: stableMin, max: stableMax }
+    }
+    return { min: stableMin, max: stableMax }
+  }, [domainKey, lines, sensorRange?.max, sensorRange?.min])
 
   const y = (value: number) => {
     const ratio = (value - domain.min) / Math.max(domain.max - domain.min, 0.0001)
@@ -221,13 +250,13 @@ export function LocationAlarmPreview({
   const points = [
     [6, baseline],
     [18, baseline],
-    [highDelayStart, highAlarmLevel + (highPeak - highAlarmLevel) * 0.12],
-    [highDelayMiddle, highAlarmLevel + (highPeak - highAlarmLevel) * 0.22],
+    [highDelayStart, highAlarmLevel],
+    [highDelayMiddle, highAlarmLevel + (highPeak - highAlarmLevel) * 0.18],
     [highDelayEnd, highAlarmLevel + (highPeak - highAlarmLevel) * 0.28],
     [54, highPeak],
     [62, baseline],
-    [lowDelayStart, lowAlarmLevel + (lowPeak - lowAlarmLevel) * 0.12],
-    [lowDelayMiddle, lowAlarmLevel + (lowPeak - lowAlarmLevel) * 0.22],
+    [lowDelayStart, lowAlarmLevel],
+    [lowDelayMiddle, lowAlarmLevel + (lowPeak - lowAlarmLevel) * 0.18],
     [lowDelayEnd, lowAlarmLevel + (lowPeak - lowAlarmLevel) * 0.28],
     [96, lowPeak],
   ] as const
@@ -287,6 +316,35 @@ export function LocationAlarmPreview({
               strokeWidth="0.45"
             />
           ))}
+
+          {normalHigh !== null ? (
+            <m.rect
+              initial={false}
+              animate={{ x: highDelayStart, width: Math.max(0, highDelayEnd - highDelayStart) }}
+              transition={transition}
+              y="28"
+              height="54"
+              rx="1.5"
+              fill="rgba(249, 115, 22, 0.08)"
+              stroke="rgba(249, 115, 22, 0.45)"
+              strokeWidth="0.5"
+              strokeDasharray="2 2"
+            />
+          ) : null}
+          {normalLow !== null ? (
+            <m.rect
+              initial={false}
+              animate={{ x: lowDelayStart, width: Math.max(0, lowDelayEnd - lowDelayStart) }}
+              transition={transition}
+              y="108"
+              height="54"
+              rx="1.5"
+              fill="rgba(249, 115, 22, 0.08)"
+              stroke="rgba(249, 115, 22, 0.45)"
+              strokeWidth="0.5"
+              strokeDasharray="2 2"
+            />
+          ) : null}
 
           {lines.map((line) => {
             const lineY = y(line.value)
@@ -369,7 +427,7 @@ export function LocationAlarmPreview({
                 textAnchor="middle"
                 className="fill-orange-600 text-[4px] dark:fill-orange-300"
               >
-                {t('delay_short', { value: data.Retard_Alarme_Haut ?? 0 })}
+                {t('delay_window', { value: data.Retard_Alarme_Haut ?? 0 })}
               </m.text>
             </>
           ) : null}
@@ -411,7 +469,7 @@ export function LocationAlarmPreview({
                 textAnchor="middle"
                 className="fill-orange-600 text-[4px] dark:fill-orange-300"
               >
-                {t('delay_short', { value: data.Retard_Alarme_Bas ?? 0 })}
+                {t('delay_window', { value: data.Retard_Alarme_Bas ?? 0 })}
               </m.text>
             </>
           ) : null}
