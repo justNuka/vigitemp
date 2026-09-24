@@ -23,6 +23,7 @@ export type Metrics = {
   latestConnectedLabel: string
   backupSummary: BackupSummary | null
   upcomingCalibrationCount: number
+  upcomingCalibrationDays: number
   hideStandards: boolean
 }
 

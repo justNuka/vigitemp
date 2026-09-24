@@ -25,6 +25,7 @@ type AlarmApiResponse = {
 type UpcomingCalibrationCountResponse = {
   count: number;
   days: number;
+  source: "database" | "fallback";
   from: string;
   to: string;
 };
@@ -134,12 +135,12 @@ export function useBackups() {
   });
 }
 
-export function useUpcomingCalibrationCount(days: number = 15, enabled: boolean = true) {
+export function useUpcomingCalibrationCount(enabled: boolean = true) {
   return useQuery({
-    queryKey: ["admin", "metrology", "calibrations-due", days],
+    queryKey: ["admin", "metrology", "calibrations-due"],
     queryFn: () =>
       getJson<UpcomingCalibrationCountResponse>(
-        `/api/admin/metrologie/etalonnages-a-prevoir?days=${days}`,
+        "/api/admin/metrologie/etalonnages-a-prevoir",
       ),
     enabled,
     refetchInterval: (query) => (isUnauthorizedError(query.state.error) ? false : 15 * 60_000),

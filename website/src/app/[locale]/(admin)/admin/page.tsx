@@ -42,6 +42,7 @@ import { AdminServiceCards } from "./_components/admin-service-cards"
 import { ExpertAdminDashboard } from "./_components/expert-admin-dashboard"
 import { staggerContainer, fadeInUp } from "@/lib/motion-variants"
 import { formatDbDateTime } from "@/lib/date-display"
+import { DEFAULT_CALIBRATION_WARNING_DAYS } from "@/lib/calibration-warning-window"
 
 type SummaryCardProps = {
   title: string
@@ -140,7 +141,7 @@ export default function AdminDashboard() {
   const acknowledgmentsQuery = useAcknowledgments(1, 7)
   const systemLogsQuery = useAuditLogs()
   const backupsQuery = useBackups()
-  const upcomingCalibrationQuery = useUpcomingCalibrationCount(15, !hideStandards)
+  const upcomingCalibrationQuery = useUpcomingCalibrationCount(!hideStandards)
   const unassignedSensorsQuery = useUnassignedSensors({ page: 1, limit: 20 })
 
   const activeAlarmsTotal = activeAlarmsQuery.data?.pagination.total || 0
@@ -152,6 +153,7 @@ export default function AdminDashboard() {
   const unassignedTotal = unassignedSensorsQuery.data?.pagination.total || 0
   const backupsTotal = backupsQuery.data?.summary.archiveCount ?? 0
   const upcomingCalibrationCount = upcomingCalibrationQuery.data?.count ?? 0
+  const upcomingCalibrationDays = upcomingCalibrationQuery.data?.days ?? DEFAULT_CALIBRATION_WARNING_DAYS
   const accessLabel = t("actions.open_page")
   const alarmsAccessLabel = `${accessLabel} (${alarmsInProgressTotal})`
   const backupSummary = backupsQuery.data?.summary ?? null
@@ -299,6 +301,7 @@ export default function AdminDashboard() {
             latestConnectedLabel,
             backupSummary,
             upcomingCalibrationCount,
+            upcomingCalibrationDays,
             hideStandards,
           }}
           onOpenBackupLog={() => setIsBackupLogOpen(true)}
@@ -404,9 +407,9 @@ export default function AdminDashboard() {
           {!hideStandards ? (
             <SummaryCard
               title={t("metrology.title")}
-              description={t("metrology.description", { days: 15 })}
+              description={t("metrology.description", { days: upcomingCalibrationDays })}
               value={String(upcomingCalibrationCount)}
-              helper={t("metrology.helper", { days: 15 })}
+              helper={t("metrology.helper", { days: upcomingCalibrationDays })}
               href={`/admin/metrologie`}
               hrefLabel={accessLabel}
               icon={<Ruler className="h-5 w-5 text-cyan-600" />}

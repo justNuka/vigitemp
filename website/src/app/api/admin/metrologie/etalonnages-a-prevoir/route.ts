@@ -5,17 +5,31 @@ import { apiError, apiOk } from "@/lib/api-response"
 import { withAdminLogging } from "@/lib/api-wrappers"
 import { log } from "@/lib/logger"
 import { prisma } from "@/lib/prisma"
+import {
+  DEFAULT_CALIBRATION_WARNING_DAYS,
+  getCalibrationWarningParameterCandidates,
+  normalizeCalibrationWarningDays,
+} from "@/lib/calibration-warning-window"
 
 type DueCountRow = {
   dueCount: bigint | number
 }
 
-export const GET = withAdminLogging(async (req: NextRequest) => {
+export const GET = withAdminLogging(async (_req: NextRequest) => {
   try {
-    const requestedDays = Number(req.nextUrl.searchParams.get("days") ?? "15")
-    const days = Number.isFinite(requestedDays)
-      ? Math.min(Math.max(Math.trunc(requestedDays), 1), 365)
-      : 15
+    const warningSetting = await prisma.t_parametre.findFirst({
+      where: {
+        OR: getCalibrationWarningParameterCandidates().map((candidate) => ({
+          Section: candidate.Section,
+          Mot_Cle: candidate.Mot_Cle,
+        })),
+      },
+      select: { Valeur: true },
+    })
+    const days = normalizeCalibrationWarningDays(
+      warningSetting?.Valeur,
+      DEFAULT_CALIBRATION_WARNING_DAYS,
+    )
 
     const from = new Date()
     from.setHours(0, 0, 0, 0)
@@ -51,6 +65,7 @@ export const GET = withAdminLogging(async (req: NextRequest) => {
     return apiOk({
       count: Number(rows[0]?.dueCount ?? 0),
       days,
+      source: warningSetting ? "database" : "fallback",
       from: from.toISOString(),
       to: to.toISOString(),
     })

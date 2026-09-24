@@ -3447,7 +3447,7 @@ Fichiers principaux :
 
 ### R23-005-F — Édition utilisateur
 
-**Statut : `PR_OUVERTE` — branche `fix/user-edit-profile-selection` — PR #155 — base `dev` `feee463f35459e5afda2f10f33132179c37eae2b`**
+**Statut : `CORRIGE_DEV` — PR #155 — squash merge `1cc012ca9729eb1dbc906bd7b39b73e3f5ab01ef`**
 
 Retours de la capture :
 
@@ -3512,13 +3512,79 @@ Fichiers principaux :
 
 ### R23-005-G — Card métrologie du Dashboard Admin
 
-**Statut : `A_FAIRE`**
+**Statut : `PR_OUVERTE` — branche `fix/admin-metrology-warning-window` — PR #156 — base `dev` `1cc012ca9729eb1dbc906bd7b39b73e3f5ab01ef`**
 
 Retour :
 
 - la durée utilisée par la card métrologie / échéance d'étalonnage ne doit pas être une constante ;
 - récupérer la **durée de validité d'étalonnage** depuis le paramètre BDD existant ;
 - vérifier MySQL / SQL Server et le fallback historique si le paramètre est absent.
+
+#### Diagnostic
+
+- la card Standard appelait `useUpcomingCalibrationCount(15, ...)` ;
+- le widget Expert affichait lui aussi `days: 15` en dur ;
+- l'API `/api/admin/metrologie/etalonnages-a-prevoir` reçoit actuellement une fenêtre en query string puis compte les sondes dont la **Date_Validite** du dernier `t_etalonnage` est comprise entre aujourd'hui et J+N ;
+- la durée de validité métier de l'étalonnage n'est donc pas recalculée par cette card : la vraie donnée de validité est déjà `Date_Validite` ;
+- le paramètre BDD destiné à piloter la fenêtre d'alerte existe déjà : `DASHBOARD / ETALONNAGE_WARNING_DAYS` ;
+- le comportement historique introduit avec la card en PR #135 est J+15 : c'est le fallback à conserver si le paramètre manque.
+
+#### Correctif
+
+- ajout du helper partagé `website/src/lib/calibration-warning-window.ts` ;
+- lecture du paramètre BDD directement dans l'API `etalonnages-a-prevoir` ;
+- prise en charge des variantes de casse historiques du couple section / mot-clé ;
+- suppression du paramètre `days` côté hook et de `?days=15` dans l'appel API ;
+- l'API renvoie la fenêtre effectivement appliquée dans `days` ;
+- la card Standard utilise `response.days` pour sa description et son helper ;
+- le widget Expert reçoit et affiche la même valeur via `upcomingCalibrationDays` ;
+- fallback absent / vide / invalide : **15 jours** ;
+- valeur positive plafonnée à 365 jours, comme l'ancien endpoint ;
+- `ServerSettings` utilise le même fallback 15 jours si le paramètre BDD est absent ;
+- les seeds MySQL et SQL Server contiennent déjà `ETALONNAGE_WARNING_DAYS` : aucune migration BDD ;
+- Web passé en **1.8.14**.
+
+#### Validation automatisée
+
+GitHub Actions run `36004176315` : **succès complet**.
+
+- [x] `git diff --check origin/dev...HEAD` ;
+- [x] installation `pnpm` avec lockfile figé ;
+- [x] génération Prisma MySQL ;
+- [x] `pnpm test:admin-metrology-warning-window` ;
+- [x] régression historique `pnpm test:admin-dashboard-refinements` mise à jour sur le contrat dynamique ;
+- [x] ESLint ciblé sur helper, API, hook, dashboards, Paramètres et test ;
+- [x] contrôle i18n sans nouvelle dette dans les fichiers du lot ;
+- [x] build production Next.js sur MySQL ;
+- [x] génération Prisma SQL Server ;
+- [x] TypeScript `--noEmit` sur SQL Server ;
+- [x] présence de `ETALONNAGE_WARNING_DAYS` vérifiée dans les seeds MySQL et SQL Server ;
+- [x] workflow temporaire retiré du diff final.
+
+Fichiers principaux :
+
+- `website/src/lib/calibration-warning-window.ts` ;
+- `website/src/app/api/admin/metrologie/etalonnages-a-prevoir/route.ts` ;
+- `website/src/hooks/useAdminData.ts` ;
+- `website/src/app/[locale]/(admin)/admin/page.tsx` ;
+- `website/src/app/[locale]/(admin)/admin/_components/expert-dashboard/expert-dashboard-types.ts` ;
+- `website/src/app/[locale]/(admin)/admin/_components/expert-dashboard/expert-widget-renderer.tsx` ;
+- `website/src/app/[locale]/(admin)/admin/parametres/server-settings.tsx` ;
+- `website/scripts/test-admin-metrology-warning-window.ts`.
+
+#### Validation terrain
+
+- [ ] régler `ETALONNAGE_WARNING_DAYS` à 7 : card Standard et widget Expert doivent afficher 7 jours et compter jusqu'à J+7 ;
+- [ ] régler le paramètre à 30 : affichage et compteur J+30 ;
+- [ ] tester une valeur personnalisée, par exemple 45 ;
+- [ ] supprimer temporairement le paramètre sur une base de test : fallback J+15 ;
+- [ ] mettre une valeur invalide : fallback J+15 ;
+- [ ] sonde avec validité déjà expirée : toujours exclue du compteur « à prévoir » ;
+- [ ] sonde réformée : toujours exclue ;
+- [ ] plusieurs étalonnages : seule la dernière `Date_Validite` compte ;
+- [ ] vérifier Dashboard Standard puis widget Expert ;
+- [ ] modifier le paramètre depuis Administration > Paramètres puis rafraîchir le Dashboard ;
+- [ ] valider MySQL puis SQL Server.
 
 ### Ordre de traitement prévu
 
