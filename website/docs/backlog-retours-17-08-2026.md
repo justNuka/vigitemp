@@ -3393,9 +3393,10 @@ Retours consolidés du texte et de la capture :
 - pour un PATCH partiel, fusion des valeurs modifiées avec les valeurs BDD avant contrôle final ;
 - bandeau rouge live dans le formulaire dès qu'une configuration devient incohérente ;
 - messages d'erreur live repris également sous les champs concernés ;
+- désactiver un seuil normal haut/bas désactive automatiquement la pré-alarme correspondante afin d'éviter une configuration masquée mais invalide ;
 - bandeau violet au-dessus des limites lorsque l'EMT est incluse dans le seuil effectif ;
 - échelle de preview stabilisée pendant toute la session d'édition ; elle ne s'agrandit que si une valeur sort réellement du domaine visible ;
-- la plage physique de la sonde remet l'échelle à zéro lors d'un changement de contexte mais n'est pas utilisée comme zoom global afin de conserver une bonne lisibilité ;
+- la plage physique de la sonde, le lieu et la sonde sélectionnée participent à la clé de contexte : l'échelle est réinitialisée quand on change réellement de contexte, sans utiliser toute la plage physique comme zoom global ;
 - le premier point de temporisation est exactement positionné sur le seuil normal : il représente le dernier point encore valide ;
 - ajout d'une zone orange visuelle pour matérialiser la fenêtre de temporisation ;
 - FR/EN mis à jour ;
@@ -3403,7 +3404,7 @@ Retours consolidés du texte et de la capture :
 
 #### Validation automatisée
 
-GitHub Actions run `35998174781` : **succès complet**.
+GitHub Actions run `35999158522` : **succès complet**.
 
 - [x] `git diff --check origin/dev...HEAD` ;
 - [x] installation `pnpm` avec lockfile figé ;
