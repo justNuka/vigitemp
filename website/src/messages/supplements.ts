@@ -50,7 +50,7 @@ export const frSupplements: MessageCatalog = {
         ok: "OK",
         preAlarm: "pré-alarmes",
         ended: "terminées",
-        critical: "critiques",
+        critical: "alarmes en cours",
       },
     },
     planning_value: "{count} règle{count, plural, one {} other {s}}",
