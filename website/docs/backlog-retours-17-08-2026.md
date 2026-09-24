@@ -3544,6 +3544,23 @@ Retour :
 - les seeds MySQL et SQL Server contiennent déjà `ETALONNAGE_WARNING_DAYS` : aucune migration BDD ;
 - Web passé en **1.8.14**.
 
+#### Validation automatisée
+
+GitHub Actions run `36004176315` : **succès complet**.
+
+- [x] `git diff --check origin/dev...HEAD` ;
+- [x] installation `pnpm` avec lockfile figé ;
+- [x] génération Prisma MySQL ;
+- [x] `pnpm test:admin-metrology-warning-window` ;
+- [x] régression historique `pnpm test:admin-dashboard-refinements` mise à jour sur le contrat dynamique ;
+- [x] ESLint ciblé sur helper, API, hook, dashboards, Paramètres et test ;
+- [x] contrôle i18n sans nouvelle dette dans les fichiers du lot ;
+- [x] build production Next.js sur MySQL ;
+- [x] génération Prisma SQL Server ;
+- [x] TypeScript `--noEmit` sur SQL Server ;
+- [x] présence de `ETALONNAGE_WARNING_DAYS` vérifiée dans les seeds MySQL et SQL Server ;
+- [x] workflow temporaire retiré du diff final.
+
 Fichiers principaux :
 
 - `website/src/lib/calibration-warning-window.ts` ;
