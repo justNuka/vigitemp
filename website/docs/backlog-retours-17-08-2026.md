@@ -3226,7 +3226,7 @@ Fichiers principaux :
 
 ### R23-005-C — Emails d'alarme et formulation Paramètres
 
-**Statut : `PR_OUVERTE` — branche `fix/alarm-email-notifications` — PR #152 — base `dev` `a644a7f065d8cacc1626da5af37f540692665eab`**
+**Statut : `CORRIGE_DEV` — PR #152 — squash merge `0b562049aef35fb060cf56c62900d793956715a0`**
 
 Retours :
 
@@ -3297,7 +3297,7 @@ Fichiers principaux :
 
 ### R23-005-D — Graphes d'acquittement : transitions et zoom
 
-**Statut : `A_FAIRE`**
+**Statut : `PR_OUVERTE` — branche `fix/alarm-analysis-chart-zoom` — PR #153 — base `dev` `0b562049aef35fb060cf56c62900d793956715a0`**
 
 Retours :
 
@@ -3306,6 +3306,60 @@ Retours :
 - le zoom/dézoom est trop lent ;
 - après un dézoom important, il devient presque impossible de rezoomer : vérifier les bornes du plugin Chart.js Zoom, la capture/restauration de `zoomBounds` et les callbacks ;
 - ne pas dégrader le comportement des graphes Surveillance classiques.
+
+#### Diagnostic
+
+- `MonitoringGraphTab` est partagé entre le détail Surveillance et l'analyse d'alarme ;
+- le plugin `chartjs-plugin-zoom` utilisait sa vitesse de molette par défaut et ne recevait qu'un `minRange`, sans limite explicite de dézoom sur la période de l'alarme ;
+- après plusieurs dézooms, l'axe X pouvait donc s'éloigner fortement des données, ce qui rendait les zooms suivants très peu perceptibles ;
+- le parcours d'analyse persistait également les bornes Y dans `zoomBounds` alors que les interactions sont limitées à l'axe X ;
+- une modification globale du composant aurait risqué de changer le ressenti des graphes Surveillance.
+
+#### Correctif
+
+- ajout d'un profil opt-in `interactionProfile="alarm-analysis"` dans `MonitoringGraphTab` ;
+- ce profil n'est activé que par `alarmes/analyse/page-client.tsx` ;
+- animation du graphe ramenée à **180 ms** ;
+- vitesse de zoom molette portée à **0,25** ;
+- seuil de pan réduit à **4 px** ;
+- limites X du plugin fixées à la plage réelle `rangeStartMs -> rangeEndMs` de l'alarme ;
+- plage minimale de zoom dynamique, plafonnée à 60 secondes, afin de rester adaptée aux alarmes courtes ;
+- `zoomBounds` du parcours d'acquittement ne persiste plus que `xMin/xMax` ;
+- le profil par défaut conserve exactement les valeurs historiques : vitesse 0,1, pan 10 px et `minRange` de 60 s ;
+- Web passé en **1.8.11**.
+
+#### Validation automatisée
+
+GitHub Actions run `35994624820` : **succès complet**.
+
+- [x] `git diff --check origin/dev...HEAD` ;
+- [x] installation `pnpm` avec lockfile figé ;
+- [x] génération Prisma MySQL ;
+- [x] `pnpm test:alarm-analysis-chart-ux` ;
+- [x] ESLint ciblé sur le graphe partagé, le parcours d'analyse et le test ;
+- [x] contrôle i18n sans nouvelle dette dans les fichiers du lot ;
+- [x] build production Next.js sur MySQL ;
+- [x] génération Prisma SQL Server ;
+- [x] TypeScript `--noEmit` sur SQL Server ;
+- [x] workflow temporaire retiré du diff final.
+
+Fichiers principaux :
+
+- `website/src/components/monitoring-details/monitoring-graph-tab.tsx` ;
+- `website/src/app/[locale]/(dashboard)/alarmes/analyse/page-client.tsx` ;
+- `website/scripts/test-alarm-analysis-chart-ux.ts`.
+
+#### Validation terrain
+
+- [ ] changer rapidement entre plusieurs alarmes : le tracé doit apparaître sans animation longue ;
+- [ ] zoomer puis dézoomer plusieurs fois à la molette : la réponse doit être nettement plus rapide ;
+- [ ] dézoomer au maximum : l'axe ne doit jamais dépasser la période réelle de l'alarme ;
+- [ ] après dézoom maximal, rezoomer immédiatement et vérifier que le zoom redevient efficace ;
+- [ ] tester une alarme très courte puis une alarme longue ;
+- [ ] tester une alarme terminée et une alarme encore active ;
+- [ ] tester le pan horizontal ;
+- [ ] utiliser « Réinitialiser le zoom » après plusieurs interactions ;
+- [ ] ouvrir ensuite un graphe Surveillance classique et confirmer que son comportement n'a pas changé.
 
 ### R23-005-E — Preview des consignes / limites dans la modal d'un lieu
 

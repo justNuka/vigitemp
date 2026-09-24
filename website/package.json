@@ -1,6 +1,6 @@
 {
   "name": "vigitemp1.1",
-  "version": "1.8.10",
+  "version": "1.8.11",
   "private": true,
   "type": "module",
   "scripts": {
@@ -19,6 +19,7 @@
     "test:alarm-acknowledgement-context": "tsx scripts/test-alarm-acknowledgement-context.ts",
     "test:location-critical-thresholds": "tsx scripts/test-location-critical-thresholds.ts",
     "test:alarm-email-notifications": "tsx scripts/test-alarm-email-notifications.tsx",
+    "test:alarm-analysis-chart-ux": "tsx scripts/test-alarm-analysis-chart-ux.ts",
     "test:admin-dashboard-refinements": "tsx scripts/test-admin-dashboard-refinements.ts",
     "test:login-audit-trail": "tsx scripts/test-login-audit-trail.ts",
     "test:help-support": "tsx scripts/test-help-support-page.ts",

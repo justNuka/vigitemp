@@ -333,12 +333,9 @@ export function AlarmAnalysisClient() {
 
   const captureZoomBounds = useCallback((chart: ChartJS<"line">) => {
     const xScale = chart.scales?.x
-    const yScale = chart.scales?.y
     setZoomBounds({
       xMin: typeof xScale?.min === "number" ? xScale.min : undefined,
       xMax: typeof xScale?.max === "number" ? xScale.max : undefined,
-      yMin: typeof yScale?.min === "number" ? yScale.min : undefined,
-      yMax: typeof yScale?.max === "number" ? yScale.max : undefined,
     })
   }, [])
 
@@ -881,6 +878,7 @@ export function AlarmAnalysisClient() {
                     showAuditControls={false}
                     allowImageExport={false}
                     onChartImageReady={handleChartImageReady}
+                    interactionProfile="alarm-analysis"
                   />
                 </TabsContent>
                 <TabsContent value="table" className="flex min-h-0 min-w-0 flex-1 flex-col">
