@@ -586,9 +586,9 @@ export function AlarmsClient({ alarms, statusFilter, initialLocationId = null, s
 
   const content = tableData.length === 0 ? (
     <Card className="overflow-hidden">
-      <CardHeader className="space-y-4 bg-linear-to-r from-primary/5 to-transparent border-b border-border/50">
+      <CardHeader className="space-y-3 border-b border-border bg-card">
         <CardTitle className="flex items-center gap-2">
-          <span className="inline-flex items-center justify-center h-8 w-8 rounded-lg bg-primary/10 text-primary">
+          <span className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-border bg-muted/60 text-foreground">
             <Bell className="h-4 w-4" />
           </span>
           {cardTitle}
@@ -612,9 +612,9 @@ export function AlarmsClient({ alarms, statusFilter, initialLocationId = null, s
     </Card>
   ) : (
     <Card className="overflow-hidden">
-      <CardHeader className="space-y-4 bg-linear-to-r from-primary/5 to-transparent border-b border-border/50">
+      <CardHeader className="space-y-3 border-b border-border bg-card">
         <CardTitle className="flex items-center gap-2">
-          <span className="inline-flex items-center justify-center h-8 w-8 rounded-lg bg-primary/10 text-primary">
+          <span className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-border bg-muted/60 text-foreground">
             <Bell className="h-4 w-4" />
           </span>
           {cardTitle}
@@ -625,15 +625,15 @@ export function AlarmsClient({ alarms, statusFilter, initialLocationId = null, s
       </CardHeader>
       <CardContent>
           {hasHiddenLocationFilter ? (
-            <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-[#26A5DA]/35 bg-[#26A5DA]/8 px-3 py-2 text-sm text-[#075776] dark:border-[#26A5DA]/45 dark:bg-[#26A5DA]/12 dark:text-sky-50">
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-md border border-border bg-muted/35 px-3 py-2 text-sm text-foreground">
               <div className="flex flex-wrap items-center gap-2">
                 <Bell className="h-4 w-4" />
                 <span className="font-medium">{t("filters.active_label")}</span>
-                <span className="rounded-full bg-white/70 px-2.5 py-1 text-xs font-medium text-[#075776] dark:bg-slate-900/40 dark:text-sky-50">
+                <span className="rounded-full border border-border bg-card px-2.5 py-1 text-xs font-medium text-foreground">
                   {t("filters.active_location", { value: hiddenLocationFilterLabel ?? locationFilterId ?? "-" })}
                 </span>
                 {typeFilters.length > 0 ? (
-                  <span className="rounded-full bg-white/70 px-2.5 py-1 text-xs font-medium text-[#075776] dark:bg-slate-900/40 dark:text-sky-50">
+                  <span className="rounded-full border border-border bg-card px-2.5 py-1 text-xs font-medium text-foreground">
                     {t("filters.active_types", {
                       value: typeFilters.map((type) => t(`filter.types.${type}`)).join(", "),
                     })}
@@ -644,7 +644,7 @@ export function AlarmsClient({ alarms, statusFilter, initialLocationId = null, s
                 type="button"
                 variant="ghost"
                 size="sm"
-                className="gap-2 text-[#075776] hover:bg-[#26A5DA]/14 hover:text-[#075776] dark:text-sky-50 dark:hover:bg-[#26A5DA]/18"
+                className="gap-2 text-muted-foreground hover:bg-muted/60 hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
                 onClick={clearImplicitFilters}
               >
                 {t("filters.clear")}
