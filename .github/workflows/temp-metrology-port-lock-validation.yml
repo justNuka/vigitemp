@@ -1,0 +1,20 @@
+name: Temporary server lock validation
+
+on:
+  push:
+    branches:
+      - fix/metrology-port-lock-deadlock
+
+jobs:
+  build-server:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: NuGet/setup-nuget@v2
+      - uses: microsoft/setup-msbuild@v2
+      - name: Restore server packages
+        run: nuget restore "Vigitemp Serveur/Vigitemp Serveur.sln"
+      - name: Build server Release
+        run: msbuild "Vigitemp Serveur/Vigitemp Serveur.sln" /m /p:Configuration=Release
+      - name: Build server installer Release
+        run: dotnet build "Vigitemp Serveur/VigitempServerInstaller/VigitempServerInstaller.csproj" -c Release
