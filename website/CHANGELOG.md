@@ -8,7 +8,32 @@ Les versions suivent `MAJOR.MINOR.PATCH` sans zéros de tête. La source de vers
 
 ## [Unreleased]
 
-Aucun changement supplémentaire documenté depuis la préparation de la version Web 1.8.12.
+Aucun changement supplémentaire documenté depuis la préparation de la version Web 1.8.13.
+
+## [1.8.13] — 2026-09-24
+
+Cette version fiabilise l'ouverture de la fiche **Modifier l'utilisateur** et améliore son affichage sur les écrans larges.
+
+### Profil utilisateur
+
+- Le profil affecté est désormais résolu explicitement dans la liste des profils avant le `reset()` du formulaire.
+- L'initialisation de la fiche attend la fin du chargement des profils en plus des sites et groupes.
+- Le nom de profil historique stocké dans `t_utilisateur.Profil_Utilisateur` est rapproché de l'option exacte, avec fallback tolérant aux différences de casse et d'espaces.
+- Pendant l'édition, la liste charge également les profils archivés afin de pouvoir afficher un profil historique encore affecté.
+- Les autres profils archivés restent masqués : seul le profil archivé déjà affecté à l'utilisateur est conservé parmi les choix.
+- La création d'utilisateur continue de proposer uniquement les profils actifs.
+
+### Fenêtre d'édition
+
+- La modal passe sur une largeur responsive pouvant atteindre **5xl** avec une largeur maximale de 96 % du viewport.
+- Login / email, profil / avatar et les champs de nouveau mot de passe utilisent deux colonnes sur les écrans suffisamment larges.
+- Le mobile conserve une disposition verticale et le scroll interne existant.
+
+### Compatibilité
+
+- Version Web : **1.8.13**.
+- Serveur **1.1.1**, Agent **1.0.1** et BDD **0.91.1** restent inchangés.
+- Aucune migration BDD n'est requise.
 
 ## [1.8.12] — 2026-09-24
 
