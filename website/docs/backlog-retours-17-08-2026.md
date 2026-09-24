@@ -3363,7 +3363,7 @@ Fichiers principaux :
 
 ### R23-005-E — Preview des consignes / limites dans la modal d'un lieu
 
-**Statut : `EN_COURS` — branche `fix/location-threshold-preview-emt` — base `dev` `1aaa5bad34f04c316a986e378c9ad919818d38e6`**
+**Statut : `PR_OUVERTE` — branche `fix/location-threshold-preview-emt` — PR #154 — base `dev` `1aaa5bad34f04c316a986e378c9ad919818d38e6`**
 
 Retours consolidés du texte et de la capture :
 
