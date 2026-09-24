@@ -3195,6 +3195,17 @@ Retours consolidés :
 - le guide utilisateur est aligné avec le nouveau vocabulaire ;
 - le Web passe en **1.8.9**.
 
+#### Validation automatisée
+
+GitHub Actions run `35984641463` : **succès complet**.
+
+- [x] installation `pnpm` avec lockfile figé ;
+- [x] ESLint ciblé sur le header de card et les supplements i18n ;
+- [x] contrôle i18n : aucune nouvelle dette dans les fichiers du lot ;
+- [x] génération Prisma MySQL ;
+- [x] build production Next.js ;
+- [x] workflow temporaire retiré du diff final.
+
 Fichiers principaux :
 
 - `website/src/components/monitoring-card/monitoring-card-header.tsx` ;
