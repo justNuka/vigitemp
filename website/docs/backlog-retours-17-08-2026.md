@@ -3447,7 +3447,7 @@ Fichiers principaux :
 
 ### R23-005-F — Édition utilisateur
 
-**Statut : `EN_COURS` — branche `fix/user-edit-profile-selection` — base `dev` `feee463f35459e5afda2f10f33132179c37eae2b`**
+**Statut : `PR_OUVERTE` — branche `fix/user-edit-profile-selection` — PR #155 — base `dev` `feee463f35459e5afda2f10f33132179c37eae2b`**
 
 Retours de la capture :
 
