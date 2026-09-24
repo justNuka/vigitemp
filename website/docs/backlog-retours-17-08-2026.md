@@ -3363,7 +3363,7 @@ Fichiers principaux :
 
 ### R23-005-E — Preview des consignes / limites dans la modal d'un lieu
 
-**Statut : `PR_OUVERTE` — branche `fix/location-threshold-preview-emt` — PR #154 — base `dev` `1aaa5bad34f04c316a986e378c9ad919818d38e6`**
+**Statut : `CORRIGE_DEV` — PR #154 — squash merge `feee463f35459e5afda2f10f33132179c37eae2b`**
 
 Retours consolidés du texte et de la capture :
 
@@ -3447,7 +3447,7 @@ Fichiers principaux :
 
 ### R23-005-F — Édition utilisateur
 
-**Statut : `A_FAIRE`**
+**Statut : `EN_COURS` — branche `fix/user-edit-profile-selection` — base `dev` `feee463f35459e5afda2f10f33132179c37eae2b`**
 
 Retours de la capture :
 
@@ -3455,6 +3455,45 @@ Retours de la capture :
 - le champ apparaît vide et déclenche immédiatement « Le profil est requis » alors que l'utilisateur possède déjà un profil ;
 - vérifier le chargement/mapping `Id_Profil` entre la ligne utilisateur et le formulaire ;
 - étudier un affichage plus large / paysage de la fenêtre d'édition afin d'afficher davantage d'informations simultanément sans scroll excessif, tout en restant responsive.
+
+#### Diagnostic
+
+- le modèle historique ne stocke pas `Id_Profil` dans `t_utilisateur` : il stocke le nom du profil dans `Profil_Utilisateur` ;
+- le champ de formulaire `profileId` porte donc un nom historique trompeur : la valeur réellement envoyée et enregistrée est le nom du profil ;
+- la modal pouvait appeler `reset()` avant la fin du chargement des profils ;
+- l'édition chargeait uniquement les profils actifs : un utilisateur encore rattaché à un profil archivé n'avait aucune option correspondante dans le select.
+
+#### Correctif
+
+- résolution explicite du profil courant dans `getEditUserDefaults()` à partir des options chargées ;
+- matching exact puis fallback normalisé casse/espaces pour les données historiques ;
+- l'initialisation attend désormais `profilesLoading === false` en plus des affectations Sites / Groupes ;
+- l'édition utilise `/api/profils?status=all` ;
+- la liste affichée conserve uniquement les profils actifs et, si nécessaire, le profil archivé actuellement affecté à l'utilisateur ;
+- la création d'utilisateur reste sur `status=active` ;
+- la modal passe à une largeur `max-w-5xl` / `96vw` ;
+- login/email, profil/avatar et changement de mot de passe sont disposés en deux colonnes sur desktop ;
+- le layout reste mono-colonne sur les petites largeurs ;
+- Web passé en **1.8.13**.
+
+Fichiers principaux :
+
+- `website/src/app/[locale]/(admin)/admin/utilisateurs/_components/user-mappers.ts` ;
+- `website/src/app/[locale]/(admin)/admin/utilisateurs/_components/edit-user-dialog.tsx` ;
+- `website/src/app/[locale]/(admin)/admin/utilisateurs/users-client.tsx` ;
+- `website/scripts/test-user-edit-profile-selection.ts`.
+
+#### Validation terrain
+
+- [ ] ouvrir un utilisateur avec un profil actif : le profil doit être immédiatement présélectionné ;
+- [ ] fermer/réouvrir la fiche sans modification : aucun message « Le profil est requis » ;
+- [ ] ouvrir un utilisateur rattaché à un profil archivé : son profil historique reste visible ;
+- [ ] vérifier que les autres profils archivés ne sont pas proposés dans le select ;
+- [ ] changer le profil puis enregistrer et rouvrir : la nouvelle affectation doit être présélectionnée ;
+- [ ] vérifier que la création utilisateur ne propose que les profils actifs ;
+- [ ] tester la modal sur desktop large : davantage de champs visibles sans scroll ;
+- [ ] tester tablette/mobile : retour propre en une colonne, aucun débordement ;
+- [ ] vérifier clair / sombre.
 
 ### R23-005-G — Card métrologie du Dashboard Admin
 
