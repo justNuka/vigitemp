@@ -323,7 +323,7 @@ Le flux est repris sur `agent/adjustment-acquisition-stability-flow` depuis `dev
 
 ## Métrologie — port série bloqué en file d'attente — 24/09/2026
 
-**Statut : `EN_COURS` — branche `fix/metrology-port-lock-deadlock`**
+**Statut : `PR_OUVERTE` — branche `fix/metrology-port-lock-deadlock` — PR #150**
 
 ### Retour terrain
 
