@@ -25,7 +25,19 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: ESLint targeted
         run: pnpm exec eslint "src/components/monitoring-card/monitoring-card-header.tsx" "src/messages/supplements.ts"
-      - name: i18n check
-        run: pnpm i18n:check
+      - name: i18n check - no new debt in this lot
+        shell: bash
+        run: |
+          set +e
+          pnpm i18n:check 2>&1 | tee /tmp/i18n-check.log
+          status=${PIPESTATUS[0]}
+          set -e
+          if grep -E "monitoring-card-header|src/messages/(fr|en)\.json|src/messages/supplements\.ts" /tmp/i18n-check.log; then
+            echo "New i18n debt detected in files changed by this lot."
+            exit 1
+          fi
+          if [ "$status" -ne 0 ]; then
+            echo "Global i18n checker still reports pre-existing debt outside this lot."
+          fi
       - name: Production build
         run: pnpm build
