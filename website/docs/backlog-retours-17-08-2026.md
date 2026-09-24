@@ -3175,7 +3175,7 @@ Le workflow temporaire a été retiré du diff final après ce run.
 
 ### R23-005-B — Présentation et signalétique Surveillance
 
-**Statut : `EN_COURS` — branche `fix/surveillance-cards-signaletique` — base `dev` `1d0655056fcd54a5b365ff9133c25b3cd8c835f9`**
+**Statut : `PR_OUVERTE` — branche `fix/surveillance-cards-signaletique` — PR #151 — base `dev` `1d0655056fcd54a5b365ff9133c25b3cd8c835f9`**
 
 Retours consolidés :
 
