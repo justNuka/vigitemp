@@ -9,8 +9,9 @@ import { useAppAccess } from '@/components/access/app-access-provider'
 import MonitoringDetailsModal from '@/components/monitoring-details-modal'
 import { MonitoringCardChartPreview } from '@/components/monitoring-card/monitoring-card-chart-preview'
 import { MonitoringCardHeader } from '@/components/monitoring-card/monitoring-card-header'
-import { BatteryIndicator } from '@/components/monitoring-card/battery-indicator'
+import { BatteryIndicator, getBatteryIndicatorState } from '@/components/monitoring-card/battery-indicator'
 import { RssiBars } from '@/components/monitoring-card/rssi-bars'
+import { getRssiLevel, parseRssiValue } from '@/components/monitoring-card/rssi'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -361,6 +362,32 @@ export default function MonitoringCard({
     return Math.round(frequence / 60)
   }, [frequence, isGso])
 
+  const measureStrokeColor =
+    effectiveAlarmType === 'H'
+      ? '#dc2626'
+      : effectiveAlarmType === 'B'
+        ? '#1d4ed8'
+        : effectiveStatus === 'warning'
+          ? '#d97706'
+          : effectiveStatus === 'technical'
+            ? '#111827'
+            : effectiveStatus === 'ended'
+              ? '#7c3aed'
+              : '#0ea5e9'
+
+  const measureFillColor =
+    effectiveAlarmType === 'H'
+      ? 'rgba(220, 38, 38, 0.10)'
+      : effectiveAlarmType === 'B'
+        ? 'rgba(29, 78, 216, 0.10)'
+        : effectiveStatus === 'warning'
+          ? 'rgba(217, 119, 6, 0.10)'
+          : effectiveStatus === 'technical'
+            ? 'rgba(17, 24, 39, 0.08)'
+            : effectiveStatus === 'ended'
+              ? 'rgba(124, 58, 237, 0.10)'
+              : 'rgba(14, 165, 233, 0.10)'
+
   const chartDatasets = useMemo(() => {
     const datasets = [
       {
@@ -438,8 +465,8 @@ export default function MonitoringCard({
     datasets.push({
       label: t('chart.measures', { unit: unite }),
       data: previewData.map((point) => point.Valeur),
-      borderColor: '#3b82f6',
-      backgroundColor: 'rgba(59, 130, 246, 0.1)',
+      borderColor: measureStrokeColor,
+      backgroundColor: measureFillColor,
       borderWidth: 1.5,
       fill: false,
       tension: 0,
@@ -457,6 +484,8 @@ export default function MonitoringCard({
     previewData,
     t,
     unite,
+    measureStrokeColor,
+    measureFillColor,
   ])
 
   const formattedConsigne = useMemo(() => formatMeasureValue(consigne, decimals, localeTag), [consigne, decimals, localeTag])
@@ -478,6 +507,21 @@ export default function MonitoringCard({
     }
     return labels.join(' · ')
   }, [batteryPercent, gsoTension, t])
+
+  const rssiLevel = getRssiLevel(parseRssiValue(gsoRssi ?? null))
+  const rssiStateLabel =
+    rssiLevel >= 5 ? t('wireless.signal_state.excellent')
+      : rssiLevel === 4 ? t('wireless.signal_state.good')
+        : rssiLevel === 3 ? t('wireless.signal_state.medium')
+          : rssiLevel === 2 ? t('wireless.signal_state.weak')
+            : rssiLevel === 1 ? t('wireless.signal_state.critical')
+              : t('wireless.signal_state.unknown')
+  const batteryState = getBatteryIndicatorState({ percent: batteryPercent, voltage: gsoTension })
+  const batteryStateLabel =
+    batteryState.severity === 'normal' ? t('wireless.battery_state.ok')
+      : batteryState.severity === 'low' ? t('wireless.battery_state.low')
+        : batteryState.severity === 'critical' ? t('wireless.battery_state.critical')
+          : t('wireless.battery_state.unknown')
 
   const cardGlowClass = (() => {
     if (!isSurveillanceActive) return "opacity-75"
@@ -516,25 +560,30 @@ export default function MonitoringCard({
           alarmDisabledLabel={alarmDisabledLabel}
           canAcknowledge={canAcknowledge}
           onAcknowledge={handleAcknowledgeOpen}
+          onOpenDetails={() => setIsModalOpen(true)}
           t={t}
           tStatus={tStatus}
         />
 
-        <div className="p-4 flex flex-col flex-1">
+        <div className="flex flex-1 flex-col px-3 pb-2 pt-2.5">
           {isAdjustmentInProgress ? (
-            <div className="flex min-h-52 flex-1 flex-col items-center justify-center gap-3 rounded-md border border-dashed border-sky-300 bg-sky-50/70 px-4 text-center dark:border-sky-700 dark:bg-sky-950/30">
+            <div className="flex min-h-[188px] flex-1 flex-col items-center justify-center gap-2.5 rounded-md border border-dashed border-sky-300 bg-sky-50/70 px-3 text-center dark:border-sky-700 dark:bg-sky-950/30">
               <div className="h-2.5 w-2.5 animate-pulse rounded-full bg-sky-500" aria-hidden="true" />
               <div className="font-semibold text-sky-900 dark:text-sky-100">{t('surveillance.adjustment')}</div>
             </div>
           ) : isSurveillanceActive ? (
             <>
-              <div className="cursor-pointer relative" onClick={() => setIsModalOpen(true)}>
+              <div
+                className="group/chart relative cursor-pointer rounded-md border border-transparent bg-muted/10 px-1 py-1 transition-all duration-150 hover:border-primary/20 hover:bg-muted/30 hover:shadow-sm"
+                onClick={() => setIsModalOpen(true)}
+                title={t('actions.details')}
+              >
                 {isMobile ? (
                   <div className="py-2 text-center">
                     <p className="text-xs text-muted-foreground">{t('mobile.small_hint')}</p>
                   </div>
                 ) : backgroundPaused ? (
-                  <div className="flex h-32.5 items-center justify-center rounded-md border border-dashed border-border/60 bg-muted/20 text-xs text-muted-foreground">
+                  <div className="flex h-[142px] items-center justify-center rounded-md border border-dashed border-border/60 bg-muted/20 text-xs text-muted-foreground">
                     {t('details.loading_hint')}
                   </div>
                 ) : (
@@ -557,7 +606,7 @@ export default function MonitoringCard({
                 )}
               </div>
 
-              <div className="mt-auto space-y-3 text-sm border-t border-border pt-3">
+              <div className="mt-1.5 space-y-2 text-sm border-t border-border/70 pt-2">
                 {lastDateTime ? (
                   <>
                     <div className={`flex flex-col gap-1 text-[12px] font-semibold ${contentTextClassName}`}>
@@ -575,14 +624,22 @@ export default function MonitoringCard({
                       <span className="text-[11px] font-medium text-muted-foreground">{lastDateTime}</span>
                     </div>
                     {hasWirelessMetrics ? (
-                        <div className={`flex flex-wrap items-center justify-center gap-4 text-[11px] ${contentTextClassName}`}>
-                          {gsoRssi ? <RssiBars value={gsoRssi} label={t('gso.rssi', { value: gsoRssi })} /> : null}
+                        <div className={`flex flex-wrap items-center justify-center gap-2 text-[11px] ${contentTextClassName}`}>
+                          {gsoRssi ? (
+                            <span className="inline-flex items-center gap-1.5 rounded-full border border-border/70 bg-muted/35 px-2 py-0.5">
+                              <RssiBars value={gsoRssi} label={t('gso.rssi', { value: gsoRssi })} />
+                              <span className="font-medium">{rssiStateLabel}</span>
+                            </span>
+                          ) : null}
                           {hasBatteryMetric && batteryTooltipLabel ? (
-                            <BatteryIndicator
-                              percent={batteryPercent}
-                              voltage={gsoTension}
-                              label={batteryTooltipLabel}
-                            />
+                            <span className="inline-flex items-center gap-1.5 rounded-full border border-border/70 bg-muted/35 px-2 py-0.5">
+                              <BatteryIndicator
+                                percent={batteryPercent}
+                                voltage={gsoTension}
+                                label={batteryTooltipLabel}
+                              />
+                              <span className="font-medium">{batteryStateLabel}</span>
+                            </span>
                           ) : null}
                         </div>
                     ) : null}
@@ -628,9 +685,9 @@ export default function MonitoringCard({
             </div>
           )}
 
-          <div className={`mt-4 border-t border-border pt-3 ${isSurveillanceActive ? '' : 'border-white/20'}`}>
+          <div className={`mt-2 border-t border-border/70 pt-2 ${isSurveillanceActive ? '' : 'border-white/20'}`}>
             <TooltipProvider>
-              <div className="flex justify-center gap-4">
+              <div className="flex justify-end gap-2">
                 {!isSurveillanceActive && !isAdjustmentInProgress ? (
                   <UITooltip>
                     <TooltipTrigger asChild>
@@ -786,7 +843,15 @@ export default function MonitoringCard({
           onClose={() => setIsModalOpen(false)}
           idLieu={idLieu}
           nomLieu={nomLieu}
+          siteName={siteName}
+          groupName={groupName}
           sondeNumeroSerie={sondeNumeroSerie || ''}
+          currentValue={currentValue}
+          lastMeasurement={lastMeasurement}
+          status={effectiveStatus}
+          alarmType={effectiveAlarmType}
+          canAcknowledge={canAcknowledge}
+          onAcknowledge={handleAcknowledgeOpen}
           isGso={isGso ?? null}
           gsoRssi={gsoRssi ?? null}
           batteryPercent={batteryPercent ?? null}

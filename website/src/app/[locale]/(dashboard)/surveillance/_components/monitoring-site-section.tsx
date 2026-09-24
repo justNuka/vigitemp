@@ -256,10 +256,10 @@ export function MonitoringSiteSection({
                       />
                     ) : null}
                     <m.div
-                      className={`grid gap-4 justify-start ${
+                      className={`grid gap-3 justify-start ${
                         disabledView
-                          ? "grid-cols-[repeat(auto-fill,minmax(250px,1fr))]"
-                          : "grid-cols-[repeat(auto-fill,minmax(260px,1fr))]"
+                          ? "grid-cols-[repeat(auto-fill,minmax(240px,1fr))]"
+                          : "grid-cols-[repeat(auto-fill,minmax(240px,1fr))]"
                       }`}
                       variants={staggerContainer}
                       initial="hidden"

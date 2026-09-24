@@ -87,7 +87,7 @@ export function SensorsCardsGrid({
             <Power className="h-5 w-5 text-sky-500" />
             {t("grid.active_title")}
           </div>
-          <div className="grid gap-4 grid-cols-[repeat(auto-fill,minmax(260px,1fr))] justify-start">
+          <div className="grid grid-cols-[repeat(auto-fill,minmax(240px,1fr))] justify-start gap-3">
             {Array.from({ length: 8 }).map((_, i) => (
               <MonitoringCardSkeleton key={`skeleton-${i}`} />
             ))}
@@ -133,7 +133,7 @@ export function SensorsCardsGrid({
           {title === t("grid.disabled_title") ? t("grid.disabled_empty") : t("grid.empty_title")}
         </div>
       ) : (
-        <div className={`grid gap-4 justify-start ${isDisabledSection ? "grid-cols-[repeat(auto-fill,minmax(250px,1fr))]" : "grid-cols-[repeat(auto-fill,minmax(260px,1fr))]"}`}>
+        <div className="grid grid-cols-[repeat(auto-fill,minmax(240px,1fr))] justify-start gap-3">
           {items.map((sensor) => {
             const locationId = Number(sensor.location.id ?? sensor.id)
             const groupName =
@@ -187,7 +187,7 @@ export function SensorsCardsGrid({
   )
 
   return (
-    <div className="p-4 md:p-6 flex flex-col gap-8 animate-fade-in">
+    <div className="flex flex-col gap-6 p-4 md:px-6 md:py-4 animate-fade-in">
       <div style={{ order: disabledFirst ? 2 : 1 }}>
         {renderSection(
           `${t("grid.active_title")} (${countLocations(activeSensors, activeTotalCount)})`,

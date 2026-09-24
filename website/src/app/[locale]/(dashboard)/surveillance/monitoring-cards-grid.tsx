@@ -51,7 +51,7 @@ function MonitoringCardsGridSkeleton({ keyPrefix }: { keyPrefix: string }) {
   return (
     <div className="space-y-2">
       <div className="h-px w-full bg-slate-200 dark:bg-slate-700" />
-      <div className="grid gap-4 grid-cols-[repeat(auto-fit,minmax(260px,1fr))]">
+      <div className="grid grid-cols-[repeat(auto-fill,minmax(240px,1fr))] gap-3">
         {Array.from({ length: 4 }).map((_, i) => (
           <MonitoringCardSkeleton key={`${keyPrefix}-${i}`} />
         ))}
@@ -168,7 +168,7 @@ export function MonitoringCardsGrid({
   ]
 
   return (
-    <div className="p-4 md:p-6 flex flex-col gap-8 animate-fade-in">
+    <div className="flex flex-col gap-6 p-4 md:px-6 md:py-4 animate-fade-in">
       {sections.map((section, index) => {
         const order = index === 0 ? (disabledFirst ? 2 : 1) : disabledFirst ? 1 : 2
 

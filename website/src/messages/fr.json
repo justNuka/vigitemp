@@ -4363,7 +4363,21 @@
       }
     },
     "wireless": {
-      "battery": "Batterie : {value}%"
+      "battery": "Batterie : {value}%",
+      "signal_state": {
+        "excellent": "Excellent",
+        "good": "Bon",
+        "medium": "Moyen",
+        "weak": "Faible",
+        "critical": "Critique",
+        "unknown": "Inconnu"
+      },
+      "battery_state": {
+        "ok": "OK",
+        "low": "Faible",
+        "critical": "Critique",
+        "unknown": "Inconnue"
+      }
     },
     "frequency": "Fréq : {minutes} min",
     "alarm_delay": "Retard alarme : {minutes} min",

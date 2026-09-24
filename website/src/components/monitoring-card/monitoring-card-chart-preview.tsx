@@ -1,6 +1,6 @@
 import { Line } from 'react-chartjs-2'
 
-import { Skeleton } from '@/components/ui/skeleton'
+import { MonitoringChartLoading } from '@/components/animated-loaders/chart-loading'
 import { getMeasureTimestamp, type MeasureData } from '@/lib/measurements'
 
 interface MonitoringCardChartPreviewProps {
@@ -49,15 +49,15 @@ export function MonitoringCardChartPreview({
 }: MonitoringCardChartPreviewProps) {
   if (isLoading) {
     return (
-      <div className="h-32.5">
-        <Skeleton className="h-full w-full rounded-md" />
+      <div className="h-[142px]">
+        <MonitoringChartLoading />
       </div>
     )
   }
 
   return (
     <>
-      <div className="h-32.5">
+      <div className="h-[142px]">
         <Line
           data={{
             datasets: chartDatasets.map((dataset) => {
@@ -108,6 +108,7 @@ export function MonitoringCardChartPreview({
               },
               y: { display: false, min: yMin, max: yMax },
             },
+            animation: { duration: 420, easing: 'easeOutQuart' },
             interaction: { mode: 'nearest', axis: 'x', intersect: false },
           }}
         />

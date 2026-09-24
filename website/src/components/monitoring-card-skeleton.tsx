@@ -1,3 +1,5 @@
+import { MonitoringChartLoading } from "@/components/animated-loaders/chart-loading"
+import { MonitoringSignalSequence } from "@/components/animated-loaders/signal-sequence"
 import { Skeleton } from "@/components/ui/skeleton"
 
 export function MonitoringCardSkeleton() {
@@ -10,8 +12,11 @@ export function MonitoringCardSkeleton() {
           <Skeleton className="h-4 w-44" />
         </div>
       </div>
-      <div className="p-4 space-y-4">
-        <Skeleton className="h-32.5 w-full rounded-md" />
+      <div className="space-y-3 px-3 pb-2 pt-2.5">
+        <div className="flex h-7 items-center text-muted-foreground/60">
+          <MonitoringSignalSequence className="h-7 w-[84px]" />
+        </div>
+        <div className="h-[142px]"><MonitoringChartLoading /></div>
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <Skeleton className="h-3 w-32" />
@@ -22,9 +27,9 @@ export function MonitoringCardSkeleton() {
             <Skeleton className="h-3 w-24" />
           </div>
         </div>
-        <div className="flex justify-center gap-4 pt-2">
+        <div className="flex justify-end gap-2 border-t border-border/70 pt-2">
           {Array.from({ length: 4 }).map((_, index) => (
-            <Skeleton key={index} className="h-6 w-6 rounded-md" />
+            <Skeleton key={index} className="h-5 w-5 rounded-md" />
           ))}
         </div>
       </div>

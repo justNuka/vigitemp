@@ -34,6 +34,7 @@ interface MonitoringCardHeaderProps {
   alarmDisabledLabel: string | null
   canAcknowledge: boolean
   onAcknowledge: () => void
+  onOpenDetails: () => void
   t: (key: string, values?: Record<string, string | number>) => string
   tStatus: (key: string) => string
 }
@@ -53,6 +54,7 @@ export function MonitoringCardHeader({
   alarmDisabledLabel,
   canAcknowledge,
   onAcknowledge,
+  onOpenDetails,
   t,
   tStatus,
 }: MonitoringCardHeaderProps) {
@@ -87,7 +89,6 @@ export function MonitoringCardHeader({
   const typeIconInfo = lieuType ? getTypeIcon(lieuType, 'w-4 h-4') : null
   const alarmBadgeClassName = isSurveillanceActive ? 'bg-black/15 text-white ring-1 ring-white/15 backdrop-blur-sm' : 'bg-white/20 text-white ring-1 ring-white/20'
   const hasActiveAlarmCode = isSurveillanceActive && Boolean(effectiveAlarmType)
-  const alarmCodeLabel = effectiveAlarmType ?? '—'
 
   const operationalState = lieuEtat === 'E'
     ? {
@@ -107,8 +108,10 @@ export function MonitoringCardHeader({
 
   return (
     <div
-      className={`px-3 py-2 relative overflow-hidden ${resolvedHeaderBg} border-b-2 ${headerBorderClassName} ${canAcknowledge ? 'cursor-pointer' : ''}`}
-      onClick={() => canAcknowledge && onAcknowledge()}
+      className={`px-3 py-2 relative overflow-hidden ${resolvedHeaderBg} border-b-2 ${headerBorderClassName} ${canAcknowledge ? 'cursor-pointer transition-[filter] hover:brightness-[1.04]' : ''}`}
+      onClick={() => {
+        if (canAcknowledge) onAcknowledge()
+      }}
       onKeyDown={(event) => {
         if (!canAcknowledge) return
         if (event.key === 'Enter' || event.key === ' ') {
@@ -131,6 +134,7 @@ export function MonitoringCardHeader({
               <TooltipTrigger asChild>
                 <div className="max-w-full cursor-help truncate hover:opacity-80 transition-opacity">
                   {siteName || t('site.unknown')}
+                  {groupName ? <span className="opacity-75"> · {groupName}</span> : null}
                 </div>
               </TooltipTrigger>
               <TooltipContent>
@@ -144,11 +148,18 @@ export function MonitoringCardHeader({
               </TooltipContent>
             </UITooltip>
           </TooltipProvider>
-          {groupName ? <div className="max-w-full truncate">{groupName}</div> : null}
           <div className="min-w-0 space-y-0.5">
-            <div className="line-clamp-2 wrap-break-word text-[17px] leading-tight font-bold tracking-tight">
+            <button
+              type="button"
+              onClick={(event) => {
+                event.stopPropagation()
+                onOpenDetails()
+              }}
+              className="line-clamp-2 max-w-full wrap-break-word rounded-sm text-left text-[17px] font-bold leading-tight tracking-tight underline-offset-4 transition-opacity hover:opacity-85 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
+              aria-label={t('actions.details')}
+            >
               {nomLieu}
-            </div>
+            </button>
             {sondeNumeroSerie ? (
               <div className="line-clamp-2 wrap-break-word text-[11px] leading-tight font-medium opacity-85">
                 {sondeNumeroSerie}
@@ -195,16 +206,19 @@ export function MonitoringCardHeader({
               <UITooltip>
                 <TooltipTrigger asChild>
                   <span
-                    className="relative inline-flex h-4 w-4 cursor-help items-center justify-center"
+                    className="relative inline-flex h-5 w-5 cursor-help items-center justify-center"
                     aria-hidden="true"
                   >
                     {hasActiveAlarmCode ? (
-                      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white/70 opacity-75" />
+                      <>
+                        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white/75 opacity-80 motion-reduce:hidden" />
+                        <span className="absolute inline-flex h-4 w-4 rounded-full border border-white/55" />
+                      </>
                     ) : null}
                     <span
                       className={`relative inline-flex rounded-full ${hasActiveAlarmCode
-                        ? 'h-2.5 w-2.5 bg-white shadow-[0_0_0_2px_rgba(255,255,255,0.28),0_0_12px_4px_rgba(255,255,255,0.7)]'
-                        : 'h-2.5 w-2.5 bg-white/40'}`}
+                        ? 'h-3 w-3 bg-white shadow-[0_0_0_2px_rgba(255,255,255,0.38),0_0_14px_5px_rgba(255,255,255,0.75)]'
+                        : 'h-2.5 w-2.5 bg-white/45'}`}
                     />
                   </span>
                 </TooltipTrigger>

@@ -19,6 +19,7 @@ import { Maximize2, Minimize2 } from "lucide-react";
 import { MonitoringAuditTab } from "@/components/monitoring-details/monitoring-audit-tab";
 import { MonitoringGraphTab } from "@/components/monitoring-details/monitoring-graph-tab";
 import { MonitoringTableTab } from "@/components/monitoring-details/monitoring-table-tab";
+import { BatteryIndicator } from "@/components/monitoring-card/battery-indicator";
 import { RssiBars } from "@/components/monitoring-card/rssi-bars";
 import type { DateRangeValue, ZoomBounds } from "@/components/monitoring-details/types";
 import { useMonitoringAuditLogs } from "@/components/monitoring-details/use-monitoring-audit-logs";
@@ -26,13 +27,13 @@ import { useMonitoringRangeMeasurements } from "@/components/monitoring-details/
 import { Button } from "@/components/ui/button";
 import { DateRangePicker } from "@/components/ui/date-range-picker";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useLieuMeasurementsPaged } from "@/hooks/useLieuMeasurementsPaged";
 import { calculateYDomain, getMeasureSummary, sortMeasuresChronologically } from "@/lib/measurements";
 import { MONITORING_DETAIL_GRAPH_MAX_POINTS } from "@/lib/measurement-downsampling";
 import { formatNumber } from "@/lib/number-display";
 import { cn } from "@/lib/utils";
+import type { SensorStatus } from "@/lib/surveillance-status";
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, ChartTooltip, Legend, Filler);
 
@@ -43,7 +44,15 @@ interface MonitoringDetailsModalProps {
   onClose: () => void;
   idLieu: number;
   nomLieu: string;
+  siteName?: string;
+  groupName?: string;
   sondeNumeroSerie: string;
+  currentValue?: number | null;
+  lastMeasurement?: Date | string | null;
+  status?: SensorStatus;
+  alarmType?: 'H' | 'B' | 'N' | 'S' | 'A' | 'M' | 'T' | null;
+  canAcknowledge?: boolean;
+  onAcknowledge?: () => void;
   isGso?: boolean | null;
   gsoRssi?: string | null;
   batteryPercent?: number | null;
@@ -83,7 +92,15 @@ export default function MonitoringDetailsModal({
   onClose,
   idLieu,
   nomLieu,
+  siteName = "",
+  groupName = "",
   sondeNumeroSerie,
+  currentValue = null,
+  lastMeasurement = null,
+  status = "ok",
+  alarmType = null,
+  canAcknowledge = false,
+  onAcknowledge,
   gsoRssi,
   batteryPercent,
   gsoTension,
@@ -102,6 +119,8 @@ export default function MonitoringDetailsModal({
   const locale = useLocale();
   const localeTag = locale === "fr" ? "fr-FR" : locale;
   const t = useTranslations("monitoringDetailsModal");
+  const tCard = useTranslations("monitoringCard");
+  const tStatus = useTranslations("surveillanceStatus");
 
   useEffect(() => {
     if (isChartZoomPluginRegistered) return;
@@ -443,17 +462,83 @@ export default function MonitoringDetailsModal({
   }, [idLieu, isOpen, hasExplicitRange, graphRangeStart, graphRangeEnd]);
 
   const [detailsSize, setDetailsSize] = useState<"standard" | "expanded">("standard");
-  const isDialogLoading = rangeGraphLoading;
-  const expandedHistoryLayout =
-    detailsSize === "expanded" || activeTab === "graph" || activeTab === "table";
-  const tabContentMaxHeight =
-    detailsSize === "expanded"
-      ? "calc(100vh - 18rem)"
-      : "calc(100vh - 26rem)";
-  const graphHeightClassName =
-    detailsSize === "expanded"
-      ? "relative h-[calc(100vh-20rem)] min-h-[72vh]"
-      : "relative h-[calc(100vh-28rem)] min-h-[52vh]";
+  const isExpanded = detailsSize === "expanded";
+  const tabContentMaxHeight = isExpanded
+    ? "calc(100vh - 18rem)"
+    : "calc(88vh - 17rem)";
+  const graphHeightClassName = isExpanded
+    ? "relative h-[calc(100vh-20rem)] min-h-[68vh]"
+    : "relative h-[380px] min-h-[380px]";
+
+  const currentMeasurementText = useMemo(() => {
+    const decimals = summary.decimals ?? 1;
+    if (currentValue !== null && currentValue !== undefined) {
+      return `${formatNumber(currentValue, { decimals, locale: localeTag })}${unite}`;
+    }
+    return summary.lastMeasureText || "—";
+  }, [currentValue, localeTag, summary.decimals, summary.lastMeasureText, unite]);
+
+  const currentMeasurementTime = useMemo(() => {
+    if (lastMeasurement) {
+      return formatStoredDbDateTime(lastMeasurement, {
+        format: "dateTime",
+        locale: localeTag,
+        fallback: "",
+      });
+    }
+    return summary.lastDateTime || "";
+  }, [lastMeasurement, localeTag, summary.lastDateTime]);
+
+  const formatThreshold = useCallback(
+    (value: number | null) =>
+      value === null
+        ? "—"
+        : `${formatNumber(value, { decimals: summary.decimals ?? 1, locale: localeTag })}${unite}`,
+    [localeTag, summary.decimals, unite],
+  );
+
+  const alarmLabel =
+    alarmType === "H"
+      ? tCard("alarmTypes.high")
+      : alarmType === "B"
+        ? tCard("alarmTypes.low")
+        : alarmType === "N"
+          ? tCard("alarmTypes.no_response")
+          : alarmType === "S" || alarmType === "A"
+            ? tCard("alarmTypes.sector")
+            : alarmType === "M"
+              ? tCard("alarmTypes.module")
+              : alarmType === "T" || status === "ended"
+                ? tCard("alarmTypes.ended")
+                : status === "warning"
+                  ? tStatus("warning")
+                  : tStatus("ok");
+
+  const statusToneClass =
+    alarmType === "H" || status === "critical"
+      ? "border-red-200 bg-red-50/80 text-red-800 dark:border-red-500/25 dark:bg-red-500/10 dark:text-red-100"
+      : alarmType === "B"
+        ? "border-blue-200 bg-blue-50/80 text-blue-800 dark:border-blue-500/25 dark:bg-blue-500/10 dark:text-blue-100"
+        : status === "warning"
+          ? "border-amber-200 bg-amber-50/80 text-amber-800 dark:border-amber-500/25 dark:bg-amber-500/10 dark:text-amber-100"
+          : status === "technical"
+            ? "border-slate-300 bg-slate-100 text-slate-900 dark:border-slate-600 dark:bg-slate-800/70 dark:text-slate-100"
+            : status === "ended"
+              ? "border-violet-200 bg-violet-50/80 text-violet-800 dark:border-violet-500/25 dark:bg-violet-500/10 dark:text-violet-100"
+              : "border-sky-200 bg-sky-50/80 text-sky-800 dark:border-sky-500/25 dark:bg-sky-500/10 dark:text-sky-100";
+
+  const statusDotClass =
+    alarmType === "H" || status === "critical"
+      ? "bg-red-600"
+      : alarmType === "B"
+        ? "bg-blue-600"
+        : status === "warning"
+          ? "bg-amber-500"
+          : status === "technical"
+            ? "bg-slate-900 dark:bg-slate-100"
+            : status === "ended"
+              ? "bg-violet-600"
+              : "bg-sky-500";
 
   useEffect(() => {
     if (!isOpen) {
@@ -488,175 +573,225 @@ export default function MonitoringDetailsModal({
   ]);
 
   return (
-      <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className={cn(
-        "max-h-[95vh] overflow-y-auto overflow-x-hidden transition-all duration-300 ease-out",
-        expandedHistoryLayout
-          ? "w-[98vw] max-w-[98vw] h-[96vh]"
-          : "w-[min(94vw,1200px)] max-w-[1200px]",
-      )}>
-        <DialogHeader>
-          <DialogTitle>{nomLieu}</DialogTitle>
-          <div className="space-y-1">
-            <p className="text-sm text-muted-foreground">{t("sensor", { serial: sondeNumeroSerie })}</p>
-            {gsoRssi || gsoTension || batteryPercent !== null && batteryPercent !== undefined ? (
-              <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
-                {gsoRssi ? (
-                  <span className="inline-flex items-center gap-2">
-                    <RssiBars value={gsoRssi} label={gsoRssiLabel ?? t("gso.rssi", { value: gsoRssi })} />
-                    <span>{gsoRssiLabel ?? t("gso.rssi", { value: gsoRssi })}</span>
-                  </span>
-                ) : null}
-                {batteryPercent !== null && batteryPercent !== undefined ? <span>{t("wireless.battery", { value: batteryPercent })}</span> : null}
-                {gsoTension ? <span>{t("gso.tension", { value: gsoTension })}</span> : null}
-              </div>
-            ) : null}
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent
+        className={cn(
+          "flex max-h-[96vh] flex-col overflow-hidden p-0 transition-all duration-300 ease-out",
+          isExpanded
+            ? "h-[96vh] w-[98vw] max-w-[98vw]"
+            : "w-[min(94vw,1080px)] max-w-[1080px] sm:max-h-[88vh]",
+        )}
+      >
+        <DialogHeader className="border-b border-border px-5 py-3 pr-14">
+          <div className="flex min-w-0 flex-col gap-0.5">
+            <p className="truncate text-[11px] font-medium text-muted-foreground">
+              {siteName || tCard("site.unknown")}
+              {groupName ? <span className="opacity-75"> · {groupName}</span> : null}
+            </p>
+            <DialogTitle className="truncate text-lg">{nomLieu}</DialogTitle>
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+              <span>{t("sensor", { serial: sondeNumeroSerie })}</span>
+              {gsoRssi ? (
+                <span className="inline-flex items-center gap-1.5">
+                  <RssiBars value={gsoRssi} label={gsoRssiLabel ?? t("gso.rssi", { value: gsoRssi })} />
+                  <span>{gsoRssiLabel ?? t("gso.rssi", { value: gsoRssi })}</span>
+                </span>
+              ) : null}
+              {batteryPercent !== null && batteryPercent !== undefined ? (
+                <span className="inline-flex items-center gap-1.5">
+                  <BatteryIndicator
+                    percent={batteryPercent}
+                    voltage={gsoTension}
+                    label={t("wireless.battery", { value: batteryPercent })}
+                  />
+                  <span>{t("wireless.battery", { value: batteryPercent })}</span>
+                </span>
+              ) : null}
+              {gsoTension ? <span>{t("gso.tension", { value: gsoTension })}</span> : null}
+            </div>
           </div>
         </DialogHeader>
 
-        {isDialogLoading ? (
-          <div className="space-y-4 pt-4">
-            <Skeleton className="h-10 w-64" />
-            <Skeleton className="h-100 w-full" />
+        <div className="grid border-b border-border md:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)_minmax(0,1.15fr)] md:divide-x md:divide-border">
+          <div className="flex flex-col justify-center gap-1 px-5 py-3">
+            <span className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+              {t("chart.measures", { unit: unite })}
+            </span>
+            <span className="text-2xl font-semibold tabular-nums text-foreground">{currentMeasurementText}</span>
+            {currentMeasurementTime ? (
+              <span className="text-xs tabular-nums text-muted-foreground">{currentMeasurementTime}</span>
+            ) : null}
           </div>
-        ) : (
-          <div className="flex min-h-0 flex-1 flex-col gap-4">
-            <div className="flex w-full flex-wrap items-center justify-between gap-3">
-              <div className="w-full max-w-5xl flex-1 space-y-2">
-                <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-                  <DateRangePicker
-                    key={hasExplicitRange ? `custom-${explicitRangeStart?.getTime()}-${explicitRangeEnd?.getTime()}` : "rolling-24-hours"}
-                    allowEmpty
-                    initialDateFrom={dateRange?.from}
-                    initialDateTo={dateRange?.to ?? dateRange?.from}
-                    onUpdate={({ range }) => {
-                      if (!range.from) {
-                        setDateRange(null);
-                        setRollingGraphRange(getRollingGraphRange());
-                        return;
-                      }
-                      setDateRange({ from: range.from, to: range.to ?? range.from });
-                    }}
-                    align="start"
-                    locale={localeTag}
-                    showCompare={false}
-                    matchTriggerWidth={false}
-                    popoverClassName="w-[min(1280px,calc(100vw-1rem))]"
-                    triggerLabel={selectedRangeLabel}
-                  />
-                  {hasExplicitRange ? (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => {
-                        setDateRange(null);
-                        setRollingGraphRange(getRollingGraphRange());
-                      }}
-                    >
-                      {t("actions.last_24_hours")}
-                    </Button>
-                  ) : null}
-                </div>
-              </div>
+
+          <dl className="grid grid-cols-3 content-center gap-x-3 gap-y-2 px-5 py-3">
+            <div className="min-w-0">
+              <dt className="truncate text-[11px] text-muted-foreground">{tCard("chart.upper_threshold", { unit: unite })}</dt>
+              <dd className="text-sm font-semibold tabular-nums text-red-600 dark:text-red-300">{formatThreshold(consigneSup)}</dd>
+            </div>
+            <div className="min-w-0">
+              <dt className="truncate text-[11px] text-muted-foreground">{tCard("chart.target", { unit: unite })}</dt>
+              <dd className="text-sm font-semibold tabular-nums text-foreground">{formatThreshold(consigne)}</dd>
+            </div>
+            <div className="min-w-0">
+              <dt className="truncate text-[11px] text-muted-foreground">{tCard("chart.lower_threshold", { unit: unite })}</dt>
+              <dd className="text-sm font-semibold tabular-nums text-red-600 dark:text-red-300">{formatThreshold(consigneInf)}</dd>
+            </div>
+          </dl>
+
+          <div className={cn("flex items-center gap-3 border md:border-0 px-5 py-3", statusToneClass)}>
+            <span className="relative inline-flex h-5 w-5 shrink-0 items-center justify-center">
+              {(alarmType || status === "critical" || status === "technical") ? (
+                <span className={cn("absolute inline-flex h-full w-full animate-ping rounded-full opacity-25 motion-reduce:hidden", statusDotClass)} />
+              ) : null}
+              <span className={cn("relative h-2.5 w-2.5 rounded-full shadow-sm", statusDotClass)} />
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-semibold">{alarmLabel}</p>
+              <p className="truncate text-xs opacity-75">
+                {isSurveillanceActive ? tCard("surveillance.active") : tCard("surveillance.disabled")}
+              </p>
+            </div>
+            {canAcknowledge && onAcknowledge ? (
+              <Button type="button" size="sm" variant="outline" className="shrink-0 bg-background/80" onClick={onAcknowledge}>
+                {tCard("acknowledge.button")}
+              </Button>
+            ) : null}
+          </div>
+        </div>
+
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border px-5 py-2">
+          <Tabs
+            value={activeTab}
+            onValueChange={(value) => setActiveTab(value as "graph" | "table" | "audit")}
+            className="w-auto"
+          >
+            <TabsList className="grid h-9 grid-cols-3 bg-muted/70 p-1">
+              <TabsTrigger value="graph" className="px-4 text-xs">{t("tabs.graph")}</TabsTrigger>
+              <TabsTrigger value="table" className="px-4 text-xs">{t("tabs.table")}</TabsTrigger>
+              <TabsTrigger value="audit" className="px-4 text-xs">{t("tabs.audit")}</TabsTrigger>
+            </TabsList>
+          </Tabs>
+
+          <div className="flex flex-wrap items-center justify-end gap-2">
+            <DateRangePicker
+              key={hasExplicitRange ? `custom-${explicitRangeStart?.getTime()}-${explicitRangeEnd?.getTime()}` : "rolling-24-hours"}
+              allowEmpty
+              initialDateFrom={dateRange?.from}
+              initialDateTo={dateRange?.to ?? dateRange?.from}
+              onUpdate={({ range }) => {
+                if (!range.from) {
+                  setDateRange(null);
+                  setRollingGraphRange(getRollingGraphRange());
+                  return;
+                }
+                setDateRange({ from: range.from, to: range.to ?? range.from });
+              }}
+              align="end"
+              locale={localeTag}
+              showCompare={false}
+              matchTriggerWidth={false}
+              popoverClassName="w-[min(1280px,calc(100vw-1rem))]"
+              triggerLabel={selectedRangeLabel}
+            />
+            {hasExplicitRange ? (
               <Button
                 type="button"
-                variant="outline"
+                variant="ghost"
                 size="sm"
-                onClick={() => setDetailsSize((prev) => (prev === "expanded" ? "standard" : "expanded"))}
+                onClick={() => {
+                  setDateRange(null);
+                  setRollingGraphRange(getRollingGraphRange());
+                }}
               >
-                {detailsSize === "expanded" ? (
-                  <Minimize2 className="mr-2 h-4 w-4" />
-                ) : (
-                  <Maximize2 className="mr-2 h-4 w-4" />
-                )}
-                {detailsSize === "expanded" ? t("actions.standard_size") : t("actions.expanded_size")}
+                {t("actions.last_24_hours")}
               </Button>
-            </div>
-
-            <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as "graph" | "table" | "audit")} className="flex min-h-0 w-full flex-1 flex-col">
-              <TabsList className="grid w-full grid-cols-3 bg-primary/10 text-primary">
-                <TabsTrigger value="graph" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-                  {t("tabs.graph")}
-                </TabsTrigger>
-                <TabsTrigger value="table" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-                  {t("tabs.table")}
-                </TabsTrigger>
-                <TabsTrigger value="audit" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-                  {t("tabs.audit")}
-                </TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="graph" className={cn("flex min-h-0 flex-1 flex-col", expandedHistoryLayout && "space-y-6") }>
-                <MonitoringGraphTab
-                  chartRef={chartRef}
-                  orderedData={orderedData}
-                  graphMeasureCount={graphSourceCount || orderedData.length}
-                  displayedPointCount={orderedData.length}
-                  isSampled={isGraphSampled}
-                  isRangeSelected={hasExplicitRange}
-                  isRollingWindow={!hasExplicitRange}
-                  auditLogs={auditLogs}
-                  showAuditMarkers={showGraphAudits}
-                  onShowAuditMarkersChange={setShowGraphAudits}
-                  measuresLabel={measuresLabel}
-                  locale={locale}
-                  unite={unite}
-                  consigneSup={consigneSup}
-                  consigneInf={consigneInf}
-                  consigne={consigne}
-                  preAlarmSup={preAlarmSup}
-                  preAlarmInf={preAlarmInf}
-                  guidePositions={guidePositions}
-                  yMin={yMin}
-                  yMax={yMax}
-                  xRangeStart={graphRangeStart}
-                  xRangeEnd={graphRangeEnd}
-                  zoomBounds={zoomBounds}
-                  resetChartZoom={resetChartZoom}
-                  captureZoomBounds={captureZoomBounds}
-                  t={t}
-                  graphHeightClassName={graphHeightClassName}
-                  exportFileName={exportFileName}
-                />
-              </TabsContent>
-
-              <TabsContent value="table" className="flex min-h-0 flex-1 flex-col">
-                <MonitoringTableTab
-                  tableMeasurements={orderedHistoryData}
-                  nomLieu={nomLieu}
-                  sondeNumeroSerie={sondeNumeroSerie}
-                  exportFileName={exportFileName}
-                  unite={unite}
-                  consigneSup={consigneSup}
-                  consigneInf={consigneInf}
-                  rangeLoading={isHistoryLoading}
-                  pagination={pagination}
-                  pageCount={pageCount}
-                  totalRows={totalRows}
-                  onPaginationChange={setPagination}
-                  sorting={tableSorting}
-                  onSortingChange={handleTableSortingChange}
-                  isSurveillanceActive={isSurveillanceActive}
-                  rangeEnabled={true}
-                  presentationRows={presentationRows}
-                  t={t}
-                  maxHeight={tabContentMaxHeight}
-                />
-              </TabsContent>
-
-              <TabsContent value="audit" className="flex min-h-0 flex-1 flex-col">
-                <MonitoringAuditTab
-                  logs={auditLogs}
-                  isLoading={auditLoading}
-                  error={auditError}
-                  t={t}
-                  maxHeight={tabContentMaxHeight}
-                />
-              </TabsContent>
-            </Tabs>
+            ) : null}
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setDetailsSize((prev) => (prev === "expanded" ? "standard" : "expanded"))}
+            >
+              {isExpanded ? <Minimize2 className="mr-2 h-4 w-4" /> : <Maximize2 className="mr-2 h-4 w-4" />}
+              {isExpanded ? t("actions.standard_size") : t("actions.expanded_size")}
+            </Button>
           </div>
-        )}
+        </div>
+
+        <Tabs
+          value={activeTab}
+          onValueChange={(value) => setActiveTab(value as "graph" | "table" | "audit")}
+          className="flex min-h-0 w-full flex-1 flex-col overflow-hidden"
+        >
+          <TabsContent value="graph" className="m-0 min-h-0 flex-1 overflow-auto px-5 py-3">
+            <MonitoringGraphTab
+              chartRef={chartRef}
+              isLoading={rangeGraphLoading}
+              orderedData={orderedData}
+              graphMeasureCount={graphSourceCount || orderedData.length}
+              displayedPointCount={orderedData.length}
+              isSampled={isGraphSampled}
+              isRangeSelected={hasExplicitRange}
+              isRollingWindow={!hasExplicitRange}
+              auditLogs={auditLogs}
+              showAuditMarkers={showGraphAudits}
+              onShowAuditMarkersChange={setShowGraphAudits}
+              measuresLabel={measuresLabel}
+              locale={locale}
+              unite={unite}
+              consigneSup={consigneSup}
+              consigneInf={consigneInf}
+              consigne={consigne}
+              preAlarmSup={preAlarmSup}
+              preAlarmInf={preAlarmInf}
+              guidePositions={guidePositions}
+              yMin={yMin}
+              yMax={yMax}
+              xRangeStart={graphRangeStart}
+              xRangeEnd={graphRangeEnd}
+              zoomBounds={zoomBounds}
+              resetChartZoom={resetChartZoom}
+              captureZoomBounds={captureZoomBounds}
+              t={t}
+              graphHeightClassName={graphHeightClassName}
+              exportFileName={exportFileName}
+            />
+          </TabsContent>
+
+          <TabsContent value="table" className="m-0 min-h-0 flex-1 overflow-auto px-5 py-3">
+            <MonitoringTableTab
+              tableMeasurements={orderedHistoryData}
+              nomLieu={nomLieu}
+              sondeNumeroSerie={sondeNumeroSerie}
+              exportFileName={exportFileName}
+              unite={unite}
+              consigneSup={consigneSup}
+              consigneInf={consigneInf}
+              rangeLoading={isHistoryLoading}
+              pagination={pagination}
+              pageCount={pageCount}
+              totalRows={totalRows}
+              onPaginationChange={setPagination}
+              sorting={tableSorting}
+              onSortingChange={handleTableSortingChange}
+              isSurveillanceActive={isSurveillanceActive}
+              rangeEnabled={true}
+              presentationRows={presentationRows}
+              t={t}
+              maxHeight={tabContentMaxHeight}
+            />
+          </TabsContent>
+
+          <TabsContent value="audit" className="m-0 min-h-0 flex-1 overflow-auto px-5 py-3">
+            <MonitoringAuditTab
+              logs={auditLogs}
+              isLoading={auditLoading}
+              error={auditError}
+              t={t}
+              maxHeight={tabContentMaxHeight}
+            />
+          </TabsContent>
+        </Tabs>
       </DialogContent>
     </Dialog>
   );

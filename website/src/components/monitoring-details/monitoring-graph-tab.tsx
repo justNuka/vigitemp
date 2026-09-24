@@ -1,6 +1,7 @@
 import type { RefObject } from "react"
 import { useEffect, useMemo } from "react"
 
+import { MonitoringDetailChartLoading } from "@/components/animated-loaders/chart-loading"
 import { Button } from "@/components/ui/button"
 import { Switch } from "@/components/ui/switch"
 import { Line } from "react-chartjs-2"
@@ -26,6 +27,7 @@ type GuidePositions = {
 
 interface MonitoringGraphTabProps {
   chartRef: RefObject<ChartJS<"line"> | null>
+  isLoading?: boolean
   orderedData: MeasureData[]
   graphMeasureCount: number
   displayedPointCount?: number
@@ -135,6 +137,7 @@ function buildMergedAxisLabels(
 
 export function MonitoringGraphTab({
   chartRef,
+  isLoading = false,
   orderedData,
   graphMeasureCount,
   displayedPointCount = orderedData.length,
@@ -459,7 +462,11 @@ export function MonitoringGraphTab({
       <p className="text-xs text-muted-foreground">{t("chart.drag_zoom_hint")}</p>
 
       <div className={graphHeightClassName ?? "relative h-[calc(100vh-23rem)] min-h-[60vh]"}>
-        {!hasPlottedMeasures ? (
+        {isLoading ? (
+          <div className="absolute inset-0">
+            <MonitoringDetailChartLoading />
+          </div>
+        ) : !hasPlottedMeasures ? (
           <div className="flex h-full items-center justify-center rounded-lg border border-dashed border-border bg-muted/20 px-6 text-center">
             <div className="space-y-2">
               <p className="text-sm font-medium">{t("chart.empty_title")}</p>
