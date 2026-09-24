@@ -3297,7 +3297,7 @@ Fichiers principaux :
 
 ### R23-005-D — Graphes d'acquittement : transitions et zoom
 
-**Statut : `EN_COURS` — branche `fix/alarm-analysis-chart-zoom` — base `dev` `0b562049aef35fb060cf56c62900d793956715a0`**
+**Statut : `PR_OUVERTE` — branche `fix/alarm-analysis-chart-zoom` — PR #153 — base `dev` `0b562049aef35fb060cf56c62900d793956715a0`**
 
 Retours :
 
