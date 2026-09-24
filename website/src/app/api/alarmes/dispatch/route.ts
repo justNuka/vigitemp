@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server"
 import { z } from "zod"
-import { prisma } from "@/lib/prisma"
+import { prisma, prismaMesure } from "@/lib/prisma"
 import { getRequestContext, withLogging } from "@/lib/api-logger"
 import { apiError, apiOk } from "@/lib/api-response"
 import { routing } from "@/i18n/routing"
@@ -8,7 +8,7 @@ import { log } from "@/lib/logger"
 import { getPublicAppUrl } from "@/lib/public-app-url"
 import { randomUUID } from "crypto"
 import { revalidateTag } from "next/cache"
-import { sendAlarmEventEmails } from "@/lib/alarm-email"
+import { resolveCriticalThresholdContext, sendAlarmEventEmails, type CriticalThresholdContext } from "@/lib/alarm-email"
 import { formatMeasureValue } from "@/lib/measurements"
 import { sendTeamsWorkflowAlarmNotification } from "@/lib/notifications/teams-workflow"
 import { getCompatEnv, getCompatHeader } from "@/lib/vigisensys-compat"
@@ -249,6 +249,29 @@ function isPowerAlarmType(type: string | null | undefined) {
   return normalized === "A" || normalized === "S"
 }
 
+async function getValidMeasurementForAlarm(input: {
+  idLieu: number
+  startedAt?: Date | null
+  order: "asc" | "desc"
+}) {
+  return prismaMesure.tm_mesures.findFirst({
+    where: {
+      Id_Lieu: input.idLieu,
+      Est_Valeur_Null: 0,
+      ...(input.startedAt ? { Date_Heure_Mesure: { gte: input.startedAt } } : {}),
+    },
+    orderBy: [
+      { Date_Heure_Mesure: input.order },
+      { Id_Mesure: input.order },
+    ],
+    select: {
+      Date_Heure_Mesure: true,
+      Valeur: true,
+      Unite: true,
+    },
+  })
+}
+
 export const POST = withLogging(async (req: NextRequest) => {
   const { ip } = getRequestContext(req)
 
@@ -305,7 +328,9 @@ export const POST = withLogging(async (req: NextRequest) => {
   let uniteLabel: string | undefined
   let lastValueLabel: string | undefined
   let lastMeasureAtLabel: string | undefined
+  let criticalThresholdContext: CriticalThresholdContext | null = null
   let alarmExists = false
+  const requestedEventType = validated.data.eventType
   const skipEmail = validated.data.skipEmail === true
   const skipAgent = validated.data.skipAgent === true
   const skipTeams = validated.data.skipTeams === true
@@ -343,6 +368,10 @@ export const POST = withLogging(async (req: NextRequest) => {
             Consigne_Inf_Pre_Alarme: true,
             Tolerance_Surveillance_Sup: true,
             Tolerance_Surveillance_Inf: true,
+            Seuil_Critique_Haut: true,
+            Est_Seuil_Critique_Haut_Active: true,
+            Seuil_Critique_Bas: true,
+            Est_Seuil_Critique_Bas_Active: true,
             Retard_Alarme_Haut: true,
             Retard_Alarme_Bas: true,
             t_site: { select: { Libelle_Site: true } },
@@ -382,19 +411,71 @@ export const POST = withLogging(async (req: NextRequest) => {
                 ? "Coupure secteur"
                 : "Alarme"
       alarmTypeCode = alarm.Type ?? undefined
-      const valueLabel = alarm.Type === "H" || alarm.Type === "B"
-        ? formatValueWithUnit(alarm.Valeur, alarm.Unite)
-        : "N/A"
       alarmTypeLabel = alarmType
-      lastValueLabel = valueLabel
       triggeredAtDate = alarm.Date_Heure_Debut ?? null
       endedAtDate = alarm.Date_Heure_Fin ?? null
       triggeredAtLabel = formatDateTime(triggeredAtDate)
-      lastMeasureAtLabel = formatDateTime(alarm.Date_Heure_Derniere_Mesure)
+
+      const isEndedAlarmDispatch =
+        requestedEventType === "ended" ||
+        (requestedEventType == null && endedAtDate != null)
+      const emailEventType = isEndedAlarmDispatch ? "ended" : "triggered"
+      let displayUnit = normalizeUnit(alarm.Unite)
+      let valueLabel =
+        alarm.Type === "H" || alarm.Type === "B"
+          ? formatValueWithUnit(alarm.Valeur, alarm.Unite)
+          : "N/A"
+      let lastMeasurementAt = alarm.Date_Heure_Derniere_Mesure ?? null
+
+      if (alarm.Type === "N" && isEndedAlarmDispatch && alarm.Id_Lieu) {
+        const recoveredMeasurement = await getValidMeasurementForAlarm({
+          idLieu: alarm.Id_Lieu,
+          startedAt: alarm.Date_Heure_Debut,
+          order: "desc",
+        })
+        if (recoveredMeasurement?.Valeur != null) {
+          displayUnit = normalizeUnit(recoveredMeasurement.Unite ?? alarm.Unite)
+          valueLabel = formatValueWithUnit(Number(recoveredMeasurement.Valeur), displayUnit)
+          lastMeasurementAt = recoveredMeasurement.Date_Heure_Mesure
+        }
+      }
+
+      let criticalEvaluationValue =
+        alarm.Valeur != null && Number.isFinite(Number(alarm.Valeur))
+          ? Number(alarm.Valeur)
+          : null
+      if (emailEventType === "triggered" && alarm.Id_Lieu && alarm.Date_Heure_Debut) {
+        const triggerMeasurement = await getValidMeasurementForAlarm({
+          idLieu: alarm.Id_Lieu,
+          startedAt: alarm.Date_Heure_Debut,
+          order: "asc",
+        })
+        if (triggerMeasurement?.Valeur != null && Number.isFinite(Number(triggerMeasurement.Valeur))) {
+          criticalEvaluationValue = Number(triggerMeasurement.Valeur)
+        }
+      }
+
+      criticalThresholdContext = resolveCriticalThresholdContext({
+        eventType: emailEventType,
+        alarmTypeCode: alarm.Type,
+        alarmValue: criticalEvaluationValue,
+        highThreshold:
+          alarm.t_lieu?.Seuil_Critique_Haut != null
+            ? Number(alarm.t_lieu.Seuil_Critique_Haut)
+            : null,
+        highEnabled: alarm.t_lieu?.Est_Seuil_Critique_Haut_Active ?? false,
+        lowThreshold:
+          alarm.t_lieu?.Seuil_Critique_Bas != null
+            ? Number(alarm.t_lieu.Seuil_Critique_Bas)
+            : null,
+        lowEnabled: alarm.t_lieu?.Est_Seuil_Critique_Bas_Active ?? false,
+      })
+
+      lastValueLabel = valueLabel
+      lastMeasureAtLabel = formatDateTime(lastMeasurementAt)
       const supTolerance =
         alarm.t_lieu?.Tolerance_Surveillance_Sup ?? alarm.t_lieu?.Consigne_Sup ?? null
       consigneValue = alarm.t_lieu?.Consigne != null ? Number(alarm.t_lieu.Consigne) : null
-      const displayUnit = normalizeUnit(alarm.Unite)
       uniteLabel = displayUnit
       consigneSupValue = supTolerance != null ? Number(supTolerance) : null
       const infTolerance =
@@ -581,6 +662,7 @@ export const POST = withLogging(async (req: NextRequest) => {
         consigneSup: consigneSupValue,
         consigneInf: consigneInfValue,
         consigne: consigneValue,
+        criticalThreshold: criticalThresholdContext,
       })
 
   log.info("ALARM_EMAIL", "Alarm email dispatch result", {
@@ -592,6 +674,7 @@ export const POST = withLogging(async (req: NextRequest) => {
     skipped: emailResult.skipped,
     skipEmail,
     usedSystemFallback: emailResult.usedSystemFallback ?? false,
+    criticalThreshold: criticalThresholdContext?.direction ?? null,
   })
 
   const teamsResult = skipTeams
