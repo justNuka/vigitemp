@@ -1,6 +1,5 @@
 import { z } from "zod";
-import { buildCriticalThresholdIssues } from "@/lib/location-critical-threshold-contract";
-import { computeEmt } from "@/lib/emt";
+import { buildLocationAlarmThresholdIssues } from "@/lib/location-alarm-threshold-contract";
 
 const mailingContactSchema = z.object({
   Id_Tel_Num: z.number().optional(),
