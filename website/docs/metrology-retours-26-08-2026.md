@@ -320,3 +320,53 @@ Comportement :
 ## Ajustage — acquisitions pilotées par point et moyenne du plateau — 28/08/2026
 
 Le flux est repris sur `agent/adjustment-acquisition-stability-flow` depuis `dev` `156da60c3847ee751fa3ad7077b35f4bdd505c02` après merge de la PR #69. La PR #70 est ouverte vers `dev`. Le détail d’implémentation et la checklist de reprise sont centralisés dans `website/docs/metrology-adjustment-acquisition-flow-28-08-2026.md`.
+
+## Métrologie — port série bloqué en file d'attente — 24/09/2026
+
+**Statut : `EN_COURS` — branche `fix/metrology-port-lock-deadlock`**
+
+### Retour terrain
+
+Lors du lancement d'une lecture de métrologie sur `COM101`, le Serveur journalisait notamment :
+
+- `[ETALONNAGE][LOCK] status=queued ... action=read-config; priority=surveillance-first` ;
+- puis `[ETALONNAGE][LOCK] status=queued ... action=read; priority=surveillance-first`.
+
+Le port pouvait rester en file d'attente alors même que les GSP de Surveillance avaient été désactivées et qu'aucune nouvelle interrogation normale ne devait monopoliser le module.
+
+### Cause identifiée
+
+Depuis le partage du verrou série introduit pour arbitrer Surveillance et métrologie, une interrogation normale était enveloppée deux fois :
+
+1. `ThreadServeur.RunWithPortLockAsync` acquérait le mutex global nommé du port ;
+2. `Sensor.ExecuteWithPortLockAsync` reprenait le même mutex avant d'exécuter la lecture.
+
+Le mutex Windows autorise une acquisition récursive par le même thread, mais son ownership est lié à ce thread. Les lectures de sondes sont asynchrones ; après un `await`, la continuation peut reprendre sur un autre thread. La seconde acquisition pouvait alors atteindre son `ReleaseMutex()` depuis un thread différent. L'exception était ignorée et une acquisition restait comptée, laissant le port global bloqué pour les requêtes de métrologie suivantes.
+
+### Correctif
+
+- `ThreadServeur.RunWithPortLockAsync` reste l'unique propriétaire du mutex global partagé avec `HotlineApiServer` ;
+- `Sensor.ExecuteWithPortLockAsync` conserve seulement son `SemaphoreSlim` local, compatible avec les continuations async ;
+- le protocole GSP, les commandes `read` / `read-config`, les timeouts métier et la priorité à une mesure de Surveillance déjà engagée ne sont pas modifiés ;
+- Serveur et installateur passent en **1.1.1** ;
+- aucune migration BDD n'est requise.
+
+Fichiers principaux :
+
+- `Vigitemp Serveur/Vigitemp Serveur/Sensor.cs` ;
+- `Vigitemp Serveur/Vigitemp Serveur/Properties/AssemblyInfo.cs` ;
+- `Vigitemp Serveur/VigitempServerInstaller/VigitempServerInstaller.csproj` ;
+- `Vigitemp Serveur/CHANGELOG.md`.
+
+### Validation terrain
+
+- [ ] redémarrer le service afin de supprimer tout mutex laissé bloqué par l'ancien binaire ;
+- [ ] désactiver les GSP de Surveillance partageant le port du banc puis lancer la lecture métrologie ;
+- [ ] vérifier que `status=queued` est suivi de `status=dequeued` / `status=acquired` en cas de mesure déjà engagée ;
+- [ ] vérifier que la lecture démarre immédiatement lorsqu'aucune interrogation Surveillance n'utilise le port ;
+- [ ] lancer plusieurs cycles consécutifs de lecture métrologie sur le même COM sans redémarrer le service ;
+- [ ] réactiver une GSP Surveillance, lancer une mesure puis une lecture métrologie et confirmer que la métrologie attend seulement la fin de la mesure déjà engagée ;
+- [ ] confirmer qu'après la libération du port la Surveillance reprend normalement ;
+- [ ] tester Ajustage et Étalonnage ;
+- [ ] tester au minimum un module avec plusieurs GSP partageant le même port.
+
