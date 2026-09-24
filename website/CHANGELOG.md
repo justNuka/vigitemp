@@ -24,7 +24,9 @@ Cette version fiabilise les emails d'alarme et clarifie les libellés de destina
 ### Fin de non-réponse
 
 - Les emails de fin d'alarme `N` ne forcent plus « Dernière valeur : N/A ».
-- Le Web recharge la dernière mesure valide non nulle du lieu depuis `tm_mesures`, postérieure au début de l'alarme, et utilise sa valeur/unité/date dans l'email.
+- Le Web recharge la mesure valide non nulle de reprise depuis `tm_mesures` et utilise sa valeur/unité/date dans l'email.
+- La fin de non-réponse étant dispatchée par le Serveur avant l'insertion de la mesure GSP, le Web applique une courte fenêtre de retry (5 lectures espacées de 100 ms) à partir de `Date_Heure_Fin` afin d'éviter une course intermittente vers `N/A`.
+- Une indisponibilité ponctuelle de la base Mesures n'empêche pas l'envoi de la notification : le fallback historique reste utilisé et l'erreur est journalisée.
 - Si aucune mesure valide n'est disponible, le fallback `N/A` historique reste conservé.
 
 ### Paramètres / i18n
