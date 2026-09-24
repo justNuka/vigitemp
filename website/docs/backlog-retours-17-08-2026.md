@@ -3260,7 +3260,7 @@ Retours :
 
 #### Validation automatisée
 
-GitHub Actions run `35992350323` : **succès complet**.
+GitHub Actions run `35993020748` : **succès complet**.
 
 - [x] `git diff --check origin/dev...HEAD` ;
 - [x] installation `pnpm` avec lockfile figé ;
