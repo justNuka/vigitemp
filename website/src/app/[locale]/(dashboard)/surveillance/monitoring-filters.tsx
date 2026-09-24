@@ -2,13 +2,12 @@
 
 import { useEffect, useMemo } from "react"
 
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { MultiSelectFilter } from "@/components/multi-select-filter"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { cn } from "@/lib/utils"
-import { Funnel, X } from "lucide-react"
+import { Search, X } from "lucide-react"
 import { useTranslations } from 'next-intl'
 
 import { areSurveillanceFiltersEqual, type FilterState, type SurveillanceSortMode } from "./_helpers/monitoring-derived"
@@ -86,9 +85,6 @@ export function SurveillanceFilters({ filters: controlledFilters, onFilterChange
     })
   }
 
-  const activeStatusFilterLabel =
-    filters.statusFilter !== "all" ? t(`status_filters.${filters.statusFilter}`) : null
-
   const handleSiteChange = (selectedIds: number[]) => {
     const normalizedSiteIds = selectedIds ?? []
     const nextAllowed = buildAllowedGroupIdSet(groups, normalizedSiteIds)
@@ -103,42 +99,22 @@ export function SurveillanceFilters({ filters: controlledFilters, onFilterChange
   }
 
   return (
-    <div className="space-y-3">
-      {hasActiveFilters ? (
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-[#26A5DA]/35 bg-[#26A5DA]/8 px-3 py-2 text-sm text-[#075776] dark:border-[#26A5DA]/45 dark:bg-[#26A5DA]/12 dark:text-sky-50">
-          <div className="flex items-center gap-2">
-            <Funnel className="h-4 w-4" />
-            <span className="font-medium">{t("status.active")}</span>
-            <Badge variant="secondary" className="bg-white/70 text-[#075776] dark:bg-slate-900/40 dark:text-sky-50">
-              {[
-                filters.siteIds.length > 0 ? t("status.siteCount", { count: filters.siteIds.length }) : null,
-                filters.groupIds.length > 0 ? t("status.groupCount", { count: filters.groupIds.length }) : null,
-                filters.searchTerm.trim().length > 0 ? t("status.search") : null,
-                filters.sortMode !== "status" ? t("status.sort") : null,
-                activeStatusFilterLabel ? t("status.badge_filter", { value: activeStatusFilterLabel }) : null,
-              ].filter(Boolean).join(" | ")}
-            </Badge>
-          </div>
-          <Button type="button" variant="ghost" size="sm" className="gap-2 text-[#075776] hover:bg-[#26A5DA]/14 hover:text-[#075776] dark:text-sky-50 dark:hover:bg-[#26A5DA]/18" onClick={clearFilters}>
-            <X className="h-4 w-4" />
-            {t("actions.clear")}
-          </Button>
-        </div>
-      ) : null}
-      <div className="grid grid-cols-1 gap-4 xl:grid-cols-12">
-      <div className="xl:col-span-3">
+    <div className="flex min-w-0 flex-1 flex-nowrap items-center gap-1.5">
+      <div className="w-40 shrink-0">
         <MultiSelectFilter
           label={t('sites.label')}
           options={sites?.map((site) => ({ id: site.id, label: site.name })) || []}
           selectedIds={filters.siteIds || []}
           onChange={(selectedIds) => handleSiteChange((selectedIds || []) as number[])}
           placeholder={t('sites.placeholder')}
-          tone="primary"
+          tone="default"
+          compact
+          hideLabel
           dropdownMaxHeightClassName="max-h-80"
         />
       </div>
 
-      <div className="xl:col-span-3">
+      <div className="w-40 shrink-0">
         <MultiSelectFilter
           label={t('groups.label')}
           options={
@@ -160,25 +136,14 @@ export function SurveillanceFilters({ filters: controlledFilters, onFilterChange
             }))
           }}
           placeholder={t('groups.placeholder')}
-          tone="primary"
+          tone="default"
+          compact
+          hideLabel
           dropdownMaxHeightClassName="max-h-80"
         />
       </div>
 
-      <div className="xl:col-span-4">
-        <Input
-          value={filters.searchTerm}
-          onChange={(event) => {
-            const value = event.target.value
-            setFilters((prev) => ({ ...prev, searchTerm: value }))
-          }}
-          placeholder={t('search.placeholder')}
-          aria-label={t('search.label')}
-          className={cn(filters.searchTerm.trim().length > 0 && "border-[#26A5DA]/60 bg-[#26A5DA]/8 focus-visible:ring-[#26A5DA]/35")}
-        />
-      </div>
-
-      <div className="xl:col-span-2">
+      <div className="w-56 shrink-0">
         <Select
           value={filters.sortMode}
           onValueChange={(value) => {
@@ -188,7 +153,10 @@ export function SurveillanceFilters({ filters: controlledFilters, onFilterChange
             }))
           }}
         >
-          <SelectTrigger className={cn(filters.sortMode !== "status" && "border-[#26A5DA]/60 bg-[#26A5DA]/8 text-[#075776] dark:text-sky-50")}>
+          <SelectTrigger
+            aria-label={t('sort.label')}
+            className="h-8 border-border bg-card px-3 text-[13px] text-foreground shadow-sm hover:border-[hsl(var(--border-strong))] hover:bg-muted/30 focus:ring-2 focus:ring-ring/30 focus:ring-offset-0"
+          >
             <SelectValue placeholder={t('sort.placeholder')} />
           </SelectTrigger>
           <SelectContent>
@@ -197,7 +165,34 @@ export function SurveillanceFilters({ filters: controlledFilters, onFilterChange
           </SelectContent>
         </Select>
       </div>
-    </div>
+
+      <div className="relative min-w-[220px] flex-1">
+        <Search className="pointer-events-none absolute left-2.5 top-1/2 z-10 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+        <Input
+          type="search"
+          value={filters.searchTerm}
+          onChange={(event) => {
+            const value = event.target.value
+            setFilters((prev) => ({ ...prev, searchTerm: value }))
+          }}
+          placeholder={t('search.placeholder')}
+          aria-label={t('search.label')}
+          className="h-8 border-border bg-card pl-8 pr-3 text-[13px] shadow-sm hover:border-[hsl(var(--border-strong))] focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/20 focus-visible:ring-offset-0"
+        />
+      </div>
+
+      {hasActiveFilters ? (
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="h-8 min-h-8 shrink-0 px-2.5 text-xs text-muted-foreground hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
+          onClick={clearFilters}
+        >
+          <X className="h-3.5 w-3.5" />
+          {t("actions.clear")}
+        </Button>
+      ) : null}
     </div>
   )
 }
