@@ -94,9 +94,9 @@ export function AdminServiceCards() {
         state={mailingState}
         stateLabel={t(`status.${mailingState}`)}
         details={[
-          { label: t("mailing.activation"), value: mailingEnabledLabel },
-          { label: t("mailing.configuration"), value: mailingConfiguredLabel },
-          { label: t("mailing.confirmation"), value: mailingConfirmedLabel },
+          { label: t("mailing.activation"), value: mailingEnabledLabel, ok: mailing ? mailing.enabled || null : undefined },
+          { label: t("mailing.configuration"), value: mailingConfiguredLabel, ok: mailing ? mailing.configured : undefined },
+          { label: t("mailing.confirmation"), value: mailingConfirmedLabel, ok: mailing ? mailing.confirmed : undefined },
         ]}
         href="/admin/parametres"
         hrefLabel={t("actions.open_settings")}
@@ -123,7 +123,7 @@ export function AdminServiceCards() {
           stateLabel={t(`status.${telephonyState}`)}
           details={[
             { label: t("telephony.provider"), value: providerLabel },
-            { label: t("telephony.configuration"), value: telephonyConfiguredLabel },
+            { label: t("telephony.configuration"), value: telephonyConfiguredLabel, ok: telephony ? telephony.configured : undefined },
           ]}
           href="/admin/parametres"
           hrefLabel={t("actions.open_settings")}
