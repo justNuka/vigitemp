@@ -12,9 +12,19 @@ import { fadeInUp } from "@/lib/motion-variants";
 import { useGroups, type Group } from '@/hooks/useGroups';
 import { useGroupLocations } from '@/hooks/useGroupLocations';
 import { useGroupUsers } from '@/hooks/useGroupUsers';
-import { deleteJson, getJson } from "@/lib/http";
+import { deleteJson, getJson, HttpError } from "@/lib/http";
 
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { GroupsActions } from "./_components/groups-actions";
 import { GroupsTable } from './_components/groups-table';
 import { GroupLocationsPanel } from './_components/group-locations-panel';
@@ -29,6 +39,9 @@ export function GroupsClient() {
   const [selectedGroup, setSelectedGroup] = useState<Group | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
+  const [archiveConfirmOpen, setArchiveConfirmOpen] = useState(false);
+  const [archiveBlockedOpen, setArchiveBlockedOpen] = useState(false);
+  const [archiveBlockedMessage, setArchiveBlockedMessage] = useState<string | null>(null);
   const [statusTab, setStatusTab] = useState<'active' | 'archived'>('active');
 
   const { data: groups = [], isLoading } = useGroups(regroupement, true, 'all');
@@ -74,6 +87,23 @@ export function GroupsClient() {
       await queryClient.invalidateQueries({ queryKey: ["groups"] });
       router.refresh();
     } catch (error) {
+      if (error instanceof HttpError && error.status === 409) {
+        const payload = error.payload as { linkedLocationsCount?: unknown; count?: unknown } | null;
+        const count =
+          typeof payload?.linkedLocationsCount === 'number'
+            ? payload.linkedLocationsCount
+            : typeof payload?.count === 'number'
+              ? payload.count
+              : null;
+        setArchiveBlockedMessage(
+          count && count > 0
+            ? `${error.message} (${count})`
+            : error.message,
+        );
+        setArchiveConfirmOpen(false);
+        setArchiveBlockedOpen(true);
+        return;
+      }
       toast.error(error instanceof Error ? error.message : t('toast.archive_error'));
     }
   };
@@ -130,7 +160,7 @@ export function GroupsClient() {
               canArchive={!!selectedDisplayedGroup && statusTab === 'active'}
               onNew={handleNew}
               onEdit={handleEdit}
-              onArchive={handleArchive}
+              onArchive={() => setArchiveConfirmOpen(true)}
             />
           }
         />
@@ -150,6 +180,44 @@ export function GroupsClient() {
           isEditing={isEditing}
         />
       ) : null}
+
+      <AlertDialog open={archiveConfirmOpen} onOpenChange={setArchiveConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('actions.archive')}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {selectedDisplayedGroup?.Nom_Groupe ?? "-"}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{useTranslations('common')('cancel')}</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                void handleArchive().finally(() => setArchiveConfirmOpen(false));
+              }}
+              className="bg-[hsl(var(--status-critical))] text-white hover:bg-[hsl(var(--status-critical)/0.90)]"
+            >
+              {t('actions.archive')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={archiveBlockedOpen} onOpenChange={setArchiveBlockedOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('actions.archive')}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {archiveBlockedMessage || t('toast.archive_error')}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={() => setArchiveBlockedOpen(false)}>
+              {useTranslations('common')('confirm')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
       </m.main>
     </LazyMotion>
   );
