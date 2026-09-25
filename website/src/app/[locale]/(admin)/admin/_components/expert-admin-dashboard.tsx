@@ -116,10 +116,16 @@ export function ExpertAdminDashboard({ metrics, onOpenBackupLog }: Props) {
   }
 
   return (
-    <div className="space-y-4 overflow-x-hidden p-6">
+    <div className="space-y-3 overflow-x-hidden pt-1">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="text-sm text-muted-foreground">{t("expert.description")}</p>
-        <Button variant="outline" type="button" onClick={() => setIsEditMode((prev) => !prev)}>
+        <Button
+          variant={isEditMode ? "primary" : "outline"}
+          size="sm"
+          type="button"
+          className="h-8 gap-1.5"
+          onClick={() => setIsEditMode((prev) => !prev)}
+        >
           <Grip className="mr-2 h-4 w-4" />
           {isEditMode ? t("expert.done") : t("expert.edit")}
         </Button>
@@ -160,7 +166,7 @@ export function ExpertAdminDashboard({ metrics, onOpenBackupLog }: Props) {
                     <button
                       type="button"
                       aria-label={t("expert.remove")}
-                      className="absolute right-2 top-2 z-10 rounded-md bg-white/90 p-1 text-slate-600 shadow hover:text-red-600 dark:bg-slate-900/90"
+                      className="absolute right-2 top-2 z-20 rounded-md border border-border bg-card/95 p-1.5 text-muted-foreground shadow-sm transition-colors duration-150 hover:border-[hsl(var(--status-critical)/0.30)] hover:bg-[hsl(var(--status-critical)/0.06)] hover:text-[hsl(var(--status-critical))] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60"
                       onClick={() => removeWidget(id)}
                     >
                       <Trash2 className="h-4 w-4" />
