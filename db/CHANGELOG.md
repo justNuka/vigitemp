@@ -23,9 +23,9 @@ La procédure complète d'upgrade des installations existantes est documentée d
 
 ## [Unreleased]
 
-Aucun changement supplémentaire documenté depuis la préparation du schéma 0.91.2.
+Aucun changement supplémentaire documenté depuis la préparation du schéma 0.92.0.
 
-## [0.91.2] — 2026-09-25
+## [0.92.0] — 2026-09-25
 
 Cette révision ajoute les codes d'alarme critiques explicites `CB` / `CH`.
 
@@ -48,17 +48,20 @@ Deux entrées sont ajoutées / mises à jour dans `t_alarme_message` :
 
 ### Trigger GSO
 
-- `TRG_GSO_BEF_UPD_LIEU_ALARME` reste **inchangé par rapport à 0.91.1**.
-- La migration 0.91.2 ne recrée pas ce trigger et ne réintroduit pas l'évaluation directe des seuils critiques supprimée en 0.91.1.
-- Les GSO conservent donc leurs alarmes B/H temporisées historiques.
+- `TRG_GSO_BEF_UPD_LIEU_ALARME` évalue de nouveau les seuils critiques avant la logique temporisée normale.
+- Un déclenchement initial directement sous le seuil critique bas crée `CB` ; un déclenchement initial directement au-dessus du seuil critique haut crée `CH`.
+- Si une alarme `B` / `H` du même côté est déjà ouverte, elle reste la même ligne et conserve son type initial : le type décrit la cause du déclenchement et ne change pas rétroactivement.
+- `B/CB` et `H/CH` sont traités comme deux familles pour les suivis, transitions et fins d'alarme afin d'éviter les doublons actifs.
+- Les seeds et migrations MySQL / SQL Server réinstallent le même trigger GSO.
 
 ### Seeds / migrations
 
-- Seed MySQL : version **0.91.2**, largeur des trois colonnes + messages 20/21.
+- Seed MySQL : version **0.92.0**, largeur des trois colonnes + messages 20/21.
 - Seed SQL Server : même contrat.
-- Migration MySQL : `db/migrations/0.91.2/mysql.sql`.
-- Migration SQL Server : `db/migrations/0.91.2/mssql.sql`.
-- `VERSION / SCHEMA_VERSION` passe à `0.91.2` uniquement après les modifications.
+- Migration MySQL : `db/migrations/0.92.0/mysql.sql`.
+- Migration SQL Server : `db/migrations/0.92.0/mssql.sql`.
+- Les deux migrations réinstallent également le trigger GSO critique correspondant au seed du même moteur.
+- `VERSION / SCHEMA_VERSION` passe à `0.92.0` uniquement après les modifications.
 
 ## [0.91.1] — 2026-09-23
 
