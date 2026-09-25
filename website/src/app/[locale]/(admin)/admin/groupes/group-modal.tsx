@@ -183,7 +183,7 @@ export function GroupModal({ open, onOpenChange, group, isEditing }: GroupModalP
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit, (errors) => showFormValidationToast(errors))} className="scroll-thin max-h-[calc(90vh-68px)] space-y-4 overflow-y-auto px-5 py-4"
+          <form onSubmit={form.handleSubmit(handleSubmit, (errors) => showFormValidationToast(errors))} className="scroll-thin max-h-[calc(90vh-68px)] space-y-4 overflow-y-auto px-5 py-4">
             <TemporaryMemoryControls
               form={form}
               storageKey={memoryKey}
