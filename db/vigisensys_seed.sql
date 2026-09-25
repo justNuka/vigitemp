@@ -1,4 +1,4 @@
--- Version produit / seed : 0.91.1
+-- Version produit / seed : 0.91.2
 -- DDL synchronise sur le dump schema courant du 2026-08-25.
 -- Les DEFINER et compteurs AUTO_INCREMENT de production sont volontairement retires.
 
