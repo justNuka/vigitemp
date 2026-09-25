@@ -90,7 +90,7 @@ export function AdminServiceCards() {
       <AdminServiceCard
         title={t("mailing.title")}
         description={t("mailing.description")}
-        icon={<Mail className="h-5 w-5 text-indigo-600" />}
+        icon={Mail}
         state={mailingState}
         stateLabel={t(`status.${mailingState}`)}
         details={[
@@ -106,7 +106,7 @@ export function AdminServiceCards() {
         <AdminServiceCard
           title={t("telephony.title")}
           description={t("telephony.description")}
-          icon={<Phone className="h-5 w-5 text-sky-600" />}
+          icon={Phone}
           state="loading"
           stateLabel={t("status.loading")}
           details={[
@@ -118,7 +118,7 @@ export function AdminServiceCards() {
         <AdminServiceCard
           title={t("telephony.title")}
           description={t("telephony.description")}
-          icon={<Phone className="h-5 w-5 text-sky-600" />}
+          icon={Phone}
           state={telephonyState}
           stateLabel={t(`status.${telephonyState}`)}
           details={[
@@ -137,7 +137,7 @@ export function AdminServiceCards() {
           <AdminServiceCard
             title={t("telephony.title")}
             description={t("telephony.description")}
-            icon={<Phone className="h-5 w-5 text-sky-600" />}
+            icon={Phone}
             state="inactive"
             stateLabel={t("telephony.license_required")}
             details={[
