@@ -1,6 +1,7 @@
 'use client';
 
 import { ColumnDef } from '@tanstack/react-table';
+import type { ReactNode } from 'react';
 import { TanStackTable } from '@/components/data-table/tanstack-table';
 import type { SiteAdmin } from '@/hooks/useSites';
 import { useTranslations } from 'next-intl';
@@ -11,9 +12,11 @@ type SitesTableProps = {
   selectedSiteId?: number;
   onSelectSite: (site: SiteAdmin) => void;
   onEditSite?: (site: SiteAdmin) => void;
+  toolbarLeft?: ReactNode;
+  toolbarRight?: ReactNode;
 };
 
-export function SitesTable({ sites, isLoading, selectedSiteId, onSelectSite, onEditSite }: SitesTableProps) {
+export function SitesTable({ sites, isLoading, selectedSiteId, onSelectSite, onEditSite, toolbarLeft, toolbarRight }: SitesTableProps) {
   const t = useTranslations('sitesTable');
 
   const columns: ColumnDef<SiteAdmin>[] = [
@@ -50,6 +53,8 @@ export function SitesTable({ sites, isLoading, selectedSiteId, onSelectSite, onE
       emptyMessage={t('empty')}
       onRowClick={(row) => onSelectSite(row)}
       onRowDoubleClick={(row) => onEditSite?.(row)}
+      toolbarLeft={toolbarLeft}
+      toolbarRight={toolbarRight}
       selectedRowId={selectedSiteId}
     />
   );
