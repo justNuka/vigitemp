@@ -137,18 +137,18 @@ export function AdminSidebar({ currentUser, onLogout, activeAlarms = 0 }: AdminS
 
   return (
     <Sidebar>
-      <SidebarHeader className="p-4 flex flex-col items-center bg-linear-to-b from-sidebar-accent/30 to-transparent">
-        <IntlLink href="/" className="flex items-center justify-center">
+      <SidebarHeader className="border-b border-sidebar-border px-4 py-3">
+        <IntlLink href="/" className="flex items-center">
           <Logo
             size="xs"
             showText
             textClassName="text-sidebar-foreground"
           />
         </IntlLink>
-        <span className="inline-flex items-center rounded-md bg-primary/10 px-3 py-1 text-xs font-medium text-primary ring-1 ring-inset ring-primary/20 mt-2">
+        <span className="mt-1.5 inline-flex items-center rounded-md border border-sidebar-border bg-sidebar-accent/70 px-2 py-0.5 text-[10px] font-semibold text-sidebar-foreground/80">
           {t("badge")}
         </span>
-        <span className="mt-2 text-[11px] font-medium text-sidebar-foreground/65">v{WEB_APP_VERSION}</span>
+        <span className="mt-1 text-[10px] font-medium text-sidebar-foreground/50">v{WEB_APP_VERSION}</span>
       </SidebarHeader>
 
       <SidebarSeparator />
@@ -321,7 +321,7 @@ export function AdminSidebar({ currentUser, onLogout, activeAlarms = 0 }: AdminS
           </SidebarMenuItem>
         </SidebarMenu>
         {currentUser && (
-          <div className="flex items-center gap-3 p-2 rounded-lg bg-sidebar-accent/50">
+          <div className="flex items-center gap-2.5 rounded-md border border-sidebar-border bg-sidebar-accent/35 p-2">
             <Avatar className="h-9 w-9">
               {(() => {
                 const initials = getInitialsForAvatar(currentUser.Prenom, currentUser.Nom, currentUser.Login)
@@ -334,7 +334,7 @@ export function AdminSidebar({ currentUser, onLogout, activeAlarms = 0 }: AdminS
             </Avatar>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium truncate">{`${currentUser.Prenom || ""} ${currentUser.Nom || ""}`}</p>
-              <p className="text-xs text-muted-foreground capitalize">{currentUser.Profil_Utilisateur || tCommon("user")}</p>
+              <p className="text-[11px] capitalize text-sidebar-foreground/55">{currentUser.Profil_Utilisateur || tCommon("user")}</p>
             </div>
             <Button
               variant="ghost"
