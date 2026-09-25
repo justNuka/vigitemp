@@ -53,12 +53,13 @@ export function ForgotPasswordDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-white dark:bg-card">
-        <DialogHeader>
+      <DialogContent className="overflow-hidden rounded-[10px] border-border bg-card p-0 text-card-foreground sm:max-w-md">
+        <DialogHeader className="border-b border-border px-5 py-4 pr-14">
           <DialogTitle>{translations.title}</DialogTitle>
           <DialogDescription>{translations.description}</DialogDescription>
         </DialogHeader>
 
+        <div className="px-5 py-4">
         {success ? (
           <div className="space-y-4">
             <div className="flex justify-center">
@@ -82,7 +83,7 @@ export function ForgotPasswordDialog({
                 type="email"
                 {...register("email")}
                 placeholder={translations.emailPlaceholder}
-                className="bg-white dark:bg-white"
+                className="h-9 border-border bg-card text-[13px] shadow-sm transition-[border-color,box-shadow,background-color] duration-200 ease-out hover:border-[hsl(var(--border-strong))] focus-visible:border-primary/55 focus-visible:ring-2 focus-visible:ring-primary/15 focus-visible:ring-offset-0"
                 autoFocus
                 disabled={isSubmitting}
                 autoComplete="email"
@@ -112,6 +113,7 @@ export function ForgotPasswordDialog({
             </div>
           </form>
         )}
+        </div>
       </DialogContent>
     </Dialog>
   );
