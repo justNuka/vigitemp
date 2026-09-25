@@ -1,6 +1,7 @@
 'use client';
 
 import type { ColumnDef } from '@tanstack/react-table';
+import type { ReactNode } from 'react';
 import { Activity, FlaskConical, PowerOff, Ruler, Wrench } from "lucide-react";
 import { TanStackTable } from '@/components/data-table/tanstack-table';
 import { Badge } from '@/components/ui/badge';
@@ -35,9 +36,11 @@ type SensorsTableProps = {
   onSelectSensor: (sensorId: number) => void;
   onEditSensor?: (sensorId: number) => void;
   warningWindowDays?: number;
+  toolbarLeft?: ReactNode;
+  toolbarRight?: ReactNode;
 };
 
-export function SensorsTable({ sensors, isLoading, selectedSensorId, onSelectSensor, onEditSensor, warningWindowDays = 30 }: SensorsTableProps) {
+export function SensorsTable({ sensors, isLoading, selectedSensorId, onSelectSensor, onEditSensor, warningWindowDays = 30, toolbarLeft, toolbarRight }: SensorsTableProps) {
   const t = useTranslations('sensorsPage');
   const locale = useLocale();
 
@@ -237,6 +240,8 @@ export function SensorsTable({ sensors, isLoading, selectedSensorId, onSelectSen
       selectedRowId={selectedSensorId ?? undefined}
       onRowClick={(row: SensorRow) => onSelectSensor(row.Id_Sonde)}
       onRowDoubleClick={(row: SensorRow) => onEditSensor?.(row.Id_Sonde)}
+      toolbarLeft={toolbarLeft}
+      toolbarRight={toolbarRight}
     />
   );
 }
