@@ -8,9 +8,9 @@ Les versions suivent `MAJOR.MINOR.PATCH` sans zéros de tête. La source de vers
 
 ## [Unreleased]
 
-Aucun changement supplémentaire documenté depuis la préparation de la version Web 1.8.16.
+Aucun changement supplémentaire documenté depuis la préparation de la version Web 1.9.0.
 
-## [1.8.16] — 2026-09-25
+## [1.9.0] — 2026-09-25
 
 Cette version introduit les types d'alarme critiques explicites **CB** et **CH** dans les parcours Web.
 
@@ -35,13 +35,13 @@ Cette version introduit les types d'alarme critiques explicites **CB** et **CH**
 
 - Les libellés FR/EN distinguent désormais **alarme critique haute** et **alarme critique basse**.
 - Un déclenchement `CH` / `CB` utilise directement le template email seuil critique.
-- Le fallback historique reste conservé pour les anciennes alarmes H/B créées avant BDD 0.91.2 et dont la valeur correspondait à un dépassement critique.
+- Le fallback historique reste conservé pour les anciennes alarmes H/B créées avant BDD 0.92.0 et dont la valeur correspondait à un dépassement critique.
 
 ### Compatibilité
 
-- Version Web : **1.8.16**.
-- Serveur **1.1.2** requis pour produire les nouveaux types sur les sondes gérées par le moteur C#.
-- BDD **0.91.2** requise pour stocker les codes sur deux caractères.
+- Version Web : **1.9.0**.
+- Serveur **1.2.0** requis pour produire les nouveaux types sur les sondes gérées par le moteur C#.
+- BDD **0.92.0** requise pour stocker les codes sur deux caractères.
 - Agent **1.0.1** inchangé.
 
 ## [1.8.15] — 2026-09-25
