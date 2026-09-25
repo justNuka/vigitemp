@@ -8,10 +8,12 @@ import { clearLocationCache } from "@/lib/measurement-cache"
 import { extractAddressFromSerial, getSensorFamilyFromSerial, isGsoType } from "@/lib/sensor-naming"
 import { computeEmt, emtModeFromDb, emtModeToDb } from "@/lib/emt"
 import { requireStandardOrExpertIfFieldsUsed } from "@/lib/license-guards"
+import { STANDARD_METROLOGY_LOCATION_FIELDS } from "@/lib/location-license-payload"
 import { isSurveillanceActionCommentRequired } from "@/lib/action-comment-policy"
 import { withAnyAuthorizationLogging } from "@/lib/api-wrappers"
 import { getPermissionAliases } from "@/lib/permissions"
 import { findLocationNameConflict } from "@/lib/location-name-conflicts"
+import { buildLocationAlarmThresholdIssues } from "@/lib/location-alarm-threshold-contract"
 import { buildLocationValueRangeIssues, getSensorTypeValueRangeBySerial } from "@/lib/sensor-value-range"
 import { getDbDatePlusMinutes, getDbNow } from "@/lib/sql-provider"
 import { syncGspLocationConfiguration } from "@/lib/gsp-config-sync"
@@ -24,19 +26,6 @@ const mailingContactSchema = z.object({
   Est_Via_Telephone: z.boolean().optional(),
   Est_Via_Email: z.boolean().optional(),
 })
-
-const STANDARD_METROLOGY_FIELDS = [
-  "EMT_Mode",
-  "EMT_Valeur",
-  "Corriger_Erreur_Justesse",
-  "Prendre_En_Compte_Derive",
-  "Derniere_Date_Etalonnage",
-  "Applied_Etalonnage_Id",
-  "Unite",
-  "Erreur_Justesse",
-  "Incertitude",
-  "Derive",
-] as const
 
 const GSO_FIXED_FREQUENCY_SECONDS = 15 * 60
 const GSP_RUNTIME_CONFIG_FIELDS = [
@@ -92,6 +81,10 @@ const AUDIT_FIELD_LABELS: Record<string, string> = {
   Frequence: "Fréquence (min)",
   Consigne_Sup: "Consigne supérieure",
   Consigne_Inf: "Consigne inférieure",
+  Seuil_Critique_Haut: "Seuil critique haut",
+  Seuil_Critique_Bas: "Seuil critique bas",
+  Est_Seuil_Critique_Haut_Active: "Seuil critique haut actif",
+  Est_Seuil_Critique_Bas_Active: "Seuil critique bas actif",
   Retard_Alarme_Haut: "Retard alarme haut",
   Retard_Alarme_Bas: "Retard alarme bas",
   Retard_Non_Reponse: "Retard non-reponse",
@@ -266,12 +259,16 @@ const updateLieuSchema = z.object({
   Est_Consigne_Sup_Active: z.boolean().optional(),
   Consigne_Sup_Pre_Alarme: z.number().nullable().optional(),
   Est_Consigne_Sup_Pre_Alarme_Active: z.boolean().optional(),
+  Seuil_Critique_Haut: z.number().nullable().optional(),
+  Est_Seuil_Critique_Haut_Active: z.boolean().optional(),
   Retard_Alarme_Haut: z.number().nullable().optional(),
   Consigne_Inf: z.number().nullable().optional(),
   Tolerance_Surveillance_Inf: z.number().nullable().optional(),
   Est_Consigne_Inf_Active: z.boolean().optional(),
   Consigne_Inf_Pre_Alarme: z.number().nullable().optional(),
   Est_Consigne_Inf_Pre_Alarme_Active: z.boolean().optional(),
+  Seuil_Critique_Bas: z.number().nullable().optional(),
+  Est_Seuil_Critique_Bas_Active: z.boolean().optional(),
   Retard_Alarme_Bas: z.number().nullable().optional(),
   Retard_Non_Reponse: z.number().nullable().optional(),
   Retard_Alarme_Changement_Consigne: z.number().nullable().optional(),
@@ -352,7 +349,7 @@ export const PATCH = withAnyAuthorizationLogging(
       }
 
       const body = await req.json()
-      const metrologyGuard = await requireStandardOrExpertIfFieldsUsed(body as Record<string, unknown>, STANDARD_METROLOGY_FIELDS)
+      const metrologyGuard = await requireStandardOrExpertIfFieldsUsed(body as Record<string, unknown>, STANDARD_METROLOGY_LOCATION_FIELDS)
       if (metrologyGuard) return metrologyGuard
 
       const validated = updateLieuSchema.parse(body)
@@ -533,7 +530,24 @@ export const PATCH = withAnyAuthorizationLogging(
 
       const currentLieuForRange = await prisma.t_lieu.findUnique({
         where: { Id_Lieu: lieuId },
-        select: { Sonde_Numero_Serie: true },
+        select: {
+          Sonde_Numero_Serie: true,
+          Consigne: true,
+          Consigne_Sup: true,
+          Consigne_Inf: true,
+          Est_Consigne_Sup_Active: true,
+          Est_Consigne_Inf_Active: true,
+          Consigne_Sup_Pre_Alarme: true,
+          Est_Consigne_Sup_Pre_Alarme_Active: true,
+          Consigne_Inf_Pre_Alarme: true,
+          Est_Consigne_Inf_Pre_Alarme_Active: true,
+          Tolerance_Surveillance_Sup: true,
+          Tolerance_Surveillance_Inf: true,
+          Seuil_Critique_Haut: true,
+          Est_Seuil_Critique_Haut_Active: true,
+          Seuil_Critique_Bas: true,
+          Est_Seuil_Critique_Bas_Active: true,
+        },
       })
       if (!currentLieuForRange) {
         return apiError(404, "not_found", "Lieu introuvable")
@@ -546,7 +560,88 @@ export const PATCH = withAnyAuthorizationLogging(
       const sensorTypeRange = await getSensorTypeValueRangeBySerial(effectiveSensorSerialForRange)
       const rangeIssues = buildLocationValueRangeIssues(validated, sensorTypeRange)
       if (rangeIssues.length > 0) {
-        return apiError(400, "validation_error", "Validation impossible", { issues: rangeIssues })
+        return apiError(
+          400,
+          "validation_error",
+          rangeIssues[0]?.message ?? "Validation impossible",
+          { issues: rangeIssues },
+        )
+      }
+
+      const resolvePatchedNumber = (field: string, fallback: number | null | undefined) => {
+        if (!Object.prototype.hasOwnProperty.call(lieuPatch, field)) return fallback ?? null
+        const value = lieuPatch[field]
+        if (value === null || value === undefined) return null
+        const numeric = Number(value)
+        return Number.isFinite(numeric) ? numeric : null
+      }
+      const resolvePatchedBoolean = (field: string, fallback: boolean | null | undefined) => {
+        if (!Object.prototype.hasOwnProperty.call(lieuPatch, field)) return fallback === true
+        return lieuPatch[field] === true
+      }
+
+      const effectiveHighActive = resolvePatchedBoolean(
+        "Est_Consigne_Sup_Active",
+        currentLieuForRange.Est_Consigne_Sup_Active,
+      )
+      const effectiveLowActive = resolvePatchedBoolean(
+        "Est_Consigne_Inf_Active",
+        currentLieuForRange.Est_Consigne_Inf_Active,
+      )
+
+      const thresholdIssues = buildLocationAlarmThresholdIssues({
+        consigne: resolvePatchedNumber("Consigne", currentLieuForRange.Consigne),
+        consigneSup: resolvePatchedNumber("Consigne_Sup", currentLieuForRange.Consigne_Sup),
+        consigneInf: resolvePatchedNumber("Consigne_Inf", currentLieuForRange.Consigne_Inf),
+        isConsigneSupActive: effectiveHighActive,
+        isConsigneInfActive: effectiveLowActive,
+        effectiveHigh: effectiveHighActive
+          ? resolvePatchedNumber(
+              "Tolerance_Surveillance_Sup",
+              currentLieuForRange.Tolerance_Surveillance_Sup ?? currentLieuForRange.Consigne_Sup,
+            )
+          : null,
+        effectiveLow: effectiveLowActive
+          ? resolvePatchedNumber(
+              "Tolerance_Surveillance_Inf",
+              currentLieuForRange.Tolerance_Surveillance_Inf ?? currentLieuForRange.Consigne_Inf,
+            )
+          : null,
+        preAlarmHigh: resolvePatchedNumber(
+          "Consigne_Sup_Pre_Alarme",
+          currentLieuForRange.Consigne_Sup_Pre_Alarme,
+        ),
+        preAlarmHighActive: resolvePatchedBoolean(
+          "Est_Consigne_Sup_Pre_Alarme_Active",
+          currentLieuForRange.Est_Consigne_Sup_Pre_Alarme_Active,
+        ),
+        preAlarmLow: resolvePatchedNumber(
+          "Consigne_Inf_Pre_Alarme",
+          currentLieuForRange.Consigne_Inf_Pre_Alarme,
+        ),
+        preAlarmLowActive: resolvePatchedBoolean(
+          "Est_Consigne_Inf_Pre_Alarme_Active",
+          currentLieuForRange.Est_Consigne_Inf_Pre_Alarme_Active,
+        ),
+        criticalHigh: resolvePatchedNumber(
+          "Seuil_Critique_Haut",
+          currentLieuForRange.Seuil_Critique_Haut,
+        ),
+        criticalHighActive: resolvePatchedBoolean(
+          "Est_Seuil_Critique_Haut_Active",
+          currentLieuForRange.Est_Seuil_Critique_Haut_Active,
+        ),
+        criticalLow: resolvePatchedNumber(
+          "Seuil_Critique_Bas",
+          currentLieuForRange.Seuil_Critique_Bas,
+        ),
+        criticalLowActive: resolvePatchedBoolean(
+          "Est_Seuil_Critique_Bas_Active",
+          currentLieuForRange.Est_Seuil_Critique_Bas_Active,
+        ),
+      })
+      if (thresholdIssues.length > 0) {
+        return apiError(400, "validation_error", thresholdIssues[0].message, { issues: thresholdIssues })
       }
 
       const ip = getClientIp(req)
@@ -576,6 +671,10 @@ export const PATCH = withAnyAuthorizationLogging(
             Consigne_Inf: true,
             Tolerance_Surveillance_Sup: true,
             Tolerance_Surveillance_Inf: true,
+            Seuil_Critique_Haut: true,
+            Est_Seuil_Critique_Haut_Active: true,
+            Seuil_Critique_Bas: true,
+            Est_Seuil_Critique_Bas_Active: true,
             Retard_Alarme_Haut: true,
             Retard_Alarme_Bas: true,
             Retard_Non_Reponse: true,
@@ -601,6 +700,10 @@ export const PATCH = withAnyAuthorizationLogging(
           Frequence: current?.Frequence !== null && current?.Frequence !== undefined ? Number(current.Frequence) / 60 : current?.Frequence,
           Consigne_Sup: current?.Consigne_Sup,
           Consigne_Inf: current?.Consigne_Inf,
+          Seuil_Critique_Haut: current?.Seuil_Critique_Haut,
+          Seuil_Critique_Bas: current?.Seuil_Critique_Bas,
+          Est_Seuil_Critique_Haut_Active: current?.Est_Seuil_Critique_Haut_Active,
+          Est_Seuil_Critique_Bas_Active: current?.Est_Seuil_Critique_Bas_Active,
           Retard_Alarme_Haut: current?.Retard_Alarme_Haut,
           Retard_Alarme_Bas: current?.Retard_Alarme_Bas,
           Retard_Non_Reponse: current?.Retard_Non_Reponse,
@@ -1027,6 +1130,10 @@ export const PATCH = withAnyAuthorizationLogging(
           "Consigne",
           "Consigne_Sup",
           "Consigne_Inf",
+          "Seuil_Critique_Haut",
+          "Seuil_Critique_Bas",
+          "Est_Seuil_Critique_Haut_Active",
+          "Est_Seuil_Critique_Bas_Active",
           "Retard_Non_Reponse",
           "Retard_Alarme_Changement_Consigne",
           "Nb_Mesures_Temporisation_Redeclenchement",

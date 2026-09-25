@@ -1,10 +1,9 @@
 "use client";
 
-import { Fragment, useCallback, useMemo, useState } from "react";
+import { Fragment, useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ColumnDef } from "@tanstack/react-table";
 import { FileText, RefreshCw, Search, X } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useLocale, useTranslations } from "next-intl";
 
@@ -25,17 +24,23 @@ import { LazyMotion, domAnimation, m } from "motion/react";
 import { fadeInUp } from "@/lib/motion-variants";
 
 import { buildAuditActionConfig } from "./_components/audit-action-config";
-import { filterAuditLogs, parseAuditDetails, renderChangesAsRows, toAuditTableData, type AuditCode, type AuditLogRow } from "./_components/audit-client-helpers";
-
-interface Props {
-  logs: AuditLog[];
-}
+import { parseAuditDetails, renderChangesAsRows, toAuditTableData, type AuditCode, type AuditLogRow } from "./_components/audit-client-helpers";
 
 interface ActiveFilters {
   dateFrom: string;
   dateTo: string;
   code: string;
 }
+
+type AuditPageResponse = {
+  data: AuditLog[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    pages: number;
+  };
+};
 
 function formatDateInput(date: Date): string {
   const year = date.getFullYear();
@@ -48,17 +53,18 @@ function hasActiveFilters(filters: ActiveFilters): boolean {
   return !!(filters.dateFrom || filters.dateTo || (filters.code && filters.code !== "all"));
 }
 
-export function AuditClient({ logs: initialLogs }: Props) {
+export function AuditClient() {
   const t = useTranslations("audit");
   const locale = useLocale();
   const timezone = useAppTimezone();
   const localeTag = locale.toLowerCase().startsWith("fr") ? "fr-FR" : locale;
-  const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
   const [codeFilter, setCodeFilter] = useState<string>("all");
   const [codesOpen, setCodesOpen] = useState(false);
   const [dateFrom, setDateFrom] = useState(() => formatDateInput(new Date()));
   const [dateTo, setDateTo] = useState(() => formatDateInput(new Date()));
+  const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 200 });
+  const deferredSearchQuery = useDeferredValue(searchQuery.trim());
   const activeFilters: ActiveFilters = useMemo(() => ({
     dateFrom,
     dateTo,
@@ -68,20 +74,34 @@ export function AuditClient({ logs: initialLogs }: Props) {
   const filtersActive = hasActiveFilters(activeFilters);
 
   const queryParams = useMemo(() => {
-    const params = new URLSearchParams();
+    const params = new URLSearchParams({
+      paginated: "1",
+      page: String(pagination.pageIndex + 1),
+      limit: String(pagination.pageSize),
+    });
     if (activeFilters.code && activeFilters.code !== "all") params.set("code", activeFilters.code);
     if (activeFilters.dateFrom) params.set("dateFrom", activeFilters.dateFrom);
     if (activeFilters.dateTo) params.set("dateTo", activeFilters.dateTo);
+    if (deferredSearchQuery) params.set("q", deferredSearchQuery);
     return params.toString();
-  }, [activeFilters]);
+  }, [activeFilters, deferredSearchQuery, pagination.pageIndex, pagination.pageSize]);
 
-  const { data: filteredByServerLogs, isLoading: isServerFiltering } = useQuery({
+  const {
+    data: auditPage,
+    isLoading: isServerFiltering,
+    refetch: refetchAudit,
+  } = useQuery({
     queryKey: ["audit-logs", queryParams],
-    queryFn: () => getJson<AuditLog[]>(`/api/audit${queryParams ? `?${queryParams}` : ""}`),
-    enabled: filtersActive,
+    queryFn: () => getJson<AuditPageResponse>(`/api/audit?${queryParams}`),
     staleTime: 0,
     refetchOnMount: "always",
   });
+
+  useEffect(() => {
+    setPagination((current) =>
+      current.pageIndex === 0 ? current : { ...current, pageIndex: 0 },
+    );
+  }, [activeFilters.code, activeFilters.dateFrom, activeFilters.dateTo, deferredSearchQuery]);
 
   const actionConfig = useMemo(() => buildAuditActionConfig(t), [t]);
 
@@ -92,19 +112,12 @@ export function AuditClient({ logs: initialLogs }: Props) {
     staleTime: 10 * 60 * 1000,
   });
 
-  // Keep a stable reference for downstream hooks that depend on the source dataset.
-  const sourceLogs: AuditLog[] = useMemo(
-    () => (filtersActive ? (filteredByServerLogs ?? []) : initialLogs),
-    [filtersActive, filteredByServerLogs, initialLogs],
-  );
-
-  const filteredLogs = useMemo(
-    () => filtersActive ? sourceLogs : filterAuditLogs(sourceLogs, codeFilter, searchQuery),
-    [sourceLogs, codeFilter, searchQuery, filtersActive]
-  );
+  const sourceLogs = auditPage?.data ?? [];
+  const totalLogs = auditPage?.pagination.total ?? 0;
+  const pageCount = auditPage?.pagination.pages ?? 1;
 
   const handleRefresh = () => {
-    router.refresh();
+    void refetchAudit();
     toast.success(t("toast.refreshed"));
   };
 
@@ -115,11 +128,8 @@ export function AuditClient({ logs: initialLogs }: Props) {
     setSearchQuery("");
   };
 
-  const totalLogs = filtersActive ? sourceLogs.length : initialLogs.length;
-  const summary =
-    filteredLogs.length === totalLogs
-      ? t("events_summary", { count: filteredLogs.length })
-      : t("events_summary_filtered", { count: filteredLogs.length, total: totalLogs });
+  const summary = t("events_summary", { count: totalLogs });
+  const hasVisibleFilters = filtersActive || searchQuery.trim().length > 0;
 
   // Extrait et traduit le contenu expandable d'une ligne (JSON changes + commentaire utilisateur)
   const getRowExpandableContent = useCallback((rowId: string) => {
@@ -137,9 +147,9 @@ export function AuditClient({ logs: initialLogs }: Props) {
     }
 
     const commentaire = originalLog.commentaireUtilisateur ?? null
-    const rows = changesJson ? renderChangesAsRows(changesJson, localeTag, timezone) : []
+    const rows = changesJson ? renderChangesAsRows(changesJson, localeTag, timezone, t) : []
     return { rows, commentaire, hasContent: rows.length > 0 || !!commentaire }
-  }, [sourceLogs, localeTag, timezone])
+  }, [sourceLogs, localeTag, timezone, t])
 
   const columns: ColumnDef<AuditLogRow>[] = [
     {
@@ -260,7 +270,7 @@ export function AuditClient({ logs: initialLogs }: Props) {
     },
   ];
 
-  const tableData = useMemo(() => toAuditTableData(filteredLogs), [filteredLogs]);
+  const tableData = useMemo(() => toAuditTableData(sourceLogs), [sourceLogs]);
 
   return (
     <LazyMotion features={domAnimation}>
@@ -285,14 +295,23 @@ export function AuditClient({ logs: initialLogs }: Props) {
               <SelectTrigger className="w-48">
                 <SelectValue placeholder={t("filter.action")} />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent
+                position="popper"
+                className="max-h-[min(60vh,30rem)] w-[min(90vw,34rem)]"
+              >
                 <SelectItem value="all">{t("all_codes")}</SelectItem>
-                {auditCodes.map((code) => (
-                  <SelectItem key={code.Code_Journal} value={code.Code_Journal}>
-                    {code.Code_Journal}
-                    {code.Commentaire && ` - ${code.Commentaire}`}
-                  </SelectItem>
-                ))}
+                {auditCodes.map((code) => {
+                  const config = actionConfig[code.Code_Journal] || actionConfig[code.Code_Journal.toUpperCase()];
+                  const label = config?.label || code.Commentaire || t("actions.unknown", { code: code.Code_Journal });
+                  return (
+                    <SelectItem key={code.Code_Journal} value={code.Code_Journal}>
+                      <span className="flex min-w-0 items-center gap-2">
+                        <span className="shrink-0 font-mono text-xs font-semibold">{code.Code_Journal}</span>
+                        <span className="truncate text-muted-foreground">{label}</span>
+                      </span>
+                    </SelectItem>
+                  );
+                })}
               </SelectContent>
             </Select>
 
@@ -316,7 +335,7 @@ export function AuditClient({ logs: initialLogs }: Props) {
               <Input type="text" placeholder={t("search_placeholder")} value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-9 w-48" />
             </div>
 
-            {filtersActive && (
+            {hasVisibleFilters && (
               <Button variant="ghost" size="sm" onClick={clearFilters} className="gap-1">
                 <X className="h-4 w-4" />
                 {t("filter.clearFilters")}
@@ -333,6 +352,11 @@ export function AuditClient({ logs: initialLogs }: Props) {
             isLoading={isServerFiltering}
             emptyMessage={t("empty")}
             showSearch={false}
+            manualPagination
+            pageCount={pageCount}
+            totalRows={totalLogs}
+            paginationState={pagination}
+            onPaginationChange={setPagination}
             maxHeight="60vh"
             headerClassName="!bg-sidebar !text-sidebar-foreground"
             headerCellClassName="!bg-sidebar !text-sidebar-foreground !border-r !border-white/25 hover:!bg-sidebar-accent/80"
@@ -344,7 +368,6 @@ export function AuditClient({ logs: initialLogs }: Props) {
             }
             showPagination
             enableExport
-            enablePrint
             containerClassName="border border-sidebar-border/40"
             tableClassName="border-separate border-spacing-0 [&_thead_th]:text-sidebar-foreground [&_thead_th]:!border-r [&_thead_th]:!border-white/25 [&_thead_th:last-child]:!border-r-0"
           />

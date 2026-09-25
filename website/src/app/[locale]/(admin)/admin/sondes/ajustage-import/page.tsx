@@ -3,6 +3,7 @@
 import { useMemo } from "react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/page-header";
 import { LicenseBlockedCard } from "@/components/license/license-blocked-card";
@@ -47,9 +48,14 @@ export default function AjustageImportPage() {
       <div className="space-y-6 p-6">
         <div className="flex items-center justify-end">
           <Button asChild variant="outline" size="sm">
-            <Link href="/sondes">{t("page.back_to_sensors")}</Link>
+            <Link href="/admin/sondes">{t("page.back_to_sensors")}</Link>
           </Button>
         </div>
+
+        <Alert>
+          <AlertTitle>{t("page.gsp_gso_title")}</AlertTitle>
+          <AlertDescription>{t("page.gsp_gso_description")}</AlertDescription>
+        </Alert>
 
         <AdjustmentImportClient />
       </div>

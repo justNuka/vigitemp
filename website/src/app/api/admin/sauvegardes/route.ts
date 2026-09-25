@@ -4,12 +4,24 @@ import path from "path"
 
 import { withAdminLogging } from "@/lib/api-wrappers"
 import { apiError, apiOk } from "@/lib/api-response"
+import {
+  buildSecondaryCopySummary,
+  getBackupLogMessage,
+  isBackupErrorLine,
+  isBackupProcessEndLine,
+  isBackupProcessStartLine,
+  isMeaningfulBackupLogLine,
+  parseBackupLogStatus,
+  parseBackupTimestamp,
+  type ParsedBackupRun,
+} from "@/lib/backup-log-parser"
 import { log } from "@/lib/logger"
 import { getCompatEnv } from "@/lib/vigisensys-compat"
 import { appDataPath, firstExistingPath, legacyAppDataPath } from "@/lib/vigisensys-paths"
-import type { BackupRecord, BackupsResponse } from "@/types/backup-types"
+import type { BackupLogEntry, BackupRecord, BackupsResponse } from "@/types/backup-types"
 
 const BACKUP_SLOT_NAMES = ["J", "J-1", "J-2", "J-3", "J-4", "J-5", "J-6", "J-7"]
+const MAX_BACKUP_LOG_ENTRIES = 300
 
 async function resolveBackupRoot() {
   const configured = getCompatEnv("VIGISENSYS_BACKUP_ROOT", "VIGITEMP_BACKUP_ROOT")
@@ -22,28 +34,6 @@ async function resolveBackupRoot() {
 
 function resolveBackupLogPath(backupRoot: string) {
   return path.join(backupRoot, "backup_bdd_vigisensys.log")
-}
-
-type ParsedRun = {
-  startedAt: string
-  endedAt: string | null
-  status: BackupRecord["etat"]
-  details: string
-}
-
-function parseFrenchTimestamp(value: string): string | null {
-  const match = value.match(/^(\d{2})\/(\d{2})\/(\d{4})\s+(\d{2}):(\d{2}):(\d{2})$/)
-  if (!match) return null
-
-  const [, day, month, year, hour, minute, second] = match
-  return new Date(
-    Number(year),
-    Number(month) - 1,
-    Number(day),
-    Number(hour),
-    Number(minute),
-    Number(second),
-  ).toISOString()
 }
 
 function formatBytes(bytes: number) {
@@ -61,76 +51,53 @@ function formatBytes(bytes: number) {
   return `${value.toFixed(digits)} ${units[unitIndex]}`
 }
 
-function summarizeRunLines(lines: string[]) {
-  const dumpErrors = lines.filter((line) => /:\s*Erreur\b/i.test(line))
-  const warningLine = dumpErrors[0] ?? lines.find((line) => /\bERREUR\b|\bERROR\b/i.test(line)) ?? null
-  if (warningLine) return warningLine.replace(/^\[[^\]]+\]\s*/, "")
+function toBackupLogEntry(line: string): BackupLogEntry {
+  const timestampMatch = line.match(/^\[([^\]]+)\]/)
+  const timestamp = timestampMatch ? parseBackupTimestamp(timestampMatch[1]) : null
+  const message = getBackupLogMessage(line)
 
-  const zipLine = lines.find((line) => /7zip .*: OK/i.test(line))
-  if (zipLine) return zipLine.replace(/^\[[^\]]+\]\s*/, "")
+  const level: BackupLogEntry["level"] =
+    isBackupProcessStartLine(line) || isBackupProcessEndLine(line)
+      ? "section"
+      : isBackupErrorLine(message)
+        ? "error"
+        : /:\s*(?:OK|SUCCESS)\b/i.test(message)
+          ? "success"
+          : "info"
 
-  const dumpOkCount = lines.filter((line) => /DUMP .*: OK/i.test(line)).length
-  if (dumpOkCount > 0) return `${dumpOkCount} dump(s) termines`;
-
-  return lines[lines.length - 1]?.replace(/^\[[^\]]+\]\s*/, "") || "Execution detectee"
+  return { timestamp, message, level }
 }
 
-function parseBackupRuns(rawLog: string): ParsedRun[] {
-  const lines = rawLog.split(/\r?\n/).map((line) => line.trim()).filter(Boolean)
-  const runs: ParsedRun[] = []
-  let currentLines: string[] = []
-  let startedAt: string | null = null
-  let endedAt: string | null = null
-
-  const flushCurrentRun = () => {
-    if (!startedAt || currentLines.length === 0) return
-
-    const hasError = currentLines.some((line) => /:\s*Erreur\b/i.test(line) || /\bERREUR\b|\bERROR\b/i.test(line))
-    const hasFinished = currentLines.some((line) => /## FIN PROCESS BACKUP ##/i.test(line))
-    const hasZipOk = currentLines.some((line) => /7zip .*: OK/i.test(line))
-
-    runs.push({
-      startedAt,
-      endedAt,
-      status: hasFinished ? (hasError ? "failed" : "success") : (hasZipOk ? "success" : "in_progress"),
-      details: summarizeRunLines(currentLines),
-    })
-
-    currentLines = []
-    startedAt = null
-    endedAt = null
-  }
-
-  for (const line of lines) {
-    const timestampMatch = line.match(/^\[([^\]]+)\]/)
-    const parsedTimestamp = timestampMatch ? parseFrenchTimestamp(timestampMatch[1]) : null
-
-    if (/## DEBUT PROCESS BACKUP ##/i.test(line)) {
-      flushCurrentRun()
-      startedAt = parsedTimestamp
-      currentLines = [line]
-      endedAt = null
-      continue
-    }
-
-    if (!startedAt) continue
-
-    currentLines.push(line)
-    if (/## FIN PROCESS BACKUP ##/i.test(line) && parsedTimestamp) {
-      endedAt = parsedTimestamp
-    }
-  }
-
-  flushCurrentRun()
-  return runs.sort((a, b) => Date.parse(b.startedAt) - Date.parse(a.startedAt))
-}
-
-async function readBackupRuns(backupLogPath: string): Promise<ParsedRun[]> {
+async function readBackupLog(backupLogPath: string) {
   try {
     const rawLog = await fs.readFile(backupLogPath, "utf8")
-    return parseBackupRuns(rawLog)
+    const meaningfulLines = rawLog
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter((line) => line.length > 0 && isMeaningfulBackupLogLine(line))
+    const selectedLines = meaningfulLines.slice(-MAX_BACKUP_LOG_ENTRIES)
+    const parsedStatus = parseBackupLogStatus(rawLog)
+
+    return {
+      runs: parsedStatus.runs,
+      secondaryCopy: buildSecondaryCopySummary(parsedStatus),
+      entries: selectedLines.map(toBackupLogEntry),
+      totalLineCount: meaningfulLines.length,
+      truncated: meaningfulLines.length > selectedLines.length,
+    }
   } catch {
-    return []
+    return {
+      runs: [] as ParsedBackupRun[],
+      secondaryCopy: {
+        configured: false,
+        path: null,
+        etat: "not_configured" as const,
+        robocopyCode: null,
+      },
+      entries: [] as BackupLogEntry[],
+      totalLineCount: 0,
+      truncated: false,
+    }
   }
 }
 
@@ -164,20 +131,22 @@ export const GET = withAdminLogging(async (_req: NextRequest) => {
   try {
     const backupRoot = await resolveBackupRoot()
     const backupLogPath = resolveBackupLogPath(backupRoot)
-    const [archiveRecords, parsedRuns] = await Promise.all([
+    const [archiveRecords, backupLog] = await Promise.all([
       readArchiveRecords(backupRoot),
-      readBackupRuns(backupLogPath),
+      readBackupLog(backupLogPath),
     ])
 
-    const runRecords: BackupRecord[] = parsedRuns.map((run, index) => ({
+    const runRecords: BackupRecord[] = backupLog.runs.map((run, index) => ({
       id: `run:${index}:${run.startedAt}`,
-      etat: run.status,
+      etat: run.primaryStatus,
       dateHeure: run.endedAt ?? run.startedAt,
-      details: run.details,
+      details: run.primaryDetails,
     }))
 
     const merged = [...archiveRecords]
-    const seenKeys = new Set(archiveRecords.map((record) => `${record.etat}:${record.dateHeure}:${record.details}`))
+    const seenKeys = new Set(
+      archiveRecords.map((record) => `${record.etat}:${record.dateHeure}:${record.details}`),
+    )
     for (const record of runRecords) {
       const key = `${record.etat}:${record.dateHeure}:${record.details}`
       if (seenKeys.has(key)) continue
@@ -195,6 +164,10 @@ export const GET = withAdminLogging(async (_req: NextRequest) => {
         archiveCount: archiveRecords.length,
         slotCount: BACKUP_SLOT_NAMES.length,
         latestRun: runRecords[0] ?? null,
+        secondaryCopy: backupLog.secondaryCopy,
+        logEntries: backupLog.entries,
+        logLineCount: backupLog.totalLineCount,
+        logTruncated: backupLog.truncated,
       },
     }
 

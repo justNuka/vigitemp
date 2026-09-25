@@ -19,6 +19,25 @@ public sealed class MainForm : Form
     private static readonly Color TextMuted = Color.FromArgb(71, 85, 105);
     private static readonly Color Border = Color.FromArgb(203, 213, 225);
 
+    private static bool TryNormalizeWebsiteBaseUrl(string value, out string normalized)
+    {
+        normalized = string.Empty;
+        if (string.IsNullOrWhiteSpace(value)) return false;
+
+        var candidate = value.Trim();
+        if (!candidate.Contains("://", StringComparison.Ordinal))
+        {
+            candidate = "http://" + candidate;
+        }
+
+        if (!Uri.TryCreate(candidate, UriKind.Absolute, out var uri)) return false;
+        if (uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps) return false;
+        if (string.IsNullOrWhiteSpace(uri.Host)) return false;
+
+        normalized = candidate.TrimEnd('/');
+        return true;
+    }
+
     private readonly Settings _s = Settings.Default();
     private readonly TabControl _tabs = new() { Dock = DockStyle.Fill };
     private readonly Label _step = new() { Left = 24, Top = 116, Width = 900, Height = 22, ForeColor = TextMuted };
@@ -372,7 +391,19 @@ public sealed class MainForm : Form
         {
             if (string.IsNullOrWhiteSpace(_s.InstallDir)) m = "Le dossier d'installation est obligatoire.";
             else if (string.IsNullOrWhiteSpace(_s.ServiceName)) m = "Le nom du service Windows est obligatoire.";
-            else if (string.IsNullOrWhiteSpace(_s.WebsiteBaseUrl)) m = "L'URL du site web est obligatoire.";
+            else
+            {
+                string normalizedWebsiteBaseUrl;
+                if (!TryNormalizeWebsiteBaseUrl(_s.WebsiteBaseUrl, out normalizedWebsiteBaseUrl))
+                {
+                    m = "L'URL du site web doit être une URL HTTP/HTTPS valide (ex: http://10.44.0.21:3000).";
+                }
+                else
+                {
+                    _s.WebsiteBaseUrl = normalizedWebsiteBaseUrl;
+                    websiteBaseUrl.Text = normalizedWebsiteBaseUrl;
+                }
+            }
         }
         else if (idx == 1)
         {

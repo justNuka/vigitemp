@@ -26,19 +26,25 @@ export function useMonitoringRangeMeasurements(
     rangeStart: Date | null
     rangeEnd: Date | null
     includeNullNonResponse: boolean
+    limitTodayRange?: boolean
+    maxGraphPoints?: number
   },
 ) {
-  const { enabled, rangeStart, rangeEnd, includeNullNonResponse } = options
+  const { enabled, rangeStart, rangeEnd, includeNullNonResponse, limitTodayRange = true, maxGraphPoints } = options
   const [data, setData] = useState<MeasureData[]>([])
   const [isLoading, setIsLoading] = useState(false)
+  const [sourceCount, setSourceCount] = useState(0)
+  const [isSampled, setIsSampled] = useState(false)
   const useDefaultTodayLimit = useMemo(
-    () => isTodayRange(rangeStart, rangeEnd),
-    [rangeEnd, rangeStart],
+    () => limitTodayRange && isTodayRange(rangeStart, rangeEnd),
+    [limitTodayRange, rangeEnd, rangeStart],
   )
 
   useEffect(() => {
     if (!enabled || !rangeStart || !rangeEnd) {
       setData([])
+      setSourceCount(0)
+      setIsSampled(false)
       setIsLoading(false)
       return
     }
@@ -49,6 +55,31 @@ export function useMonitoringRangeMeasurements(
     const loadAllMeasures = async () => {
       setIsLoading(true)
       try {
+        if (maxGraphPoints && maxGraphPoints > 0) {
+          const params = new URLSearchParams({
+            source: "mesures",
+            startDate: toApiUtcDateTime(rangeStart),
+            endDate: toApiUtcDateTime(rangeEnd),
+            includeNullNonResponse: includeNullNonResponse ? "1" : "0",
+            graphMaxPoints: String(maxGraphPoints),
+          })
+
+          const payload = await fetchJson<{
+            measurements: MeasureData[]
+            graphSourceCount?: number
+            graphSampled?: boolean
+          }>(`/api/mesures/${idLieu}?${params}`, { signal: controller.signal })
+
+          if (!isActive) return
+          const measurements = Array.isArray(payload?.measurements) ? payload.measurements : []
+          setData(sortMeasuresChronologically(measurements))
+          setSourceCount(
+            typeof payload?.graphSourceCount === "number" ? payload.graphSourceCount : measurements.length,
+          )
+          setIsSampled(Boolean(payload?.graphSampled))
+          return
+        }
+
         const all: MeasureData[] = []
         const pageSize = useDefaultTodayLimit ? DEFAULT_TODAY_GRAPH_LIMIT : 500
         let page = 1
@@ -81,11 +112,15 @@ export function useMonitoringRangeMeasurements(
 
         if (!isActive) return
         setData(sortMeasuresChronologically(all))
+        setSourceCount(total || all.length)
+        setIsSampled(false)
       } catch (error) {
         if ((error as Error)?.name === "AbortError") return
         console.error("Erreur chargement mesures (range):", error)
         if (!isActive) return
         setData([])
+        setSourceCount(0)
+        setIsSampled(false)
       } finally {
         if (isActive) setIsLoading(false)
       }
@@ -96,7 +131,7 @@ export function useMonitoringRangeMeasurements(
       isActive = false
       controller.abort()
     }
-  }, [enabled, idLieu, includeNullNonResponse, rangeEnd, rangeStart, useDefaultTodayLimit])
+  }, [enabled, idLieu, includeNullNonResponse, maxGraphPoints, rangeEnd, rangeStart, useDefaultTodayLimit])
 
-  return { data, isLoading, useDefaultTodayLimit }
+  return { data, isLoading, useDefaultTodayLimit, sourceCount, isSampled }
 }

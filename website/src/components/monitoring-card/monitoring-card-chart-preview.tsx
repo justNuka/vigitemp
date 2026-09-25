@@ -1,10 +1,11 @@
 import { Line } from 'react-chartjs-2'
 
 import { Skeleton } from '@/components/ui/skeleton'
+import { getMeasureTimestamp, type MeasureData } from '@/lib/measurements'
 
 interface MonitoringCardChartPreviewProps {
   isLoading: boolean
-  orderedData: Array<{ DateHeureMesureXaxis: string; Valeur: number | null }>
+  orderedData: MeasureData[]
   chartDatasets: {
     label: string
     data: Array<number | null>
@@ -26,6 +27,8 @@ interface MonitoringCardChartPreviewProps {
   formattedConsigneSup: string
   formattedConsigneInf: string
   unite: string
+  rangeStartMs: number
+  rangeEndMs: number
 }
 
 export function MonitoringCardChartPreview({
@@ -41,6 +44,8 @@ export function MonitoringCardChartPreview({
   formattedConsigneSup,
   formattedConsigneInf,
   unite,
+  rangeStartMs,
+  rangeEndMs,
 }: MonitoringCardChartPreviewProps) {
   if (isLoading) {
     return (
@@ -55,13 +60,37 @@ export function MonitoringCardChartPreview({
       <div className="h-32.5">
         <Line
           data={{
-            labels: orderedData.map((point) => point.DateHeureMesureXaxis),
-            datasets: chartDatasets.map((dataset) => ({
-              ...dataset,
-              borderWidth: dataset.label === "" ? 1.35 : 1,
-              pointRadius: dataset.label === "" ? 1.25 : 0,
-              pointHoverRadius: dataset.label === "" ? 1.25 : 0,
-            })),
+            datasets: chartDatasets.map((dataset) => {
+              const points = orderedData
+                .map((point, index) => {
+                  const timestamp = getMeasureTimestamp(point)
+                  return {
+                    x: timestamp,
+                    y: dataset.data[index] ?? null,
+                  }
+                })
+                .filter((point) => Number.isFinite(point.x))
+
+              const isGuideDataset = dataset.order === 0
+              if (isGuideDataset && points.length > 0) {
+                const firstValue = points.find((point) => typeof point.y === "number")?.y ?? null
+                const lastValue = [...points].reverse().find((point) => typeof point.y === "number")?.y ?? firstValue
+                if (typeof firstValue === "number") {
+                  points.unshift({ x: rangeStartMs, y: firstValue })
+                }
+                if (typeof lastValue === "number") {
+                  points.push({ x: rangeEndMs, y: lastValue })
+                }
+              }
+
+              return {
+                ...dataset,
+                data: points,
+                borderWidth: dataset.label === "" ? 1.35 : 1,
+                pointRadius: dataset.label === "" ? 1.25 : 0,
+                pointHoverRadius: dataset.label === "" ? 1.25 : 0,
+              }
+            }),
           }}
           options={{
             responsive: true,
@@ -71,7 +100,12 @@ export function MonitoringCardChartPreview({
               tooltip: { enabled: false },
             },
             scales: {
-              x: { display: false },
+              x: {
+                type: 'linear',
+                display: false,
+                min: rangeStartMs,
+                max: rangeEndMs,
+              },
               y: { display: false, min: yMin, max: yMax },
             },
             interaction: { mode: 'nearest', axis: 'x', intersect: false },

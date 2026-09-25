@@ -3,6 +3,7 @@
 import { useEffect } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { AppSidebar } from "@/components/app-sidebar"
+import { AppFooter } from "@/components/app-footer"
 import PageTransitionWrapper from "@/components/animations/transitions/page-transitions/PageTransitionWrapper"
 import { useAutoLock } from "@/hooks/useAutoLock"
 import { useCurrentUser } from "@/hooks/useCurrentUser"
@@ -69,11 +70,12 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="flex flex-col min-h-screen w-full">
-      <div className="flex flex-1 overflow-hidden">
+    <div className="flex h-dvh w-full flex-col overflow-hidden">
+      <div className="flex min-h-0 flex-1 overflow-hidden">
         <AppSidebar activeAlarms={activeAlarmsCount} currentUser={currentUser} onLogout={handleLogout} />
-        <main className="flex-1 overflow-y-auto bg-background">
+        <main className="min-h-0 min-w-0 flex-1 overflow-y-auto bg-background">
           <PageTransitionWrapper className="min-h-full">{children}</PageTransitionWrapper>
+          <AppFooter />
         </main>
       </div>
     </div>

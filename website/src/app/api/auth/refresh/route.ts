@@ -10,6 +10,7 @@ import {
   getRefreshSessionExpiresAt,
   verifyRefreshToken,
 } from "@/lib/jwt"
+import { getUserAuthorizationCodes } from "@/lib/authz"
 
 function clearAuthCookies(req: NextRequest, response: ReturnType<typeof apiError>) {
   response.cookies.set("auth-token", "", {
@@ -48,12 +49,20 @@ export async function POST(req: NextRequest) {
     return clearAuthCookies(req, apiError(401, "session_expired", "Session expirée"))
   }
 
+  let authorizations = payload.authorizations ?? []
+  try {
+    authorizations = await getUserAuthorizationCodes(payload.userId)
+  } catch {
+    // If the main database is temporarily unavailable, keep the signed claims
+    // already present in the refresh token instead of dropping permissions.
+  }
+
   const nextAccessToken = generateAccessToken(
     {
       userId: payload.userId,
       username: payload.username,
       profile: payload.profile,
-      authorizations: payload.authorizations ?? [],
+      authorizations,
     },
     sessionExpiresAt,
   )
@@ -64,6 +73,7 @@ export async function POST(req: NextRequest) {
       userId: payload.userId,
       username: payload.username,
       profile: payload.profile,
+      authorizations,
     },
     sessionExpiresAt,
   )

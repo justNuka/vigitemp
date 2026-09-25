@@ -8,6 +8,7 @@ import { log } from "@/lib/logger";
 import { decodeXmlBytes } from "@/lib/xml-decoding";
 import { buildImportedSensorStorageIdentity, resolveImportedSensorIdentity } from "@/lib/sensor-naming";
 import { getPermissionAliases } from "@/lib/permissions";
+import { readGspCoefficientsFromTarget } from "@/lib/metrology-gsp-coefficient-sync";
 
 const isXmlFile = (file: File) => {
   const name = file.name.toLowerCase();
@@ -83,7 +84,7 @@ export const POST = withOneOrHigherAnyAuthorizationLogging(getPermissionAliases(
 
       const existingSensor = await prisma.t_sonde.findUnique({
         where: { Sonde_Numero_Serie: storageIdentity.serial },
-        select: { Sonde_Numero_Serie: true },
+        select: { Id_Sonde: true, Sonde_Numero_Serie: true, Adresse_Sonde: true, Id_Module: true },
       });
 
       if (!existingSensor) {
@@ -107,6 +108,35 @@ export const POST = withOneOrHigherAnyAuthorizationLogging(getPermissionAliases(
           ...(isGsoFamily ? { Adresse_Sonde: storageIdentity.address } : {}),
         },
       });
+
+
+      if (!isGsoFamily) {
+        const sensorForRead = await prisma.t_sonde.findUnique({
+          where: { Sonde_Numero_Serie: storageIdentity.serial },
+          select: { Id_Sonde: true, Adresse_Sonde: true, Id_Module: true },
+        });
+        if (!sensorForRead?.Id_Module) {
+          return apiError(400, "gsp_module_required", "La GSP doit déjà être affectée à un module pour relire ses coefficients. Utilisez l'import multiple pour une nouvelle GSP.");
+        }
+        const moduleRow = await prisma.t_module.findUnique({
+          where: { Id_Module: sensorForRead.Id_Module },
+          select: { Port_Serie: true, Module_Numero_Serie: true, Emplacement: true },
+        });
+        if (!moduleRow?.Port_Serie) {
+          return apiError(400, "gsp_module_required", `Aucun port série n'est configuré pour ${storageIdentity.serial}.`);
+        }
+        const live = await readGspCoefficientsFromTarget({
+          sensorId: sensorForRead.Id_Sonde,
+          serialNumber: storageIdentity.serial,
+          address: sensorForRead.Adresse_Sonde?.trim() || storageIdentity.address,
+          modulePort: moduleRow.Port_Serie,
+          moduleName: moduleRow.Module_Numero_Serie ?? moduleRow.Emplacement ?? null,
+          unit: parsed.data.Unite ?? null,
+        }, "AJUSTAGE");
+        parsed.data.Coeff_X2 = live.stored.coeffX2;
+        parsed.data.Coeff_X = live.stored.coeffX;
+        parsed.data.Coeff_Constant = live.stored.coeffConstant;
+      }
     }
 
     const created = await prisma.t_ajustage.create({

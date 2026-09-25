@@ -118,7 +118,7 @@ export const DateRangePicker: FC<DateRangePickerProps> & { filePath: string } = 
               <div>
                 {range?.from
                   ? triggerLabel ?? `${formatDate(range.from, resolvedLocale)}${range.to != null ? ' - ' + formatDate(range.to, resolvedLocale) : ''}`
-                  : t('selectRange')}
+                  : triggerLabel ?? t('selectRange')}
               </div>
             </div>
             {rangeCompare != null ? (
@@ -196,6 +196,7 @@ export const DateRangePicker: FC<DateRangePickerProps> & { filePath: string } = 
           <Button
             onClick={() => {
               if (allowEmpty && !range?.from) {
+                onUpdate?.({ range: { from: undefined, to: undefined }, rangeCompare: undefined })
                 openedRangeRef.current = null
                 openedRangeCompareRef.current = undefined
                 setIsOpen(false)

@@ -1,6 +1,6 @@
 "use client";
 
-import { Plus, Trash2 } from "lucide-react";
+import { Info, Plus, Trash2 } from "lucide-react";
 import { Controller, useFieldArray, useFormContext } from "react-hook-form";
 import { useMemo } from "react";
 import { TabsContent } from "@/components/ui/tabs";
@@ -86,6 +86,14 @@ export function LocationFormTabTelephony({ users }: Props) {
             <Plus className="h-4 w-4" />
             {t("add")}
           </Button>
+        </div>
+
+        <div className="flex items-start gap-2 rounded-md border border-sky-200 bg-sky-50 p-3 text-sm text-sky-950 dark:border-sky-500/40 dark:bg-sky-500/10 dark:text-sky-100">
+          <Info className="mt-0.5 h-4 w-4 shrink-0" />
+          <div className="space-y-1">
+            <p className="font-medium">{t("planning_info_title")}</p>
+            <p className="text-xs text-sky-800 dark:text-sky-200">{t("planning_info_description")}</p>
+          </div>
         </div>
 
         {fields.length === 0 ? (

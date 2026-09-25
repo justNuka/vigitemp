@@ -164,6 +164,7 @@ export async function ensureMetrologyReadingPreviewSession(
       startedAt: existing.startedAt,
       operation: existing.operation,
       sensorIds: existing.sensorIds,
+      created: false,
     }
   }
 
@@ -239,7 +240,7 @@ export async function ensureMetrologyReadingPreviewSession(
     sensors: sensors.map((sensor) => sensor.serialNumber),
   })
 
-  return { startedAt, operation, sensorIds }
+  return { startedAt, operation, sensorIds, created: true }
 }
 
 export function requireMetrologyReadingPreviewSession(

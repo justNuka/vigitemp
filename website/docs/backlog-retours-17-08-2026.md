@@ -389,35 +389,51 @@ Depuis **Administration > Sondes > détail d’une sonde > Ajustages**, le tél�
 
 ## B20-002 — Import ajustage : identité d’une GSO simple capteur incorrecte
 
-**Statut : `CORRIGE_DEV` — PR #33 — branche `agent/xml-ajustage-import-export`**
+**Statut : `PR_OUVERTE` — PR #111 — branche `fix/gso-import-address-normalization`**
 
-### Retour du 20/08/2026
+### Retour initial du 20/08/2026
 
-Lorsqu’un XML d’ajustage créait automatiquement une **GSO simple capteur**, les valeurs stockées ne suivaient pas la convention attendue.
+Lorsqu’un XML d’ajustage créait automatiquement une **GSO simple capteur**, les valeurs stockées ne suivaient pas la convention attendue. La PR #33 avait alors centralisé la reconstruction du numéro de série et de l’adresse GSO pour les imports.
 
-Exemple terrain fourni :
+### Précision terrain du 10/09/2026
 
-- attendu : `Adresse = 10007909-T`, `Numéro de série = SOET-10007909`;
-- ancien comportement après import : `Adresse = 10007909`, `Numéro de série = 10007909`.
+La règle d’adresse retenue dans la PR #33 ajoutait `-T` aux GSO simples (`SOIT` / `SOET`). Cette convention a été corrigée : `Adresse_Sonde` doit contenir uniquement l’adresse physique, sans préfixe de type et sans suffixe artificiel.
 
-### Correctif livré
+Exemple confirmé :
 
-La règle d’identité des GSO simples `SOIT` / `SOET` est centralisée et utilisée par la prévisualisation, l’import unitaire et l’import multiple :
+- `Sonde_Numero_Serie = SOIT-10007193` ;
+- `Adresse_Sonde = 10007193`.
 
-- `Sonde_Numero_Serie` = `<TYPE>-<chiffres>`;
-- `Adresse_Sonde` = `<chiffres>-T`;
-- `Sonde_Type` reste le type détecté;
-- `Est_Sonde_GSO = true`;
-- l’ajustage importé référence le même numéro typé que la sonde;
-- les doubles `SOIH` / `SOEH` conservent leur convention existante.
+Lorsqu’une adresse porte réellement un suffixe de canal `-T` ou `-H`, ce suffixe est conservé, mais le préfixe de type (`SOIT`, `SOET`, `SOIH`, `SOEH`) ne doit jamais faire partie de `Adresse_Sonde`.
 
-### Validation terrain
+### Correctif PR #111
 
-- importer un XML SOET simple et vérifier exactement les deux colonnes montrées dans les captures;
-- refaire avec SOIT;
-- tester SOIH/SOEH pour confirmer absence de régression;
-- tester un import sur une sonde déjà existante;
-- vérifier que l’ajustage importé référence le même numéro de série que la sonde créée.
+La règle reste centralisée dans `website/src/lib/sensor-naming.ts`, via `buildImportedSensorStorageIdentity()` et est donc appliquée sans duplication aux parcours de prévisualisation, import unitaire et import multiple :
+
+- `SOIT` / `SOET` : numéro de série conservé sous la forme `<TYPE>-<numero>` ;
+- `SOIT` / `SOET` : `Adresse_Sonde = <numero>` ;
+- adresses portant réellement un canal : `<numero>-T` ou `<numero>-H` ;
+- aucun préfixe de type dans `Adresse_Sonde` ;
+- `Sonde_Type` et `Est_Sonde_GSO` restent inchangés ;
+- l’ajustage importé continue de référencer le même numéro de série que la sonde créée ou mise à jour.
+
+Fichiers principaux :
+
+- `website/src/lib/sensor-naming.ts` ;
+- `website/scripts/test-gso-import-address-normalization.ts` ;
+- `website/docs/gso-adjustment-import-address-10-09-2026.md`.
+
+Validation automatique : GitHub Actions run `34463664299` — test ciblé, ESLint, TypeScript et build Next.js production réussis.
+
+### Validation terrain restante
+
+- importer un XML `SOIT-10007193` et vérifier `Sonde_Numero_Serie = SOIT-10007193` et `Adresse_Sonde = 10007193` ;
+- refaire avec `SOET` ;
+- tester une GSO avec suffixe `-T` puis `-H` et vérifier que seul le suffixe est conservé dans l’adresse ;
+- tester l’import unitaire et l’import multiple ;
+- tester une sonde GSO déjà existante ;
+- vérifier que l’ajustage importé référence toujours le même numéro de série que la sonde ;
+- vérifier une sonde non-GSO en non-régression.
 
 ---
 
@@ -1405,3 +1421,2445 @@ Les anciens placeholders `%1`, `%2`, `%3` ainsi que les signatures de mauvais en
 - `db/vigisensys_seed_mssql.sql` ;
 - `db/CHANGELOG.md` ;
 - `CHANGELOG.md`.
+
+
+## Lot métrologie — coefficients relus / GSO / imports-exports (10/09/2026)
+
+- **Statut : `PR_OUVERTE` — branche `feature/metrology-coefficient-synchronization` — PR #114 vers `dev`.**
+- GSP : DCON au lancement, persistance des coefficients existants, suppression de l'ECON neutre automatique.
+- GSO : affichage de `Metrologie_cmd_envoyee` (attente / envoyé) dans les cards de démarrage.
+- Ajustage : sélection individuelle des GSP avant envoi des coefficients calculés.
+- Ajustage XML : conservation de `COEFFX2`, XML individuel + ZIP contrôlés ; parseur corrigé pour distinguer strictement `COEFFX` et `COEFFX2`.
+- Étalonnage : PDF individuel + ZIP proposés.
+- Import XML : GSP/GSO, lecture live DCON pour GSP, upsert ciblé sans suppression complète de l'historique.
+- Validation automatique : GitHub Actions run `34572188177` — test ciblé, ESLint, TypeScript et build production OK.
+- Documentation détaillée : `website/docs/metrology-coefficient-synchronization-10-09-2026.md`.
+
+### Validation terrain
+
+- [ ] GSP avec coefficients non neutres : vérifier que DCON remplit A/B/C sans ECON automatique au lancement ;
+- [ ] GSP sans ajustage puis avec ajustage existant : vérifier création / mise à jour ciblée en base ;
+- [ ] GSO : vérifier le passage visible de « commande en attente » à « commande envoyée » ;
+- [ ] fin d'ajustage : sélectionner une seule GSP et confirmer que seule celle-ci reçoit les coefficients calculés ;
+- [ ] export XML individuel + ZIP avec `COEFFX2/COEFFX/COEFFCONSTANT` ;
+- [ ] export PDF individuel + ZIP après étalonnage ;
+- [ ] import XML GSO puis GSP et vérifier l'upsert, avec DCON prioritaire pour la GSP.
+
+---
+
+## R21-001 — Trier le suivi métrologique par prochain étalonnage
+
+**Statut : `CORRIGE_DEV` — PR #137 — squash merge `0c7d7ea4ea07bc4e39613c304e33aec5f3d0cb40`**
+
+### Retour — 21/09/2026
+
+Sur la page **Métrologie**, le tableau de suivi doit présenter en priorité les lieux dont la date de prochain étalonnage est la plus proche.
+
+### État vérifié avant correction
+
+Le tableau expose déjà la colonne **Date prochain étalonnage** via `dateProchainEtalonnage`, mais les données étaient transmises dans l'ordre de récupération de l'API et aucun tri initial n'était appliqué côté écran.
+
+### Correctif du lot
+
+- tri initial ascendant sur `dateProchainEtalonnage` ;
+- la date la plus proche apparaît en premier ;
+- les lignes sans date de prochain étalonnage sont conservées en fin de tableau ;
+- le tri interactif existant de `TanStackTable` reste disponible pour l'utilisateur ;
+- aucune requête, formule métrologique ou donnée persistée n'est modifiée.
+
+### Fichiers principaux
+
+- `website/src/app/[locale]/(admin)/admin/metrologie/metrology-dashboard-client.tsx` ;
+- `website/package.json` ;
+- `website/CHANGELOG.md` ;
+- `CHANGELOG.md`.
+
+### Version
+
+- Web : **1.4.1** ;
+- Serveur : **1.1.0** — inchangé ;
+- Agent : **1.0.1** — inchangé ;
+- BDD : **0.91.0** — inchangée.
+
+### Validation terrain
+
+- [ ] ouvrir Administration > Métrologie avec plusieurs échéances différentes ;
+- [ ] confirmer que la date de prochain étalonnage la plus proche est affichée en haut ;
+- [ ] vérifier que les dates plus lointaines suivent dans l'ordre chronologique ;
+- [ ] vérifier que les lignes sans prochaine date restent visibles en fin de tableau ;
+- [ ] cliquer sur d'autres colonnes et confirmer que le tri manuel du tableau reste fonctionnel ;
+- [ ] contrôler le rendu FR/EN des dates.
+
+---
+
+## R21-002 — Page Hotline & aide orientée utilisateur
+
+**Statut : `CORRIGE_DEV` — PR #138 — squash merge `93a46e690edf8ea79c358b9e53d1cc2ca2fbaf9b`**
+
+### Retour — 21/09/2026
+
+Ajouter dans la sidebar un accès **Hotline & aide** menant vers une page orientée utilisateur, distincte de la console Hotline technique.
+
+La page doit :
+
+- expliquer le fonctionnement global de VigiSensys et les notions Site / Groupe / Lieu / Sonde / Surveillance / Alarme ;
+- proposer des procédures courantes, notamment la mise en surveillance d'une sonde encore non affectée à un lieu ;
+- expliquer dès le haut de page que le guide est volontairement centré sur l'usage et que la hotline MC2 reste disponible lorsqu'un besoin n'est pas couvert ;
+- afficher en bas de page l'email et le numéro de téléphone Hotline ;
+- proposer un bouton **Nous écrire** ouvrant l'application de messagerie du poste avec un modèle de demande prérempli.
+
+### État vérifié avant correction
+
+- la sidebar utilisateur ne disposait d'aucune entrée Hotline/Aide ; seul le hub **Services** était présent dans le footer ;
+- la route `/hotline/[slug]` existante est une console de diagnostic technique et ne doit pas être exposée comme guide utilisateur ;
+- aucune page applicative ne regroupait les concepts VigiSensys et les procédures opérateur demandées ;
+- les routes localisées ne déclaraient pas de chemin `/aide` / `/help`.
+
+### Implémentation du lot
+
+- nouvelle route canonique `/help`, localisée en `/fr/aide` et `/en/help` ;
+- nouvelle entrée **Hotline & aide** dans le footer de la sidebar, en conservant l'accès **Services** ;
+- présentation des concepts Site, Groupe, Lieu, Sonde, Surveillance et Alarme ;
+- procédures pas à pas :
+  - créer/configurer un lieu à partir d'une sonde non affectée puis activer sa surveillance ;
+  - analyser et acquitter une alarme ;
+  - désactiver puis réactiver temporairement la surveillance ;
+  - consulter le graphique et l'historique d'un lieu ;
+- rappel des restrictions liées aux droits et à la licence ;
+- bloc Hotline avec email cliquable, téléphone cliquable et bouton **Nous écrire** ;
+- modèle `mailto:` prérempli avec établissement, contact, téléphone, version Web VigiSensys, page, lieu, sonde, objet, description, étapes de reproduction et message d'erreur ;
+- traductions FR/EN isolées dans un supplément i18n dédié ;
+- coordonnées Hotline centralisées dans `website/src/lib/support-contact.ts`.
+
+### Coordonnées affichées
+
+- email : `contact@mc2lab.fr` ;
+- téléphone : `04 73 28 99 99`.
+
+### Fichiers principaux
+
+- `website/src/app/[locale]/(dashboard)/help/page.tsx` ;
+- `website/src/app/[locale]/(dashboard)/help/help-support-page-client.tsx` ;
+- `website/src/components/app-sidebar.tsx` ;
+- `website/src/i18n/routing.ts` ;
+- `website/src/i18n/request.ts` ;
+- `website/src/messages/help-support-supplements.ts` ;
+- `website/src/lib/support-contact.ts` ;
+- `website/scripts/test-help-support-page.ts`.
+
+### Version
+
+- Web : **1.5.0** ;
+- Serveur : **1.1.0** — inchangé ;
+- Agent : **1.0.1** — inchangé ;
+- BDD : **0.91.0** — inchangée.
+
+### Validation terrain
+
+- [ ] vérifier l'entrée **Hotline & aide** dans la sidebar desktop et mobile ;
+- [ ] vérifier `/fr/aide` et `/en/help` ;
+- [ ] relire les concepts et les quatre procédures avec un profil utilisateur standard ;
+- [ ] confirmer que le guide reste lisible en clair/sombre et sur largeur mobile ;
+- [ ] vérifier les liens email et téléphone ;
+- [ ] cliquer sur **Nous écrire** et contrôler le sujet + corps préremplis dans l'application de messagerie ;
+- [ ] vérifier que la version Web affichée dans le modèle correspond à la version courante ;
+- [ ] confirmer que la console Hotline technique `/hotline/[slug]` reste inchangée et séparée de cette page ;
+- [x] validation automatisée GitHub Actions — run `35660771998` : diff check, `pnpm test:help-support`, ESLint ciblé, i18n, TypeScript MySQL, TypeScript SQL Server et build production réussis.
+
+---
+
+## R21-003 — Surveillance : cards, fenêtre 24 h et réduction des grands graphiques
+
+**Statut : `CORRIGE_DEV` — PR #139 — squash merge `00f2778993e81faf959aa4879fb8433ddcaf88c5`**
+
+### Retour — 21/09/2026
+
+Trois évolutions liées à l'affichage Surveillance doivent être traitées ensemble :
+
+1. dans les cards, afficher la **sonde** en première ligne puis le **nom du lieu** en dessous, au lieu de `Lieu - Sonde` ;
+2. mini-graphe et grand graphe : afficher par défaut les **24 dernières heures glissantes**, par exemple 08:00 J-1 → 08:00 aujourd'hui ;
+3. lorsqu'une longue plage est sélectionnée dans le détail d'un lieu, éviter de transférer et rendre plusieurs milliers de points dans Chart.js.
+
+Le retour terrain mentionne également que, lors d'une non-réponse de plusieurs heures, le mini-graphe occupait encore toute la largeur comme si la courbe arrivait jusqu'à l'heure courante.
+
+### État vérifié avant correction
+
+Cards :
+
+- le header concaténait `nomLieu - sondeNumeroSerie` ;
+- chaque card demandait les **125 dernières mesures** sans borne temporelle 24 h ;
+- l'axe X du mini-graphe était un axe Chart.js catégoriel masqué : les points étaient répartis uniformément sur toute la largeur, indépendamment de l'intervalle réel entre deux mesures ;
+- ce fonctionnement expliquait pourquoi une dernière mesure vieille de plusieurs heures pouvait visuellement arriver jusqu'au bord droit.
+
+Détail du lieu :
+
+- la modal s'initialisait sur la **journée civile courante**, de 00:00 à 23:59:59 ;
+- le hook graphique utilisait une limite spéciale de 125 points pour la journée courante ;
+- sur une plage plus large, `useMonitoringRangeMeasurements` parcourait toutes les pages de 500 lignes jusqu'à charger l'intégralité des mesures dans le navigateur ;
+- une période de plusieurs semaines/mois pouvait donc transmettre puis rendre plusieurs milliers de points ;
+- le tableau détaillé disposait déjà d'une pagination serveur séparée et ne nécessitait pas ce chargement global.
+
+BDD :
+
+- `tm_graphique` est le cache récent prévu pour les courbes de Surveillance ;
+- les seeds MySQL et les jobs SQL Server suppriment les lignes de `tm_graphique` âgées de plus de **72 heures** ;
+- cette table peut donc servir aux mini-courbes 24 h sans interroger inutilement tout `tm_mesures`.
+
+### Implémentation du lot
+
+#### Identité des cards
+
+- numéro de série de sonde en première ligne ;
+- nom du lieu en seconde ligne ;
+- fallback sur le nom du lieu si aucun numéro de série n'est disponible.
+
+#### Mini-graphe — 24 h glissantes
+
+- requête bornée à `maintenant - 24 h → maintenant` à chaque chargement/rafraîchissement ;
+- source `tm_graphique`, adaptée à cette fenêtre courte ;
+- maximum **180 points** envoyés au mini-graphe lorsque davantage de lignes existent ;
+- axe X linéaire basé sur les vrais timestamps et borné sur les 24 h demandées ;
+- une absence de remontée est donc représentée par un espace temporel réel à droite de la dernière mesure ;
+- les consignes continuent d'être prolongées sur toute la fenêtre pour conserver les guides visuels.
+
+#### Grand graphe — 24 h par défaut
+
+- ouverture du détail sans plage explicite : `maintenant - 24 h → maintenant` ;
+- le sélecteur de dates reste disponible pour les périodes personnalisées ;
+- bouton **Revenir aux 24 dernières heures** après sélection d'une plage ;
+- axe X linéaire temporel borné sur la période demandée ;
+- le tableau et l'audit utilisent la même fenêtre par défaut dans la modal, puis la plage explicitement sélectionnée lorsqu'elle existe.
+
+#### Downsampling des longues périodes
+
+- nouveau paramètre API opt-in `graphMaxPoints` ;
+- grand graphe limité à **600 points affichés** ;
+- l'API charge la plage historique puis réduit le payload **avant l'envoi au navigateur** ;
+- par tranches temporelles, l'algorithme conserve :
+  - premier et dernier point utiles ;
+  - minimum local ;
+  - maximum local ;
+  - un point significatif de non-réponse, remontée mémoire ou changement de consigne ;
+- le premier et le dernier point de la période de mesures sont toujours conservés ;
+- le nombre de mesures sources est renvoyé séparément afin d'afficher, par exemple, `4000 mesures sur la période · 600 points affichés` ;
+- une courbe downsamplée ne reconnecte jamais automatiquement les trous de non-réponse, car le nombre de points réduits ne représente plus la durée réelle du trou.
+
+Le downsampling est volontairement limité aux parcours graphiques qui le demandent. Les consommateurs qui effectuent des calculs sur les valeurs complètes, notamment **Analyse d'impact** et **Analyse d'alarme**, conservent le comportement pleine résolution existant.
+
+#### Historique détaillé
+
+Le tableau de mesures reste sur `useLieuMeasurementsPaged` :
+
+- pagination serveur ;
+- valeurs complètes ;
+- tri existant ;
+- aucune moyenne ni suppression de mesures dans le tableau ;
+- le downsampling graphique n'altère donc ni la BDD ni les exports/consultations tabulaires.
+
+### API
+
+`GET /api/mesures/[idLieu]` accepte désormais `graphMaxPoints` lorsqu'une plage `startDate/endDate` est fournie.
+
+Dans ce mode, la réponse expose notamment :
+
+- `measurements` : points réellement destinés au graphe ;
+- `graphSourceCount` : nombre de mesures avant réduction ;
+- `graphMeasureCount` : nombre de points transmis ;
+- `graphSampled` : indique si une réduction a réellement eu lieu ;
+- `graphRangeStart` / `graphRangeEnd` : bornes utilisées par le graphe.
+
+La pagination `page/pageSize` conserve son comportement existant et n'est jamais downsamplée.
+
+### Fichiers principaux
+
+- `website/src/app/api/mesures/[idLieu]/route.ts` ;
+- `website/src/components/monitoring-card.tsx` ;
+- `website/src/components/monitoring-card/monitoring-card-header.tsx` ;
+- `website/src/components/monitoring-card/monitoring-card-chart-preview.tsx` ;
+- `website/src/components/monitoring-details-modal.tsx` ;
+- `website/src/components/monitoring-details/monitoring-graph-tab.tsx` ;
+- `website/src/components/monitoring-details/use-monitoring-range-measurements.ts` ;
+- `website/src/components/ui/date-range-picker.tsx` ;
+- `website/src/hooks/useLieuMeasurements.ts` ;
+- `website/src/lib/measurement-downsampling.ts` ;
+- `website/scripts/test-surveillance-rolling-graphs.ts` ;
+- `website/src/messages/fr.json` ;
+- `website/src/messages/en.json`.
+
+### Version
+
+- Web : **1.6.0** ;
+- Serveur : **1.1.0** — inchangé ;
+- Agent : **1.0.1** — inchangé ;
+- BDD : **0.91.0** — inchangée ;
+- aucune migration BDD.
+
+### Validation automatisée
+
+GitHub Actions run `35701478085` : **succès complet**.
+
+- [x] `git diff --check origin/dev...HEAD` ;
+- [x] test ciblé `pnpm test:surveillance-rolling-graphs` ;
+- [x] downsampling : limite, ordre chronologique, premier/dernier point, pic extrême et non-réponse couverts ;
+- [x] ESLint ciblé ;
+- [x] TypeScript avec Prisma MySQL ;
+- [x] contrôle i18n sans nouvelle dette dans les sources du lot ;
+- [x] génération Prisma SQL Server ;
+- [x] TypeScript avec Prisma SQL Server ;
+- [x] restauration Prisma MySQL ;
+- [x] build production Next.js.
+
+### Validation terrain
+
+- [ ] card : vérifier **sonde** puis **lieu** sur deux lignes ;
+- [ ] ouvrir Surveillance vers 08:00 et confirmer que le mini-graphe couvre environ 08:00 J-1 → 08:00 aujourd'hui ;
+- [ ] provoquer/observer une sonde sans nouvelle mesure depuis plusieurs heures et vérifier que la courbe s'arrête à la vraie heure de dernière mesure ;
+- [ ] vérifier une sonde avec points de non-réponse explicites ;
+- [ ] ouvrir le détail d'un lieu et confirmer la plage par défaut **24 dernières heures** ;
+- [ ] sélectionner une journée civile puis plusieurs jours et confirmer les bornes du graphe ;
+- [ ] utiliser **Revenir aux 24 dernières heures** ;
+- [ ] tester une période d'environ 2 mois contenant plusieurs milliers de mesures : interface fluide et compteur source/points affichés cohérent ;
+- [ ] sur cette longue période, vérifier qu'un pic haut/bas reste visible après réduction ;
+- [ ] sur cette longue période, vérifier qu'une non-réponse reste un trou et n'est pas reconnectée ;
+- [ ] contrôler que le tableau de mesures reste paginé et complet ;
+- [ ] tester FR/EN, clair/sombre et largeur réduite ;
+- [ ] contrôler MySQL puis SQL Server sur une installation représentative.
+
+---
+
+## R22-001 — Harmoniser impression et formats d'export
+
+**Statut : `CORRIGE_DEV` — PR #140 — squash merge `4e5cf37a4fb8a46aba1ac68a93d31589e7277f90`**
+
+### Retour — 22/09/2026
+
+Revoir de manière globale les actions **Imprimer / Exporter** du Web :
+
+- retirer tous les boutons/actions **Imprimer** ;
+- lorsqu'un écran correspond à un tableau ou à un contenu facilement représentable en PDF, proposer **PDF + Excel** ;
+- pour les vues plus complexes, proposer uniquement **Excel** ;
+- pour l'analyse d'une alarme par lieu, intégrer directement la courbe dans l'export Excel, sur le premier onglet.
+
+### État vérifié avant correction
+
+Le comportement n'était pas homogène :
+
+- `TanStackTable` exposait encore `enablePrint` et proposait par défaut **CSV + Excel + PDF** ;
+- l'Audit trail activait explicitement l'option d'impression ;
+- l'historique des acquittements proposait encore **CSV + Excel + PDF** ;
+- Analyse d'impact proposait quatre actions distinctes : impression navigateur, CSV des alarmes, image de la courbe et PDF ;
+- la superposition de courbes proposait CSV + impression de la courbe ;
+- le détail d'une tournée VigiLog disposait d'un export CSV isolé ;
+- le tableau de mesures d'un lieu proposait l'export générique en plus d'un export Excel multi-onglets.
+
+L'**Analyse d'alarme par lieu** avait en revanche déjà été refondue auparavant :
+
+- un seul export XLSX ;
+- premier onglet **Présentation** avec les informations de l'alarme ;
+- image de la courbe Chart.js intégrée directement dans cet onglet ;
+- second onglet avec toutes les mesures de la période.
+
+Ce comportement existant a donc été conservé plutôt que réimplémenté.
+
+### Politique retenue
+
+#### Tableaux simples
+
+Les tableaux exportables standards proposent :
+
+- **PDF** ;
+- **Excel (.xlsx)**.
+
+Ne sont plus proposés :
+
+- CSV ;
+- impression navigateur.
+
+La règle par défaut est portée par `TanStackTable`, afin que les écrans existants et futurs héritent du même comportement.
+
+Exemples concernés :
+
+- Audit trail ;
+- historique des acquittements d'alarmes ;
+- tableaux d'administration utilisant le composant générique ;
+- tableaux simples des services.
+
+Le tableau historique des mesures d'un lieu conserve :
+
+- PDF via le tableau générique ;
+- Excel via l'export enrichi existant, renommé explicitement **Exporter Excel**.
+
+#### Vues complexes — Excel uniquement
+
+Les vues contenant un ensemble de résumé + graphique + données utilisent un XLSX unique structuré.
+
+**Analyse d'alarme par lieu**
+
+- comportement déjà conforme dans `dev` avant ce lot ;
+- aucun export PDF / CSV / impression ajouté ;
+- onglet Présentation avec la courbe ;
+- onglet Mesures avec les valeurs complètes.
+
+**Analyse d'impact**
+
+- suppression de l'impression navigateur ;
+- suppression du CSV ;
+- suppression de l'export image séparé ;
+- suppression du PDF ;
+- un seul export Excel ;
+- onglet Présentation : lieu, période, seuils/tolérances actuels et simulés, compteurs et courbe ;
+- onglet Alarmes : alarmes simulées et réelles.
+
+**Superposition de courbes**
+
+- suppression de l'impression ;
+- suppression du CSV ;
+- un seul XLSX ;
+- onglet Présentation : période, lieux sélectionnés et image de la superposition ;
+- onglet Courbes : horodatage + valeur de chaque lieu.
+
+**VigiLog — détail d'une tournée**
+
+- remplacement du CSV de mesures par un XLSX ;
+- onglet Présentation : configuration, VigiLog, trajet, consigne, limites, dates et courbe ;
+- onglet Mesures : mesures importées et leurs statuts.
+
+Les deux sous-tableaux **Alarmes simulées / Alarmes réelles** de l'Analyse d'impact ont leur export individuel désactivé pour éviter de proposer trois exports différents sur le même écran complexe.
+
+### Composant générique
+
+`website/src/components/data-table/tanstack-table.tsx` :
+
+- suppression du contrat `enablePrint` ;
+- suppression complète de la génération CSV utilisateur ;
+- formats autorisés : `xlsx | pdf` ;
+- valeur par défaut : `["xlsx", "pdf"]` ;
+- conservation de la sélection de colonnes et du choix du nombre de lignes à exporter.
+
+### Excel enrichi
+
+Le helper existant `website/src/lib/excel-export.ts` est réutilisé plutôt que dupliquer la génération XLSX.
+
+Il permet :
+
+- logo VigiSensys ;
+- onglet Présentation ;
+- tableau de métadonnées ;
+- intégration facultative d'une image de courbe ;
+- onglet de données stylisé avec filtres et largeurs adaptées.
+
+### Prévention des régressions
+
+Nouveau test `website/scripts/test-export-format-policy.ts` :
+
+- parcourt tous les fichiers TypeScript/TSX de `website/src` ;
+- refuse les appels `window.print()` / `popup.print()` et les usages de l'icône `Printer` ;
+- refuse le retour de `enablePrint` ;
+- refuse les exports utilisateur `text/csv;charset...` ;
+- vérifie que le tableau générique est limité à PDF + XLSX ;
+- vérifie l'Excel enrichi de l'analyse d'alarme, de l'analyse d'impact, de la superposition de courbes et de VigiLog ;
+- vérifie que la courbe est bien transmise via `presentationImage` sur les écrans complexes concernés.
+
+Les fichiers CSV en **entrée** ou les références techniques à ce format (pièces jointes, configuration CSV, documentation historique) ne sont pas concernés : seule la politique d'export utilisateur est modifiée.
+
+### Fichiers principaux
+
+- `website/src/components/data-table/tanstack-table.tsx` ;
+- `website/src/components/monitoring-details/monitoring-table-tab.tsx` ;
+- `website/src/app/[locale]/(admin)/admin/audit/audit-client.tsx` ;
+- `website/src/app/[locale]/(dashboard)/alarmes/acquittements/page-client.tsx` ;
+- `website/src/app/[locale]/(admin)/admin/analyse-impact/impact-analysis-client.tsx` ;
+- `website/src/app/[locale]/(admin)/admin/analyse-impact/_components/impact-alarms-table.tsx` ;
+- `website/src/app/[locale]/(dashboard)/surveillance/_components/curves-overlay-modal.tsx` ;
+- `website/src/components/services/vigilog/vigilog-tournee-detail-dialog.tsx` ;
+- `website/src/messages/fr.json` ;
+- `website/src/messages/en.json` ;
+- `website/scripts/test-export-format-policy.ts`.
+
+### Version
+
+- Web : **1.7.0** ;
+- Serveur : **1.1.0** — inchangé ;
+- Agent : **1.0.1** — inchangé ;
+- BDD : **0.91.0** — inchangée ;
+- aucune migration BDD.
+
+### Validation automatisée
+
+GitHub Actions run `35704323198` :
+
+- [x] `git diff --check origin/dev...HEAD` ;
+- [x] `pnpm test:export-format-policy` ;
+- [x] ESLint ciblé ;
+- [x] TypeScript avec Prisma MySQL ;
+- [x] contrôle i18n sans nouvelle dette dans les sources du lot ;
+- [x] génération Prisma SQL Server ;
+- [x] TypeScript avec Prisma SQL Server ;
+- [x] restauration Prisma MySQL ;
+- [x] build production Next.js.
+
+### Validation terrain
+
+- [ ] parcourir les principales pages et confirmer l'absence de tout bouton **Imprimer** ;
+- [ ] Audit trail : vérifier uniquement PDF + Excel ;
+- [ ] Historique acquittements : vérifier uniquement PDF + Excel ;
+- [ ] tableau de mesures Surveillance : vérifier PDF + bouton **Exporter Excel** ;
+- [ ] Analyse d'alarme par lieu : vérifier XLSX unique, courbe lisible dans le premier onglet et mesures complètes dans le second ;
+- [ ] Analyse d'impact : vérifier XLSX unique, courbe dans Présentation et alarmes simulées/réelles dans le second onglet ;
+- [ ] Superposition de courbes : vérifier XLSX unique, courbe dans Présentation et valeurs multi-lieux dans le second onglet ;
+- [ ] VigiLog — détail tournée : vérifier XLSX unique, courbe dans Présentation et mesures importées dans le second onglet ;
+- [ ] tester les libellés FR/EN ;
+- [ ] ouvrir les PDF simples et vérifier la lisibilité des tableaux ;
+- [ ] ouvrir les XLSX avec Excel ou LibreOffice et contrôler les onglets, images et filtres.
+
+---
+
+## R22-002 — Ajouter le groupe au tableau des alarmes
+
+**Statut : `CORRIGE_DEV` — PR #141 — squash merge `d2dccf996405f3e39ac2eb8593071aa2fe1b3a95`**
+
+### Retour — 22/09/2026
+
+Sur la page **Alarmes**, ajouter une colonne **Groupe** :
+
+- affichée dans le tableau principal ;
+- triable ;
+- recherchable via la barre de recherche existante.
+
+La capture de référence place cette colonne entre **Consignes sup/inf** et **Déclenchée**.
+
+### État vérifié avant correction
+
+- le tableau ne possédait aucune colonne Groupe ;
+- `ServerAlarms()` chargeait le lieu mais pas ses relations `t_lieu_groupe` ;
+- `location.siteGroup` était forcé à `null` dans ce parcours ;
+- la recherche de `TanStackTable` reposait sur les champs par défaut de la ligne et ne pouvait donc pas retrouver un groupe absent des données ;
+- un lieu peut être affecté à plusieurs groupes via la table de liaison `t_lieu_groupe`.
+
+### Implémentation
+
+#### Chargement des groupes
+
+Le `select` Prisma déjà utilisé par `ServerAlarms()` est étendu avec :
+
+- `t_lieu_groupe` ;
+- `t_groupe.Nom_Groupe`.
+
+Les groupes sont donc récupérés avec le chargement des alarmes, sans ajouter de boucle de requêtes applicatives par ligne.
+
+Les noms sont exposés via `location.groupNames`, propriété déjà prévue par le type `Location`.
+
+La propriété historique `location.siteGroup` reste à `null` dans ce parcours : elle n'est pas réutilisée pour stocker les groupes métier, car elle possède une sémantique différente dans d'autres parties du Web.
+
+#### Normalisation multi-groupes
+
+Nouveau helper `alarm-groups.ts` :
+
+- suppression des valeurs vides ;
+- trim ;
+- déduplication insensible à la casse ;
+- tri alphabétique avec tri numérique naturel ;
+- format d'affichage `Groupe A, Groupe B`.
+
+Un lieu sans groupe affiche `-`.
+
+#### Tableau
+
+La colonne **Groupe / Group** :
+
+- est placée après **Consignes sup/inf** et avant **Déclenchée** ;
+- utilise `accessorKey: "groups"`, ce qui la rend triable nativement par TanStack ;
+- affiche jusqu'à deux lignes dans la cellule avec la valeur complète au survol ;
+- est incluse automatiquement dans les exports PDF / Excel du tableau.
+
+#### Recherche
+
+Chaque ligne construit un champ interne `searchText` contenant :
+
+- nom du lieu ;
+- numéro de série de la sonde ;
+- groupes ;
+- statut.
+
+Le tableau utilise ce champ comme source de la recherche globale. Rechercher tout ou partie du nom d'un groupe filtre donc les alarmes correspondantes, tout en conservant la recherche lieu/sonde/statut existante.
+
+### Fichiers principaux
+
+- `website/src/app/[locale]/(dashboard)/alarmes/server-alarms.tsx` ;
+- `website/src/app/[locale]/(dashboard)/alarmes/alarms-client.tsx` ;
+- `website/src/app/[locale]/(dashboard)/alarmes/alarm-groups.ts` ;
+- `website/src/messages/fr.json` ;
+- `website/src/messages/en.json` ;
+- `website/scripts/test-alarm-group-column.ts`.
+
+### Version
+
+- Web : **1.8.0** ;
+- Serveur : **1.1.0** — inchangé ;
+- Agent : **1.0.1** — inchangé ;
+- BDD : **0.91.0** — inchangée ;
+- aucune migration BDD.
+
+### Validation automatisée
+
+GitHub Actions run `35723651236` : **succès complet**.
+
+- [x] `git diff --check origin/dev...HEAD` ;
+- [x] `pnpm test:alarm-group-column` ;
+- [x] helper multi-groupes : trim, déduplication et ordre naturel couverts ;
+- [x] position de la colonne Groupe couverte par le test ;
+- [x] liaison de la recherche à `searchText` couverte ;
+- [x] ESLint ciblé ;
+- [x] TypeScript avec Prisma MySQL ;
+- [x] contrôle i18n sans nouvelle dette du lot ;
+- [x] génération Prisma SQL Server ;
+- [x] TypeScript avec Prisma SQL Server ;
+- [x] restauration Prisma MySQL ;
+- [x] build production Next.js.
+
+### Validation terrain
+
+- [ ] ouvrir la page Alarmes avec plusieurs alarmes de groupes différents ;
+- [ ] vérifier la colonne **Groupe** entre **Consignes sup/inf** et **Déclenchée** ;
+- [ ] vérifier un lieu sans groupe : `-` ;
+- [ ] vérifier un lieu avec un seul groupe ;
+- [ ] vérifier un lieu appartenant à plusieurs groupes ;
+- [ ] cliquer sur l'en-tête Groupe et contrôler les tris ascendant / descendant ;
+- [ ] rechercher le nom complet d'un groupe ;
+- [ ] rechercher une partie du nom d'un groupe ;
+- [ ] vérifier que la recherche par lieu et sonde fonctionne toujours ;
+- [ ] vérifier les onglets Alarmes actives / À acquitter ;
+- [ ] vérifier l'export PDF et Excel avec la colonne Groupe ;
+- [ ] vérifier FR/EN ;
+- [ ] vérifier sur MySQL puis SQL Server.
+
+---
+
+## R22-003 — Conserver la locale dans les liens du Dashboard Admin One / Pack
+
+**Statut : `CORRIGE_DEV` — PR #142 — squash merge `207ed69ffc4a2a0100836e9f2e17dbc19527cb9d`**
+
+### Retour — 22/09/2026
+
+Sur le Dashboard Admin avec une licence **One**, les cards de navigation ouvraient des URLs sans préfixe de locale :
+
+- observé : `/admin/...` ;
+- attendu : `/fr/admin/...` ou `/en/admin/...`.
+
+Le même dashboard basique est utilisé par les licences **One / Pack**.
+
+### État vérifié avant correction
+
+- les cards One / Pack sont rendues par `DashboardLinkCard` ;
+- `DashboardLinkCard` importait directement `next/link` ;
+- les destinations de la page Admin sont volontairement écrites sous forme de routes canoniques, par exemple `/admin/sondes`, `/admin/groupes`, `/admin/lieux` ;
+- contrairement au wrapper `@/i18n/navigation`, `next/link` ne transforme pas ces routes selon la locale du projet ;
+- le reste du Dashboard Admin utilise déjà majoritairement le wrapper next-intl.
+
+### Correctif
+
+`website/src/components/dashboard-link-card.tsx` utilise désormais :
+
+- `Link` depuis `@/i18n/navigation` ;
+- les routes canoniques existantes restent inchangées.
+
+Le routage next-intl ajoute donc automatiquement le préfixe et la traduction de chemin :
+
+- FR : `/admin/sondes` → `/fr/admin/sondes` ;
+- EN : `/admin/sondes` → `/en/admin/sensors` ;
+- FR : `/admin/groupes` → `/fr/admin/groupes` ;
+- EN : `/admin/groupes` → `/en/admin/groups` ;
+- FR : `/admin/lieux` → `/fr/admin/lieux` ;
+- EN : `/admin/lieux` → `/en/admin/locations`.
+
+Aucun préfixe `/fr` ou `/en` n'est concaténé manuellement.
+
+### Fichiers principaux
+
+- `website/src/components/dashboard-link-card.tsx` ;
+- `website/scripts/test-admin-dashboard-locale-links.ts` ;
+- `website/package.json` ;
+- `website/CHANGELOG.md` ;
+- `CHANGELOG.md`.
+
+### Version
+
+- Web : **1.8.1** ;
+- Serveur : **1.1.0** — inchangé ;
+- Agent : **1.0.1** — inchangé ;
+- BDD : **0.91.0** — inchangée ;
+- aucune migration BDD.
+
+### Validation automatisée
+
+GitHub Actions run `35728689698` : **succès complet**.
+
+- [x] `git diff --check origin/dev...HEAD` ;
+- [x] `pnpm test:admin-dashboard-locale-links` ;
+- [x] routes FR / EN vérifiées par le test ;
+- [x] ESLint ciblé ;
+- [x] TypeScript avec Prisma MySQL ;
+- [x] génération Prisma SQL Server ;
+- [x] TypeScript avec Prisma SQL Server ;
+- [x] restauration Prisma MySQL ;
+- [x] build production Next.js.
+
+### Validation terrain
+
+- [ ] se connecter en licence One avec locale FR puis ouvrir chaque card du Dashboard Admin ;
+- [ ] confirmer que l'URL reste sous `/fr/admin/...` ;
+- [ ] passer en EN puis ouvrir les mêmes cards ;
+- [ ] confirmer `/en/admin/sensors`, `/en/admin/groups`, `/en/admin/locations`, `/en/admin/tools` selon la card ;
+- [ ] vérifier la licence Pack, qui utilise le même dashboard basique ;
+- [ ] vérifier que les cards Services / Santé système restent fonctionnelles ;
+- [ ] revenir sur le Dashboard Admin via la sidebar et confirmer que la locale est conservée.
+
+---
+
+## R22-004 — Corriger les accès Pack / One aux lieux et à la messagerie
+
+**Statut : `CORRIGE_DEV` — PR #143 — squash merge `0b3bf3e6575d166d60a98b89219fb55825e248e2`**
+
+### Retour — 22/09/2026
+
+Retour terrain sur une licence **One**, à vérifier également pour **Pack** :
+
+- impossible de créer un lieu ;
+- impossible de modifier les paramètres d'un lieu ;
+- erreur affichée : fonctionnalité réservée aux licences Standard et Expert ;
+- même problème constaté pour l'accès à la **Messagerie**.
+
+### État vérifié avant correction
+
+#### Lieux
+
+La matrice produit du repo indiquait déjà que Pack / One doivent pouvoir utiliser les lieux, seuls les champs métrologiques EMT étant réservés à Standard / Expert.
+
+Le bug venait du payload Web :
+
+- `getDefaultLocationFormData()` initialise toujours les champs métrologiques :
+  - `EMT_Mode` ;
+  - `EMT_Valeur` ;
+  - `Corriger_Erreur_Justesse` ;
+  - `Prendre_En_Compte_Derive` ;
+  - `Derniere_Date_Etalonnage` ;
+  - `Applied_Etalonnage_Id` ;
+  - `Unite` ;
+  - `Erreur_Justesse` ;
+  - `Incertitude` ;
+  - `Derive` ;
+- même lorsque l'onglet Métrologie est masqué en Pack / One, `normalizePayload()` envoyait tout le formulaire via `...data` ;
+- les API `POST /api/lieux` et `PATCH /api/lieux/[id]` utilisent volontairement `requireStandardOrExpertIfFieldsUsed()` ;
+- ce garde vérifie la **présence des clés**, pas seulement leur valeur ;
+- Pack / One étaient donc refusés avant même la validation métier du lieu.
+
+Le même risque existait pour l'édition d'un lieu depuis la page Surveillance.
+
+#### Messagerie
+
+Le runtime contenait plusieurs restrictions d'édition Standard / Expert :
+
+- `useMessagingEnabled()` retournait `false` sur Pack / One ;
+- `checkChatAccess()` renvoyait un 403 `Licence Standard ou Expert requise` ;
+- `GET /api/settings/messaging-enabled` désactivait la Messagerie hors Standard / Expert ;
+- `MESSAGING:ENABLED` était classé comme paramètre Standard-only ;
+- la card de paramétrage Messagerie était masquée sur Pack / One ;
+- la page de comparaison des licences présentait également la Messagerie comme fonctionnalité Standard.
+
+Les autorisations utilisateur `ACCES_CONVERSATION` / `MODULE_CONVERSATION` existent déjà dans les seeds MySQL et SQL Server ; aucun changement BDD n'est nécessaire.
+
+### Correctif — Lieux
+
+Nouveau contrat central :
+
+`website/src/lib/location-license-payload.ts`
+
+Il contient la liste canonique des champs métrologiques Standard / Expert, réutilisée à la fois :
+
+- côté API pour refuser un appel direct Pack / One qui tenterait réellement d'envoyer ces champs ;
+- côté UI pour retirer ces clés du payload lorsque la licence active est Pack ou One.
+
+Parcours couverts :
+
+- Administration > Lieux — création ;
+- Administration > Lieux — modification ;
+- Surveillance — modification des paramètres d'un lieu.
+
+Les autres champs restent envoyés normalement : nom, sonde, groupes, site, consignes, seuils, retards, planning, notifications, etc.
+
+### Correctif — Messagerie
+
+La Messagerie est désormais disponible sur :
+
+- Pack ;
+- One ;
+- Standard ;
+- Expert.
+
+Conditions conservées :
+
+- licence valide ;
+- paramètre global `messaging:enabled` actif ;
+- permission utilisateur `CONVERSATION_ACCESS` pour afficher l'entrée dans la sidebar.
+
+Modifications :
+
+- le garde Chat ne filtre plus l'édition ;
+- `useMessagingEnabled()` fonctionne avec toute licence valide ;
+- le paramètre `MESSAGING:ENABLED` n'est plus Standard-only ;
+- la card Messagerie des Paramètres est visible pour toutes les éditions ;
+- la matrice de licences et la page Upgrade sont alignées ;
+- les protections Standard / Expert des fonctions réellement métrologiques restent inchangées.
+- l'onglet Mailing du formulaire Lieu est dissocié du garde Métrologie : One/Standard/Expert y accèdent par défaut, Pack uniquement avec l'option mail de licence.
+
+### Fichiers principaux
+
+- `website/src/lib/location-license-payload.ts` ;
+- `website/src/lib/license-access.ts` ;
+- `website/src/lib/license-email.ts` ;
+- `website/src/app/[locale]/(admin)/admin/lieux/_components/location-form-dialog.tsx` ;
+- `website/src/app/api/lieux/route.ts` ;
+- `website/src/app/api/lieux/[id]/route.ts` ;
+- `website/src/app/[locale]/(admin)/admin/lieux/locations-client.tsx` ;
+- `website/src/app/[locale]/(dashboard)/surveillance/_components/page-client/use-surveillance-location-editor.ts` ;
+- `website/src/lib/chat-guard.ts` ;
+- `website/src/hooks/useMessagingEnabled.ts` ;
+- `website/src/app/api/settings/messaging-enabled/route.ts` ;
+- `website/src/lib/parameter-license-guards.ts` ;
+- `website/src/app/[locale]/(admin)/admin/parametres/_components/settings-client.tsx` ;
+- `website/src/components/upgrade/upgradeContent.ts` ;
+- `website/docs/matrice-licences-acces.md` ;
+- `website/docs/infos-licences.md` ;
+- `website/scripts/smoke-license-matrix.ts` ;
+- `website/scripts/test-pack-one-license-access.ts`.
+
+### Version
+
+- Web : **1.8.2** ;
+- Serveur : **1.1.0** — inchangé ;
+- Agent : **1.0.1** — inchangé ;
+- BDD : **0.91.0** — inchangée ;
+- aucune migration BDD.
+
+### Validation automatisée
+
+GitHub Actions run `35733062303` : **succès complet** sur le HEAD fonctionnel incluant également l'accès Mailing.
+
+- [x] `git diff --check origin/dev...HEAD` ;
+- [x] `pnpm test:pack-one-license-access` ;
+- [x] payload Pack / One sans champs EMT réservés ;
+- [x] protections API EMT Standard / Expert conservées ;
+- [x] Messagerie disponible pour toute licence valide dans le contrat runtime ;
+- [x] permission `CONVERSATION_ACCESS` et toggle `messaging:enabled` conservés ;
+- [x] ESLint ciblé ;
+- [x] contrôle i18n sans nouvelle dette dans le lot ;
+- [x] TypeScript avec Prisma MySQL ;
+- [x] génération Prisma SQL Server ;
+- [x] TypeScript avec Prisma SQL Server ;
+- [x] restauration Prisma MySQL ;
+- [x] build production Next.js.
+
+Le workflow temporaire a ensuite été retiré de la branche ; les commits postérieurs au run ne concernent que cette suppression et la documentation de validation.
+
+### Validation terrain
+
+- [ ] licence Pack sans option mail : vérifier que l'onglet Mailing reste masqué ;
+- [ ] licence Pack avec option mail : vérifier que l'onglet Mailing est disponible ;
+- [ ] licence One : vérifier que l'onglet Mailing est disponible ;
+- [ ] licence Pack : créer un lieu sans champs EMT ;
+- [ ] licence Pack : modifier nom, sonde, groupes, consignes, retards et planning d'un lieu ;
+- [ ] licence One : mêmes tests création / modification ;
+- [ ] depuis Surveillance en Pack / One, modifier les paramètres d'un lieu ;
+- [ ] vérifier que l'onglet Métrologie reste absent en Pack / One ;
+- [ ] appel direct Pack / One vers `POST/PATCH /api/lieux` avec `EMT_Mode` : vérifier le 403 ;
+- [ ] licence Pack avec `CONVERSATION_ACCESS` : entrée Messagerie visible et page accessible ;
+- [ ] licence One avec `CONVERSATION_ACCESS` : entrée Messagerie visible et page accessible ;
+- [ ] profil sans `CONVERSATION_ACCESS` : entrée Messagerie absente ;
+- [ ] désactiver `messaging:enabled` : entrée/page Messagerie désactivées ;
+- [ ] réactiver `messaging:enabled` depuis Paramètres en Pack / One ;
+- [ ] vérifier Standard / Expert sans régression ;
+- [ ] vérifier MySQL puis SQL Server.
+
+---
+
+## R22-005 — Conserver la locale vers Alarmes depuis le dashboard utilisateur
+
+**Statut : `CORRIGE_DEV` — PR #143 — squash merge `0b3bf3e6575d166d60a98b89219fb55825e248e2`**
+
+### Retour — 22/09/2026
+
+Depuis le dashboard utilisateur, un clic sur le bandeau d'alarmes pouvait ouvrir :
+
+- observé : `/alarmes` ;
+- attendu en FR : `/fr/alarmes` ;
+- attendu en EN : `/en/alarms`.
+
+### État vérifié avant correction
+
+Le bloc **Voir toutes les alarmes** du contenu principal utilisait déjà le wrapper localisé avec la route canonique `/alarmes`.
+
+Le problème restant se trouvait dans `PageHeaderBase` :
+
+- le composant importait correctement `Link` depuis `@/i18n/navigation` ;
+- mais les deux variantes du bandeau utilisaient `href="alarmes"`, donc un chemin **relatif** ;
+- depuis une URL comme `/fr`, le navigateur pouvait résoudre ce chemin en `/alarmes`, en perdant le préfixe de locale.
+
+### Correctif
+
+Les deux liens du header utilisent désormais la route canonique `/alarmes`.
+
+Le wrapper next-intl applique ensuite la locale et la traduction de pathname :
+
+- FR : `/fr/alarmes` ;
+- EN : `/en/alarms`.
+
+Aucune concaténation manuelle de `/fr` ou `/en` n'est introduite.
+
+### Fichiers principaux
+
+- `website/src/components/page-header-base.tsx` ;
+- `website/scripts/test-user-dashboard-locale-links.ts` ;
+- `website/package.json` ;
+- `website/CHANGELOG.md` ;
+- `CHANGELOG.md`.
+
+### Version
+
+- Web : **1.8.3** ;
+- Serveur : **1.1.0** — inchangé ;
+- Agent : **1.0.1** — inchangé ;
+- BDD : **0.91.0** — inchangée ;
+- aucune migration BDD.
+
+### Validation automatisée
+
+GitHub Actions run `35739118522` : **succès complet**.
+
+- [x] `git diff --check origin/dev...HEAD` ;
+- [x] `pnpm test:pack-one-license-access` ;
+- [x] `pnpm test:user-dashboard-locale-links` ;
+- [x] ESLint ciblé ;
+- [x] contrôle i18n sans nouvelle dette dans les sources du lot ;
+- [x] TypeScript avec Prisma MySQL ;
+- [x] génération Prisma SQL Server ;
+- [x] TypeScript avec Prisma SQL Server ;
+- [x] restauration Prisma MySQL ;
+- [x] build production Next.js.
+
+Le workflow temporaire de validation a été retiré du diff final.
+
+### Validation terrain
+
+- [ ] ouvrir le dashboard utilisateur en FR avec au moins une alarme active ;
+- [ ] cliquer sur le bandeau rouge du header et confirmer `/fr/alarmes` ;
+- [ ] revenir au dashboard puis tester le bouton **Voir toutes** du bloc Alarmes actives ;
+- [ ] passer en EN et confirmer `/en/alarms` ;
+- [ ] vérifier que le bandeau reste non cliquable lorsque l'utilisateur est déjà sur la page Alarmes.
+
+---
+
+## R22-006 — Fiabiliser le type des sondes importées et le retour vers Sondes
+
+**Statut : `CORRIGE_DEV` — PR #144 — squash merge `9e67fd3a8b42bf9da305533b4c87c9e0d95f45b6`**
+
+### Retour — 22/09/2026
+
+Deux correctifs sont demandés autour de l'import des sondes :
+
+- les anciennes références classiques, notamment `IN...` et `IEE...`, peuvent être mal détectées lors de l'import et ne doivent jamais être assimilées à des GSP ;
+- le bouton **Retour aux sondes** de la page d'import d'ajustage ouvre `/fr/sondes` au lieu de `/fr/admin/sondes`.
+
+La règle métier fournie pour la détection est basée sur le début du numéro de série :
+
+- `SO...` → famille **GSO** ;
+- `SP...` → famille **GSP** ;
+- `E...`, `G...`, `H...`, `I...`, `R...`, `V...` → famille **CLASSIC**.
+
+Les anciens types agrégés `GSO` et `GSP` de `t_sonde_type` (IDs historiques 7 et 8) ne doivent pas intervenir dans cette détection.
+
+### État vérifié avant correction
+
+Le flux partagé d'import passe par `resolveImportedSensorIdentity()` dans `sensor-naming.ts`. La fonction générique `extractTypeCodeFromSerial()` donnait priorité à tout le texte avant le premier tiret. Une ancienne série telle que `IEE-123456` pouvait donc produire le pseudo-type `IEE` au lieu du type classique `I`.
+
+Le bulk d'import d'ajustage chargeait par ailleurs tous les codes de `t_sonde_type`, y compris les deux anciens codes agrégés `GSO` et `GSP`, pour construire ses listes de types et familles autorisées.
+
+Enfin, la page `admin/sondes/ajustage-import` utilisait bien le wrapper localisé `@/i18n/navigation`, mais avec la route canonique incorrecte `/sondes`.
+
+### Correctif — détection du type à l'import
+
+Un extracteur dédié aux imports applique maintenant la priorité métier sur les préfixes :
+
+- `SO...` : recherche du sous-type GSO détaillé connu (`SOIT`, `SOIH`, `SOET`, `SOEH`) ;
+- `SP...` : recherche du sous-type GSP détaillé connu (`SPNB`, `SPNG`, `SPPS`, `SPFP`, etc.) ;
+- sinon, si la première lettre est `E`, `G`, `H`, `I`, `R` ou `V`, cette lettre devient directement `Sonde_Type` ;
+- les deux types agrégés `GSO` / `GSP` sont retirés des codes candidats utilisés par l'import.
+
+Exemples couverts :
+
+- `IN123456` / `IN-123456` → type `I`, famille `CLASSIC` ;
+- `IEE123456` / `IEE-123456` → type `I`, famille `CLASSIC` ;
+- `SOIT-123456` → type `SOIT`, famille `GSO` ;
+- `SOIH-123456-T` → type `SOIH`, famille `GSO` ;
+- `SPNB-123456` → type `SPNB`, famille `GSP` ;
+- `SPFP123456` → type `SPFP`, famille `GSP`.
+
+`resolveImportedSensorIdentity()` reste le point d'entrée partagé par les parseurs d'ajustage et d'étalonnage, ce qui évite deux règles de détection divergentes.
+
+Les lignes historiques `GSO` / `GSP` ne sont **pas supprimées de la BDD** dans ce lot : elles sont seulement ignorées par l'import. Leur suppression éventuelle sera un changement BDD distinct si elle est confirmée.
+
+### Correctif — bouton Retour aux sondes
+
+Le bouton utilise désormais la route canonique `/admin/sondes` avec le wrapper next-intl :
+
+- FR : `/fr/admin/sondes` ;
+- EN : `/en/admin/sensors`.
+
+### Fichiers principaux
+
+- `website/src/lib/sensor-naming.ts` ;
+- `website/src/app/api/sondes/ajustages/bulk/route.ts` ;
+- `website/src/app/[locale]/(admin)/admin/sondes/ajustage-import/page.tsx` ;
+- `website/scripts/test-sensor-import-type-detection.ts` ;
+- `website/package.json` ;
+- `website/CHANGELOG.md` ;
+- `CHANGELOG.md`.
+
+### Version
+
+- Web : **1.8.4** ;
+- Serveur : **1.1.0** — inchangé ;
+- Agent : **1.0.1** — inchangé ;
+- BDD : **0.91.0** — inchangée ;
+- aucune migration BDD.
+
+### Validation automatisée
+
+GitHub Actions run `35746073802` : **succès complet** sur le HEAD fonctionnel du lot.
+
+- [x] `git diff --check origin/dev...HEAD` ;
+- [x] `pnpm test:sensor-import-type-detection` ;
+- [x] cas `IN` / `IEE` classiques ;
+- [x] cas GSO détaillés ;
+- [x] cas GSP détaillés ;
+- [x] exclusion des types agrégés `GSO` / `GSP` du contrat d'import ;
+- [x] route localisée `/admin/sondes` FR/EN ;
+- [x] ESLint ciblé ;
+- [x] contrôle i18n ;
+- [x] TypeScript avec Prisma MySQL ;
+- [x] génération Prisma SQL Server ;
+- [x] TypeScript avec Prisma SQL Server ;
+- [x] restauration Prisma MySQL ;
+- [x] build production Next.js.
+
+Le workflow temporaire de validation a été retiré du diff final.
+
+### Validation terrain
+
+- [ ] importer une ancienne sonde `IN...` sans tiret et vérifier `Sonde_Type = I` ;
+- [ ] importer une ancienne sonde `IN-...` et vérifier `Sonde_Type = I` ;
+- [ ] importer une ancienne sonde `IEE...` / `IEE-...` et vérifier `Sonde_Type = I` ;
+- [ ] contrôler un exemple de chaque préfixe classique `E/G/H/I/R/V` ;
+- [ ] importer un `SOIT` puis un `SOIH` et contrôler type, famille, série et adresse ;
+- [ ] importer un `SPNB` puis un autre GSP détaillé tel que `SPFP` ;
+- [ ] avec les lignes historiques IDs 7/8 encore présentes, confirmer qu'elles ne sont jamais choisies par l'import ;
+- [ ] tester une sonde déjà existante puis une nouvelle sonde créée par l'import ;
+- [ ] vérifier l'affectation de module, `Est_Sonde_GSO`, `Sonde_Type` et `Adresse_Sonde` après insertion ;
+- [ ] FR : cliquer sur **Retour aux sondes** et confirmer `/fr/admin/sondes` ;
+- [ ] EN : confirmer `/en/admin/sensors` ;
+- [ ] valider MySQL puis SQL Server.
+
+
+---
+
+## R23-001 — Respecter les groupes utilisateur dans les filtres et l’arborescence Surveillance
+
+**Statut : `CORRIGE_DEV` — PR #145 — squash merge `c6ef7d87243d147bdceb1414c5f6a1c521a5d2bc`**
+
+### Retour — 23/09/2026
+
+Retour terrain sur le périmètre de visibilité d'un utilisateur :
+
+- Administration > Utilisateurs permet d'affecter une liste de **Sites** et une liste de **Groupes** ;
+- sur Surveillance > Graphiques, un groupe non affecté ne doit donner accès à aucun lieu ;
+- dans le sélecteur **Groupes**, le nom d'un groupe non affecté doit néanmoins rester visible en **grisé / non sélectionnable** ;
+- en vue **Arborescence**, un groupe non affecté ne doit jamais réapparaître avec ses lieux.
+
+Cas reproduit avec le groupe `GSO_DEFAUT` : il n'est pas affecté à l'utilisateur, mais pouvait encore apparaître dans l'Arborescence.
+
+### État vérifié avant correction
+
+Trois causes se combinaient :
+
+1. `buildLieuAccessFilter()` combinait les restrictions Site et Groupe avec un `OR`.
+   - Si l'utilisateur avait un site affecté, un lieu de ce site restait donc accessible même si aucun de ses groupes n'était affecté.
+   - Cela rendait les deux dimensions de restriction incohérentes lorsqu'elles étaient toutes les deux configurées.
+
+2. `GET /api/capteurs/paginated` réimplémentait sa propre logique de droits.
+   - Les sites et groupes affectés étaient relus directement.
+   - Sans filtre explicite, les deux périmètres étaient eux aussi combinés avec un `OR`.
+   - Avec certains filtres explicites, la logique pouvait diverger du helper partagé.
+
+3. Les relations `t_lieu_groupe` retournées à l'Arborescence n'étaient pas filtrées.
+   - Un lieu autorisé via un groupe pouvait donc transporter également le nom d'un autre groupe non affecté.
+   - Le regroupement client dupliquait alors le même lieu sous ce groupe non autorisé.
+
+Le composant partagé `MultiSelectFilter` savait déjà afficher une option `disabled` en grisé : le manque venait des métadonnées d'accès fournies à la page Surveillance.
+
+### Règle métier retenue
+
+Le scope utilisateur suit désormais la règle suivante :
+
+- aucun site + aucun groupe affecté → tous les lieux restent visibles ;
+- sites uniquement → lieux appartenant aux sites affectés ;
+- groupes uniquement → lieux appartenant aux groupes affectés ;
+- sites **et** groupes affectés → le lieu doit satisfaire **les deux dimensions** :
+  - appartenir à un site affecté ;
+  - appartenir à au moins un groupe affecté.
+
+Cette règle est portée par le helper canonique `buildLieuAccessFilter()` et bénéficie donc aussi aux autres lectures qui réutilisent ce scope (Dashboard, Alarmes, résumés, etc.).
+
+### Correctif — filtre Groupes
+
+`ServerFilterOptions()` distingue maintenant :
+
+- les groupes candidats présents dans le périmètre des sites ;
+- les groupes réellement affectés à l'utilisateur.
+
+Lorsqu'une restriction Groupe existe :
+
+- groupe affecté → option active ;
+- groupe non affecté → option visible mais `disabled`, donc grisée par `MultiSelectFilter`.
+
+Le changement de filtre Site conserve uniquement les groupes encore valides.
+
+Un ancien groupe non autorisé conservé dans `localStorage` est automatiquement retiré des filtres actifs.
+
+### Correctif — API Surveillance
+
+`GET /api/capteurs/paginated` réutilise désormais :
+
+- `getUserLocationScope()` ;
+- `buildLieuAccessFilter()`.
+
+Les filtres explicites Site / Groupe sont ensuite appliqués **en plus** du scope utilisateur.
+
+Si un ID de filtre ne fait pas partie du scope configuré, il est neutralisé côté serveur et ne peut pas servir de contournement.
+
+### Correctif — Arborescence
+
+Lorsque l'utilisateur possède une restriction Groupe, les relations `t_lieu_groupe` renvoyées avec :
+
+- les lieux paginés ;
+- les compteurs globaux de l'Arborescence ;
+
+sont limitées aux groupes affectés.
+
+Un lieu multi-groupes accessible via un groupe autorisé ne peut donc plus être réaffiché sous un autre groupe non autorisé.
+
+### Fichiers principaux
+
+- `website/src/lib/location-access-scope.ts` ;
+- `website/src/app/api/capteurs/paginated/route.ts` ;
+- `website/src/app/[locale]/(dashboard)/surveillance/server-filters.ts` ;
+- `website/src/app/[locale]/(dashboard)/surveillance/monitoring-filters.tsx` ;
+- `website/scripts/test-surveillance-group-access.ts` ;
+- `website/package.json` ;
+- `website/CHANGELOG.md` ;
+- `CHANGELOG.md`.
+
+### Version
+
+- Web : **1.8.5** ;
+- Serveur : **1.1.0** — inchangé ;
+- Agent : **1.0.1** — inchangé ;
+- BDD : **0.91.0** — inchangée ;
+- aucune migration BDD.
+
+### Validation automatisée
+
+GitHub Actions run `35830199009` : **succès complet** sur le HEAD fonctionnel du lot.
+
+- [x] `git diff --check origin/dev...HEAD` ;
+- [x] `pnpm test:surveillance-group-access` ;
+- [x] scope sans restriction ;
+- [x] scope Site seul ;
+- [x] scope Groupe seul ;
+- [x] scope Site + Groupe en `AND` ;
+- [x] groupe non affecté visible mais désactivé dans les filtres ;
+- [x] filtre localStorage non autorisé nettoyé ;
+- [x] relations Arborescence limitées aux groupes autorisés ;
+- [x] ESLint ciblé ;
+- [x] contrôle i18n sans nouvelle dette dans le lot ;
+- [x] TypeScript Prisma MySQL ;
+- [x] génération Prisma SQL Server ;
+- [x] TypeScript Prisma SQL Server ;
+- [x] restauration Prisma MySQL ;
+- [x] build production Next.js.
+
+Le workflow temporaire de validation a été retiré du diff final.
+
+### Validation terrain
+
+- [ ] affecter plusieurs sites et plusieurs groupes à un utilisateur en laissant au moins un groupe décoché ;
+- [ ] se connecter avec cet utilisateur ;
+- [ ] ouvrir Surveillance > Graphiques ;
+- [ ] ouvrir le filtre Groupes et vérifier que le groupe non affecté est visible en grisé et non cliquable ;
+- [ ] vérifier que les groupes affectés restent sélectionnables ;
+- [ ] vérifier qu'aucun lieu appartenant uniquement au groupe non affecté n'est affiché ;
+- [ ] passer en vue Arborescence et confirmer l'absence du groupe non affecté ;
+- [ ] tester un lieu appartenant à deux groupes, dont un seul est affecté : le lieu doit apparaître uniquement sous le groupe autorisé ;
+- [ ] tester un utilisateur avec seulement des Sites affectés ;
+- [ ] tester un utilisateur avec seulement des Groupes affectés ;
+- [ ] tester un utilisateur sans Site ni Groupe : tous les lieux doivent rester visibles ;
+- [ ] vérifier les compteurs Surveillance et Dashboard ;
+- [ ] vérifier la page Alarmes avec le même utilisateur ;
+- [ ] valider MySQL puis SQL Server.
+
+
+---
+
+## R23-002 — Navigation Admin persistante et double état de sauvegarde
+
+**Statut : `CORRIGE_DEV` — PR #146 — squash merge `68cf48afd5bdd9d2541f20cde7af866b266cf623`**
+
+### Retour — 23/09/2026
+
+Deux évolutions sont demandées sur l'Administration :
+
+1. le dock de navigation Admin doit être visible :
+   - sur le Dashboard Admin ;
+   - sur les pages accessibles depuis ce dock ;
+   - sur les sous-pages de ces sections.
+
+2. la card **Sauvegarde système** doit distinguer :
+   - l'état de la sauvegarde principale ;
+   - l'état de la copie secondaire Robocopy lorsqu'un second répertoire est configuré.
+
+Le journal détaillé actuel est jugé correct et ne doit pas être modifié visuellement.
+
+### Navigation Admin — état vérifié avant correction
+
+`AdminNavDock` contient les destinations :
+
+- Sondes ;
+- Modules ;
+- Actionneurs ;
+- Groupes ;
+- Lieux ;
+- Sites ;
+- Outils.
+
+Cependant `shouldShowAdminNavDock()` n'acceptait que les correspondances exactes.
+
+Conséquences :
+
+- le dock était absent de `/admin` ;
+- il disparaissait dès qu'on entrait dans une sous-page, par exemple une sous-page de Sondes, Lieux ou Outils.
+
+### Navigation Admin — correctif
+
+Le dock est maintenant affiché :
+
+- sur `/admin` ;
+- sur chaque destination principale ;
+- sur leurs descendants via `pathname.startsWith(<route>/)`.
+
+Les autres pages Admin hors du menu restent inchangées : Paramètres, Audit, Métrologie, Santé système, etc.
+
+L'élément actif du dock suit également les sous-pages.
+
+### Sauvegarde système — problème identifié
+
+Le parser historique calculait un seul état par run.
+
+Toute ligne contenant une erreur faisait passer le run complet en `failed`.
+
+Exemple terrain :
+
+- les dumps MySQL sont OK ;
+- l'archive `7zip DUMP JOUR vers J : OK (code=0)` est créée ;
+- puis la copie secondaire échoue :
+  `ERREUR robocopy Repertoire principal vers Repertoire Secondaire (code=16)`.
+
+L'UI affichait donc la sauvegarde complète en échec alors que la sauvegarde principale était réussie.
+
+### Sauvegarde système — nouveau contrat
+
+La réponse `GET /api/admin/sauvegardes` expose désormais deux états indépendants :
+
+#### Sauvegarde principale
+
+- `success` lorsqu'une archive journalière 7zip a été créée sans erreur préalable ;
+- `failed` lorsqu'une erreur intervient pendant la phase principale ;
+- `in_progress` tant que la phase principale n'est pas terminée.
+
+Une erreur de copie secondaire n'altère plus cet état.
+
+#### Copie secondaire
+
+Le chemin est lu dans le journal depuis la ligne :
+
+`Repertoire secondaire de sauvegarde (si defini) : "..."`
+
+Une variante anglaise est également reconnue.
+
+- chemin vide `""` → `not_configured` ;
+- chemin défini + Robocopy réussi → `success` ;
+- chemin défini + Robocopy en attente / en cours → état dédié ;
+- code Robocopy en échec → `failed`.
+
+### Robocopy
+
+Le parser ne dépend plus uniquement du texte localisé.
+
+Les erreurs suivantes sont reconnues :
+
+- `ERREUR` ;
+- `ERROR` ;
+- `FAILED` ;
+- `FAILURE` ;
+- `ECHEC` / `ÉCHEC`.
+
+Le code Robocopy reste la source de vérité pour la copie secondaire :
+
+- codes `0–7` : non bloquants ;
+- codes `>= 8` : échec.
+
+La card fournit un message explicite pour chaque code `0–16`.
+
+Exemple attendu avec le log terrain :
+
+- Sauvegarde principale : **Réussie** ;
+- Copie secondaire : **Échec** ;
+- Répertoire : `Z:\Temp` ;
+- Code Robocopy 16 : erreur grave, copie secondaire non réalisée.
+
+### Affichage
+
+La card Sauvegarde système affiche deux blocs compacts :
+
+- **Sauvegarde principale** :
+  - état ;
+  - dernière exécution ;
+  - répertoire principal.
+
+- **Copie secondaire** :
+  - état ;
+  - répertoire secondaire si configuré ;
+  - code + explication Robocopy lorsqu'il existe.
+
+La dialog du journal conserve son affichage existant.
+
+Le rendu est partagé par les dashboards Basic / Standard / Expert.
+
+### Fichiers principaux
+
+- `website/src/components/admin-nav-dock.tsx` ;
+- `website/src/lib/backup-log-parser.ts` ;
+- `website/src/types/backup-types.ts` ;
+- `website/src/app/api/admin/sauvegardes/route.ts` ;
+- `website/src/app/[locale]/(admin)/admin/_components/admin-backup-status-summary.tsx` ;
+- `website/src/app/[locale]/(admin)/admin/page.tsx` ;
+- `website/src/app/[locale]/(admin)/admin/_components/expert-dashboard/expert-widget-card.tsx` ;
+- `website/src/app/[locale]/(admin)/admin/_components/expert-dashboard/expert-widget-renderer.tsx` ;
+- `website/src/app/[locale]/(admin)/admin/_components/expert-dashboard/expert-dashboard-types.ts` ;
+- `website/src/messages/fr.json` ;
+- `website/src/messages/en.json` ;
+- `website/scripts/test-admin-nav-backup-status.ts`.
+
+### Version
+
+- Web : **1.8.6** ;
+- Serveur : **1.1.0** — inchangé ;
+- Agent : **1.0.1** — inchangé ;
+- BDD : **0.91.0** — inchangée ;
+- aucune migration BDD.
+
+### Validation automatisée
+
+GitHub Actions run `35846548157` : **succès complet** après réintégration du dernier `dev` (`14de48a5a20a990b4898f9aa3de2b0da5ee3af6c`).
+
+- [x] `git diff --check origin/dev...HEAD` ;
+- [x] `pnpm test:admin-nav-backup-status` ;
+- [x] log terrain avec sauvegarde principale OK + Robocopy secondaire code 16 ;
+- [x] erreur anglaise `ERROR` ;
+- [x] répertoire secondaire vide ;
+- [x] codes Robocopy 0–7 non bloquants ;
+- [x] codes Robocopy 8–16 en échec ;
+- [x] dock sur `/admin` ;
+- [x] dock sur destinations + sous-pages ;
+- [x] absence du dock sur les autres pages Admin ;
+- [x] ESLint ciblé ;
+- [x] contrôle i18n sans nouvelle dette dans les sources du lot ;
+- [x] TypeScript Prisma MySQL ;
+- [x] génération Prisma SQL Server ;
+- [x] TypeScript Prisma SQL Server ;
+- [x] restauration Prisma MySQL ;
+- [x] build production Next.js.
+
+Le checker i18n global signale encore uniquement de la dette préexistante hors de ce lot (workflow d'étalonnage et mention légale). Le workflow temporaire de validation a été retiré du diff final.
+
+### Validation terrain
+
+- [ ] ouvrir le Dashboard Admin et vérifier la présence du dock ;
+- [ ] tester Sondes, Modules, Actionneurs, Groupes, Lieux, Sites et Outils ;
+- [ ] ouvrir une sous-page de Sondes / Lieux / Outils et vérifier que le dock reste visible ;
+- [ ] vérifier qu'Audit, Paramètres, Métrologie et Santé système ne récupèrent pas le dock par erreur ;
+- [ ] avec sauvegarde secondaire désactivée (`""`) : état **Non configurée** ;
+- [ ] avec copie secondaire réussie : état et code Robocopy cohérents ;
+- [ ] reproduire un code Robocopy 16 : principale **Réussie**, secondaire **Échec** ;
+- [ ] vérifier un Windows FR et un Windows EN ;
+- [ ] ouvrir la dialog du journal et confirmer que son affichage est inchangé ;
+- [ ] vérifier dashboards Basic / Standard / Expert ;
+- [ ] valider MySQL puis SQL Server.
+
+
+---
+
+## R23-003 — Surveillance : corriger le décalage horaire des mesures
+
+**Statut : `CORRIGE_DEV` — PR #147 — squash merge `412675643cbf531316c8a90565b4ca3df0a7594b`**
+
+### Retour — 23/09/2026
+
+Décalage horaire constaté sur plusieurs affichages liés aux mesures :
+
+- page Surveillance ;
+- consultation des graphes ;
+- tableau des mesures.
+
+Le correctif doit réutiliser le helper date canonique et ne pas ajouter de compensation manuelle de type `-2 h`.
+
+### Cause / état vérifié
+
+Le dépôt avait déjà rencontré le même symptôme sur les alarmes dans **B17-001** : les colonnes MySQL `DATETIME` sans fuseau peuvent être exposées par Prisma sous forme de `Date` puis sérialisées en ISO `...Z`. Si cette valeur est ensuite traitée comme un vrai instant UTC, une heure stockée localement peut être affichée avec +1/+2 h.
+
+Le flux des mesures était partiellement correct avant ce lot :
+
+- `GET /api/mesures/[idLieu]` utilisait déjà `serializeStoredDbDateTime(m.Date_Heure_Mesure)` ;
+- `GET /api/capteurs/paginated` sérialisait déjà correctement la dernière mesure.
+
+Cependant plusieurs consommateurs reparsaient ensuite les timestamps avec la sémantique générique `parseDbDateTime()`, et certains autres `DATETIME` de Surveillance traversaient encore JSON comme des objets `Date` standards.
+
+Autres points identifiés :
+
+- le tableau des mesures utilisait `formatDbDateTime()` / `parseDbDateTime()` sur les timestamps de mesure ;
+- le grand graphe utilisait ces mêmes helpers génériques pour ses labels et tooltips ;
+- le cache des mesures triait avec `Date.parse()` directement ;
+- les dates de désactivation/réactivation de Surveillance et alarmes étaient renvoyées brutes par l'API paginée ;
+- le résumé des lieux désactivés pouvait appliquer explicitement le `timeZone` applicatif à une heure murale déjà stockée ;
+- l'endpoint historique `/api/tableau-de-bord/measurements` utilisait encore `serializeDbDateTime()` sur un `Date` Prisma.
+
+### Correctif — helper date canonique
+
+`website/src/lib/date-display.ts` reste l'unique moteur date.
+
+Le contrat est complété par :
+
+- `parseStoredDbDateTime(value)` ;
+- `formatStoredDbDateTime(value, options)`.
+
+Ces helpers passent d'abord par `serializeStoredDbDateTime()` afin de préserver les composantes du `DATETIME` stocké.
+
+Lorsqu'une valeur a déjà traversé JSON sous une forme telle que :
+
+`2026-09-23T10:36:17.000Z`
+
+elle est interprétée comme l'heure murale stockée **10:36:17**, et non comme un instant à convertir vers 12:36:17 en Europe/Paris.
+
+`formatStoredDbDateTime()` ignore volontairement `timeZone` afin d'empêcher une seconde conversion de fuseau sur ce type de donnée.
+
+### Correctif — Surveillance
+
+Les cards utilisent désormais les helpers « stored » pour :
+
+- la dernière mesure ;
+- les comparaisons chronologiques avec le dernier point du mini-graphe ;
+- les dates de désactivation/réactivation affichées dans les badges.
+
+L'API paginée sérialise aussi avec `serializeStoredDbDateTime()` :
+
+- `Date_Heure_Reactivation_Alarme` ;
+- `Date_Heure_Surveillance_Off` ;
+- `Date_Heure_Reactivation_Surveillance`.
+
+Le résumé des sections désactivées n'applique plus de `timeZone` aux `DATETIME` stockés.
+
+### Correctif — graphes
+
+Le graphe détaillé utilise la sémantique `DATETIME` stocké pour :
+
+- tri des labels de mesures ;
+- timestamps des points ;
+- tooltips date/heure ;
+- marqueurs d'audit associés aux mesures.
+
+Les bornes de plage choisies par l'utilisateur restent des vrais objets `Date` et conservent le traitement générique existant.
+
+La superposition de courbes est également alignée pour le tri, l'axe et l'export Excel.
+
+### Correctif — tableau des mesures
+
+Le tableau détaillé :
+
+- affiche les dates via `formatStoredDbDateTime()` ;
+- trie la colonne Date via `parseStoredDbDateTime()`.
+
+Le cache serveur des mesures utilise le helper métier `getMeasureTimestamp()` au lieu de `Date.parse()`.
+
+### Non-régression complémentaire
+
+`GET /api/tableau-de-bord/measurements` utilise désormais `serializeStoredDbDateTime()` sur `Date_Heure_Mesure`, comme les autres endpoints de mesures.
+
+### Fichiers principaux
+
+- `website/src/lib/date-display.ts` ;
+- `website/src/lib/measurements.ts` ;
+- `website/src/lib/measurement-cache.ts` ;
+- `website/src/components/monitoring-card.tsx` ;
+- `website/src/components/monitoring-details/monitoring-graph-tab.tsx` ;
+- `website/src/components/monitoring-details/monitoring-table-tab.tsx` ;
+- `website/src/app/[locale]/(dashboard)/surveillance/_components/monitoring-site-section.tsx` ;
+- `website/src/app/[locale]/(dashboard)/surveillance/_components/curves-overlay-modal.tsx` ;
+- `website/src/app/api/capteurs/paginated/route.ts` ;
+- `website/src/app/api/tableau-de-bord/measurements/route.ts` ;
+- `website/scripts/test-date-display.ts` ;
+- `website/scripts/test-surveillance-measurement-timezone.ts`.
+
+### Version
+
+- Web : **1.8.7** ;
+- Serveur : **1.1.0** — inchangé ;
+- Agent : **1.0.1** — inchangé ;
+- BDD : **0.91.0** — inchangée ;
+- aucune migration BDD.
+
+### Validation automatisée
+
+GitHub Actions run `35860494426` : **succès complet** après réintégration du dernier `dev` (`9151b14a315112363227a03467af45535e54a99e`).
+
+- [x] `git diff --check origin/dev...HEAD` ;
+- [x] `pnpm test:date-display` ;
+- [x] `pnpm test:surveillance-measurement-timezone` ;
+- [x] heure d'été Europe/Paris : `10:36:17` reste `10:36:17` ;
+- [x] chaîne JSON `...Z` issue d'un `DATETIME` stocké ;
+- [x] chaîne avec offset explicite ;
+- [x] mini-graphe Surveillance ;
+- [x] graphe détaillé / tooltip ;
+- [x] tableau des mesures / tri ;
+- [x] superposition de courbes ;
+- [x] dates de désactivation/réactivation ;
+- [x] ESLint ciblé ;
+- [x] contrôle i18n sans nouvelle dette dans les sources du lot ;
+- [x] TypeScript Prisma MySQL ;
+- [x] génération Prisma SQL Server ;
+- [x] TypeScript Prisma SQL Server ;
+- [x] restauration Prisma MySQL ;
+- [x] build production Next.js.
+
+Le workflow temporaire de validation a été retiré du diff final. Les changements postérieurs au run concernent uniquement ce nettoyage et la documentation de validation.
+
+### Validation terrain
+
+- [ ] prendre une mesure récente et noter exactement `Date_Heure_Mesure` en BDD ;
+- [ ] comparer l'heure affichée sur la card Surveillance ;
+- [ ] ouvrir le graphe et vérifier axe + tooltip sur la même mesure ;
+- [ ] ouvrir **Tableau des mesures** et vérifier la même heure ;
+- [ ] vérifier un tri ascendant / descendant sur Date ;
+- [ ] tester une plage personnalisée et les dernières 24 h ;
+- [ ] tester la superposition de courbes et son export Excel ;
+- [ ] vérifier les badges de Surveillance désactivée / réactivation programmée ;
+- [ ] refaire le contrôle sur une date en heure d'été et une date en heure d'hiver ;
+- [ ] valider MySQL puis SQL Server.
+
+
+---
+
+## R23-004 — Aligner le seed SQL Server sur les derniers changements MySQL
+
+**Statut : `CORRIGE_DEV` — PR #148 — squash merge `ab753d85e1832dab7878158b7f2463d570772a87`**
+
+### Demande — 23/09/2026
+
+Deux modifications ont été réalisées directement dans `db/vigisensys_seed.sql` et doivent être reproduites côté SQL Server :
+
+1. modification des types numériques de `t_lieu_template` ;
+2. modification de `TRG_GSO_BEF_UPD_LIEU_ALARME`.
+
+Commits MySQL analysés :
+
+- `14de48a5a20a990b4898f9aa3de2b0da5ee3af6c` — `Update des types de données du t_lieu_template` ;
+- `850fc17a515ffed98507b3357ea076905cb3bec2` — `Update trigger TRG_GSO_BEF_UPD_LIEU_ALARME`.
+
+### Changement de types
+
+Les neuf colonnes suivantes de `t_lieu_template` passent de `DECIMAL(10,2)` à `FLOAT` sur SQL Server, comme elles le sont déjà dans le seed MySQL :
+
+- `Consigne` ;
+- `Consigne_Sup` ;
+- `Consigne_Inf` ;
+- `Tolerance_Surveillance_Sup` ;
+- `Tolerance_Surveillance_Inf` ;
+- `Consigne_Sup_Pre_Alarme` ;
+- `Consigne_Inf_Pre_Alarme` ;
+- `Seuil_Critique_Haut` ;
+- `Seuil_Critique_Bas`.
+
+La nullabilité reste `NULL`.
+
+### Trigger GSO
+
+Le changement métier réellement identifié dans le commit MySQL est le retrait du bloc **seuils critiques immédiats** de `TRG_GSO_BEF_UPD_LIEU_ALARME`.
+
+Le gros diff du commit contient également beaucoup de suppressions de lignes vides, qui ne constituent pas un changement métier.
+
+Le seed SQL Server est aligné en retirant :
+
+- les quatre variables liées aux seuils critiques ;
+- les quatre champs correspondants du curseur `inserted` ;
+- les variables correspondantes des deux `FETCH NEXT` ;
+- les deux branches qui créaient/transitaient immédiatement vers une alarme `B` / `H` sur franchissement d'un seuil critique.
+
+La logique restante du trigger est conservée : alarmes temporisées B/H, non-réponse, transitions, fins d'alarme et pré-alarmes.
+
+### Version BDD et migrations
+
+Le lot formalise la révision BDD **0.91.1** :
+
+- `db/vigisensys_seed.sql` : comportement métier inchangé, marqueur porté à `0.91.1` ;
+- `db/vigisensys_seed_mssql.sql` : types + trigger alignés et marqueur `0.91.1` ;
+- `db/migrations/0.91.1/mysql.sql` : applique aux bases MySQL existantes les changements déjà présents dans le seed ;
+- `db/migrations/0.91.1/mssql.sql` : applique les mêmes changements aux bases SQL Server existantes.
+
+Les triggers des migrations sont générés depuis les triggers courantes des seeds pour éviter toute divergence.
+
+### Fichiers principaux
+
+- `db/vigisensys_seed.sql` ;
+- `db/vigisensys_seed_mssql.sql` ;
+- `db/migrations/0.91.1/mysql.sql` ;
+- `db/migrations/0.91.1/mssql.sql` ;
+- `db/migrations/README.md` ;
+- `db/CHANGELOG.md` ;
+- `CHANGELOG.md`.
+
+### Version
+
+- BDD : **0.91.1** ;
+- Web : **1.8.7** — inchangé ;
+- Serveur : **1.1.0** — inchangé ;
+- Agent : **1.0.1** — inchangé.
+
+### Validation automatisée
+
+GitHub Actions run `35864102588` : **succès complet**.
+
+- [x] `git diff --check origin/dev...HEAD` ;
+- [x] les 9 colonnes sont `FLOAT` dans les deux seeds ;
+- [x] les deux triggers GSO ne contiennent plus `Seuil_Critique_*` ;
+- [x] trigger MySQL migration = trigger MySQL seed (hors espaces de fin de ligne) ;
+- [x] trigger MSSQL migration = trigger MSSQL seed (hors espaces de fin de ligne) ;
+- [x] le curseur MSSQL et ses deux `FETCH NEXT` utilisent le même nombre de champs ;
+- [x] `SCHEMA_VERSION = 0.91.1` dans les deux seeds et migrations ;
+- [x] le seed MySQL ne reçoit aucune modification métier supplémentaire dans cette branche : uniquement le passage de version `0.91.0 -> 0.91.1`.
+
+Le workflow temporaire de validation a été retiré du diff final.
+
+### Validation terrain / BDD
+
+- [ ] nouvelle base MySQL : vérifier les types de `t_lieu_template` et le trigger ;
+- [ ] nouvelle base SQL Server : vérifier les mêmes objets ;
+- [ ] migration d'une base MySQL 0.91.0 vers 0.91.1 ;
+- [ ] migration d'une base SQL Server 0.91.0 vers 0.91.1 ;
+- [ ] vérifier que les données existantes de `t_lieu_template` sont conservées ;
+- [ ] tester une alarme GSO basse / haute avec retard normal ;
+- [ ] tester une non-réponse GSO ;
+- [ ] tester une fin d'alarme et une pré-alarme ;
+- [ ] confirmer que les seuils critiques ne déclenchent plus directement via le trigger GSO.
+
+
+---
+
+## R23-005 — Retours complémentaires Surveillance / alarmes / administration du 23/09/2026
+
+**Statut global : `EN_COURS` — traitement par lots séquentiels depuis `dev`**
+
+Les retours suivants ont été fournis à la fois sous forme de texte et de captures. Certains se recoupent ; cette section constitue la liste consolidée à reprendre lot par lot.
+
+### R23-005-A — Décalages horaires Surveillance / graphes / acquittements
+
+**Statut : `CORRIGE_DEV` — PR #149 — squash merge `f4fbf7d7e709cabb47baa2c571b5fa4fb0866312`**
+
+Retours :
+
+- à l'ouverture du détail d'un lieu vers 15 h, le graphe pouvait ne charger les mesures que jusqu'à environ 13 h ;
+- même phénomène sur les graphes utilisés dans le parcours d'acquittement / analyse d'alarme ;
+- après la PR #147, une card Surveillance a affiché par exemple `23/09/2026 11:36` alors que l'heure réelle de la mesure était environ deux heures plus tard ;
+- revalider également le tableau des mesures, déjà traité en #147, afin de ne pas réintroduire de décalage.
+
+#### Cause complémentaire identifiée après #147
+
+La PR #147 a corrigé la sémantique des chaînes `DATETIME` côté affichage, mais supposait encore que les objets `Date` renvoyés par Prisma avaient la même représentation sur MySQL et SQL Server.
+
+Ce n'est pas le cas avec les adapters réellement utilisés :
+
+- `@prisma/adapter-mariadb` utilise le driver MariaDB dont la timezone par défaut est locale ;
+- `@prisma/adapter-mssql` s'appuie sur node-mssql, qui utilise UTC par défaut pour les dates sans offset.
+
+Deux régressions en découlent si le provider n'est pas pris en compte :
+
+1. **lecture MySQL** : un `DATETIME 13:36` peut être porté par un objet `Date` local 13:36, dont les composantes UTC valent 11:36 ; lire systématiquement `getUTCHours()` produit donc le `-2 h` visible sur la card ;
+2. **borne de requête** : un objet UI local 15:00 représente réellement `13:00Z` en été. S'il est transmis tel quel à un provider qui sérialise en UTC, le filtre SQL peut s'arrêter à 13:00.
+
+#### Correctif
+
+Le helper date est séparé en deux niveaux :
+
+- côté client / JSON : chaînes murales sans fuseau via `formatStoredDbDateTime` / `parseStoredDbDateTime` ;
+- frontière serveur Prisma : bridge provider-aware exposé par `sql-provider.ts`.
+
+Nouveaux wrappers serveur :
+
+- `serializePrismaStoredDbDateTime(value)` — transforme un `Date` Prisma en chaîne murale correcte selon le provider ;
+- `toPrismaStoredDbDateTime(value)` — transforme une borne murale UI en objet `Date` adapté au provider avant filtre/écriture Prisma.
+
+Parcours alignés dans ce lot :
+
+- `GET /api/mesures/[idLieu]` ;
+- `GET /api/alarmes/range` ;
+- `GET /api/alarmes` pour la borne des 30 jours ;
+- `GET /api/alarmes/[id]` utilisé par l'analyse d'acquittement ;
+- candidats d'acquittement ;
+- `GET /api/capteurs/paginated` pour les dates des cards Surveillance ;
+- `GET /api/capteurs` et `GET /api/capteurs/[id]` ;
+- `GET /api/sondes/[idSonde]/mesures` ;
+- `GET /api/tableau-de-bord/measurements` ;
+- dashboard serveur.
+
+Aucune correction fixe `+2 h` / `-2 h` n'est utilisée.
+
+#### Validation automatisée du lot A
+
+GitHub Actions run `35876030438` : **succès complet** sur le HEAD fonctionnel final avant retrait du workflow temporaire.
+
+- [x] `git diff --check origin/dev...HEAD` ;
+- [x] `pnpm test:date-display` ;
+- [x] `pnpm test:surveillance-measurement-timezone` ;
+- [x] simulation Europe/Paris en heure d'été ;
+- [x] lecture MariaDB : `13:36` reste `13:36` ;
+- [x] lecture SQL Server : composantes UTC du wrapper conservées ;
+- [x] borne UI MySQL `15:00` conservée comme heure murale `15:00` ;
+- [x] borne UI SQL Server enveloppée en `15:00Z` pour `useUTC=true` ;
+- [x] contrats source des APIs mesures, alarmes, cards et endpoints historiques ;
+- [x] ESLint ciblé ;
+- [x] TypeScript Prisma MySQL ;
+- [x] contrôle i18n sans nouvelle dette dans les sources du lot ;
+- [x] génération Prisma SQL Server ;
+- [x] TypeScript Prisma SQL Server ;
+- [x] restauration Prisma MySQL ;
+- [x] build production Next.js.
+
+Le workflow temporaire a été retiré du diff final après ce run.
+
+#### Validation terrain du lot A
+
+- [ ] comparer une `Date_Heure_Mesure` BDD avec l'heure affichée sur la card ;
+- [ ] ouvrir un lieu à une heure connue, par exemple 15 h, et vérifier que les dernières mesures vont bien jusqu'à ~15 h ;
+- [ ] vérifier axe et tooltip du graphe ;
+- [ ] vérifier le tableau des mesures ;
+- [ ] ouvrir l'analyse/acquittement d'une alarme et vérifier que la plage débute/termine aux vraies heures de l'alarme ;
+- [ ] tester une alarme encore en cours, dont la fin de plage suit l'heure actuelle ;
+- [ ] tester MySQL ;
+- [ ] tester SQL Server ;
+- [ ] refaire un contrôle en heure d'hiver.
+
+### R23-005-B — Présentation et signalétique Surveillance
+
+**Statut : `CORRIGE_DEV` — PR #151 — squash merge `a644a7f065d8cacc1626da5af37f540692665eab`**
+
+Retours consolidés :
+
+- sur les cards, inverser la hiérarchie visuelle du **lieu** et de la **sonde** :
+  - lieu en premier et plus grand ;
+  - sonde en second et plus petit ;
+- rendre le point clignotant des cards en alarme nettement plus visible / flashy ;
+- remplacer le badge/libellé **« critiques »** par **« alarmes en cours »** là où ce compteur représente les alarmes actives.
+
+#### Correctif
+
+- le header des cards affiche maintenant le **lieu** en premier avec une taille et un poids supérieurs ;
+- le numéro de série de la **sonde** est affiché juste dessous avec une taille plus discrète ;
+- le point d'alarme combine un noyau blanc contrasté, un halo et une pulsation expansive pour rester visible sur tous les thèmes d'alarme ;
+- le compteur supérieur et le filtre de statut `critical` sont renommés **« alarmes en cours »** en FR et **« alarms in progress »** en EN ;
+- la clé/statut interne `critical` est conservée afin de ne modifier aucun contrat API ou calcul de compteur ;
+- le guide utilisateur est aligné avec le nouveau vocabulaire ;
+- le Web passe en **1.8.9**.
+
+#### Validation automatisée
+
+GitHub Actions run `35984641463` : **succès complet**.
+
+- [x] installation `pnpm` avec lockfile figé ;
+- [x] ESLint ciblé sur le header de card et les supplements i18n ;
+- [x] contrôle i18n : aucune nouvelle dette dans les fichiers du lot ;
+- [x] génération Prisma MySQL ;
+- [x] build production Next.js ;
+- [x] workflow temporaire retiré du diff final.
+
+Fichiers principaux :
+
+- `website/src/components/monitoring-card/monitoring-card-header.tsx` ;
+- `website/src/messages/fr.json` ;
+- `website/src/messages/en.json` ;
+- `website/src/messages/supplements.ts` ;
+- `docs/guide-utilisateur-vigisensys.md`.
+
+#### Validation terrain
+
+- [ ] vérifier une card avec sonde : le lieu doit être immédiatement plus visible que le numéro de série ;
+- [ ] vérifier une card sans numéro de série : le lieu reste correctement affiché sans ligne vide ;
+- [ ] vérifier le point sur une alarme haute, basse et non-réponse ;
+- [ ] vérifier la lisibilité du pulse sur les headers rouge, bleu et noir, en thème clair et sombre ;
+- [ ] vérifier le badge supérieur **Alarmes en cours** et son filtre au clic ;
+- [ ] vérifier le libellé anglais **Alarms in progress** ;
+- [ ] vérifier que les compteurs, filtres et statuts métier restent identiques.
+
+### R23-005-C — Emails d'alarme et formulation Paramètres
+
+**Statut : `CORRIGE_DEV` — PR #152 — squash merge `0b562049aef35fb060cf56c62900d793956715a0`**
+
+Retours :
+
+- créer un template d'email spécifique pour le déclenchement d'un **seuil critique** ;
+- sur un email de **fin d'alarme de non-réponse**, la dernière valeur apparaît `N/A` alors qu'une mesure a été reçue et que la trigger a été mise à jour ;
+- dans Administration > Paramètres > Alarmes / notifications, supprimer la formulation **« mail système »** au profit d'un libellé métier plus clair ;
+- conserver FR/EN.
+
+#### Diagnostic
+
+- les seuils critiques ne créent pas un nouveau type d'alarme : le Serveur conserve `H` / `B` et déclenche immédiatement lorsque `Seuil_Critique_Haut` / `Seuil_Critique_Bas` est franchi ;
+- le Web peut donc identifier un déclenchement critique en comparant la valeur de déclenchement au seuil critique actif du lieu avec les mêmes opérateurs stricts `>` / `<` ;
+- pour les fins de non-réponse, `/api/alarmes/dispatch` forçait explicitement `N/A` pour tous les types différents de `H` et `B`, sans relire la mesure valide ayant mis fin à l'alarme.
+- sur le chemin GSP, le Serveur appelle `HandleNoResponseAlarm(true)` avant `AddMesure(...)` : le dispatch de fin peut donc atteindre le Web quelques millisecondes avant que la mesure de reprise soit visible dans `tm_mesures`.
+
+#### Correctif
+
+- ajout de `emails/critical-threshold-alarm-notification.tsx`, template React Email dédié aux seuils critiques ;
+- sujet spécifique **SEUIL CRITIQUE DÉPASSÉ** / **CRITICAL THRESHOLD EXCEEDED** ;
+- mise en avant du seuil, de la valeur mesurée, du sens haut/bas et du contexte lieu/sonde ;
+- détection centralisée via `resolveCriticalThresholdContext()`, sans modifier les types `H` / `B` en BDD ou dans les APIs ;
+- sur une fin d'alarme `N`, récupération de la mesure valide non nulle de reprise depuis `tm_mesures`, à partir de `Date_Heure_Fin` ;
+- le Web retente jusqu'à 5 fois à 100 ms d'intervalle pour couvrir l'ordre Serveur `fin alarme -> AddMesure` sans déplacer cette responsabilité métier côté Serveur ;
+- une erreur de lecture de la base Mesures est journalisée mais ne bloque pas le reste du dispatch ;
+- la date et l'unité de cette mesure deviennent également la source de l'email lorsque la mesure de reprise est disponible ;
+- fallback `N/A` conservé si aucune mesure valide n'est retrouvée ;
+- remplacement des formulations « emails système » par **destinataires globaux** / **global recipients** dans Paramètres ;
+- le helper SMTP parle de **notifications automatiques** / **automated notifications** ;
+- correction des libellés anglais historiquement restés en français dans le template générique ;
+- Web passé en **1.8.10**.
+
+#### Validation automatisée
+
+GitHub Actions run `35993020748` : **succès complet**.
+
+- [x] `git diff --check origin/dev...HEAD` ;
+- [x] installation `pnpm` avec lockfile figé ;
+- [x] génération Prisma MySQL ;
+- [x] `pnpm test:alarm-email-notifications` ;
+- [x] ESLint ciblé sur le flux de dispatch, les templates, le moteur email et les messages Paramètres ;
+- [x] contrôle i18n sans nouvelle dette dans les fichiers du lot ;
+- [x] build production Next.js sur le provider MySQL ;
+- [x] génération Prisma SQL Server ;
+- [x] TypeScript `--noEmit` sur le provider SQL Server ;
+- [x] workflow temporaire retiré du diff final.
+
+Fichiers principaux :
+
+- `website/src/app/api/alarmes/dispatch/route.ts` ;
+- `website/src/lib/alarm-email.ts` ;
+- `website/emails/alarm-event-notification.tsx` ;
+- `website/emails/critical-threshold-alarm-notification.tsx` ;
+- `website/src/messages/fr.json` ;
+- `website/src/messages/en.json` ;
+- `website/src/messages/admin-settings-supplements.ts` ;
+- `website/scripts/test-alarm-email-notifications.tsx`.
+
+#### Validation terrain
+
+- [ ] déclencher directement une alarme haute via le seuil critique haut : vérifier sujet et template critique ;
+- [ ] déclencher directement une alarme basse via le seuil critique bas : vérifier sujet et sens du seuil ;
+- [ ] déclencher une alarme H/B normale sans franchir le seuil critique : vérifier que le template standard reste utilisé ;
+- [ ] provoquer une non-réponse puis une reprise : l'email de fin doit afficher la vraie dernière valeur et son unité ;
+- [ ] vérifier que le fallback `N/A` reste propre si aucune mesure valide n'est disponible ;
+- [ ] vérifier les templates et libellés en français puis en anglais ;
+- [ ] vérifier dans Paramètres que « mail système » n'apparaît plus dans les libellés visibles du lot ;
+- [ ] vérifier MySQL et SQL Server.
+
+### R23-005-D — Graphes d'acquittement : transitions et zoom
+
+**Statut : `CORRIGE_DEV` — PR #153 — squash merge `1aaa5bad34f04c316a986e378c9ad919818d38e6`**
+
+Retours :
+
+- l'animation de dessin/changement d'alarme est trop lente ;
+- les transitions lors d'un changement d'alarme doivent être plus rapides ;
+- le zoom/dézoom est trop lent ;
+- après un dézoom important, il devient presque impossible de rezoomer : vérifier les bornes du plugin Chart.js Zoom, la capture/restauration de `zoomBounds` et les callbacks ;
+- ne pas dégrader le comportement des graphes Surveillance classiques.
+
+#### Diagnostic
+
+- `MonitoringGraphTab` est partagé entre le détail Surveillance et l'analyse d'alarme ;
+- le plugin `chartjs-plugin-zoom` utilisait sa vitesse de molette par défaut et ne recevait qu'un `minRange`, sans limite explicite de dézoom sur la période de l'alarme ;
+- après plusieurs dézooms, l'axe X pouvait donc s'éloigner fortement des données, ce qui rendait les zooms suivants très peu perceptibles ;
+- le parcours d'analyse persistait également les bornes Y dans `zoomBounds` alors que les interactions sont limitées à l'axe X ;
+- une modification globale du composant aurait risqué de changer le ressenti des graphes Surveillance.
+
+#### Correctif
+
+- ajout d'un profil opt-in `interactionProfile="alarm-analysis"` dans `MonitoringGraphTab` ;
+- ce profil n'est activé que par `alarmes/analyse/page-client.tsx` ;
+- animation du graphe ramenée à **180 ms** ;
+- vitesse de zoom molette portée à **0,25** ;
+- seuil de pan réduit à **4 px** ;
+- limites X du plugin fixées à la plage réelle `rangeStartMs -> rangeEndMs` de l'alarme ;
+- plage minimale de zoom dynamique, plafonnée à 60 secondes, afin de rester adaptée aux alarmes courtes ;
+- `zoomBounds` du parcours d'acquittement ne persiste plus que `xMin/xMax` ;
+- le profil par défaut conserve exactement les valeurs historiques : vitesse 0,1, pan 10 px et `minRange` de 60 s ;
+- Web passé en **1.8.11**.
+
+#### Validation automatisée
+
+GitHub Actions run `35994624820` : **succès complet**.
+
+- [x] `git diff --check origin/dev...HEAD` ;
+- [x] installation `pnpm` avec lockfile figé ;
+- [x] génération Prisma MySQL ;
+- [x] `pnpm test:alarm-analysis-chart-ux` ;
+- [x] ESLint ciblé sur le graphe partagé, le parcours d'analyse et le test ;
+- [x] contrôle i18n sans nouvelle dette dans les fichiers du lot ;
+- [x] build production Next.js sur MySQL ;
+- [x] génération Prisma SQL Server ;
+- [x] TypeScript `--noEmit` sur SQL Server ;
+- [x] workflow temporaire retiré du diff final.
+
+Fichiers principaux :
+
+- `website/src/components/monitoring-details/monitoring-graph-tab.tsx` ;
+- `website/src/app/[locale]/(dashboard)/alarmes/analyse/page-client.tsx` ;
+- `website/scripts/test-alarm-analysis-chart-ux.ts`.
+
+#### Validation terrain
+
+- [ ] changer rapidement entre plusieurs alarmes : le tracé doit apparaître sans animation longue ;
+- [ ] zoomer puis dézoomer plusieurs fois à la molette : la réponse doit être nettement plus rapide ;
+- [ ] dézoomer au maximum : l'axe ne doit jamais dépasser la période réelle de l'alarme ;
+- [ ] après dézoom maximal, rezoomer immédiatement et vérifier que le zoom redevient efficace ;
+- [ ] tester une alarme très courte puis une alarme longue ;
+- [ ] tester une alarme terminée et une alarme encore active ;
+- [ ] tester le pan horizontal ;
+- [ ] utiliser « Réinitialiser le zoom » après plusieurs interactions ;
+- [ ] ouvrir ensuite un graphe Surveillance classique et confirmer que son comportement n'a pas changé.
+
+### R23-005-E — Preview des consignes / limites dans la modal d'un lieu
+
+**Statut : `CORRIGE_DEV` — PR #154 — squash merge `feee463f35459e5afda2f10f33132179c37eae2b`**
+
+Retours consolidés du texte et de la capture :
+
+- lorsque l'utilisateur modifie certaines limites, c'est visuellement la **ligne Consigne** qui se déplace : corriger l'association dataset/guide ;
+- empêcher ou signaler immédiatement les valeurs incohérentes dans le formulaire, même si la validation finale les refuserait déjà ;
+- vérifier si une configuration incohérente doit bloquer la saisie ou au minimum rendre la validation impossible de manière visuellement explicite ;
+- le retard d'alarme doit commencer depuis le **dernier point encore valide**, et non depuis le premier point hors tolérance ;
+- revoir le visuel représentant la temporisation / le « Retard d'alarme » sur la preview ;
+- revoir les validations des **pré-alarmes avec EMT** ;
+- indiquer au-dessus des limites lorsqu'un **EMT** est inclus dans le seuil effectif ;
+- lorsqu'une consigne/limite change, la preview doit se mettre à jour sans déplacer une courbe qui ne correspond pas au champ modifié.
+
+#### Diagnostic
+
+- la preview recalculait son domaine vertical à partir de toutes les lignes à chaque modification ; changer une limite modifiait donc l'échelle complète et donnait l'impression que la consigne se déplaçait ;
+- les pré-alarmes étaient validées contre `Consigne_Sup` / `Consigne_Inf` brutes, alors que la surveillance utilise les seuils effectifs `Tolerance_Surveillance_*` après EMT ;
+- le dessin de démonstration plaçait le premier point de la zone temporisée déjà hors tolérance : la temporisation semblait commencer après le franchissement au lieu de partir du dernier point valide ;
+- les validations étaient dupliquées entre formulaire, création API et modification API, avec un risque de divergence.
+
+#### Correctif
+
+- ajout du contrat partagé `website/src/lib/location-alarm-threshold-contract.ts` ;
+- calcul commun des limites brutes, seuils effectifs, pré-alarmes et critiques ;
+- validation des pré-alarmes contre les seuils effectifs après EMT ;
+- détection d'un EMT trop important faisant rejoindre/croiser la consigne ;
+- utilisation du même contrat par le formulaire, `POST /api/lieux` et `PATCH /api/lieux/[id]` ;
+- pour un PATCH partiel, fusion des valeurs modifiées avec les valeurs BDD avant contrôle final ;
+- bandeau rouge live dans le formulaire dès qu'une configuration devient incohérente ;
+- messages d'erreur live repris également sous les champs concernés ;
+- désactiver un seuil normal haut/bas désactive automatiquement la pré-alarme correspondante afin d'éviter une configuration masquée mais invalide ;
+- bandeau violet au-dessus des limites lorsque l'EMT est incluse dans le seuil effectif ;
+- échelle de preview stabilisée pendant toute la session d'édition ; elle ne s'agrandit que si une valeur sort réellement du domaine visible ;
+- la plage physique de la sonde, le lieu et la sonde sélectionnée participent à la clé de contexte : l'échelle est réinitialisée quand on change réellement de contexte, sans utiliser toute la plage physique comme zoom global ;
+- le premier point de temporisation est exactement positionné sur le seuil normal : il représente le dernier point encore valide ;
+- ajout d'une zone orange visuelle pour matérialiser la fenêtre de temporisation ;
+- FR/EN mis à jour ;
+- Web passé en **1.8.12**.
+
+#### Validation automatisée
+
+GitHub Actions run `35999158522` : **succès complet**.
+
+- [x] `git diff --check origin/dev...HEAD` ;
+- [x] installation `pnpm` avec lockfile figé ;
+- [x] génération Prisma MySQL ;
+- [x] `pnpm test:location-threshold-preview-emt` ;
+- [x] `pnpm test:location-critical-thresholds` après alignement du test historique sur le contrat partagé ;
+- [x] `pnpm test:number-display` ;
+- [x] ESLint ciblé sur le contrat, le formulaire, la preview, les APIs et les tests ;
+- [x] contrôle i18n sans nouvelle dette dans les fichiers du lot ;
+- [x] build production Next.js sur MySQL ;
+- [x] génération Prisma SQL Server ;
+- [x] TypeScript `--noEmit` sur SQL Server ;
+- [x] workflow temporaire retiré du diff final.
+
+Fichiers principaux :
+
+- `website/src/lib/location-alarm-threshold-contract.ts` ;
+- `website/src/app/[locale]/(admin)/admin/lieux/_components/location-form-schema.ts` ;
+- `website/src/app/[locale]/(admin)/admin/lieux/_components/general-tab/location-setpoints-section.tsx` ;
+- `website/src/app/[locale]/(admin)/admin/lieux/_components/general-tab/location-alarm-preview.tsx` ;
+- `website/src/app/api/lieux/route.ts` ;
+- `website/src/app/api/lieux/[id]/route.ts` ;
+- `website/scripts/test-location-threshold-preview-emt.ts`.
+
+#### Validation terrain
+
+- [ ] modifier uniquement la limite haute : la consigne et les guides bas ne doivent pas se déplacer artificiellement ;
+- [ ] modifier uniquement la limite basse : la consigne et les guides hauts ne doivent pas se déplacer artificiellement ;
+- [ ] modifier la consigne : seule sa ligne doit suivre la nouvelle valeur, les autres lignes conservant leur valeur propre ;
+- [ ] activer une EMT et vérifier le bandeau d'information au-dessus des limites ;
+- [ ] placer une pré-alarme haute entre le seuil brut et le seuil effectif EMT : le formulaire doit la refuser immédiatement ;
+- [ ] même test pour la pré-alarme basse ;
+- [ ] configurer une EMT trop grande faisant croiser le seuil effectif avec la consigne : bandeau rouge + blocage à l'enregistrement ;
+- [ ] vérifier le début de la zone de temporisation exactement sur le seuil normal ;
+- [ ] faire varier les retards haut/bas et vérifier la largeur des zones orange ;
+- [ ] vérifier qu'un seuil critique reste immédiat et visuellement distinct de la temporisation normale ;
+- [ ] vérifier création et modification de lieu ;
+- [ ] vérifier FR / EN, clair / sombre ;
+- [ ] vérifier MySQL et SQL Server.
+
+### R23-005-F — Édition utilisateur
+
+**Statut : `CORRIGE_DEV` — PR #155 — squash merge `1cc012ca9729eb1dbc906bd7b39b73e3f5ab01ef`**
+
+Retours de la capture :
+
+- à l'ouverture de **Modifier l'utilisateur**, le profil actuellement affecté n'est pas présélectionné ;
+- le champ apparaît vide et déclenche immédiatement « Le profil est requis » alors que l'utilisateur possède déjà un profil ;
+- vérifier le chargement/mapping `Id_Profil` entre la ligne utilisateur et le formulaire ;
+- étudier un affichage plus large / paysage de la fenêtre d'édition afin d'afficher davantage d'informations simultanément sans scroll excessif, tout en restant responsive.
+
+#### Diagnostic
+
+- le modèle historique ne stocke pas `Id_Profil` dans `t_utilisateur` : il stocke le nom du profil dans `Profil_Utilisateur` ;
+- le champ de formulaire `profileId` porte donc un nom historique trompeur : la valeur réellement envoyée et enregistrée est le nom du profil ;
+- la modal pouvait appeler `reset()` avant la fin du chargement des profils ;
+- l'édition chargeait uniquement les profils actifs : un utilisateur encore rattaché à un profil archivé n'avait aucune option correspondante dans le select.
+
+#### Correctif
+
+- résolution explicite du profil courant dans `getEditUserDefaults()` à partir des options chargées ;
+- matching exact puis fallback normalisé casse/espaces pour les données historiques ;
+- l'initialisation attend désormais `profilesLoading === false` en plus des affectations Sites / Groupes ;
+- l'édition utilise `/api/profils?status=all` ;
+- la liste affichée conserve uniquement les profils actifs et, si nécessaire, le profil archivé actuellement affecté à l'utilisateur ;
+- la création d'utilisateur reste sur `status=active` ;
+- la modal passe à une largeur `max-w-5xl` / `96vw` ;
+- login/email, profil/avatar et changement de mot de passe sont disposés en deux colonnes sur desktop ;
+- le layout reste mono-colonne sur les petites largeurs ;
+- Web passé en **1.8.13**.
+
+#### Validation automatisée
+
+GitHub Actions run `36000641813` : **succès complet**.
+
+- [x] `git diff --check origin/dev...HEAD` ;
+- [x] installation `pnpm` avec lockfile figé ;
+- [x] génération Prisma MySQL ;
+- [x] `pnpm test:user-edit-profile-selection` ;
+- [x] ESLint ciblé sur le mapper, la modal, le client utilisateurs et le test ;
+- [x] contrôle i18n sans nouvelle dette dans les fichiers du lot ;
+- [x] build production Next.js sur MySQL ;
+- [x] génération Prisma SQL Server ;
+- [x] TypeScript `--noEmit` sur SQL Server ;
+- [x] workflow temporaire retiré du diff final.
+
+Fichiers principaux :
+
+- `website/src/app/[locale]/(admin)/admin/utilisateurs/_components/user-mappers.ts` ;
+- `website/src/app/[locale]/(admin)/admin/utilisateurs/_components/edit-user-dialog.tsx` ;
+- `website/src/app/[locale]/(admin)/admin/utilisateurs/users-client.tsx` ;
+- `website/scripts/test-user-edit-profile-selection.ts`.
+
+#### Validation terrain
+
+- [ ] ouvrir un utilisateur avec un profil actif : le profil doit être immédiatement présélectionné ;
+- [ ] fermer/réouvrir la fiche sans modification : aucun message « Le profil est requis » ;
+- [ ] ouvrir un utilisateur rattaché à un profil archivé : son profil historique reste visible ;
+- [ ] vérifier que les autres profils archivés ne sont pas proposés dans le select ;
+- [ ] changer le profil puis enregistrer et rouvrir : la nouvelle affectation doit être présélectionnée ;
+- [ ] vérifier que la création utilisateur ne propose que les profils actifs ;
+- [ ] tester la modal sur desktop large : davantage de champs visibles sans scroll ;
+- [ ] tester tablette/mobile : retour propre en une colonne, aucun débordement ;
+- [ ] vérifier clair / sombre.
+
+### R23-005-G — Card métrologie du Dashboard Admin
+
+**Statut : `CORRIGE_DEV` — PR #156 — squash merge `41071cf29bed5378b4fc73b48daee5aca715008b`**
+
+Retour :
+
+- la durée utilisée par la card métrologie / échéance d'étalonnage ne doit pas être une constante ;
+- récupérer la **durée de validité d'étalonnage** depuis le paramètre BDD existant ;
+- vérifier MySQL / SQL Server et le fallback historique si le paramètre est absent.
+
+#### Diagnostic
+
+- la card Standard appelait `useUpcomingCalibrationCount(15, ...)` ;
+- le widget Expert affichait lui aussi `days: 15` en dur ;
+- l'API `/api/admin/metrologie/etalonnages-a-prevoir` reçoit actuellement une fenêtre en query string puis compte les sondes dont la **Date_Validite** du dernier `t_etalonnage` est comprise entre aujourd'hui et J+N ;
+- la durée de validité métier de l'étalonnage n'est donc pas recalculée par cette card : la vraie donnée de validité est déjà `Date_Validite` ;
+- le paramètre BDD destiné à piloter la fenêtre d'alerte existe déjà : `DASHBOARD / ETALONNAGE_WARNING_DAYS` ;
+- le comportement historique introduit avec la card en PR #135 est J+15 : c'est le fallback à conserver si le paramètre manque.
+
+#### Correctif
+
+- ajout du helper partagé `website/src/lib/calibration-warning-window.ts` ;
+- lecture du paramètre BDD directement dans l'API `etalonnages-a-prevoir` ;
+- prise en charge des variantes de casse historiques du couple section / mot-clé ;
+- suppression du paramètre `days` côté hook et de `?days=15` dans l'appel API ;
+- l'API renvoie la fenêtre effectivement appliquée dans `days` ;
+- la card Standard utilise `response.days` pour sa description et son helper ;
+- le widget Expert reçoit et affiche la même valeur via `upcomingCalibrationDays` ;
+- fallback absent / vide / invalide : **15 jours** ;
+- valeur positive plafonnée à 365 jours, comme l'ancien endpoint ;
+- `ServerSettings` utilise le même fallback 15 jours si le paramètre BDD est absent ;
+- les seeds MySQL et SQL Server contiennent déjà `ETALONNAGE_WARNING_DAYS` : aucune migration BDD ;
+- Web passé en **1.8.14**.
+
+#### Validation automatisée
+
+GitHub Actions run `36004176315` : **succès complet**.
+
+- [x] `git diff --check origin/dev...HEAD` ;
+- [x] installation `pnpm` avec lockfile figé ;
+- [x] génération Prisma MySQL ;
+- [x] `pnpm test:admin-metrology-warning-window` ;
+- [x] régression historique `pnpm test:admin-dashboard-refinements` mise à jour sur le contrat dynamique ;
+- [x] ESLint ciblé sur helper, API, hook, dashboards, Paramètres et test ;
+- [x] contrôle i18n sans nouvelle dette dans les fichiers du lot ;
+- [x] build production Next.js sur MySQL ;
+- [x] génération Prisma SQL Server ;
+- [x] TypeScript `--noEmit` sur SQL Server ;
+- [x] présence de `ETALONNAGE_WARNING_DAYS` vérifiée dans les seeds MySQL et SQL Server ;
+- [x] workflow temporaire retiré du diff final.
+
+Fichiers principaux :
+
+- `website/src/lib/calibration-warning-window.ts` ;
+- `website/src/app/api/admin/metrologie/etalonnages-a-prevoir/route.ts` ;
+- `website/src/hooks/useAdminData.ts` ;
+- `website/src/app/[locale]/(admin)/admin/page.tsx` ;
+- `website/src/app/[locale]/(admin)/admin/_components/expert-dashboard/expert-dashboard-types.ts` ;
+- `website/src/app/[locale]/(admin)/admin/_components/expert-dashboard/expert-widget-renderer.tsx` ;
+- `website/src/app/[locale]/(admin)/admin/parametres/server-settings.tsx` ;
+- `website/scripts/test-admin-metrology-warning-window.ts`.
+
+#### Validation terrain
+
+- [ ] régler `ETALONNAGE_WARNING_DAYS` à 7 : card Standard et widget Expert doivent afficher 7 jours et compter jusqu'à J+7 ;
+- [ ] régler le paramètre à 30 : affichage et compteur J+30 ;
+- [ ] tester une valeur personnalisée, par exemple 45 ;
+- [ ] supprimer temporairement le paramètre sur une base de test : fallback J+15 ;
+- [ ] mettre une valeur invalide : fallback J+15 ;
+- [ ] sonde avec validité déjà expirée : toujours exclue du compteur « à prévoir » ;
+- [ ] sonde réformée : toujours exclue ;
+- [ ] plusieurs étalonnages : seule la dernière `Date_Validite` compte ;
+- [ ] vérifier Dashboard Standard puis widget Expert ;
+- [ ] modifier le paramètre depuis Administration > Paramètres puis rafraîchir le Dashboard ;
+- [ ] valider MySQL puis SQL Server.
+
+### Ordre de traitement prévu
+
+Les lots restent séquentiels afin que chaque branche parte du `dev` effectivement mergé :
+
+1. **A — dates / graphes** ;
+2. **B — cards / signalétique Surveillance** ;
+3. **C — emails / paramètres alarmes** ;
+4. **D — UX graphes acquittement** ;
+5. **E — preview limites / EMT / validations** ;
+6. **F — édition utilisateur** ;
+7. **G — card métrologie**.
+
+L'ordre pourra être ajusté sur demande, mais aucune branche suivante ne doit être créée depuis un `dev` obsolète.
+
+---
+
+## R24-001 — Métrologie : port série bloqué en `queued` après une interrogation
+
+**Statut : `CORRIGE_DEV` — PR #150 — squash merge `1d0655056fcd54a5b365ff9133c25b3cd8c835f9`**
+
+### Retour — 24/09/2026
+
+Lors d'une lecture de sonde en Étalonnage, le Serveur pouvait rester sur :
+
+- `[ETALONNAGE][LOCK] status=queued ... action=read-config; priority=surveillance-first` ;
+- `[ETALONNAGE][LOCK] status=queued ... action=read; priority=surveillance-first`.
+
+Le défaut persistait alors que toutes les GSP de Surveillance du banc avaient été désactivées : aucune valeur de métrologie n'arrivait et le port série n'était jamais repris par l'opération.
+
+### Diagnostic
+
+Le verrou global du port était acquis une première fois par `ThreadServeur.RunWithPortLockAsync`, puis une seconde fois dans `Sensor.ExecuteWithPortLockAsync`.
+
+Cette acquisition imbriquée utilisait un `Mutex` Windows, dont le propriétaire est le thread. Comme les lectures de sondes contiennent des `await`, la continuation pouvait reprendre sur un autre thread ; `ReleaseMutex()` échouait alors pour la seconde acquisition. L'exception était ignorée et le mutex global pouvait rester détenu indéfiniment.
+
+### Correctif en cours
+
+- conserver le mutex global dans `ThreadServeur.RunWithPortLockAsync`, qui arbitre Surveillance / Hotline / métrologie ;
+- supprimer la seconde acquisition du même mutex dans `Sensor.ExecuteWithPortLockAsync` ;
+- conserver dans `Sensor` uniquement le `SemaphoreSlim` local async-compatible ;
+- ne modifier ni les trames GSP ni la logique métier de lecture ;
+- passer Serveur + installateur en **1.1.1** ;
+- documenter la validation terrain dans `website/docs/metrology-retours-26-08-2026.md`.
+
+### Validation automatisée
+
+GitHub Actions run `35970788192` : **succès**.
+
+- [x] restauration NuGet legacy ;
+- [x] build Serveur .NET Framework 4.8 Release ;
+- [x] build installateur Serveur 1.1.1 Release ;
+- [x] workflow temporaire retiré du diff final.
+
+### Fichiers principaux
+
+- `Vigitemp Serveur/Vigitemp Serveur/Sensor.cs` ;
+- `Vigitemp Serveur/Vigitemp Serveur/Properties/AssemblyInfo.cs` ;
+- `Vigitemp Serveur/VigitempServerInstaller/VigitempServerInstaller.csproj` ;
+- `Vigitemp Serveur/CHANGELOG.md` ;
+- `CHANGELOG.md` ;
+- `website/docs/metrology-retours-26-08-2026.md`.
+
+### Validation terrain
+
+- [ ] redémarrer le service avec le binaire corrigé pour repartir sans mutex résiduel de l'ancienne version ;
+- [ ] vérifier une lecture métrologie sans GSP Surveillance active sur le port : acquisition immédiate ;
+- [ ] vérifier une lecture lancée pendant une mesure Surveillance : attente, puis `dequeued` et lecture ;
+- [ ] enchaîner plusieurs lectures sur le même port sans redémarrage ;
+- [ ] valider Ajustage et Étalonnage ;
+- [ ] valider plusieurs GSP sur le même module/COM ;
+- [ ] confirmer la reprise normale de la Surveillance après l'opération.
+
+---
+
+## R25-001 — Retours complémentaires du 25/09/2026
+
+### R25-001-A — Card sauvegarde Admin : lignes vides et logs FR/EN
+
+**Statut : `CORRIGE_DEV` — PR #157 — squash merge `8ae5ba55faabbb38e554b267f9151e460a27e695`**
+
+Retours :
+
+- ignorer la ligne vide affichée en fin de journal ;
+- prendre en compte les formulations françaises et anglaises du log : `ERREUR` / `ERROR`, etc.
+
+#### Diagnostic
+
+- les lignes réellement vides étaient déjà filtrées ;
+- une ligne contenant uniquement un timestamp restait toutefois non vide côté fichier puis devenait `message: ""` après retrait de l'horodatage, ce qui créait une ligne vide dans la dialog ;
+- les erreurs FR/EN étaient déjà partiellement reconnues ;
+- les marqueurs de début/fin de processus et la détection du succès 7zip quotidien restaient plus orientés vers les formulations françaises.
+
+#### Correctif
+
+- centralisation de l'extraction du message via `getBackupLogMessage()` ;
+- exclusion des lignes sans contenu métier avec `isMeaningfulBackupLogLine()` avant troncature et transformation en entries ;
+- reconnaissance des marqueurs de processus FR/EN ;
+- reconnaissance du succès 7zip quotidien FR/EN ;
+- maintien et extension de la reconnaissance des erreurs FR/EN ;
+- Web passé en **1.8.15**.
+
+#### Validation automatisée
+
+GitHub Actions run `36106181908` : **succès complet**.
+
+- [x] `git diff --check origin/dev...HEAD` ;
+- [x] installation `pnpm` avec lockfile figé ;
+- [x] génération Prisma MySQL ;
+- [x] `pnpm test:admin-nav-backup-status` avec cas FR, EN et ligne timestamp seule ;
+- [x] ESLint ciblé sur parser, API sauvegardes et test ;
+- [x] build production Next.js sur MySQL ;
+- [x] génération Prisma SQL Server ;
+- [x] TypeScript `--noEmit` sur SQL Server ;
+- [x] workflow temporaire retiré du diff final.
+
+Fichiers principaux :
+
+- `website/src/lib/backup-log-parser.ts` ;
+- `website/src/app/api/admin/sauvegardes/route.ts` ;
+- `website/scripts/test-admin-nav-backup-status.ts`.
+
+#### Validation terrain
+
+- [ ] journal se terminant par une ligne vide réelle : aucune ligne supplémentaire ;
+- [ ] journal se terminant par une ligne contenant uniquement `[date heure]` : aucune ligne vide affichée ;
+- [ ] run FR avec `ERREUR` : état échec correctement détecté ;
+- [ ] run EN avec `ERROR` : état échec correctement détecté ;
+- [ ] run EN avec `START BACKUP PROCESS`, `DAILY DUMP : SUCCESS`, `END BACKUP PROCESS` : run correctement reconnu ;
+- [ ] vérifier la copie secondaire Robocopy sur Windows FR et EN.
+
+### R25-001-B — Nouveaux types d'alarmes critiques `CB` / `CH`
+
+**Statut : `CORRIGE_DEV` — PR #158 — squash merge `b7b543623cdbc7ec13f6b5661fa95739b1bafd5b`**
+
+Demandes :
+
+- passer `t_alarme.Type`, `t_alarme_message.Type` et `t_alarme_message_histo.Type` à **2 caractères** ;
+- créer les types :
+  - `CB` — critique bas ;
+  - `CH` — critique haut ;
+- ajouter dans `t_alarme_message` :
+  - `20 / CRITIQUE_BAS / CB / L'alarme a été déclenchée par un dépassement du seuil critique inférieur.` ;
+  - `21 / CRITIQUE_HAUT / CH / L'alarme a été déclenchée par un dépassement du seuil critique supérieur.` ;
+- mettre à jour les seeds MySQL et SQL Server ;
+- adapter le déclenchement Serveur/BDD pour créer `CB` / `CH` lorsqu'un seuil critique est dépassé ;
+- conserver les alarmes standards `B` / `H` pour les seuils normaux ;
+- sur les cards Surveillance :
+  - conserver le petit point clignotant pour toute alarme ;
+  - retirer le panneau danger pour les alarmes standards ;
+  - afficher ce panneau uniquement pour `CB` / `CH` ;
+  - ne pas ajouter de nouvelle couleur ;
+- vérifier emails, acquittements, historiques, filtres, exports et i18n avec les types à 2 caractères ;
+- prévoir migration MySQL + SQL Server en plus des seeds pour les installations existantes.
+
+
+
+#### Diagnostic / contrat retenu
+
+- le schéma courant possède `t_alarme_histo` et non `t_alarme_message_histo` : c'est donc `t_alarme_histo.Type` qui est élargi ;
+- les seuils critiques existaient déjà mais créaient historiquement des alarmes `B/H` ;
+- à partir de ce lot, un déclenchement initial directement critique crée `CB/CH` ;
+- `B/CB` forment une même famille basse et `H/CH` une même famille haute ;
+- une alarme déjà ouverte garde son type initial jusqu'à sa fin : pas de promotion/dégradation en cours d'alarme et pas de doublon actif ;
+- le trigger GSO avait volontairement perdu l'évaluation directe des critiques en BDD 0.91.1 ; la BDD 0.92.0 réintroduit explicitement cette logique afin qu'un déclenchement initial directement critique produise lui aussi `CB/CH` sur les GSO ;
+- le Web regroupe `CH` avec les alarmes hautes et `CB` avec les alarmes basses pour les filtres, graphes, acquittements et statistiques ;
+- sur les cards, la couleur reste celle de H/B ; seul l'indicateur danger distingue le critique ;
+- versions du lot : **Web 1.9.0**, **Serveur/installateur 1.2.0**, **BDD 0.92.0**.
+
+Fichiers principaux :
+
+- `website/src/lib/alarm-types.ts` ;
+- `website/src/components/monitoring-card/monitoring-card-header.tsx` ;
+- `website/src/app/api/alarmes/*` et adaptateurs Dashboard/Surveillance concernés ;
+- `website/src/lib/alarm-email.ts` ;
+- `Vigitemp Serveur/Vigitemp Serveur/Sensor.cs` ;
+- providers MySQL / SQL Server ;
+- `website/prisma/db-main/schema.prisma` ;
+- seeds MySQL / SQL Server ;
+- migrations `db/migrations/0.92.0/*`.
+
+#### Validation automatisée
+
+GitHub Actions run `36117832556` : **succès complet** sur le HEAD fonctionnel final.
+
+Web / BDD :
+
+- [x] `git diff --check origin/dev...HEAD` ;
+- [x] installation `pnpm` avec lockfile figé ;
+- [x] génération Prisma MySQL ;
+- [x] `pnpm test:critical-alarm-types` ;
+- [x] régression seuils critiques `pnpm test:location-critical-thresholds` ;
+- [x] régression emails `pnpm test:alarm-email-notifications` ;
+- [x] régression acquittements `pnpm test:alarm-acknowledgement-context` ;
+- [x] ESLint ciblé sur le contrat alarmes, cards, APIs, dashboard, statistiques et test ;
+- [x] contrôle i18n sans nouvelle dette dans les fichiers du lot ;
+- [x] build production Next.js sur MySQL ;
+- [x] génération Prisma SQL Server ;
+- [x] TypeScript `--noEmit` sur SQL Server ;
+- [x] migrations/seeds vérifiés sur les trois `VARCHAR(2)`, les messages 20/21 et les triggers GSO `CB/CH` ;
+- [x] vérification statique : le trigger de chaque migration correspond au trigger de son seed, après normalisation du whitespace ;
+- [x] vérification de l'ordre de migration : `SCHEMA_VERSION` n'est écrit qu'après installation réussie du trigger.
+
+Serveur :
+
+- [x] restauration NuGet legacy ;
+- [x] build Release VigiSensys Serveur **1.2.0** ;
+- [x] build Release installateur Serveur **1.2.0** ;
+- [x] vérification des versions produit dans les artefacts sources ;
+- [x] workflow temporaire retiré du diff final.
+
+Les runs intermédiaires ont permis de détecter avant finalisation :
+- deux helpers MySQL supprimés accidentellement lors d'une première réécriture du provider ;
+- des assertions trop strictes sur le formatage SQL ;
+- une première construction SQL Server qui positionnait le trigger au mauvais endroit dans le bloc d'erreur ;
+- un flag RegExp de test incompatible avec la cible TypeScript du projet.
+
+Ces points sont corrigés dans le run final ci-dessus.
+
+#### Validation terrain
+
+- [ ] appliquer la migration BDD 0.92.0 sur une copie MySQL 0.91.1 et confirmer `SCHEMA_VERSION = 0.92.0` ;
+- [ ] appliquer la migration SQL Server 0.92.0 sur une copie 0.91.1 ;
+- [ ] vérifier `t_alarme.Type`, `t_alarme_histo.Type` et `t_alarme_message.Type` en deux caractères ;
+- [ ] vérifier les messages 20 `CRITIQUE_BAS / CB` et 21 `CRITIQUE_HAUT / CH` ;
+- [ ] déclencher une alarme basse standard : type `B`, point pulsant présent, panneau danger absent ;
+- [ ] déclencher directement un critique bas : type `CB`, même couleur bleue que B, panneau danger présent ;
+- [ ] déclencher une alarme haute standard : type `H`, point pulsant présent, panneau danger absent ;
+- [ ] déclencher directement un critique haut : type `CH`, même couleur rouge que H, panneau danger présent ;
+- [ ] vérifier qu'une alarme B/H déjà ouverte conserve son type si la mesure franchit ensuite le critique ;
+- [ ] vérifier qu'une alarme CB/CH conserve son type jusqu'à sa fin même si la valeur repasse entre critique et seuil normal ;
+- [ ] vérifier qu'il n'existe jamais deux alarmes ouvertes simultanément B+CB ou H+CH pour le même lieu ;
+- [ ] vérifier l'email critique CB/CH puis les emails de fin/acquittement ;
+- [ ] vérifier page Alarmes, filtres haute/basse, historique d'acquittement, exports/statistiques et dashboard ;
+- [ ] vérifier FR / EN ;
+- [ ] vérifier une GSO : dépassement normal temporisé en B/H et déclenchement initial directement critique en CB/CH ;
+- [ ] vérifier qu'une GSO déjà ouverte en B/H conserve ce type si elle franchit ensuite le critique, sans créer de doublon.
+
+### R25-001-C — Information fréquence GSP pendant les opérations métrologie
+
+**Statut : `PR_OUVERTE` — branche `fix/metrology-gsp-cadence-info` — PR #159 — base `dev` `b7b543623cdbc7ec13f6b5661fa95739b1bafd5b`**
+
+Demande :
+
+- indiquer dans les parcours Ajustage / Étalonnage que la fréquence de lecture d'une GSP peut ne pas être exactement **1 minute** lorsqu'une ou plusieurs autres sondes du même module sont encore en Surveillance ;
+- expliquer que la Surveillance reste prioritaire sur le module et peut donc décaler légèrement les interrogations de métrologie ;
+- ajouter l'information de manière claire, non bloquante et traduite FR/EN ;
+- relire `docs/architecture/metrology-refactor.md` avant modification.
+
+#### Vérification
+
+- l'Étalonnage affichait déjà une cadence de **1 min** et indiquait que les GSP étaient interrogées toutes les minutes, sans expliquer l'arbitrage avec la Surveillance ;
+- l'Ajustage expose déjà l'intervalle de lecture dans la card du plateau, mais son texte d'aide n'indiquait pas non plus que cet intervalle peut être légèrement décalé ;
+- le comportement matériel existe déjà : la Surveillance conserve la priorité sur les lectures métrologie partageant le même module. Ce lot ne modifie donc pas le moteur d'acquisition.
+
+#### Correctif
+
+- le texte de cadence de l'Étalonnage précise désormais que **1 minute est une cadence cible** pour les GSP et qu'une Surveillance active sur le même module peut retarder légèrement la lecture ;
+- le texte d'aide de l'Ajustage précise la même règle pour l'intervalle GSP configuré ;
+- traduction FR/EN ;
+- aucune modification du Serveur, des verrous ou de l'ordonnancement matériel ;
+- Web passé en **1.9.1**.
+
+Fichiers principaux :
+
+- `website/src/messages/fr.json` ;
+- `website/src/messages/en.json` ;
+- `website/package.json` ;
+- `website/CHANGELOG.md` ;
+- `CHANGELOG.md`.
+
+#### Validation terrain
+
+- [ ] en Étalonnage avec une GSP, vérifier que la card de cadence explique clairement que la minute est indicative ;
+- [ ] en Ajustage avec une GSP, vérifier que l'aide de l'intervalle rappelle la priorité de la Surveillance ;
+- [ ] vérifier le rendu FR / EN ;
+- [ ] avec plusieurs sondes sur le même module, confirmer que l'information correspond au comportement observé lorsque la Surveillance intercale une interrogation.
+

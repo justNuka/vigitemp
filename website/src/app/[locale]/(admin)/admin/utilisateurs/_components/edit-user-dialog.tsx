@@ -145,10 +145,10 @@ export function EditUserDialog({
   useEffect(() => {
     if (!open || !user) return;
     if (didInitRef.current) return;
-    if (assignedSitesLoading || assignedGroupsLoading || assignedSitesFetching || assignedGroupsFetching) return;
+    if (profilesLoading || assignedSitesLoading || assignedGroupsLoading || assignedSitesFetching || assignedGroupsFetching) return;
 
     editForm.reset({
-      ...getEditUserDefaults(user),
+      ...getEditUserDefaults(user, profiles),
       siteIds: assignedSiteIds,
       groupeIds: assignedGroupIds,
     });
@@ -162,12 +162,14 @@ export function EditUserDialog({
     assignedSitesFetching,
     editForm,
     open,
+    profiles,
+    profilesLoading,
     user,
   ]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-white dark:bg-popover dark:text-popover-foreground">
+      <DialogContent className="w-[96vw] max-w-5xl max-h-[92vh] overflow-y-auto bg-white dark:bg-popover dark:text-popover-foreground">
         <DialogHeader>
           <DialogTitle>{t("title")}</DialogTitle>
           <DialogDescription>
@@ -195,11 +197,16 @@ export function EditUserDialog({
             ) : null}
 
             <UserNameFields control={editForm.control} order="last-first" />
-            <UserUsernameField control={editForm.control} />
-            <UserEmailField control={editForm.control} />
 
-            <UserProfileField control={editForm.control} profiles={profiles} isLoading={profilesLoading} />
-            <UserAvatarField control={editForm.control} />
+            <div className="grid gap-4 md:grid-cols-2">
+              <UserUsernameField control={editForm.control} />
+              <UserEmailField control={editForm.control} />
+            </div>
+
+            <div className="grid gap-4 lg:grid-cols-2 lg:items-start">
+              <UserProfileField control={editForm.control} profiles={profiles} isLoading={profilesLoading} />
+              <UserAvatarField control={editForm.control} />
+            </div>
 
             <div className="rounded-lg border border-border/60 bg-muted/20 p-4 space-y-4">
               <div className="rounded-md border border-sky-200 bg-sky-50 px-3 py-2 text-xs text-sky-900">
@@ -214,43 +221,45 @@ export function EditUserDialog({
 
             <UserExpiryFields control={editForm.control} enabled={hasEditExpiryDate} />
 
-            <div className="space-y-2 pt-4 border-t">
+            <div className="space-y-3 pt-4 border-t">
               <p className="text-sm font-medium">{t("password.section_title")}</p>
-              <FormField
-                control={editForm.control}
-                name="password"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t("password.new_label")}</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="password"
-                        placeholder={t("password.new_placeholder")}
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <div className="grid gap-4 md:grid-cols-2">
+                <FormField
+                  control={editForm.control}
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t("password.new_label")}</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="password"
+                          placeholder={t("password.new_placeholder")}
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-              <FormField
-                control={editForm.control}
-                name="passwordConfirm"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t("password.confirm_label")}</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="password"
-                        placeholder={t("password.confirm_placeholder")}
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                <FormField
+                  control={editForm.control}
+                  name="passwordConfirm"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t("password.confirm_label")}</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="password"
+                          placeholder={t("password.confirm_placeholder")}
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
             </div>
 
             {isArchived && user ? (

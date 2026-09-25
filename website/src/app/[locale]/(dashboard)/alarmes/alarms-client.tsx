@@ -29,6 +29,7 @@ import { AlarmDetailsDialog } from "./_components/alarm-details-dialog";
 import { AlarmStatusBadge } from "./_components/alarm-status-badge";
 import { AlarmStatusTabs, type AlarmStatus } from "./_components/alarm-status-tabs";
 import { AlarmTypeFilter, type AlarmRowType } from "./_components/alarm-type-filter";
+import { formatAlarmGroupNames } from "./alarm-groups";
 
 interface Props {
   alarms: AlarmWithDetails[];
@@ -59,6 +60,8 @@ interface AlarmRow {
   triggeredAt: string | Date;
   status: string;
   comment: string | null;
+  groups: string;
+  searchText: string;
 }
 
 const hasConfiguredThresholds = (alarm: { sensor: AlarmWithDetails["sensor"] }): boolean => {
@@ -336,6 +339,25 @@ export function AlarmsClient({ alarms, statusFilter, initialLocationId = null, s
       },
     },
     {
+      accessorKey: "groups",
+      header: t("table.columns.group"),
+      size: 150,
+      meta: {
+        exportLabel: t("table.columns.group"),
+        exportValue: (row: AlarmRow) => row.groups || "-",
+      },
+      cell: ({ row }) => {
+        const groups = row.original.groups;
+        return groups ? (
+          <div className="max-w-48 text-sm" title={groups}>
+            <span className="line-clamp-2">{groups}</span>
+          </div>
+        ) : (
+          <span className="text-sm text-muted-foreground">-</span>
+        );
+      },
+    },
+    {
       accessorKey: "triggeredAt",
       header: t("table.columns.triggered_at"),
       meta: {
@@ -397,17 +419,28 @@ export function AlarmsClient({ alarms, statusFilter, initialLocationId = null, s
       if (typeFilters.length === 0) return true;
       return typeFilters.some((type) => alarm.type === type);
     })
-    .map((alarm) => ({
-      id: alarm.id,
-      type: alarm.type,
-      location: alarm.location,
-      sensor: alarm.sensor,
-      value: alarm.value,
-      threshold: alarm.threshold,
-      triggeredAt: alarm.triggeredAt,
-      status: alarm.status,
-      comment: alarm.comment,
-    }));
+    .map((alarm) => {
+      const groups = formatAlarmGroupNames(alarm.location.groupNames ?? []);
+
+      return {
+        id: alarm.id,
+        type: alarm.type,
+        location: alarm.location,
+        sensor: alarm.sensor,
+        value: alarm.value,
+        threshold: alarm.threshold,
+        triggeredAt: alarm.triggeredAt,
+        status: alarm.status,
+        comment: alarm.comment,
+        groups,
+        searchText: [
+          alarm.location.name,
+          alarm.sensor.name,
+          groups,
+          alarm.status,
+        ].filter(Boolean).join(" "),
+      };
+    });
 
   useEffect(() => {
     setVisibleRowCount(tableData.length);
@@ -558,6 +591,7 @@ export function AlarmsClient({ alarms, statusFilter, initialLocationId = null, s
           <TanStackTable<AlarmRow>
             columns={columns}
             data={tableData}
+          searchField="searchText"
           searchPlaceholder={t("table.search_placeholder")}
           pageSize={500}
           isLoading={isRefreshing}

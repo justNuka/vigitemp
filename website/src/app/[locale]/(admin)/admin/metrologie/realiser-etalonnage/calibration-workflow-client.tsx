@@ -54,6 +54,7 @@ import {
 } from "@/components/ui/table"
 import { useAdjustmentSensors, type AdjustmentSensorRow } from "@/hooks/useAdjustmentSensors"
 import { useIntercomparisonMedia } from "@/hooks/useIntercomparisonMedia"
+import { useModules } from "@/hooks/useModules"
 import { useStandards } from "@/hooks/useStandards"
 import { formatDbDateTime } from "@/lib/date-display"
 import { fetchJson, getJson } from "@/lib/http"
@@ -68,6 +69,8 @@ import type {
 } from "@/lib/metrology-calibration-session"
 import type { MetrologyPreviewReading } from "@/lib/metrology-reading-preview"
 import { MetrologySubpagesCards } from "../_components/metrology-subpages-cards"
+import { MetrologyStartFeedback } from "../_components/metrology-start-feedback"
+import { MetrologyStartSummaryDialog } from "../_components/metrology-start-summary-dialog"
 import { CalibrationCoefficientsCard } from "./calibration-coefficients-card"
 
 type Step = "selection" | "calibration"
@@ -75,6 +78,7 @@ type SessionPayload = { session: PublicCalibrationSession | null }
 type PreviewPayload = {
   readings: Record<number, MetrologyPreviewReading>
   standardReading: CalibrationReading | null
+  coefficientSync: { sensorIds: number[] }
   readAt: string
 }
 
@@ -111,12 +115,14 @@ function getDownloadFileName(contentDisposition: string | null, fallback: string
 export function CalibrationWorkflowClient() {
   const t = useTranslations("metrologyAdmin.calibrationPage")
   const tCommon = useTranslations("common")
+  const tStartSummary = useTranslations("metrologyAdmin.startSummary")
   const tTables = useTranslations("tables")
   const { user } = useAppAccess()
   const queryClient = useQueryClient()
   const { data: sensors = [], isLoading: sensorsLoading } = useAdjustmentSensors()
   const { data: standards = [], isLoading: standardsLoading } = useStandards()
   const { data: media = [], isLoading: mediaLoading } = useIntercomparisonMedia(true)
+  const { data: modules = [] } = useModules(true)
 
   const [step, setStep] = useState<Step>("selection")
   const [selectedSensorIds, setSelectedSensorIds] = useState<number[]>([])
@@ -125,6 +131,7 @@ export function CalibrationWorkflowClient() {
   const [selectedMediumId, setSelectedMediumId] = useState("")
   const [addSensorSearch, setAddSensorSearch] = useState("")
   const [addSensorDialogOpen, setAddSensorDialogOpen] = useState(false)
+  const [showStartSummary, setShowStartSummary] = useState(false)
   const [previewReadingEnabled, setPreviewReadingEnabled] = useState(false)
   const [showCalculationDetails, setShowCalculationDetails] = useState(false)
   const [isExportingCalibrationZip, setIsExportingCalibrationZip] = useState(false)
@@ -182,6 +189,12 @@ export function CalibrationWorkflowClient() {
   const displayedStandardReading = running
     ? session?.latestStandardReading ?? null
     : previewReadingQuery.data?.standardReading ?? null
+
+  useEffect(() => {
+    if ((previewReadingQuery.data?.coefficientSync.sensorIds.length ?? 0) > 0) {
+      void queryClient.invalidateQueries({ queryKey: ["metrology-adjustment-sensors"] })
+    }
+  }, [previewReadingQuery.data, queryClient])
 
   useEffect(() => {
     if (!session) return
@@ -284,6 +297,14 @@ export function CalibrationWorkflowClient() {
     () => media.find((item) => String(item.Id_Milieu) === selectedMediumId) ?? null,
     [media, selectedMediumId],
   )
+  const selectedStandard = useMemo(
+    () => standards.find((item) => String(item.Id_Etalon) === selectedStandardId) ?? null,
+    [selectedStandardId, standards],
+  )
+  const selectedModule = useMemo(() => {
+    if (!selectedStandard?.Id_Module) return null
+    return modules.find((item) => item.Id_Module === selectedStandard.Id_Module) ?? null
+  }, [modules, selectedStandard?.Id_Module])
   const lockedUnit = useMemo(() => {
     const knownSelectedUnits = selectedSensors
       .map((sensor) => normalizeUnit(sensor.unit))
@@ -294,7 +315,8 @@ export function CalibrationWorkflowClient() {
   const eligibleStandards = useMemo(
     () => standards.filter((standard) => {
       if (standard.Est_Sonde_Externe) return false
-      if ((standard.Type_Etalon ?? "").trim().toUpperCase() !== "SPET") return false
+      const standardType = (standard.Type_Etalon ?? "").trim().toUpperCase()
+      if (standardType !== "SPET" && standardType !== "SEF") return false
       const standardUnit = normalizeUnit(standard.Unite)
       return lockedUnit === null || standardUnit === null || standardUnit === lockedUnit
     }),
@@ -423,10 +445,10 @@ export function CalibrationWorkflowClient() {
 
   const error =
     exportError ??
-    startOperationMutation.error ??
-    previewReadingQuery.error ??
     stopPreviewMutation.error ??
     stopMutation.error
+
+  const startOrReadingError = startOperationMutation.error ?? previewReadingQuery.error
 
   const canStartOperation =
     !running &&
@@ -662,6 +684,12 @@ export function CalibrationWorkflowClient() {
                     <CardContent className="space-y-3">
                       <Badge variant={running ? "default" : "secondary"}>{phaseLabel}</Badge>
 
+                      <MetrologyStartFeedback
+                        error={startOrReadingError}
+                        isPending={startOperationMutation.isPending}
+                        sensors={selectedSensors}
+                      />
+
                       <Button
                         type="button"
                         variant="outline"
@@ -709,7 +737,7 @@ export function CalibrationWorkflowClient() {
                           disabled={!canStartOperation || previewReadingQuery.isFetching}
                           onClick={() => {
                             setPreviewReadingEnabled(false)
-                            startOperationMutation.mutate()
+                            setShowStartSummary(true)
                           }}
                         >
                           <Play className="mr-2 h-4 w-4" />
@@ -842,6 +870,54 @@ export function CalibrationWorkflowClient() {
                     </div>
                   </CardContent>
                 </Card>
+
+                <MetrologyStartSummaryDialog
+                  open={showStartSummary}
+                  onOpenChange={setShowStartSummary}
+                  pending={startOperationMutation.isPending}
+                  operationLabel={tStartSummary("operations.calibration")}
+                  operator={operatorValue}
+                  sensors={selectedSensors.map((sensor) => ({
+                    serialNumber: sensor.serialNumber,
+                    locationName: sensor.locationName,
+                    moduleName: sensor.moduleName,
+                  }))}
+                  standard={selectedStandard ? {
+                    serialNumber: selectedStandard.Etalon_Numero_Serie,
+                    type: selectedStandard.Type_Etalon,
+                    port: selectedModule?.Port_Serie ?? selectedStandard.Port_Serie,
+                    moduleName: selectedModule?.Module_Numero_Serie ?? null,
+                    networkHost: selectedModule?.Adresse_IP ?? null,
+                  } : null}
+                  mediumLabel={selectedMedium ? `${selectedMedium.Model ?? "-"} / ${selectedMedium.Reference ?? "-"}` : null}
+                  intervalLabel={tStartSummary("seconds", { count: previewIntervalMs / 1000 })}
+                  onConfirm={() => {
+                    startOperationMutation.mutate(undefined, {
+                      onSettled: () => setShowStartSummary(false),
+                    })
+                  }}
+                  labels={{
+                    title: tStartSummary("title"),
+                    description: tStartSummary("description"),
+                    operation: tStartSummary("fields.operation"),
+                    operator: tStartSummary("fields.operator"),
+                    sensors: tStartSummary("fields.sensors"),
+                    standard: tStartSummary("fields.standard"),
+                    standardType: tStartSummary("fields.standardType"),
+                    module: tStartSummary("fields.module"),
+                    connection: tStartSummary("fields.connection"),
+                    medium: tStartSummary("fields.medium"),
+                    interval: tStartSummary("fields.interval"),
+                    unassigned: tStartSummary("unassigned"),
+                    noModule: tStartSummary("warnings.noModule"),
+                    noIp: tStartSummary("warnings.noIp"),
+                    sefConnection: (host) => tStartSummary("connections.sef", { host }),
+                    serialConnection: (port) => tStartSummary("connections.serial", { port }),
+                    cancel: tStartSummary("actions.cancel"),
+                    confirm: tStartSummary("actions.confirm"),
+                    confirming: tStartSummary("actions.confirming"),
+                  }}
+                />
 
                 <Dialog
                   open={addSensorDialogOpen}
@@ -979,6 +1055,7 @@ export function CalibrationWorkflowClient() {
                               <TableHead className="text-white">{t("workflow.enhanced.mean_sensor")}</TableHead>
                               <TableHead className="text-white">{t("workflow.enhanced.accuracy_error")}</TableHead>
                               <TableHead className="text-white">{t("workflow.enhanced.uncertainty")}</TableHead>
+                              <TableHead className="text-white">{t("workflow.enhanced.report")}</TableHead>
                             </TableRow>
                           </TableHeader>
                           <TableBody>
@@ -991,6 +1068,13 @@ export function CalibrationWorkflowClient() {
                                   <TableCell>{formatCampaignValue(result.meanSensor, unit)}</TableCell>
                                   <TableCell>{formatCampaignValue(result.accuracyError, unit)}</TableCell>
                                   <TableCell>{formatCampaignValue(result.uncertainty, unit)}</TableCell>
+                                  <TableCell>
+                                    <Button asChild size="sm" variant="outline">
+                                      <a href={`/api/metrologie/etalonnage/report/${result.calibrationId}`}>
+                                        {t("workflow.enhanced.download_pdf")}
+                                      </a>
+                                    </Button>
+                                  </TableCell>
                                 </TableRow>
                               )
                             })}

@@ -23,6 +23,124 @@ La procédure complète d'upgrade des installations existantes est documentée d
 
 ## [Unreleased]
 
+Aucun changement supplémentaire documenté depuis la préparation du schéma 0.92.0.
+
+## [0.92.0] — 2026-09-25
+
+Cette révision ajoute les codes d'alarme critiques explicites `CB` / `CH`.
+
+### Colonnes `Type`
+
+Les trois colonnes suivantes passent de **VARCHAR(1)** à **VARCHAR(2)**, restent `NULL` et ne reçoivent aucune nouvelle valeur par défaut :
+
+- `t_alarme.Type` ;
+- `t_alarme_histo.Type` ;
+- `t_alarme_message.Type`.
+
+> Le retour terrain mentionnait `t_alarme_message_histo`. Cette table n'existe pas dans le schéma courant ; l'historique des alarmes est porté par `t_alarme_histo`.
+
+### Messages critiques
+
+Deux entrées sont ajoutées / mises à jour dans `t_alarme_message` :
+
+- `20 / CRITIQUE_BAS / CB` — « L'alarme a été déclenchée par un dépassement du seuil critique inférieur. »
+- `21 / CRITIQUE_HAUT / CH` — « L'alarme a été déclenchée par un dépassement du seuil critique supérieur. »
+
+### Trigger GSO
+
+- `TRG_GSO_BEF_UPD_LIEU_ALARME` évalue de nouveau les seuils critiques avant la logique temporisée normale.
+- Un déclenchement initial directement sous le seuil critique bas crée `CB` ; un déclenchement initial directement au-dessus du seuil critique haut crée `CH`.
+- Si une alarme `B` / `H` du même côté est déjà ouverte, elle reste la même ligne et conserve son type initial : le type décrit la cause du déclenchement et ne change pas rétroactivement.
+- `B/CB` et `H/CH` sont traités comme deux familles pour les suivis, transitions et fins d'alarme afin d'éviter les doublons actifs.
+- Les seeds et migrations MySQL / SQL Server réinstallent le même trigger GSO.
+
+### Seeds / migrations
+
+- Seed MySQL : version **0.92.0**, largeur des trois colonnes + messages 20/21.
+- Seed SQL Server : même contrat.
+- Migration MySQL : `db/migrations/0.92.0/mysql.sql`.
+- Migration SQL Server : `db/migrations/0.92.0/mssql.sql`.
+- Les deux migrations réinstallent également le trigger GSO critique correspondant au seed du même moteur.
+- `VERSION / SCHEMA_VERSION` passe à `0.92.0` uniquement après les modifications.
+
+## [0.91.1] — 2026-09-23
+
+Cette révision aligne le seed SQL Server sur les modifications déjà appliquées au seed MySQL et formalise leur migration pour les installations existantes.
+
+### `t_lieu_template` — types numériques
+
+Les neuf colonnes suivantes passent de `DECIMAL(10,2)` à `FLOAT` dans les deux moteurs :
+
+- `Consigne` ;
+- `Consigne_Sup` ;
+- `Consigne_Inf` ;
+- `Tolerance_Surveillance_Sup` ;
+- `Tolerance_Surveillance_Inf` ;
+- `Consigne_Sup_Pre_Alarme` ;
+- `Consigne_Inf_Pre_Alarme` ;
+- `Seuil_Critique_Haut` ;
+- `Seuil_Critique_Bas`.
+
+La nullabilité reste `NULL` et aucune valeur par défaut métier n'est ajoutée.
+
+### Trigger GSO
+
+Le trigger `TRG_GSO_BEF_UPD_LIEU_ALARME` n'évalue plus directement les seuils critiques `Seuil_Critique_Bas` / `Seuil_Critique_Haut`.
+
+Les variables, colonnes de curseur et branches de déclenchement immédiat correspondantes sont retirées du seed SQL Server afin de reproduire le comportement du seed MySQL courant.
+
+La logique historique restante est conservée : alarmes basse/haute temporisées, non-réponse, transitions, fins d'alarme et pré-alarmes.
+
+### Seeds / migrations
+
+- MySQL seed : version portée à **0.91.1** ; les changements métier préexistaient déjà dans le fichier.
+- SQL Server seed : types `FLOAT` + trigger GSO alignée + version **0.91.1**.
+- Migration MySQL : `db/migrations/0.91.1/mysql.sql`.
+- Migration SQL Server : `db/migrations/0.91.1/mssql.sql`.
+- Les deux migrations mettent `VERSION / SCHEMA_VERSION` à `0.91.1` uniquement après les modifications.
+
+## [0.91.0] — 2026-09-21
+
+Cette révision ajoute les seuils critiques de lieu utilisés par le Web 1.2.0 et le Serveur 1.1.0. Les seeds MySQL / SQL Server et les migrations d'installations existantes restent alignés.
+
+### Colonnes ajoutées
+
+| Table | Colonne | MySQL | SQL Server | Nullabilité / défaut | Rôle |
+| --- | --- | --- | --- | --- | --- |
+| `t_lieu` | `Seuil_Critique_Haut` | `float` | `FLOAT` | NULL, défaut NULL | valeur au-dessus de laquelle l'alarme haute doit partir immédiatement |
+| `t_lieu` | `Est_Seuil_Critique_Haut_Active` | `tinyint(1)` | `BIT` | NOT NULL, défaut `0` | active le seuil critique haut |
+| `t_lieu` | `Seuil_Critique_Bas` | `float` | `FLOAT` | NULL, défaut NULL | valeur au-dessous de laquelle l'alarme basse doit partir immédiatement |
+| `t_lieu` | `Est_Seuil_Critique_Bas_Active` | `tinyint(1)` | `BIT` | NOT NULL, défaut `0` | active le seuil critique bas |
+| `t_lieu_template` | `Seuil_Critique_Haut` | `decimal(10,2)` | `DECIMAL(10,2)` | NULL, défaut NULL | seuil critique haut recopiable depuis un template |
+| `t_lieu_template` | `Seuil_Critique_Bas` | `decimal(10,2)` | `DECIMAL(10,2)` | NULL, défaut NULL | seuil critique bas recopiable depuis un template |
+| `t_lieu_template` | `Est_Seuil_Critique_Haut_Active` | `tinyint(1)` | `BIT` | NOT NULL, défaut `0` | activation du seuil critique haut dans le template |
+| `t_lieu_template` | `Est_Seuil_Critique_Bas_Active` | `tinyint(1)` | `BIT` | NOT NULL, défaut `0` | activation du seuil critique bas dans le template |
+
+### Alarmes GSO
+
+- Le trigger historique `TRG_GSO_BEF_UPD_LIEU_ALARME` est remplacé sur MySQL et SQL Server afin d'évaluer les nouveaux seuils critiques avant la logique de retard d'alarme normale.
+- Un franchissement critique crée ou transitionne immédiatement vers une alarme `B` / `H` datée de la mesure courante.
+- Le type d'alarme historique reste donc compatible : aucun nouveau code d'alarme n'est introduit.
+- La logique normale, les pré-alarmes et les retards existants restent inchangés hors franchissement critique.
+
+### Migration des installations existantes
+
+- MySQL : `db/migrations/0.91.0/mysql.sql`.
+- SQL Server : `db/migrations/0.91.0/mssql.sql`.
+- Les scripts ajoutent les huit colonnes de manière conditionnelle, réinstallent le trigger GSO adapté puis mettent `VERSION / SCHEMA_VERSION` à `0.91.0`.
+- Le marqueur de version n'est mis à jour qu'après application des objets nécessaires à la fonctionnalité.
+- Les migrations `0.90.2` puis `0.91.0` doivent être exécutées dans l'ordre lorsqu'une base part d'une révision antérieure.
+
+### Données initiales
+
+- Le paramètre `SECURITE_EMAIL:SMTP_CONFIRME=false`, ajouté après le schéma 0.90.2 pour les nouvelles installations, est conservé dans les seeds 0.91.0.
+- Les installations historiques sans ce paramètre conservent le mécanisme de compatibilité Web existant ; aucune colonne SMTP supplémentaire n'est ajoutée par 0.91.0.
+
+## [0.90.2] — 2026-09-18
+
+Cette révision est le schéma / bootstrap de référence de la livraison produit **VigiSensys 1.0.0**. Le numéro BDD reste indépendant de la version Web/Serveur et n'est pas artificiellement porté à `1.0.0`.
+
+
 ### Objets et colonnes ajoutés — schéma 0.90.2
 
 | Table | Évolution | Colonnes ajoutées / définition |
@@ -76,6 +194,39 @@ Ces scripts regroupent l'ensemble des changements de schéma `0.90.2` : colonne 
 - `db/migrations/README.md`
 - `db/migrations/0.90.2/mysql.sql`
 - `db/migrations/0.90.2/mssql.sql`
+
+### Types et données initiales
+
+- Les seeds MySQL et SQL Server incluent les éléments nécessaires au support des étalons SEF utilisés par les workflows de métrologie / Hotline.
+- Les valeurs initiales restent alignées entre les deux moteurs lorsque le modèle fonctionnel est commun.
+- Les libellés français ont été nettoyés sans modifier les codes techniques ni les identifiants métier.
+
+### Installation / encodage SQL Server
+
+- L'installateur Serveur exécute les seeds SQL Server en UTF-8 explicite avec `sqlcmd -f i:65001,o:65001`.
+- Cette fiabilisation ne modifie pas le schéma mais évite les mojibakes des libellés accentués sur les nouvelles installations.
+- Les bases historiques peuvent être réparées côté application pour les chaînes d'autorisation reconnues comme corrompues, sans réécriture des textes déjà corrects.
+
+### Better Auth
+
+- Les tables `t_auth_user`, `t_auth_session`, `t_auth_account` et `t_auth_verification` restent préparatoires et compatibles avec l'activation opt-in du runtime Better Auth.
+- Leur présence dans le schéma `0.90.2` n'active aucune authentification supplémentaire à elle seule.
+
+### Compatibilité VigiSensys 1.0.0
+
+- Web `1.0.0` et Serveur `1.0.0` utilisent cette révision de schéma comme baseline de la livraison.
+- Les migrations `db/migrations/0.90.2/mysql.sql` et `db/migrations/0.90.2/mssql.sql` restent la voie d'upgrade des installations existantes antérieures à `0.90.2`.
+- Aucun bump de `SCHEMA_VERSION` n'est effectué uniquement pour aligner visuellement le numéro avec la release produit.
+
+### PR principales
+
+- #67 — colonne / flux de synchronisation des coefficients métrologie.
+- #76 — nettoyage des libellés et artefacts des seeds.
+- #90 — préparation des seeds `0.90.2` et tables Better Auth.
+- #92 — formalisation des migrations d'installations existantes.
+- #101 — fondation Better Auth opt-in utilisant les tables préparées.
+- #110 — données de seed liées au support SEF.
+- #124 — fiabilisation UTF-8 de l'application des scripts SQL Server.
 
 ## [0.90.1] — baseline de référence au 2026-08-27
 

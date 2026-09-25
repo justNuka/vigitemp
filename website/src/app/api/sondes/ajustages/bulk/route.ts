@@ -1,10 +1,12 @@
-﻿import { NextRequest } from "next/server";
+import { NextRequest } from "next/server";
 import { z } from "zod";
 import { apiError, apiOk } from "@/lib/api-response";
 import { prisma } from "@/lib/prisma";
 import { getRequestContext } from "@/lib/api-logger";
+import { hasMainDbColumn } from "@/lib/db-schema";
 import { withOneOrHigherAnyAuthorizationLogging } from "@/lib/license-guards";
 import { log } from "@/lib/logger";
+import { getTableReference, isMssqlProvider, quoteIdentifier } from "@/lib/metrology-db";
 import { getPermissionAliases } from "@/lib/permissions";
 import {
   buildImportedSensorStorageIdentity,
@@ -12,10 +14,18 @@ import {
   resolveImportedSensorIdentity,
 } from "@/lib/sensor-naming";
 import { parseDbDateTime } from "@/lib/date-display";
+import { isLegacyGenericSensorTypeCode } from "@/lib/sensor-types";
+import {
+  buildAdjustmentImportModuleAssignments,
+  resolveEffectiveImportModuleId,
+} from "@/lib/adjustment-import-module-assignment";
+
+const COEFFICIENT_DIRTY_COLUMN = "Coeffs_Modifies_Depuis_Derniere_Mesure";
 
 const rowSchema = z.object({
   id: z.string().min(1),
   file: z.string().min(1),
+  moduleId: z.number().int().positive().nullable().optional(),
   insertData: z.object({
     Date_Heure_Ajustage: z.string().nullable(),
     Sonde_Numero_Serie: z.string().nullable(),
@@ -44,10 +54,17 @@ const bodySchema = z.object({
   moduleId: z.number().int().positive().optional(),
   rows: z.array(rowSchema).min(1),
   confirmOverwrite: z.boolean().optional(),
+  sendCoefficients: z.boolean().optional().default(false),
 });
 
 const isMeaningfulOffset = (value: number | null | undefined) =>
   value !== null && value !== undefined && Math.abs(value) > 0.0000001;
+
+function buildCoefficientDirtyUpdateSql() {
+  return isMssqlProvider()
+    ? `UPDATE ${getTableReference("t_ajustage")} SET ${quoteIdentifier(COEFFICIENT_DIRTY_COLUMN)} = @P1 WHERE ${quoteIdentifier("Id_Ajustage")} = @P2`
+    : `UPDATE ${getTableReference("t_ajustage")} SET ${quoteIdentifier(COEFFICIENT_DIRTY_COLUMN)} = ? WHERE ${quoteIdentifier("Id_Ajustage")} = ?`;
+}
 
 export const POST = withOneOrHigherAnyAuthorizationLogging(getPermissionAliases("METROLOGY_OPERATION_ACCESS"), async (req: NextRequest, ctx) => {
   const { ip } = getRequestContext(req);
@@ -55,24 +72,28 @@ export const POST = withOneOrHigherAnyAuthorizationLogging(getPermissionAliases(
   try {
     const body = await req.json();
     const validated = bodySchema.parse(body);
-    const selectedModuleId = validated.moduleId ?? null;
+    const legacyModuleId = validated.moduleId ?? null;
 
     log.info("ADJUSTMENT_IMPORT", "Bulk adjustment import requested", {
       user: ctx.user.username,
       userId: ctx.user.userId,
       ip,
       files: validated.rows.length,
-      moduleId: selectedModuleId,
+      legacyModuleId,
+      sendCoefficients: validated.sendCoefficients,
     });
 
     const sensorTypes = await prisma.t_sonde_type.findMany({
       select: { Sonde_Type: true, Famille_Sonde: true },
     });
-    const knownTypeCodes = sensorTypes
+    const importSensorTypes = sensorTypes.filter(
+      (row) => !isLegacyGenericSensorTypeCode(row.Sonde_Type),
+    );
+    const knownTypeCodes = importSensorTypes
       .map((row) => row.Sonde_Type)
       .filter((row): row is string => Boolean(row));
     const familyByType = new Map(
-      sensorTypes
+      importSensorTypes
         .filter((row): row is typeof row & { Sonde_Type: string } => Boolean(row.Sonde_Type))
         .map((row) => [row.Sonde_Type, row.Famille_Sonde]),
     );
@@ -86,6 +107,7 @@ export const POST = withOneOrHigherAnyAuthorizationLogging(getPermissionAliases(
         : null;
       return {
         ...row,
+        requestedModuleId: row.moduleId === undefined ? legacyModuleId : row.moduleId,
         sensorTypeCode: sensorIdentity?.typeCode ?? null,
         sensorAddress: storageIdentity?.address ?? null,
         insertData: {
@@ -150,34 +172,50 @@ export const POST = withOneOrHigherAnyAuthorizationLogging(getPermissionAliases(
       typeBySerial.get(serial) ?? resolveImportedSensorIdentity(serial, "", knownTypeCodes).typeCode;
     const isGsoSerial = (serial: string) => familyByType.get(getSerialTypeCode(serial)) === "GSO";
 
-    const [existingAdjustments, sensorsWithOffset, selectedModule] = await Promise.all([
-      serials.length > 0
-        ? prisma.t_ajustage.groupBy({
-            by: ["Sonde_Numero_Serie"],
-            where: { Sonde_Numero_Serie: { in: serials } },
-          })
-        : Promise.resolve([]),
+    const { assignments: requestedModuleBySerial, conflicts: moduleAssignmentConflicts } =
+      buildAdjustmentImportModuleAssignments(
+        normalizedRows.map((row) => ({
+          sensorSerial: row.insertData.Sonde_Numero_Serie?.trim() ?? null,
+          moduleId: row.requestedModuleId ?? null,
+        })),
+      );
+    if (moduleAssignmentConflicts.length > 0) {
+      return apiError(400, "conflicting_module_assignments", "Une même sonde ne peut pas être affectée à plusieurs modules pendant le même import", {
+        sensors: moduleAssignmentConflicts,
+      });
+    }
+    const requestedModuleIds = Array.from(
+      new Set(Array.from(requestedModuleBySerial.values()).filter((id): id is number => id != null)),
+    );
+
+    const [sensorsWithOffset, requestedModules] = await Promise.all([
       serials.length > 0
         ? prisma.t_sonde.findMany({
             where: { Sonde_Numero_Serie: { in: serials } },
-            select: { Sonde_Numero_Serie: true, Sonde_Offset: true, Id_Module: true },
+            select: {
+              Id_Sonde: true,
+              Sonde_Numero_Serie: true,
+              Adresse_Sonde: true,
+              Sonde_Offset: true,
+              Id_Module: true,
+            },
           })
         : Promise.resolve([]),
-      selectedModuleId
-        ? prisma.t_module.findUnique({
-            where: { Id_Module: selectedModuleId },
-            select: { Id_Module: true, Port_Serie: true },
+      requestedModuleIds.length > 0
+        ? prisma.t_module.findMany({
+            where: { Id_Module: { in: requestedModuleIds } },
+            select: { Id_Module: true, Port_Serie: true, Module_Numero_Serie: true, Emplacement: true },
           })
-        : Promise.resolve(null),
+        : Promise.resolve([]),
     ]);
 
-    if (selectedModuleId && !selectedModule) {
-      return apiError(400, "invalid_module", "Module sélectionné introuvable");
+    const requestedModuleIdSet = new Set(requestedModules.map((moduleRow) => moduleRow.Id_Module));
+    const missingModuleIds = requestedModuleIds.filter((moduleId) => !requestedModuleIdSet.has(moduleId));
+    if (missingModuleIds.length > 0) {
+      return apiError(400, "invalid_module", "Un ou plusieurs modules sélectionnés sont introuvables", {
+        moduleIds: missingModuleIds,
+      });
     }
-
-    const adjustmentSerials = existingAdjustments
-      .map((entry) => entry.Sonde_Numero_Serie)
-      .filter((serial): serial is string => !!serial);
 
     const offsetRows = sensorsWithOffset.filter((sensor) => isMeaningfulOffset(sensor.Sonde_Offset));
     const offsetSerials = offsetRows
@@ -187,16 +225,48 @@ export const POST = withOneOrHigherAnyAuthorizationLogging(getPermissionAliases(
       (sensor) => sensor.Id_Module !== null && sensor.Id_Module !== undefined,
     ).length;
 
-    if ((adjustmentSerials.length > 0 || offsetSerials.length > 0) && !validated.confirmOverwrite) {
+
+    const existingSensorBySerial = new Map(
+      sensorsWithOffset
+        .filter((sensor) => sensor.Sonde_Numero_Serie)
+        .map((sensor) => [sensor.Sonde_Numero_Serie as string, sensor]),
+    );
+    const existingModuleIds = Array.from(
+      new Set(sensorsWithOffset.map((sensor) => sensor.Id_Module).filter((id): id is number => id != null)),
+    );
+    const additionalExistingModuleIds = existingModuleIds.filter((moduleId) => !requestedModuleIdSet.has(moduleId));
+    const existingModules = additionalExistingModuleIds.length
+      ? await prisma.t_module.findMany({
+          where: { Id_Module: { in: additionalExistingModuleIds } },
+          select: { Id_Module: true, Port_Serie: true, Module_Numero_Serie: true, Emplacement: true },
+        })
+      : [];
+    const moduleById = new Map(
+      [...requestedModules, ...existingModules].map((moduleRow) => [moduleRow.Id_Module, moduleRow]),
+    );
+
+    // Le choix d'un module reste une affectation BDD uniquement. L'import bulk ne doit
+    // plus contacter le matériel : aucune lecture DCON ni écriture ECON n'est déclenchée ici.
+    const hasCoefficientDirtyColumn = await hasMainDbColumn("t_ajustage", COEFFICIENT_DIRTY_COLUMN);
+    if (validated.sendCoefficients && !hasCoefficientDirtyColumn) {
+      return apiError(
+        409,
+        "coefficient_sync_schema_required",
+        "La base doit être migrée en version 0.90.2 avant de programmer l'envoi des coefficients.",
+      );
+    }
+    const coefficientDirtyUpdateSql = hasCoefficientDirtyColumn ? buildCoefficientDirtyUpdateSql() : null;
+
+    if (offsetSerials.length > 0 && !validated.confirmOverwrite) {
       log.warn("ADJUSTMENT_IMPORT", "Confirmation required before overwrite", {
         user: ctx.user.username,
         userId: ctx.user.userId,
         ip,
-        sensorsWithAdjustment: adjustmentSerials.length,
+        sensorsWithAdjustment: 0,
         sensorsWithOffset: offsetSerials.length,
       });
       return apiError(409, "confirmation_required", "Confirmation requise avant insertion", {
-        sensorsWithAdjustment: adjustmentSerials,
+        sensorsWithAdjustment: [],
         sensorsWithOffset: offsetRows,
       });
     }
@@ -212,7 +282,11 @@ export const POST = withOneOrHigherAnyAuthorizationLogging(getPermissionAliases(
 
     const insertedIds: string[] = [];
     const skippedIds: string[] = [];
+    let overwrittenAdjustments = 0;
     const insertedSerials = new Set<string>();
+    const importedAdjustmentIdsBySerial = new Map<string, Set<number>>();
+    const coefficientSyncQueuedSerials = new Set<string>();
+    const coefficientSyncSkippedSerials = new Set<string>();
     let invalidatedEtalonnages = 0;
     let invalidatedEtalonnageMeasures = 0;
 
@@ -220,12 +294,17 @@ export const POST = withOneOrHigherAnyAuthorizationLogging(getPermissionAliases(
       for (const serial of serials) {
         const typeCode = getSerialTypeCode(serial);
         const gso = familyByType.get(typeCode) === "GSO";
+        const requestedModuleId = requestedModuleBySerial.get(serial) ?? null;
+        const requestedModule = requestedModuleId ? moduleById.get(requestedModuleId) ?? null : null;
         await tx.t_sonde.updateMany({
           where: { Sonde_Numero_Serie: serial },
           data: {
             Sonde_Type: typeCode,
             Est_Sonde_GSO: gso,
             ...(gso && addressBySerial.has(serial) ? { Adresse_Sonde: addressBySerial.get(serial) } : {}),
+            ...(!existingSensorBySerial.get(serial)?.Id_Module && requestedModule
+              ? { Id_Module: requestedModule.Id_Module, Port_Serie: requestedModule.Port_Serie }
+              : {}),
           },
         });
       }
@@ -248,6 +327,8 @@ export const POST = withOneOrHigherAnyAuthorizationLogging(getPermissionAliases(
           await tx.t_sonde.createMany({
             data: serialsStillMissing.map((serial) => {
               const gso = isGsoSerial(serial);
+              const requestedModuleId = requestedModuleBySerial.get(serial) ?? null;
+              const requestedModule = requestedModuleId ? moduleById.get(requestedModuleId) ?? null : null;
               return {
                 Sonde_Numero_Serie: serial,
                 Sonde_Type: getSerialTypeCode(serial),
@@ -257,19 +338,14 @@ export const POST = withOneOrHigherAnyAuthorizationLogging(getPermissionAliases(
                 Est_Sonde_GSO: gso,
                 Surveillance_Etat: "D",
                 Sonde_Offset: 0,
-                Id_Module: selectedModule?.Id_Module ?? null,
-                Port_Serie: selectedModule?.Port_Serie ?? null,
+                Id_Module: requestedModule?.Id_Module ?? null,
+                Port_Serie: requestedModule?.Port_Serie ?? null,
               };
             }),
           });
         }
       }
 
-      if (validated.confirmOverwrite && adjustmentSerials.length > 0) {
-        await tx.t_ajustage.deleteMany({
-          where: { Sonde_Numero_Serie: { in: adjustmentSerials } },
-        });
-      }
 
       if (validated.confirmOverwrite && offsetSerials.length > 0) {
         await tx.t_sonde.updateMany({
@@ -278,37 +354,12 @@ export const POST = withOneOrHigherAnyAuthorizationLogging(getPermissionAliases(
         });
       }
 
-      if (serials.length > 0) {
-        await tx.t_lieu.updateMany({
-          where: { Sonde_Numero_Serie: { in: serials } },
-          data: { Infos_Modifiees_Depuis_Derniere_Mesure: true },
-        });
-      }
-
       for (const row of normalizedRows) {
         const data = row.insertData;
         const dateAjustage = parseDbDateTime(data.Date_Heure_Ajustage);
         const dateCertif = parseDbDateTime(data.SE_Date_Certif);
 
-        const existing = await tx.t_ajustage.findFirst({
-          where: {
-            Sonde_Numero_Serie: data.Sonde_Numero_Serie,
-            Date_Heure_Ajustage: dateAjustage,
-            Coeff_X: data.Coeff_X,
-            Coeff_Constant: data.Coeff_Constant,
-            Mesure_Etalon1: data.Mesure_Etalon1,
-            Mesure_Etalon2: data.Mesure_Etalon2,
-          },
-          select: { Id_Ajustage: true },
-        });
-
-        if (existing) {
-          skippedIds.push(row.id);
-          continue;
-        }
-
-        await tx.t_ajustage.create({
-          data: {
+        const adjustmentData = {
             Date_Heure_Ajustage: dateAjustage,
             Sonde_Numero_Serie: data.Sonde_Numero_Serie,
             Coeff_X2: data.Coeff_X2 ?? 0,
@@ -329,13 +380,75 @@ export const POST = withOneOrHigherAnyAuthorizationLogging(getPermissionAliases(
             Ancienne_Mesure2: data.Ancienne_Mesure2,
             Nouvelle_Mesure1: data.Nouvelle_Mesure1,
             Nouvelle_Mesure2: data.Nouvelle_Mesure2,
+          };
+
+        const existing = await tx.t_ajustage.findFirst({
+          where: {
+            Sonde_Numero_Serie: data.Sonde_Numero_Serie,
+            ...(dateAjustage ? { Date_Heure_Ajustage: dateAjustage } : {}),
           },
+          orderBy: [{ Date_Heure_Ajustage: "desc" }, { Id_Ajustage: "desc" }],
+          select: { Id_Ajustage: true },
         });
+
+        const savedAdjustment = existing
+          ? await tx.t_ajustage.update({
+              where: { Id_Ajustage: existing.Id_Ajustage },
+              data: adjustmentData,
+              select: { Id_Ajustage: true },
+            })
+          : await tx.t_ajustage.create({
+              data: adjustmentData,
+              select: { Id_Ajustage: true },
+            });
+
+        if (existing) overwrittenAdjustments += 1;
+
+        if (coefficientDirtyUpdateSql) {
+          // Un import non coché doit neutraliser un ancien dirty flag sur la ligne
+          // remplacée ; sinon les coefficients importés pourraient être envoyés sans
+          // action explicite de l'opérateur.
+          await tx.$executeRawUnsafe(coefficientDirtyUpdateSql, 0, savedAdjustment.Id_Ajustage);
+        }
 
         if (data.Sonde_Numero_Serie) {
           insertedSerials.add(data.Sonde_Numero_Serie);
+          const adjustmentIds = importedAdjustmentIdsBySerial.get(data.Sonde_Numero_Serie) ?? new Set<number>();
+          adjustmentIds.add(savedAdjustment.Id_Ajustage);
+          importedAdjustmentIdsBySerial.set(data.Sonde_Numero_Serie, adjustmentIds);
         }
         insertedIds.push(row.id);
+      }
+
+      if (validated.sendCoefficients && coefficientDirtyUpdateSql) {
+        for (const [serial, importedAdjustmentIds] of importedAdjustmentIdsBySerial) {
+          if (isGsoSerial(serial)) continue;
+
+          const existingSensor = existingSensorBySerial.get(serial);
+          const requestedModuleId = requestedModuleBySerial.get(serial) ?? null;
+          const effectiveModuleId = resolveEffectiveImportModuleId(existingSensor?.Id_Module, requestedModuleId);
+          const modulePort = effectiveModuleId ? moduleById.get(effectiveModuleId)?.Port_Serie?.trim() : null;
+          if (!effectiveModuleId || !modulePort) {
+            coefficientSyncSkippedSerials.add(serial);
+            continue;
+          }
+
+          const latestAdjustment = await tx.t_ajustage.findFirst({
+            where: { Sonde_Numero_Serie: serial },
+            orderBy: [{ Date_Heure_Ajustage: "desc" }, { Id_Ajustage: "desc" }],
+            select: { Id_Ajustage: true },
+          });
+
+          if (!latestAdjustment || !importedAdjustmentIds.has(latestAdjustment.Id_Ajustage)) {
+            // Ne jamais armer un ajustage plus récent qui ne fait pas partie du lot :
+            // l'opérateur a demandé l'envoi des coefficients du XML importé.
+            coefficientSyncSkippedSerials.add(serial);
+            continue;
+          }
+
+          await tx.$executeRawUnsafe(coefficientDirtyUpdateSql, 1, latestAdjustment.Id_Ajustage);
+          coefficientSyncQueuedSerials.add(serial);
+        }
       }
 
       const insertedSerialList = Array.from(insertedSerials);
@@ -369,6 +482,9 @@ export const POST = withOneOrHigherAnyAuthorizationLogging(getPermissionAliases(
       createdSensorsFromAdjustment: serialsToCreate.length,
       invalidatedEtalonnages,
       invalidatedEtalonnageMeasures,
+      sendCoefficients: validated.sendCoefficients,
+      coefficientSyncQueuedCount: coefficientSyncQueuedSerials.size,
+      coefficientSyncSkippedCount: coefficientSyncSkippedSerials.size,
     })
 
     log.audit("CA", {
@@ -381,10 +497,15 @@ export const POST = withOneOrHigherAnyAuthorizationLogging(getPermissionAliases(
         inserted: insertedIds.length,
         skipped: skippedIds.length,
         createdSensorsFromAdjustment: serialsToCreate.length,
-        overwrittenAdjustments: validated.confirmOverwrite ? adjustmentSerials.length : 0,
+        overwrittenAdjustments,
         clearedOffsets: validated.confirmOverwrite ? offsetSerials.length : 0,
         invalidatedEtalonnages,
         invalidatedEtalonnageMeasures,
+        sendCoefficients: validated.sendCoefficients,
+        coefficientSyncQueuedCount: coefficientSyncQueuedSerials.size,
+        coefficientSyncQueuedSerials: Array.from(coefficientSyncQueuedSerials).slice(0, 20),
+        coefficientSyncSkippedCount: coefficientSyncSkippedSerials.size,
+        coefficientSyncSkippedSerials: Array.from(coefficientSyncSkippedSerials).slice(0, 20),
         serials: serials.slice(0, 10),
         fileNames: validated.rows.slice(0, 10).map((row) => row.file),
       },
@@ -396,12 +517,16 @@ export const POST = withOneOrHigherAnyAuthorizationLogging(getPermissionAliases(
       skipped: skippedIds.length,
       insertedIds,
       skippedIds,
-      overwrittenAdjustments: validated.confirmOverwrite ? adjustmentSerials.length : 0,
+      overwrittenAdjustments,
       clearedOffsets: validated.confirmOverwrite ? offsetSerials.length : 0,
       createdSensorsFromAdjustment: serialsToCreate.length,
       existingSensorsWithModule,
       invalidatedEtalonnages,
       invalidatedEtalonnageMeasures,
+      coefficientSyncQueuedCount: coefficientSyncQueuedSerials.size,
+      coefficientSyncQueuedSerials: Array.from(coefficientSyncQueuedSerials),
+      coefficientSyncSkippedCount: coefficientSyncSkippedSerials.size,
+      coefficientSyncSkippedSerials: Array.from(coefficientSyncSkippedSerials),
     });
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -432,4 +557,3 @@ export const POST = withOneOrHigherAnyAuthorizationLogging(getPermissionAliases(
     return apiError(500, "bulk_import_failed", "Erreur lors de l'insertion en base");
   }
 });
-

@@ -109,6 +109,7 @@ export async function sendMonthlyStatsReport({
     const result = await sendEmail({
       to: recipient,
       subject,
+      audit: { kind: "monthly_statistics", context: periodLabel },
       react: <MonthlyStatsReportEmail periodLabel={periodLabel} rows={rows} config={config} />,
     })
     if (result.success) sent += 1

@@ -21,10 +21,14 @@ export interface LocationTemplateRow {
   Tolerance_Surveillance_Inf?: number | null
   Consigne_Sup_Pre_Alarme?: number | null
   Consigne_Inf_Pre_Alarme?: number | null
+  Seuil_Critique_Haut?: number | null
+  Seuil_Critique_Bas?: number | null
   Est_Consigne_Sup_Active?: boolean | null
   Est_Consigne_Inf_Active?: boolean | null
   Est_Consigne_Sup_Pre_Alarme_Active?: boolean | null
   Est_Consigne_Inf_Pre_Alarme_Active?: boolean | null
+  Est_Seuil_Critique_Haut_Active?: boolean | null
+  Est_Seuil_Critique_Bas_Active?: boolean | null
   Est_Son_Alarme_Active?: boolean | null
   Est_Redeclenchement_Immediat?: boolean | null
   Nb_Mesures_Temporisation_Redeclenchement?: number | null

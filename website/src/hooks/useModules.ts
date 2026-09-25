@@ -7,6 +7,7 @@ export interface Module {
   Type_Module: number | null;
   Libelle_Type_Module: string | null;
   Port_Serie: string | null;
+  Adresse_IP: string | null;
   Emplacement: string | null;
   Id_Worker: number | null;
   Est_Module_GSO?: boolean | null;

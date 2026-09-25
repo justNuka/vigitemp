@@ -1,61 +1,75 @@
-"use client";
-import { showFormValidationToast } from "@/lib/form-toast"
+"use client"
 
-import { useState, useEffect, useMemo, useCallback } from "react";
-import { useMutation } from "@tanstack/react-query";
+import { useCallback, useEffect, useMemo, useState } from "react"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { CheckCircle2, Loader2, Mail, RotateCcw } from "lucide-react"
+import { useTranslations } from "next-intl"
+import { useForm } from "react-hook-form"
+import { toast } from "sonner"
+import { z } from "zod"
+
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Button } from "@/components/ui/button"
 import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { SwitchWithLoading } from "@/components/ui/switch-with-loading";
-import { toast } from "sonner";
-import { Loader2, Mail } from "lucide-react";
-import { getJson, postJson, putJson } from "@/lib/http";
-import { z } from "zod";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useTranslations } from "next-intl";
+} from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { showFormValidationToast } from "@/lib/form-toast"
+import { getJson, postJson, putJson } from "@/lib/http"
 
 interface SMTPConfigPayload {
-  enabled: boolean;
-  host: string;
-  port: number;
-  user: string;
-  password: string;
-  sender: string;
-  passwordConfigured?: boolean;
+  enabled: boolean
+  host: string
+  port: number
+  user: string
+  password: string
+  sender: string
+  passwordConfigured?: boolean
+  configured: boolean
+  confirmed: boolean
 }
 
 type SMTPConfigFormValues = {
-  enabled: boolean;
-  host: string;
-  port: number;
-  user: string;
-  password?: string;
-  sender: string;
-};
-
-interface SMTPConfigModalProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+  host: string
+  port: number
+  user: string
+  password?: string
+  sender: string
 }
 
-export function SMTPConfigModal({ open, onOpenChange }: SMTPConfigModalProps) {
-  const [isLoading, setIsLoading] = useState(false);
-  const [passwordConfigured, setPasswordConfigured] = useState(false);
-  const t = useTranslations("adminSettings.smtp_modal");
+type VerificationRequestResponse = {
+  recipient: string
+  expiresAt: string
+  expiresInMinutes: number
+}
+
+type SMTPConfigModalProps = {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+}
+
+export function SMTPConfigModal({
+  open,
+  onOpenChange,
+}: SMTPConfigModalProps) {
+  const [isLoading, setIsLoading] = useState(false)
+  const [passwordConfigured, setPasswordConfigured] = useState(false)
+  const [confirmed, setConfirmed] = useState(false)
+  const [mode, setMode] = useState<"config" | "verify">("config")
+  const [verificationRecipient, setVerificationRecipient] = useState("")
+  const queryClient = useQueryClient()
+  const t = useTranslations("adminSettings.smtp_modal")
 
   const smtpSchema = useMemo(
     () =>
       z.object({
-        enabled: z.boolean(),
         host: z.string().min(1, t("validation.host_required")),
         port: z
           .number()
@@ -69,316 +83,476 @@ export function SMTPConfigModal({ open, onOpenChange }: SMTPConfigModalProps) {
           .min(1, t("validation.sender_required"))
           .email(t("validation.email_invalid")),
       }),
-    [t]
-  );
+    [t],
+  )
 
-  const testSchema = useMemo(
+  const recipientSchema = useMemo(
     () =>
       z.object({
-        testEmail: z
+        verificationEmail: z
           .string()
           .min(1, t("validation.test_email_required"))
           .email(t("validation.email_invalid")),
       }),
-    [t]
-  );
+    [t],
+  )
+
+  const codeSchema = useMemo(
+    () =>
+      z.object({
+        code: z
+          .string()
+          .regex(/^\d{6}$/, t("verification.code_invalid")),
+      }),
+    [t],
+  )
 
   const {
     register,
     handleSubmit,
     reset,
-    setValue,
-    watch,
     formState: { errors, isSubmitting },
   } = useForm<SMTPConfigFormValues>({
     resolver: zodResolver(smtpSchema),
     defaultValues: {
-      enabled: false,
       host: "",
       port: 587,
       user: "",
       password: "",
       sender: "noreply@vigitemp.fr",
     },
-  });
-
-  const emailEnabled = watch("enabled");
+  })
 
   const {
-    register: registerTest,
-    handleSubmit: handleTestSubmit,
-    setValue: setTestValue,
-    formState: { errors: testErrors },
-  } = useForm<{ testEmail: string }>({
-    resolver: zodResolver(testSchema),
-    defaultValues: {
-      testEmail: "",
-    },
-  });
+    register: registerRecipient,
+    handleSubmit: handleRecipientSubmit,
+    reset: resetRecipient,
+    getValues: getRecipientValues,
+    formState: { errors: recipientErrors },
+  } = useForm<{ verificationEmail: string }>({
+    resolver: zodResolver(recipientSchema),
+    defaultValues: { verificationEmail: "" },
+  })
+
+  const {
+    register: registerCode,
+    handleSubmit: handleCodeSubmit,
+    reset: resetCode,
+    formState: { errors: codeErrors },
+  } = useForm<{ code: string }>({
+    resolver: zodResolver(codeSchema),
+    defaultValues: { code: "" },
+  })
+
+  const invalidateStatus = useCallback(async () => {
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: ["admin", "smtp-config"] }),
+      queryClient.invalidateQueries({
+        queryKey: ["admin", "services", "mailing"],
+      }),
+    ])
+  }, [queryClient])
 
   const fetchConfig = useCallback(async () => {
     try {
-      setIsLoading(true);
-      const payload = await getJson<SMTPConfigPayload>("/api/admin/configuration-smtp");
+      setIsLoading(true)
+      const payload = await getJson<SMTPConfigPayload>(
+        "/api/admin/configuration-smtp",
+      )
       reset({
-        enabled: payload.enabled,
         host: payload.host,
         port: payload.port,
         user: payload.user,
-        password: payload.password,
+        password: "",
         sender: payload.sender,
-      });
-      setPasswordConfigured(Boolean(payload.passwordConfigured));
-      setTestValue("testEmail", payload.sender || payload.user || "");
+      })
+      resetRecipient({
+        verificationEmail: payload.sender || payload.user || "",
+      })
+      resetCode({ code: "" })
+      setPasswordConfigured(Boolean(payload.passwordConfigured))
+      setConfirmed(payload.confirmed)
+      setMode("config")
     } catch (error) {
-      console.error("Erreur:", error);
-      toast.error(t("toasts.fetch_error"));
+      console.error("SMTP configuration fetch failed:", error)
+      toast.error(t("toasts.fetch_error"))
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  }, [reset, setTestValue, t]);
+  }, [reset, resetCode, resetRecipient, t])
 
-  // Charger la configuration a l'ouverture du modal
   useEffect(() => {
     if (open) {
-      void fetchConfig();
+      void fetchConfig()
     }
-  }, [fetchConfig, open]);
+  }, [fetchConfig, open])
 
-  const updateMutation = useMutation({
-    mutationFn: async (newConfig: SMTPConfigFormValues) => {
-      return putJson<{ message: string }>("/api/admin/configuration-smtp", newConfig);
+  const saveMutation = useMutation({
+    mutationFn: async ({
+      config,
+      verificationEmail,
+    }: {
+      config: SMTPConfigFormValues
+      verificationEmail: string
+    }) => {
+      const update = await putJson<{
+        message: string
+        changed: boolean
+        confirmed: boolean
+        verificationRequired: boolean
+      }>("/api/admin/configuration-smtp", config)
+
+      if (!update.verificationRequired) {
+        return {
+          update,
+          challenge: null as VerificationRequestResponse | null,
+        }
+      }
+
+      const challenge = await postJson<VerificationRequestResponse>(
+        "/api/admin/configuration-smtp/verification/request",
+        { toEmail: verificationEmail.trim() },
+      )
+
+      return { update, challenge }
     },
-    onSuccess: () => {
-      toast.success(t("toasts.update_success"));
-      onOpenChange(false);
+    onSuccess: async ({ update, challenge }) => {
+      await invalidateStatus()
+
+      if (!update.verificationRequired) {
+        toast.success(t("toasts.update_success"))
+        onOpenChange(false)
+        return
+      }
+
+      if (!challenge) return
+
+      setConfirmed(false)
+      setVerificationRecipient(challenge.recipient)
+      resetCode({ code: "" })
+      setMode("verify")
+      toast.success(
+        t("verification.code_sent", {
+          email: challenge.recipient,
+          minutes: challenge.expiresInMinutes,
+        }),
+      )
     },
     onError: (error) => {
-      toast.error(error instanceof Error ? error.message : t("toasts.update_error"));
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : t("toasts.verification_send_error"),
+      )
+      void Promise.all([invalidateStatus(), fetchConfig()])
     },
-  });
+  })
 
-  const testMutation = useMutation({
-    mutationFn: async (toEmail: string) => {
-      return postJson<{ message?: string }>("/api/email/test", { toEmail });
-    },
-    onSuccess: (data) => {
-      toast.success(data?.message || t("toasts.test_success"));
+  const confirmMutation = useMutation({
+    mutationFn: (code: string) =>
+      postJson<{ confirmed: true }>(
+        "/api/admin/configuration-smtp/verification/confirm",
+        { code },
+      ),
+    onSuccess: async () => {
+      setConfirmed(true)
+      await invalidateStatus()
+      toast.success(t("verification.confirmed"))
+      onOpenChange(false)
     },
     onError: (error) => {
-      toast.error(error instanceof Error ? error.message : t("toasts.test_error"));
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : t("verification.confirm_error"),
+      )
     },
-  });
+  })
 
-  const onSubmit = (data: SMTPConfigFormValues) => {
-    updateMutation.mutate(data);
-  };
+  const resendMutation = useMutation({
+    mutationFn: (toEmail: string) =>
+      postJson<VerificationRequestResponse>(
+        "/api/admin/configuration-smtp/verification/request",
+        { toEmail },
+      ),
+    onSuccess: (challenge) => {
+      setVerificationRecipient(challenge.recipient)
+      resetCode({ code: "" })
+      toast.success(
+        t("verification.code_sent", {
+          email: challenge.recipient,
+          minutes: challenge.expiresInMinutes,
+        }),
+      )
+    },
+    onError: (error) => {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : t("toasts.verification_send_error"),
+      )
+    },
+  })
 
-  const onTest = ({ testEmail }: { testEmail: string }) => {
-    testMutation.mutate(testEmail.trim());
-  };
+  const submitConfiguration = handleSubmit(
+    (config) =>
+      handleRecipientSubmit(({ verificationEmail }) => {
+        saveMutation.mutate({ config, verificationEmail })
+      })(),
+    (formErrors) => showFormValidationToast(formErrors),
+  )
+
+  const busy =
+    isLoading ||
+    isSubmitting ||
+    saveMutation.isPending ||
+    confirmMutation.isPending ||
+    resendMutation.isPending
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg border bg-white dark:bg-background shadow-xl sm:rounded-xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-h-[90vh] max-w-lg overflow-y-auto border bg-white shadow-xl dark:bg-background sm:rounded-xl">
         <DialogHeader>
           <DialogTitle>{t("title")}</DialogTitle>
-          <DialogDescription>
-            {t("description")}
-          </DialogDescription>
+          <DialogDescription>{t("description")}</DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit(onSubmit, (errors) => showFormValidationToast(errors))} className="space-y-4">
-          <div className="flex items-center justify-between gap-4 rounded-lg border bg-muted/20 p-4">
-            <div className="space-y-1">
-              <Label htmlFor="smtp-enabled">{t("activation.label")}</Label>
-              <p className="text-xs text-muted-foreground">{t("activation.helper")}</p>
+        {mode === "config" ? (
+          <form onSubmit={submitConfiguration} className="space-y-4">
+            {confirmed ? (
+              <Alert className="border-emerald-500/30 bg-emerald-500/10 text-emerald-800 dark:text-emerald-200">
+                <CheckCircle2 className="h-4 w-4" />
+                <AlertDescription>
+                  {t("verification.currently_confirmed")}
+                </AlertDescription>
+              </Alert>
+            ) : (
+              <Alert variant="destructive">
+                <Mail className="h-4 w-4" />
+                <AlertDescription>
+                  {t("verification.currently_unconfirmed")}
+                </AlertDescription>
+              </Alert>
+            )}
+
+            <div>
+              <Label htmlFor="host">{t("fields.host.label")}</Label>
+              <Input
+                id="host"
+                type="text"
+                placeholder={t("fields.host.placeholder")}
+                {...register("host")}
+                disabled={busy}
+                aria-invalid={!!errors.host}
+              />
+              {errors.host?.message ? (
+                <p className="text-sm text-destructive">
+                  {String(errors.host.message)}
+                </p>
+              ) : null}
+              <p className="mt-1 text-xs text-muted-foreground">
+                {t("fields.host.helper")}
+              </p>
             </div>
-            <SwitchWithLoading
-              id="smtp-enabled"
-              checked={emailEnabled}
-              onCheckedChange={(checked) => {
-                setValue("enabled", checked, { shouldDirty: true, shouldTouch: true });
-              }}
-              isLoading={isLoading || updateMutation.isPending || isSubmitting}
-            />
-          </div>
 
-          <div>
-            <Label htmlFor="host">{t("fields.host.label")}</Label>
-            <Input
-              id="host"
-              type="text"
-              placeholder={t("fields.host.placeholder")}
-              {...register("host")}
-              disabled={isLoading || updateMutation.isPending || isSubmitting}
-              aria-invalid={!!errors.host}
-              aria-describedby={errors.host ? "smtp-host-error" : undefined}
-            />
-            {errors.host?.message && (
-              <p id="smtp-host-error" className="text-sm text-destructive">
-                {String(errors.host.message)}
+            <div>
+              <Label htmlFor="port">{t("fields.port.label")}</Label>
+              <Input
+                id="port"
+                type="number"
+                placeholder={t("fields.port.placeholder")}
+                {...register("port", { valueAsNumber: true })}
+                disabled={busy}
+                min="1"
+                max="65535"
+                aria-invalid={!!errors.port}
+              />
+              {errors.port?.message ? (
+                <p className="text-sm text-destructive">
+                  {String(errors.port.message)}
+                </p>
+              ) : null}
+              <p className="mt-1 text-xs text-muted-foreground">
+                {t("fields.port.helper")}
               </p>
-            )}
-            <p className="text-xs text-muted-foreground mt-1">
-              {t("fields.host.helper")}
-            </p>
-          </div>
-
-          <div>
-            <Label htmlFor="port">{t("fields.port.label")}</Label>
-            <Input
-              id="port"
-              type="number"
-              placeholder={t("fields.port.placeholder")}
-              {...register("port", { valueAsNumber: true })}
-              disabled={isLoading || updateMutation.isPending || isSubmitting}
-              min="1"
-              max="65535"
-              aria-invalid={!!errors.port}
-              aria-describedby={errors.port ? "smtp-port-error" : undefined}
-            />
-            {errors.port?.message && (
-              <p id="smtp-port-error" className="text-sm text-destructive">
-                {String(errors.port.message)}
-              </p>
-            )}
-            <p className="text-xs text-muted-foreground mt-1">
-              {t("fields.port.helper")}
-            </p>
-          </div>
-
-          <div>
-            <Label htmlFor="user">{t("fields.user.label")}</Label>
-            <Input
-              id="user"
-              type="email"
-              placeholder={t("fields.user.placeholder")}
-              {...register("user")}
-              disabled={isLoading || updateMutation.isPending || isSubmitting}
-              aria-invalid={!!errors.user}
-              aria-describedby={errors.user ? "smtp-user-error" : undefined}
-            />
-            {errors.user?.message && (
-              <p id="smtp-user-error" className="text-sm text-destructive">
-                {String(errors.user.message)}
-              </p>
-            )}
-          </div>
-
-          <div>
-            <Label htmlFor="password">{t("fields.password.label")}</Label>
-            <Input
-              id="password"
-              type="password"
-              placeholder={t("fields.password.placeholder")}
-              {...register("password")}
-              disabled={isLoading || updateMutation.isPending || isSubmitting}
-              aria-invalid={!!errors.password}
-              aria-describedby={errors.password ? "smtp-password-error" : undefined}
-            />
-            {errors.password?.message && (
-              <p id="smtp-password-error" className="text-sm text-destructive">
-                {String(errors.password.message)}
-              </p>
-            )}
-            <p className="text-xs text-muted-foreground mt-1">
-              {t("fields.password.helper")}
-            </p>
-            {passwordConfigured ? (
-              <p className="text-xs text-muted-foreground mt-1">
-                {t("fields.password.hidden_helper")}
-              </p>
-            ) : null}
-          </div>
-
-          <div>
-            <Label htmlFor="sender">{t("fields.sender.label")}</Label>
-            <Input
-              id="sender"
-              type="email"
-              placeholder={t("fields.sender.placeholder")}
-              {...register("sender")}
-              disabled={isLoading || updateMutation.isPending || isSubmitting}
-              aria-invalid={!!errors.sender}
-              aria-describedby={errors.sender ? "smtp-sender-error" : undefined}
-            />
-            {errors.sender?.message && (
-              <p id="smtp-sender-error" className="text-sm text-destructive">
-                {String(errors.sender.message)}
-              </p>
-            )}
-            <p className="text-xs text-muted-foreground mt-1">
-              {t("fields.sender.helper")}
-            </p>
-          </div>
-
-          <div className="rounded-lg border bg-muted/20 p-4 space-y-3">
-            <div className="flex items-center gap-2 text-sm font-medium">
-              <Mail className="h-4 w-4" />
-              {t("test.title")}
             </div>
-            <p className="text-xs text-muted-foreground">
-              {t("test.description")}
-            </p>
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-start">
-              <div className="flex-1 space-y-1">
-                <Input
-                  id="test-email"
-                  type="email"
-                  placeholder={t("test.placeholder")}
-                  {...registerTest("testEmail")}
-                  disabled={isLoading || updateMutation.isPending || testMutation.isPending}
-                  aria-invalid={!!testErrors.testEmail}
-                  aria-describedby={testErrors.testEmail ? "smtp-test-email-error" : undefined}
-                />
-                {testErrors.testEmail?.message && (
-                  <p id="smtp-test-email-error" className="text-sm text-destructive">
-                    {String(testErrors.testEmail.message)}
-                  </p>
-                )}
+
+            <div>
+              <Label htmlFor="user">{t("fields.user.label")}</Label>
+              <Input
+                id="user"
+                type="email"
+                placeholder={t("fields.user.placeholder")}
+                {...register("user")}
+                disabled={busy}
+                aria-invalid={!!errors.user}
+              />
+              {errors.user?.message ? (
+                <p className="text-sm text-destructive">
+                  {String(errors.user.message)}
+                </p>
+              ) : null}
+            </div>
+
+            <div>
+              <Label htmlFor="password">{t("fields.password.label")}</Label>
+              <Input
+                id="password"
+                type="password"
+                placeholder={t("fields.password.placeholder")}
+                {...register("password")}
+                disabled={busy}
+                aria-invalid={!!errors.password}
+              />
+              <p className="mt-1 text-xs text-muted-foreground">
+                {t("fields.password.helper")}
+              </p>
+              {passwordConfigured ? (
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {t("fields.password.hidden_helper")}
+                </p>
+              ) : null}
+            </div>
+
+            <div>
+              <Label htmlFor="sender">{t("fields.sender.label")}</Label>
+              <Input
+                id="sender"
+                type="email"
+                placeholder={t("fields.sender.placeholder")}
+                {...register("sender")}
+                disabled={busy}
+                aria-invalid={!!errors.sender}
+              />
+              {errors.sender?.message ? (
+                <p className="text-sm text-destructive">
+                  {String(errors.sender.message)}
+                </p>
+              ) : null}
+              <p className="mt-1 text-xs text-muted-foreground">
+                {t("fields.sender.helper")}
+              </p>
+            </div>
+
+            <div className="space-y-2 rounded-lg border bg-muted/20 p-4">
+              <div className="flex items-center gap-2 text-sm font-medium">
+                <Mail className="h-4 w-4" />
+                {t("verification.recipient_title")}
               </div>
+              <p className="text-xs text-muted-foreground">
+                {t("verification.recipient_description")}
+              </p>
+              <Input
+                id="smtp-verification-email"
+                type="email"
+                placeholder={t("test.placeholder")}
+                {...registerRecipient("verificationEmail")}
+                disabled={busy}
+                aria-invalid={!!recipientErrors.verificationEmail}
+              />
+              {recipientErrors.verificationEmail?.message ? (
+                <p className="text-sm text-destructive">
+                  {String(recipientErrors.verificationEmail.message)}
+                </p>
+              ) : null}
+            </div>
+
+            <DialogFooter>
               <Button
                 type="button"
-                variant="secondary"
-                className="sm:mt-0 sm:self-start"
-                onClick={handleTestSubmit(onTest)}
-                disabled={isLoading || updateMutation.isPending || testMutation.isPending}
+                variant="outline"
+                onClick={() => onOpenChange(false)}
+                disabled={busy}
               >
-                {testMutation.isPending ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    {t("test.loading")}
-                  </>
+                {t("buttons.cancel")}
+              </Button>
+              <Button type="submit" disabled={busy}>
+                {saveMutation.isPending ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 ) : (
-                  t("test.button")
+                  <Mail className="mr-2 h-4 w-4" />
                 )}
+                {t("verification.save_and_send")}
+              </Button>
+            </DialogFooter>
+          </form>
+        ) : (
+          <form
+            onSubmit={handleCodeSubmit(({ code }) =>
+              confirmMutation.mutate(code),
+            )}
+            className="space-y-5"
+          >
+            <Alert>
+              <Mail className="h-4 w-4" />
+              <AlertDescription>
+                {t("verification.enter_code", {
+                  email: verificationRecipient,
+                })}
+              </AlertDescription>
+            </Alert>
+
+            <div className="space-y-2">
+              <Label htmlFor="smtp-verification-code">
+                {t("verification.code_label")}
+              </Label>
+              <Input
+                id="smtp-verification-code"
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                maxLength={6}
+                className="text-center font-mono text-2xl tracking-[0.4em]"
+                placeholder="000000"
+                {...registerCode("code")}
+                disabled={busy}
+                aria-invalid={!!codeErrors.code}
+              />
+              {codeErrors.code?.message ? (
+                <p className="text-sm text-destructive">
+                  {String(codeErrors.code.message)}
+                </p>
+              ) : null}
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setMode("config")}
+                disabled={busy}
+              >
+                {t("verification.edit_configuration")}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  const fallback =
+                    verificationRecipient ||
+                    getRecipientValues("verificationEmail")
+                  if (fallback) resendMutation.mutate(fallback)
+                }}
+                disabled={busy}
+              >
+                {resendMutation.isPending ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <RotateCcw className="mr-2 h-4 w-4" />
+                )}
+                {t("verification.resend")}
+              </Button>
+              <Button type="submit" disabled={busy} className="sm:ml-auto">
+                {confirmMutation.isPending ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <CheckCircle2 className="mr-2 h-4 w-4" />
+                )}
+                {t("verification.confirm_button")}
               </Button>
             </div>
-          </div>
-
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-              disabled={isLoading || updateMutation.isPending}
-            >
-              {t("buttons.cancel")}
-            </Button>
-            <Button type="submit" disabled={isLoading || updateMutation.isPending}>
-              {updateMutation.isPending ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  {t("buttons.saving")}
-                </>
-              ) : (
-                t("buttons.save")
-              )}
-            </Button>
-          </DialogFooter>
-        </form>
+          </form>
+        )}
       </DialogContent>
     </Dialog>
-  );
+  )
 }

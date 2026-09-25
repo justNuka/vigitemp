@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { buildLocationAlarmThresholdIssues } from "@/lib/location-alarm-threshold-contract";
 
 const mailingContactSchema = z.object({
   Id_Tel_Num: z.number().optional(),
@@ -26,7 +27,10 @@ function addConsigneGuards(data: Record<string, unknown>, ctx: z.RefinementCtx) 
     })
   }
 
-  if (data.Sonde_Numero_Serie && (data.Lieu_Etat === null || data.Lieu_Etat === undefined || data.Lieu_Etat === "")) {
+  if (
+    data.Sonde_Numero_Serie &&
+    (data.Lieu_Etat === null || data.Lieu_Etat === undefined || data.Lieu_Etat === "")
+  ) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
       path: ["Lieu_Etat"],
@@ -37,79 +41,19 @@ function addConsigneGuards(data: Record<string, unknown>, ctx: z.RefinementCtx) 
   const hasConsigne = data.Consigne !== null && data.Consigne !== undefined
   const hasSup = data.Consigne_Sup !== null && data.Consigne_Sup !== undefined
   const hasInf = data.Consigne_Inf !== null && data.Consigne_Inf !== undefined
-  const hasSupPreAlarm = data.Consigne_Sup_Pre_Alarme !== null && data.Consigne_Sup_Pre_Alarme !== undefined
-  const hasInfPreAlarm = data.Consigne_Inf_Pre_Alarme !== null && data.Consigne_Inf_Pre_Alarme !== undefined
-  const supActive = (typeof data.Est_Consigne_Sup_Active === "boolean" ? data.Est_Consigne_Sup_Active : hasSup)
-  const infActive = (typeof data.Est_Consigne_Inf_Active === "boolean" ? data.Est_Consigne_Inf_Active : hasInf)
-  const supPreAlarmActive = typeof data.Est_Consigne_Sup_Pre_Alarme_Active === "boolean"
-    ? data.Est_Consigne_Sup_Pre_Alarme_Active
-    : hasSupPreAlarm
-  const infPreAlarmActive = typeof data.Est_Consigne_Inf_Pre_Alarme_Active === "boolean"
-    ? data.Est_Consigne_Inf_Pre_Alarme_Active
-    : hasInfPreAlarm
+  const supActive =
+    typeof data.Est_Consigne_Sup_Active === "boolean"
+      ? data.Est_Consigne_Sup_Active
+      : hasSup
+  const infActive =
+    typeof data.Est_Consigne_Inf_Active === "boolean"
+      ? data.Est_Consigne_Inf_Active
+      : hasInf
 
-  if (hasConsigne && supActive && hasSup && Number(data.Consigne_Sup) <= Number(data.Consigne)) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      path: ["Consigne_Sup"],
-      message: "La consigne superieure doit etre strictement superieure a la consigne.",
-    })
-  }
-
-  if (hasConsigne && infActive && hasInf && Number(data.Consigne_Inf) >= Number(data.Consigne)) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      path: ["Consigne_Inf"],
-      message: "La consigne inferieure doit etre strictement inferieure a la consigne.",
-    })
-  }
-
-  if (supActive && infActive && hasSup && hasInf && Number(data.Consigne_Inf) >= Number(data.Consigne_Sup)) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      path: ["Consigne_Inf"],
-      message: "La consigne inferieure doit etre strictement inferieure a la consigne superieure.",
-    })
-  }
-
-  if (supActive && supPreAlarmActive && hasSup && hasSupPreAlarm && Number(data.Consigne_Sup_Pre_Alarme) >= Number(data.Consigne_Sup)) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      path: ["Consigne_Sup_Pre_Alarme"],
-      message: "La pre-alarme superieure doit etre strictement inferieure a la consigne superieure.",
-    })
-  }
-
-  if (hasConsigne && supPreAlarmActive && hasSupPreAlarm && Number(data.Consigne_Sup_Pre_Alarme) <= Number(data.Consigne)) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      path: ["Consigne_Sup_Pre_Alarme"],
-      message: "La pre-alarme superieure doit etre strictement superieure a la consigne.",
-    })
-  }
-  if (infActive && infPreAlarmActive && hasInf && hasInfPreAlarm && Number(data.Consigne_Inf_Pre_Alarme) <= Number(data.Consigne_Inf)) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      path: ["Consigne_Inf_Pre_Alarme"],
-      message: "La pre-alarme inferieure doit etre strictement superieure a la consigne inferieure.",
-    })
-  }
-  if (hasConsigne && infPreAlarmActive && hasInfPreAlarm && Number(data.Consigne_Inf_Pre_Alarme) >= Number(data.Consigne)) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      path: ["Consigne_Inf_Pre_Alarme"],
-      message: "La pre-alarme inferieure doit etre strictement inferieure a la consigne.",
-    })
-  }
-  if (supPreAlarmActive && infPreAlarmActive && hasSupPreAlarm && hasInfPreAlarm && Number(data.Consigne_Inf_Pre_Alarme) >= Number(data.Consigne_Sup_Pre_Alarme)) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      path: ["Consigne_Inf_Pre_Alarme"],
-      message: "La pre-alarme inferieure doit etre strictement inferieure a la pre-alarme superieure.",
-    })
-  }
-
-  if ((hasConsigne || supActive || infActive) && (data.Frequence === null || data.Frequence === undefined)) {
+  if (
+    (hasConsigne || supActive || infActive) &&
+    (data.Frequence === null || data.Frequence === undefined)
+  ) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
       path: ["Frequence"],
@@ -117,7 +61,11 @@ function addConsigneGuards(data: Record<string, unknown>, ctx: z.RefinementCtx) 
     })
   }
 
-  if (data.Frequence !== null && data.Frequence !== undefined && Number(data.Frequence) <= 0) {
+  if (
+    data.Frequence !== null &&
+    data.Frequence !== undefined &&
+    Number(data.Frequence) <= 0
+  ) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
       path: ["Frequence"],
@@ -125,7 +73,11 @@ function addConsigneGuards(data: Record<string, unknown>, ctx: z.RefinementCtx) 
     })
   }
 
-  if (data.Retard_Alarme_Haut !== null && data.Retard_Alarme_Haut !== undefined && Number(data.Retard_Alarme_Haut) <= 0) {
+  if (
+    data.Retard_Alarme_Haut !== null &&
+    data.Retard_Alarme_Haut !== undefined &&
+    Number(data.Retard_Alarme_Haut) <= 0
+  ) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
       path: ["Retard_Alarme_Haut"],
@@ -133,11 +85,58 @@ function addConsigneGuards(data: Record<string, unknown>, ctx: z.RefinementCtx) 
     })
   }
 
-  if (data.Retard_Alarme_Bas !== null && data.Retard_Alarme_Bas !== undefined && Number(data.Retard_Alarme_Bas) <= 0) {
+  if (
+    data.Retard_Alarme_Bas !== null &&
+    data.Retard_Alarme_Bas !== undefined &&
+    Number(data.Retard_Alarme_Bas) <= 0
+  ) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
       path: ["Retard_Alarme_Bas"],
       message: "Le retard d'alarme bas doit etre strictement superieur a 0.",
+    })
+  }
+
+  const thresholdIssues = buildLocationAlarmThresholdIssues({
+    mode: typeof data.EMT_Mode === "string" ? data.EMT_Mode : null,
+    emtValue: typeof data.EMT_Valeur === "number" ? data.EMT_Valeur : null,
+    consigne: typeof data.Consigne === "number" ? data.Consigne : null,
+    consigneSup: typeof data.Consigne_Sup === "number" ? data.Consigne_Sup : null,
+    consigneInf: typeof data.Consigne_Inf === "number" ? data.Consigne_Inf : null,
+    isConsigneSupActive: supActive,
+    isConsigneInfActive: infActive,
+    preAlarmHigh:
+      typeof data.Consigne_Sup_Pre_Alarme === "number"
+        ? data.Consigne_Sup_Pre_Alarme
+        : null,
+    preAlarmHighActive: data.Est_Consigne_Sup_Pre_Alarme_Active === true,
+    preAlarmLow:
+      typeof data.Consigne_Inf_Pre_Alarme === "number"
+        ? data.Consigne_Inf_Pre_Alarme
+        : null,
+    preAlarmLowActive: data.Est_Consigne_Inf_Pre_Alarme_Active === true,
+    criticalHigh:
+      typeof data.Seuil_Critique_Haut === "number" ? data.Seuil_Critique_Haut : null,
+    criticalHighActive: data.Est_Seuil_Critique_Haut_Active === true,
+    criticalLow:
+      typeof data.Seuil_Critique_Bas === "number" ? data.Seuil_Critique_Bas : null,
+    criticalLowActive: data.Est_Seuil_Critique_Bas_Active === true,
+    incertitude: typeof data.Incertitude === "number" ? data.Incertitude : null,
+    erreurJustesse:
+      typeof data.Erreur_Justesse === "number" ? data.Erreur_Justesse : null,
+    derive: typeof data.Derive === "number" ? data.Derive : null,
+    includeDeriveInUncertainty:
+      data.EMT_Mode === "quart" || data.EMT_Mode === "manuel"
+        ? true
+        : data.Prendre_En_Compte_Derive === true,
+    correctAccuracyError: data.Corriger_Erreur_Justesse === true,
+  })
+
+  for (const issue of thresholdIssues) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: issue.path,
+      message: issue.message,
     })
   }
 }
@@ -156,11 +155,15 @@ export const locationFormSchema = z.object({
   Est_Consigne_Sup_Active: z.boolean().optional(),
   Consigne_Sup_Pre_Alarme: z.number().optional().nullable(),
   Est_Consigne_Sup_Pre_Alarme_Active: z.boolean().optional(),
+  Seuil_Critique_Haut: z.number().optional().nullable(),
+  Est_Seuil_Critique_Haut_Active: z.boolean().optional(),
   Retard_Alarme_Haut: z.number().optional().nullable(),
   Consigne_Inf: z.number().optional().nullable(),
   Est_Consigne_Inf_Active: z.boolean().optional(),
   Consigne_Inf_Pre_Alarme: z.number().optional().nullable(),
   Est_Consigne_Inf_Pre_Alarme_Active: z.boolean().optional(),
+  Seuil_Critique_Bas: z.number().optional().nullable(),
+  Est_Seuil_Critique_Bas_Active: z.boolean().optional(),
   Retard_Alarme_Bas: z.number().optional().nullable(),
   Retard_Non_Reponse: z.number().optional().nullable(),
   Retard_Alarme_Changement_Consigne: z.number().optional().nullable(),

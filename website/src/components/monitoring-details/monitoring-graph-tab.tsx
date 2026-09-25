@@ -1,12 +1,12 @@
 import type { RefObject } from "react"
-import { useMemo } from "react"
+import { useEffect, useMemo } from "react"
 
 import { Button } from "@/components/ui/button"
 import { Switch } from "@/components/ui/switch"
 import { Line } from "react-chartjs-2"
 import type { Chart as ChartJS } from "chart.js"
 
-import { formatDbDateTime, parseDbDateTime } from "@/lib/date-display"
+import { formatStoredDbDateTime, parseDbDateTime, parseStoredDbDateTime, serializeDbDateTime } from "@/lib/date-display"
 import {
   formatMeasureValue,
   formatTimeAxisLabel,
@@ -28,7 +28,10 @@ interface MonitoringGraphTabProps {
   chartRef: RefObject<ChartJS<"line"> | null>
   orderedData: MeasureData[]
   graphMeasureCount: number
+  displayedPointCount?: number
+  isSampled?: boolean
   isRangeSelected: boolean
+  isRollingWindow?: boolean
   auditLogs: AuditLog[]
   showAuditMarkers: boolean
   onShowAuditMarkersChange: (next: boolean) => void
@@ -43,12 +46,18 @@ interface MonitoringGraphTabProps {
   guidePositions: GuidePositions
   yMin: number
   yMax: number
+  xRangeStart?: Date | null
+  xRangeEnd?: Date | null
   zoomBounds: ZoomBounds | null
   resetChartZoom: () => void
   captureZoomBounds: (chart: ChartJS<"line">) => void
   t: (key: string, values?: Record<string, string | number>) => string
   graphHeightClassName?: string
   exportFileName: string
+  showAuditControls?: boolean
+  allowImageExport?: boolean
+  onChartImageReady?: (dataUrl: string) => void
+  interactionProfile?: "default" | "alarm-analysis"
 }
 
 function normalizeGuideValue(value: number | null): number | null {
@@ -91,6 +100,8 @@ function buildMergedAxisLabels(
   orderedData: MeasureData[],
   auditLogs: AuditLog[],
   showAuditMarkers: boolean,
+  rangeStart?: Date | null,
+  rangeEnd?: Date | null,
 ) {
   const labels = new Set<string>()
 
@@ -105,21 +116,31 @@ function buildMergedAxisLabels(
     }
   }
 
-  return Array.from(labels).sort((left, right) => {
-    const leftTs = parseDbDateTime(left)?.getTime() ?? Number.NaN
-    const rightTs = parseDbDateTime(right)?.getTime() ?? Number.NaN
-    if (!Number.isFinite(leftTs) || !Number.isFinite(rightTs)) {
-      return left.localeCompare(right)
-    }
-    return leftTs - rightTs
-  })
+  const rangeStartLabel = serializeDbDateTime(rangeStart ?? null)
+  const rangeEndLabel = serializeDbDateTime(rangeEnd ?? null)
+  if (rangeStartLabel) labels.add(rangeStartLabel)
+  if (rangeEndLabel) labels.add(rangeEndLabel)
+
+  return Array.from(labels)
+    .filter((label) => Number.isFinite(parseStoredDbDateTime(label)?.getTime() ?? Number.NaN))
+    .sort((left, right) => {
+      const leftTs = parseStoredDbDateTime(left)?.getTime() ?? Number.NaN
+      const rightTs = parseStoredDbDateTime(right)?.getTime() ?? Number.NaN
+      if (!Number.isFinite(leftTs) || !Number.isFinite(rightTs)) {
+        return left.localeCompare(right)
+      }
+      return leftTs - rightTs
+    })
 }
 
 export function MonitoringGraphTab({
   chartRef,
   orderedData,
   graphMeasureCount,
+  displayedPointCount = orderedData.length,
+  isSampled = false,
   isRangeSelected,
+  isRollingWindow = false,
   auditLogs,
   showAuditMarkers,
   onShowAuditMarkersChange,
@@ -134,12 +155,18 @@ export function MonitoringGraphTab({
   guidePositions,
   yMin,
   yMax,
+  xRangeStart = null,
+  xRangeEnd = null,
   zoomBounds,
   resetChartZoom,
   captureZoomBounds,
   t,
   graphHeightClassName,
   exportFileName,
+  showAuditControls = true,
+  allowImageExport = true,
+  onChartImageReady,
+  interactionProfile = "default",
 }: MonitoringGraphTabProps) {
   const localeTag = locale === "fr" ? "fr-FR" : locale
   const auditMarkerLabel = t("chart.audit_markers")
@@ -153,7 +180,15 @@ export function MonitoringGraphTab({
   const formattedConsigne = normalizedConsigne === null ? null : formatMeasureValue(normalizedConsigne, null, localeTag)
   const formattedPreAlarmSup = normalizedPreAlarmSup === null ? null : formatMeasureValue(normalizedPreAlarmSup, null, localeTag)
   const formattedPreAlarmInf = normalizedPreAlarmInf === null ? null : formatMeasureValue(normalizedPreAlarmInf, null, localeTag)
-  const timeAxisSpanMs = getTimeAxisSpanMs(orderedData)
+  const rangeStartMs = parseDbDateTime(xRangeStart)?.getTime() ?? Number.NaN
+  const rangeEndMs = parseDbDateTime(xRangeEnd)?.getTime() ?? Number.NaN
+  const hasExplicitAxisRange = Number.isFinite(rangeStartMs) && Number.isFinite(rangeEndMs) && rangeEndMs > rangeStartMs
+  const timeAxisSpanMs = hasExplicitAxisRange ? rangeEndMs - rangeStartMs : getTimeAxisSpanMs(orderedData)
+  const isAlarmAnalysisInteraction = interactionProfile === "alarm-analysis"
+  const alarmAnalysisMinRangeMs =
+    isAlarmAnalysisInteraction && Number.isFinite(timeAxisSpanMs) && timeAxisSpanMs > 0
+      ? Math.max(1_000, Math.min(60_000, Math.floor(timeAxisSpanMs / 100)))
+      : 60_000
   const memoryMeasureRanges = useMemo(
     () =>
       buildRanges(
@@ -163,8 +198,12 @@ export function MonitoringGraphTab({
     [orderedData],
   )
   const axisLabels = useMemo(
-    () => buildMergedAxisLabels(orderedData, auditLogs, showAuditMarkers),
-    [auditLogs, orderedData, showAuditMarkers],
+    () => buildMergedAxisLabels(orderedData, auditLogs, showAuditMarkers, xRangeStart, xRangeEnd),
+    [auditLogs, orderedData, showAuditMarkers, xRangeEnd, xRangeStart],
+  )
+  const axisTimestamps = useMemo(
+    () => axisLabels.map((label) => parseStoredDbDateTime(label)?.getTime() ?? Number.NaN),
+    [axisLabels],
   )
   const measurementByLabel = useMemo(() => {
     const map = new Map<string, MeasureData>()
@@ -174,14 +213,30 @@ export function MonitoringGraphTab({
     }
     return map
   }, [orderedData])
-  const upperLine = axisLabels.map((label) => normalizeGuideValue(measurementByLabel.get(label)?.Consigne_Sup ?? null))
-  const lowerLine = axisLabels.map((label) => normalizeGuideValue(measurementByLabel.get(label)?.Consigne_Inf ?? null))
-  const targetLine = axisLabels.map((label) => normalizeGuideValue(measurementByLabel.get(label)?.Consigne ?? null))
+  const firstMeasurement = orderedData[0]
+  const lastMeasurement = orderedData[orderedData.length - 1]
+  const rangeStartLabel = serializeDbDateTime(xRangeStart)
+  const rangeEndLabel = serializeDbDateTime(xRangeEnd)
+  const guideValueForLabel = (
+    label: string,
+    field: "Consigne_Sup" | "Consigne_Inf" | "Consigne",
+  ) => {
+    const point = measurementByLabel.get(label)
+    if (point) return normalizeGuideValue(point[field] ?? null)
+    if (label === rangeStartLabel) return normalizeGuideValue(firstMeasurement?.[field] ?? null)
+    if (label === rangeEndLabel) return normalizeGuideValue(lastMeasurement?.[field] ?? null)
+    return null
+  }
+  const upperLine = axisLabels.map((label) => guideValueForLabel(label, "Consigne_Sup"))
+  const lowerLine = axisLabels.map((label) => guideValueForLabel(label, "Consigne_Inf"))
+  const targetLine = axisLabels.map((label) => guideValueForLabel(label, "Consigne"))
   const measureSeries = axisLabels.map((label) => {
     const point = measurementByLabel.get(label)
     return typeof point?.Valeur === "number" ? point.Valeur : null
   })
   const shortNoResponseConnectorDatasets = useMemo(() => {
+    if (isSampled) return []
+
     const ranges = buildRanges(
       orderedData,
       (point) =>
@@ -221,7 +276,7 @@ export function MonitoringGraphTab({
         }
       })
       .filter((dataset): dataset is NonNullable<typeof dataset> => dataset !== null)
-  }, [axisLabels, orderedData])
+  }, [axisLabels, isSampled, orderedData])
   const memoryRangeDatasets = useMemo(
     () =>
       memoryMeasureRanges.map((range, rangeIndex) => {
@@ -265,13 +320,13 @@ export function MonitoringGraphTab({
     }
 
     const pointTimestamps = orderedData.map(
-      (point) => parseDbDateTime(point.DateHeureMesureIso ?? point.DateHeureMesure)?.getTime() ?? Number.NaN,
+      (point) => parseStoredDbDateTime(point.DateHeureMesureIso ?? point.DateHeureMesure)?.getTime() ?? Number.NaN,
     )
     const axisIndexByLabel = new Map(axisLabels.map((label, index) => [label, index]))
 
     for (const log of auditLogs) {
       if (!log.timestamp) continue
-      const logTs = parseDbDateTime(log.timestamp)?.getTime() ?? Number.NaN
+      const logTs = parseStoredDbDateTime(log.timestamp)?.getTime() ?? Number.NaN
       if (!Number.isFinite(logTs)) continue
 
       let nearestIndex = -1
@@ -323,6 +378,19 @@ export function MonitoringGraphTab({
     [orderedData],
   )
 
+  useEffect(() => {
+    if (!onChartImageReady || !hasPlottedMeasures) return
+
+    const frame = window.requestAnimationFrame(() => {
+      const chart = chartRef.current
+      if (!chart) return
+      const image = chart.toBase64Image("image/png", 1)
+      if (image) onChartImageReady(image)
+    })
+
+    return () => window.cancelAnimationFrame(frame)
+  }, [axisLabels, chartRef, hasPlottedMeasures, onChartImageReady, orderedData])
+
   const exportChartImage = () => {
     const chart = chartRef.current
     if (!chart) return
@@ -347,9 +415,19 @@ export function MonitoringGraphTab({
     <div className="space-y-4 pt-4 min-h-[68vh]">
       <div className="flex items-center justify-between gap-2">
         <span className="text-sm text-muted-foreground">
-          {t(isRangeSelected ? "chart.measure_count" : "chart.latest_measure_count", {
-            count: graphMeasureCount,
-          })}
+          {isSampled
+            ? t("chart.sampled_measure_count", {
+                source: graphMeasureCount,
+                displayed: displayedPointCount,
+              })
+            : t(
+                isRollingWindow
+                  ? "chart.rolling_measure_count"
+                  : isRangeSelected
+                    ? "chart.measure_count"
+                    : "chart.latest_measure_count",
+                { count: graphMeasureCount },
+              )}
         </span>
         <div className="flex flex-wrap items-center justify-end gap-2">
           {memoryMeasureRanges.length > 0 ? (
@@ -361,16 +439,20 @@ export function MonitoringGraphTab({
               <span>{t("table.legend.memory")}</span>
             </span>
           ) : null}
-          <label className="inline-flex items-center gap-2 rounded-md border px-2.5 py-1.5 text-xs text-muted-foreground">
-            <Switch checked={showAuditMarkers} onCheckedChange={onShowAuditMarkersChange} disabled={!hasPlottedMeasures} />
-            <span>{t("chart.show_audit_markers")}</span>
-          </label>
+          {showAuditControls ? (
+            <label className="inline-flex items-center gap-2 rounded-md border px-2.5 py-1.5 text-xs text-muted-foreground">
+              <Switch checked={showAuditMarkers} onCheckedChange={onShowAuditMarkersChange} disabled={!hasPlottedMeasures} />
+              <span>{t("chart.show_audit_markers")}</span>
+            </label>
+          ) : null}
           <Button type="button" variant="outline" size="sm" onClick={resetChartZoom} disabled={!hasPlottedMeasures}>
             {t("chart.reset_zoom")}
           </Button>
-          <Button type="button" variant="outline" size="sm" onClick={exportChartImage} disabled={!hasPlottedMeasures}>
-            {t("chart.export_image")}
-          </Button>
+          {allowImageExport ? (
+            <Button type="button" variant="outline" size="sm" onClick={exportChartImage} disabled={!hasPlottedMeasures}>
+              {t("chart.export_image")}
+            </Button>
+          ) : null}
         </div>
       </div>
 
@@ -390,7 +472,7 @@ export function MonitoringGraphTab({
           <Line
             ref={chartRef}
           data={{
-            labels: axisLabels,
+            labels: axisTimestamps,
             datasets: [
               ...(consigneSup !== null
                 ? [{
@@ -512,6 +594,12 @@ export function MonitoringGraphTab({
           options={{
             responsive: true,
             maintainAspectRatio: false,
+            animation: isAlarmAnalysisInteraction
+              ? {
+                  duration: 180,
+                  easing: "easeOutQuart",
+                }
+              : undefined,
             plugins: {
               legend: {
                 display: true,
@@ -556,7 +644,7 @@ export function MonitoringGraphTab({
                   title: (context) => {
                     const index = context?.[0]?.dataIndex
                     const dateValue = typeof index === "number" ? axisLabels[index] : ""
-                    return dateValue ? formatDbDateTime(dateValue, { format: "dateTimeSeconds" }) : ""
+                    return dateValue ? formatStoredDbDateTime(dateValue, { format: "dateTimeSeconds" }) : ""
                   },
                   label: (context) => {
                     const index = context?.dataIndex
@@ -614,16 +702,28 @@ export function MonitoringGraphTab({
                 },
               },
               zoom: {
-                limits: { x: { minRange: 10 } },
+                limits: {
+                  x: isAlarmAnalysisInteraction && hasExplicitAxisRange
+                    ? {
+                        min: rangeStartMs,
+                        max: rangeEndMs,
+                        minRange: alarmAnalysisMinRangeMs,
+                      }
+                    : { minRange: 60_000 },
+                },
                 pan: {
                   enabled: true,
                   mode: "x" as const,
+                  threshold: isAlarmAnalysisInteraction ? 4 : 10,
                   onPanComplete: ({ chart }: { chart: ChartJS<"line"> }) => captureZoomBounds(chart),
                 },
                 zoom: {
                   // Drag désactivé : le glissement est réservé au pan
                   drag: { enabled: false },
-                  wheel: { enabled: true },
+                  wheel: {
+                    enabled: true,
+                    speed: isAlarmAnalysisInteraction ? 0.25 : 0.1,
+                  },
                   pinch: { enabled: true },
                   mode: "x" as const,
                   onZoomComplete: ({ chart }: { chart: ChartJS<"line"> }) => captureZoomBounds(chart),
@@ -632,11 +732,12 @@ export function MonitoringGraphTab({
             },
             scales: {
               x: {
+                type: "linear",
                 display: true,
                 offset: false,
                 bounds: "ticks",
-                min: zoomBounds?.xMin,
-                max: zoomBounds?.xMax,
+                min: zoomBounds?.xMin ?? (hasExplicitAxisRange ? rangeStartMs : undefined),
+                max: zoomBounds?.xMax ?? (hasExplicitAxisRange ? rangeEndMs : undefined),
                 grid: { display: true, color: "rgba(0, 0, 0, 0.05)" },
                 ticks: {
                   autoSkip: true,
@@ -645,10 +746,11 @@ export function MonitoringGraphTab({
                   minRotation: 0,
                   font: { size: 10 },
                   padding: 8,
-                  callback: (value, index) => {
-                    const dataIndex = typeof value === "number" ? value : Number(value)
-                    const rawValue = axisLabels[Number.isFinite(dataIndex) ? Math.round(dataIndex) : index]
-                    return rawValue ? formatTimeAxisLabel(rawValue, localeTag, timeAxisSpanMs) : ""
+                  callback: (value) => {
+                    const timestamp = typeof value === "number" ? value : Number(value)
+                    return Number.isFinite(timestamp)
+                      ? formatTimeAxisLabel(new Date(timestamp), localeTag, timeAxisSpanMs)
+                      : ""
                   },
                 },
               },

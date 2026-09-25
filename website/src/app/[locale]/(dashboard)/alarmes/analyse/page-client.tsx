@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useLocale, useTranslations } from "next-intl"
 import { useRouter, useSearchParams } from "next/navigation"
 import type { SortingState, Updater } from "@tanstack/react-table"
+import { useQueryClient } from "@tanstack/react-query"
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -15,29 +16,33 @@ import {
   Title,
   Tooltip as ChartTooltip,
 } from "chart.js"
-import { AlertTriangle, ChevronLeft, Clock3, LocateFixed, Maximize2, Minimize2 } from "lucide-react"
-import { AlarmAcknowledgeDialog, type AcknowledgeDialogAlarm } from "@/components/alarm-acknowledge-dialog"
-import { alarmsApi } from "@/lib/api"
+import { ChevronLeft, Maximize2, Minimize2 } from "lucide-react"
 import { toast } from "sonner"
 
+import { useAppAccess } from "@/components/access/app-access-provider"
 import { PageHeader } from "@/components/page-header"
-import { MonitoringAuditTab } from "@/components/monitoring-details/monitoring-audit-tab"
 import { MonitoringGraphTab } from "@/components/monitoring-details/monitoring-graph-tab"
 import { MonitoringTableTab } from "@/components/monitoring-details/monitoring-table-tab"
-import type { DateRangeValue, ZoomBounds } from "@/components/monitoring-details/types"
-import { useMonitoringAuditLogs } from "@/components/monitoring-details/use-monitoring-audit-logs"
+import type { ZoomBounds } from "@/components/monitoring-details/types"
 import { useMonitoringRangeMeasurements } from "@/components/monitoring-details/use-monitoring-range-measurements"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { DateRangePicker } from "@/components/ui/date-range-picker"
+import { Checkbox } from "@/components/ui/checkbox"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useLieuMeasurementsPaged } from "@/hooks/useLieuMeasurementsPaged"
+import { alarmsApi } from "@/lib/api"
+import { toApiUtcDateTime } from "@/lib/date-range-api"
 import { formatDbDateTime, parseDbDateTime } from "@/lib/date-display"
+import { exportStyledExcel } from "@/lib/excel-export"
+import { fetchJson } from "@/lib/http"
 import { getMeasureSummary, calculateYDomain, formatMeasureValue, sortMeasuresChronologically } from "@/lib/measurements"
 import type { MeasureData } from "@/lib/measurements"
+import { markAlarmAcknowledgedInPaginatedSensorsCache } from "@/lib/surveillance-cache"
 import { cn } from "@/lib/utils"
+
+import { AlarmAcknowledgementCommentDialog } from "./alarm-acknowledgement-comment-dialog"
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, ChartTooltip, Legend, Filler)
 
@@ -79,6 +84,13 @@ type GuidePositions = {
   preInf: number | null
 }
 
+type MeasurementsExportPayload = {
+  measurements: MeasureData[]
+  total: number
+  page: number
+  pageSize: number
+}
+
 function formatAlarmNumber(value: number | null | undefined, locale: string) {
   if (value == null || !Number.isFinite(value)) return "-"
   return formatMeasureValue(value, null, locale === "fr" ? "fr-FR" : locale)
@@ -112,27 +124,35 @@ export function AlarmAnalysisClient() {
   const localeTag = locale === "fr" ? "fr-FR" : locale
   const router = useRouter()
   const searchParams = useSearchParams()
+  const queryClient = useQueryClient()
+  const { hasPermission } = useAppAccess()
+  const canAcknowledgeAlarm = hasPermission("ALARM_ACK_ACCESS")
   const chartRef = useRef<ChartJS<"line"> | null>(null)
 
   const locationId = Number(searchParams.get("locationId") ?? "0")
   const initialAlarmId = Number(searchParams.get("alarmId") ?? "0")
   const [alarms, setAlarms] = useState<AlarmListItem[]>([])
   const [isLoadingAlarms, setIsLoadingAlarms] = useState(false)
-  const [selectedAlarmId, setSelectedAlarmId] = useState<number | null>(Number.isFinite(initialAlarmId) && initialAlarmId > 0 ? initialAlarmId : null)
+  const [selectedAlarmIds, setSelectedAlarmIds] = useState<number[]>(
+    Number.isFinite(initialAlarmId) && initialAlarmId > 0 ? [initialAlarmId] : [],
+  )
+  const selectedAlarmId = selectedAlarmIds.length === 1 ? selectedAlarmIds[0] : null
   const [selectedAlarmDetail, setSelectedAlarmDetail] = useState<AlarmDetailPayload | null>(null)
   const [isLoadingDetail, setIsLoadingDetail] = useState(false)
-  const [dateRange, setDateRange] = useState<DateRangeValue | null>(null)
-  const [activeTab, setActiveTab] = useState<"graph" | "table" | "audit">("graph")
+  const [activeTab, setActiveTab] = useState<"graph" | "table">("graph")
   const [detailsSize, setDetailsSize] = useState<"standard" | "expanded">("standard")
   const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 500 })
   const [tableSorting, setTableSorting] = useState<SortingState>([])
   const [zoomBounds, setZoomBounds] = useState<ZoomBounds | null>(null)
   const [guidePositions, setGuidePositions] = useState<GuidePositions>({ sup: null, inf: null, consigne: null, preSup: null, preInf: null })
-  const [showGraphAudits, setShowGraphAudits] = useState(false)
+  const [activeRangeNow, setActiveRangeNow] = useState(() => new Date())
+  const [chartImageDataUrl, setChartImageDataUrl] = useState<string | null>(null)
   const [isAcknowledgeOpen, setIsAcknowledgeOpen] = useState(false)
+  const [acknowledgementTargetIds, setAcknowledgementTargetIds] = useState<number[]>([])
   const [isAcknowledgePending, setIsAcknowledgePending] = useState(false)
+  const [isExportingXlsx, setIsExportingXlsx] = useState(false)
   const tabContentMaxHeight =
-    detailsSize === "expanded" || activeTab === "audit"
+    detailsSize === "expanded"
       ? "calc(100vh - 18rem)"
       : "calc(100vh - 26rem)"
 
@@ -162,28 +182,39 @@ export function AlarmAnalysisClient() {
         const rows = Array.isArray(payload?.data?.data) ? (payload.data.data as AlarmListItem[]) : []
         const next = rows.filter((row) => row.status !== "acknowledged")
         setAlarms(next)
+
         if (next.length === 0) {
-          setSelectedAlarmId(null)
+          setSelectedAlarmIds([])
           return
         }
+
         const preferred = next.some((row) => row.id === initialAlarmId) ? initialAlarmId : next[0].id
-        setSelectedAlarmId((current) => (current && next.some((row) => row.id === current) ? current : preferred))
+        setSelectedAlarmIds((current) => {
+          const validSelection = current.filter((id) => next.some((row) => row.id === id))
+          return validSelection.length > 0 ? validSelection : [preferred]
+        })
       })
       .catch(() => {
         if (!active) return
         setAlarms([])
-        setSelectedAlarmId(null)
+        setSelectedAlarmIds([])
       })
       .finally(() => {
         if (active) setIsLoadingAlarms(false)
       })
+
     return () => {
       active = false
     }
   }, [initialAlarmId, locationId])
 
   useEffect(() => {
-    if (!selectedAlarmId) return
+    if (!selectedAlarmId) {
+      setSelectedAlarmDetail(null)
+      setIsLoadingDetail(false)
+      return
+    }
+
     let active = true
     setIsLoadingDetail(true)
     fetch(`/api/alarmes/${selectedAlarmId}`, { cache: "no-store" })
@@ -199,38 +230,46 @@ export function AlarmAnalysisClient() {
       .finally(() => {
         if (active) setIsLoadingDetail(false)
       })
+
     return () => {
       active = false
     }
   }, [selectedAlarmId])
 
   useEffect(() => {
-    if (!selectedAlarmDetail?.triggeredAt) return
-    const start = parseDbDateTime(selectedAlarmDetail.triggeredAt)
-    const end = selectedAlarmDetail.endedAt ? parseDbDateTime(selectedAlarmDetail.endedAt) : new Date()
-    if (!start || !end) return
-    setDateRange({
-      from: new Date(start.getTime() - 60 * 60 * 1000),
-      to: new Date(end.getTime() + 60 * 60 * 1000),
-    })
-    setPagination((prev) => ({ ...prev, pageIndex: 0 }))
+    setPagination((previous) => ({ ...previous, pageIndex: 0 }))
     setActiveTab("graph")
     setZoomBounds(null)
-  }, [selectedAlarmDetail?.endedAt, selectedAlarmDetail?.triggeredAt, selectedAlarmId])
+    setChartImageDataUrl(null)
+  }, [selectedAlarmId])
 
-  const explicitRangeStart = dateRange?.from ?? null
-  const explicitRangeEnd = useMemo(() => {
-    if (!dateRange?.to && !dateRange?.from) return null
-    const end = new Date(dateRange?.to ?? dateRange!.from)
-    end.setHours(23, 59, 59, 999)
-    return end
-  }, [dateRange])
+  useEffect(() => {
+    if (!selectedAlarmDetail?.triggeredAt || selectedAlarmDetail.endedAt) return
 
-  const { data: graphData = [], isLoading: isGraphLoading } = useMonitoringRangeMeasurements(locationId, {
+    setActiveRangeNow(new Date())
+    const interval = window.setInterval(() => setActiveRangeNow(new Date()), 60_000)
+    return () => window.clearInterval(interval)
+  }, [selectedAlarmDetail?.endedAt, selectedAlarmDetail?.triggeredAt])
+
+  const explicitRangeStart = useMemo(
+    () => selectedAlarmDetail?.triggeredAt ? parseDbDateTime(selectedAlarmDetail.triggeredAt) : null,
+    [selectedAlarmDetail?.triggeredAt],
+  )
+  const explicitRangeEnd = useMemo(
+    () => selectedAlarmDetail?.endedAt
+      ? parseDbDateTime(selectedAlarmDetail.endedAt)
+      : selectedAlarmDetail?.triggeredAt
+        ? activeRangeNow
+        : null,
+    [activeRangeNow, selectedAlarmDetail?.endedAt, selectedAlarmDetail?.triggeredAt],
+  )
+
+  const { data: graphData = [] } = useMonitoringRangeMeasurements(locationId, {
     enabled: locationId > 0 && !!explicitRangeStart && !!explicitRangeEnd,
     rangeStart: explicitRangeStart,
     rangeEnd: explicitRangeEnd,
     includeNullNonResponse: true,
+    limitTodayRange: false,
   })
 
   const measurementSortBy = tableSorting[0]?.id === "value" ? "value" : tableSorting[0]?.id === "date" ? "date" : null
@@ -246,13 +285,6 @@ export function AlarmAnalysisClient() {
     includeNullNonResponse: true,
     sortBy: measurementSortBy,
     sortDirection: measurementSortDirection,
-  })
-
-  const { logs: auditLogs, isLoading: auditLoading, error: auditError } = useMonitoringAuditLogs(locationId, {
-    enabled: locationId > 0 && !!explicitRangeStart && !!explicitRangeEnd && (activeTab === "audit" || (activeTab === "graph" && showGraphAudits)),
-    errorMessage: tMonitoring("audit.error"),
-    rangeStart: explicitRangeStart,
-    rangeEnd: explicitRangeEnd,
   })
 
   const orderedData = useMemo(() => sortMeasuresChronologically(graphData), [graphData])
@@ -301,12 +333,9 @@ export function AlarmAnalysisClient() {
 
   const captureZoomBounds = useCallback((chart: ChartJS<"line">) => {
     const xScale = chart.scales?.x
-    const yScale = chart.scales?.y
     setZoomBounds({
       xMin: typeof xScale?.min === "number" ? xScale.min : undefined,
       xMax: typeof xScale?.max === "number" ? xScale.max : undefined,
-      yMin: typeof yScale?.min === "number" ? yScale.min : undefined,
-      yMax: typeof yScale?.max === "number" ? yScale.max : undefined,
     })
   }, [])
 
@@ -322,7 +351,12 @@ export function AlarmAnalysisClient() {
     () => [
       { label: tMonitoring("export.presentation.location"), value: selectedAlarmDetail?.locationName ?? "-" },
       { label: tMonitoring("export.presentation.sensor_serial"), value: selectedAlarmDetail?.sensorName ?? "-" },
-      { label: tMonitoring("export.presentation.selected_range"), value: dateRange ? `${formatDbDateTime(dateRange.from, { format: "date" })} -> ${formatDbDateTime(dateRange.to ?? dateRange.from, { format: "date" })}` : "-" },
+      {
+        label: tMonitoring("export.presentation.selected_range"),
+        value: explicitRangeStart && explicitRangeEnd
+          ? `${formatDbDateTime(explicitRangeStart, { format: "dateTimeSeconds" })} -> ${formatDbDateTime(explicitRangeEnd, { format: "dateTimeSeconds" })}`
+          : "-",
+      },
       { label: tMonitoring("export.presentation.unit"), value: summary.unite || "-" },
       { label: tMonitoring("export.presentation.upper_threshold"), value: summary.consigneSup !== null ? `${summary.consigneSup}${summary.unite}` : "-" },
       { label: tMonitoring("export.presentation.lower_threshold"), value: summary.consigneInf !== null ? `${summary.consigneInf}${summary.unite}` : "-" },
@@ -331,7 +365,7 @@ export function AlarmAnalysisClient() {
       { label: tMonitoring("export.presentation.last_measure_time"), value: summary.lastDateTime || "-" },
       { label: tMonitoring("export.presentation.last_measure_value"), value: summary.lastMeasureText || "-" },
     ],
-    [dateRange, orderedData.length, selectedAlarmDetail?.locationName, selectedAlarmDetail?.sensorName, summary, tMonitoring, totalRows],
+    [explicitRangeEnd, explicitRangeStart, orderedData.length, selectedAlarmDetail?.locationName, selectedAlarmDetail?.sensorName, summary, tMonitoring, totalRows],
   )
 
   const handleTableSortingChange = useCallback((updater: Updater<SortingState>) => {
@@ -340,114 +374,215 @@ export function AlarmAnalysisClient() {
   }, [])
 
   const selectedAlarmRow = useMemo(
-    () => alarms.find((row) => row.id === selectedAlarmId) ?? null,
+    () => (selectedAlarmId ? alarms.find((row) => row.id === selectedAlarmId) ?? null : null),
     [alarms, selectedAlarmId],
   )
-  const acknowledgeDialogAlarm = useMemo<AcknowledgeDialogAlarm | null>(() => {
-    if (!selectedAlarmDetail || !selectedAlarmId) return null
-    return {
-      id: String(selectedAlarmId),
-      locationId: String(selectedAlarmDetail.locationId ?? ""),
-      locationName: selectedAlarmDetail.locationName ?? selectedAlarmRow?.locationName ?? "-",
-      sensorName: selectedAlarmDetail.sensorName ?? selectedAlarmRow?.sensorName ?? "-",
-      type: selectedAlarmDetail.type,
-      currentValue: selectedAlarmDetail.currentValue ?? selectedAlarmDetail.value ?? null,
-      value: selectedAlarmDetail.value ?? null,
-      unit: selectedAlarmDetail.unit ?? null,
-      minThreshold: selectedAlarmDetail.minThreshold ?? null,
-      maxThreshold: selectedAlarmDetail.maxThreshold ?? null,
-      triggeredAt: selectedAlarmDetail.triggeredAt ?? null,
-      endedAt: selectedAlarmDetail.endedAt ?? null,
-    }
-  }, [selectedAlarmDetail, selectedAlarmId, selectedAlarmRow?.locationName, selectedAlarmRow?.sensorName])
-  const datePickerKey = useMemo(() => {
-    const from = dateRange?.from?.toISOString() ?? "none"
-    const to = dateRange?.to?.toISOString() ?? "none"
-    return `${from}-${to}`
-  }, [dateRange?.from, dateRange?.to])
+  const selectedAlarmRows = useMemo(
+    () => selectedAlarmIds
+      .map((id) => alarms.find((row) => row.id === id) ?? null)
+      .filter((row): row is AlarmListItem => row !== null),
+    [alarms, selectedAlarmIds],
+  )
+  const acknowledgeableAlarms = useMemo(
+    () => alarms.filter((row) => row.status !== "acknowledged"),
+    [alarms],
+  )
+  const selectedAcknowledgeableIds = useMemo(
+    () => selectedAlarmIds.filter((id) => alarms.some((row) => row.id === id && row.status !== "acknowledged")),
+    [alarms, selectedAlarmIds],
+  )
+  const allAcknowledgeableSelected =
+    acknowledgeableAlarms.length > 0 &&
+    acknowledgeableAlarms.every((row) => selectedAlarmIds.includes(row.id))
+  const someAcknowledgeableSelected =
+    !allAcknowledgeableSelected &&
+    acknowledgeableAlarms.some((row) => selectedAlarmIds.includes(row.id))
 
-  const refreshAlarms = useCallback(async () => {
-    if (!Number.isFinite(locationId) || locationId <= 0) return
-    setIsLoadingAlarms(true)
-    try {
-      const res = await fetch(`/api/alarmes?locationId=${encodeURIComponent(String(locationId))}&limit=200`, { cache: "no-store" })
-      const payload = res.ok ? await res.json() : null
-      const rows = Array.isArray(payload?.data?.data) ? (payload.data.data as AlarmListItem[]) : []
-      const next = rows.filter((row) => row.status !== "acknowledged")
-      setAlarms(next)
-      if (next.length === 0) {
-        setSelectedAlarmId(null)
-        return
+  const toggleAlarmSelection = useCallback((alarmId: number, checked: boolean) => {
+    if (!canAcknowledgeAlarm) return
+    setSelectedAlarmIds((current) => {
+      if (checked) {
+        return current.includes(alarmId) ? current : [...current, alarmId]
       }
-      if (!next.some((row) => row.id === selectedAlarmId)) {
-        setSelectedAlarmId(next[0].id)
+      return current.filter((id) => id !== alarmId)
+    })
+  }, [canAcknowledgeAlarm])
+
+  const selectOnlyAlarm = useCallback((alarmId: number) => {
+    setSelectedAlarmIds([alarmId])
+  }, [])
+
+  const toggleAllAlarms = useCallback((checked: boolean) => {
+    if (!canAcknowledgeAlarm) return
+    setSelectedAlarmIds(checked ? acknowledgeableAlarms.map((row) => row.id) : [])
+  }, [acknowledgeableAlarms, canAcknowledgeAlarm])
+
+  const openAcknowledgementDialog = useCallback(() => {
+    if (!canAcknowledgeAlarm || selectedAcknowledgeableIds.length === 0) return
+    setAcknowledgementTargetIds(selectedAcknowledgeableIds)
+    setIsAcknowledgeOpen(true)
+  }, [canAcknowledgeAlarm, selectedAcknowledgeableIds])
+
+  const handleAcknowledgementConfirm = useCallback(async (comment: string) => {
+    if (acknowledgementTargetIds.length === 0) return
+
+    setIsAcknowledgePending(true)
+    try {
+      const successfulIds = new Set<number>()
+      for (const alarmId of acknowledgementTargetIds) {
+        try {
+          await alarmsApi.acknowledge(String(alarmId), comment)
+          successfulIds.add(alarmId)
+        } catch {
+          // Keep processing the remaining alarms so a partial multi-acknowledgement
+          // is reflected accurately without creating a burst of concurrent writes.
+        }
+      }
+
+      if (successfulIds.size === 0) {
+        throw new Error("no_acknowledgement_succeeded")
+      }
+
+      const nextAlarms = alarms.map((row) =>
+        successfulIds.has(row.id) ? { ...row, status: "acknowledged" as const } : row,
+      )
+      setAlarms(nextAlarms)
+
+      successfulIds.forEach((alarmId) => {
+        markAlarmAcknowledgedInPaginatedSensorsCache(queryClient, alarmId)
+      })
+      void Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["alarms"] }),
+        queryClient.invalidateQueries({ queryKey: ["capteurs", "paginated"] }),
+        queryClient.invalidateQueries({ queryKey: ["admin", "alarmes-actives"] }),
+        queryClient.invalidateQueries({ queryKey: ["admin", "alarms-count"] }),
+        queryClient.invalidateQueries({ queryKey: ["dashboard"] }),
+      ])
+
+      const remainingSelection = selectedAlarmIds.filter((id) => !successfulIds.has(id))
+      if (remainingSelection.length > 0) {
+        setSelectedAlarmIds(remainingSelection)
+      } else {
+        const nextAlarm = nextAlarms.find((row) => row.status !== "acknowledged")
+        setSelectedAlarmIds(nextAlarm ? [nextAlarm.id] : [])
+      }
+
+      setIsAcknowledgeOpen(false)
+      setAcknowledgementTargetIds([])
+      toast.success(t("toast.acknowledge_success"))
+
+      if (successfulIds.size !== acknowledgementTargetIds.length) {
+        toast.error(t("analysis.partialAcknowledgeError"))
       }
     } catch {
-      setAlarms([])
-      setSelectedAlarmId(null)
+      toast.error(t("toast.acknowledge_error"))
     } finally {
-      setIsLoadingAlarms(false)
+      setIsAcknowledgePending(false)
     }
-  }, [locationId, selectedAlarmId])
+  }, [acknowledgementTargetIds, alarms, queryClient, selectedAlarmIds, t])
 
-  const exportMeasurementsCsv = useCallback(() => {
-    const headers = [
-      tMonitoring("table.columns.date_time"),
-      tMonitoring("table.columns.serial"),
-      tMonitoring("table.columns.value"),
-      tMonitoring("table.columns.lower_threshold"),
-      tMonitoring("table.columns.upper_threshold"),
-      tMonitoring("table.columns.status"),
-    ]
-    const rows = orderedHistoryData.map((measure) => [
-      formatDbDateTime(measure.DateHeureMesure ?? null, { format: "dateTimeSeconds" }),
-      selectedAlarmDetail?.sensorName ?? "",
-      measure.Valeur == null ? "" : formatMeasureValue(measure.Valeur, null, localeTag),
-      measure.Consigne_Inf == null ? "" : formatMeasureValue(measure.Consigne_Inf, null, localeTag),
-      measure.Consigne_Sup == null ? "" : formatMeasureValue(measure.Consigne_Sup, null, localeTag),
-      measure.Est_Valeur_Null ? tMonitoring("table.status.no_response") : measure.Etat_Alarme ? tMonitoring("table.status.out_of_range") : tMonitoring("table.status.ok"),
-    ])
-    const csv = [headers, ...rows]
-      .map((row) => row.map((value) => `"${String(value ?? "").replace(/"/g, '""')}"`).join(";"))
-      .join("\n")
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" })
-    const url = URL.createObjectURL(blob)
-    const anchor = document.createElement("a")
-    anchor.href = url
-    anchor.download = `analyse-alarme-${selectedAlarmId ?? "unknown"}-mesures.csv`
-    anchor.click()
-    URL.revokeObjectURL(url)
-  }, [localeTag, orderedHistoryData, selectedAlarmDetail?.sensorName, selectedAlarmId, tMonitoring])
+  const handleChartImageReady = useCallback((dataUrl: string) => {
+    setChartImageDataUrl(dataUrl)
+  }, [])
 
-  const exportAuditCsv = useCallback(() => {
-    const headers = [
-      tMonitoring("audit.columns.code"),
-      tMonitoring("audit.columns.label"),
-      tMonitoring("audit.columns.date_time"),
-      tMonitoring("audit.columns.user"),
-      tMonitoring("audit.columns.details"),
-    ]
-    const rows = auditLogs.map((log) => [
-      log.code ?? "",
-      log.commentaire ?? log.label ?? "",
-      formatDbDateTime(log.timestamp ?? null, { format: "dateTimeSeconds" }),
-      log.user ?? "",
-      log.detailsSummary ?? "",
-    ])
-    const csv = [headers, ...rows]
-      .map((row) => row.map((value) => `"${String(value ?? "").replace(/"/g, '""')}"`).join(";"))
-      .join("\n")
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" })
-    const url = URL.createObjectURL(blob)
-    const anchor = document.createElement("a")
-    anchor.href = url
-    anchor.download = `analyse-alarme-${selectedAlarmId ?? "unknown"}-audit.csv`
-    anchor.click()
-    URL.revokeObjectURL(url)
-  }, [auditLogs, selectedAlarmId, tMonitoring])
+  const fetchAllMeasurementsForExport = useCallback(async () => {
+    if (!explicitRangeStart || !explicitRangeEnd || locationId <= 0) return [] as MeasureData[]
+
+    const pageSize = 500
+    const fetchPage = (page: number) => {
+      const params = new URLSearchParams({
+        page: String(page),
+        pageSize: String(pageSize),
+        source: "mesures",
+        startDate: toApiUtcDateTime(explicitRangeStart),
+        endDate: toApiUtcDateTime(explicitRangeEnd),
+        includeNullNonResponse: "1",
+      })
+      return fetchJson<MeasurementsExportPayload>(`/api/mesures/${locationId}?${params.toString()}`)
+    }
+
+    const firstPage = await fetchPage(1)
+    const measurements = [...(firstPage.measurements ?? [])]
+    const pageCountForExport = Math.max(1, Math.ceil((firstPage.total ?? measurements.length) / pageSize))
+
+    for (let page = 2; page <= pageCountForExport; page += 1) {
+      const nextPage = await fetchPage(page)
+      measurements.push(...(nextPage.measurements ?? []))
+    }
+
+    return sortMeasuresChronologically(measurements)
+  }, [explicitRangeEnd, explicitRangeStart, locationId])
+
+  const handleExportXlsx = useCallback(async () => {
+    if (!selectedAlarmId || !selectedAlarmDetail || isExportingXlsx) return
+
+    setIsExportingXlsx(true)
+    try {
+      const measurements = await fetchAllMeasurementsForExport()
+      const imageDataUrl =
+        chartImageDataUrl ??
+        chartRef.current?.toBase64Image("image/png", 1) ??
+        null
+
+      await exportStyledExcel({
+        fileName: `analyse-alarme-${selectedAlarmId}`,
+        title: selectedAlarmDetail.locationName ?? t("analysis.focusTitle"),
+        presentationSheetName: tMonitoring("table.multi_tabs.presentation_sheet"),
+        dataSheetName: tMonitoring("table.multi_tabs.measurements_sheet"),
+        presentationHeaders: [
+          tMonitoring("table.multi_tabs.presentation_columns.label"),
+          tMonitoring("table.multi_tabs.presentation_columns.value"),
+        ],
+        presentationRows,
+        presentationImage: imageDataUrl
+          ? {
+              dataUrl: imageDataUrl,
+              title: tMonitoring("tabs.graph"),
+            }
+          : null,
+        dataHeaders: [
+          tMonitoring("table.columns.date_time"),
+          tMonitoring("table.columns.serial"),
+          tMonitoring("table.columns.value"),
+          tMonitoring("table.columns.lower_threshold"),
+          tMonitoring("table.columns.upper_threshold"),
+          tMonitoring("table.columns.status"),
+        ],
+        dataRows: measurements.map((measure) => [
+          formatDbDateTime(measure.DateHeureMesureIso ?? measure.DateHeureMesure ?? null, { format: "dateTimeSeconds" }),
+          selectedAlarmDetail.sensorName ?? "",
+          measure.Valeur == null
+            ? tMonitoring("table.status.no_response")
+            : `${formatMeasureValue(measure.Valeur, measure.Nb_Decimal ?? null, localeTag)}${summary.unite}`,
+          measure.Consigne_Inf == null ? "-" : `${formatMeasureValue(measure.Consigne_Inf, null, localeTag)}${summary.unite}`,
+          measure.Consigne_Sup == null ? "-" : `${formatMeasureValue(measure.Consigne_Sup, null, localeTag)}${summary.unite}`,
+          measure.Est_Valeur_Null
+            ? tMonitoring("table.status.no_response")
+            : measure.Etat_Alarme
+              ? tMonitoring("table.status.out_of_range")
+              : tMonitoring("table.status.ok"),
+        ]),
+      })
+    } catch {
+      toast.error(t("analysis.exportError"))
+    } finally {
+      setIsExportingXlsx(false)
+    }
+  }, [
+    chartImageDataUrl,
+    fetchAllMeasurementsForExport,
+    isExportingXlsx,
+    localeTag,
+    presentationRows,
+    selectedAlarmDetail,
+    selectedAlarmId,
+    summary.unite,
+    t,
+    tMonitoring,
+  ])
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="space-y-6 p-6">
       <PageHeader
         title={t("analysis.title")}
         description={t("analysis.description")}
@@ -461,20 +596,11 @@ export function AlarmAnalysisClient() {
             {t("analysis.backToMonitoring")}
           </Button>
           <Button
-            variant="default"
-            disabled={!acknowledgeDialogAlarm || isAcknowledgePending}
-            onClick={() => setIsAcknowledgeOpen(true)}
+            variant="outline"
+            disabled={!selectedAlarmId || !selectedAlarmDetail || isExportingXlsx}
+            onClick={() => void handleExportXlsx()}
           >
-            {t("analysis.acknowledge")}
-          </Button>
-          <Button variant="outline" onClick={() => window.print()}>
-            {t("analysis.print")}
-          </Button>
-          <Button variant="outline" onClick={exportMeasurementsCsv} disabled={orderedHistoryData.length === 0}>
-            {t("analysis.exportMeasurements")}
-          </Button>
-          <Button variant="outline" onClick={exportAuditCsv} disabled={auditLogs.length === 0}>
-            {t("analysis.exportAudit")}
+            {isExportingXlsx ? t("analysis.exportingXlsx") : t("analysis.exportXlsx")}
           </Button>
           <Button
             variant="outline"
@@ -488,16 +614,28 @@ export function AlarmAnalysisClient() {
 
       <div className="grid gap-6 xl:grid-cols-[380px_minmax(0,1fr)]">
         <Card className="min-w-0">
-          <CardHeader>
-            <CardTitle>{t("analysis.locationAlarms")}</CardTitle>
-            <CardDescription>{selectedAlarmRow?.locationName ?? t("analysis.selectAlarm")}</CardDescription>
+          <CardHeader className="space-y-4">
+            <div>
+              <CardTitle>{t("analysis.locationAlarms")}</CardTitle>
+              <CardDescription>
+                {alarms[0]?.locationName ?? t("analysis.selectAlarm")}
+              </CardDescription>
+            </div>
+            <label className="flex cursor-pointer items-center gap-2 text-sm font-medium">
+              <Checkbox
+                checked={allAcknowledgeableSelected ? true : someAcknowledgeableSelected ? "indeterminate" : false}
+                disabled={!canAcknowledgeAlarm || acknowledgeableAlarms.length === 0}
+                onCheckedChange={(checked) => toggleAllAlarms(checked === true)}
+              />
+              <span>{t("analysis.selectAllForAcknowledgement")}</span>
+            </label>
           </CardHeader>
           <CardContent className="min-w-0">
             {isLoadingAlarms ? (
               <div className="space-y-3">
-                <Skeleton className="h-16 w-full" />
-                <Skeleton className="h-16 w-full" />
-                <Skeleton className="h-16 w-full" />
+                <Skeleton className="h-20 w-full" />
+                <Skeleton className="h-20 w-full" />
+                <Skeleton className="h-20 w-full" />
               </div>
             ) : alarms.length === 0 ? (
               <div className="rounded-lg border border-dashed p-4 text-sm text-muted-foreground">
@@ -507,41 +645,76 @@ export function AlarmAnalysisClient() {
               <ScrollArea className="h-[72vh] pr-3">
                 <div className="space-y-3">
                   {alarms.map((alarm) => {
-                    const active = alarm.id === selectedAlarmId
-                    const value = alarm.currentValue == null ? t("dialog.na") : `${formatAlarmNumber(alarm.currentValue, locale)} ${alarm.unit ?? ""}`.trim()
+                    const selected = selectedAlarmIds.includes(alarm.id)
+                    const acknowledged = alarm.status === "acknowledged"
+                    const value = alarm.currentValue == null
+                      ? t("dialog.na")
+                      : `${formatAlarmNumber(alarm.currentValue, locale)} ${alarm.unit ?? ""}`.trim()
+
                     return (
-                      <button
+                      <div
                         key={alarm.id}
-                        type="button"
-                        onClick={() => setSelectedAlarmId(alarm.id)}
+                        role={acknowledged ? undefined : "button"}
+                        tabIndex={acknowledged ? -1 : 0}
+                        onClick={() => {
+                          if (!acknowledged) selectOnlyAlarm(alarm.id)
+                        }}
+                        onKeyDown={(event) => {
+                          if (acknowledged || (event.key !== "Enter" && event.key !== " ")) return
+                          event.preventDefault()
+                          selectOnlyAlarm(alarm.id)
+                        }}
                         className={cn(
                           "w-full rounded-xl border p-4 text-left transition-colors",
-                          active ? "border-primary bg-primary/5 shadow-sm" : "border-border bg-background hover:bg-muted/30",
+                          acknowledged && "cursor-default border-border bg-muted/50 opacity-65",
+                          !acknowledged && selected && "border-primary bg-primary/5 shadow-sm",
+                          !acknowledged && !selected && "cursor-pointer border-border bg-background hover:bg-muted/30",
                         )}
                       >
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="space-y-1">
-                            <p className="text-sm font-semibold">#{alarm.id} - {getTypeLabel(t, alarm.type)}</p>
-                            <p className="text-xs text-muted-foreground">{formatDbDateTime(alarm.timestamp, { format: "dateTimeSeconds" })}</p>
+                        <div className="flex items-start gap-3">
+                          <Checkbox
+                            checked={selected}
+                            disabled={acknowledged || !canAcknowledgeAlarm}
+                            onCheckedChange={(checked) => toggleAlarmSelection(alarm.id, checked === true)}
+                            onClick={(event) => event.stopPropagation()}
+                            aria-label={t("analysis.selectAlarmAria", { id: alarm.id })}
+                          />
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-start justify-between gap-3">
+                              <div className="space-y-1">
+                                <p className="text-sm font-semibold">#{alarm.id} - {getTypeLabel(t, alarm.type)}</p>
+                                <p className="text-xs text-muted-foreground">
+                                  {formatDbDateTime(alarm.timestamp, { format: "dateTimeSeconds" })}
+                                </p>
+                              </div>
+                              <span
+                                className={cn(
+                                  "inline-flex shrink-0 items-center rounded-full px-2.5 py-1 text-xs font-medium",
+                                  alarm.status === "active" && "bg-red-100 text-red-700 dark:bg-red-950/40 dark:text-red-300",
+                                  alarm.status === "resolved" && "bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300",
+                                  acknowledged && "bg-muted text-muted-foreground",
+                                )}
+                              >
+                                {alarm.status === "active"
+                                  ? t("analysis.statusActive")
+                                  : alarm.status === "resolved"
+                                    ? t("analysis.statusResolved")
+                                    : t("status.acknowledged")}
+                              </span>
+                            </div>
+                            <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
+                              <div>
+                                <p className="text-xs text-muted-foreground">{t("dialog.last_value_label")}</p>
+                                <p className="font-medium">{value}</p>
+                              </div>
+                              <div>
+                                <p className="text-xs text-muted-foreground">{t("dialog.sensor_label")}</p>
+                                <p className="truncate font-medium">{alarm.sensorName}</p>
+                              </div>
+                            </div>
                           </div>
-                          <span className={cn(
-                            "inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium",
-                            alarm.status === "active" ? "bg-red-100 text-red-700" : "bg-amber-100 text-amber-700",
-                          )}>
-                            {alarm.status === "active" ? t("analysis.statusActive") : t("analysis.statusResolved")}
-                          </span>
                         </div>
-                        <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
-                          <div>
-                            <p className="text-xs text-muted-foreground">{t("dialog.last_value_label")}</p>
-                            <p className="font-medium">{value}</p>
-                          </div>
-                          <div>
-                            <p className="text-xs text-muted-foreground">{t("dialog.sensor_label")}</p>
-                            <p className="font-medium">{alarm.sensorName}</p>
-                          </div>
-                        </div>
-                      </button>
+                      </div>
                     )
                   })}
                 </div>
@@ -551,163 +724,202 @@ export function AlarmAnalysisClient() {
         </Card>
 
         <div className="min-w-0 space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>{t("analysis.focusTitle")}</CardTitle>
-              <CardDescription>{selectedAlarmDetail?.locationName ?? t("analysis.selectAlarm")}</CardDescription>
-            </CardHeader>
-            <CardContent className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-              <div>
-                <p className="text-xs uppercase tracking-wide text-muted-foreground">{t("dialog.type_label")}</p>
-                <p className="text-sm font-medium">{getTypeLabel(t, selectedAlarmDetail?.type)}</p>
-              </div>
-              <div>
-                <p className="text-xs uppercase tracking-wide text-muted-foreground">{t("dialog.last_value_label")}</p>
-                <p className="text-sm font-medium">
-                  {selectedAlarmDetail
-                    ? `${formatAlarmNumber(selectedAlarmDetail.currentValue ?? selectedAlarmDetail.value ?? null, locale)} ${selectedAlarmDetail.unit ?? ""}`.trim()
-                    : "-"}
-                </p>
-              </div>
-              <div>
-                <p className="text-xs uppercase tracking-wide text-muted-foreground">{t("dialog.start_label")}</p>
-                <p className="text-sm font-medium">{formatDbDateTime(selectedAlarmDetail?.triggeredAt ?? null, { format: "dateTimeSeconds" })}</p>
-              </div>
-              <div>
-                <p className="text-xs uppercase tracking-wide text-muted-foreground">{t("dialog.end_label")}</p>
-                <p className="text-sm font-medium">{selectedAlarmDetail?.endedAt ? formatDbDateTime(selectedAlarmDetail.endedAt, { format: "dateTimeSeconds" }) : t("dialog.end_in_progress")}</p>
-              </div>
-            </CardContent>
-          </Card>
+          {selectedAlarmIds.length === 0 ? (
+            <Card>
+              <CardContent className="flex min-h-48 items-center justify-center p-6 text-center text-sm text-muted-foreground">
+                {t("analysis.noSelection")}
+              </CardContent>
+            </Card>
+          ) : selectedAlarmIds.length > 1 ? (
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between gap-4 space-y-0">
+                <div>
+                  <CardTitle>{t("analysis.multipleSelectionTitle", { count: selectedAlarmRows.length })}</CardTitle>
+                  <CardDescription>{t("analysis.multipleSelectionDescription")}</CardDescription>
+                </div>
+                <Button
+                  type="button"
+                  disabled={!canAcknowledgeAlarm || selectedAcknowledgeableIds.length === 0 || isAcknowledgePending}
+                  onClick={openAcknowledgementDialog}
+                >
+                  {t("analysis.acknowledgeMany", { count: selectedAcknowledgeableIds.length })}
+                </Button>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {selectedAlarmRows.map((alarm) => (
+                  <div
+                    key={alarm.id}
+                    className="grid gap-3 rounded-xl border bg-muted/15 p-4 md:grid-cols-2 xl:grid-cols-[minmax(0,1.2fr)_minmax(0,.8fr)_minmax(0,1fr)_minmax(0,1fr)_auto]"
+                  >
+                    <div>
+                      <p className="text-sm font-semibold">#{alarm.id} - {getTypeLabel(t, alarm.type)}</p>
+                      <p className="text-xs text-muted-foreground">{alarm.sensorName}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs uppercase tracking-wide text-muted-foreground">{t("dialog.last_value_label")}</p>
+                      <p className="text-sm font-medium">
+                        {alarm.currentValue == null
+                          ? t("dialog.na")
+                          : `${formatAlarmNumber(alarm.currentValue, locale)} ${alarm.unit ?? ""}`.trim()}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs uppercase tracking-wide text-muted-foreground">{t("dialog.start_label")}</p>
+                      <p className="text-sm font-medium">{formatDbDateTime(alarm.timestamp, { format: "dateTimeSeconds" })}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs uppercase tracking-wide text-muted-foreground">{t("dialog.end_label")}</p>
+                      <p className="text-sm font-medium">
+                        {alarm.resolvedAt
+                          ? formatDbDateTime(alarm.resolvedAt, { format: "dateTimeSeconds" })
+                          : t("dialog.end_in_progress")}
+                      </p>
+                    </div>
+                    <div className="flex items-start justify-end">
+                      <span
+                        className={cn(
+                          "inline-flex shrink-0 items-center rounded-full px-2.5 py-1 text-xs font-medium",
+                          alarm.status === "active" && "bg-red-100 text-red-700 dark:bg-red-950/40 dark:text-red-300",
+                          alarm.status === "resolved" && "bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300",
+                          alarm.status === "acknowledged" && "bg-muted text-muted-foreground",
+                        )}
+                      >
+                        {alarm.status === "active"
+                          ? t("analysis.statusActive")
+                          : alarm.status === "resolved"
+                            ? t("analysis.statusResolved")
+                            : t("status.acknowledged")}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          ) : (
+            <>
+              <Card className="border-primary/30">
+                <CardHeader className="flex flex-row items-center justify-between gap-4 space-y-0">
+                  <div>
+                    <CardTitle>{t("analysis.focusTitle")}</CardTitle>
+                    <CardDescription>{selectedAlarmDetail?.locationName ?? selectedAlarmRow?.locationName ?? t("analysis.selectAlarm")}</CardDescription>
+                  </div>
+                  <Button
+                    type="button"
+                    disabled={!canAcknowledgeAlarm || !selectedAlarmDetail || isLoadingDetail || selectedAcknowledgeableIds.length === 0 || isAcknowledgePending}
+                    onClick={openAcknowledgementDialog}
+                  >
+                    {t("analysis.acknowledge")}
+                  </Button>
+                </CardHeader>
+                <CardContent className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+                  <div>
+                    <p className="text-xs uppercase tracking-wide text-muted-foreground">{t("dialog.type_label")}</p>
+                    <p className="text-sm font-medium">{getTypeLabel(t, selectedAlarmDetail?.type)}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs uppercase tracking-wide text-muted-foreground">{t("dialog.last_value_label")}</p>
+                    <p className="text-sm font-medium">
+                      {selectedAlarmDetail
+                        ? `${formatAlarmNumber(selectedAlarmDetail.currentValue ?? selectedAlarmDetail.value ?? null, locale)} ${selectedAlarmDetail.unit ?? ""}`.trim()
+                        : "-"}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs uppercase tracking-wide text-muted-foreground">{t("dialog.start_label")}</p>
+                    <p className="text-sm font-medium">
+                      {formatDbDateTime(selectedAlarmDetail?.triggeredAt ?? null, { format: "dateTimeSeconds" })}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs uppercase tracking-wide text-muted-foreground">{t("dialog.end_label")}</p>
+                    <p className="text-sm font-medium">
+                      {selectedAlarmDetail?.endedAt
+                        ? formatDbDateTime(selectedAlarmDetail.endedAt, { format: "dateTimeSeconds" })
+                        : t("dialog.end_in_progress")}
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
 
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <DateRangePicker
-              key={datePickerKey}
-              allowEmpty
-              initialDateFrom={dateRange?.from}
-              initialDateTo={dateRange?.to}
-              onUpdate={({ range }) => setDateRange(range?.from ? { from: range.from, to: range.to } : null)}
-            />
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => {
-                if (!selectedAlarmDetail?.triggeredAt) return
-                const start = parseDbDateTime(selectedAlarmDetail.triggeredAt)
-                const end = selectedAlarmDetail.endedAt ? parseDbDateTime(selectedAlarmDetail.endedAt) : new Date()
-                if (!start || !end) return
-                setDateRange({
-                  from: new Date(start.getTime() - 60 * 60 * 1000),
-                  to: new Date(end.getTime() + 60 * 60 * 1000),
-                })
-                resetChartZoom()
-              }}
-            >
-              <LocateFixed className="mr-2 h-4 w-4" />
-              {t("analysis.refocus")}
-            </Button>
-          </div>
-
-          <Tabs
-            value={activeTab}
-            onValueChange={(next) => setActiveTab(next as "graph" | "table" | "audit")}
-            className="flex min-h-0 min-w-0 flex-1 flex-col"
-          >
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="graph">{tMonitoring("tabs.graph")}</TabsTrigger>
-              <TabsTrigger value="table">{tMonitoring("tabs.table")}</TabsTrigger>
-              <TabsTrigger value="audit">{tMonitoring("tabs.audit")}</TabsTrigger>
-            </TabsList>
-            <TabsContent value="graph" className="flex min-h-0 min-w-0 flex-1 flex-col">
-              <MonitoringGraphTab
-                chartRef={chartRef}
-                orderedData={orderedData}
-                graphMeasureCount={orderedData.length}
-                isRangeSelected={Boolean(dateRange?.from)}
-                auditLogs={auditLogs}
-                showAuditMarkers={showGraphAudits}
-                onShowAuditMarkersChange={setShowGraphAudits}
-                measuresLabel={measuresLabel}
-                locale={locale}
-                unite={summary.unite}
-                consigneSup={summary.consigneSup}
-                consigneInf={summary.consigneInf}
-                consigne={null}
-                preAlarmSup={null}
-                preAlarmInf={null}
-                guidePositions={guidePositions}
-                yMin={yMin}
-                yMax={yMax}
-                zoomBounds={zoomBounds}
-                resetChartZoom={resetChartZoom}
-                captureZoomBounds={captureZoomBounds}
-                t={tMonitoring}
-                exportFileName={`analyse-alarme-${selectedAlarmId ?? "unknown"}`}
-              />
-            </TabsContent>
-            <TabsContent value="table" className="flex min-h-0 min-w-0 flex-1 flex-col">
-              <MonitoringTableTab
-                tableMeasurements={orderedHistoryData}
-                nomLieu={selectedAlarmDetail?.locationName ?? "-"}
-                sondeNumeroSerie={selectedAlarmDetail?.sensorName ?? "-"}
-                exportFileName={`analyse-alarme-${selectedAlarmId ?? "unknown"}`}
-                unite={summary.unite}
-                consigneSup={summary.consigneSup}
-                consigneInf={summary.consigneInf}
-                rangeLoading={isHistoryLoading}
-                pagination={pagination}
-                pageCount={pageCount}
-                totalRows={totalRows}
-                onPaginationChange={setPagination}
-                sorting={tableSorting}
-                onSortingChange={handleTableSortingChange}
-                isSurveillanceActive={true}
-                rangeEnabled={Boolean(dateRange?.from)}
-                presentationRows={presentationRows}
-                maxHeight={tabContentMaxHeight}
-                t={tMonitoring}
-              />
-            </TabsContent>
-            <TabsContent value="audit" className="flex min-h-0 min-w-0 flex-1 flex-col">
-              <MonitoringAuditTab
-                logs={auditLogs}
-                isLoading={auditLoading || isLoadingDetail || isGraphLoading}
-                error={auditError}
-                maxHeight={tabContentMaxHeight}
-                t={tMonitoring}
-              />
-            </TabsContent>
-          </Tabs>
+              <Tabs
+                value={activeTab}
+                onValueChange={(next) => setActiveTab(next as "graph" | "table")}
+                className="flex min-h-0 min-w-0 flex-1 flex-col"
+              >
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="graph">{tMonitoring("tabs.graph")}</TabsTrigger>
+                  <TabsTrigger value="table">{tMonitoring("tabs.table")}</TabsTrigger>
+                </TabsList>
+                <TabsContent value="graph" className="flex min-h-0 min-w-0 flex-1 flex-col">
+                  <MonitoringGraphTab
+                    chartRef={chartRef}
+                    orderedData={orderedData}
+                    graphMeasureCount={orderedData.length}
+                    isRangeSelected
+                    auditLogs={[]}
+                    showAuditMarkers={false}
+                    onShowAuditMarkersChange={() => {}}
+                    measuresLabel={measuresLabel}
+                    locale={locale}
+                    unite={summary.unite}
+                    consigneSup={summary.consigneSup}
+                    consigneInf={summary.consigneInf}
+                    consigne={null}
+                    preAlarmSup={null}
+                    preAlarmInf={null}
+                    guidePositions={guidePositions}
+                    yMin={yMin}
+                    yMax={yMax}
+                    zoomBounds={zoomBounds}
+                    resetChartZoom={resetChartZoom}
+                    captureZoomBounds={captureZoomBounds}
+                    t={tMonitoring}
+                    exportFileName={`analyse-alarme-${selectedAlarmId ?? "unknown"}`}
+                    showAuditControls={false}
+                    allowImageExport={false}
+                    onChartImageReady={handleChartImageReady}
+                    interactionProfile="alarm-analysis"
+                  />
+                </TabsContent>
+                <TabsContent value="table" className="flex min-h-0 min-w-0 flex-1 flex-col">
+                  <MonitoringTableTab
+                    tableMeasurements={orderedHistoryData}
+                    nomLieu={selectedAlarmDetail?.locationName ?? "-"}
+                    sondeNumeroSerie={selectedAlarmDetail?.sensorName ?? "-"}
+                    exportFileName={`analyse-alarme-${selectedAlarmId ?? "unknown"}`}
+                    unite={summary.unite}
+                    consigneSup={summary.consigneSup}
+                    consigneInf={summary.consigneInf}
+                    rangeLoading={isHistoryLoading}
+                    pagination={pagination}
+                    pageCount={pageCount}
+                    totalRows={totalRows}
+                    onPaginationChange={setPagination}
+                    sorting={tableSorting}
+                    onSortingChange={handleTableSortingChange}
+                    isSurveillanceActive
+                    rangeEnabled={Boolean(explicitRangeStart && explicitRangeEnd)}
+                    presentationRows={presentationRows}
+                    maxHeight={tabContentMaxHeight}
+                    t={tMonitoring}
+                    showExportActions={false}
+                  />
+                </TabsContent>
+              </Tabs>
+            </>
+          )}
         </div>
       </div>
 
-      <AlarmAcknowledgeDialog
+      <AlarmAcknowledgementCommentDialog
         open={isAcknowledgeOpen}
-        alarm={acknowledgeDialogAlarm}
-        onOpenChange={setIsAcknowledgeOpen}
+        alarmCount={acknowledgementTargetIds.length}
         isConfirming={isAcknowledgePending}
-        selectionMode="single"
-        onConfirm={async (alarmIds, comment, options) => {
-          setIsAcknowledgePending(true)
-          try {
-            const results = await Promise.allSettled(
-              alarmIds.map((alarmId) => alarmsApi.acknowledge(alarmId, comment || "")),
-            )
-            const successCount = results.filter((result) => result.status === "fulfilled").length
-            if (successCount === 0) {
-              throw new Error("no_acknowledgement_succeeded")
-            }
-            toast.success(t("toast.acknowledge_success"))
-            if (options?.closeAfter !== false) {
-              setIsAcknowledgeOpen(false)
-            }
-            await refreshAlarms()
-          } catch {
-            toast.error(t("toast.acknowledge_error"))
-          } finally {
-            setIsAcknowledgePending(false)
-          }
+        onOpenChange={(open) => {
+          setIsAcknowledgeOpen(open)
+          if (!open) setAcknowledgementTargetIds([])
         }}
+        onConfirm={handleAcknowledgementConfirm}
       />
     </div>
   )

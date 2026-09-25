@@ -33,6 +33,7 @@ import {
   MessageSquare,
   Truck,
   TrendingUp,
+  CircleHelp,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ALARM_AUDIO_STATE_EVENT, getAlarmAudioMuted, setAlarmAudioMuted } from "@/lib/alarm-audio";
@@ -327,6 +328,24 @@ export function AppSidebar({ activeAlarms = 0, currentUser, onLogout }: AppSideb
           />
         </div>
         <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              asChild
+              isActive={isActive("/help")}
+              tooltip={tSidebar("hotline_help")}
+            >
+              <Link
+                href="/help"
+                data-testid="nav-hotline-help"
+                onClick={() => {
+                  if (isMobile) setOpenMobile(false);
+                }}
+              >
+                <CircleHelp className="h-4 w-4" />
+                <span>{tSidebar("hotline_help")}</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
           <SidebarMenuItem>
             <SidebarMenuButton
               asChild

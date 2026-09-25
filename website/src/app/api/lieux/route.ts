@@ -9,8 +9,10 @@ import { log } from "@/lib/logger"
 import { extractAddressFromSerial, getSensorFamilyFromSerial, isGsoType } from "@/lib/sensor-naming"
 import { computeEmt, emtModeToDb, emtModeFromDb } from "@/lib/emt"
 import { requireStandardOrExpertIfFieldsUsed } from "@/lib/license-guards"
+import { STANDARD_METROLOGY_LOCATION_FIELDS } from "@/lib/location-license-payload"
 import { applyAccessFilter, buildLieuAccessFilter, getUserLocationScope } from "@/lib/location-access-scope"
 import { findLocationNameConflict, normalizeLocationName } from "@/lib/location-name-conflicts"
+import { buildLocationAlarmThresholdIssues } from "@/lib/location-alarm-threshold-contract"
 import { buildLocationValueRangeIssues, getSensorTypeValueRangeBySerial } from "@/lib/sensor-value-range"
 import { getDbNow } from "@/lib/sql-provider"
 import { syncGspLocationConfiguration } from "@/lib/gsp-config-sync"
@@ -23,19 +25,6 @@ const mailingContactSchema = z.object({
   Est_Via_Telephone: z.boolean().optional(),
   Est_Via_Email: z.boolean().optional(),
 })
-
-const STANDARD_METROLOGY_FIELDS = [
-  "EMT_Mode",
-  "EMT_Valeur",
-  "Corriger_Erreur_Justesse",
-  "Prendre_En_Compte_Derive",
-  "Derniere_Date_Etalonnage",
-  "Applied_Etalonnage_Id",
-  "Unite",
-  "Erreur_Justesse",
-  "Incertitude",
-  "Derive",
-] as const
 
 const GSO_FIXED_FREQUENCY_SECONDS = 15 * 60
 
@@ -174,12 +163,16 @@ const createLieuSchema = z.object({
   Est_Consigne_Sup_Active: z.boolean().optional(),
   Consigne_Sup_Pre_Alarme: z.number().nullable().optional(),
   Est_Consigne_Sup_Pre_Alarme_Active: z.boolean().optional(),
+  Seuil_Critique_Haut: z.number().nullable().optional(),
+  Est_Seuil_Critique_Haut_Active: z.boolean().optional(),
   Retard_Alarme_Haut: z.number().nullable().optional(),
   Consigne_Inf: z.number().nullable().optional(),
   Tolerance_Surveillance_Inf: z.number().nullable().optional(),
   Est_Consigne_Inf_Active: z.boolean().optional(),
   Consigne_Inf_Pre_Alarme: z.number().nullable().optional(),
   Est_Consigne_Inf_Pre_Alarme_Active: z.boolean().optional(),
+  Seuil_Critique_Bas: z.number().nullable().optional(),
+  Est_Seuil_Critique_Bas_Active: z.boolean().optional(),
   Retard_Alarme_Bas: z.number().nullable().optional(),
   Retard_Non_Reponse: z.number().nullable().optional(),
   Retard_Alarme_Changement_Consigne: z.number().nullable().optional(),
@@ -319,7 +312,7 @@ export const POST = withLogging(async (req: NextRequest) => {
 
   try {
     const body = await req.json()
-    const metrologyGuard = await requireStandardOrExpertIfFieldsUsed(body as Record<string, unknown>, STANDARD_METROLOGY_FIELDS)
+    const metrologyGuard = await requireStandardOrExpertIfFieldsUsed(body as Record<string, unknown>, STANDARD_METROLOGY_LOCATION_FIELDS)
     if (metrologyGuard) return metrologyGuard
 
     const validated = createLieuSchema.parse(body)
@@ -359,7 +352,12 @@ export const POST = withLogging(async (req: NextRequest) => {
     const sensorTypeRange = await getSensorTypeValueRangeBySerial(sondeNumeroSerie)
     const rangeIssues = buildLocationValueRangeIssues(validated, sensorTypeRange)
     if (rangeIssues.length > 0) {
-      return apiError(400, "validation_error", "Validation impossible", { issues: rangeIssues })
+      return apiError(
+        400,
+        "validation_error",
+        rangeIssues[0]?.message ?? "Validation impossible",
+        { issues: rangeIssues },
+      )
     }
 
     const frequencySeconds =
@@ -412,6 +410,34 @@ export const POST = withLogging(async (req: NextRequest) => {
         ? (validated.Est_Consigne_Inf_Active ? validated.Consigne_Inf : null)
         : validated.Tolerance_Surveillance_Inf
 
+    const thresholdIssues = buildLocationAlarmThresholdIssues({
+      mode: validated.EMT_Mode,
+      emtValue: validated.EMT_Valeur,
+      consigne: validated.Consigne,
+      consigneSup: validated.Consigne_Sup,
+      consigneInf: validated.Consigne_Inf,
+      isConsigneSupActive: validated.Est_Consigne_Sup_Active ?? false,
+      isConsigneInfActive: validated.Est_Consigne_Inf_Active ?? false,
+      effectiveHigh: toleranceSup,
+      effectiveLow: toleranceInf,
+      preAlarmHigh: validated.Consigne_Sup_Pre_Alarme,
+      preAlarmHighActive: validated.Est_Consigne_Sup_Pre_Alarme_Active ?? false,
+      preAlarmLow: validated.Consigne_Inf_Pre_Alarme,
+      preAlarmLowActive: validated.Est_Consigne_Inf_Pre_Alarme_Active ?? false,
+      criticalHigh: validated.Seuil_Critique_Haut,
+      criticalHighActive: validated.Est_Seuil_Critique_Haut_Active ?? false,
+      criticalLow: validated.Seuil_Critique_Bas,
+      criticalLowActive: validated.Est_Seuil_Critique_Bas_Active ?? false,
+      incertitude: validated.Incertitude,
+      erreurJustesse: validated.Erreur_Justesse,
+      derive: validated.Derive,
+      includeDeriveInUncertainty,
+      correctAccuracyError: validated.Corriger_Erreur_Justesse ?? false,
+    })
+    if (thresholdIssues.length > 0) {
+      return apiError(400, "validation_error", thresholdIssues[0].message, { issues: thresholdIssues })
+    }
+
     const lieu = await prisma.t_lieu.create({
       data: ({
         Nom_Lieu: normalizedLocationName,
@@ -428,6 +454,8 @@ export const POST = withLogging(async (req: NextRequest) => {
         Est_Consigne_Sup_Active: validated.Est_Consigne_Sup_Active ?? false,
         Consigne_Sup_Pre_Alarme: validated.Consigne_Sup_Pre_Alarme,
         Est_Consigne_Sup_Pre_Alarme_Active: validated.Est_Consigne_Sup_Pre_Alarme_Active ?? false,
+        Seuil_Critique_Haut: validated.Seuil_Critique_Haut,
+        Est_Seuil_Critique_Haut_Active: validated.Est_Seuil_Critique_Haut_Active ?? false,
         Retard_Alarme_Haut: validated.Retard_Alarme_Haut,
         Consigne_Inf: validated.Consigne_Inf,
         Consigne_Inf_Base: validated.Consigne_Inf ?? null,
@@ -436,6 +464,8 @@ export const POST = withLogging(async (req: NextRequest) => {
         Est_Consigne_Inf_Active: validated.Est_Consigne_Inf_Active ?? false,
         Consigne_Inf_Pre_Alarme: validated.Consigne_Inf_Pre_Alarme,
         Est_Consigne_Inf_Pre_Alarme_Active: validated.Est_Consigne_Inf_Pre_Alarme_Active ?? false,
+        Seuil_Critique_Bas: validated.Seuil_Critique_Bas,
+        Est_Seuil_Critique_Bas_Active: validated.Est_Seuil_Critique_Bas_Active ?? false,
         Retard_Alarme_Bas: validated.Retard_Alarme_Bas,
         Retard_Non_Reponse: validated.Retard_Non_Reponse,
         Retard_Alarme_Changement_Consigne: validated.Retard_Alarme_Changement_Consigne,
@@ -693,7 +723,12 @@ export const POST = withLogging(async (req: NextRequest) => {
       return apiError(400, "invalid_calibration_date", "Date d'étalonnage invalide")
     }
     if (error instanceof z.ZodError) {
-      return apiError(400, "validation_error", "Validation impossible", { issues: error.issues })
+      return apiError(
+        400,
+        "validation_error",
+        error.issues[0]?.message ?? "Validation impossible",
+        { issues: error.issues },
+      )
     }
     log.error("lieux", "lieu_create_error", { error: error });
     return apiError(500, "lieu_create_failed", "Erreur lors de la création du lieu")

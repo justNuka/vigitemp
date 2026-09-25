@@ -333,8 +333,7 @@ export function AlarmAcknowledgmentHistoryClient() {
               showSearch={false}
               emptyMessage={t("empty")}
               isLoading={query.isLoading || query.isFetching}
-              enablePrint={false}
-              exportFormats={["csv", "xlsx", "pdf"]}
+              exportFormats={["xlsx", "pdf"]}
               toolbarRight={
                 <div className="flex flex-wrap items-center gap-2">
                   <div className="relative min-w-[16rem]">

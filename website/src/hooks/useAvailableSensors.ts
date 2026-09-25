@@ -13,6 +13,9 @@ export interface AvailableSensor {
   Id_Module?: number | null
   Est_Sonde_GSO?: boolean | null
   Famille_Sonde?: "CLASSIC" | "GSO" | "GSP" | string | null
+  Valeur_Min?: number | null
+  Valeur_Max?: number | null
+  Unite_Type?: string | null
 }
 
 export function useAvailableSensors(selectedSondeNumeroSerie?: string | null, enabled: boolean = true) {

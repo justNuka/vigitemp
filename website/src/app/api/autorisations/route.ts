@@ -17,7 +17,10 @@ import {
  */
 export const GET = withAuthorizationLogging("GERER_PROFIL", async (_req: NextRequest) => {
   try {
-    await ensureApplicationAuthorizations()
+    const repairedCount = await ensureApplicationAuthorizations()
+    if (repairedCount > 0) {
+      log.info("AUTHORIZATIONS", "Legacy authorization encoding repaired", { count: repairedCount })
+    }
 
     const authorizations = await prisma.t_autorisation.findMany({
       orderBy: { Code_Autorisation: "asc" },
@@ -36,7 +39,7 @@ export const GET = withAuthorizationLogging("GERER_PROFIL", async (_req: NextReq
 
     return apiOk(formatted)
   } catch (error) {
-    log.error("autorisations", "get_authorizations_error", { error: error });
-    return apiError(500, "authorizations_fetch_failed", "Echec de recuperation des autorisations")
+    log.error("AUTHORIZATIONS", "get_authorizations_error", { error })
+    return apiError(500, "authorizations_fetch_failed", "Échec de récupération des autorisations")
   }
 })

@@ -3,7 +3,9 @@ import assert from "node:assert/strict";
 import {
   formatDbDateTime,
   formatDbDateTimeIntl,
+  formatStoredDbDateTime,
   parseDbDateTime,
+  parseStoredDbDateTime,
   serializeDbDateTime,
   serializeStoredDbDateTime,
 } from "../src/lib/date-display";
@@ -54,7 +56,7 @@ const cases: TestCase[] = [
     },
   },
   {
-    name: "serializeStoredDbDateTime preserves Prisma DATETIME wall-clock components",
+    name: "serializeStoredDbDateTime preserves UTC-wrapped stored DATETIME components",
     run: () => {
       const prismaDateWrapper = new Date("2026-08-31T14:05:06.000Z");
       assert.equal(serializeStoredDbDateTime(prismaDateWrapper), "2026-08-31T14:05:06");
@@ -71,6 +73,37 @@ const cases: TestCase[] = [
       assert.equal(
         serializeStoredDbDateTime(new Date("2026-10-25T01:30:00.000Z")),
         "2026-10-25T01:30:00",
+      );
+    },
+  },
+  {
+    name: "stored DATETIME helpers preserve wall-clock components after JSON serialization",
+    run: () => {
+      const prismaJson = "2026-09-23T10:36:17.000Z";
+      assert.equal(serializeStoredDbDateTime(prismaJson), "2026-09-23T10:36:17");
+
+      const parsed = parseStoredDbDateTime(prismaJson);
+      assert.ok(parsed);
+      assert.equal(parsed.getHours(), 10);
+      assert.equal(parsed.getMinutes(), 36);
+      assert.equal(parsed.getSeconds(), 17);
+
+      assert.equal(
+        formatStoredDbDateTime(prismaJson, { format: "dateTimeSeconds" }),
+        "23/09/2026 10:36:17",
+      );
+    },
+  },
+  {
+    name: "stored DATETIME helpers keep timezone-less strings unchanged",
+    run: () => {
+      assert.equal(
+        serializeStoredDbDateTime("2026-09-23T10:36:17"),
+        "2026-09-23T10:36:17",
+      );
+      assert.equal(
+        formatStoredDbDateTime("2026-09-23T10:36:17", { format: "time" }),
+        "10:36",
       );
     },
   },

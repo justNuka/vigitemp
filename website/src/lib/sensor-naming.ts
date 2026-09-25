@@ -1,7 +1,9 @@
 import {
+  CLASSIC_SENSOR_TYPE_CODE_SET,
   GSO_SENSOR_TYPE_CODE_SET,
   GSP_SENSOR_TYPE_CODE_SET,
   KNOWN_SENSOR_TYPE_CODES,
+  LEGACY_GENERIC_SENSOR_TYPE_CODE_SET,
   getKnownSensorFamilyFromTypeCode,
   normalizeSensorTypeCode,
 } from "@/lib/sensor-types";
@@ -22,6 +24,48 @@ const normalizeKnownTypeCodes = (knownTypeCodes?: Iterable<string> | null) => {
         .filter((value) => value.length > 0),
     ),
   ).sort((a, b) => b.length - a.length);
+};
+
+const normalizeImportTypeCodes = (knownTypeCodes?: Iterable<string> | null) =>
+  normalizeKnownTypeCodes(knownTypeCodes).filter(
+    (code) => !LEGACY_GENERIC_SENSOR_TYPE_CODE_SET.has(code),
+  );
+
+/**
+ * Imports classify the sensor family from the beginning of the serial number:
+ * - SO... => GSO, while retaining the detailed SOxx type when known
+ * - SP... => GSP, while retaining the detailed SPxx type when known
+ * - E/G/H/I/R/V... => classic sensor, using the first letter as Sonde_Type
+ *
+ * The historical aggregate GSO/GSP rows are intentionally ignored here.
+ */
+export const extractImportedTypeCodeFromSerial = (
+  serial: string,
+  knownTypeCodes?: Iterable<string> | null,
+) => {
+  const normalized = normalizeSerial(serial);
+  if (!normalized) return "";
+
+  const knownCodes = normalizeImportTypeCodes(knownTypeCodes);
+  const familyPrefix = normalized.slice(0, 2);
+
+  if (familyPrefix === "SO" || familyPrefix === "SP") {
+    const matchedFamilyCode = knownCodes.find(
+      (code) => code.startsWith(familyPrefix) && normalized.startsWith(code),
+    );
+    return matchedFamilyCode ?? familyPrefix;
+  }
+
+  const classicPrefix = normalized.charAt(0);
+  if (CLASSIC_SENSOR_TYPE_CODE_SET.has(classicPrefix)) {
+    return classicPrefix;
+  }
+
+  const matchedKnownCode = knownCodes.find((code) => normalized.startsWith(code));
+  if (matchedKnownCode) return matchedKnownCode;
+
+  const alphaPrefix = normalized.match(/^[A-Z]+/)?.[0];
+  return normalizeType(alphaPrefix ?? normalized);
 };
 
 export const isDualGsoType = (type: string) => DUAL_GSO_TYPES.has(normalizeType(type));
@@ -140,7 +184,7 @@ export const buildImportedSensorStorageIdentity = (
     const baseAddress = stripGsoSuffix((typedParts?.address ?? identity.serial).replace(/^-+/, ""));
     return {
       serial: `${typeCode}-${baseAddress}`,
-      address: `${baseAddress}-T`,
+      address: baseAddress,
     };
   }
 
@@ -200,7 +244,7 @@ export const resolveImportedSensorIdentity = (
   const normalized = normalizeImportedGsoSerial(serial);
   return {
     serial: normalized,
-    typeCode: extractTypeCodeFromSerial(normalized, knownTypeCodes),
+    typeCode: extractImportedTypeCodeFromSerial(normalized, knownTypeCodes),
     isGso: false,
   };
 };

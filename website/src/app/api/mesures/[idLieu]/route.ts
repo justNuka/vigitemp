@@ -5,7 +5,6 @@ import { getCachedMeasurements, setCachedMeasurements } from "@/lib/measurement-
 import { apiError, apiOk } from "@/lib/api-response"
 import {
   formatDbDateTime,
-  parseDbDateTime,
   serializeDbDateTime,
   serializeStoredDbDateTime,
 } from "@/lib/date-display"
@@ -13,7 +12,9 @@ import { getGlobalNonResponseDefault } from "@/lib/non-response-preference"
 import { canUserAccessLieu } from "@/lib/location-access-scope"
 import { log } from "@/lib/logger"
 import { normalizeMeasureNumber } from "@/lib/measurements"
+import { downsampleMeasurementsForGraph } from "@/lib/measurement-downsampling"
 import { resolveSensorDisplayUnit } from "@/lib/sensor-unit"
+import { serializePrismaStoredDbDateTime, toPrismaStoredDbDateTime } from "@/lib/sql-provider"
 
 export const GET = withAuthLogging(
   async (req: NextRequest, ctx: HandlerContext, { params }: { params: Promise<{ idLieu: string }> }) => {
@@ -25,6 +26,10 @@ export const GET = withAuthLogging(
       const pageSizeParam = parseInt(searchParams.get("pageSize") || "200")
       const page = Number.isFinite(pageParam) && pageParam > 0 ? pageParam : 1
       const pageSize = Number.isFinite(pageSizeParam) && pageSizeParam > 0 ? Math.min(pageSizeParam, 1000) : 200
+      const graphMaxPointsParam = parseInt(searchParams.get("graphMaxPoints") || "")
+      const graphMaxPoints = Number.isFinite(graphMaxPointsParam)
+        ? Math.min(Math.max(graphMaxPointsParam, 16), 1200)
+        : null
       const startDate = searchParams.get("startDate")
       const endDate = searchParams.get("endDate")
       const sortByParam = searchParams.get("sortBy")
@@ -35,6 +40,10 @@ export const GET = withAuthLogging(
       const maxRowNumber = source === "mesures" ? 2000 : 500
       const rowNumber = Math.min(rowNumberParam, maxRowNumber)
       const usePagination = source === "mesures" && (searchParams.has("page") || searchParams.has("pageSize"))
+      const useGraphDownsampling =
+        !usePagination &&
+        graphMaxPoints !== null &&
+        Boolean(startDate && endDate)
       const includeNullNonResponseParam = searchParams.get("includeNullNonResponse")
       const includeNullNonResponse =
         includeNullNonResponseParam === null
@@ -93,8 +102,8 @@ export const GET = withAuthLogging(
           : [{ Date_Heure_Mesure: sortBy === "date" ? sortDirection : "desc" }]
 
       if (startDate && endDate) {
-        const parsedStartDate = parseDbDateTime(startDate)
-        const parsedEndDate = parseDbDateTime(endDate)
+        const parsedStartDate = toPrismaStoredDbDateTime(startDate)
+        const parsedEndDate = toPrismaStoredDbDateTime(endDate)
         if (!parsedStartDate || !parsedEndDate) {
           return apiError(400, "invalid_date_range", "Invalid date range")
         }
@@ -111,7 +120,7 @@ export const GET = withAuthLogging(
                 ...whereClause,
                 ...(includeNullNonResponse ? {} : { Est_Valeur_Null: 0 }),
               },
-              take: usePagination ? pageSize : rowNumber,
+              take: useGraphDownsampling ? undefined : usePagination ? pageSize : rowNumber,
               skip: usePagination ? (page - 1) * pageSize : 0,
               orderBy: mesureOrderBy,
               select: {
@@ -135,7 +144,7 @@ export const GET = withAuthLogging(
                 ...whereClause,
                 ...(includeNullNonResponse ? {} : { Est_Valeur_Null: false }),
               },
-              take: rowNumber,
+              take: useGraphDownsampling ? undefined : rowNumber,
               orderBy: { Date_Heure_Mesure: "desc" },
               select: {
                 Id_Graphique: true,
@@ -224,7 +233,7 @@ export const GET = withAuthLogging(
 
       const formattedMeasurements = chronologicalMeasurements.map((m) => {
         const dateHeure =
-          serializeStoredDbDateTime(m.Date_Heure_Mesure) ??
+          serializePrismaStoredDbDateTime(m.Date_Heure_Mesure) ??
           serializeDbDateTime(new Date()) ??
           ""
         const isNullMeasurement =
@@ -293,6 +302,11 @@ export const GET = withAuthLogging(
         }
       })
 
+      const graphResult = useGraphDownsampling && graphMaxPoints !== null
+        ? downsampleMeasurementsForGraph(formattedMeasurements, graphMaxPoints)
+        : null
+      const responseMeasurements = graphResult?.measurements ?? formattedMeasurements
+
       if (canUseCache && !startDate && !endDate) {
         setCachedMeasurements(idLieuInt, formattedMeasurements)
       }
@@ -300,13 +314,17 @@ export const GET = withAuthLogging(
       const response = apiOk(
         usePagination
           ? { measurements: formattedMeasurements, total, page, pageSize }
-          : includeMeta
+          : includeMeta || useGraphDownsampling
             ? {
-              measurements: formattedMeasurements,
+              measurements: responseMeasurements,
               lieuType: lieu?.Type_Lieu ?? null,
-              graphMeasureCount: source === "graphique" ? formattedMeasurements.length : undefined,
+              graphMeasureCount: responseMeasurements.length,
+              graphSourceCount: graphResult?.sourceCount ?? responseMeasurements.length,
+              graphSampled: graphResult?.sampled ?? false,
+              graphRangeStart: startDate ?? null,
+              graphRangeEnd: endDate ?? null,
             }
-            : formattedMeasurements,
+            : responseMeasurements,
       )
       response.headers.set(
         "Cache-Control",

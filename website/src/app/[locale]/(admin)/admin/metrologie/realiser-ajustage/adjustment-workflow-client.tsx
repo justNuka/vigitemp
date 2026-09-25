@@ -37,6 +37,8 @@ import { fetchJson, getJson, HttpError, isUnauthorizedError } from "@/lib/http"
 import { formatDbDateTime } from "@/lib/date-display"
 import { formatMeasureValue } from "@/lib/measurements"
 import { MetrologySubpagesCards } from "../_components/metrology-subpages-cards"
+import { MetrologyStartFeedback } from "../_components/metrology-start-feedback"
+import { MetrologyStartSummaryDialog } from "../_components/metrology-start-summary-dialog"
 
 type Step = "selection" | "adjustment"
 type CoefficientKey = "a" | "b" | "c"
@@ -176,6 +178,7 @@ function getDownloadFileName(contentDisposition: string | null, fallback: string
 export function AdjustmentWorkflowClient() {
   const t = useTranslations("metrologyAdmin.adjustmentPage")
   const tCommon = useTranslations("common")
+  const tStartSummary = useTranslations("metrologyAdmin.startSummary")
   const locale = useLocale()
   const { user } = useAppAccess()
   const queryClient = useQueryClient()
@@ -201,8 +204,10 @@ export function AdjustmentWorkflowClient() {
   const [currentDateTime, setCurrentDateTime] = useState(() => new Date())
   const [actionError, setActionError] = useState<string | null>(null)
   const [showStopConfirm, setShowStopConfirm] = useState(false)
+  const [showStartSummary, setShowStartSummary] = useState(false)
   const [showFirstPointConfirm, setShowFirstPointConfirm] = useState(false)
   const [showCalculationDetails, setShowCalculationDetails] = useState(false)
+  const [selectedCalculatedGspSensorIds, setSelectedCalculatedGspSensorIds] = useState<number[]>([])
   const [isExportingAdjustmentZip, setIsExportingAdjustmentZip] = useState(false)
   const [coefficientDrafts, setCoefficientDrafts] = useState<
     Record<number, { a: string; b: string; c: string }>
@@ -366,8 +371,9 @@ export function AdjustmentWorkflowClient() {
       setStep("adjustment")
       await refreshSession()
     },
-    onError: (error) => {
-      setActionError(getActionErrorMessage(error))
+    onError: () => {
+      // The start error is rendered directly in the Run card, next to the action.
+      setActionError(null)
     },
   })
 
@@ -412,13 +418,14 @@ export function AdjustmentWorkflowClient() {
   })
 
   const resolveCalculatedCoefficientsMutation = useMutation({
-    mutationFn: async (apply: boolean) =>
+    mutationFn: async (input: { apply: boolean; sensorIds: number[] }) =>
       fetchJson<{ session: SessionApiPayload["session"] }>("/api/metrologie/ajustage/session", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           action: "resolve-calculated-coefficients",
-          apply,
+          apply: input.apply,
+          sensorIds: input.sensorIds,
         }),
       }),
     onSuccess: async () => {
@@ -513,6 +520,26 @@ export function AdjustmentWorkflowClient() {
       setStep("adjustment")
     }
   }, [session, step])
+
+  const pendingCalculatedGspSensors = useMemo(
+    () => session?.coefficientApplication.status === "pending"
+      ? session.sensors.filter((sensor) => !sensor.isGso)
+      : [],
+    [session?.coefficientApplication.status, session?.sensors],
+  )
+  const pendingCalculatedGspSensorKey = pendingCalculatedGspSensors.map((sensor) => sensor.id).join(",")
+
+  useEffect(() => {
+    if (session?.coefficientApplication.status !== "pending") {
+      setSelectedCalculatedGspSensorIds([])
+      return
+    }
+    const eligibleIds = pendingCalculatedGspSensors.map((sensor) => sensor.id)
+    setSelectedCalculatedGspSensorIds((current) => {
+      const filtered = current.filter((sensorId) => eligibleIds.includes(sensorId))
+      return filtered.length > 0 ? filtered : eligibleIds
+    })
+  }, [pendingCalculatedGspSensorKey, pendingCalculatedGspSensors, session?.coefficientApplication.status])
 
   const selectedSensors = useMemo(
     () => sensors.filter((sensor) => selectedSensorIds.includes(sensor.id)),
@@ -1200,6 +1227,13 @@ export function AdjustmentWorkflowClient() {
                         </CardDescription>
                       </CardHeader>
                       <CardContent className="space-y-4">
+                        {isAdjustmentRunning && session?.sensors.some((sensor) => !sensor.isGso) ? (
+                          <Alert className="border-sky-300 bg-sky-50 text-sky-950 dark:border-sky-500/40 dark:bg-sky-500/10 dark:text-sky-100">
+                            <BadgeInfo className="h-4 w-4" />
+                            <AlertTitle>{t("adjustment.cards.coefficients.retrievedTitle")}</AlertTitle>
+                            <AlertDescription>{t("adjustment.cards.coefficients.retrievedDescription")}</AlertDescription>
+                          </Alert>
+                        ) : null}
                         <div className="overflow-x-auto">
                           <div className="min-w-[620px] space-y-3">
                             <div className="grid grid-cols-[minmax(180px,1fr)_repeat(3,minmax(110px,0.5fr))] gap-3 text-sm font-medium text-muted-foreground">
@@ -1325,6 +1359,11 @@ export function AdjustmentWorkflowClient() {
                         <CardDescription>{t("adjustment.cards.run.description")}</CardDescription>
                       </CardHeader>
                       <CardContent className="space-y-3">
+                        <MetrologyStartFeedback
+                          error={startMutation.error}
+                          isPending={startMutation.isPending}
+                          sensors={selectedSensors}
+                        />
                         <Button
                           type="button"
                           className="w-full"
@@ -1343,7 +1382,7 @@ export function AdjustmentWorkflowClient() {
                               stopMutation.mutate(false)
                               return
                             }
-                            startMutation.mutate()
+                            setShowStartSummary(true)
                           }}
                         >
                           {isAdjustmentRunning ? (
@@ -1372,8 +1411,8 @@ export function AdjustmentWorkflowClient() {
                         <CardDescription>{t("adjustment.cards.points.description")}</CardDescription>
                       </CardHeader>
                       <CardContent className="space-y-4">
-                        <div className="flex items-end gap-2">
-                          <div className="flex-1 space-y-2">
+                        <div className="space-y-2">
+                          <div className="space-y-2">
                             <Label htmlFor="adjustment-point-one">{t("adjustment.cards.points.pointOne")}</Label>
                             <Input
                               id="adjustment-point-one"
@@ -1402,8 +1441,8 @@ export function AdjustmentWorkflowClient() {
                             {t("adjustment.cards.points.startFirstAcquisition")}
                           </Button>
                         </div>
-                        <div className="flex items-end gap-2">
-                          <div className="flex-1 space-y-2">
+                        <div className="space-y-2">
+                          <div className="space-y-2">
                             <Label htmlFor="adjustment-point-two">{t("adjustment.cards.points.pointTwo")}</Label>
                             <Input
                               id="adjustment-point-two"
@@ -1748,6 +1787,23 @@ export function AdjustmentWorkflowClient() {
                 </p>
               ) : null}
             </AlertDialogHeader>
+            <div className="space-y-2 rounded-md border p-3">
+              <p className="text-sm font-medium">{t("adjustment.cards.calculatedCoefficients.selectSensors")}</p>
+              {pendingCalculatedGspSensors.map((sensor) => (
+                <label key={sensor.id} className="flex items-center gap-3 text-sm">
+                  <Checkbox
+                    checked={selectedCalculatedGspSensorIds.includes(sensor.id)}
+                    disabled={resolveCalculatedCoefficientsMutation.isPending}
+                    onCheckedChange={(checked) => {
+                      setSelectedCalculatedGspSensorIds((current) => checked === true
+                        ? Array.from(new Set([...current, sensor.id]))
+                        : current.filter((sensorId) => sensorId !== sensor.id))
+                    }}
+                  />
+                  <span>{sensor.serialNumber}</span>
+                </label>
+              ))}
+            </div>
             {resolveCalculatedCoefficientsMutation.error ? (
               <Alert variant="destructive">
                 <AlertTitle>{t("adjustment.status.errorTitle")}</AlertTitle>
@@ -1761,15 +1817,18 @@ export function AdjustmentWorkflowClient() {
                 type="button"
                 variant="outline"
                 disabled={resolveCalculatedCoefficientsMutation.isPending}
-                onClick={() => resolveCalculatedCoefficientsMutation.mutate(false)}
+                onClick={() => resolveCalculatedCoefficientsMutation.mutate({ apply: false, sensorIds: [] })}
               >
                 {t("adjustment.cards.calculatedCoefficients.keepPrevious")}
               </Button>
               <AlertDialogAction
-                disabled={resolveCalculatedCoefficientsMutation.isPending}
+                disabled={resolveCalculatedCoefficientsMutation.isPending || selectedCalculatedGspSensorIds.length === 0}
                 onClick={(event) => {
                   event.preventDefault()
-                  resolveCalculatedCoefficientsMutation.mutate(true)
+                  resolveCalculatedCoefficientsMutation.mutate({
+                    apply: true,
+                    sensorIds: selectedCalculatedGspSensorIds,
+                  })
                 }}
               >
                 {resolveCalculatedCoefficientsMutation.isPending
@@ -1779,6 +1838,54 @@ export function AdjustmentWorkflowClient() {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+
+        <MetrologyStartSummaryDialog
+          open={showStartSummary}
+          onOpenChange={setShowStartSummary}
+          pending={startMutation.isPending}
+          operationLabel={tStartSummary("operations.adjustment")}
+          operator={operator}
+          sensors={selectedSensors.map((sensor) => ({
+            serialNumber: sensor.serialNumber,
+            locationName: sensor.locationName,
+            moduleName: sensor.moduleName,
+          }))}
+          standard={selectedStandard ? {
+            serialNumber: selectedStandard.Etalon_Numero_Serie,
+            type: selectedStandard.Type_Etalon,
+            port: selectedModule?.Port_Serie ?? selectedStandard.Port_Serie,
+            moduleName: selectedModule?.Module_Numero_Serie ?? null,
+            networkHost: selectedModule?.Adresse_IP ?? null,
+          } : null}
+          mediumLabel={selectedMedium ? `${selectedMedium.Model ?? "-"} / ${selectedMedium.Reference ?? "-"}` : null}
+          intervalLabel={tStartSummary("seconds", { count: sensors.some((sensor) => selectedSensorIds.includes(sensor.id) && sensor.isGso) ? 60 : Number(measurementIntervalSeconds === "30" ? 30 : 15) })}
+          onConfirm={() => {
+            startMutation.mutate(undefined, {
+              onSettled: () => setShowStartSummary(false),
+            })
+          }}
+          labels={{
+            title: tStartSummary("title"),
+            description: tStartSummary("description"),
+            operation: tStartSummary("fields.operation"),
+            operator: tStartSummary("fields.operator"),
+            sensors: tStartSummary("fields.sensors"),
+            standard: tStartSummary("fields.standard"),
+            standardType: tStartSummary("fields.standardType"),
+            module: tStartSummary("fields.module"),
+            connection: tStartSummary("fields.connection"),
+            medium: tStartSummary("fields.medium"),
+            interval: tStartSummary("fields.interval"),
+            unassigned: tStartSummary("unassigned"),
+            noModule: tStartSummary("warnings.noModule"),
+            noIp: tStartSummary("warnings.noIp"),
+            sefConnection: (host) => tStartSummary("connections.sef", { host }),
+            serialConnection: (port) => tStartSummary("connections.serial", { port }),
+            cancel: tStartSummary("actions.cancel"),
+            confirm: tStartSummary("actions.confirm"),
+            confirming: tStartSummary("actions.confirming"),
+          }}
+        />
 
         <AlertDialog open={showFirstPointConfirm} onOpenChange={setShowFirstPointConfirm}>
           <AlertDialogContent>

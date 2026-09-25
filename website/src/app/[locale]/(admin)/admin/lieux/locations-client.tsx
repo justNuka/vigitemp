@@ -26,14 +26,18 @@ import {
 import { toast } from 'sonner'
 import { useRouter } from '@/i18n/navigation'
 import { LocationFormDialog } from './_components/location-form-dialog'
+import { LocationConfigSourceDialog } from './_components/location-config-source-dialog'
 import { LocationsTable } from './_components/locations-table'
 import { getJson, patchJson, postJson } from '@/lib/http'
 import { LocationsActions } from './_components/locations-actions'
 import type { LocationFormData } from './_components/location-form-types'
 import { getDefaultLocationFormData } from './_components/location-form-defaults'
 import { mapLocationToFormData } from './_components/location-form-mappers'
+import { buildLocationConfigCopy } from './_components/location-config-copy'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useTranslations } from 'next-intl'
+import { useLicense } from '@/components/license/license-provider'
+import { prepareLocationPayloadForLicense } from '@/lib/location-license-payload'
 import { MapPin } from 'lucide-react'
 
 export function LocationsClient() {
@@ -41,14 +45,19 @@ export function LocationsClient() {
   const tCommon = useTranslations('common')
   const queryClient = useQueryClient()
   const router = useRouter()
+  const { license } = useLicense()
   const { data: locations = [], isLoading } = useLocations()
   const didPrefetchRef = useRef(false)
   const [selectedLocation, setSelectedLocation] = useState<LocationRow | null>(null)
   const [isCreateOpen, setIsCreateOpen] = useState(false)
   const [isEditOpen, setIsEditOpen] = useState(false)
   const [isArchiveOpen, setIsArchiveOpen] = useState(false)
+  const [isCopySourceOpen, setIsCopySourceOpen] = useState(false)
   const [isCreateNoSondeOpen, setIsCreateNoSondeOpen] = useState(false)
-  const [pendingCreate, setPendingCreate] = useState<LocationFormData | null>(null)
+  const [pendingCreate, setPendingCreate] = useState<{
+    values: LocationFormData
+    submitMode: 'stay' | 'close'
+  } | null>(null)
   const [statusTab, setStatusTab] = useState<'active' | 'archived'>('active')
   const [tabFilter, setTabFilter] = useState<'all' | 'unassigned'>('all')
   const shouldLoadFormData = isCreateOpen || isEditOpen
@@ -95,14 +104,18 @@ export function LocationsClient() {
   }, [isLoading, queryClient])
 
   const resetForm = () => form.reset(getDefaultLocationFormData())
-  const normalizePayload = (data: LocationFormData, forceInactive = false): Partial<LocationRow> => ({
-    ...data,
-    Sonde_Numero_Serie: data.Sonde_Numero_Serie ? data.Sonde_Numero_Serie : null,
-    Lieu_Etat: forceInactive || !data.Sonde_Numero_Serie ? 'D' : data.Lieu_Etat ?? null,
-  })
+  const normalizePayload = (data: LocationFormData, forceInactive = false): Partial<LocationRow> => {
+    const payload = {
+      ...data,
+      Sonde_Numero_Serie: data.Sonde_Numero_Serie ? data.Sonde_Numero_Serie : null,
+      Lieu_Etat: forceInactive || !data.Sonde_Numero_Serie ? 'D' : data.Lieu_Etat ?? null,
+    }
+
+    return prepareLocationPayloadForLicense(payload, license) as Partial<LocationRow>
+  }
 
   const createMutation = useMutation({
-    mutationFn: async (data: Partial<LocationRow>) => postJson('/api/lieux', data),
+    mutationFn: async (data: Partial<LocationRow>) => postJson<LocationRow>('/api/lieux', data),
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['locations'] })
       queryClient.invalidateQueries({ queryKey: ['available-sensors'] })
@@ -111,8 +124,6 @@ export function LocationsClient() {
       if (!variables?.Sonde_Numero_Serie) {
         toast.message(t('toast.create_no_sensor'))
       }
-      setIsCreateOpen(false)
-      resetForm()
     },
     onError: (error) => {
       toast.error(error instanceof Error ? error.message : t('toast.create_error'))
@@ -120,24 +131,26 @@ export function LocationsClient() {
   })
 
   const updateMutation = useMutation({
-    mutationFn: async (data: Partial<LocationRow>) => {
-      if (!selectedDisplayedLocation?.Id_Lieu) throw new Error(t('errors.no_location_selected'))
-      return patchJson(`/api/lieux/${selectedDisplayedLocation.Id_Lieu}`, data)
+    mutationFn: async ({ data }: { data: Partial<LocationRow>; submitMode: 'stay' | 'close' }) => {
+      if (!selectedLocation?.Id_Lieu) throw new Error(t('errors.no_location_selected'))
+      return patchJson(`/api/lieux/${selectedLocation.Id_Lieu}`, data)
     },
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['locations'] })
       queryClient.invalidateQueries({ queryKey: ['available-sensors'] })
       router.refresh()
       toast.success(t('toast.update_success'))
-      if (selectedDisplayedLocation?.Id_Lieu) {
+      if (selectedLocation?.Id_Lieu) {
         window.dispatchEvent(
           new CustomEvent('vigitemp:lieu-updated', {
-            detail: { idLieu: selectedDisplayedLocation.Id_Lieu },
+            detail: { idLieu: selectedLocation.Id_Lieu },
           }),
         )
       }
-      setIsEditOpen(false)
-      setSelectedLocation(null)
+      if (variables.submitMode === 'close') {
+        setIsEditOpen(false)
+        setSelectedLocation(null)
+      }
     },
     onError: (error) => {
       toast.error(error instanceof Error ? error.message : t('toast.update_error'))
@@ -169,6 +182,20 @@ export function LocationsClient() {
     setIsEditOpen(true)
   }
 
+  const applyExistingLocationConfig = (source: LocationRow, preserveCurrentName = false) => {
+    const currentName = preserveCurrentName ? (form.getValues('Nom_Lieu') ?? '') : ''
+    form.reset(buildLocationConfigCopy(source, { name: currentName }))
+    toast.success(t('copy.applied', { name: source.Nom_Lieu || t('copy.unnamed') }))
+  }
+
+  const handleDuplicate = () => {
+    if (!selectedDisplayedLocation) return
+    setPendingCreate(null)
+    setIsCreateNoSondeOpen(false)
+    applyExistingLocationConfig(selectedDisplayedLocation)
+    setIsCreateOpen(true)
+  }
+
   return (
     <LazyMotion features={domAnimation}>
       <m.main
@@ -190,10 +217,14 @@ export function LocationsClient() {
           </div>
           <LocationsActions
             canEdit={!!selectedDisplayedLocation && statusTab === 'active'}
+            canDuplicate={!!selectedDisplayedLocation && statusTab === 'active'}
             onCreate={() => {
               resetForm()
+              setPendingCreate(null)
+              setIsCreateNoSondeOpen(false)
               setIsCreateOpen(true)
             }}
+            onDuplicate={handleDuplicate}
             onEdit={handleEdit}
             onArchive={() => setIsArchiveOpen(true)}
           />
@@ -259,14 +290,43 @@ export function LocationsClient() {
         mailingUsers={mailingUsers}
         locationTemplates={locationTemplates}
         isSubmitting={createMutation.isPending}
-        onCancel={() => setIsCreateOpen(false)}
-        onSubmit={(values) => {
+        onRequestCopyFromExisting={() => setIsCopySourceOpen(true)}
+        onCancel={() => {
+          setIsCopySourceOpen(false)
+          setIsCreateOpen(false)
+        }}
+        onSubmit={async (values, submitMode = 'stay') => {
           if (!values.Sonde_Numero_Serie) {
-            setPendingCreate(values)
+            setPendingCreate({ values, submitMode })
             setIsCreateNoSondeOpen(true)
-            return
+            return { saved: false }
           }
-          createMutation.mutate(normalizePayload(values))
+
+          const created = await createMutation.mutateAsync(normalizePayload(values))
+          const committedValues: LocationFormData = {
+            ...values,
+            Id_Lieu: created.Id_Lieu,
+            Commentaire_Action: null,
+          }
+
+          if (submitMode === 'stay') {
+            form.reset(committedValues)
+            setSelectedLocation(created)
+            setIsCreateOpen(false)
+            setIsEditOpen(true)
+          }
+
+          return { saved: true, values: committedValues }
+        }}
+      />
+
+      <LocationConfigSourceDialog
+        open={isCopySourceOpen}
+        onOpenChange={setIsCopySourceOpen}
+        locations={activeLocations}
+        onSelect={(source) => {
+          applyExistingLocationConfig(source, true)
+          setIsCopySourceOpen(false)
         }}
       />
 
@@ -282,7 +342,10 @@ export function LocationsClient() {
         locationTemplates={locationTemplates}
         isSubmitting={updateMutation.isPending}
         onCancel={() => setIsEditOpen(false)}
-        onSubmit={(values) => updateMutation.mutate(normalizePayload(values))}
+        onSubmit={async (values, submitMode = 'stay') => {
+          await updateMutation.mutateAsync({ data: normalizePayload(values), submitMode })
+          return { saved: true }
+        }}
       />
 
       <AlertDialog open={isArchiveOpen} onOpenChange={setIsArchiveOpen}>
@@ -313,11 +376,34 @@ export function LocationsClient() {
           <div className="flex justify-end gap-2">
             <AlertDialogCancel>{tCommon('cancel')}</AlertDialogCancel>
             <AlertDialogAction
-              onClick={() => {
+              onClick={async () => {
                 if (!pendingCreate) return
-                createMutation.mutate(normalizePayload(pendingCreate, true))
-                setPendingCreate(null)
-                setIsCreateNoSondeOpen(false)
+                try {
+                  const created = await createMutation.mutateAsync(
+                    normalizePayload(pendingCreate.values, true),
+                  )
+                  const committedValues: LocationFormData = {
+                    ...pendingCreate.values,
+                    Id_Lieu: created.Id_Lieu,
+                    Lieu_Etat: 'D',
+                    Commentaire_Action: null,
+                  }
+
+                  if (pendingCreate.submitMode === 'stay') {
+                    form.reset(committedValues)
+                    setSelectedLocation(created)
+                    setIsCreateOpen(false)
+                    setIsEditOpen(true)
+                  } else {
+                    setIsCreateOpen(false)
+                    resetForm()
+                  }
+
+                  setPendingCreate(null)
+                  setIsCreateNoSondeOpen(false)
+                } catch {
+                  // createMutation.onError shows the error and preserves the main form.
+                }
               }}
               disabled={createMutation.isPending}
             >
@@ -330,6 +416,5 @@ export function LocationsClient() {
     </LazyMotion>
   )
 }
-
 
 

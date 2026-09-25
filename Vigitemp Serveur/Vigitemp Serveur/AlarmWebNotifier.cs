@@ -15,9 +15,11 @@ namespace Vigitemp_Serveur
         private static readonly HttpClient _http = new HttpClient { Timeout = TimeSpan.FromSeconds(10) };
         private static DateTime _monthlyStatsPauseUntilUtc = DateTime.MinValue;
 
-        private static string BaseUrl =>
+        private static string RawBaseUrl =>
             ConfigurationManager.AppSettings["VigiSensys.WebsiteBaseUrl"] ??
             ConfigurationManager.AppSettings["Vigi.WebsiteBaseUrl"];
+
+        private static string BaseUrl => NormalizeBaseUrl(RawBaseUrl);
 
         private static string Secret =>
             ConfigurationManager.AppSettings["VigiSensys.AlarmDispatchSecret"] ??
@@ -25,12 +27,21 @@ namespace Vigitemp_Serveur
 
         public static void ValidateConfig()
         {
+            var rawBaseUrl = RawBaseUrl;
             var baseUrl = BaseUrl;
             var secret = Secret;
 
-            if (string.IsNullOrWhiteSpace(baseUrl))
+            if (string.IsNullOrWhiteSpace(rawBaseUrl))
             {
                 VigitempServeur.Log("[ALARM][WEB] status=config-warning issue=missing-base-url");
+            }
+            else if (string.IsNullOrWhiteSpace(baseUrl))
+            {
+                VigitempServeur.Log("[ALARM][WEB] status=config-warning issue=invalid-base-url");
+            }
+            else if (!string.Equals(rawBaseUrl.Trim().TrimEnd('/'), baseUrl, StringComparison.OrdinalIgnoreCase))
+            {
+                VigitempServeur.Log("[ALARM][WEB] status=config-normalized baseUrl=" + baseUrl);
             }
 
             if (string.IsNullOrWhiteSpace(secret))
@@ -407,6 +418,28 @@ namespace Vigitemp_Serveur
         {
             req.Headers.Add("x-vigisensys-secret", Secret);
             req.Headers.Add("x-vigitemp-secret", Secret);
+        }
+
+        private static string NormalizeBaseUrl(string value)
+        {
+            if (string.IsNullOrWhiteSpace(value)) return null;
+
+            var normalized = value.Trim();
+            if (normalized.IndexOf("://", StringComparison.Ordinal) < 0)
+            {
+                normalized = "http://" + normalized;
+            }
+
+            Uri uri;
+            if (!Uri.TryCreate(normalized, UriKind.Absolute, out uri)) return null;
+            if (!string.Equals(uri.Scheme, Uri.UriSchemeHttp, StringComparison.OrdinalIgnoreCase) &&
+                !string.Equals(uri.Scheme, Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase))
+            {
+                return null;
+            }
+            if (string.IsNullOrWhiteSpace(uri.Host)) return null;
+
+            return normalized.TrimEnd('/');
         }
 
         private static string Combine(string baseUrl, string path)

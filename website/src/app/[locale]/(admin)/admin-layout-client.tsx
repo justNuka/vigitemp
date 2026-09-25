@@ -1,10 +1,11 @@
 "use client";
 
 import { AdminSidebar } from "@/components/admin-sidebar";
+import { AppFooter } from "@/components/app-footer";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { authApi } from "@/lib/api";
 import { useAutoLock } from "@/hooks/useAutoLock";
-import { useRouter } from "@/i18n/navigation";
+import { usePathname, useRouter } from "@/i18n/navigation";
 import { useEffect, useState } from "react";
 import { clearAgentSession } from "@/lib/agent-session";
 import PageTransitionWrapper from "@/components/animations/transitions/page-transitions/PageTransitionWrapper";
@@ -15,10 +16,17 @@ import { useTranslations } from "next-intl";
 import { AlertTriangle } from "lucide-react";
 import { isFeatureEnabled } from "@/lib/feature-flags";
 import { toast } from "sonner";
+import { useLicense } from "@/components/license/license-provider";
+import { isOneOrPack } from "@/lib/license-access";
+import { stripLocalePrefix } from "@/i18n/pathnames";
 
 export function AdminGroupLayoutClient({ children }: { children: React.ReactNode }) {
   useAutoLock();
   const router = useRouter();
+  const pathname = usePathname();
+  const { license } = useLicense();
+  const normalizedPathname = stripLocalePrefix(pathname);
+  const showAdminDock = !(isOneOrPack(license) && normalizedPathname === "/admin");
   const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
   const [agentSecretStatus, setAgentSecretStatus] = useState<{
     status: string;
@@ -100,7 +108,7 @@ export function AdminGroupLayoutClient({ children }: { children: React.ReactNode
           onLogout={handleLogout}
           activeAlarms={activeAlarmsCount}
         />
-        <main className="flex-1 min-h-0 bg-background">
+        <main className="min-h-0 flex-1 overflow-y-auto bg-background">
           {isFeatureEnabled("enableAgentSecretAlert") &&
           agentSecretStatus &&
           agentSecretStatus.status !== "ok" &&
@@ -116,6 +124,7 @@ export function AdminGroupLayoutClient({ children }: { children: React.ReactNode
             </div>
           ) : null}
           <PageTransitionWrapper className="min-h-0">{children}</PageTransitionWrapper>
+          <AppFooter className={showAdminDock ? "mb-24" : undefined} />
         </main>
       </div>
     </SidebarProvider>

@@ -1,5 +1,6 @@
 import { log } from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
+import { DEFAULT_CALIBRATION_WARNING_DAYS } from "@/lib/calibration-warning-window";
 
 const DEFAULT_SETTINGS = [
   { key: "general:timezone", value: "Europe/Paris", label: "Timezone" },
@@ -13,7 +14,7 @@ const DEFAULT_SETTINGS = [
   { key: "notifications:gsp_battery_email_percent", value: "25", label: "GSP battery email threshold (%)" },
   { key: "dashboard:surveillance_refresh", value: "15", label: "Surveillance refresh interval" },
   { key: "dashboard:show_null_non_response", value: "false", label: "Show null non-response" },
-  { key: "dashboard:etalonnage_warning_days", value: "30", label: "Calibration warning days" },
+  { key: "dashboard:etalonnage_warning_days", value: String(DEFAULT_CALIBRATION_WARNING_DAYS), label: "Calibration warning days" },
   { key: "dashboard:audit_graph_openings", value: "false", label: "Audit trail on graph opening" },
   { key: "dashboard:require_action_comment", value: "false", label: "Require action comment for surveillance actions" },
   { key: "messaging:enabled", value: "true", label: "Internal messaging" },

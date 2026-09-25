@@ -217,7 +217,7 @@ function AlarmWeatherWidget({
     );
   }
 
-  return <Link href="alarmes" className="block w-full max-w-[42rem] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-2xl">{content}</Link>;
+  return <Link href="/alarmes" className="block w-full max-w-[42rem] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-2xl">{content}</Link>;
 }
 
 interface AlarmBannerProps {
@@ -241,7 +241,7 @@ export function AlarmBanner({ count, onDismiss }: AlarmBannerProps) {
           {t("active_alarms.banner", { count })}
         </span>
       </div>
-      <Link href="alarmes" passHref>
+      <Link href="/alarmes" passHref>
         <Button
           variant="outline"
           size="sm"

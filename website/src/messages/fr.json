@@ -278,7 +278,18 @@
       "load": "Afficher la superposition",
       "hint": "Selectionnez au moins 2 lieux",
       "hint_range": "Selectionnez d'abord une plage de dates",
-      "empty": "Selectionnez 2 lieux puis cliquez sur afficher"
+      "empty": "Selectionnez 2 lieux puis cliquez sur afficher",
+      "export": {
+        "excel": "Exporter Excel",
+        "loading": "Export Excel...",
+        "presentation_sheet": "Présentation",
+        "data_sheet": "Courbes",
+        "date_column": "Date / heure",
+        "presentation_columns": {
+          "label": "Information",
+          "value": "Valeur"
+        }
+      }
     },
     "load_more": "Charger plus",
     "open_details": "Voir les détails",
@@ -289,7 +300,7 @@
       "pre_alarm": "{count, plural, one {# pre-alarme} other {# pre-alarmes}}",
       "ended": "{count, plural, one {# terminee} other {# terminees}}",
       "warning": "{count, plural, one {# alerte} other {# alertes}}",
-      "critical": "{count, plural, one {# critique} other {# critiques}}"
+      "critical": "{count, plural, one {# alarme en cours} other {# alarmes en cours}}"
     },
     "footer": {
       "count": "{count, plural, one {# sonde} other {# sondes}}",
@@ -480,10 +491,10 @@
       "email_toggle": "Activer les emails d'alarme",
       "acknowledged_toggle": "Recevoir les emails d'acquittement",
       "ended_toggle": "Recevoir les emails d'alarme terminée",
-      "fallback_toggle": "Utiliser les emails systeme si aucun destinataire lieu",
-      "cc_recipients_label": "Emails en copie (tous les emails système)",
+      "fallback_toggle": "Utiliser les destinataires globaux si aucun destinataire n’est configuré pour le lieu",
+      "cc_recipients_label": "Destinataires globaux en copie",
       "cc_recipients_placeholder": "ex: support@mc2-info.com\nadmin@client.fr",
-      "cc_recipients_helper": "Un email par ligne, ou séparés par virgule/point-virgule.",
+      "cc_recipients_helper": "Un email par ligne, ou séparés par virgule/point-virgule. Ces adresses peuvent être ajoutées en copie aux emails VigiSensys.",
       "gsp_battery_notify_percent_label": "Seuil notification batterie GSP (%)",
       "gsp_battery_notify_percent_helper": "Notification agent quand la batterie est inférieure ou égale à ce seuil.",
       "gsp_battery_email_percent_label": "Seuil email batterie GSP (%)",
@@ -575,7 +586,7 @@
   "alarmsPage": {
     "analysis": {
       "title": "Analyse d'alarme",
-      "description": "Analyse détaillée d'une alarme, de ses mesures et de son audit.",
+      "description": "Acquittement et analyse des alarmes du lieu sur leur période concernée.",
       "back": "Retour aux alarmes",
       "backToMonitoring": "Retour à la surveillance",
       "acknowledge": "Acquitter",
@@ -590,7 +601,19 @@
       "focusTitle": "Alarme sélectionnée",
       "refocus": "Recentrer sur l'alarme",
       "statusActive": "Active",
-      "statusResolved": "Terminée"
+      "statusResolved": "Terminée",
+      "exportXlsx": "Exporter XLSX",
+      "exportingXlsx": "Export XLSX...",
+      "exportError": "Impossible d'exporter les mesures en XLSX.",
+      "partialAcknowledgeError": "Certaines alarmes n'ont pas pu être acquittées.",
+      "selectAllForAcknowledgement": "Tout cocher (acquittement multiple)",
+      "selectAlarmAria": "Sélectionner l'alarme {id}",
+      "noSelection": "Sélectionnez une alarme dans la liste pour afficher son détail.",
+      "multipleSelectionTitle": "Alarmes sélectionnées ({count})",
+      "multipleSelectionDescription": "Le graphique est masqué pendant une sélection multiple. Vérifiez les alarmes avant de les acquitter ensemble.",
+      "acknowledgeMany": "Acquitter ({count})",
+      "acknowledgeManyDialogTitle": "Acquitter {count} alarmes",
+      "acknowledgeDialogDescription": "Ajoutez si besoin un commentaire qui sera associé à l'acquittement."
     },
     "title": "Gestion des alarmes",
     "description": "Suivi et traitement des alarmes",
@@ -672,6 +695,7 @@
         "last_value": "Dernière valeur",
         "triggered_value": "Valeur de déclenchement",
         "thresholds": "Consignes sup/inf",
+        "group": "Groupe",
         "triggered_at": "Déclenchée",
         "status": "Statut",
         "actions": "Actions"
@@ -748,7 +772,9 @@
       "deselect_all": "Tout décocher",
       "related_type_filter_placeholder": "Filtrer par type",
       "related_type_filter_all": "Tous les types",
-      "related_alarms_empty": "Aucune alarme ne correspond au filtre."
+      "related_alarms_empty": "Aucune alarme ne correspond au filtre.",
+      "comment_loading": "Chargement...",
+      "characters_count": "{count}/{max} caractères"
     },
     "status": {
       "active": "En cours",
@@ -1032,7 +1058,8 @@
         "create_saving": "Création...",
         "toast_apply_success": "Template \"{name}\" appliqué.",
         "toast_create_success": "Template de lieu créé.",
-        "toast_create_error": "Erreur lors de la création du template."
+        "toast_create_error": "Erreur lors de la création du template.",
+        "manage": "Gérer les templates"
       },
       "current_location_label": "Lieu en cours :",
       "action_comment_label": "Commentaire de l'action",
@@ -1045,7 +1072,8 @@
     "general": {
       "sections": {
         "sensor": "Sonde",
-        "setpoints": "Consignes"
+        "setpoints": "Consignes",
+        "timing": "Fréquence & temporisations"
       },
       "labels": {
         "name": "Nom du lieu",
@@ -1074,7 +1102,14 @@
         "module_select": "Module",
         "enabled": "Activé",
         "disabled": "Désactivé",
-        "observations": "Observations"
+        "observations": "Observations",
+        "alarm_delay_high": "Retard alarme haute (min)",
+        "alarm_delay_low": "Retard alarme basse (min)",
+        "no_response_delay": "Retard de non-réponse (min)",
+        "setpoint_change_delay": "Retard après changement de consigne (min)",
+        "effective_threshold": "Seuil effectif",
+        "critical_high_enable": "Seuil critique haut",
+        "critical_low_enable": "Seuil critique bas"
       },
       "placeholders": {
         "name": "Ex: Stockage A",
@@ -1113,13 +1148,63 @@
       "tooltips": {
         "frequency_gso": "Fréquence fixée à 15 min pour les sondes GSO.",
         "retrigger_delay_measures": "Nombre de mesures hors tolérances à ignorer avant un nouveau déclenchement apres acquittement ou alarme terminée.",
-        "monitoring_requires_sensor": "Sans sonde sélectionnée, la surveillance est désactivée automatiquement."
+        "monitoring_requires_sensor": "Sans sonde sélectionnée, la surveillance est désactivée automatiquement.",
+        "frequency": "Intervalle entre deux mesures utilisées par la surveillance.",
+        "alarm_delay_high": "Durée pendant laquelle la valeur doit rester au-dessus du seuil haut normal avant le déclenchement de l'alarme.",
+        "alarm_delay_low": "Durée pendant laquelle la valeur doit rester sous le seuil bas normal avant le déclenchement de l'alarme.",
+        "no_response_delay": "Durée maximale sans réponse de la sonde avant une alarme de non-réponse.",
+        "setpoint_change_delay": "Temporisation appliquée après un changement de consigne, notamment lors d'un changement de règle de planning.",
+        "setpoint": "Valeur cible autour de laquelle les seuils de surveillance sont configurés.",
+        "upper_alarm": "Seuil haut normal. Son dépassement applique le retard d'alarme haut avant déclenchement.",
+        "lower_alarm": "Seuil bas normal. Son dépassement applique le retard d'alarme bas avant déclenchement.",
+        "effective_threshold": "Seuil réellement utilisé par la surveillance. En métrologie, il peut intégrer l'EMT calculée.",
+        "prealarm": "Niveau d'avertissement visuel avant d'atteindre le seuil d'alarme normal."
       },
       "group_fallback": "Groupe {id}",
+      "sensor_range": "Plage de mesure de la sonde sélectionnée : {range}",
       "planning_lock": {
         "title": "Consignes pilotées par le planning",
         "description": "Des règles de planning sont actives pour ce lieu. Les consignes de base sont verrouillées ici. Modifiez le planning si vous devez changer les consignes appliquées.",
         "go_to_planning": "Aller au planning"
+      },
+      "setpoints": {
+        "description": "Consigne, seuils normaux, pré-alarmes et limites critiques du lieu.",
+        "target_hint": "Valeur de référence du lieu.",
+        "upper_title": "Limites hautes",
+        "upper_hint": "Pré-alerte, alarme temporisée et sécurité critique.",
+        "lower_title": "Limites basses",
+        "lower_hint": "Pré-alerte, alarme temporisée et sécurité critique.",
+        "normal_disabled": "Le seuil d'alarme normal est désactivé.",
+        "critical_hint": "Déclenchement immédiat, sans attendre le retard d'alarme normal.",
+        "invalid_title": "Configuration incohérente : l'enregistrement sera bloqué tant que ces valeurs ne sont pas corrigées.",
+        "emt_effective_title": "EMT prise en compte dans les seuils effectifs : {value}",
+        "emt_effective_description": "Le seuil haut effectif est rapproché de la consigne et le seuil bas effectif l'est également. Les pré-alarmes sont validées par rapport à ces seuils réellement utilisés."
+      },
+      "timing": {
+        "description": "Cadence de mesure et délais utilisés avant les différents déclenchements."
+      },
+      "name_limit": "30 caractères maximum",
+      "name_remaining": "{remaining} restant(s) / {max}",
+      "alarm_preview": {
+        "title": "Aperçu du comportement des alarmes",
+        "description": "Simulation visuelle mise à jour en temps réel à partir des valeurs du formulaire.",
+        "chart_aria": "Aperçu des consignes, seuils et temporisations d'alarme",
+        "frequency": "Mesure toutes les {value} min",
+        "setpoint": "Consigne",
+        "setpoint_description": "Valeur cible configurée pour le lieu.",
+        "prealarm_high": "Pré-alarme haute",
+        "prealarm_low": "Pré-alarme basse",
+        "prealarm_description": "Avertissement avant le seuil d'alarme normal.",
+        "alarm_high": "Alarme haute",
+        "alarm_low": "Alarme basse",
+        "alarm_description": "Le franchissement doit persister pendant {delay} min avant le déclenchement.",
+        "critical_high": "Critique haut",
+        "critical_low": "Critique bas",
+        "critical_description": "Seuil de sécurité : le franchissement déclenche immédiatement l'alarme.",
+        "delay_short": "retard {value} min",
+        "delay_window": "temporisation {value} min",
+        "normal_behavior": "Seuil normal franchi : la temporisation démarre, puis l'alarme se déclenche si le dépassement persiste.",
+        "critical_behavior": "Seuil critique franchi : l'alarme est déclenchée immédiatement, sans temporisation."
       }
     },
     "metrology": {
@@ -1687,7 +1772,7 @@
       "dateTo": "Au",
       "clearFilters": "Effacer les filtres",
       "action": "Action",
-      "today_limit_hint": "Affichage du jour en cours. Pour une période plus precise, ajustez les dates. La liste reste limitée à 100 entrées."
+      "today_limit_hint": "Affichage du jour en cours. Ajustez les dates pour changer de période ; les événements sont chargés par pages."
     },
     "expandedDetails": "Détails complets",
     "actions": {
@@ -1720,7 +1805,17 @@
       "PS": "Redémarrage port série",
       "SACT": "Module alarme retiré",
       "AACT": "Module alarme associé",
-      "unknown": "Action inconnue ({code})"
+      "unknown": "Action inconnue ({code})",
+      "GRPH": "Ouverture d'un graphique",
+      "MAIL": "Email d'alarme envoyé",
+      "ALARM_RESOLVED": "Fin d'alarme",
+      "ETAP": "Étalonnage appliqué",
+      "VLOG": "Action VigiLog",
+      "FERMSURV": "Fermeture de la surveillance",
+      "IMP": "Import de données",
+      "PLAN": "Modification du planning",
+      "TEL": "Système",
+      "UT": "Événement système"
     },
     "filters": {
       "site": "Site",
@@ -1750,7 +1845,67 @@
       "from": "De : {value}",
       "to": "Vers : {value}",
       "action": "Action : {action}",
-      "ip": "IP : {ip}"
+      "ip": "IP : {ip}",
+      "resources": {
+        "audit_graph_openings": "Affichage des ouvertures de graphiques"
+      },
+      "fields": {
+        "address": "Adresse",
+        "connectedAt": "Connecté le",
+        "machineName": "Machine",
+        "authEngine": "Moteur d'authentification",
+        "newToleranceSup": "Tolérance supérieure",
+        "newToleranceInf": "Tolérance inférieure",
+        "simAlarms": "Alarmes simulées",
+        "realAlarms": "Alarmes réelles",
+        "dateRange": "Période",
+        "alarmId": "N° alarme",
+        "acknowledgedAt": "Acquitté le",
+        "from": "Avant",
+        "to": "Après",
+        "forced": "Forcé",
+        "description": "Description",
+        "format": "Format",
+        "Nom_Lieu": "Nom du lieu",
+        "Tolerance_Sup": "Tolérance supérieure",
+        "Tolerance_Inf": "Tolérance inférieure",
+        "Consigne_Sup": "Consigne supérieure",
+        "Consigne_Inf": "Consigne inférieure",
+        "Est_Son_Alarme_Active": "Son d'alarme",
+        "Nom_Sonde": "Nom de la sonde",
+        "Frequence_Mesure": "Fréquence de mesure (s)",
+        "Retard_Alarme": "Retard d'alarme (s)",
+        "Hysteresis": "Hystérésis",
+        "disabled": "Surveillance désactivée",
+        "durationMinutes": "Durée (min)",
+        "reactivationAt": "Réactivation prévue",
+        "updated": "Lieux modifiés",
+        "lieuIds": "Lieux concernés",
+        "groupOrLiaisonId": "Groupe / liaison",
+        "emailEvent": "Événement email",
+        "emailStatus": "Statut email",
+        "recipient": "Destinataire",
+        "attempts": "Tentatives",
+        "usedSystemFallback": "Destinataires système utilisés"
+      },
+      "values": {
+        "yes": "Oui",
+        "no": "Non",
+        "before": "Avant",
+        "after": "Après",
+        "auth_legacy": "legacy",
+        "auth_new": "new",
+        "action_create": "Création",
+        "action_update": "Modification",
+        "action_delete": "Suppression",
+        "action_enable": "Activation",
+        "action_disable": "Désactivation",
+        "email_triggered": "Alarme déclenchée",
+        "email_ended": "Fin d'alarme",
+        "email_acknowledged": "Acquittement d'alarme",
+        "email_sent": "Envoyé"
+      },
+      "email_event": "Email d'alarme : {event}"
     }
   },
   "profilePage": {
@@ -1943,12 +2098,24 @@
       "noSimAlarms": "Aucune alarme simulée avec ces tolérances.",
       "noRealAlarms": "Aucune alarme réelle sur cette période."
     },
-    "print": "Imprimer",
     "export": {
-      "button": "Exporter",
-      "csv": "Exporter CSV (alarmes)",
-      "image": "Exporter le graphique",
-      "pdf": "Exporter PDF"
+      "excel": "Exporter Excel",
+      "loading": "Export Excel...",
+      "presentation_sheet": "Présentation",
+      "data_sheet": "Alarmes",
+      "exported_at": "Date d'export",
+      "presentation_columns": {
+        "label": "Information",
+        "value": "Valeur"
+      },
+      "columns": {
+        "kind": "Origine",
+        "duration_minutes": "Durée (min)"
+      },
+      "kinds": {
+        "simulated": "Alarme simulée",
+        "real": "Alarme réelle"
+      }
     },
     "save": {
       "button": "Enregistrer l'analyse",
@@ -2874,7 +3041,10 @@
       "password_label": "Mot de passe",
       "password_placeholder": "Votre mot de passe",
       "reset_email_label": "Adresse email",
-      "reset_email_placeholder": "votre@email.com"
+      "reset_email_placeholder": "votre@email.com",
+      "show_password": "Afficher le mot de passe",
+      "hide_password": "Masquer le mot de passe",
+      "caps_lock_warning": "Verr. Maj est activé"
     },
     "buttons": {
       "sign_in": "Se connecter",
@@ -3236,7 +3406,8 @@
     },
     "actions": {
       "expanded_size": "Affichage agrandi",
-      "standard_size": "Affichage standard"
+      "standard_size": "Affichage standard",
+      "last_24_hours": "Revenir aux 24 dernières heures"
     },
     "filters": {
       "site": "Site",
@@ -3245,7 +3416,8 @@
       "dateTo": "Date de fin",
       "allSites": "Tous les sites",
       "allTypes": "Tous les types",
-      "selected_range": "Plage sélectionnée : {range}"
+      "selected_range": "Plage sélectionnée : {range}",
+      "last_24_hours": "24 dernières heures"
     },
     "table": {
       "columns": {
@@ -3257,8 +3429,8 @@
         "serial": "Numéro de série"
       },
       "multi_tabs": {
-        "button": "Export multi-onglets",
-        "button_loading": "Export...",
+        "button": "Exporter Excel",
+        "button_loading": "Export Excel...",
         "presentation_sheet": "Présentation",
         "measurements_sheet": "Mesures",
         "presentation_columns": {
@@ -3316,8 +3488,10 @@
       "audit_marker_count": "{count} événement(s) d'audit",
       "show_audit_markers": "Afficher les audits sur le graphique",
       "show_no_response": "Afficher les non-réponses",
-      "measure_count": "Mesures dans le graphique: {count}",
-      "latest_measure_count": "{count} dernieres mesures",
+      "measure_count": "Mesures dans le graphique : {count}",
+      "latest_measure_count": "{count} dernières mesures",
+      "rolling_measure_count": "{count} mesures sur les 24 dernières heures",
+      "sampled_measure_count": "{source} mesures sur la période · {displayed} points affichés",
       "drag_zoom_hint": "Molette pour zoomer, glisser pour se déplacer, double-clic pour réinitialiser.",
       "reset_zoom": "Réinitialiser le zoom",
       "export_image": "Exporter la courbe",
@@ -3402,36 +3576,62 @@
     }
   },
   "versionChangelog": {
-    "title": "Nouvelle version {version}",
-    "description": "Nouveautes principales et changements a connaitre.",
+    "title": "VigiSensys {version}",
+    "description": "Version 1.4 : connexion plus pratique et Audit trail localisé, paginé et enrichi des emails d’alarme.",
     "sections": {
       "surveillance": {
-        "title": "Surveillance et alarmes",
+        "title": "Connexion et ergonomie",
         "items": {
-          "0": "Correction des erreurs de chargement sur la liste des alarmes et sur les filtres d'acces associes.",
-          "1": "Le rafraichissement de la surveillance conserve maintenant mieux l'affichage filtre et les lieux deja charges.",
-          "2": "Les valeurs affichees dans les info-bulles et sur l'axe des graphes sont maintenant formatees proprement.",
-          "3": "L'analyse d'alarme affiche maintenant sa courbe a partir de l'historique complet des mesures, y compris pour les alarmes plus anciennes.",
-          "4": "Les modifications de consignes des sondes GSP envoient maintenant aussi correctement les retards haut et bas vers la sonde.",
-          "5": "La reactivation de la surveillance reinitialise maintenant la derniere date de reponse pour eviter les alarmes de non-reponse non justifiees.",
-          "6": "L'activation et la desactivation de la surveillance par groupe ont ete fiabilisees, avec les bons libelles dans la fenetre de confirmation.",
-          "7": "Les mesures issues d'une remontee memoire sont maintenant distinguees visuellement dans le tableau de details d'un lieu.",
-          "8": "Les acquittements d'alarme remontent maintenant correctement dans l'audit de detail d'un lieu.",
-          "9": "Avec un filtre actif, le rafraichissement recharge maintenant correctement les lieux correspondants et replace le bouton de chargement au bon endroit dans chaque section.",
-          "10": "Les compteurs en vue arborescence distinguent maintenant correctement les pre-alarmes et les alarmes terminees.",
-          "11": "La page de surveillance affiche maintenant un message explicite quand aucun capteur ne correspond aux filtres actifs.",
-          "12": "Le detail d'un lieu conserve des libelles de consigne et de tolerance plus lisibles, y compris sur petits ecrans."
+          "0": "Le mot de passe de connexion peut maintenant être affiché ou masqué avec l’icône œil.",
+          "1": "Un avertissement indique immédiatement lorsque Verr. Maj est actif pendant la saisie du mot de passe.",
+          "2": "Le moteur d’authentification journalisé utilise désormais uniquement les valeurs legacy ou new.",
+          "3": "Les anciennes valeurs Better Auth restent correctement normalisées à l’affichage de l’audit."
+        }
+      },
+      "metrology": {
+        "title": "Métrologie",
+        "items": {
+          "0": "Ajustage et étalonnage ont été fiabilisés : acquisitions par plateau, coefficients A/B/C, erreurs matérielles explicites et rollback en cas d'échec partiel.",
+          "1": "Les rapports d'étalonnage PDF et les exports ZIP permettent d'exporter une opération ou plusieurs historiques en une fois.",
+          "2": "Les étalons SEF sont désormais pris en charge directement via les convertisseurs Sollae TCP, sans port COM virtuel ezVSP.",
+          "3": "Les coefficients GSP/GSO sont relus, affichés et synchronisés sans écraser automatiquement la configuration présente sur les sondes.",
+          "4": "L'import d'ajustage accepte les sondes sans module, les affectations multi-modules et sépare l'import BDD de la synchronisation matérielle."
         }
       },
       "admin": {
-        "title": "Administration",
+        "title": "Audit trail",
         "items": {
-          "0": "Ajout du bloc sauvegarde systeme pour toutes les licences.",
-          "1": "Le lien du journal des acquittements depuis le dashboard admin ouvre maintenant une vraie page.",
-          "2": "L'export de l'historique des acquittements reapplique maintenant correctement les filtres actifs.",
-          "3": "La liste des commentaires libres d'acquittement est maintenant chargee depuis le journal dedie.",
-          "4": "L'aperçu de l'erreur de justesse affiche maintenant clairement le signe inverse applique lors de la correction.",
-          "5": "Les exports Excel comportent maintenant un onglet de presentation VigiSensys et un onglet de donnees distinct et lisible."
+          "0": "Les libellés, valeurs connues et détails d’audit utilisent maintenant les traductions FR/EN avec les accents corrigés.",
+          "1": "GRPH et les autres codes runtime connus disposent d’un libellé explicite au lieu d’Action inconnue.",
+          "2": "La pagination serveur permet de charger réellement 200, 500 ou 1000 événements par page au-delà de l’ancienne limite de 100.",
+          "3": "Le sélecteur de codes est scrollable et affiche proprement code + libellé.",
+          "4": "Les emails d’alarme envoyés, de fin d’alarme et d’acquittement sont visibles dans l’audit global et dans celui du lieu."
+        }
+      },
+      "security": {
+        "title": "Authentification et sécurité",
+        "items": {
+          "0": "La première connexion dispose d'un onboarding dédié et respecte les règles de mot de passe configurées.",
+          "1": "La fondation Better Auth est intégrée en mode opt-in, avec activation contrôlée et compatibilité avec le parcours historique.",
+          "2": "La réinitialisation de mot de passe ne signale plus à tort un envoi réussi et évite de révéler l'existence d'un compte.",
+          "3": "Les liens d'email sont localisés et les pages Mentions légales / Protection des données décrivent le fonctionnement on-premise de VigiSensys."
+        }
+      },
+      "telephony": {
+        "title": "Téléphonie",
+        "items": {
+          "0": "Twilio est prêt comme provider recommandé pour les appels de test, avec prise en charge des comptes Trial et un guide de mise en service.",
+          "1": "OVHcloud Click2Call et Asterisk/SIP restent disponibles comme options documentées selon l'infrastructure du client.",
+          "2": "L'accès aux fonctions de téléphonie est protégé par l'option de licence correspondante côté API et interface."
+        }
+      },
+      "platform": {
+        "title": "Version et compatibilité",
+        "items": {
+          "0": "Le Web passe en version 1.4.0.",
+          "1": "Le Serveur 1.1.0, l’Agent 1.0.1 et la BDD 0.91.0 restent inchangés.",
+          "2": "L’API Audit conserve son ancien format pour les consommateurs existants et ajoute la pagination de manière opt-in.",
+          "3": "Aucune migration BDD n’est nécessaire ; MySQL et SQL Server restent supportés."
         }
       }
     }
@@ -3754,8 +3954,8 @@
           "badge": "Standard"
         },
         "4": {
-          "title": "Pilotage collaboratif",
-          "description": "Dashboard admin, messagerie et analyse d'impact.",
+          "title": "Pilotage qualité",
+          "description": "Analyse d'impact, conformité et pilotage qualité avancé.",
           "badge": "Standard"
         },
         "5": {
@@ -3970,7 +4170,7 @@
           "title": "Pilotage & collaboration",
           "bullets": {
             "0": "Dashboard administrateur",
-            "1": "Messagerie inter-utilisateurs",
+            "1": "Pilotage qualité avancé",
             "2": "Notifications avancées",
             "3": "Conformité opérationnelle"
           }
@@ -4290,7 +4490,8 @@
         "action": "Action",
         "sensor": "Sonde",
         "alarm": "Alarme"
-      }
+      },
+      "description_recent": "{total, plural, =0 {Aucun acquittement sur les {days} derniers jours} one {# acquittement sur les {days} derniers jours} other {# acquittements sur les {days} derniers jours}}"
     },
     "connected_users": {
       "title": "Connexions récentes",
@@ -4337,7 +4538,63 @@
       "actions": {
         "run": "Lancer sauvegarde"
       },
-      "empty": "Aucun historique de sauvegarde disponible"
+      "empty": "Aucun historique de sauvegarde disponible",
+      "primary": {
+        "label": "Sauvegarde principale"
+      },
+      "secondary": {
+        "label": "Copie secondaire",
+        "not_configured_description": "Aucun répertoire secondaire n'est défini.",
+        "not_run_description": "La copie secondaire n'a pas été exécutée pour cette sauvegarde.",
+        "pending_description": "La copie secondaire démarrera après la sauvegarde principale.",
+        "in_progress_description": "La copie vers le répertoire secondaire est en cours.",
+        "unknown_description": "Le journal ne permet pas de déterminer l'état de la copie secondaire."
+      },
+      "states": {
+        "success": "Réussie",
+        "in_progress": "En cours",
+        "failed": "Échec",
+        "pending": "En attente",
+        "not_run": "Non exécutée",
+        "not_configured": "Non configurée",
+        "unknown": "Indéterminée",
+        "none": "Aucune donnée"
+      },
+      "robocopy": {
+        "code": "Code Robocopy {code}",
+        "codes": {
+          "0": "Destination déjà à jour : aucun fichier à copier.",
+          "1": "Copie effectuée avec succès.",
+          "2": "Des fichiers supplémentaires existent dans la destination ; aucune erreur de copie.",
+          "3": "Copie effectuée ; des fichiers supplémentaires existent dans la destination.",
+          "4": "Des différences de fichiers ou de répertoires ont été détectées.",
+          "5": "Copie effectuée ; certaines différences ont été détectées.",
+          "6": "Des fichiers supplémentaires et des différences ont été détectés ; aucune erreur de copie.",
+          "7": "Copie effectuée avec des fichiers supplémentaires et des différences détectées.",
+          "8": "Au moins un fichier ou répertoire n'a pas pu être copié.",
+          "9": "Des fichiers ont été copiés, mais au moins une copie a échoué.",
+          "10": "Des fichiers supplémentaires existent et au moins une copie a échoué.",
+          "11": "Des fichiers ont été copiés, des fichiers supplémentaires existent et au moins une copie a échoué.",
+          "12": "Des différences ont été détectées et au moins une copie a échoué.",
+          "13": "Des fichiers ont été copiés, des différences ont été détectées et au moins une copie a échoué.",
+          "14": "Des fichiers supplémentaires et des différences ont été détectés, avec au moins une erreur de copie.",
+          "15": "Copie partielle avec fichiers supplémentaires, différences et au moins une erreur.",
+          "16": "Erreur Robocopy grave : la copie secondaire n'a pas pu être réalisée.",
+          "other": "Robocopy a retourné le code {code}, considéré comme un échec."
+        }
+      },
+      "log": {
+        "open": "Afficher le journal de sauvegarde",
+        "title": "Journal de sauvegarde système",
+        "description": "Dernières lignes du journal de sauvegarde, présentées par date et état.",
+        "file": "Fichier journal",
+        "lines": "{count, plural, one {# ligne} other {# lignes}}",
+        "last_lines": "{count} dernières affichées",
+        "truncated": "Le journal contient {total} lignes. Les {shown} dernières sont affichées.",
+        "empty": "Le journal de sauvegarde est vide ou indisponible.",
+        "unavailable": "Indisponible",
+        "time_unknown": "Sans horodatage"
+      }
     },
     "backups": {
       "columns": {
@@ -4386,6 +4643,11 @@
       "alarms_title": "Alarmes",
       "alarms_description": "Alarmes en cours : {inProgress}",
       "alarms_helper": "Alarmes terminées en attente d'acquittement : {pending}"
+    },
+    "metrology": {
+      "title": "Métrologie",
+      "description": "Étalonnages arrivant à échéance dans les {days} prochains jours",
+      "helper": "Sondes actives dont la dernière validité expire entre aujourd’hui et J+{days}."
     }
   },
   "cacheControls": {
@@ -4499,7 +4761,9 @@
   "globalAppEffects": {
     "alarm": {
       "type": {
+        "critical_high": "Alarme critique haute",
         "high": "Alarme haute",
+        "critical_low": "Alarme critique basse",
         "low": "Alarme basse",
         "sector": "Secteur / alimentation",
         "module": "Problème module",
@@ -5546,7 +5810,14 @@
         "title": "Aucune mesure importée",
         "description": "Cette tournée a été réceptionnée, mais le VigiLog ne contenait aucune mesure exploitable."
       },
-      "export": "Exporter les mesures"
+      "export": "Exporter Excel",
+      "exportLoading": "Export Excel...",
+      "exportPresentationSheet": "Présentation",
+      "exportDataSheet": "Mesures",
+      "exportPresentationColumns": {
+        "label": "Information",
+        "value": "Valeur"
+      }
     },
     "loggers": {
       "title": "Registre des VigiLog",
@@ -5846,7 +6117,7 @@
             "durationMinutes": "Durée (min)",
             "maxGap": "Écart max",
             "measurementIntervalSeconds": "Durée en <strong>secondes</strong> entre les mesures",
-            "measurementIntervalHelp": "Choisissez une durée de 15 ou 30 secondes.",
+            "measurementIntervalHelp": "Choisissez une durée de 15 ou 30 secondes. Pour les GSP, cette cadence reste indicative : si d'autres sondes du même module sont en Surveillance, celle-ci est prioritaire et peut légèrement décaler la lecture de métrologie.",
             "gsoFixedInterval": "Une sonde GSO est sélectionnée : la durée entre les mesures est fixée a 60 secondes.",
             "invalidIntervalTitle": "Durée invalide",
             "invalidIntervalDescription": "La durée entre deux mesures doit être un nombre entier supérieur ou égal à 12 secondes.",
@@ -5955,7 +6226,7 @@
           "general": "Informations générales",
           "operator": "Opérateur",
           "cadence": "Fréquence de lecture",
-          "cadenceDescription": "Les sondes GSP sont interrogées toutes les minutes. Les nouvelles mesures GSO sont lues depuis la base de mesures.",
+          "cadenceDescription": "Les sondes GSP sont interrogées toutes les minutes. Cette cadence reste indicative : si d'autres sondes du même module sont en Surveillance, celle-ci est prioritaire et peut légèrement décaler la lecture de métrologie. Les nouvelles mesures GSO sont lues depuis la base de mesures.",
           "session": "Session d'étalonnage",
           "startReading": "Lancer la lecture des sondes",
           "stopReading": "Arrêter la lecture des sondes",

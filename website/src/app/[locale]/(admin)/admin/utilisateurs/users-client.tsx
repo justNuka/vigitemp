@@ -69,9 +69,19 @@ export function UsersClient({ users }: Props) {
 
   const shouldLoadFormData = isCreateDialogOpen || isEditDialogOpen;
   const { data: rules, isLoading: rulesLoading } = usePasswordRules(shouldLoadFormData);
-  const { data: profiles, isLoading: profilesLoading } = useProfiles(shouldLoadFormData);
+  const profileStatus = isEditDialogOpen ? "all" : "active";
+  const { data: profiles, isLoading: profilesLoading } = useProfiles(shouldLoadFormData, profileStatus);
   const { data: sites, isLoading: sitesLoading } = useSitesSimple(shouldLoadFormData);
   const { data: groups, isLoading: groupsLoading } = useGroups(undefined, shouldLoadFormData);
+  const editProfiles = useMemo(() => {
+    if (!profiles) return profiles;
+    const currentProfileName = selectedUser?.role?.trim().toLocaleLowerCase() ?? "";
+    return profiles.filter(
+      (profile) =>
+        profile.estArchive !== true ||
+        profile.name.trim().toLocaleLowerCase() === currentProfileName,
+    );
+  }, [profiles, selectedUser?.role]);
 
   useEffect(() => {
     if (didPrefetchRef.current) return;
@@ -83,8 +93,8 @@ export function UsersClient({ users }: Props) {
       staleTime: 5 * 60 * 1000,
     });
     queryClient.prefetchQuery({
-      queryKey: ["profiles"],
-      queryFn: () => getJson("/api/profils"),
+      queryKey: ["profiles", "active"],
+      queryFn: () => getJson("/api/profils?status=active"),
     });
     queryClient.prefetchQuery({
       queryKey: ["sites-simple"],
@@ -274,7 +284,7 @@ export function UsersClient({ users }: Props) {
         open={isEditDialogOpen}
         onOpenChange={setIsEditDialogOpen}
         user={selectedUser}
-        profiles={profiles as any}
+        profiles={editProfiles as any}
         profilesLoading={profilesLoading}
         sites={sites as any}
         sitesLoading={sitesLoading}

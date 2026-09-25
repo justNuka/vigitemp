@@ -1,15 +1,15 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
+import { useRouter } from 'next/navigation'
 import { Chart as ChartJS, CategoryScale, Filler, Legend, LineElement, LinearScale, PointElement, Title, Tooltip } from 'chart.js'
 import { BatteryWarning, History, Power, PowerOff, Settings } from 'lucide-react'
 import { m } from 'motion/react'
-import { useQueryClient } from '@tanstack/react-query'
 
 import { useAppAccess } from '@/components/access/app-access-provider'
-import { AlarmAcknowledgeDialog, type AcknowledgeDialogAlarm } from '@/components/alarm-acknowledge-dialog'
 import MonitoringDetailsModal from '@/components/monitoring-details-modal'
 import { MonitoringCardChartPreview } from '@/components/monitoring-card/monitoring-card-chart-preview'
 import { MonitoringCardHeader } from '@/components/monitoring-card/monitoring-card-header'
+import { BatteryIndicator } from '@/components/monitoring-card/battery-indicator'
 import { RssiBars } from '@/components/monitoring-card/rssi-bars'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
@@ -18,14 +18,19 @@ import { Textarea } from '@/components/ui/textarea'
 import { Tooltip as UITooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { useIsMobile } from '@/hooks/useIsMobile'
 import { useLieuMeasurements } from '@/hooks/useLieuMeasurements'
-import { formatDbDateTime, parseDbDateTime, serializeDbDateTime } from '@/lib/date-display'
+import {
+  formatStoredDbDateTime,
+  parseDbDateTime,
+  parseStoredDbDateTime,
+  serializeStoredDbDateTime,
+} from '@/lib/date-display'
 import type { LieuTypeValue } from '@/lib/lieu-types'
 import { calculateYDomain, formatMeasureValue, getMeasureSummary, sortMeasuresChronologically } from '@/lib/measurements'
-import { formatNumber } from '@/lib/number-display'
+import { MONITORING_CARD_GRAPH_MAX_POINTS } from '@/lib/measurement-downsampling'
 import { cn } from '@/lib/utils'
 import { fadeInUp } from '@/lib/motion-variants'
-import { markAlarmAcknowledgedInPaginatedSensorsCache } from '@/lib/surveillance-cache'
 import type { SensorStatus } from '@/lib/surveillance-status'
+import type { AlarmTypeCode } from '@/lib/alarm-types'
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Filler)
 
@@ -41,7 +46,7 @@ interface MonitoringCardProps {
   siteName: string
   groupName: string
   status: SensorStatus
-  alarmType?: 'H' | 'B' | 'N' | 'S' | 'A' | 'M' | 'T' | null
+  alarmType?: AlarmTypeCode | null
   alarmDisabled: boolean
   alarmDisabledUntil: Date | string | null
   alarmDelayMinutes: number | null
@@ -123,29 +128,43 @@ export default function MonitoringCard({
   const isMobile = useIsMobile()
   const locale = useLocale()
   const localeTag = locale === 'fr' ? 'fr-FR' : locale
-  const queryClient = useQueryClient()
+  const router = useRouter()
   const isAdjustmentInProgress = lieuEtat === 'A'
   const shouldLoadCardMeasurements = !isMobile && !backgroundPaused && !isAdjustmentInProgress
 
   const { data, isLoading, reload, meta } = useLieuMeasurements(idLieu, {
     enabled: shouldLoadCardMeasurements,
     includeMeta: true,
-    source: "mesures",
+    source: "graphique",
     includeNullNonResponse: showNullNonResponse,
+    rollingHours: 24,
+    graphMaxPoints: MONITORING_CARD_GRAPH_MAX_POINTS,
   })
 
   const orderedData = useMemo(() => sortMeasuresChronologically(data), [data])
-  const liveMeasurementDate = useMemo(() => {
-    if (!lastMeasurement) return null
-    const parsed = parseDbDateTime(lastMeasurement)
-    if (!parsed) return null
-    return Number.isNaN(parsed.getTime()) ? null : parsed
-  }, [lastMeasurement])
+  const chartRangeStartMs = useMemo(
+    () => parseDbDateTime(meta?.graphRangeStart ?? null)?.getTime() ?? 0,
+    [meta?.graphRangeStart],
+  )
+  const chartRangeEndMs = useMemo(
+    () => parseDbDateTime(meta?.graphRangeEnd ?? null)?.getTime() ?? 1,
+    [meta?.graphRangeEnd],
+  )
+  const liveMeasurementIso = useMemo(
+    () => serializeStoredDbDateTime(lastMeasurement),
+    [lastMeasurement],
+  )
+  const liveMeasurementDate = useMemo(
+    () => (liveMeasurementIso ? parseDbDateTime(liveMeasurementIso) : null),
+    [liveMeasurementIso],
+  )
 
   const previewData = useMemo(() => {
     if (!liveMeasurementDate) return orderedData
     const lastPoint = orderedData[orderedData.length - 1]
-    const lastPointDate = lastPoint?.DateHeureMesureIso ? parseDbDateTime(lastPoint.DateHeureMesureIso) : null
+    const lastPointDate = lastPoint?.DateHeureMesureIso
+      ? parseStoredDbDateTime(lastPoint.DateHeureMesureIso)
+      : null
     const isLiveNullNonResponse = currentValue === null && (alarmType === "N" || alarmType === "M" || status === "technical")
 
     if (currentValue === null && !isLiveNullNonResponse) {
@@ -153,12 +172,12 @@ export default function MonitoringCard({
     }
 
     const template = lastPoint ?? null
-    const serializedDate = serializeDbDateTime(liveMeasurementDate) ?? ""
-    const timeLabel = formatDbDateTime(serializedDate, {
+    const serializedDate = liveMeasurementIso ?? ""
+    const timeLabel = formatStoredDbDateTime(serializedDate, {
       format: "time",
       locale: localeTag,
     })
-    const dateLabel = formatDbDateTime(serializedDate, { format: "dateTime" })
+    const dateLabel = formatStoredDbDateTime(serializedDate, { format: "dateTime" })
     const livePoint = {
       id: `live-${idLieu}-${serializedDate}`,
       Valeur: currentValue,
@@ -195,26 +214,23 @@ export default function MonitoringCard({
     }
 
     return [...orderedData, livePoint]
-  }, [alarmType, currentValue, idLieu, liveMeasurementDate, localeTag, orderedData, sondeNumeroSerie, status, unit])
+  }, [alarmType, currentValue, idLieu, liveMeasurementDate, liveMeasurementIso, localeTag, orderedData, sondeNumeroSerie, status, unit])
 
   const summary = useMemo(() => getMeasureSummary(previewData), [previewData])
   const { consigneSup, consigneInf, consigne, unite, frequence, lastMeasureText, lastDateTime, decimals, lastValue } = summary
 
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [showConfirmModal, setShowConfirmModal] = useState(false)
-  const [showAcknowledgeModal, setShowAcknowledgeModal] = useState(false)
-  const [ackComment, setAckComment] = useState('')
   const [actionComment, setActionComment] = useState('')
   const [actionCommentError, setActionCommentError] = useState<string | null>(null)
   const [disableDuration, setDisableDuration] = useState<string>('60')
   const [actionType, setActionType] = useState<'surveillance' | 'alarms'>('surveillance')
   const [isSurveillanceActive, setIsSurveillanceActive] = useState(surveillanceDisabled !== undefined ? !surveillanceDisabled : lieuEtat !== 'D')
   const [isAlarmActive, setIsAlarmActive] = useState(!alarmDisabled)
-  const [locallyAcknowledgedAlarmId, setLocallyAcknowledgedAlarmId] = useState<number | null>(null)
 
-  const effectiveAlarmId = locallyAcknowledgedAlarmId !== null && alarmId === locallyAcknowledgedAlarmId ? null : alarmId
-  const effectiveAlarmType = locallyAcknowledgedAlarmId !== null && alarmId === locallyAcknowledgedAlarmId ? null : alarmType
-  const effectiveStatus = locallyAcknowledgedAlarmId !== null && alarmId === locallyAcknowledgedAlarmId ? 'ok' : status
+  const effectiveAlarmId = alarmId
+  const effectiveAlarmType = alarmType
+  const effectiveStatus = status
   const resolvedLieuType = lieuType ?? meta?.lieuType ?? null
 
   useEffect(() => {
@@ -255,9 +271,11 @@ export default function MonitoringCard({
   }, [idLieu, isModalOpen, onDetailsModalStateChange])
 
   const handleAcknowledgeOpen = useCallback(() => {
-    setAckComment('')
-    setShowAcknowledgeModal(true)
-  }, [])
+    if (!effectiveAlarmId) return
+    router.push(
+      `/${locale}/alarmes/analyse?locationId=${encodeURIComponent(String(idLieu))}&alarmId=${encodeURIComponent(String(effectiveAlarmId))}`,
+    )
+  }, [effectiveAlarmId, idLieu, locale, router])
 
   const confirmSurveillanceToggle = () => {
     if (!hasPermission('LOCATION_DISABLE_ACCESS')) {
@@ -296,28 +314,32 @@ export default function MonitoringCard({
   const surveillanceDisabledLabel = useMemo(() => {
     if (isSurveillanceActive) return null
     if (surveillanceDisabledUntil) {
-      const untilDate = parseDbDateTime(surveillanceDisabledUntil)
-      if (untilDate && !Number.isNaN(untilDate.getTime())) {
-        return t('surveillance.disabled_until', {
-          date: formatDbDateTime(untilDate, { format: "dateTime" }),
-        })
+      const formattedUntil = formatStoredDbDateTime(surveillanceDisabledUntil, {
+        format: "dateTime",
+        fallback: "",
+      })
+      if (formattedUntil) {
+        return t('surveillance.disabled_until', { date: formattedUntil })
       }
     }
     if (!surveillanceDisabledSince) return t('surveillance.disabled')
-    const date = parseDbDateTime(surveillanceDisabledSince)
-    if (!date || Number.isNaN(date.getTime())) return t('surveillance.disabled')
-    return t('surveillance.disabled_since', {
-      date: formatDbDateTime(date, { format: "dateTime" }),
+    const formattedSince = formatStoredDbDateTime(surveillanceDisabledSince, {
+      format: "dateTime",
+      fallback: "",
     })
+    if (!formattedSince) return t('surveillance.disabled')
+    return t('surveillance.disabled_since', { date: formattedSince })
   }, [isSurveillanceActive, surveillanceDisabledSince, surveillanceDisabledUntil, t])
 
   const alarmDisabledLabel = useMemo(() => {
     if (isAlarmActive) return null
     if (!alarmDisabledUntil) return t('alarms.disabled')
-    const date = parseDbDateTime(alarmDisabledUntil)
-    if (!date) return t('alarms.disabled')
-    if (Number.isNaN(date.getTime())) return t('alarms.disabled')
-    return t('alarms.disabled_until', { date: formatDbDateTime(date, { format: "dateTime" }) })
+    const formattedUntil = formatStoredDbDateTime(alarmDisabledUntil, {
+      format: "dateTime",
+      fallback: "",
+    })
+    if (!formattedUntil) return t('alarms.disabled')
+    return t('alarms.disabled_until', { date: formattedUntil })
   }, [alarmDisabledUntil, isAlarmActive, t])
 
   const contentTextClassName = 'text-muted-foreground'
@@ -442,18 +464,21 @@ export default function MonitoringCard({
   const formattedConsigneSup = useMemo(() => formatMeasureValue(consigneSup, decimals, localeTag), [consigneSup, decimals, localeTag])
   const formattedConsigneInf = useMemo(() => formatMeasureValue(consigneInf, decimals, localeTag), [consigneInf, decimals, localeTag])
   const formattedLastValue = useMemo(() => formatMeasureValue(lastValue, decimals, localeTag), [lastValue, decimals, localeTag])
-  const hasWirelessMetrics = Boolean(gsoRssi || gsoTension || batteryPercent !== null && batteryPercent !== undefined)
+  const hasBatteryMetric = Boolean(
+    batteryPercent !== null && batteryPercent !== undefined || gsoTension,
+  )
+  const hasWirelessMetrics = Boolean(gsoRssi || hasBatteryMetric)
   const isOnBatteryPower = effectiveAlarmType === 'S'
-  const gsoBatteryState = useMemo(() => {
-    if (!isGso || !gsoTension) return null
-    const normalized = gsoTension.replace(',', '.').replace(/[^0-9.\-]/g, '')
-    const voltage = Number.parseFloat(normalized)
-    if (!Number.isFinite(voltage)) return null
-    const formattedVoltage = formatNumber(voltage, { decimals: 2, locale: "en-US", grouping: false })
-    if (voltage >= 2.9) return t('gso.battery_state.ok', { value: formattedVoltage })
-    if (voltage >= 2.65) return t('gso.battery_state.medium', { value: formattedVoltage })
-    return t('gso.battery_state.low', { value: formattedVoltage })
-  }, [gsoTension, isGso, t])
+  const batteryTooltipLabel = useMemo(() => {
+    const labels: string[] = []
+    if (batteryPercent !== null && batteryPercent !== undefined) {
+      labels.push(t('wireless.battery', { value: batteryPercent }))
+    }
+    if (gsoTension) {
+      labels.push(t('gso.tension', { value: gsoTension }))
+    }
+    return labels.join(' · ')
+  }, [batteryPercent, gsoTension, t])
 
   const cardGlowClass = (() => {
     if (!isSurveillanceActive) return "opacity-75"
@@ -463,34 +488,6 @@ export default function MonitoringCard({
       return "ring-1 ring-amber-500/20 shadow-[0_4px_20px_-6px_rgba(245,158,11,0.25)]"
     return ""
   })()
-
-  const acknowledgeDialogAlarm: AcknowledgeDialogAlarm | null = canAcknowledge && effectiveAlarmId
-    ? {
-        id: String(effectiveAlarmId),
-        locationId: String(idLieu),
-        locationName: nomLieu,
-        sensorName: sondeNumeroSerie || nomLieu,
-        type:
-          effectiveAlarmType === 'H'
-            ? 'high'
-            : effectiveAlarmType === 'B'
-              ? 'low'
-              : effectiveAlarmType === 'N'
-                ? 'no-response'
-                : effectiveAlarmType === 'S'
-                  ? 'sector'
-                  : effectiveAlarmType === 'M'
-                    ? 'module'
-                : effectiveStatus === 'ended' || effectiveAlarmType === 'T'
-                  ? 'ended'
-                  : undefined,
-        currentValue: typeof lastValue === 'number' ? lastValue : null,
-        value: typeof lastValue === 'number' ? lastValue : null,
-        unit: unite,
-        minThreshold: consigneInf,
-        maxThreshold: consigneSup,
-      }
-    : null
 
   return (
     <>
@@ -555,6 +552,8 @@ export default function MonitoringCard({
                     formattedConsigneSup={formattedConsigneSup}
                     formattedConsigneInf={formattedConsigneInf}
                     unite={unite}
+                    rangeStartMs={chartRangeStartMs}
+                    rangeEndMs={chartRangeEndMs}
                   />
                 )}
               </div>
@@ -579,8 +578,13 @@ export default function MonitoringCard({
                     {hasWirelessMetrics ? (
                         <div className={`flex flex-wrap items-center justify-center gap-4 text-[11px] ${contentTextClassName}`}>
                           {gsoRssi ? <RssiBars value={gsoRssi} label={t('gso.rssi', { value: gsoRssi })} /> : null}
-                          {batteryPercent !== null && batteryPercent !== undefined ? <span>{t('wireless.battery', { value: batteryPercent })}</span> : null}
-                          {gsoBatteryState ? <span>{gsoBatteryState}</span> : gsoTension ? <span>{t('gso.tension', { value: gsoTension })}</span> : null}
+                          {hasBatteryMetric && batteryTooltipLabel ? (
+                            <BatteryIndicator
+                              percent={batteryPercent}
+                              voltage={gsoTension}
+                              label={batteryTooltipLabel}
+                            />
+                          ) : null}
                         </div>
                     ) : null}
                     {isOnBatteryPower ? (
@@ -797,46 +801,10 @@ export default function MonitoringCard({
           estConsigneInfPreAlarmeActive={estConsigneInfPreAlarmeActive ?? false}
           unite={unite}
           isSurveillanceActive={isSurveillanceActive}
-          measurements={isSurveillanceActive && shouldLoadCardMeasurements ? previewData : []}
           showNullNonResponse={showNullNonResponse}
         />
       ) : null}
 
-      <AlarmAcknowledgeDialog
-        open={showAcknowledgeModal}
-        alarm={acknowledgeDialogAlarm}
-        onOpenChange={(open) => {
-          setShowAcknowledgeModal(open)
-          if (!open) setAckComment('')
-        }}
-        onConfirm={async (ackAlarmIds, commentValue, options) => {
-          try {
-            for (const ackAlarmId of ackAlarmIds) {
-              const response = await fetch(`/api/alarmes/${ackAlarmId}/acknowledge`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ comment: commentValue || ackComment || undefined }),
-              })
-              if (!response.ok) {
-                console.error('Acknowledge alarm error', await response.text())
-                return
-              }
-              const acknowledgedId = Number(ackAlarmId)
-              if (Number.isFinite(acknowledgedId)) {
-                setLocallyAcknowledgedAlarmId(acknowledgedId)
-                markAlarmAcknowledgedInPaginatedSensorsCache(queryClient, acknowledgedId)
-              }
-            }
-            if (options?.closeAfter !== false) {
-              setShowAcknowledgeModal(false)
-              setAckComment('')
-            }
-            reload(true)
-          } catch (error) {
-            console.error('Acknowledge alarm error', error)
-          }
-        }}
-      />
     </>
   )
 }

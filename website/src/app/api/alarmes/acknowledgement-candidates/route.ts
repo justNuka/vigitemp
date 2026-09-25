@@ -1,40 +1,41 @@
 import { NextRequest } from "next/server"
+import { z } from "zod"
 
 import { withAuthLogging } from "@/lib/api-wrappers"
 import { apiError, apiOk } from "@/lib/api-response"
-import { serializeStoredDbDateTime } from "@/lib/date-display"
 import { applyAccessFilter, buildAlarmAccessFilter, getUserLocationScope } from "@/lib/location-access-scope"
 import { log } from "@/lib/logger"
 import { normalizeMeasureNumber } from "@/lib/measurements"
 import { prisma } from "@/lib/prisma"
+import { serializePrismaStoredDbDateTime } from "@/lib/sql-provider"
+import { mapAlarmTypeCategory } from "@/lib/alarm-types"
 
 function mapAlarmType(type: string | null | undefined) {
-  switch ((type ?? "").trim().toUpperCase()) {
-    case "H":
-      return "high" as const
-    case "B":
-      return "low" as const
-    case "N":
-      return "no-response" as const
-    case "M":
-      return "module" as const
-    case "A":
-    case "S":
-      return "sector" as const
-    case "T":
-      return "ended" as const
-    default:
-      return undefined
-  }
+  return mapAlarmTypeCategory(type) ?? undefined
 }
 
-export const GET = withAuthLogging(async (_req: NextRequest, ctx) => {
+const querySchema = z.object({
+  locationId: z.coerce.number().int().positive().optional(),
+})
+
+export const GET = withAuthLogging(async (req: NextRequest, ctx) => {
   try {
+    const parsed = querySchema.safeParse({
+      locationId: req.nextUrl.searchParams.get("locationId") ?? undefined,
+    })
+    if (!parsed.success) {
+      return apiError(400, "validation_error", "Paramètres invalides", { details: parsed.error.issues })
+    }
+
     const scope = await getUserLocationScope(ctx.user.userId)
     const accessFilter = buildAlarmAccessFilter(scope)
+    const baseWhere = {
+      Est_Acquittee: false,
+      ...(parsed.data.locationId ? { Id_Lieu: parsed.data.locationId } : {}),
+    }
 
     const alarms = await prisma.t_alarme.findMany({
-      where: applyAccessFilter({ Est_Acquittee: false }, accessFilter),
+      where: applyAccessFilter(baseWhere, accessFilter),
       select: {
         Id_Alarme: true,
         Id_Lieu: true,
@@ -80,8 +81,8 @@ export const GET = withAuthLogging(async (_req: NextRequest, ctx) => {
           locationId: alarm.Id_Lieu,
           type: mapAlarmType(alarm.Type),
           status: alarm.Date_Heure_Fin ? ("resolved" as const) : ("active" as const),
-          timestamp: serializeStoredDbDateTime(alarm.Date_Heure_Debut) || null,
-          resolvedAt: serializeStoredDbDateTime(alarm.Date_Heure_Fin) || null,
+          timestamp: serializePrismaStoredDbDateTime(alarm.Date_Heure_Debut) || null,
+          resolvedAt: serializePrismaStoredDbDateTime(alarm.Date_Heure_Fin) || null,
           currentValue: technicalType
             ? null
             : normalizeMeasureNumber(alarm.t_lieu?.Derniere_Valeur ?? alarm.Valeur ?? null, 2),

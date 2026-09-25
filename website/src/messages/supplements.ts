@@ -50,14 +50,53 @@ export const frSupplements: MessageCatalog = {
         ok: "OK",
         preAlarm: "pré-alarmes",
         ended: "terminées",
-        critical: "critiques",
+        critical: "alarmes en cours",
       },
     },
     planning_value: "{count} règle{count, plural, one {} other {s}}",
     refresh: { error: "Échec de l'actualisation" },
   },
+  locationsPage: {
+    actions: {
+      duplicate: "Dupliquer",
+    },
+    copy: {
+      applied: "Configuration de « {name} » chargée.",
+      unnamed: "Lieu sans nom",
+    },
+  },
+  locationConfigCopy: {
+    title: "Créer à partir d'une configuration existante",
+    description: "Choisissez un lieu actif. Les champs de configuration seront repris, mais jamais le nom, la sonde, le module ni l'état de surveillance. Les règles de planning restent propres à chaque lieu.",
+    search_placeholder: "Rechercher un lieu, site, groupe ou numéro de sonde...",
+    empty: "Aucun lieu ne correspond à la recherche.",
+    select: "Utiliser cette configuration",
+    summary: {
+      site: "Site",
+      sensor: "Sonde source",
+      setpoint: "Consigne :",
+      range: "Plage :",
+      range_value: "{low} → {high}",
+      frequency: "Fréquence :",
+      frequency_value: "{value} min",
+      contacts: "Contacts :",
+      none: "—",
+      unnamed: "Lieu sans nom",
+      no_sensor: "Aucune",
+      more_groups: "+{count}",
+    },
+  },
   locationsForm: {
+    dialog: {
+      copy_existing: {
+        title: "Créer à partir d'un lieu existant",
+        description: "Reprenez la configuration d'un autre lieu sans copier son nom, sa sonde, son module ni son état de surveillance.",
+        button: "Choisir un lieu",
+      },
+    },
     telephony: {
+      planning_info_title: "Emails d'alarme et planning",
+      planning_info_description: "Le planning ne limite pas les horaires d'envoi des emails : il modifie les consignes applicables. Sans règle de planning, les consignes de base restent actives en continu ; si la surveillance et le mailing sont actifs, une alarme peut donc générer un email à toute heure.",
       apply_groups_title: "Appliquer ces contacts aux groupes sélectionnés",
       apply_groups_description: "La liste remplacera les contacts mail de tous les autres lieux appartenant aux groupes sélectionnés.",
       apply_groups_empty: "Sélectionnez au moins un groupe dans l'onglet Général.",
@@ -99,10 +138,69 @@ export const frSupplements: MessageCatalog = {
       typing: "{names} est en train d'écrire…",
     },
   },
+  sensorAdjustmentImport: {
+    actions: {
+      assign_modules: "Assignation des modules",
+    },
+    toast: {
+      gsp_coefficients_fallback: "Lecture des coefficients impossible pour {count} GSP : les coefficients du fichier XML ont été importés à la place.",
+    },
+    labels: {
+      no_module: "Sans module",
+    },
+    tooltips: {
+      created_on_import: "Affectation définie pour cet import. Sans affectation, la sonde est créée ou conservée sans module.",
+    },
+    module_assignment_dialog: {
+      title: "Assignation des modules",
+      description: "Choisissez un module, puis cochez les sondes à lui affecter. Changez de module et recommencez autant de fois que nécessaire. Une sonde peut rester sans module.",
+      module_label: "Module à affecter",
+      module_placeholder: "Sélectionner un module",
+      search_placeholder: "Rechercher une sonde ou un module...",
+      assigned_count: "{count} affectée(s)",
+      unassigned_count: "{count} sans module",
+      no_modules: "Aucun module n'est disponible. L'import reste possible sans affectation.",
+      no_module: "Sans module",
+      move_hint: "Cocher une sonde déjà affectée dans cette fenêtre la déplace vers le module sélectionné. Les sondes déjà affectées en base restent verrouillées ici.",
+      existing_locked: "Module déjà enregistré en base. Utilisez la gestion des sondes pour le modifier.",
+      assigned_here: "Affectation préparée pour cet import.",
+      unassigned: "Aucune affectation préparée : l'import reste autorisé.",
+      clear: "Retirer",
+      close: "Terminer",
+      empty: "Aucune sonde ne correspond à la recherche.",
+      checkbox_aria: "Affecter {sensor} à {module}",
+    },
+  },
   metrologyWorkspace: {
     title: "Métrologie",
     description: "Espace de travail métrologie. Les opérations d'ajustage et d'étalonnage seront accessibles ici.",
     notice: "Cette page est prête. Les opérations métrologiques visibles ici sont réservées aux profils disposant de l'autorisation métrologie.",
+  },
+  hotlineSefTest: {
+    title: "Ancienne sonde étalon SEF (TCP via Sollae)",
+    description: "Lecture directe d'une ancienne sonde étalon VigiTemp SEF via son convertisseur Sollae TCP/IP, sans port COM virtuel.",
+    protocol_note: "Le Sollae fonctionne en serveur TCP (port 1470 sur l'installation observée). Le COM69 est uniquement le port virtuel historique d'ezVSP et n'est pas requis par VigiSensys. Si ezVSP est connecté au même Sollae, libérez d'abord cette connexion TCP avant le test.",
+    fields: {
+      server_host: "IP / hôte du serveur d'interrogation",
+      api_port: "Port API hotline",
+      network_host: "IP / hôte du convertisseur Sollae",
+      network_port: "Port TCP Sollae",
+      protocol_address: "Adresse protocole SEF",
+      sensor_reference: "Repère sonde (facultatif)",
+      read_timeout: "Timeout lecture (ms)",
+      write_timeout: "Timeout écriture (ms)",
+    },
+    command_title: "Commande de lecture",
+    actions: { test: "Lire la SEF", testing: "Lecture en cours..." },
+    errors: { test_failed: "La lecture SEF a échoué" },
+    results: {
+      endpoint: "Endpoint TCP",
+      protocol_address: "Adresse protocole",
+      value: "Valeur",
+      command: "Commande",
+      raw: "Réponse brute",
+      exchanges: "Trames TX/RX",
+    },
   },
   hotlineSensorTest: {
     title: "Test manuel de sonde",
@@ -245,6 +343,33 @@ export const frSupplements: MessageCatalog = {
     },
   },
   metrologyAdmin: {
+    startSummary: {
+      title: "Vérifier avant de lancer la lecture",
+      description: "Confirmez les sondes, l’étalon et sa connexion avant de démarrer l’opération.",
+      operations: { adjustment: "Ajustage", calibration: "Étalonnage" },
+      fields: {
+        operation: "Opération",
+        operator: "Opérateur",
+        sensors: "Sondes sélectionnées",
+        standard: "Étalon",
+        standardType: "Type d’étalon",
+        module: "Module associé",
+        connection: "Connexion étalon",
+        medium: "Milieu",
+        interval: "Intervalle de lecture",
+      },
+      unassigned: "Non affectée à un lieu",
+      seconds: "{count} s",
+      warnings: {
+        noModule: "Aucun module n’est associé explicitement à cette sonde étalon SEF. Associez le module Sollae avant de démarrer.",
+        noIp: "Le module associé à la sonde étalon SEF ne possède pas d’adresse IP Sollae.",
+      },
+      connections: {
+        sef: "TCP {host}:1470 · adresse protocole 01",
+        serial: "Port série {port}",
+      },
+      actions: { cancel: "Revenir à la configuration", confirm: "Confirmer et lancer", confirming: "Démarrage…" },
+    },
     adjustmentPage: {
       adjustment: {
         cards: {
@@ -354,8 +479,47 @@ export const enSupplements: MessageCatalog = {
       },
     },
   },
+  locationsPage: {
+    actions: {
+      duplicate: "Duplicate",
+    },
+    copy: {
+      applied: "Configuration from “{name}” loaded.",
+      unnamed: "Unnamed location",
+    },
+  },
+  locationConfigCopy: {
+    title: "Create from an existing configuration",
+    description: "Choose an active location. Configuration fields will be copied, but never the name, sensor, module or monitoring state. Planning rules remain specific to each location.",
+    search_placeholder: "Search a location, site, group or sensor serial...",
+    empty: "No location matches the search.",
+    select: "Use this configuration",
+    summary: {
+      site: "Site",
+      sensor: "Source sensor",
+      setpoint: "Setpoint:",
+      range: "Range:",
+      range_value: "{low} → {high}",
+      frequency: "Frequency:",
+      frequency_value: "{value} min",
+      contacts: "Contacts:",
+      none: "—",
+      unnamed: "Unnamed location",
+      no_sensor: "None",
+      more_groups: "+{count}",
+    },
+  },
   locationsForm: {
+    dialog: {
+      copy_existing: {
+        title: "Create from an existing location",
+        description: "Reuse another location's configuration without copying its name, sensor, module or monitoring state.",
+        button: "Choose a location",
+      },
+    },
     telephony: {
+      planning_info_title: "Alarm emails and planning",
+      planning_info_description: "Planning does not restrict email delivery times: it changes the applicable setpoints. Without a planning rule, the location's base setpoints remain active continuously; if monitoring and email notifications are enabled, an alarm can therefore generate an email at any time.",
       apply_groups_title: "Apply these contacts to selected groups",
       apply_groups_description: "This list will replace the email contacts of all other locations belonging to the selected groups.",
       apply_groups_empty: "Select at least one group in the General tab.",
@@ -387,10 +551,69 @@ export const enSupplements: MessageCatalog = {
       typing: "{names} is typing…",
     },
   },
+  sensorAdjustmentImport: {
+    actions: {
+      assign_modules: "Module assignment",
+    },
+    toast: {
+      gsp_coefficients_fallback: "Coefficient reading failed for {count} GSP sensor(s): the XML file coefficients were imported instead.",
+    },
+    labels: {
+      no_module: "No module",
+    },
+    tooltips: {
+      created_on_import: "Assignment defined for this import. Without an assignment, the sensor is created or kept without a module.",
+    },
+    module_assignment_dialog: {
+      title: "Module assignment",
+      description: "Choose a module, then check the sensors to assign to it. Switch modules and repeat as many times as needed. A sensor may remain unassigned.",
+      module_label: "Module to assign",
+      module_placeholder: "Select a module",
+      search_placeholder: "Search a sensor or module...",
+      assigned_count: "{count} assigned",
+      unassigned_count: "{count} without module",
+      no_modules: "No module is available. Import remains possible without an assignment.",
+      no_module: "No module",
+      move_hint: "Checking a sensor already assigned in this dialog moves it to the selected module. Sensors already assigned in the database remain locked here.",
+      existing_locked: "A module is already stored in the database. Use sensor management to change it.",
+      assigned_here: "Assignment prepared for this import.",
+      unassigned: "No assignment prepared: import remains allowed.",
+      clear: "Remove",
+      close: "Done",
+      empty: "No sensor matches the search.",
+      checkbox_aria: "Assign {sensor} to {module}",
+    },
+  },
   metrologyWorkspace: {
     title: "Metrology",
     description: "Metrology workspace. Adjustment and calibration operations will be available here.",
     notice: "This page is ready. The metrology operations shown here are restricted to profiles with metrology permission.",
+  },
+  hotlineSefTest: {
+    title: "Legacy SEF reference sensor (TCP through Sollae)",
+    description: "Direct reading of a legacy VigiTemp SEF reference sensor through its Sollae TCP/IP converter, without a virtual COM port.",
+    protocol_note: "The Sollae works as a TCP server (port 1470 on the observed installation). COM69 is only the legacy ezVSP virtual port and is not required by VigiSensys. If ezVSP is already connected to the same Sollae, release that TCP connection before testing.",
+    fields: {
+      server_host: "Polling server IP / host",
+      api_port: "Hotline API port",
+      network_host: "Sollae converter IP / host",
+      network_port: "Sollae TCP port",
+      protocol_address: "SEF protocol address",
+      sensor_reference: "Sensor reference (optional)",
+      read_timeout: "Read timeout (ms)",
+      write_timeout: "Write timeout (ms)",
+    },
+    command_title: "Read command",
+    actions: { test: "Read SEF", testing: "Reading..." },
+    errors: { test_failed: "SEF reading failed" },
+    results: {
+      endpoint: "TCP endpoint",
+      protocol_address: "Protocol address",
+      value: "Value",
+      command: "Command",
+      raw: "Raw response",
+      exchanges: "TX/RX frames",
+    },
   },
   hotlineSensorTest: {
     title: "Manual sensor test",
@@ -533,6 +756,33 @@ export const enSupplements: MessageCatalog = {
     },
   },
   metrologyAdmin: {
+    startSummary: {
+      title: "Review before starting the reading",
+      description: "Confirm the probes, reference standard and its connection before starting the operation.",
+      operations: { adjustment: "Adjustment", calibration: "Calibration" },
+      fields: {
+        operation: "Operation",
+        operator: "Operator",
+        sensors: "Selected probes",
+        standard: "Reference standard",
+        standardType: "Standard type",
+        module: "Associated module",
+        connection: "Standard connection",
+        medium: "Medium",
+        interval: "Reading interval",
+      },
+      unassigned: "Not assigned to a location",
+      seconds: "{count} s",
+      warnings: {
+        noModule: "No module is explicitly associated with this SEF reference probe. Associate the Sollae module before starting.",
+        noIp: "The module associated with the SEF reference probe has no Sollae IP address.",
+      },
+      connections: {
+        sef: "TCP {host}:1470 · protocol address 01",
+        serial: "Serial port {port}",
+      },
+      actions: { cancel: "Back to configuration", confirm: "Confirm and start", confirming: "Starting…" },
+    },
     adjustmentPage: {
       adjustment: {
         cards: {

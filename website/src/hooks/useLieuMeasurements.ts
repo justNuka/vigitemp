@@ -15,6 +15,8 @@ type Options = {
   includeMeta?: boolean
   source?: "graphique" | "mesures"
   includeNullNonResponse?: boolean
+  rollingHours?: number
+  graphMaxPoints?: number
 }
 
 export function useLieuMeasurements(
@@ -28,20 +30,37 @@ export function useLieuMeasurements(
     includeMeta = false,
     source = "graphique",
     includeNullNonResponse,
+    rollingHours,
+    graphMaxPoints,
   }: Options = {},
 ) {
   const [data, setData] = useState<MeasureData[]>([])
   const [isLoading, setIsLoading] = useState(true)
-  const [meta, setMeta] = useState<{ lieuType?: string | null; graphMeasureCount?: number } | null>(null)
+  const [meta, setMeta] = useState<{
+    lieuType?: string | null
+    graphMeasureCount?: number
+    graphSourceCount?: number
+    graphSampled?: boolean
+    graphRangeStart?: string | null
+    graphRangeEnd?: string | null
+  } | null>(null)
 
   const load = useCallback(
     async (forceFresh = false) => {
     setIsLoading(true)
     try {
         const params = new URLSearchParams({ rowNumber: String(rowNumber) })
-        if (startDate && endDate) {
+        if (rollingHours && rollingHours > 0) {
+          const rollingEnd = new Date()
+          const rollingStart = new Date(rollingEnd.getTime() - rollingHours * 60 * 60 * 1000)
+          params.set("startDate", toApiUtcDateTime(rollingStart))
+          params.set("endDate", toApiUtcDateTime(rollingEnd))
+        } else if (startDate && endDate) {
           params.set("startDate", startDate instanceof Date ? toApiUtcDateTime(startDate) : startDate)
           params.set("endDate", endDate instanceof Date ? toApiUtcDateTime(endDate) : endDate)
+        }
+        if (graphMaxPoints && graphMaxPoints > 0) {
+          params.set("graphMaxPoints", String(graphMaxPoints))
         }
         if (forceFresh) {
           params.set("fresh", "true")
@@ -56,7 +75,15 @@ export function useLieuMeasurements(
           params.set("includeNullNonResponse", includeNullNonResponse ? "1" : "0")
         }
         const payload = await fetchJson<
-          MeasureData[] | { measurements?: MeasureData[]; lieuType?: string | null; graphMeasureCount?: number }
+          MeasureData[] | {
+            measurements?: MeasureData[]
+            lieuType?: string | null
+            graphMeasureCount?: number
+            graphSourceCount?: number
+            graphSampled?: boolean
+            graphRangeStart?: string | null
+            graphRangeEnd?: string | null
+          }
         >(`/api/mesures/${idLieu}?${params}`)
         if (Array.isArray(payload)) {
           setData(payload)
@@ -67,6 +94,11 @@ export function useLieuMeasurements(
             lieuType: payload.lieuType ?? null,
             graphMeasureCount:
               typeof payload.graphMeasureCount === "number" ? payload.graphMeasureCount : undefined,
+            graphSourceCount:
+              typeof payload.graphSourceCount === "number" ? payload.graphSourceCount : undefined,
+            graphSampled: Boolean(payload.graphSampled),
+            graphRangeStart: payload.graphRangeStart ?? null,
+            graphRangeEnd: payload.graphRangeEnd ?? null,
           })
         }
     } catch (error) {
@@ -77,7 +109,7 @@ export function useLieuMeasurements(
       setIsLoading(false)
     }
     },
-    [idLieu, rowNumber, includeMeta, startDate, endDate, source, includeNullNonResponse],
+    [idLieu, rowNumber, includeMeta, startDate, endDate, source, includeNullNonResponse, rollingHours, graphMaxPoints],
   )
 
   useEffect(() => {

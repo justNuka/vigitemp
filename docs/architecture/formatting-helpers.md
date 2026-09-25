@@ -81,6 +81,36 @@ formatDbDateTimeIntl(value, {
 
 La résolution runtime du preset reste défensive : si une valeur `format` invalide contourne le typage TypeScript, le helper retombe sur le comportement legacy au lieu de retourner une valeur indéfinie.
 
+### DATETIME stockés sans fuseau
+
+Pour les colonnes MySQL / SQL Server `DATETIME` qui représentent une heure murale locale, utiliser les variantes dédiées :
+
+- `serializeStoredDbDateTime(value)` : sérialise les composantes stockées sans ajouter de fuseau ;
+- `parseStoredDbDateTime(value)` : transforme cette représentation en `Date` locale uniquement pour tri/calcul d'axe ;
+- `formatStoredDbDateTime(value, options)` : applique les presets d'affichage tout en interdisant une reconversion de fuseau.
+
+Le helper prend aussi en charge le cas où un `Date` Prisma a déjà traversé une frontière JSON et arrive sous forme ISO avec `Z` ou offset explicite : les composantes écrites `YYYY-MM-DD HH:mm:ss` restent la source de vérité.
+
+Important : `formatStoredDbDateTime` ignore volontairement `timeZone`. Un `DATETIME` historique sans fuseau ne doit jamais être déplacé de +1/+2 h par une conversion `Intl`.
+
+À la frontière serveur Prisma, la représentation `Date` dépend du driver. Utiliser les wrappers de `src/lib/sql-provider.ts` :
+
+- `serializePrismaStoredDbDateTime(value)` pour convertir un `Date` lu par Prisma en chaîne murale sans fuseau ;
+- `toPrismaStoredDbDateTime(value)` pour construire une borne/valeur `Date` adaptée au provider avant un filtre ou une écriture Prisma.
+
+Ces wrappers distinguent MariaDB (composantes locales) de SQL Server/node-mssql (composantes UTC par défaut). Ne pas remplacer ce mécanisme par une correction fixe `+2 h` / `-2 h`, car elle serait fausse en heure d'hiver et sur l'autre provider.
+
+Exemple :
+
+```ts
+formatStoredDbDateTime("2026-09-23T10:36:17.000Z", {
+  format: "dateTimeSeconds",
+  locale: "fr-FR",
+  timeZone: "Europe/Paris",
+})
+// 23/09/2026 10:36:17 — jamais 12:36:17
+```
+
 ### Étape 3 — migration de tous les appels applicatifs date
 
 Branche : `refactor/date-display-call-sites`.

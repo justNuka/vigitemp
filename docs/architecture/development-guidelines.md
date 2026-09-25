@@ -141,10 +141,19 @@ Fonctions à connaître :
 - `parseDbDateTime` ;
 - `serializeDbDateTime` ;
 - `serializeStoredDbDateTime` ;
+- `parseStoredDbDateTime` ;
+- `formatStoredDbDateTime` ;
 - `formatDbDateTime` ;
 - `formatDbDateTimeIntl`.
 
-`serializeStoredDbDateTime` est spécialement prévu pour les colonnes MySQL/MSSQL `DATETIME` sans fuseau exposées par Prisma sous forme de `Date`. Il lit les composantes UTC du wrapper afin de préserver les composantes d'heure stockées et d'éviter d'ajouter artificiellement le décalage du navigateur/serveur.
+Pour les colonnes MySQL/MSSQL `DATETIME` sans fuseau, distinguer la frontière **Prisma/driver** de la frontière **JSON/client**.
+
+- côté client, `parseStoredDbDateTime` et `formatStoredDbDateTime` préservent les composantes écrites d'une heure murale déjà sérialisée ; `formatStoredDbDateTime` n'applique jamais de reconversion `timeZone` ;
+- côté serveur, ne pas appeler directement `serializeStoredDbDateTime(DatePrisma)` en supposant que tous les providers enveloppent le `DATETIME` de la même façon ;
+- utiliser `serializePrismaStoredDbDateTime` / `toPrismaStoredDbDateTime` depuis `website/src/lib/sql-provider.ts` aux frontières Prisma. Ces wrappers connaissent le provider courant ;
+- `@prisma/adapter-mariadb` s'appuie sur le driver MariaDB en timezone locale par défaut, tandis que `@prisma/adapter-mssql` / node-mssql utilise UTC par défaut pour les dates sans offset. Le helper provider-aware compense cette différence sans modifier globalement la timezone des connexions.
+
+Une borne de requête issue de l'UI suit le même principe : une heure murale `15:00` doit filtrer `DATETIME <= 15:00` en base, et non devenir `13:00` à cause de la sérialisation de l'objet `Date` par Prisma.
 
 Toujours distinguer deux catégories :
 

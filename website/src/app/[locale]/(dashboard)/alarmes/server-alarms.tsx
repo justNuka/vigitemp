@@ -1,8 +1,10 @@
 import { applyAccessFilter, buildAlarmAccessFilter, getUserLocationScope } from "@/lib/location-access-scope"
 import { getServerAuthenticatedUserId } from "@/lib/server-auth"
 import { normalizeUnitLabel } from "@/lib/measurements"
+import { mapAlarmTypeCategory } from "@/lib/alarm-types"
 import { unstable_noStore } from "next/cache"
 import { getTranslations } from "next-intl/server"
+import { normalizeAlarmGroupNames } from "./alarm-groups"
 
 export type ServerAlarmStatus = "active" | "acknowledged" | "resolved"
 
@@ -43,6 +45,15 @@ export async function ServerAlarms(status: ServerAlarmStatus = "active") {
           Consigne_Inf: true,
           Tolerance_Surveillance_Sup: true,
           Tolerance_Surveillance_Inf: true,
+          t_lieu_groupe: {
+            select: {
+              t_groupe: {
+                select: {
+                  Nom_Groupe: true,
+                },
+              },
+            },
+          },
         },
       },
     },
@@ -68,22 +79,20 @@ export async function ServerAlarms(status: ServerAlarmStatus = "active") {
         ? ("resolved" as const)
         : ("active" as const)
 
-    const alarmType = (
-      alarm.Type === "H"
-        ? "high"
-        : alarm.Type === "B"
-          ? "low"
-          : alarm.Type === "N"
-            ? "no-response"
-            : isModuleAlarm
-              ? "module"
-            : "sector"
-    ) as "high" | "low" | "no-response" | "sector" | "module"
+    const alarmType = (mapAlarmTypeCategory(alarm.Type) ?? "sector") as
+      | "high"
+      | "low"
+      | "no-response"
+      | "sector"
+      | "module"
 
     const thresholdValue =
       alarmType === "high" ? (consigneSup ?? 0) : alarmType === "low" ? (consigneInf ?? 0) : 0
 
     const unit = normalizeUnitLabel(alarm.Unite?.trim() || t("fallback.unknown_unit"))
+    const groupNames = normalizeAlarmGroupNames(
+      (alarm.t_lieu?.t_lieu_groupe ?? []).map((link) => link.t_groupe?.Nom_Groupe),
+    )
 
     return {
       id: alarm.Id_Alarme.toString(),
@@ -118,6 +127,7 @@ export async function ServerAlarms(status: ServerAlarmStatus = "active") {
         name: alarm.t_lieu?.Nom_Lieu || alarm.t_lieu?.Sonde_Numero_Serie || t("fallback.unknown_name"),
         description: null,
         siteGroup: null,
+        groupNames,
         isActive: true,
       },
     }

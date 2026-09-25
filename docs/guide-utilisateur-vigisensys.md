@@ -26,7 +26,9 @@ https://vigisensys.example.com
 
 1. Ouvrir l'adresse VigiSensys.
 2. Saisir le login et le mot de passe.
-3. Valider la connexion.
+3. Utiliser l'icône œil si nécessaire pour afficher temporairement le mot de passe saisi.
+4. Vérifier l'avertissement **Verr. Maj** : il apparaît lorsque Caps Lock est actif pendant la saisie.
+5. Valider la connexion.
 
 Selon la configuration, l'utilisateur peut devoir changer son mot de passe à la première connexion ou après expiration.
 
@@ -91,7 +93,7 @@ En haut de page, les badges indiquent les principaux états :
 | --- | --- |
 | OK | Lieux en surveillance sans alarme |
 | Pré-alertes | Lieux en pré-alarme |
-| Critiques | Lieux en alarme active |
+| Alarmes en cours | Lieux en alarme active |
 | Terminées | Alarmes terminées à acquitter |
 | Désactivés | Lieux dont la surveillance est désactivée |
 
@@ -174,7 +176,10 @@ L'onglet Audit liste les événements liés au lieu :
 - changement de consignes ;
 - activation ou désactivation de surveillance ;
 - acquittements d'alarme ;
-- actions utilisateur.
+- actions utilisateur ;
+- emails d'alarme réellement envoyés pour un déclenchement, une fin d'alarme ou un acquittement.
+
+Les audits d'email indiquent notamment le type d'événement et le destinataire. Une tentative SMTP en échec n'est pas présentée comme un email envoyé.
 
 ## Alarmes
 
@@ -203,26 +208,49 @@ Les principaux types sont :
 
 ### Acquitter une alarme
 
-1. Ouvrir la page Alarmes ou cliquer sur une carte en alarme.
-2. Sélectionner l'alarme à acquitter.
-3. Ajouter un commentaire libre ou choisir un commentaire pré-existant.
-4. Valider l'acquittement.
+Depuis une carte Surveillance en alarme, l'action **Acquitter** ouvre directement la page d'analyse du lieu sur l'alarme concernée.
 
-L'acquittement est tracé dans l'audit.
+La page affiche les alarmes à traiter du lieu dans la colonne de gauche. Pour une alarme sélectionnée :
+
+1. vérifier le résumé et les mesures de la période d'alarme ;
+2. cliquer **Acquitter** dans le bandeau **Alarme sélectionnée** ;
+3. choisir si nécessaire un commentaire pré-existant et/ou saisir un commentaire libre ;
+4. confirmer l'acquittement.
+
+Après confirmation, l'alarme reste visible dans la liste, grisée et marquée **Acquittée**, afin de conserver le contexte du travail en cours. Elle disparaît de cette liste au prochain rafraîchissement, lorsque l'état est rechargé depuis le serveur.
+
+L'acquittement reste tracé dans l'audit général de l'application, même si l'onglet Audit n'est plus affiché sur cette page.
 
 ### Multi-acquittement
 
-Quand plusieurs alarmes sont disponibles pour un même lieu, la fenêtre d'acquittement permet de sélectionner plusieurs lignes et d'appliquer un commentaire commun.
+Les cases de la colonne gauche permettent de sélectionner plusieurs alarmes du même lieu.
+
+Lorsqu'au moins deux alarmes sont sélectionnées :
+
+- le graphique et le tableau sont remplacés par un résumé de chaque alarme ;
+- le bouton d'acquittement indique le nombre d'alarmes concernées ;
+- un commentaire commun peut être appliqué ;
+- les acquittements sont traités séquentiellement ;
+- les alarmes effectivement acquittées restent grisées jusqu'au rafraîchissement.
 
 ### Analyse d'alarme
 
-La page d'analyse permet de consulter :
+La page d'analyse est volontairement centrée sur la période de l'alarme sélectionnée :
 
-- les alarmes du lieu ;
-- le graphique centré sur la période concernée ;
-- le tableau de mesures ;
-- l'audit associé ;
-- les actions d'export ou d'impression selon droits.
+- début de l'alarme → fin de l'alarme ;
+- début de l'alarme → instant courant si elle est toujours active.
+
+Il n'y a plus de sélecteur de période ni de recherche d'historique sur cet écran. Les onglets disponibles sont **Graphique** et **Tableau des mesures**.
+
+L'onglet Audit et l'affichage des événements d'audit sur la courbe ont été retirés de ce parcours.
+
+L'export de la page est uniquement disponible en **XLSX**. Le classeur contient :
+
+- une feuille **Présentation** ;
+- une feuille **Mesures** ;
+- la courbe dans la feuille Présentation lorsqu'un graphique est disponible.
+
+L'impression et les exports CSV/PDF/PNG propres à cette page ne sont plus proposés.
 
 ## Administration
 
@@ -286,7 +314,11 @@ Le journal d'audit centralise les actions importantes :
 - changement de paramètres ;
 - acquittement ;
 - création ou modification d'utilisateur ;
-- actions de surveillance.
+- actions de surveillance ;
+- ouverture de graphiques lorsque l'audit correspondant est activé ;
+- emails d'alarme effectivement envoyés.
+
+L'écran utilise une pagination serveur : le nombre de lignes par page peut être augmenté jusqu'à 1000 et les pages suivantes chargent réellement les événements supplémentaires. Le filtre de code est scrollable et les codes connus sont traduits selon la langue de l'interface.
 
 ## Métrologie
 

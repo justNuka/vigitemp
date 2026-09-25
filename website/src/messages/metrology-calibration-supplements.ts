@@ -2,6 +2,21 @@ import type { MessageCatalog } from "./supplements"
 
 export const frMetrologyCalibrationSupplements: MessageCatalog = {
   metrologyAdmin: {
+    startFailure: {
+      pendingTitle: "Configuration des sondes en cours",
+      pendingDescription: "VigiSensys prépare les sondes sélectionnées avant de démarrer. Cette étape peut prendre quelques secondes si plusieurs sondes doivent être configurées.",
+      title: "Impossible de démarrer la lecture",
+      sensor: "Sonde concernée : {serial}",
+      checksTitle: "Vérifications recommandées",
+      gspLabel: "GSP :",
+      gspHelp: "vérifiez que le numéro de série affiché sur l'écran de la sonde correspond à la sonde sélectionnée, puis comparez-le avec l'étiquette au dos. Une différence entre le numéro programmé et l'étiquette empêche de joindre la sonde attendue.",
+      gsoLabel: "GSO :",
+      gsoHelp: "vérifiez le numéro de série et l'adresse indiqués sur l'étiquette au dos et assurez-vous qu'ils correspondent à la sonde sélectionnée dans VigiSensys.",
+      gsoCommandPendingTitle: "Commande métrologie GSO en attente",
+      gsoCommandPendingDescription: "VigiSensys attend que le serveur envoie la commande de passage en mode métrologie pour : {serials}.",
+      gsoCommandSentTitle: "Commande métrologie GSO envoyée",
+      gsoCommandSentDescription: "La commande de passage en mode métrologie a été envoyée pour : {serials}.",
+    },
     adjustmentPage: {
       operationTimer: {
         movePanel: "Déplacer le panneau",
@@ -13,6 +28,15 @@ export const frMetrologyCalibrationSupplements: MessageCatalog = {
         },
         errors: {
           sensorUnreachable: "Le serveur n’arrive pas à joindre la sonde. Vérifiez qu’elle est bien branchée.",
+        },
+        cards: {
+          coefficients: {
+            retrievedTitle: "Coefficients relus sur les GSP",
+            retrievedDescription: "Les coefficients A/B/C affichés pour les GSP ont été récupérés directement par DCON au démarrage. Aucune valeur 1/0/0 n'a été envoyée automatiquement.",
+          },
+          calculatedCoefficients: {
+            selectSensors: "Sélectionnez les GSP qui doivent recevoir les nouveaux coefficients calculés :",
+          },
         },
       },
     },
@@ -91,15 +115,39 @@ export const frMetrologyCalibrationSupplements: MessageCatalog = {
           coefficients_description: "Consultez les coefficients a, b et c des sondes sélectionnées. Ils sont modifiables uniquement pendant la lecture des sondes.",
           coefficients_reading_required: "Démarrez la lecture des sondes pour modifier et valider les coefficients.",
           coefficients_apply_on_start: "Les coefficients validés seront repris au démarrage de l'étalonnage.",
-          coefficients_saved: "Coefficients enregistrés. Ils seront appliqués au démarrage de l'étalonnage.",
+          coefficients_saved: "Coefficients enregistrés. Ils seront appliqués à la prochaine interrogation.",
+          coefficients_retrieved_gsp: "Pour les GSP, les coefficients A/B/C affichés ont été relus directement sur chaque sonde au démarrage de la lecture. Ils ne sont pas remplacés par des valeurs par défaut.",
+          report: "Rapport",
+          download_pdf: "PDF",
         },
       },
+    },
+  },
+  sensorAdjustmentImport: {
+    page: {
+      gsp_gso_title: "Import XML GSP et GSO",
+      gsp_gso_description: "Les XML sont acceptés pour les GSP et les GSO. Pour une GSP, VigiSensys relit les coefficients A/B/C directement sur la sonde au moment de l'enregistrement ; pour une GSO, les coefficients présents dans le XML sont utilisés. Les lignes d'ajustage correspondantes sont mises à jour ou créées sans supprimer tout l'historique.",
     },
   },
 }
 
 export const enMetrologyCalibrationSupplements: MessageCatalog = {
   metrologyAdmin: {
+    startFailure: {
+      pendingTitle: "Configuring sensors",
+      pendingDescription: "VigiSensys is preparing the selected sensors before starting. This can take a few seconds when several sensors must be configured.",
+      title: "Unable to start reading",
+      sensor: "Affected sensor: {serial}",
+      checksTitle: "Recommended checks",
+      gspLabel: "GSP:",
+      gspHelp: "check that the serial number shown on the sensor display matches the selected sensor, then compare it with the label on the back. A mismatch between the programmed serial number and the label prevents the expected sensor from being reached.",
+      gsoLabel: "GSO:",
+      gsoHelp: "check the serial number and address shown on the label on the back and make sure they match the sensor selected in VigiSensys.",
+      gsoCommandPendingTitle: "GSO metrology command pending",
+      gsoCommandPendingDescription: "VigiSensys is waiting for the server to send the metrology-mode command for: {serials}.",
+      gsoCommandSentTitle: "GSO metrology command sent",
+      gsoCommandSentDescription: "The metrology-mode command was sent for: {serials}.",
+    },
     adjustmentPage: {
       operationTimer: {
         movePanel: "Move panel",
@@ -111,6 +159,15 @@ export const enMetrologyCalibrationSupplements: MessageCatalog = {
         },
         errors: {
           sensorUnreachable: "The server cannot reach the sensor. Check that it is properly connected.",
+        },
+        cards: {
+          coefficients: {
+            retrievedTitle: "Coefficients read from GSP sensors",
+            retrievedDescription: "The A/B/C coefficients shown for GSP sensors were read directly through DCON at startup. No automatic 1/0/0 values were sent.",
+          },
+          calculatedCoefficients: {
+            selectSensors: "Select the GSP sensors that should receive the newly calculated coefficients:",
+          },
         },
       },
     },
@@ -189,9 +246,18 @@ export const enMetrologyCalibrationSupplements: MessageCatalog = {
           coefficients_description: "Review coefficients a, b and c for the selected sensors. They can only be edited while sensor reading is active.",
           coefficients_reading_required: "Start sensor reading to edit and validate the coefficients.",
           coefficients_apply_on_start: "Validated coefficients will be applied when calibration starts.",
-          coefficients_saved: "Coefficients saved. They will be applied when calibration starts.",
+          coefficients_saved: "Coefficients saved. They will be applied on the next interrogation.",
+          coefficients_retrieved_gsp: "For GSP sensors, the displayed A/B/C coefficients were read directly from each sensor when reading started. They are not replaced with default values.",
+          report: "Report",
+          download_pdf: "PDF",
         },
       },
+    },
+  },
+  sensorAdjustmentImport: {
+    page: {
+      gsp_gso_title: "GSP and GSO XML import",
+      gsp_gso_description: "XML files are accepted for both GSP and GSO sensors. For a GSP, VigiSensys reads A/B/C directly from the physical sensor when saving; for a GSO, coefficients from the XML are used. Matching adjustment rows are updated or created without deleting the whole history.",
     },
   },
 }

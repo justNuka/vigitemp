@@ -1,6 +1,7 @@
 import { applyAccessFilter, buildAlarmAccessFilter, buildLieuAccessFilter, getUserLocationScope } from "@/lib/location-access-scope"
 import { getServerAuthenticatedUserId } from "@/lib/server-auth"
 import { log } from "@/lib/logger"
+import { mapAlarmTypeCategory } from "@/lib/alarm-types"
 ﻿import { unstable_noStore } from "next/cache"
 
 export interface DashboardStats {
@@ -90,11 +91,12 @@ export async function ServerDashboardStats(): Promise<DashboardStats> {
       select: { Type: true },
     })
     const activeAlarmBreakdown = currentAlarms.reduce((counts, alarm) => {
-      if (alarm.Type === "H") counts.high += 1
-      else if (alarm.Type === "B") counts.low += 1
-      else if (alarm.Type === "N") counts.noResponse += 1
-      else if (alarm.Type === "M") counts.module += 1
-      else if (alarm.Type === "S" || alarm.Type === "A") counts.sector += 1
+      const category = mapAlarmTypeCategory(alarm.Type)
+      if (category === "high") counts.high += 1
+      else if (category === "low") counts.low += 1
+      else if (category === "no-response") counts.noResponse += 1
+      else if (category === "module") counts.module += 1
+      else if (category === "sector") counts.sector += 1
       else counts.other += 1
       return counts
     }, emptyAlarmBreakdown())

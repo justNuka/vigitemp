@@ -25,6 +25,7 @@ import { useSensors } from "@/hooks/useSensors";
 import { formatDbDateTime } from "@/lib/date-display";
 
 import { AdjustmentImportEditDialog } from "./_components/adjustment-import-edit-dialog";
+import { AdjustmentImportModuleAssignmentDialog } from "./_components/adjustment-import-module-assignment-dialog";
 import { saveAdjustmentsBulk, notifyBulkSaveResult } from "./_components/adjustment-import-save";
 import { AdjustmentImportTableCard } from "./_components/adjustment-import-table-card";
 import { AdjustmentImportUploadDialog } from "./_components/adjustment-import-upload-dialog";
@@ -45,7 +46,7 @@ type AdjustmentImportRow = {
 };
 
 type ModuleAssignment = {
-  status: "existing_assigned" | "existing_unassigned" | "to_create";
+  status: "existing_assigned" | "assigned" | "unassigned";
   moduleLabel: string;
 };
 
@@ -65,9 +66,11 @@ export function AdjustmentImportClient() {
   const [editRowId, setEditRowId] = useState<string | null>(null);
   const [editOperator, setEditOperator] = useState("");
   const [editUnit, setEditUnit] = useState("");
-  const [selectedModuleId, setSelectedModuleId] = useState<string>("");
+  const [moduleAssignmentOpen, setModuleAssignmentOpen] = useState(false);
+  const [moduleAssignmentBySensor, setModuleAssignmentBySensor] = useState<Record<string, number | null>>({});
   const [selectedRowIds, setSelectedRowIds] = useState<string[]>([]);
   const [bulkUnit, setBulkUnit] = useState<string>("");
+  const [sendCoefficients, setSendCoefficients] = useState(false);
   const [confirmOverwriteOpen, setConfirmOverwriteOpen] = useState(false);
   const [confirmOverwriteAdjustments, setConfirmOverwriteAdjustments] = useState<string[]>([]);
   const [confirmOverwriteOffsets, setConfirmOverwriteOffsets] = useState<string[]>([]);
@@ -95,7 +98,6 @@ export function AdjustmentImportClient() {
     return map;
   }, [sensors]);
 
-  const selectedModuleNumericId = selectedModuleId ? Number(selectedModuleId) : null;
   const pendingRows = useMemo(() => rows.filter((row) => !row.persisted), [rows]);
   const pendingRowIds = useMemo(() => pendingRows.map((row) => row.id), [pendingRows]);
   const selectedPendingRowIds = useMemo(
@@ -107,6 +109,23 @@ export function AdjustmentImportClient() {
     const importedUnits = rows.map((row) => row.unit?.trim()).filter((unit): unit is string => !!unit);
     return Array.from(new Set([...COMMON_UNIT_OPTIONS, ...importedUnits]));
   }, [rows]);
+
+  const assignmentSensors = useMemo(() => {
+    const seen = new Set<string>();
+    return pendingRows.flatMap((row) => {
+      const serial = row.sensor?.trim();
+      if (!serial || seen.has(serial)) return [];
+      seen.add(serial);
+      const existing = sensorBySerial.get(serial);
+      const existingModuleId = existing?.Id_Module ?? null;
+      return [{
+        serialNumber: serial,
+        existingModuleId,
+        existingModuleLabel: existingModuleId ? moduleById.get(existingModuleId) ?? `#${existingModuleId}` : null,
+        assignedModuleId: existingModuleId ? null : moduleAssignmentBySensor[serial] ?? null,
+      }];
+    });
+  }, [moduleAssignmentBySensor, moduleById, pendingRows, sensorBySerial]);
 
   const handleUploadResult = (result: AdjustmentImportResult) => {
     const dateText =
@@ -137,24 +156,25 @@ export function AdjustmentImportClient() {
 
   const getModuleAssignment = (row: AdjustmentImportRow): ModuleAssignment => {
     const serial = row.sensor?.trim();
-    if (!serial) return { status: "to_create", moduleLabel: "-" };
+    if (!serial) return { status: "unassigned", moduleLabel: t("labels.no_module") };
 
     const existing = sensorBySerial.get(serial);
-    if (existing) {
-      if (existing.Id_Module) {
-        return {
-          status: "existing_assigned",
-          moduleLabel: moduleById.get(existing.Id_Module) ?? `#${existing.Id_Module}`,
-        };
-      }
-      return { status: "existing_unassigned", moduleLabel: t("labels.no_module") };
+    if (existing?.Id_Module) {
+      return {
+        status: "existing_assigned",
+        moduleLabel: moduleById.get(existing.Id_Module) ?? `#${existing.Id_Module}`,
+      };
     }
 
-    const selectedLabel = selectedModuleNumericId
-      ? moduleById.get(selectedModuleNumericId) ?? `#${selectedModuleNumericId}`
-      : t("labels.module_not_selected");
+    const assignedModuleId = moduleAssignmentBySensor[serial] ?? null;
+    if (assignedModuleId) {
+      return {
+        status: "assigned",
+        moduleLabel: moduleById.get(assignedModuleId) ?? `#${assignedModuleId}`,
+      };
+    }
 
-    return { status: "to_create", moduleLabel: selectedLabel };
+    return { status: "unassigned", moduleLabel: t("labels.no_module") };
   };
 
   const summaryCounts = useMemo(() => {
@@ -247,15 +267,54 @@ export function AdjustmentImportClient() {
     toast.success(t("toast.unit_applied", { count: selectedPendingRowIds.length }));
   };
 
+  const assignModuleToSensor = (serialNumber: string, moduleId: number) => {
+    setModuleAssignmentBySensor((current) => ({ ...current, [serialNumber]: moduleId }));
+  };
+
+  const clearModuleAssignment = (serialNumber: string) => {
+    setModuleAssignmentBySensor((current) => {
+      const next = { ...current };
+      delete next[serialNumber];
+      return next;
+    });
+  };
+
   const handleRemoveRow = (rowId: string) => {
+    const removedSerial = rows.find((row) => row.id === rowId)?.sensor?.trim();
     setRows((prev) => prev.filter((row) => row.id !== rowId));
     setSelectedRowIds((prev) => prev.filter((id) => id !== rowId));
+    if (removedSerial && !rows.some((row) => row.id !== rowId && !row.persisted && row.sensor?.trim() === removedSerial)) {
+      clearModuleAssignment(removedSerial);
+    }
     if (editRowId === rowId) closeEdit();
   };
 
   const handleClearRows = () => {
     setRows([]);
     setSelectedRowIds([]);
+    setModuleAssignmentBySensor({});
+    setSendCoefficients(false);
+    closeEdit();
+  };
+
+  const buildSaveRows = () => pendingRows.map((row) => {
+    const serial = row.sensor?.trim();
+    const existingModuleId = serial ? sensorBySerial.get(serial)?.Id_Module ?? null : null;
+    return {
+      id: row.id,
+      file: row.file,
+      moduleId: existingModuleId ?? (serial ? moduleAssignmentBySensor[serial] ?? null : null),
+      insertData: row.insertData,
+    };
+  });
+
+  const resetAfterSave = () => {
+    setRows([]);
+    setSelectedRowIds([]);
+    setModuleAssignmentBySensor({});
+    setSendCoefficients(false);
+    setOpen(false);
+    setStepperSessionKey((prev) => prev + 1);
     closeEdit();
   };
 
@@ -265,18 +324,10 @@ export function AdjustmentImportClient() {
       toast.error(t("toast.no_pending"));
       return;
     }
-    if (!selectedModuleNumericId) {
-      toast.error(t("toast.module_required"));
-      return;
-    }
 
     setIsSaving(true);
     try {
-      const result = await saveAdjustmentsBulk(
-        selectedModuleNumericId,
-        pendingRows.map((row) => ({ id: row.id, file: row.file, insertData: row.insertData })),
-        t,
-      );
+      const result = await saveAdjustmentsBulk(buildSaveRows(), t, { sendCoefficients });
 
       if (result.status === "confirmation_required") {
         setConfirmOverwriteAdjustments(result.adjustmentList);
@@ -287,11 +338,7 @@ export function AdjustmentImportClient() {
       }
 
       notifyBulkSaveResult(result.payload, t);
-      setRows([]);
-      setSelectedRowIds([]);
-      setOpen(false);
-      setStepperSessionKey((prev) => prev + 1);
-      closeEdit();
+      resetAfterSave();
     } catch (error) {
       const message = error instanceof Error ? error.message : t("toast.save_error");
       toast.error(message || t("toast.save_error"));
@@ -302,19 +349,17 @@ export function AdjustmentImportClient() {
   };
 
   const handleConfirmOverwrite = async () => {
-    if (isSaving || pendingRows.length === 0 || !selectedModuleNumericId) {
+    if (isSaving || pendingRows.length === 0) {
       setConfirmOverwriteOpen(false);
       return;
     }
 
     setIsSaving(true);
     try {
-      const result = await saveAdjustmentsBulk(
-        selectedModuleNumericId,
-        pendingRows.map((row) => ({ id: row.id, file: row.file, insertData: row.insertData })),
-        t,
-        true,
-      );
+      const result = await saveAdjustmentsBulk(buildSaveRows(), t, {
+        confirmOverwrite: true,
+        sendCoefficients,
+      });
 
       if (result.status === "confirmation_required") {
         setConfirmOverwriteAdjustments(result.adjustmentList);
@@ -324,11 +369,7 @@ export function AdjustmentImportClient() {
       }
 
       notifyBulkSaveResult(result.payload, t);
-      setRows([]);
-      setSelectedRowIds([]);
-      setOpen(false);
-      setStepperSessionKey((prev) => prev + 1);
-      closeEdit();
+      resetAfterSave();
       setConfirmOverwriteOpen(false);
     } catch (error) {
       const message = error instanceof Error ? error.message : t("toast.save_error");
@@ -382,7 +423,7 @@ export function AdjustmentImportClient() {
           );
         }
 
-        if (assignment.status === "to_create") {
+        if (assignment.status === "assigned") {
           return (
             <TooltipProvider>
               <Tooltip>
@@ -395,7 +436,16 @@ export function AdjustmentImportClient() {
           );
         }
 
-        return <span className="text-muted-foreground">{assignment.moduleLabel}</span>;
+        return (
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className="inline-flex rounded-md border px-2 py-1 text-xs font-medium text-muted-foreground">{assignment.moduleLabel}</span>
+              </TooltipTrigger>
+              <TooltipContent className="max-w-72 whitespace-normal break-words">{t("module_assignment_dialog.unassigned")}</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        );
       },
     },
     { accessorKey: "sensor", header: t("table.columns.sensor"), cell: ({ row }) => row.getValue("sensor") || "-" },
@@ -442,6 +492,21 @@ export function AdjustmentImportClient() {
       <Button size="sm" variant="outline" onClick={applyBulkUnit} disabled={selectedPendingRowIds.length === 0 || isSaving}>
         {t("actions.apply_unit")}
       </Button>
+
+      <div className="flex min-w-[280px] flex-1 items-start gap-2 sm:ml-2 sm:border-l sm:pl-4">
+        <Checkbox
+          id="send-adjustment-coefficients"
+          checked={sendCoefficients}
+          onCheckedChange={(checked) => setSendCoefficients(checked === true)}
+          disabled={isSaving}
+        />
+        <div className="space-y-0.5">
+          <label htmlFor="send-adjustment-coefficients" className="cursor-pointer font-medium leading-none">
+            {t("coefficient_sync.label")}
+          </label>
+          <p className="text-xs text-muted-foreground">{t("coefficient_sync.description")}</p>
+        </div>
+      </div>
     </div>
   ) : null;
 
@@ -449,10 +514,9 @@ export function AdjustmentImportClient() {
     <div className="space-y-6">
       <AdjustmentImportTableCard
         title={t("table.title")}
-        modulePlaceholder={t("labels.select_module")}
-        modules={modules}
-        selectedModuleId={selectedModuleId}
-        onModuleChange={setSelectedModuleId}
+        assignmentLabel={t("actions.assign_modules")}
+        onOpenAssignment={() => setModuleAssignmentOpen(true)}
+        assignmentDisabled={pendingRows.length === 0 || isSaving}
         onOpenImport={() => setOpen(true)}
         importLabel={t("actions.import")}
         columns={columns}
@@ -463,10 +527,19 @@ export function AdjustmentImportClient() {
         summaryExistingLabel={t("toast.existing_sensors_with_module", { count: summaryCounts.existingAssigned })}
         onSave={handleSaveToDb}
         saveLabel={isSaving ? t("actions.saving_to_db") : t("actions.save_to_db")}
-        disabled={pendingRows.length === 0 || isSaving || !selectedModuleNumericId}
+        disabled={pendingRows.length === 0 || isSaving}
         onClear={handleClearRows}
         clearLabel={t("actions.clear_list")}
         clearDisabled={rows.length === 0 || isSaving}
+      />
+
+      <AdjustmentImportModuleAssignmentDialog
+        open={moduleAssignmentOpen}
+        onOpenChange={setModuleAssignmentOpen}
+        modules={modules}
+        sensors={assignmentSensors}
+        onAssign={assignModuleToSensor}
+        onClear={clearModuleAssignment}
       />
 
       <AdjustmentImportUploadDialog

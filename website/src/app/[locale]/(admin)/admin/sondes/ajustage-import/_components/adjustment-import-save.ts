@@ -9,7 +9,21 @@ type BulkPayload = {
     clearedOffsets?: number
     createdSensorsFromAdjustment?: number
     existingSensorsWithModule?: number
+    coefficientSyncQueuedCount?: number
+    coefficientSyncSkippedCount?: number
   }
+}
+
+type AdjustmentBulkSaveRow = {
+  id: string
+  file: string
+  moduleId: number | null
+  insertData: unknown
+}
+
+type AdjustmentBulkSaveOptions = {
+  confirmOverwrite?: boolean
+  sendCoefficients?: boolean
 }
 
 export type AdjustmentBulkSaveResult =
@@ -17,22 +31,25 @@ export type AdjustmentBulkSaveResult =
   | { status: 'confirmation_required'; adjustmentList: string[]; offsetList: string[] }
 
 export async function saveAdjustmentsBulk(
-  moduleId: number,
-  rows: Array<{ id: string; file: string; insertData: unknown }>,
+  rows: AdjustmentBulkSaveRow[],
   t: TFunction,
-  confirmOverwrite = false,
+  options: AdjustmentBulkSaveOptions = {},
 ) : Promise<AdjustmentBulkSaveResult> {
   const postBulk = async (confirmOverwrite: boolean) => {
     const response = await fetch('/api/sondes/ajustages/bulk', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ moduleId, rows, confirmOverwrite }),
+      body: JSON.stringify({
+        rows,
+        confirmOverwrite,
+        sendCoefficients: options.sendCoefficients ?? false,
+      }),
     })
     const payload = await response.json().catch(() => null)
     return { response, payload }
   }
 
-  const { response, payload } = await postBulk(confirmOverwrite)
+  const { response, payload } = await postBulk(options.confirmOverwrite ?? false)
 
   if (!response.ok && payload?.error?.code === 'confirmation_required') {
     const adjustmentList = (payload?.error?.details?.sensorsWithAdjustment as string[] | undefined) ?? []
@@ -61,6 +78,8 @@ export function notifyBulkSaveResult(payload: BulkPayload | undefined, t: TFunct
   const clearedOffsets = payload?.data?.clearedOffsets ?? 0
   const createdSensorsFromAdjustment = payload?.data?.createdSensorsFromAdjustment ?? 0
   const existingSensorsWithModule = payload?.data?.existingSensorsWithModule ?? 0
+  const coefficientSyncQueuedCount = payload?.data?.coefficientSyncQueuedCount ?? 0
+  const coefficientSyncSkippedCount = payload?.data?.coefficientSyncSkippedCount ?? 0
 
   if (insertedCount > 0) toast.success(t('toast.save_success', { count: insertedCount }))
   if (skippedCount > 0) toast.warning(t('toast.save_skipped', { count: skippedCount }))
@@ -68,4 +87,6 @@ export function notifyBulkSaveResult(payload: BulkPayload | undefined, t: TFunct
   if (clearedOffsets > 0) toast.success(t('toast.offsets_cleared', { count: clearedOffsets }))
   if (createdSensorsFromAdjustment > 0) toast.success(t('toast.created_sensors_from_adjustment', { count: createdSensorsFromAdjustment }))
   if (existingSensorsWithModule > 0) toast.success(t('toast.existing_sensors_with_module', { count: existingSensorsWithModule }))
+  if (coefficientSyncQueuedCount > 0) toast.success(t('toast.coefficients_queued', { count: coefficientSyncQueuedCount }))
+  if (coefficientSyncSkippedCount > 0) toast.warning(t('toast.coefficients_not_queued', { count: coefficientSyncSkippedCount }))
 }

@@ -5,27 +5,12 @@ import { apiError, apiOk } from "@/lib/api-response"
 import { prisma } from "@/lib/prisma"
 import { log } from "@/lib/logger"
 import { applyAccessFilter, buildAlarmAccessFilter, getUserLocationScope } from "@/lib/location-access-scope"
-import { serializeStoredDbDateTime } from "@/lib/date-display"
 import { normalizeMeasureNumber } from "@/lib/measurements"
+import { serializePrismaStoredDbDateTime } from "@/lib/sql-provider"
+import { mapAlarmTypeCategory } from "@/lib/alarm-types"
 
 function mapAlarmType(type: string | null | undefined) {
-  switch ((type ?? "").trim().toUpperCase()) {
-    case "H":
-      return "high" as const
-    case "B":
-      return "low" as const
-    case "N":
-      return "no-response" as const
-    case "M":
-      return "module" as const
-    case "A":
-    case "S":
-      return "sector" as const
-    case "T":
-      return "ended" as const
-    default:
-      return undefined
-  }
+  return mapAlarmTypeCategory(type) ?? undefined
 }
 
 export const GET = withAuthLogging(
@@ -114,8 +99,8 @@ export const GET = withAuthLogging(
               2,
             )
           : null,
-        triggeredAt: serializeStoredDbDateTime(alarm.Date_Heure_Debut) || null,
-        endedAt: serializeStoredDbDateTime(alarm.Date_Heure_Fin) || null,
+        triggeredAt: serializePrismaStoredDbDateTime(alarm.Date_Heure_Debut) || null,
+        endedAt: serializePrismaStoredDbDateTime(alarm.Date_Heure_Fin) || null,
       })
     } catch (error) {
       log.error("alarmes/[id]", "get_alarm_detail_failed", { error })

@@ -4,7 +4,7 @@ import type { ColumnDef, SortingState, Updater } from "@tanstack/react-table"
 
 import { TanStackTable } from "@/components/data-table/tanstack-table"
 import { Button } from "@/components/ui/button"
-import { formatDbDateTime, parseDbDateTime } from "@/lib/date-display"
+import { formatStoredDbDateTime, parseStoredDbDateTime } from "@/lib/date-display"
 import type { MeasureData } from "@/lib/measurements"
 import { formatMeasureValue } from "@/lib/measurements"
 import { exportStyledExcel } from "@/lib/excel-export"
@@ -35,6 +35,7 @@ interface MonitoringTableTabProps {
   presentationRows: PresentationExportRow[]
   t: (key: string) => string
   maxHeight?: string
+  showExportActions?: boolean
 }
 
 type TableRow = {
@@ -69,6 +70,7 @@ export function MonitoringTableTab({
   presentationRows,
   t,
   maxHeight = "calc(100vh - 26rem)",
+  showExportActions = true,
 }: MonitoringTableTabProps) {
   const [isExportingMultiTabs, setIsExportingMultiTabs] = useState(false)
 
@@ -76,7 +78,7 @@ export function MonitoringTableTab({
     return tableMeasurements.map((measure) => ({
       id: measure.id,
       dateIso: measure.DateHeureMesureIso ?? measure.DateHeureMesure,
-      dateLabel: formatDbDateTime(measure.DateHeureMesureIso ?? measure.DateHeureMesure, {
+      dateLabel: formatStoredDbDateTime(measure.DateHeureMesureIso ?? measure.DateHeureMesure, {
         format: "dateTimeSeconds",
       }),
       sensorSerial: sondeNumeroSerie,
@@ -109,8 +111,8 @@ export function MonitoringTableTab({
       accessorKey: "dateLabel",
       header: t("table.columns.date_time"),
       sortingFn: (rowA, rowB) =>
-        (parseDbDateTime(rowA.original.dateIso)?.getTime() ?? 0) -
-        (parseDbDateTime(rowB.original.dateIso)?.getTime() ?? 0),
+        (parseStoredDbDateTime(rowA.original.dateIso)?.getTime() ?? 0) -
+        (parseStoredDbDateTime(rowB.original.dateIso)?.getTime() ?? 0),
       cell: ({ row }) => (
         <span className={cn("font-medium", row.original.isMemoryValue && "italic")}>
           {row.original.dateLabel}
@@ -252,8 +254,10 @@ export function MonitoringTableTab({
         isLoading={rangeLoading}
         exportFileName={exportFileName}
         promptExportCount
-        enableExportColumnSelection
-        toolbarRight={
+        enableExport={showExportActions}
+        exportFormats={["pdf"]}
+        enableExportColumnSelection={showExportActions}
+        toolbarRight={showExportActions ? (
           <Button
             type="button"
             size="sm"
@@ -263,7 +267,7 @@ export function MonitoringTableTab({
           >
             {isExportingMultiTabs ? t("table.multi_tabs.button_loading") : t("table.multi_tabs.button")}
           </Button>
-        }
+        ) : undefined}
         manualPagination
         manualSorting
         pageCount={pageCount}

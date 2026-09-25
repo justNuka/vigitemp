@@ -1,6 +1,6 @@
 "use client"
 
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import { ArrowRight } from "lucide-react";
 import { ReactNode } from "react";
 import { m } from "motion/react";
@@ -28,7 +28,7 @@ export function DashboardLinkCard({
     <m.div
       variants={fadeInUp}
       className={cn(
-        "group rounded-xl border border-border bg-card p-4 shadow-sm",
+        "group h-full rounded-xl border border-border bg-card p-4 shadow-sm",
         "transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md",
         "hover:bg-linear-to-br hover:from-card hover:to-primary/5",
         className
@@ -43,7 +43,7 @@ export function DashboardLinkCard({
           ) : null}
           <div className="space-y-1">
             <Link
-              href={href}
+              href={href as never}
               className="inline-flex items-center gap-2 text-base font-semibold text-foreground transition-colors group-hover:text-primary"
             >
               {title}

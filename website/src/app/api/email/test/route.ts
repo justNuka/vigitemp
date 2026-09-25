@@ -37,6 +37,7 @@ export const POST = withAuthorizationLogging("PARAMETRES_GERER", async (req: Nex
     const result = await sendEmail({
       to: toEmail,
       subject: mailLocale === "en" ? "VigiSensys - Email configuration test" : "VigiSensys - Test configuration email",
+      audit: { kind: "smtp_test" },
       react: PasswordResetEmail({
         resetUrl: `${baseUrl}/reset-password?token=test-token-12345`,
         firstName: "Admin",

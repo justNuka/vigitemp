@@ -1,13 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
 import { getJson, isAuthDisconnected } from "@/lib/http";
 import { useLicense } from "@/components/license/license-provider";
-import { isStandardOrExpert } from "@/lib/license-access";
 
 type MessagingEnabledResponse = { enabled: boolean };
 
 export function useMessagingEnabled(): boolean {
   const { license, loading: licenseLoading } = useLicense();
-  const hasLicense = isStandardOrExpert(license);
+  const hasLicense = license?.ok === true;
 
   const { data } = useQuery<MessagingEnabledResponse>({
     queryKey: ["settings", "messaging-enabled"],

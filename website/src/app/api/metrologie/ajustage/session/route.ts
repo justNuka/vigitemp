@@ -19,10 +19,11 @@ import {
   requireAdjustmentCoefficientDirtyColumn,
 } from "@/lib/metrology-adjustment-coefficient-dirty"
 import { withGsoAdjustmentDisplayValue } from "@/lib/metrology-gso-adjustment-display"
+import { GspSensorUnreachableError } from "@/lib/metrology-gsp-configuration"
 import {
-  applyGspMetrologyConfiguration,
-  GspSensorUnreachableError,
-} from "@/lib/metrology-gsp-configuration"
+  GspCoefficientReadError,
+  synchronizeGspCoefficientsFromSensors,
+} from "@/lib/metrology-gsp-coefficient-sync"
 import { restoreGspMetrologyConfigurationOnce } from "@/lib/metrology-gsp-configuration-restore"
 import { stopMetrologyReadingPreviewSession } from "@/lib/metrology-reading-preview-session"
 import {
@@ -58,6 +59,7 @@ const patchSchema = z.discriminatedUnion("action", [
   z.object({
     action: z.literal("resolve-calculated-coefficients"),
     apply: z.boolean(),
+    sensorIds: z.array(z.number().int().positive()).max(200).optional(),
   }),
   z.object({
     action: z.literal("update-coefficients"),
@@ -208,18 +210,13 @@ export const GET = withStandardOrExpertAnyAuthorizationLogging(
 export const POST = withStandardOrExpertAnyAuthorizationLogging(
   METROLOGY_OPERATION_CODES,
   async (req: NextRequest, ctx) => {
-    let neutralizedSensorIds: number[] = []
     try {
       const body = await req.json()
       const data = startSchema.parse(body)
       const userId = ctx.user.userId
       await stopMetrologyReadingPreviewSession(userId)
 
-      neutralizedSensorIds = await applyGspMetrologyConfiguration(
-        data.selectedSensorIds,
-        "adjustment-neutral",
-        "AJUSTAGE",
-      )
+      await synchronizeGspCoefficientsFromSensors(data.selectedSensorIds, "AJUSTAGE")
 
       const session = await startAdjustmentSession(
         ctx.user,
@@ -245,19 +242,10 @@ export const POST = withStandardOrExpertAnyAuthorizationLogging(
       )
       return apiOk({ session: normalizeAdjustmentSessionDates(session) }, { status: 201 })
     } catch (error) {
-      if (neutralizedSensorIds.length > 0) {
-        await applyGspMetrologyConfiguration(neutralizedSensorIds, "normal", "AJUSTAGE").catch((restoreError) => {
-          log.error("METROLOGY_GSP", "adjustment_start_econ_rollback_failed", {
-            userId: ctx.user.userId,
-            sensorIds: neutralizedSensorIds,
-            error: restoreError instanceof Error ? restoreError.message : String(restoreError),
-          })
-        })
-      }
       if (error instanceof z.ZodError) {
         return apiError(400, "validation_error", "Donnees invalides", { details: error.issues })
       }
-      if (error instanceof GspSensorUnreachableError) {
+      if (error instanceof GspCoefficientReadError || error instanceof GspSensorUnreachableError) {
         return apiError(400, "gsp_sensor_unreachable", error.message, { serial: error.serial })
       }
       log.error("METROLOGY_ADJUSTMENT", "session_start_failed", {
@@ -321,6 +309,7 @@ export const PATCH = withStandardOrExpertAnyAuthorizationLogging(
         const session = await resolveAdjustmentCalculatedCoefficientApplication(
           userId,
           data.apply,
+          data.sensorIds ?? [],
           getClientIp(req),
         )
         return apiOk({ session: normalizeAdjustmentSessionDates(session) })

@@ -1,4 +1,5 @@
 import type { Layout } from "react-grid-layout"
+import type { BackupSummary } from "@/types/backup-types"
 
 export type WidgetId =
   | "alarms"
@@ -20,15 +21,13 @@ export type Metrics = {
   latestAck: string
   latestAuditAction: string
   latestConnectedLabel: string
-  lastBackupLabel: string
-  latestBackupStatus: string
-  latestBackupEtat: "success" | "in_progress" | "failed" | null
-  backupStoragePath: string
-  backupLogFilePath: string
+  backupSummary: BackupSummary | null
+  upcomingCalibrationCount: number
+  upcomingCalibrationDays: number
   hideStandards: boolean
 }
 
-export type Props = { metrics: Metrics }
+export type Props = { metrics: Metrics; onOpenBackupLog?: () => void }
 export type BreakpointKey = "lg" | "md" | "sm" | "xs" | "xxs"
 export type GridLayouts = Partial<Record<BreakpointKey, Layout>>
 

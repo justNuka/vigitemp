@@ -2,12 +2,65 @@ import { prisma, prismaMesure } from "@/lib/prisma";
 import { getSystemEmailCcRecipients, isSystemEmailFallbackEnabled, sendEmail, type EmailAttachment } from "@/lib/email";
 import { log } from "@/lib/logger";
 import AlarmEventNotificationEmail from "../../emails/alarm-event-notification";
+import CriticalThresholdAlarmNotificationEmail from "../../emails/critical-threshold-alarm-notification";
 import { PNG } from "pngjs";
 import { getGlobalAppLanguage, type AppLanguage } from "@/lib/app-language";
 import { formatMeasureValue, normalizeUnitLabel } from "@/lib/measurements";
 import { canUseApplicationEmail } from "@/lib/license-email";
 
 export type AlarmEmailEventType = "triggered" | "ended" | "acknowledged";
+
+export type CriticalThresholdContext = {
+  direction: "high" | "low";
+  threshold: number;
+};
+
+export function resolveCriticalThresholdContext(input: {
+  eventType: AlarmEmailEventType;
+  alarmTypeCode?: string | null;
+  alarmValue?: number | null;
+  highThreshold?: number | null;
+  highEnabled?: boolean | null;
+  lowThreshold?: number | null;
+  lowEnabled?: boolean | null;
+}): CriticalThresholdContext | null {
+  if (input.eventType !== "triggered" || input.alarmValue == null || !Number.isFinite(input.alarmValue)) {
+    return null;
+  }
+
+  const type = input.alarmTypeCode?.trim().toUpperCase();
+  if (type === "CH" && input.highThreshold != null && Number.isFinite(input.highThreshold)) {
+    return { direction: "high", threshold: input.highThreshold };
+  }
+
+  if (type === "CB" && input.lowThreshold != null && Number.isFinite(input.lowThreshold)) {
+    return { direction: "low", threshold: input.lowThreshold };
+  }
+
+  // Compatibilité des alarmes historiques créées avant DB 0.91.2 :
+  // H/B peuvent encore représenter un dépassement critique selon leur valeur.
+  if (
+    type === "H" &&
+    input.highEnabled === true &&
+    input.highThreshold != null &&
+    Number.isFinite(input.highThreshold) &&
+    input.alarmValue > input.highThreshold
+  ) {
+    return { direction: "high", threshold: input.highThreshold };
+  }
+
+  if (
+    type === "B" &&
+    input.lowEnabled === true &&
+    input.lowThreshold != null &&
+    Number.isFinite(input.lowThreshold) &&
+    input.alarmValue < input.lowThreshold
+  ) {
+    return { direction: "low", threshold: input.lowThreshold };
+  }
+
+  return null;
+}
 
 export type SendAlarmEventEmailInput = {
   eventType: AlarmEmailEventType;
@@ -28,6 +81,7 @@ export type SendAlarmEventEmailInput = {
   consigneSup?: number | null;
   consigneInf?: number | null;
   consigne?: number | null;
+  criticalThreshold?: CriticalThresholdContext | null;
 };
 
 type QueuedAlarmEmailStatus = "queued" | "sending" | "sent" | "failed";
@@ -289,8 +343,12 @@ function formatLastValue(value: string | null | undefined, unit: string | null |
 
 export function mapAlarmTypeLabel(type: string | null | undefined, locale: AppLanguage): string {
   switch ((type ?? "").toUpperCase()) {
+    case "CH":
+      return locale === "en" ? "CRITICAL HIGH ALARM" : "ALARME CRITIQUE HAUTE";
     case "H":
       return locale === "en" ? "HIGH ALARM" : "ALARME HAUTE";
+    case "CB":
+      return locale === "en" ? "CRITICAL LOW ALARM" : "ALARME CRITIQUE BASSE";
     case "B":
       return locale === "en" ? "LOW ALARM" : "ALARME BASSE";
     case "N":
@@ -631,7 +689,18 @@ async function buildAlarmChartInlineAttachment(input: {
   }
 }
 
-function buildSubject(eventType: AlarmEmailEventType, lieu: string, locale: AppLanguage) {
+function buildSubject(
+  eventType: AlarmEmailEventType,
+  lieu: string,
+  locale: AppLanguage,
+  criticalThreshold?: CriticalThresholdContext | null,
+) {
+  if (eventType === "triggered" && criticalThreshold) {
+    return locale === "en"
+      ? `[VIGISENSYS] CRITICAL THRESHOLD EXCEEDED - ${lieu}`
+      : `[VIGISENSYS] SEUIL CRITIQUE DEPASSE - ${lieu}`;
+  }
+
   switch (eventType) {
     case "triggered":
       return locale === "en"
@@ -665,32 +734,59 @@ async function sendQueuedAlarmEmailNow(payload: QueuedAlarmEmailPayload) {
 
   const locale = await getGlobalAppLanguage();
   const alarmTypeLabel = mapAlarmTypeLabel(input.alarmTypeCode, locale);
-  const subject = buildSubject(input.eventType, input.lieu, locale);
+  const subject = buildSubject(input.eventType, input.lieu, locale, input.criticalThreshold);
   const lastValue = formatLastValue(input.lastValue, input.unite, locale);
   const details = sanitizeAlarmText(input.details);
+  const criticalThresholdValue =
+    input.criticalThreshold && Number.isFinite(input.criticalThreshold.threshold)
+      ? `${formatMeasureValue(
+          input.criticalThreshold.threshold,
+          2,
+          locale === "en" ? "en-US" : "fr-FR",
+        )}${normalizeUnitLabel(input.unite)}`
+      : undefined;
+
+  const react =
+    input.eventType === "triggered" && input.criticalThreshold && criticalThresholdValue
+      ? CriticalThresholdAlarmNotificationEmail({
+          site: input.site ?? undefined,
+          lieu: input.lieu,
+          sonde: input.sonde ?? undefined,
+          alarmType: alarmTypeLabel,
+          locale,
+          triggeredAt: formatDateTime(input.triggeredAt, locale),
+          measuredValue: lastValue,
+          criticalThreshold: criticalThresholdValue,
+          direction: input.criticalThreshold.direction,
+          details,
+          alarmUrl: input.alarmUrl ?? undefined,
+          chartSrc: chartInline?.chartSrc,
+        })
+      : AlarmEventNotificationEmail({
+          eventType: input.eventType,
+          site: input.site ?? undefined,
+          lieu: input.lieu,
+          sonde: input.sonde ?? undefined,
+          alarmType: alarmTypeLabel,
+          locale,
+          triggeredAt: formatDateTime(input.triggeredAt, locale),
+          endedAt: formatDateTime(input.endedAt, locale),
+          acknowledgedAt: formatDateTime(input.acknowledgedAt, locale),
+          acknowledgedBy: input.acknowledgedBy ?? undefined,
+          lastValue,
+          details,
+          alarmUrl: input.alarmUrl ?? undefined,
+          chartSrc: chartInline?.chartSrc,
+        });
 
   return sendEmail({
     to: payload.recipient,
     cc: payload.ccRecipients,
     subject,
     includeSystemCc: false,
+    audit: false,
     attachments: chartInline ? [chartInline.attachment] : undefined,
-    react: AlarmEventNotificationEmail({
-      eventType: input.eventType,
-      site: input.site ?? undefined,
-      lieu: input.lieu,
-      sonde: input.sonde ?? undefined,
-      alarmType: alarmTypeLabel,
-      locale,
-      triggeredAt: formatDateTime(input.triggeredAt, locale),
-      endedAt: formatDateTime(input.endedAt, locale),
-      acknowledgedAt: formatDateTime(input.acknowledgedAt, locale),
-      acknowledgedBy: input.acknowledgedBy ?? undefined,
-      lastValue,
-      details,
-      alarmUrl: input.alarmUrl ?? undefined,
-      chartSrc: chartInline?.chartSrc,
-    }),
+    react,
   });
 }
 
@@ -724,8 +820,10 @@ async function reserveAlarmEmail(
   return prisma.t_notification.create({
     data: {
       Type: ALARM_EMAIL_NOTIFICATION_TYPE,
-      Id_Alarme: input.alarmId ?? null,
-      Titre: buildSubject(input.eventType, input.lieu, locale).slice(0, 128),
+      // Keep alarm correlation in Payload_Json instead of the FK so the email
+      // queue/audit survives alarm acknowledgement and history cleanup.
+      Id_Alarme: null,
+      Titre: buildSubject(input.eventType, input.lieu, locale, input.criticalThreshold).slice(0, 128),
       Message: key,
       Payload_Json: JSON.stringify(payload),
       Priorite: input.eventType === "triggered" ? 10 : 5,
@@ -778,6 +876,23 @@ async function deliverQueuedAlarmEmail(notificationId: number) {
         Est_Archive: true,
       },
     });
+
+    const deliveredInput = deserializeAlarmEmailInput(claimedPayload.input);
+    log.audit("MAIL", {
+      user: "SYSTEM",
+      userProfile: "system",
+      lieuId: deliveredInput.idLieu ?? undefined,
+      changes: {
+        emailEvent: deliveredInput.eventType,
+        emailStatus: "sent",
+        alarmId: deliveredInput.alarmId ?? null,
+        recipient: claimedPayload.recipient,
+        attempts: claimedPayload.attempts,
+        usedSystemFallback: claimedPayload.usedSystemFallback,
+        criticalThreshold: deliveredInput.criticalThreshold?.direction ?? null,
+      },
+    });
+
     return true;
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);

@@ -22,6 +22,21 @@ type AlarmApiResponse = {
   pagination: { page: number; limit: number; total: number; pages: number };
 };
 
+type UpcomingCalibrationCountResponse = {
+  count: number;
+  days: number;
+  source: "database" | "fallback";
+  from: string;
+  to: string;
+};
+
+function formatLocalDateForQuery(date: Date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
 export function useConnectedUsers(page: number = 1) {
   return useQuery({
     queryKey: ["admin", "utilisateurs-connectes", page],
@@ -46,11 +61,30 @@ export function useActiveAlarms(page: number = 1) {
   });
 }
 
-export function useAcknowledgments(page: number = 1) {
+export function useAcknowledgments(page: number = 1, recentDays?: number) {
+  const normalizedDays =
+    typeof recentDays === "number" && Number.isFinite(recentDays) && recentDays > 0
+      ? Math.max(1, Math.trunc(recentDays))
+      : null;
+  const today = new Date();
+  const dateTo = normalizedDays ? formatLocalDateForQuery(today) : null;
+  const dateFromDate = new Date(today);
+  if (normalizedDays) {
+    dateFromDate.setDate(dateFromDate.getDate() - (normalizedDays - 1));
+  }
+  const dateFrom = normalizedDays ? formatLocalDateForQuery(dateFromDate) : null;
+
   return useQuery({
-    queryKey: ["admin", "acquittements", page],
+    queryKey: ["admin", "acquittements", page, dateFrom, dateTo],
     queryFn: async () => {
-      const response = await getJson<any>(`/api/alarmes/acquittements?page=${page}&limit=10`);
+      const params = new URLSearchParams({
+        page: String(page),
+        limit: "10",
+      });
+      if (dateFrom) params.set("dateFrom", dateFrom);
+      if (dateTo) params.set("dateTo", dateTo);
+
+      const response = await getJson<any>(`/api/alarmes/acquittements?${params.toString()}`);
       return {
         data: (response?.data ?? []).map((item: any) => ({
           id: String(item.id),
@@ -101,6 +135,18 @@ export function useBackups() {
   });
 }
 
+export function useUpcomingCalibrationCount(enabled: boolean = true) {
+  return useQuery({
+    queryKey: ["admin", "metrology", "calibrations-due"],
+    queryFn: () =>
+      getJson<UpcomingCalibrationCountResponse>(
+        "/api/admin/metrologie/etalonnages-a-prevoir",
+      ),
+    enabled,
+    refetchInterval: (query) => (isUnauthorizedError(query.state.error) ? false : 15 * 60_000),
+    staleTime: 10 * 60_000,
+  });
+}
 
 export function useAlarmCount(status: "active" | "resolved") {
   return useQuery({

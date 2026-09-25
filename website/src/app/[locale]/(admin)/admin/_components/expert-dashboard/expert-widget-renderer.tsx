@@ -2,6 +2,7 @@ import { AlertTriangle, BookOpen, Clock, Cpu, Ruler, Users } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
 import { ExpertWidgetCard } from "./expert-widget-card"
+import { AdminBackupStatusSummary } from "../admin-backup-status-summary"
 import type { Metrics, WidgetId } from "./expert-dashboard-types"
 
 type Translate = (key: string, values?: Record<string, string | number>) => string
@@ -19,12 +20,14 @@ export function renderExpertWidget({
   metrics,
   accessLabel,
   t,
+  onOpenBackupLog,
 }: {
   id: WidgetId
   locale: string
   metrics: Metrics
   accessLabel: string
   t: Translate
+  onOpenBackupLog?: () => void
 }) {
   if (id === "alarms") {
     return (
@@ -48,7 +51,7 @@ export function renderExpertWidget({
     return (
       <ExpertWidgetCard
         title={t("acknowledgments.title")}
-        description={t("acknowledgments.description", { total: metrics.acknowledgmentsTotal, max: 50 })}
+        description={t("acknowledgments.description_recent", { total: metrics.acknowledgmentsTotal, days: 7 })}
         value={String(metrics.acknowledgmentsTotal)}
         helper={`${t("acknowledgments.columns.date_time")}: ${metrics.latestAck}`}
         href="/admin/alarmes/acquittements"
@@ -90,35 +93,14 @@ export function renderExpertWidget({
   }
 
   if (id === "backups") {
-    const backupBadge = metrics.latestBackupEtat ? (
-      <Badge
-        variant={
-          metrics.latestBackupEtat === "success"
-            ? "default"
-            : metrics.latestBackupEtat === "failed"
-              ? "destructive"
-              : "secondary"
-        }
-        className={
-          metrics.latestBackupEtat === "success"
-            ? "bg-emerald-600 text-white hover:bg-emerald-600"
-            : metrics.latestBackupEtat === "in_progress"
-              ? "bg-amber-100 text-amber-800 hover:bg-amber-100 dark:bg-amber-950 dark:text-amber-300"
-              : undefined
-        }
-      >
-        {metrics.latestBackupStatus}
-      </Badge>
-    ) : undefined
-
     return (
       <ExpertWidgetCard
         title={t("backup.title")}
         description={t("backup.description", { total: metrics.backupsTotal })}
-        value={metrics.latestBackupStatus}
-        helper={`${t("backup.last.label")}: ${metrics.lastBackupLabel}\n${metrics.backupStoragePath}`}
+        content={<AdminBackupStatusSummary summary={metrics.backupSummary} compact />}
         icon={<BookOpen className="h-5 w-5 text-violet-600" />}
-        badge={backupBadge}
+        onClick={onOpenBackupLog}
+        ariaLabel={t("backup.log.open")}
       />
     )
   }
@@ -138,9 +120,10 @@ export function renderExpertWidget({
 
   return (
     <ExpertWidgetCard
-      title={t("links.etalons.title")}
-      description={t("links.etalons.description")}
-      value="-"
+      title={t("metrology.title")}
+      description={t("metrology.description", { days: metrics.upcomingCalibrationDays })}
+      value={String(metrics.upcomingCalibrationCount)}
+      helper={t("metrology.helper", { days: metrics.upcomingCalibrationDays })}
       href="/admin/metrologie"
       hrefLabel={accessLabel}
       icon={<Ruler className="h-5 w-5 text-cyan-600" />}

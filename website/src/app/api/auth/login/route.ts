@@ -19,6 +19,7 @@ import { checkUserLicenseCapacity } from "@/lib/license-user-limit"
 import { isBetterAuthRuntimeEnabled } from "@/lib/better-auth/auth"
 import { signInExistingVigiSensysUser } from "@/lib/better-auth/credentials"
 import { appendBetterAuthResponseHeaders } from "@/lib/better-auth/response-headers"
+import { getUserAuthorizationCodes } from "@/lib/authz"
 
 const loginSchema = z.object({
   username: z.string().min(1, "Username required"),
@@ -143,9 +144,9 @@ export const POST = withLogging(async (req: NextRequest) => {
       )
     }
 
-    // Authorizations relation is not available on `t_utilisateur` in the current schema,
-    // so default to an empty array here.
-    const authorizations: string[] = []
+    // Keep authorization claims in the signed tokens so diagnostic endpoints
+    // can remain usable even when the main database becomes unavailable later.
+    const authorizations = await getUserAuthorizationCodes(user.Id_Utilisateur)
 
     // La période de transition conserve les JWT pour les consommateurs pas encore migrés,
     // mais Better Auth devient la session serveur testée lorsque le runtime est activé.
@@ -184,7 +185,7 @@ export const POST = withLogging(async (req: NextRequest) => {
       isFirstLogin,
       passwordExpiryEnabled: expiryEnabled,
       passwordValidityDays,
-      authEngine: isBetterAuthRuntimeEnabled() ? "better-auth-transition" : "legacy",
+      authEngine: isBetterAuthRuntimeEnabled() ? "new" : "legacy",
     }
 
     const response = apiOk(userData)
@@ -200,6 +201,7 @@ export const POST = withLogging(async (req: NextRequest) => {
       userId: user.Id_Utilisateur,
       username: user.Login || "user",
       profile: user.Profil_Utilisateur || "user",
+      authorizations,
     })
     response.cookies.set("refresh-token", refreshToken, {
       httpOnly: true,
@@ -229,7 +231,7 @@ export const POST = withLogging(async (req: NextRequest) => {
         machineName: resolvedMachineName,
         address: ip,
         connectedAt: now.toISOString(),
-        authEngine: isBetterAuthRuntimeEnabled() ? "better-auth-transition" : "legacy",
+        authEngine: isBetterAuthRuntimeEnabled() ? "new" : "legacy",
       },
     })
 

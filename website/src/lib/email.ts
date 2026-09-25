@@ -1,8 +1,10 @@
 import nodemailer from "nodemailer";
 import { render } from "@react-email/components";
 import { prisma } from "@/lib/prisma";
-import { decryptSmtpPassword } from "@/lib/secret-crypto";
+import { getSmtpConfigState } from "@/lib/smtp-config";
 import { log } from "@/lib/logger";
+import { recordSystemEmailAuditSafely } from "@/lib/email-audit";
+import type { EmailSendAuditMetadata } from "@/types/email-audit";
 
 interface EmailConfig {
   host: string;
@@ -11,6 +13,8 @@ interface EmailConfig {
   password: string;
   from: string;
   enabled: boolean;
+  configured: boolean;
+  confirmed: boolean;
 }
 
 export type EmailAttachment = {
@@ -38,48 +42,23 @@ function parseRecipients(raw: string | null | undefined): string[] {
 
 
 /**
- * Get email configuration from database parameters
- * Uses the new parameter structure with section: SECURITE_EMAIL
+ * Get the canonical SMTP configuration.
+ * Existing installations without SMTP_CONFIRME remain compatible until their
+ * SMTP details are modified for the first time.
  */
 async function getEmailConfig(): Promise<EmailConfig> {
-  const params = await prisma.t_parametre.findMany({
-    where: {
-      Section: "SECURITE_EMAIL",
-    },
-  });
+  const config = await getSmtpConfigState({ includePassword: true });
 
-  const config: EmailConfig = {
-    host: "",
-    port: 587,
-    user: "",
-    password: "",
-    from: "noreply@alwaysdata.net",
-    enabled: false,
+  return {
+    host: config.host,
+    port: config.port,
+    user: config.user,
+    password: config.password,
+    from: config.sender,
+    enabled: config.enabled,
+    configured: config.configured,
+    confirmed: config.confirmed,
   };
-
-  params.forEach((param) => {
-    switch (param.Mot_Cle) {
-      case "SMTP_SERVEUR":
-        config.host = param.Valeur || "sandbox.smtp.mailtrap.io";
-        break;
-      case "SMTP_PORT":
-        config.port = parseInt(param.Valeur || "587");
-        break;
-      case "SMTP_UTILISATEUR":
-        config.user = param.Valeur || "eb3e24c69a3763";
-        break;
-      case "SMTP_MOT_DE_PASSE":
-        config.password = decryptSmtpPassword(param.Valeur || "");
-        break;
-      case "SMTP_EXPEDITEUR":
-        config.from = param.Valeur || "noreply@alwaysdata.net";
-        break;
-      case "SMTP_ACTIVATION":
-        config.enabled = param.Valeur === "1" || param.Valeur?.toLowerCase() === "true";
-        break;
-    }
-  });
-  return config;
 }
 
 export async function getSystemEmailCcRecipients(): Promise<string[]> {
@@ -118,6 +97,7 @@ export async function sendEmail({
   subject,
   react,
   attachments,
+  audit,
 }: {
   to: string;
   cc?: string | string[];
@@ -125,18 +105,65 @@ export async function sendEmail({
   subject: string;
   react: React.ReactElement;
   attachments?: EmailAttachment[];
+  audit?: EmailSendAuditMetadata | false;
 }): Promise<{ success: boolean; error?: string }> {
+  const auditMetadata = audit === false ? null : (audit ?? { kind: "other" as const });
+  const normalizedAuditRecipient = parseRecipients(to).join(", ") || to.trim();
+  let resolvedCcRecipients: string[] = [];
+  let smtpAttempted = false;
+
   try {
     const config = await getEmailConfig();
 
     if (!config.enabled) {
       log.info("EMAIL", "email_sending_disabled");
+      if (auditMetadata) {
+        await recordSystemEmailAuditSafely({
+          metadata: auditMetadata,
+          status: "skipped",
+          recipient: normalizedAuditRecipient,
+          ccRecipients: resolvedCcRecipients,
+          subject,
+          attempts: 0,
+          lastError: "email_sending_disabled",
+        });
+      }
       return { success: false, error: "Email sending is disabled" };
     }
 
-    if (!config.host || !config.user || !config.password) {
+    if (!config.configured || !config.password) {
       log.error("email", "smtp_configuration_incomplete");
+      if (auditMetadata) {
+        await recordSystemEmailAuditSafely({
+          metadata: auditMetadata,
+          status: "skipped",
+          recipient: normalizedAuditRecipient,
+          ccRecipients: resolvedCcRecipients,
+          subject,
+          attempts: 0,
+          lastError: "smtp_configuration_incomplete",
+        });
+      }
       return { success: false, error: "SMTP configuration is incomplete" };
+    }
+
+    if (!config.confirmed) {
+      log.error("email", "smtp_configuration_unconfirmed");
+      if (auditMetadata) {
+        await recordSystemEmailAuditSafely({
+          metadata: auditMetadata,
+          status: "skipped",
+          recipient: normalizedAuditRecipient,
+          ccRecipients: resolvedCcRecipients,
+          subject,
+          attempts: 0,
+          lastError: "smtp_configuration_unconfirmed",
+        });
+      }
+      return {
+        success: false,
+        error: "SMTP configuration is not confirmed",
+      };
     }
 
     const toNormalized = parseRecipients(to);
@@ -144,39 +171,64 @@ export async function sendEmail({
     const systemCc = includeSystemCc ? await getSystemEmailCcRecipients() : [];
 
     const toSet = new Set(toNormalized);
-    const ccRecipients = Array.from(new Set([...explicitCc, ...systemCc])).filter((email) => !toSet.has(email));
+    resolvedCcRecipients = Array.from(new Set([...explicitCc, ...systemCc])).filter(
+      (email) => !toSet.has(email),
+    );
 
-    // Create transporter
     const transporter = nodemailer.createTransport({
       host: config.host,
       port: config.port,
-      secure: config.port === 465, // true for 465, false for other ports
+      secure: config.port === 465,
       auth: {
         user: config.user,
         pass: config.password,
       },
     });
 
-    // Render React email to HTML
     const html = await render(react);
 
-    // Send email
+    smtpAttempted = true;
     await transporter.sendMail({
       from: config.from,
       to,
-      cc: ccRecipients.length > 0 ? ccRecipients : undefined,
+      cc: resolvedCcRecipients.length > 0 ? resolvedCcRecipients : undefined,
       subject,
       html,
       attachments,
     });
 
+    if (auditMetadata) {
+      await recordSystemEmailAuditSafely({
+        metadata: auditMetadata,
+        status: "sent",
+        recipient: normalizedAuditRecipient,
+        ccRecipients: resolvedCcRecipients,
+        subject,
+        attempts: 1,
+      });
+    }
+
     log.info("EMAIL", "email_sent", { to });
     return { success: true };
   } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+
+    if (auditMetadata) {
+      await recordSystemEmailAuditSafely({
+        metadata: auditMetadata,
+        status: "failed",
+        recipient: normalizedAuditRecipient,
+        ccRecipients: resolvedCcRecipients,
+        subject,
+        attempts: smtpAttempted ? 1 : 0,
+        lastError: errorMessage,
+      });
+    }
+
     log.error("email", "failed_to_send_email", { error });
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Unknown error",
+      error: errorMessage,
     };
   }
 }
@@ -186,7 +238,12 @@ export async function sendEmail({
  */
 export async function isEmailEnabled(): Promise<boolean> {
   const config = await getEmailConfig();
-  return config.enabled && !!config.host && !!config.user && !!config.password;
+  return (
+    config.enabled &&
+    config.configured &&
+    config.confirmed &&
+    Boolean(config.password)
+  );
 }
 
 export async function isSystemEmailFallbackEnabled(): Promise<boolean> {

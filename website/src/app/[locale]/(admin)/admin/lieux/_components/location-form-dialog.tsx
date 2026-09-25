@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import type { AvailableSensor } from '@/hooks/useAvailableSensors';
 import type { Group } from '@/hooks/useGroups';
@@ -31,16 +31,18 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useLicense } from "@/components/license/license-provider";
-import { isExpert, isStandardOrExpert } from "@/lib/license-access";
-import { Check, ChevronDown, X } from "lucide-react";
+import { hasApplicationEmailAccess, isExpert, isStandardOrExpert } from "@/lib/license-access";
+import { ArrowUpRight, Check, ChevronDown, Copy, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import type { Dispatch, SetStateAction } from "react";
 import { FormProvider, type UseFormReturn, useForm, useWatch } from 'react-hook-form';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
+import { Link } from '@/i18n/navigation';
 import { toast } from 'sonner';
 import { showFormValidationToast } from '@/lib/form-toast';
 import { postJson } from '@/lib/http';
+import { buildLocationValueRangeIssues } from '@/lib/sensor-value-range-contract';
 
 import type { EmtMode } from "@/lib/emt"
 import type { LieuEmtParams } from "@/lib/planning-regle-schema"
@@ -64,6 +66,11 @@ function cleanupStaleModalLocks() {
   }, 0);
 }
 
+export type LocationFormSubmitResult = {
+  saved: boolean;
+  values?: LocationFormData;
+};
+
 type LocationFormDialogProps = {
   open: boolean;
   mode: LocationFormMode;
@@ -78,10 +85,14 @@ type LocationFormDialogProps = {
   mailingUsers: MailingUser[];
   locationTemplates?: LocationTemplateRow[];
   isSubmitting: boolean;
+  onRequestCopyFromExisting?: () => void;
   showActionComment?: boolean;
   requireActionComment?: boolean;
   onCancel: () => void;
-  onSubmit: (values: LocationFormData, submitMode?: "stay" | "close") => void | Promise<void>;
+  onSubmit: (
+    values: LocationFormData,
+    submitMode?: "stay" | "close",
+  ) => void | LocationFormSubmitResult | Promise<void | LocationFormSubmitResult>;
 };
 
 export function LocationFormDialog({
@@ -97,6 +108,7 @@ export function LocationFormDialog({
   mailingUsers,
   locationTemplates = [],
   isSubmitting,
+  onRequestCopyFromExisting,
   showActionComment = false,
   requireActionComment = false,
   onCancel,
@@ -105,15 +117,47 @@ export function LocationFormDialog({
   const isEdit = mode === 'edit';
   const { license } = useLicense();
   const hasMetrologyTabs = isStandardOrExpert(license);
+  const hasMailingTab = license?.ok === true && hasApplicationEmailAccess(license);
   const isExpertEdition = isExpert(license);
   const t = useTranslations('locationsForm.dialog');
   const tCommon = useTranslations('common');
+  const locale = useLocale() === 'en' ? 'en' : 'fr';
   const internalForm = useForm<LocationFormData>({
     defaultValues: formData ?? getDefaultLocationFormData(),
   });
   const resolvedForm = form ?? internalForm;
   const internalFormValues = useWatch({ control: internalForm.control });
   const hasChanges = open && resolvedForm.formState.isDirty;
+
+  const validateSelectedSensorRange = (values: LocationFormData) => {
+    const serial = values.Sonde_Numero_Serie?.trim();
+    if (!serial) return true;
+
+    const sensor = availableSensors.find(
+      (candidate) => candidate.Sonde_Numero_Serie === serial,
+    );
+    if (!sensor) return true;
+
+    const range = {
+      min: sensor.Valeur_Min ?? null,
+      max: sensor.Valeur_Max ?? null,
+      unit: sensor.Unite_Type ?? values.Unite ?? null,
+    };
+    const issues = buildLocationValueRangeIssues(values, range, locale);
+
+    if (issues.length === 0) return true;
+
+    for (const issue of issues) {
+      const [field] = issue.path;
+      resolvedForm.setError(field as keyof LocationFormData, {
+        type: 'manual',
+        message: issue.message,
+      });
+    }
+
+    toast.error(issues[0]?.message ?? tCommon('error'));
+    return false;
+  };
 
   const normalizeSubmitValues = (values: LocationFormData): LocationFormData | null => {
     if (!showActionComment) return values;
@@ -154,13 +198,19 @@ export function LocationFormDialog({
       toast.error(validation.error.issues[0]?.message ?? tCommon('error'));
       return;
     }
-    await onSubmit(normalized, 'stay');
-    const nextCommitted = {
-      ...normalized,
-      Commentaire_Action: null,
-    };
-    setLastCommittedValues(nextCommitted);
-    resolvedForm.reset(nextCommitted);
+    if (!validateSelectedSensorRange(normalized)) return;
+    try {
+      const result = await onSubmit(normalized, 'stay');
+      if (result?.saved === false) return;
+      const nextCommitted = {
+        ...(result?.values ?? normalized),
+        Commentaire_Action: null,
+      };
+      setLastCommittedValues(nextCommitted);
+      resolvedForm.reset(nextCommitted);
+    } catch {
+      // The parent mutation owns the user-facing error message.
+    }
   }, (errors) => showFormValidationToast(errors));
 
   const submitAndClose = resolvedForm.handleSubmit(async (values) => {
@@ -181,9 +231,15 @@ export function LocationFormDialog({
       toast.error(validation.error.issues[0]?.message ?? tCommon('error'));
       return;
     }
-    await onSubmit(normalized, 'close');
-    setLastCommittedValues(normalized);
-    onCancel();
+    if (!validateSelectedSensorRange(normalized)) return;
+    try {
+      const result = await onSubmit(normalized, 'close');
+      if (result?.saved === false) return;
+      setLastCommittedValues(result?.values ?? normalized);
+      onCancel();
+    } catch {
+      // The parent mutation owns the user-facing error message.
+    }
   }, (errors) => showFormValidationToast(errors));
   const memoryKey = `location-form:${mode}:${resolvedForm.watch('Id_Lieu') ?? 'new'}`;
   const resetValues = useMemo(() => (
@@ -256,7 +312,10 @@ export function LocationFormDialog({
       ...currentValues,
       ...patch,
     }, {
-      keepDirty: true,
+      // Keep the committed baseline so template values are explicit changes.
+      // This distinguishes a template Lieu_Etat="D" from the temporary D
+      // automatically applied before a sensor is selected.
+      keepDefaultValues: true,
       keepTouched: true,
     });
     toast.success(t('template.toast_apply_success', { name: selectedTemplate.Nom_Template }));
@@ -300,10 +359,37 @@ export function LocationFormDialog({
                 }}
               />
             ) : null}
+            {!isEdit && onRequestCopyFromExisting ? (
+              <div className="flex flex-col gap-3 rounded-md border border-primary/25 bg-primary/5 p-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="space-y-1">
+                  <p className="text-sm font-medium">{t('copy_existing.title')}</p>
+                  <p className="text-xs text-muted-foreground">{t('copy_existing.description')}</p>
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="shrink-0 gap-2"
+                  onClick={onRequestCopyFromExisting}
+                >
+                  <Copy className="h-4 w-4" aria-hidden="true" />
+                  {t('copy_existing.button')}
+                </Button>
+              </div>
+            ) : null}
             <div className="space-y-3 rounded-md border border-border/60 bg-muted/20 p-3">
-              <div className="space-y-1">
-                <p className="text-sm font-medium">{t('template.title')}</p>
-                <p className="text-xs text-muted-foreground">{t('template.description')}</p>
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                <div className="space-y-1">
+                  <p className="text-sm font-medium">{t('template.title')}</p>
+                  <p className="text-xs text-muted-foreground">{t('template.description')}</p>
+                </div>
+                {!isEdit ? (
+                  <Button asChild type="button" variant="ghost" size="sm" className="h-8 shrink-0 gap-1.5">
+                    <Link href="/admin/lieux/templates">
+                      {t('template.manage')}
+                      <ArrowUpRight className="h-3.5 w-3.5" aria-hidden="true" />
+                    </Link>
+                  </Button>
+                ) : null}
               </div>
               <div className="grid gap-2 md:grid-cols-[1fr_auto_auto]">
                 <Select value={selectedTemplateId} onValueChange={setSelectedTemplateId}>
@@ -340,7 +426,7 @@ export function LocationFormDialog({
                 </div>
               ) : null}
               <TabsList
-                className={`grid w-full ${hasMetrologyTabs ? "grid-cols-4" : "grid-cols-2"} bg-[#26A5DA]/10 text-[#26A5DA] border border-[#26A5DA]/30`}
+                className={`grid w-full ${hasMetrologyTabs ? "grid-cols-4" : hasMailingTab ? "grid-cols-3" : "grid-cols-2"} bg-[#26A5DA]/10 text-[#26A5DA] border border-[#26A5DA]/30`}
               >
                 <TabsTrigger
                   value="general"
@@ -356,7 +442,7 @@ export function LocationFormDialog({
                     {t('tabs.metrology')}
                   </TabsTrigger>
                 )}
-                {hasMetrologyTabs && (
+                {hasMailingTab && (
                   <TabsTrigger
                     value="telephonie"
                     className="data-[state=active]:bg-[#26A5DA] data-[state=active]:text-sidebar-foreground hover:bg-[#26A5DA]/15"
@@ -380,7 +466,7 @@ export function LocationFormDialog({
                 onGoToPlanning={() => setActiveTab('planning')}
               />
               {hasMetrologyTabs && <LocationFormTabMetrology isExpertEdition={isExpertEdition} />}
-              {hasMetrologyTabs && <LocationFormTabTelephony users={mailingUsers} />}
+              {hasMailingTab && <LocationFormTabTelephony users={mailingUsers} />}
               <TabsContent value="planning">
                 <LocationFormTabPlanning
                   idLieu={resolvedForm.watch('Id_Lieu') ?? null}

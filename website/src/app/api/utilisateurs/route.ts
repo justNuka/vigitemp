@@ -16,6 +16,7 @@ import { canUseApplicationEmail } from "@/lib/license-email"
 import { serializeDbDateTime } from "@/lib/date-display"
 import { getPasswordRulesFromDb } from "@/lib/password-rules"
 import { validatePassword } from "@/lib/password-validation"
+import { getLocalizedPublicAppUrl } from "@/lib/public-app-url"
 
 const createUserSchema = z.object({
   username: z.string().min(3, "Username must be at least 3 characters"),
@@ -54,7 +55,7 @@ export const GET = withAdminLogging(async (_req: NextRequest) => {
 
     return apiOk(formatted)
   } catch (error) {
-    log.error("utilisateurs", "get_users_error", { error: error });
+    log.error("utilisateurs", "get_users_error", { error: error })
     return apiError(500, "users_fetch_failed", "Failed to fetch users")
   }
 })
@@ -134,18 +135,20 @@ export const POST = withAdminLogging(async (req: NextRequest, ctx: HandlerContex
       },
       reason: `Creation utilisateur ${user.Login}`,
     })
+
     const emailLicense = data.email ? await canUseApplicationEmail() : null
     if (data.email && emailLicense?.allowed && (await isEmailEnabled())) {
-      const loginUrl = `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/login`
       const mailLocale = await getGlobalAppLanguage()
+      const loginUrl = getLocalizedPublicAppUrl("/login", mailLocale, req)
 
       try {
-        await sendEmail({
+        const delivery = await sendEmail({
           to: data.email,
           subject:
             mailLocale === "en"
               ? "Your VigiSensys account has been created"
-              : "Votre compte VigiSensys a ete cree",
+              : "Votre compte VigiSensys a été créé",
+          audit: { kind: "account_creation", context: data.username },
           react: AccountCreationEmail({
             username: data.username,
             temporaryPassword,
@@ -155,9 +158,17 @@ export const POST = withAdminLogging(async (req: NextRequest, ctx: HandlerContex
             locale: mailLocale,
           }),
         })
-        log.info("UTILISATEURS", "account_creation_email_sent", { email: data.email })
+
+        if (delivery.success) {
+          log.info("UTILISATEURS", "account_creation_email_sent", { email: data.email })
+        } else {
+          log.error("UTILISATEURS", "account_creation_email_delivery_failed", {
+            email: data.email,
+            error: delivery.error ?? "unknown_email_delivery_error",
+          })
+        }
       } catch (emailError) {
-        log.error("utilisateurs", "utilisateurs_api_failed_to_send_account_creation_email", { error: emailError });
+        log.error("utilisateurs", "utilisateurs_api_failed_to_send_account_creation_email", { error: emailError })
       }
     } else if (data.email && emailLicense && !emailLicense.allowed) {
       log.info("UTILISATEURS", "account_creation_email_blocked_by_license", {
@@ -194,7 +205,7 @@ export const POST = withAdminLogging(async (req: NextRequest, ctx: HandlerContex
       )
     }
 
-    log.error("utilisateurs", "create_user_error", { error: error });
+    log.error("utilisateurs", "create_user_error", { error: error })
     return apiError(500, "user_create_failed", "Failed to create user")
   }
 })

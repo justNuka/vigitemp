@@ -1,3 +1,8 @@
+import type { DbDateInput } from "@/lib/date-display"
+import {
+  serializePrismaStoredDbDateTimeForProvider,
+  toPrismaStoredDbDateTimeForProvider,
+} from "@/lib/date-display"
 import { prisma } from "@/lib/prisma"
 
 type RawQueryClient = Pick<typeof prisma, "$queryRaw">
@@ -6,6 +11,18 @@ export function isMssqlProvider() {
   const provider = process.env.DATABASE_PROVIDER?.trim().toLowerCase()
   const url = process.env.DATABASE_URL?.trim().toLowerCase() ?? ""
   return provider === "mssql" || provider === "sqlserver" || url.startsWith("sqlserver://")
+}
+
+export function getStoredDbPrismaProvider(): "mysql" | "mssql" {
+  return isMssqlProvider() ? "mssql" : "mysql"
+}
+
+export function serializePrismaStoredDbDateTime(value: DbDateInput): string | null {
+  return serializePrismaStoredDbDateTimeForProvider(value, getStoredDbPrismaProvider())
+}
+
+export function toPrismaStoredDbDateTime(value: DbDateInput): Date | null {
+  return toPrismaStoredDbDateTimeForProvider(value, getStoredDbPrismaProvider())
 }
 
 export async function getDbNow(client: RawQueryClient): Promise<Date> {

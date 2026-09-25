@@ -7,6 +7,18 @@ export type LicenseLike = {
 
 const KNOWN_EDITIONS: readonly LicenseEdition[] = ["pack", "one", "standard", "expert"] as const;
 
+const PACK_EMAIL_OPTION_KEYS = new Set([
+  "mail",
+  "email",
+  "emails",
+  "notification_mail",
+  "notification_email",
+  "notifications_mail",
+  "notifications_email",
+  "alarm_mail",
+  "alarm_email",
+]);
+
 export function getLicenseEdition(input: LicenseLike, fallback: LicenseEdition = "one"): LicenseEdition {
   const raw = typeof input === "string" ? input : input?.edition;
   const normalized = (raw ?? "").trim().toLowerCase();
@@ -17,6 +29,16 @@ export function hasLicenseOption(input: LicenseLike, option: string): boolean {
   if (!input || typeof input === "string") return false;
   const normalizedOption = option.trim().toLowerCase();
   return (input.options ?? []).some((value) => value.trim().toLowerCase() === normalizedOption);
+}
+
+export function hasApplicationEmailAccess(input: LicenseLike): boolean {
+  const edition = getLicenseEdition(input);
+  if (edition !== "pack") return true;
+  if (!input || typeof input === "string") return false;
+
+  return (input.options ?? []).some((option) =>
+    PACK_EMAIL_OPTION_KEYS.has(String(option).trim().toLowerCase()),
+  );
 }
 
 export function isPack(input: LicenseLike): boolean {

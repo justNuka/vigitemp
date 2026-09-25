@@ -5,14 +5,12 @@ import "react-resizable/css/styles.css";
 
 import { useEffect } from "react";
 
-import { AdminNavDock } from "@/components/admin-nav-dock";
+import { AdminNavDock, shouldShowAdminNavDock } from "@/components/admin-nav-dock";
 import { useAppAccess } from "@/components/access/app-access-provider";
 import PageTransitionWrapper from "@/components/animations/transitions/page-transitions/PageTransitionWrapper";
-import { useLicense } from "@/components/license/license-provider";
 import { useAutoLock } from "@/hooks/useAutoLock";
 import { usePathname, useRouter } from "@/i18n/navigation";
 import { stripLocalePrefix } from "@/i18n/pathnames";
-import { isOneOrPack } from "@/lib/license-access";
 import type { AppPermission } from "@/lib/permissions";
 
 function matchesAdminPath(pathname: string, candidates: readonly string[]) {
@@ -26,16 +24,15 @@ export default function AdminLayout({
 }) {
   useAutoLock();
 
-  const { license } = useLicense();
   const pathname = usePathname();
   const router = useRouter();
   const { hasPermission, hasAuthorizationCode, loading: accessLoading } = useAppAccess();
 
   const normalizedPathname = stripLocalePrefix(pathname);
-  const showDock = !(isOneOrPack(license) && normalizedPathname === "/admin");
+  const showDock = shouldShowAdminNavDock(normalizedPathname);
 
   const hasRouteAccess =
-    normalizedPathname === "/admin"
+    normalizedPathname === "/admin" || matchesAdminPath(normalizedPathname, ["/admin/sante-systeme"])
       ? hasPermission("DASHBOARD_ADMIN_ACCESS")
       : matchesAdminPath(normalizedPathname, ["/admin/parametres", "/admin/sites", "/admin/groupes", "/admin/audit"])
         ? hasAuthorizationCode("PARAMETRES_GERER")

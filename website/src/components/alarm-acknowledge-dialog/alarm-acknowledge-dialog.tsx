@@ -7,7 +7,7 @@ import { z } from "zod"
 import { formatDistanceStrict } from "date-fns"
 import { fr } from "date-fns/locale"
 import { useLocale, useTranslations } from "next-intl"
-import { AlertTriangle } from "lucide-react"
+import { AlertTriangle, ChevronDown } from "lucide-react"
 
 import { useAppAccess } from "@/components/access/app-access-provider"
 import { Button } from "@/components/ui/button"
@@ -82,6 +82,8 @@ type Props = {
   onConfirm: (alarmIds: string[], comment?: string, options?: { closeAfter: boolean }) => Promise<void>
   isConfirming?: boolean
   selectionMode?: "single" | "multiple"
+  candidateLocationId?: string | number | null
+  relatedAlarmsInitiallyOpen?: boolean
 }
 
 type LocaleKey = "fr" | "en"
@@ -157,6 +159,8 @@ export function AlarmAcknowledgeDialog({
   onConfirm,
   isConfirming = false,
   selectionMode = "multiple",
+  candidateLocationId = null,
+  relatedAlarmsInitiallyOpen = true,
 }: Props) {
   const t = useTranslations("alarmsPage")
   const locale = useLocale()
@@ -182,6 +186,7 @@ export function AlarmAcknowledgeDialog({
   const [selectedAlarmIds, setSelectedAlarmIds] = useState<string[]>([])
   const [focusedAlarmId, setFocusedAlarmId] = useState<string | null>(null)
   const [relatedTypeFilter, setRelatedTypeFilter] = useState("all")
+  const [relatedAlarmsOpen, setRelatedAlarmsOpen] = useState(relatedAlarmsInitiallyOpen)
 
   const commentSchema = z.object({
     comment: z.string().max(200, t("validation.comment_max", { max: 200 })).optional(),
@@ -224,6 +229,7 @@ export function AlarmAcknowledgeDialog({
       setSelectedAlarmIds([alarm.id])
       setFocusedAlarmId(alarm.id)
       setRelatedTypeFilter("all")
+      setRelatedAlarmsOpen(relatedAlarmsInitiallyOpen)
       setIsCommentsLoading(true)
       setIsStatsLoading(true)
       setIsCandidatesLoading(selectionMode === "multiple")
@@ -257,7 +263,10 @@ export function AlarmAcknowledgeDialog({
       })
 
     if (selectionMode === "multiple") {
-      fetch("/api/alarmes/acknowledgement-candidates")
+      const candidateQuery = candidateLocationId
+        ? `?locationId=${encodeURIComponent(String(candidateLocationId))}`
+        : ""
+      fetch(`/api/alarmes/acknowledgement-candidates${candidateQuery}`)
         .then((res) => (res.ok ? res.json() : null))
         .then((payload) => {
           if (!isActive) return
@@ -297,7 +306,7 @@ export function AlarmAcknowledgeDialog({
       isActive = false
       window.clearTimeout(initTimer)
     }
-  }, [alarm, open, reset, selectionMode])
+  }, [alarm, candidateLocationId, open, relatedAlarmsInitiallyOpen, reset, selectionMode])
 
   useEffect(() => {
     if (!open || !focusedAlarmId) return
@@ -420,9 +429,11 @@ export function AlarmAcknowledgeDialog({
     () => relatedTypeFilter === "all" ? candidateAlarms : candidateAlarms.filter((row) => row.type === relatedTypeFilter),
     [candidateAlarms, relatedTypeFilter],
   )
+  const focusedCandidateId = focusedAlarmId ?? alarm?.id ?? ""
+  const relatedCandidates = visibleCandidates.filter((row) => String(row.id) !== String(focusedCandidateId))
   const isSelectable = (row: CandidateAlarmRow) =>
     canAcknowledgeMultipleLocations || String(row.locationId ?? "") === baseLocationId
-  const selectableVisibleIds = visibleCandidates.filter(isSelectable).map((row) => String(row.id))
+  const selectableVisibleIds = relatedCandidates.filter(isSelectable).map((row) => String(row.id))
   const allVisibleSelected = selectableVisibleIds.length > 0 && selectableVisibleIds.every((id) => selectedAlarmIds.includes(id))
   const someVisibleSelected = selectableVisibleIds.some((id) => selectedAlarmIds.includes(id))
   const hasForbiddenCrossLocationRows =
@@ -506,46 +517,102 @@ export function AlarmAcknowledgeDialog({
         </DialogHeader>
 
         <div className="space-y-4">
+          <div className="grid gap-3 rounded-xl border border-primary/40 bg-primary/5 p-4 shadow-sm md:grid-cols-2">
+            <div className="md:col-span-2">
+              <span className="inline-flex rounded-full bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary">
+                {t("dialog.focused_alarm_label", { id: focusedCandidateId })}
+              </span>
+            </div>
+            <div>
+              <p className="mb-0.5 text-xs uppercase tracking-wide text-muted-foreground">{t("dialog.type_label")}</p>
+              <p className="text-sm font-medium">{alarmTypeLabel}</p>
+            </div>
+            <div>
+              <p className="mb-0.5 text-xs uppercase tracking-wide text-muted-foreground">{t("dialog.last_value_label")}</p>
+              <p className="text-sm font-mono font-semibold text-primary">{formattedCurrentValue}</p>
+            </div>
+            <div>
+              <p className="mb-0.5 text-xs uppercase tracking-wide text-muted-foreground">{t("dialog.start_label")}</p>
+              <p className="text-sm font-medium">{formattedStart}</p>
+            </div>
+            <div>
+              <p className="mb-0.5 text-xs uppercase tracking-wide text-muted-foreground">{t("dialog.end_label")}</p>
+              <p className="text-sm font-medium">{formattedEnd}</p>
+            </div>
+            <div>
+              <p className="mb-0.5 text-xs uppercase tracking-wide text-muted-foreground">{t("dialog.duration_label")}</p>
+              <p className="text-sm font-medium">{formattedDuration}</p>
+            </div>
+            <div>
+              <p className="mb-0.5 text-xs uppercase tracking-wide text-muted-foreground">{t("dialog.count_30_label")}</p>
+              <p className="text-sm font-medium">
+                {isStatsLoading || isDetailLoading
+                  ? t("dialog.loading")
+                  : alarmCount30 !== null
+                    ? t("dialog.count_30_value", { count: alarmCount30 })
+                    : t("dialog.na")}
+              </p>
+            </div>
+            <div>
+              <p className="mb-0.5 text-xs uppercase tracking-wide text-muted-foreground">{t("dialog.thresholds_label")}</p>
+              <p className="text-sm font-mono text-muted-foreground">{formattedThresholdSup}</p>
+              <p className="text-sm font-mono text-muted-foreground">{formattedThresholdInf}</p>
+            </div>
+          </div>
+
           {selectionMode === "multiple" ? (
             <div className="rounded-xl border border-border/60 bg-background">
               <div className="flex flex-col gap-3 border-b border-border/60 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                  <p className="text-sm font-semibold">{t("dialog.related_alarms_title")}</p>
+                  <p className="text-sm font-semibold">{t("dialog.other_alarms_title", { count: relatedCandidates.length })}</p>
                   <p className="text-xs text-muted-foreground">{t("dialog.selected_alarms_count", { count: selectedAlarmIds.length })}</p>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
-                  <Select value={relatedTypeFilter} onValueChange={setRelatedTypeFilter}>
-                    <SelectTrigger className="h-8 w-45">
-                      <SelectValue placeholder={t("dialog.related_type_filter_placeholder")} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">{t("dialog.related_type_filter_all")}</SelectItem>
-                      {relatedTypeOptions.map((type) => (
-                        <SelectItem key={String(type)} value={String(type)}>{getTypeLabel(type)}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
                   <Button
                     type="button"
                     variant="ghost"
                     size="sm"
-                    disabled={selectableVisibleIds.length === 0}
-                    onClick={() => toggleAllVisibleAlarms(!allVisibleSelected)}
+                    onClick={() => setRelatedAlarmsOpen((current) => !current)}
                   >
-                    {allVisibleSelected ? t("dialog.deselect_all") : t("dialog.select_all")}
+                    <ChevronDown className={cn("mr-1.5 h-4 w-4 transition-transform", relatedAlarmsOpen && "rotate-180")} />
+                    {relatedAlarmsOpen ? t("dialog.other_alarms_hide") : t("dialog.other_alarms_show")}
                   </Button>
-                  {isCandidatesLoading ? <span className="text-xs text-muted-foreground">{t("dialog.loading")}</span> : null}
+                  {relatedAlarmsOpen ? (
+                    <>
+                      <Select value={relatedTypeFilter} onValueChange={setRelatedTypeFilter}>
+                        <SelectTrigger className="h-8 w-45">
+                          <SelectValue placeholder={t("dialog.related_type_filter_placeholder")} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">{t("dialog.related_type_filter_all")}</SelectItem>
+                          {relatedTypeOptions.map((type) => (
+                            <SelectItem key={String(type)} value={String(type)}>{getTypeLabel(type)}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        disabled={selectableVisibleIds.length === 0}
+                        onClick={() => toggleAllVisibleAlarms(!allVisibleSelected)}
+                      >
+                        {allVisibleSelected ? t("dialog.deselect_all") : t("dialog.select_all")}
+                      </Button>
+                      {isCandidatesLoading ? <span className="text-xs text-muted-foreground">{t("dialog.loading")}</span> : null}
+                    </>
+                  ) : null}
                 </div>
               </div>
 
-              {hasForbiddenCrossLocationRows ? (
+              {relatedAlarmsOpen && hasForbiddenCrossLocationRows ? (
                 <div className="mx-4 mt-3 flex items-start gap-2 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-950 dark:border-amber-500/40 dark:bg-amber-500/10 dark:text-amber-100">
                   <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
                   <p>{copy.multiLocationForbidden}</p>
                 </div>
               ) : null}
 
-              <div className="max-h-72 overflow-auto">
+              <div className={cn("max-h-64 overflow-auto", !relatedAlarmsOpen && "hidden")}>
                 <table className="w-full min-w-[880px] text-sm">
                   <thead className="sticky top-0 bg-muted/90 text-xs uppercase text-muted-foreground">
                     <tr>
@@ -565,7 +632,7 @@ export function AlarmAcknowledgeDialog({
                     </tr>
                   </thead>
                   <tbody>
-                    {visibleCandidates.map((row) => {
+                    {relatedCandidates.map((row) => {
                       const rowId = String(row.id)
                       const checked = selectedAlarmIds.includes(rowId)
                       const selectable = isSelectable(row)
@@ -610,7 +677,7 @@ export function AlarmAcknowledgeDialog({
                         </tr>
                       )
                     })}
-                    {!isCandidatesLoading && visibleCandidates.length === 0 ? (
+                    {!isCandidatesLoading && relatedCandidates.length === 0 ? (
                       <tr>
                         <td colSpan={6} className="px-3 py-6 text-center text-sm text-muted-foreground">{t("dialog.related_alarms_empty")}</td>
                       </tr>
@@ -620,44 +687,6 @@ export function AlarmAcknowledgeDialog({
               </div>
             </div>
           ) : null}
-
-          <div className="grid gap-3 rounded-xl border border-border/50 bg-muted/40 p-4 md:grid-cols-2">
-            <div>
-              <p className="mb-0.5 text-xs uppercase tracking-wide text-muted-foreground">{t("dialog.type_label")}</p>
-              <p className="text-sm font-medium">{alarmTypeLabel}</p>
-            </div>
-            <div>
-              <p className="mb-0.5 text-xs uppercase tracking-wide text-muted-foreground">{t("dialog.last_value_label")}</p>
-              <p className="text-sm font-mono font-semibold text-primary">{formattedCurrentValue}</p>
-            </div>
-            <div>
-              <p className="mb-0.5 text-xs uppercase tracking-wide text-muted-foreground">{t("dialog.start_label")}</p>
-              <p className="text-sm font-medium">{formattedStart}</p>
-            </div>
-            <div>
-              <p className="mb-0.5 text-xs uppercase tracking-wide text-muted-foreground">{t("dialog.end_label")}</p>
-              <p className="text-sm font-medium">{formattedEnd}</p>
-            </div>
-            <div>
-              <p className="mb-0.5 text-xs uppercase tracking-wide text-muted-foreground">{t("dialog.duration_label")}</p>
-              <p className="text-sm font-medium">{formattedDuration}</p>
-            </div>
-            <div>
-              <p className="mb-0.5 text-xs uppercase tracking-wide text-muted-foreground">{t("dialog.count_30_label")}</p>
-              <p className="text-sm font-medium">
-                {isStatsLoading || isDetailLoading
-                  ? t("dialog.loading")
-                  : alarmCount30 !== null
-                    ? t("dialog.count_30_value", { count: alarmCount30 })
-                    : t("dialog.na")}
-              </p>
-            </div>
-            <div>
-              <p className="mb-0.5 text-xs uppercase tracking-wide text-muted-foreground">{t("dialog.thresholds_label")}</p>
-              <p className="text-sm font-mono text-muted-foreground">{formattedThresholdSup}</p>
-              <p className="text-sm font-mono text-muted-foreground">{formattedThresholdInf}</p>
-            </div>
-          </div>
 
           {Number(resolvedAlarm.locationId) > 0 && alarmCount30 !== null && alarmCount30 > 1 ? (
             <div className="flex items-center justify-between gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-500/40 dark:bg-amber-500/10 dark:text-amber-100">
@@ -690,7 +719,7 @@ export function AlarmAcknowledgeDialog({
                 const targetLocationId = Number(resolvedAlarm.locationId)
                 const targetAlarmId = Number(focusedAlarmId ?? alarm.id)
                 if (!Number.isFinite(targetLocationId) || targetLocationId <= 0 || !Number.isFinite(targetAlarmId) || targetAlarmId <= 0) return
-                const targetUrl = `/${locale}/alarmes/analyse?locationId=${encodeURIComponent(String(targetLocationId))}&alarmId=${encodeURIComponent(String(targetAlarmId))}`
+                const targetUrl = `/${locale}/alarmes/analyse?locationId=${encodeURIComponent(String(targetLocationId))}&alarmId=${encodeURIComponent(String(targetAlarmId))}&source=acknowledgement`
                 window.open(targetUrl, "_blank", "noopener,noreferrer")
               }}
             >
