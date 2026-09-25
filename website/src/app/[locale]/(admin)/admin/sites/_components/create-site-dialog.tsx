@@ -64,8 +64,6 @@ export function CreateSiteDialog({
   });
   const users = usersQuery.data ?? EMPTY_USERS;
   const assignedUserIds = form.watch('assignedUserIds') || [];
-  const allUserIds = users.map((user) => user.id);
-  const allUsersSelected = allUserIds.length > 0 && allUserIds.every((userId) => assignedUserIds.includes(userId));
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
