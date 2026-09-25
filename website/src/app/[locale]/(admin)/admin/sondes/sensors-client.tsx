@@ -100,34 +100,53 @@ export function SensorsClient() {
 
   if (sensorsLoading) {
     return (
-      <Card className="overflow-hidden rounded-[10px] border-border bg-card shadow-[0_1px_2px_hsl(var(--shadow)/0.06)]">
-        <CardContent className="p-6">
-          <div className="space-y-3">
-            {[...Array(6)].map((_, i) => (
-              <Skeleton key={i} className="h-16 w-full" />
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  return (
-    <LazyMotion features={domAnimation}>
-      <m.div
-        className="space-y-4"
-        variants={fadeInUp}
-        initial="hidden"
-        animate="visible"
-      >
-      <Card className="overflow-hidden rounded-[10px] border-border bg-card shadow-[0_1px_2px_hsl(var(--shadow)/0.06)]">
-        <CardHeader className="border-b border-border px-3 py-2.5">
-          <div className="flex items-center justify-between">
-            <CardTitle className="flex items-center gap-2 text-base">
-              <Thermometer className="h-4 w-4 text-primary" />
-              {t('title_with_count', { count: displayedSensors.length })}
-            </CardTitle>
-            <div className="flex gap-2">
+      <section className="overflow-hidden rounded-[10px] border border-border bg-card shadow-[0_1px_2px_hsl(var(--shadow)/0.06)]">
+        <SensorsTable
+          sensors={sensorsTableData}
+          isLoading={sensorsLoading}
+          selectedSensorId={selectedSensorId}
+          onSelectSensor={(id) => {
+            setSelectedSensorId((current) => current === id ? null : id);
+            setSelectedAdjustmentId(null);
+            setSelectedCalibrationId(null);
+          }}
+          warningWindowDays={etalonnageWarningDays}
+          onEditSensor={(id) => {
+            if (statusTab === "archived") return;
+            setSelectedSensorId(id);
+            setSelectedAdjustmentId(null);
+            setSelectedCalibrationId(null);
+            setIsEditing(true);
+            setIsModalOpen(true);
+          }}
+          toolbarLeft={
+            <Tabs
+              value={statusTab}
+              onValueChange={(value) => {
+                setStatusTab(value as "active" | "archived");
+                setSelectedSensorId(null);
+                setSelectedAdjustmentId(null);
+                setSelectedCalibrationId(null);
+              }}
+            >
+              <TabsList className="grid h-8 w-auto grid-cols-2 gap-0.5 rounded-md border border-border bg-[hsl(var(--surface-muted))] p-0.5 text-muted-foreground">
+                <TabsTrigger
+                  value="active"
+                  className="h-7 rounded-[5px] px-2.5 text-[13px] font-medium transition-colors duration-150 hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/60 data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-sm data-[state=active]:ring-1 data-[state=active]:ring-border"
+                >
+                  {t('tabs.active', { count: activeSensors.length })}
+                </TabsTrigger>
+                <TabsTrigger
+                  value="archived"
+                  className="h-7 rounded-[5px] px-2.5 text-[13px] font-medium transition-colors duration-150 hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/60 data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-sm data-[state=active]:ring-1 data-[state=active]:ring-border"
+                >
+                  {t('tabs.archived', { count: archivedSensors.length })}
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
+          }
+          toolbarRight={
+            <>
               <Button size="sm" variant="outline" className="h-8 gap-1.5 text-xs" asChild>
                 <Link href="/admin/sondes/ajustage-import">
                   {t("actions.create_from_adjustment_file")}
@@ -141,7 +160,7 @@ export function SensorsClient() {
                   setIsModalOpen(true);
                 }}
               >
-                <Plus className="w-4 h-4" />
+                <Plus className="h-4 w-4" />
                 {t('actions.add')}
               </Button>
               <Button
@@ -154,61 +173,15 @@ export function SensorsClient() {
                   setIsModalOpen(true);
                 }}
               >
-                <Pencil className="w-4 h-4" />
+                <Pencil className="h-4 w-4" />
                 {t('actions.edit')}
               </Button>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent className="p-3">
-          <Tabs
-            value={statusTab}
-            onValueChange={(value) => {
-              setStatusTab(value as "active" | "archived");
-              setSelectedSensorId(null);
-              setSelectedAdjustmentId(null);
-              setSelectedCalibrationId(null);
-            }}
-            className="space-y-4"
-          >
-            <TabsList className="grid h-8 w-auto max-w-md grid-cols-2 gap-0.5 rounded-md border border-border bg-[hsl(var(--surface-muted))] p-0.5 text-muted-foreground">
-              <TabsTrigger
-                value="active"
-                className="h-7 rounded-[5px] px-2.5 text-[13px] font-medium transition-colors duration-150 hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/60 data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-sm data-[state=active]:ring-1 data-[state=active]:ring-border"
-              >
-                {t('tabs.active', { count: activeSensors.length })}
-              </TabsTrigger>
-              <TabsTrigger
-                value="archived"
-                className="h-7 rounded-[5px] px-2.5 text-[13px] font-medium transition-colors duration-150 hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/60 data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-sm data-[state=active]:ring-1 data-[state=active]:ring-border"
-              >
-                {t('tabs.archived', { count: archivedSensors.length })}
-              </TabsTrigger>
-            </TabsList>
-            <SensorsTable
-              sensors={sensorsTableData}
-              isLoading={sensorsLoading}
-              selectedSensorId={selectedSensorId}
-              onSelectSensor={(id) => {
-                setSelectedSensorId(id);
-                setSelectedAdjustmentId(null);
-                setSelectedCalibrationId(null);
-              }}
-              warningWindowDays={etalonnageWarningDays}
-              onEditSensor={(id) => {
-                if (statusTab === "archived") return;
-                setSelectedSensorId(id);
-                setSelectedAdjustmentId(null);
-                setSelectedCalibrationId(null);
-                setIsEditing(true);
-                setIsModalOpen(true);
-              }}
-            />
-          </Tabs>
-        </CardContent>
-      </Card>
+            </>
+          }
+        />
+      </section>
 
-      <div className="mb-12">
+      <div className="mb-6">
         <CalibrationsPanel
           calibrations={calibrationsTableData}
           isLoading={calibrationsLoading}
