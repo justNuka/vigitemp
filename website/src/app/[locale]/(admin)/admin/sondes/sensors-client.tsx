@@ -120,7 +120,7 @@ export function SensorsClient() {
         initial="hidden"
         animate="visible"
       >
-      <Card>
+      <Card className="overflow-hidden rounded-[10px] border-border bg-card shadow-[0_1px_2px_hsl(var(--shadow)/0.06)]">
         <CardHeader className="border-b border-border px-3 py-2.5">
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center gap-2 text-base">
