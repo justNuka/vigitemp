@@ -1,6 +1,7 @@
 'use client';
 
 import type { ColumnDef } from '@tanstack/react-table';
+import type { ReactNode } from 'react';
 import { TanStackTable } from '@/components/data-table/tanstack-table';
 import { useTranslations } from 'next-intl';
 
@@ -20,6 +21,8 @@ type ModulesTableProps = {
   selectedModuleId: number | null;
   onSelectModule: (moduleId: number) => void;
   onEditModule?: (moduleId: number) => void;
+  toolbarLeft?: ReactNode;
+  toolbarRight?: ReactNode;
 };
 
 export function ModulesTable({
@@ -28,6 +31,8 @@ export function ModulesTable({
   selectedModuleId,
   onSelectModule,
   onEditModule,
+  toolbarLeft,
+  toolbarRight,
 }: ModulesTableProps) {
   const t = useTranslations('modulesTable');
   const columns: ColumnDef<ModuleRow>[] = [
@@ -77,6 +82,8 @@ export function ModulesTable({
       selectedRowId={selectedModuleId ?? undefined}
       onRowClick={(row) => onSelectModule(row.Id_Module)}
       onRowDoubleClick={(row) => onEditModule?.(row.Id_Module)}
+      toolbarLeft={toolbarLeft}
+      toolbarRight={toolbarRight}
       maxHeight="60vh"
     />
   );
