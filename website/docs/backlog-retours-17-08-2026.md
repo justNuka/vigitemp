@@ -3664,7 +3664,7 @@ GitHub Actions run `35970788192` : **succès**.
 
 ### R25-001-A — Card sauvegarde Admin : lignes vides et logs FR/EN
 
-**Statut : `PR_OUVERTE` — branche `fix/admin-backup-log-bilingual` — PR #157 — base `dev` `41071cf29bed5378b4fc73b48daee5aca715008b`**
+**Statut : `CORRIGE_DEV` — PR #157 — squash merge `8ae5ba55faabbb38e554b267f9151e460a27e695`**
 
 Retours :
 
@@ -3718,7 +3718,7 @@ Fichiers principaux :
 
 ### R25-001-B — Nouveaux types d'alarmes critiques `CB` / `CH`
 
-**Statut : `A_FAIRE`**
+**Statut : `EN_COURS` — branche `feature/critical-alarm-types` — base `dev` `8ae5ba55faabbb38e554b267f9151e460a27e695`**
 
 Demandes :
 
@@ -3739,6 +3739,32 @@ Demandes :
   - ne pas ajouter de nouvelle couleur ;
 - vérifier emails, acquittements, historiques, filtres, exports et i18n avec les types à 2 caractères ;
 - prévoir migration MySQL + SQL Server en plus des seeds pour les installations existantes.
+
+
+
+#### Diagnostic / contrat retenu
+
+- le schéma courant possède `t_alarme_histo` et non `t_alarme_message_histo` : c'est donc `t_alarme_histo.Type` qui est élargi ;
+- les seuils critiques existaient déjà mais créaient historiquement des alarmes `B/H` ;
+- à partir de ce lot, un déclenchement initial directement critique crée `CB/CH` ;
+- `B/CB` forment une même famille basse et `H/CH` une même famille haute ;
+- une alarme déjà ouverte garde son type initial jusqu'à sa fin : pas de promotion/dégradation en cours d'alarme et pas de doublon actif ;
+- le trigger GSO avait volontairement perdu l'évaluation directe des critiques en BDD 0.91.1 : 0.91.2 conserve ce comportement et ne recrée pas cette logique ;
+- le Web regroupe `CH` avec les alarmes hautes et `CB` avec les alarmes basses pour les filtres, graphes, acquittements et statistiques ;
+- sur les cards, la couleur reste celle de H/B ; seul l'indicateur danger distingue le critique ;
+- versions prévues : **Web 1.8.16**, **Serveur/installateur 1.1.2**, **BDD 0.91.2**.
+
+Fichiers principaux :
+
+- `website/src/lib/alarm-types.ts` ;
+- `website/src/components/monitoring-card/monitoring-card-header.tsx` ;
+- `website/src/app/api/alarmes/*` et adaptateurs Dashboard/Surveillance concernés ;
+- `website/src/lib/alarm-email.ts` ;
+- `Vigitemp Serveur/Vigitemp Serveur/Sensor.cs` ;
+- providers MySQL / SQL Server ;
+- `website/prisma/db-main/schema.prisma` ;
+- seeds MySQL / SQL Server ;
+- migrations `db/migrations/0.91.2/*`.
 
 ### R25-001-C — Information fréquence GSP pendant les opérations métrologie
 
