@@ -14,7 +14,6 @@ import { toast } from "sonner";
 import { z } from "zod";
 
 import { useAppAccess } from "@/components/access/app-access-provider";
-import { EmptyState } from "@/components/empty-state";
 import { TanStackTable } from "@/components/data-table/tanstack-table";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -584,98 +583,84 @@ export function AlarmsClient({ alarms, statusFilter, initialLocationId = null, s
     };
   }, [selectedAlarm]);
 
-  const content = tableData.length === 0 ? (
-    <Card className="overflow-hidden rounded-[10px] border-border bg-card shadow-[0_1px_2px_hsl(var(--shadow)/0.06)]">
-      <CardHeader className="space-y-3 border-b border-border bg-card">
-        <CardTitle className="flex items-center gap-2">
-          <span className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-border bg-muted/60 text-foreground">
-            <Bell className="h-4 w-4" />
-          </span>
-          {cardTitle}
-        </CardTitle>
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <AlarmStatusTabs statusFilter={statusFilter} stats={statsForTabs} onStatusChange={onStatusChange} t={t} />
-          <div className="flex justify-end gap-2">
-            <AlarmTypeFilter
-              typeFilters={typeFilters}
-              onToggleType={toggleTypeFilter}
-              onReset={() => setTypeFilters([])}
-              t={t}
-            />
-            {refreshButton}
+  const content = (
+    <>
+      {hasHiddenLocationFilter ? (
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-3 rounded-md border border-border bg-[hsl(var(--surface-muted)/0.55)] px-3 py-2 text-[13px] text-foreground">
+          <div className="flex flex-wrap items-center gap-2">
+            <Bell className="h-4 w-4 text-muted-foreground" />
+            <span className="font-medium">{t("filters.active_label")}</span>
+            <span className="rounded-full border border-border bg-card px-2.5 py-1 text-xs font-medium text-foreground">
+              {t("filters.active_location", { value: hiddenLocationFilterLabel ?? locationFilterId ?? "-" })}
+            </span>
+            {typeFilters.length > 0 ? (
+              <span className="rounded-full border border-border bg-card px-2.5 py-1 text-xs font-medium text-foreground">
+                {t("filters.active_types", {
+                  value: typeFilters.map((type) => t(`filter.types.${type}`)).join(", "),
+                })}
+              </span>
+            ) : null}
           </div>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="h-7 text-xs"
+            onClick={clearImplicitFilters}
+          >
+            {t("filters.clear")}
+          </Button>
         </div>
-      </CardHeader>
-      <CardContent>
-        <EmptyState icon={AlertTriangle} title={statusFilter === "active" ? t("empty_state.active_title") : t("empty_state.resolved_title")} description={statusFilter === "active" ? t("empty_state.active_description") : t("empty_state.other_description")} />
-      </CardContent>
-    </Card>
-  ) : (
-    <Card className="overflow-hidden rounded-[10px] border-border bg-card shadow-[0_1px_2px_hsl(var(--shadow)/0.06)]">
-      <CardHeader className="space-y-3 border-b border-border bg-card">
-        <CardTitle className="flex items-center gap-2">
-          <span className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-border bg-muted/60 text-foreground">
-            <Bell className="h-4 w-4" />
-          </span>
-          {cardTitle}
-        </CardTitle>
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <AlarmStatusTabs statusFilter={statusFilter} stats={statsForTabs} onStatusChange={onStatusChange} t={t} />
-        </div>
-      </CardHeader>
-      <CardContent>
-          {hasHiddenLocationFilter ? (
-            <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-md border border-border bg-muted/35 px-3 py-2 text-sm text-foreground">
-              <div className="flex flex-wrap items-center gap-2">
-                <Bell className="h-4 w-4" />
-                <span className="font-medium">{t("filters.active_label")}</span>
-                <span className="rounded-full border border-border bg-card px-2.5 py-1 text-xs font-medium text-foreground">
-                  {t("filters.active_location", { value: hiddenLocationFilterLabel ?? locationFilterId ?? "-" })}
-                </span>
-                {typeFilters.length > 0 ? (
-                  <span className="rounded-full border border-border bg-card px-2.5 py-1 text-xs font-medium text-foreground">
-                    {t("filters.active_types", {
-                      value: typeFilters.map((type) => t(`filter.types.${type}`)).join(", "),
-                    })}
-                  </span>
-                ) : null}
-              </div>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="gap-2 text-muted-foreground hover:bg-muted/60 hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
-                onClick={clearImplicitFilters}
-              >
-                {t("filters.clear")}
-              </Button>
-            </div>
-          ) : null}
-          <TanStackTable<AlarmRow>
-            columns={columns}
-            data={tableData}
+      ) : null}
+
+      <section className="overflow-hidden rounded-[10px] border border-border bg-card shadow-[0_1px_2px_hsl(var(--shadow)/0.06)]">
+        <TanStackTable<AlarmRow>
+          columns={columns}
+          data={tableData}
           searchField="searchText"
           searchPlaceholder={t("table.search_placeholder")}
           pageSize={500}
           isLoading={isRefreshing}
-          emptyMessage={t("table.empty")}
+          emptyMessage={
+            statusFilter === "active"
+              ? t("empty_state.active_description")
+              : t("empty_state.other_description")
+          }
           resultsLabel={resultsLabel}
           selectedRowId={selectedAlarm?.id}
           onRowClick={(row: AlarmRow) => {
             const fullAlarm = localAlarms.find((item) => item.id === row.id);
             if (fullAlarm && canAcknowledgeAlarm) setSelectedAlarm(fullAlarm);
           }}
-            toolbarRight={<div className="flex items-center gap-2"><AlarmTypeFilter typeFilters={typeFilters} onToggleType={toggleTypeFilter} onReset={() => setTypeFilters([])} t={t} />{refreshButton}</div>}
-            onFilteredRowCountChange={setVisibleRowCount}
-            maxHeight="calc(100dvh - 25rem)"
-            rowClassName={(row) => {
-              if (row.status !== "active") return "border-l-[3px] border-l-transparent";
-              return cn("border-l-[3px]", getAlarmTone(row.type).row);
-            }}
-            tableClassName="[&_tbody_tr]:transition-colors [&_tbody_tr]:duration-150"
-          />
-      </CardContent>
-    </Card>
+          toolbarLeft={
+            <AlarmStatusTabs
+              statusFilter={statusFilter}
+              stats={statsForTabs}
+              onStatusChange={onStatusChange}
+              t={t}
+            />
+          }
+          toolbarRight={
+            <div className="flex items-center gap-1.5">
+              <AlarmTypeFilter
+                typeFilters={typeFilters}
+                onToggleType={toggleTypeFilter}
+                onReset={() => setTypeFilters([])}
+                t={t}
+              />
+              {refreshButton}
+            </div>
+          }
+          onFilteredRowCountChange={setVisibleRowCount}
+          maxHeight="calc(100dvh - 19rem)"
+          rowClassName={(row) => {
+            if (row.status !== "active") return "border-l-[3px] border-l-transparent";
+            return cn("border-l-[3px]", getAlarmTone(row.type).row);
+          }}
+          tableClassName="[&_tbody_tr]:transition-colors [&_tbody_tr]:duration-150"
+        />
+      </section>
+    </>
   );
 
   return (
