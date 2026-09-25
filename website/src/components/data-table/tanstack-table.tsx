@@ -524,17 +524,21 @@ export function TanStackTable<TData extends Record<string, any>>({
 
   return (
     <>
-      <div className="space-y-4 w-full">
+      <div className="w-full space-y-3">
       {/* Barre d'outils - conditionnelle */}
       {(showSearch || enableExport || toolbarRight) && (
-        <div className={cn("flex items-center gap-2 flex-wrap", toolbarClassName)}>
+        <div className={cn("flex flex-wrap items-center gap-2", toolbarClassName)}>
           {showSearch && (
             <>
               <Input
                 placeholder={resolvedSearchPlaceholder}
                 value={globalFilter ?? ''}
                 onChange={(e) => setGlobalFilter(e.target.value)}
-                className={cn("max-w-sm", globalFilter ? "border-[#26A5DA]/60 bg-[#26A5DA]/8" : undefined)}
+                className={cn(
+                  "h-8 max-w-sm border-border bg-[hsl(var(--primary-soft)/0.55)] text-[13px] shadow-sm transition-[border-color,box-shadow,background-color] duration-200 ease-out",
+                  "hover:border-[hsl(var(--border-strong))] focus-visible:border-primary/55 focus-visible:ring-2 focus-visible:ring-primary/15 focus-visible:ring-offset-0",
+                  globalFilter && "border-primary/45 bg-[hsl(var(--primary-soft))]",
+                )}
                 disabled={isLoading}
               />
               {globalFilter ? (
@@ -603,7 +607,7 @@ export function TanStackTable<TData extends Record<string, any>>({
       {/* Tableau */}
       <div
         className={cn(
-          "isolate border rounded-lg overflow-auto max-w-full bg-background",
+          "isolate max-w-full overflow-auto rounded-lg border border-border bg-card",
           "[&>div]:max-h-(--vt-table-max-height)",
           "[&>div]:overflow-auto",
           containerClassName
@@ -617,7 +621,7 @@ export function TanStackTable<TData extends Record<string, any>>({
         <Table className={tableClassName}>
           <TableHeader
             className={cn(
-              "sticky top-0 z-10 bg-background dark:bg-card",
+              "sticky top-0 z-10 bg-[hsl(var(--surface-muted))] text-muted-foreground",
               headerClassName
             )}
           >
@@ -643,8 +647,8 @@ export function TanStackTable<TData extends Record<string, any>>({
                       <TableHead
                         key={header.id}
                         className={cn(
-                          canSort && 'cursor-pointer select-none hover:bg-muted/50',
-                          'transition-colors sticky top-0 z-10 bg-background border-b border-border border-r shadow-none dark:bg-card',
+                          canSort && 'cursor-pointer select-none hover:bg-[hsl(var(--surface-sunken)/0.70)] hover:text-foreground',
+                          'sticky top-0 z-10 border-b border-r border-border bg-[hsl(var(--surface-muted))] text-[11px] font-semibold text-muted-foreground shadow-none transition-colors',
                           headerCellClassName,
                           headerCellMetaClass
                         )}
@@ -744,12 +748,12 @@ export function TanStackTable<TData extends Record<string, any>>({
                     tabIndex={onRowClick ? 0 : undefined}
                     aria-selected={isSelected || undefined}
                     className={cn(
-                      "border-b transition-colors",
-                      onRowClick && 'cursor-pointer hover:bg-muted/50',
+                      "border-b transition-colors duration-150",
+                      onRowClick && 'cursor-pointer hover:bg-[hsl(var(--surface-muted)/0.80)]',
                       onRowDoubleClick && 'cursor-pointer',
                       isSelected &&
-                        'bg-blue-100 dark:bg-blue-950 text-blue-900 dark:text-blue-100 font-medium [&_td:first-child]:border-l-4 [&_td:first-child]:border-l-primary',
-                      onRowClick && 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
+                        'bg-primary/[0.07] font-medium [&_td:first-child]:border-l-[3px] [&_td:first-child]:border-l-primary',
+                      onRowClick && 'focus-visible:outline-none focus-visible:bg-primary/[0.05] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring/60',
                       rowClassName?.(row.original),
                     )}
                   >
@@ -760,7 +764,7 @@ export function TanStackTable<TData extends Record<string, any>>({
                       return (
                       <TableCell
                         key={`cell-${rowIndex}-${cellIndex}-${cell.id}`}
-                        className={cn("border-r border-border", cellMetaClass)}
+                        className={cn("border-r border-border/70", cellMetaClass)}
                       >
                         {flexRender(cell.column.columnDef.cell, cell.getContext())}
                       </TableCell>
