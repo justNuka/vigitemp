@@ -27,9 +27,9 @@ export function GroupsActions({
   const t = useTranslations('groupsPage')
 
   return (
-    <div className="flex gap-2">
+    <div className="flex flex-wrap items-center gap-1.5">
       <Select value={regroupement} onValueChange={onRegroupementChange}>
-        <SelectTrigger className="w-40">
+        <SelectTrigger className="h-8 w-44 text-xs">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
@@ -38,15 +38,15 @@ export function GroupsActions({
           <SelectItem value="2">{t('regroupement.two')}</SelectItem>
         </SelectContent>
       </Select>
-      <Button type="button" onClick={onNew} variant="default" size="sm" className="gap-2">
+      <Button type="button" onClick={onNew} size="sm" className="h-8 gap-1.5 text-xs">
         <Plus className="h-4 w-4" />
         {t('actions.new')}
       </Button>
-      <Button type="button" onClick={onEdit} disabled={!canEdit} variant="outline" size="sm" className="gap-2">
+      <Button type="button" onClick={onEdit} disabled={!canEdit} variant="outline" size="sm" className="h-8 gap-1.5 text-xs">
         <Pencil className="h-4 w-4" />
         {t('actions.edit')}
       </Button>
-      <Button type="button" onClick={onArchive} disabled={!canArchive} variant="outline" size="sm" className="gap-2">
+      <Button type="button" onClick={onArchive} disabled={!canArchive} variant="outline" size="sm" className="h-8 gap-1.5 text-xs hover:text-[hsl(var(--status-critical))]">
         <Archive className="h-4 w-4" />
         {t('actions.archive')}
       </Button>
