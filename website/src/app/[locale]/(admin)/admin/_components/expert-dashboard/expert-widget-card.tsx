@@ -31,7 +31,7 @@ export function ExpertWidgetCard({
 }) {
   return (
     <Card
-      className={`h-full overflow-hidden border-slate-200 bg-white/95 shadow-sm dark:border-border dark:bg-card/95 ${onClick ? "cursor-pointer transition-shadow hover:shadow-md" : ""}`}
+      className={`h-full overflow-hidden rounded-[10px] border-border bg-card shadow-[0_1px_2px_hsl(var(--shadow)/0.06)] transition-[border-color,box-shadow] duration-200 hover:border-[hsl(var(--border-strong))] hover:shadow-[0_10px_28px_-20px_hsl(var(--shadow)/0.35)] ${onClick ? "cursor-pointer" : ""}`}
       role={onClick ? "button" : undefined}
       tabIndex={onClick ? 0 : undefined}
       aria-label={onClick ? ariaLabel ?? title : undefined}
@@ -47,29 +47,29 @@ export function ExpertWidgetCard({
           : undefined
       }
     >
-      <CardHeader className="pb-2">
+      <CardHeader className="border-b border-border/70 px-4 pb-2.5 pt-3.5">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <CardTitle className="flex items-center gap-2 text-base">
+            <CardTitle className="flex items-center gap-2 text-[13px] font-semibold">
               {icon}
               <span className="truncate">{title}</span>
             </CardTitle>
-            <CardDescription className="mt-1 line-clamp-2">{description}</CardDescription>
+            <CardDescription className="mt-0.5 line-clamp-2 text-xs leading-4">{description}</CardDescription>
           </div>
           {badge}
         </div>
       </CardHeader>
-      <CardContent className="space-y-2 overflow-hidden">
+      <CardContent className="space-y-2 overflow-hidden px-4 pb-3 pt-3">
         {content ?? (
           <>
-            <div className="text-3xl font-bold text-slate-900 dark:text-slate-100">{value}</div>
+            <div className="num text-2xl font-semibold tracking-[-0.02em] text-foreground">{value}</div>
             {helper ? <p className="line-clamp-3 whitespace-pre-line break-all text-sm text-muted-foreground">{helper}</p> : null}
           </>
         )}
         {href && hrefLabel ? (
           <Link
             href={href as never}
-            className="inline-flex items-center gap-1 text-sm font-medium text-sky-600 transition-colors hover:text-sky-700 dark:text-sky-400 dark:hover:text-sky-300"
+            className="group/link inline-flex items-center gap-1 rounded-md text-xs font-medium text-[hsl(var(--primary-strong))] transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60"
           >
             {hrefLabel}
             <ArrowRight className="h-4 w-4" />
