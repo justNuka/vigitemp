@@ -173,8 +173,8 @@ export function AdjustmentsPanel({
   ];
 
   return (
-    <Card>
-      <CardHeader className="pb-3">
+    <Card className="overflow-hidden rounded-[10px] border-border bg-card shadow-[0_1px_2px_hsl(var(--shadow)/0.06)]">
+      <CardHeader className="border-b border-border px-3 py-2.5">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <CardTitle className="text-base">{t('panels.adjustments.title')}</CardTitle>
           <div className="flex items-center gap-2">
@@ -198,7 +198,7 @@ export function AdjustmentsPanel({
           </div>
         </div>
       </CardHeader>
-      <CardContent className="p-2 md:p-4 xl:p-4">
+      <CardContent className="p-3">
         {isLoading ? (
           <div className="space-y-3">
             {[...Array(3)].map((_, i) => (
@@ -216,9 +216,6 @@ export function AdjustmentsPanel({
             maxHeight="16rem"
             selectedRowId={selectedAdjustmentId ?? undefined}
             onRowClick={(row: AdjustmentRow) => onSelectAdjustment(row.Id_Ajustage)}
-            headerClassName="!bg-sidebar !text-sidebar-foreground"
-            headerCellClassName="!bg-sidebar !text-sidebar-foreground !border-r !border-white/25 hover:!bg-sidebar-accent/80"
-            tableClassName="border-separate border-spacing-0 [&_thead_th]:!border-r [&_thead_th]:!border-white/25 [&_thead_th:last-child]:!border-r-0"
           />
         )}
       </CardContent>
