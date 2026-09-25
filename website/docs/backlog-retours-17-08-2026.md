@@ -3512,7 +3512,7 @@ Fichiers principaux :
 
 ### R23-005-G — Card métrologie du Dashboard Admin
 
-**Statut : `PR_OUVERTE` — branche `fix/admin-metrology-warning-window` — PR #156 — base `dev` `1cc012ca9729eb1dbc906bd7b39b73e3f5ab01ef`**
+**Statut : `CORRIGE_DEV` — PR #156 — squash merge `41071cf29bed5378b4fc73b48daee5aca715008b`**
 
 Retour :
 
@@ -3657,4 +3657,83 @@ GitHub Actions run `35970788192` : **succès**.
 - [ ] valider Ajustage et Étalonnage ;
 - [ ] valider plusieurs GSP sur le même module/COM ;
 - [ ] confirmer la reprise normale de la Surveillance après l'opération.
+
+---
+
+## R25-001 — Retours complémentaires du 25/09/2026
+
+### R25-001-A — Card sauvegarde Admin : lignes vides et logs FR/EN
+
+**Statut : `EN_COURS` — branche `fix/admin-backup-log-bilingual` — base `dev` `41071cf29bed5378b4fc73b48daee5aca715008b`**
+
+Retours :
+
+- ignorer la ligne vide affichée en fin de journal ;
+- prendre en compte les formulations françaises et anglaises du log : `ERREUR` / `ERROR`, etc.
+
+#### Diagnostic
+
+- les lignes réellement vides étaient déjà filtrées ;
+- une ligne contenant uniquement un timestamp restait toutefois non vide côté fichier puis devenait `message: ""` après retrait de l'horodatage, ce qui créait une ligne vide dans la dialog ;
+- les erreurs FR/EN étaient déjà partiellement reconnues ;
+- les marqueurs de début/fin de processus et la détection du succès 7zip quotidien restaient plus orientés vers les formulations françaises.
+
+#### Correctif
+
+- centralisation de l'extraction du message via `getBackupLogMessage()` ;
+- exclusion des lignes sans contenu métier avec `isMeaningfulBackupLogLine()` avant troncature et transformation en entries ;
+- reconnaissance des marqueurs de processus FR/EN ;
+- reconnaissance du succès 7zip quotidien FR/EN ;
+- maintien et extension de la reconnaissance des erreurs FR/EN ;
+- Web passé en **1.8.15**.
+
+Fichiers principaux :
+
+- `website/src/lib/backup-log-parser.ts` ;
+- `website/src/app/api/admin/sauvegardes/route.ts` ;
+- `website/scripts/test-admin-nav-backup-status.ts`.
+
+#### Validation terrain
+
+- [ ] journal se terminant par une ligne vide réelle : aucune ligne supplémentaire ;
+- [ ] journal se terminant par une ligne contenant uniquement `[date heure]` : aucune ligne vide affichée ;
+- [ ] run FR avec `ERREUR` : état échec correctement détecté ;
+- [ ] run EN avec `ERROR` : état échec correctement détecté ;
+- [ ] run EN avec `START BACKUP PROCESS`, `DAILY DUMP : SUCCESS`, `END BACKUP PROCESS` : run correctement reconnu ;
+- [ ] vérifier la copie secondaire Robocopy sur Windows FR et EN.
+
+### R25-001-B — Nouveaux types d'alarmes critiques `CB` / `CH`
+
+**Statut : `A_FAIRE`**
+
+Demandes :
+
+- passer `t_alarme.Type`, `t_alarme_message.Type` et `t_alarme_message_histo.Type` à **2 caractères** ;
+- créer les types :
+  - `CB` — critique bas ;
+  - `CH` — critique haut ;
+- ajouter dans `t_alarme_message` :
+  - `20 / CRITIQUE_BAS / CB / L'alarme a été déclenchée par un dépassement du seuil critique inférieur.` ;
+  - `21 / CRITIQUE_HAUT / CH / L'alarme a été déclenchée par un dépassement du seuil critique supérieur.` ;
+- mettre à jour les seeds MySQL et SQL Server ;
+- adapter le déclenchement Serveur/BDD pour créer `CB` / `CH` lorsqu'un seuil critique est dépassé ;
+- conserver les alarmes standards `B` / `H` pour les seuils normaux ;
+- sur les cards Surveillance :
+  - conserver le petit point clignotant pour toute alarme ;
+  - retirer le panneau danger pour les alarmes standards ;
+  - afficher ce panneau uniquement pour `CB` / `CH` ;
+  - ne pas ajouter de nouvelle couleur ;
+- vérifier emails, acquittements, historiques, filtres, exports et i18n avec les types à 2 caractères ;
+- prévoir migration MySQL + SQL Server en plus des seeds pour les installations existantes.
+
+### R25-001-C — Information fréquence GSP pendant les opérations métrologie
+
+**Statut : `A_FAIRE`**
+
+Demande :
+
+- indiquer dans les parcours Ajustage / Étalonnage que la fréquence de lecture d'une GSP peut ne pas être exactement **1 minute** lorsqu'une ou plusieurs autres sondes du même module sont encore en Surveillance ;
+- expliquer que la Surveillance reste prioritaire sur le module et peut donc décaler légèrement les interrogations de métrologie ;
+- ajouter l'information de manière claire, non bloquante et traduite FR/EN ;
+- relire `docs/architecture/metrology-refactor.md` avant modification.
 
