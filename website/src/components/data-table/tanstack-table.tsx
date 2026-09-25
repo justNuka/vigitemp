@@ -74,6 +74,7 @@ export interface TanStackTableProps<TData> {
   maxHeight?: string;
   showSearch?: boolean;
   showPagination?: boolean;
+  toolbarLeft?: ReactNode;
   toolbarRight?: ReactNode;
   tableClassName?: string;
   headerClassName?: string;
@@ -138,6 +139,7 @@ export function TanStackTable<TData extends Record<string, any>>({
   maxHeight,
   showSearch = true,
   showPagination = true,
+  toolbarLeft,
   toolbarRight,
   tableClassName,
   headerClassName,
@@ -526,8 +528,9 @@ export function TanStackTable<TData extends Record<string, any>>({
     <>
       <div className="w-full space-y-3">
       {/* Barre d'outils - conditionnelle */}
-      {(showSearch || enableExport || toolbarRight) && (
-        <div className={cn("flex flex-wrap items-center gap-2", toolbarClassName)}>
+      {(toolbarLeft || showSearch || enableExport || toolbarRight) && (
+        <div className={cn("flex flex-wrap items-center gap-2 border-b border-border px-3 py-2", toolbarClassName)}>
+          {toolbarLeft}
           {showSearch && (
             <>
               <Input
@@ -608,6 +611,7 @@ export function TanStackTable<TData extends Record<string, any>>({
       <div
         className={cn(
           "isolate max-w-full overflow-auto rounded-lg border border-border bg-card",
+          (toolbarLeft || showSearch || enableExport || toolbarRight) && "-mt-3 rounded-t-none border-t-0",
           "[&>div]:max-h-(--vt-table-max-height)",
           "[&>div]:overflow-auto",
           containerClassName
