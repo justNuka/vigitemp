@@ -1,6 +1,7 @@
 'use client';
 
 import type { ColumnDef } from '@tanstack/react-table';
+import type { ReactNode } from 'react';
 import { TanStackTable } from '@/components/data-table/tanstack-table';
 import type { Group } from '@/hooks/useGroups';
 import { useTranslations } from 'next-intl';
@@ -11,9 +12,11 @@ type GroupsTableProps = {
   selectedGroupId: number | null;
   onSelectGroup: (group: Group) => void;
   onEditGroup?: (group: Group) => void;
+  toolbarLeft?: ReactNode;
+  toolbarRight?: ReactNode;
 };
 
-export function GroupsTable({ groups, isLoading, selectedGroupId, onSelectGroup, onEditGroup }: GroupsTableProps) {
+export function GroupsTable({ groups, isLoading, selectedGroupId, onSelectGroup, onEditGroup, toolbarLeft, toolbarRight }: GroupsTableProps) {
   const t = useTranslations('groupsPage');
   const columns: ColumnDef<Group>[] = [
     {
@@ -58,6 +61,8 @@ export function GroupsTable({ groups, isLoading, selectedGroupId, onSelectGroup,
       selectedRowId={selectedGroupId ?? undefined}
       onRowClick={(row: Group) => onSelectGroup(row)}
       onRowDoubleClick={(row: Group) => onEditGroup?.(row)}
+      toolbarLeft={toolbarLeft}
+      toolbarRight={toolbarRight}
     />
   );
 }
