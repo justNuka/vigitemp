@@ -1432,7 +1432,7 @@ DELIMITER ;;
 		LEAVE main_block;
 
 /* --- FIN D’ALARME B/H --- */
-	ELSEIF v_TypeAlarme IN ('B','CB','H','CH') THEN 
+	ELSEIF v_TypeAlarme IN ('B','CB','H','CH') THEN
 		UPDATE t_alarme
 		SET Date_Heure_Fin = NEW.Derniere_Date_Heure,
         Valeur = NEW.Derniere_Valeur,
