@@ -32,16 +32,16 @@ export function GroupLocationsPanel({ groupSelected, locations }: GroupLocations
   ];
 
   return (
-    <Card>
-      <CardHeader className="pb-3">
-        <CardTitle className="text-base">{t('panels.locations.title')}</CardTitle>
+    <Card className="overflow-hidden rounded-[10px] border-border bg-card shadow-[0_1px_2px_hsl(var(--shadow)/0.06)]">
+      <CardHeader className="flex flex-row items-center justify-between gap-3 border-b border-border px-3 py-2">
+        <CardTitle className="text-[13px] font-semibold">{t('panels.locations.title')}</CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-3">
         <Input
           placeholder={t('panels.locations.search_placeholder')}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="mb-3"
+          className="mb-3 h-8 bg-[hsl(var(--primary-soft)/0.55)] text-[13px]"
         />
         <TanStackTable
           columns={columns}
@@ -50,9 +50,6 @@ export function GroupLocationsPanel({ groupSelected, locations }: GroupLocations
           showPagination={false}
           maxHeight="16rem"
           emptyMessage={groupSelected ? t('panels.locations.empty') : t('panels.locations.empty_unselected')}
-          headerClassName="!bg-sidebar !text-sidebar-foreground"
-          headerCellClassName="!bg-sidebar !text-sidebar-foreground !border-r !border-white/25 hover:!bg-sidebar-accent/80"
-          tableClassName="border-separate border-spacing-0 [&_thead_th]:!border-r [&_thead_th]:!border-white/25 [&_thead_th:last-child]:!border-r-0"
         />
       </CardContent>
     </Card>
