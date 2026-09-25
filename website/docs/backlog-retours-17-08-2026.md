@@ -3752,7 +3752,7 @@ Demandes :
 - le trigger GSO avait volontairement perdu l'évaluation directe des critiques en BDD 0.91.1 : 0.91.2 conserve ce comportement et ne recrée pas cette logique ;
 - le Web regroupe `CH` avec les alarmes hautes et `CB` avec les alarmes basses pour les filtres, graphes, acquittements et statistiques ;
 - sur les cards, la couleur reste celle de H/B ; seul l'indicateur danger distingue le critique ;
-- versions prévues : **Web 1.8.16**, **Serveur/installateur 1.1.2**, **BDD 0.91.2**.
+- versions du lot : **Web 1.9.0**, **Serveur/installateur 1.2.0**, **BDD 0.92.0**.
 
 Fichiers principaux :
 
@@ -3764,11 +3764,11 @@ Fichiers principaux :
 - providers MySQL / SQL Server ;
 - `website/prisma/db-main/schema.prisma` ;
 - seeds MySQL / SQL Server ;
-- migrations `db/migrations/0.91.2/*`.
+- migrations `db/migrations/0.92.0/*`.
 
 #### Validation automatisée
 
-GitHub Actions run `36115799129` : **succès complet**.
+Validation automatisée à relancer après l'ajout final du support GSO et le bump des versions.
 
 Web / BDD :
 
@@ -3797,8 +3797,8 @@ Les premiers runs temporaires ont identifié avant PR deux défauts de préparat
 
 #### Validation terrain
 
-- [ ] appliquer la migration BDD 0.91.2 sur une copie MySQL 0.91.1 et confirmer `SCHEMA_VERSION = 0.91.2` ;
-- [ ] appliquer la migration SQL Server 0.91.2 sur une copie 0.91.1 ;
+- [ ] appliquer la migration BDD 0.92.0 sur une copie MySQL 0.91.1 et confirmer `SCHEMA_VERSION = 0.92.0` ;
+- [ ] appliquer la migration SQL Server 0.92.0 sur une copie 0.91.1 ;
 - [ ] vérifier `t_alarme.Type`, `t_alarme_histo.Type` et `t_alarme_message.Type` en deux caractères ;
 - [ ] vérifier les messages 20 `CRITIQUE_BAS / CB` et 21 `CRITIQUE_HAUT / CH` ;
 - [ ] déclencher une alarme basse standard : type `B`, point pulsant présent, panneau danger absent ;
@@ -3811,7 +3811,8 @@ Les premiers runs temporaires ont identifié avant PR deux défauts de préparat
 - [ ] vérifier l'email critique CB/CH puis les emails de fin/acquittement ;
 - [ ] vérifier page Alarmes, filtres haute/basse, historique d'acquittement, exports/statistiques et dashboard ;
 - [ ] vérifier FR / EN ;
-- [ ] vérifier une GSO : comportement historique B/H inchangé, aucun déclenchement CB/CH ajouté par le trigger.
+- [ ] vérifier une GSO : dépassement normal temporisé en B/H et déclenchement initial directement critique en CB/CH ;
+- [ ] vérifier qu'une GSO déjà ouverte en B/H conserve ce type si elle franchit ensuite le critique, sans créer de doublon.
 
 ### R25-001-C — Information fréquence GSP pendant les opérations métrologie
 
