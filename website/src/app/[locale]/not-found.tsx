@@ -13,6 +13,7 @@ export default function NotFound() {
   return (
     <ErrorPageLayout
       code="404"
+      standalone
       badge={t("not_found_badge")}
       icon={<AlertCircle className="h-6 w-6" />}
       title={t("not_found_title")}
