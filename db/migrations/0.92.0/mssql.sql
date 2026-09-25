@@ -538,4 +538,3 @@ GO
 
 SELECT N'Migration VigiSensys DB 0.92.0 terminée' AS Migration_Status;
 GO
-
