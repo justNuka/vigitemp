@@ -32,10 +32,10 @@ export default function PageTransitionWrapper({
 
   const transition = shouldReduceMotion
     ? { duration: 0 }
-    : { duration: 0.25, ease: [0.22, 1, 0.36, 1] as const }
-  const initial = shouldReduceMotion ? { opacity: 1 } : { opacity: 0, y: 8 }
+    : { duration: 0.18, ease: [0.23, 1, 0.32, 1] as const }
+  const initial = shouldReduceMotion ? { opacity: 1 } : { opacity: 0, y: 4 }
   const animate = { opacity: 1, y: 0 }
-  const exit = shouldReduceMotion ? { opacity: 1 } : { opacity: 0, y: -8 }
+  const exit = shouldReduceMotion ? { opacity: 1 } : { opacity: 0, y: -2 }
 
   return (
     <LazyMotion features={domAnimation}>
