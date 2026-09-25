@@ -8,7 +8,24 @@ Les versions suivent `MAJOR.MINOR.PATCH` sans zéros de tête. La source de vers
 
 ## [Unreleased]
 
-Aucun changement supplémentaire documenté depuis la préparation de la version Web 1.9.1.
+Aucun changement supplémentaire documenté depuis la préparation de la version Web 1.9.2.
+
+## [1.9.2] — 2026-09-25
+
+Cette version fiabilise la préparation des packages Web avec les versions récentes de pnpm.
+
+### Build / packaging
+
+- La politique d'exécution des scripts de dépendances est désormais déclarative via `allowBuilds` dans `pnpm-workspace.yaml` ; aucune approbation interactive n'est nécessaire pendant une préparation de livraison.
+- `Prepare-StandaloneBuild.ps1` utilise `pnpm install --frozen-lockfile` afin de garantir que le package est construit strictement depuis le lockfile versionné.
+- La préparation vérifie explicitement la présence de la politique `allowBuilds` avant l'installation et échoue avec un message clair si elle manque.
+- L'étape `pnpm approve-builds` est retirée du flux de préparation : elle pouvait être inaccessible lorsque pnpm refusait déjà l'installation à cause de scripts de build non approuvés.
+
+### Compatibilité
+
+- Version Web : **1.9.2**.
+- Serveur **1.2.0**, BDD **0.92.0** et Agent **1.0.1** inchangés.
+- Aucune migration BDD n'est requise.
 
 ## [1.9.1] — 2026-09-25
 
