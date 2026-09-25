@@ -168,7 +168,7 @@ export function SitesClient() {
   return (
     <LazyMotion features={domAnimation}>
       <m.main
-        className="flex-1 space-y-4 p-4 md:p-6"
+        className="flex-1 space-y-4"
         variants={fadeInUp}
         initial="hidden"
         animate="visible"
