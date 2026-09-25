@@ -610,7 +610,7 @@ export function TanStackTable<TData extends Record<string, any>>({
       {/* Tableau */}
       <div
         className={cn(
-          "isolate max-w-full overflow-auto rounded-lg border border-border bg-card",
+          "relative isolate max-w-full overflow-auto rounded-lg border border-border bg-card",
           (toolbarLeft || showSearch || enableExport || toolbarRight) && "-mt-3 rounded-t-none border-t-0",
           "[&>div]:max-h-(--vt-table-max-height)",
           "[&>div]:overflow-auto",
@@ -621,8 +621,11 @@ export function TanStackTable<TData extends Record<string, any>>({
           ['--vt-table-max-height' as any]: maxHeight ?? 'none',
         }}
       >
+        {isLoading && rows.length > 0 ? (
+          <div aria-hidden className="table-progress absolute inset-x-0 top-0 z-30 h-0.5 overflow-hidden bg-primary/10" />
+        ) : null}
         <LazyMotion features={domAnimation}>
-        <Table className={tableClassName}>
+        <Table className={cn(isLoading && rows.length > 0 && "opacity-70 transition-opacity duration-150", tableClassName)}>
           <TableHeader
             className={cn(
               "sticky top-0 z-10 bg-[hsl(var(--surface-muted))] text-muted-foreground",
@@ -698,14 +701,14 @@ export function TanStackTable<TData extends Record<string, any>>({
               bodyClassName
             )}
           >
-            {isLoading ? (
+            {isLoading && rows.length === 0 ? (
               Array.from({
                 length: Math.min(10, showPagination ? table.getState().pagination.pageSize : 10),
               }).map((_, rowIndex) => (
                 <TableRow key={`loading-${rowIndex}`} className="hover:bg-transparent">
                   {table.getVisibleLeafColumns().map((col, colIndex) => (
-                    <TableCell key={`loading-${rowIndex}-${col.id}-${colIndex}`} className="border-r border-border">
-                      <div className="h-4 rounded animate-shimmer" />
+                    <TableCell key={`loading-${rowIndex}-${col.id}-${colIndex}`} className="h-10 border-r border-border/70">
+                      <div className="h-2.5 w-[72%] rounded bg-[hsl(var(--surface-sunken))] animate-pulse motion-reduce:animate-none" />
                     </TableCell>
                   ))}
                 </TableRow>
@@ -797,9 +800,9 @@ export function TanStackTable<TData extends Record<string, any>>({
 
       {/* Contrôles de pagination - conditionnels */}
       {showPagination && (
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-2 border-t border-border/70 pt-2 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-2">
-            <span className="text-sm text-muted-foreground">
+            <span className="num text-xs text-muted-foreground">
               {t('pagination.summary', {
                 current: table.getState().pagination.pageIndex + 1,
                 total: table.getPageCount(),
@@ -811,13 +814,13 @@ export function TanStackTable<TData extends Record<string, any>>({
             </span>
           </div>
 
-          <div className="flex flex-wrap items-center justify-end gap-2 rounded-md border border-border bg-muted/10 px-2 py-1">
+          <div className="flex flex-wrap items-center justify-end gap-1.5">
             <Button
               variant="outline"
               size="sm"
               onClick={() => table.previousPage()}
               disabled={!table.getCanPreviousPage() || isLoading}
-              className="border-primary/40 text-primary hover:bg-primary/10"
+              className="h-7 px-2.5 text-xs"
             >
               {t('pagination.previous')}
             </Button>
@@ -829,7 +832,7 @@ export function TanStackTable<TData extends Record<string, any>>({
               }}
               disabled={isLoading}
             >
-              <SelectTrigger className="w-30 sm:w-35">
+              <SelectTrigger className="h-7 w-28 text-xs sm:w-32">
                 <SelectValue aria-label={t('pagination.page_size_label')} />
               </SelectTrigger>
               <SelectContent>
@@ -846,7 +849,7 @@ export function TanStackTable<TData extends Record<string, any>>({
               size="sm"
               onClick={() => table.nextPage()}
               disabled={!table.getCanNextPage() || isLoading}
-              className="border-primary/40 text-primary hover:bg-primary/10"
+              className="h-7 px-2.5 text-xs"
             >
               {t('pagination.next')}
             </Button>
