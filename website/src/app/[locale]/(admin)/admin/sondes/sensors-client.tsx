@@ -100,7 +100,7 @@ export function SensorsClient() {
 
   if (sensorsLoading) {
     return (
-      <Card>
+      <Card className="overflow-hidden rounded-[10px] border-border bg-card shadow-[0_1px_2px_hsl(var(--shadow)/0.06)]">
         <CardContent className="p-6">
           <div className="space-y-3">
             {[...Array(6)].map((_, i) => (
@@ -115,27 +115,27 @@ export function SensorsClient() {
   return (
     <LazyMotion features={domAnimation}>
       <m.div
-        className="space-y-6"
+        className="space-y-4"
         variants={fadeInUp}
         initial="hidden"
         animate="visible"
       >
       <Card>
-        <CardHeader className="border-b border-border/50 bg-white/90 pb-3 dark:bg-card/90">
+        <CardHeader className="border-b border-border px-3 py-2.5">
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center gap-2 text-base">
               <Thermometer className="h-4 w-4 text-primary" />
               {t('title_with_count', { count: displayedSensors.length })}
             </CardTitle>
             <div className="flex gap-2">
-              <Button size="sm" className="gap-2" asChild>
+              <Button size="sm" variant="outline" className="h-8 gap-1.5 text-xs" asChild>
                 <Link href="/admin/sondes/ajustage-import">
                   {t("actions.create_from_adjustment_file")}
                 </Link>
               </Button>
               <Button
                 size="sm"
-                className="gap-2"
+                className="h-8 gap-1.5 text-xs"
                 onClick={() => {
                   setIsEditing(false);
                   setIsModalOpen(true);
@@ -147,8 +147,8 @@ export function SensorsClient() {
               <Button
                 size="sm"
                 variant="outline"
+                className="h-8 gap-1.5 text-xs"
                 disabled={!selectedSensorId || statusTab === "archived"}
-                className="gap-2"
                 onClick={() => {
                   setIsEditing(true);
                   setIsModalOpen(true);
@@ -160,7 +160,7 @@ export function SensorsClient() {
             </div>
           </div>
         </CardHeader>
-        <CardContent className="p-2 md:p-4 xl:p-4">
+        <CardContent className="p-3">
           <Tabs
             value={statusTab}
             onValueChange={(value) => {
@@ -171,16 +171,16 @@ export function SensorsClient() {
             }}
             className="space-y-4"
           >
-            <TabsList className="grid w-full max-w-md grid-cols-2 bg-primary/10 text-primary">
+            <TabsList className="grid h-8 w-auto max-w-md grid-cols-2 gap-0.5 rounded-md border border-border bg-[hsl(var(--surface-muted))] p-0.5 text-muted-foreground">
               <TabsTrigger
                 value="active"
-                className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+                className="h-7 rounded-[5px] px-2.5 text-[13px] font-medium transition-colors duration-150 hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/60 data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-sm data-[state=active]:ring-1 data-[state=active]:ring-border"
               >
                 {t('tabs.active', { count: activeSensors.length })}
               </TabsTrigger>
               <TabsTrigger
                 value="archived"
-                className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+                className="h-7 rounded-[5px] px-2.5 text-[13px] font-medium transition-colors duration-150 hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/60 data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-sm data-[state=active]:ring-1 data-[state=active]:ring-border"
               >
                 {t('tabs.archived', { count: archivedSensors.length })}
               </TabsTrigger>
