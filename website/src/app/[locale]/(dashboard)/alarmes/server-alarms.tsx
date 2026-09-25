@@ -1,6 +1,7 @@
 import { applyAccessFilter, buildAlarmAccessFilter, getUserLocationScope } from "@/lib/location-access-scope"
 import { getServerAuthenticatedUserId } from "@/lib/server-auth"
 import { normalizeUnitLabel } from "@/lib/measurements"
+import { mapAlarmTypeCategory } from "@/lib/alarm-types"
 import { unstable_noStore } from "next/cache"
 import { getTranslations } from "next-intl/server"
 import { normalizeAlarmGroupNames } from "./alarm-groups"
@@ -78,17 +79,12 @@ export async function ServerAlarms(status: ServerAlarmStatus = "active") {
         ? ("resolved" as const)
         : ("active" as const)
 
-    const alarmType = (
-      alarm.Type === "H"
-        ? "high"
-        : alarm.Type === "B"
-          ? "low"
-          : alarm.Type === "N"
-            ? "no-response"
-            : isModuleAlarm
-              ? "module"
-            : "sector"
-    ) as "high" | "low" | "no-response" | "sector" | "module"
+    const alarmType = (mapAlarmTypeCategory(alarm.Type) ?? "sector") as
+      | "high"
+      | "low"
+      | "no-response"
+      | "sector"
+      | "module"
 
     const thresholdValue =
       alarmType === "high" ? (consigneSup ?? 0) : alarmType === "low" ? (consigneInf ?? 0) : 0
