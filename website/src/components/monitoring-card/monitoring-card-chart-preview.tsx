@@ -116,19 +116,19 @@ export function MonitoringCardChartPreview({
 
       <div className="absolute left-0 top-0 bottom-0 flex flex-col justify-between py-2 pointer-events-none pl-1">
         {consigneSup !== null ? (
-          <div className="text-[9px] font-medium text-red-600 dark:text-red-200 bg-white/92 dark:bg-popover/95 px-1 rounded shadow-sm whitespace-nowrap" style={{ position: 'absolute', top: `${yMax === yMin ? 0 : ((yMax - consigneSup) / (yMax - yMin)) * 100}%`, transform: 'translateY(-50%)', left: '4px' }}>
+          <div className="text-[9px] font-medium text-red-600 dark:text-red-200 bg-card/90 px-0.5 rounded-sm backdrop-blur-[1px] whitespace-nowrap" style={{ position: 'absolute', top: `${yMax === yMin ? 0 : ((yMax - consigneSup) / (yMax - yMin)) * 100}%`, transform: 'translateY(-50%)', right: '0px' }}>
             {formattedConsigneSup || "-"}
             {unite}
           </div>
         ) : null}
         {consigneInf !== null ? (
-          <div className="text-[9px] font-medium text-red-600 dark:text-red-200 bg-white/92 dark:bg-popover/95 px-1 rounded shadow-sm whitespace-nowrap" style={{ position: 'absolute', top: `${yMax === yMin ? 0 : ((yMax - consigneInf) / (yMax - yMin)) * 100}%`, transform: 'translateY(-50%)', left: '4px' }}>
+          <div className="text-[9px] font-medium text-red-600 dark:text-red-200 bg-card/90 px-0.5 rounded-sm backdrop-blur-[1px] whitespace-nowrap" style={{ position: 'absolute', top: `${yMax === yMin ? 0 : ((yMax - consigneInf) / (yMax - yMin)) * 100}%`, transform: 'translateY(-50%)', right: '0px' }}>
             {formattedConsigneInf || "-"}
             {unite}
           </div>
         ) : null}
         {consigne !== null ? (
-          <div className="text-[9px] font-medium text-gray-900 dark:text-popover-foreground bg-white/92 dark:bg-popover/95 px-1 rounded shadow-sm whitespace-nowrap" style={{ position: 'absolute', top: `${yMax === yMin ? 0 : ((yMax - consigne) / (yMax - yMin)) * 100}%`, transform: 'translateY(-50%)', left: '4px' }}>
+          <div className="text-[9px] font-medium text-muted-foreground bg-card/90 px-0.5 rounded-sm backdrop-blur-[1px] whitespace-nowrap" style={{ position: 'absolute', top: `${yMax === yMin ? 0 : ((yMax - consigne) / (yMax - yMin)) * 100}%`, transform: 'translateY(-50%)', right: '0px' }}>
             {formattedConsigne || "-"}
             {unite}
           </div>
