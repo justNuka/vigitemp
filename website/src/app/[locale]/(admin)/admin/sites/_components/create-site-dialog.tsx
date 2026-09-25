@@ -18,9 +18,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Card, CardContent } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
+import { AdminUserAssignList } from '@/components/admin-user-assign-list';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Form,
@@ -134,51 +132,20 @@ export function CreateSiteDialog({
                 />
               </TabsContent>
 
-              <TabsContent value="users" className="space-y-4">
-                <div className="flex items-center justify-between gap-3">
-                  <Label>{t('users.title')}</Label>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => form.setValue('assignedUserIds', allUsersSelected ? [] : allUserIds, { shouldDirty: true })}
-                    disabled={users.length === 0}
-                  >
-                    {allUsersSelected ? t('actions.uncheck_all') : t('actions.check_all')}
-                  </Button>
-                </div>
-                <Card className="overflow-hidden rounded-lg border-border bg-[hsl(var(--surface-muted)/0.45)] shadow-none">
-                  <CardContent className="scroll-thin max-h-72 space-y-1.5 overflow-y-auto p-2">
-                    {users.length === 0 ? (
-                      <p className="text-sm text-muted-foreground">{t('users.empty')}</p>
-                    ) : (
-                      users.map((user) => {
-                        const checked = assignedUserIds.includes(user.id);
-                        return (
-                          <div key={user.id} className="flex items-start gap-3 rounded-md border border-transparent px-2.5 py-2 transition-colors duration-150 hover:border-border hover:bg-card">
-                            <Checkbox
-                              id={`site-create-user-${user.id}`}
-                              checked={checked}
-                              onCheckedChange={(nextChecked) => {
-                                const current = new Set(form.getValues('assignedUserIds') || []);
-                                if (nextChecked === true) current.add(user.id);
-                                else current.delete(user.id);
-                                form.setValue('assignedUserIds', Array.from(current), { shouldDirty: true });
-                              }}
-                            />
-                            <div className="min-w-0 flex-1">
-                              <label htmlFor={`site-create-user-${user.id}`} className="cursor-pointer text-sm font-medium">
-                                {user.displayName}
-                              </label>
-                              <p className="text-xs text-muted-foreground">{user.username}</p>
-                            </div>
-                          </div>
-                        );
-                      })
-                    )}
-                  </CardContent>
-                </Card>
-              </TabsContent>
+              <TabsContent value="users">
+                <AdminUserAssignList
+                  idPrefix="site-create"
+                  users={users}
+                  selectedIds={assignedUserIds}
+                  onChange={(ids) => form.setValue('assignedUserIds', ids, { shouldDirty: true })}
+                  loading={usersQuery.isLoading}
+                  title={t('users.title')}
+                  emptyLabel={t('users.empty')}
+                  checkAllLabel={t('actions.check_all')}
+                  uncheckAllLabel={t('actions.uncheck_all')}
+                  searchPlaceholder={tCommon('search')}
+                />
+
             </Tabs>
             <DialogFooter className="-mx-5 -mb-4 border-t border-border bg-[hsl(var(--surface-muted)/0.45)] px-5 py-3">
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="gap-2">
