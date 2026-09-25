@@ -2573,6 +2573,40 @@ namespace Vigitemp_Serveur
             return true;
         }
 
+        private bool SetLieuAlarmFlagsV2(int idLieu, bool isPreAlarm, bool isAlarm)
+        {
+            using (var cmd = this.connection_vigitemp.CreateCommand())
+            {
+                cmd.CommandText =
+                    "UPDATE t_lieu SET " +
+                    "Est_Lieu_En_Pre_Alarme = @pre, " +
+                    "Est_Lieu_En_Alarme = @alarm " +
+                    "WHERE Id_Lieu = @id;";
+                cmd.Parameters.AddWithValue("@pre", isPreAlarm ? 1 : 0);
+                cmd.Parameters.AddWithValue("@alarm", isAlarm ? 1 : 0);
+                cmd.Parameters.AddWithValue("@id", idLieu);
+                cmd.ExecuteNonQuery();
+            }
+            return true;
+        }
+
+        private bool SetLieuAlarmFlagsV1(int idLieu, bool isPreAlarm, bool isAlarm)
+        {
+            using (var cmd = this.connection_vigitemp.CreateCommand())
+            {
+                cmd.CommandText =
+                    "UPDATE t_lieu SET " +
+                    "Est_Lieu_En_Pre_Alarme = @pre, " +
+                    "Est_Lieu_En_Alarme = @alarm " +
+                    "WHERE IdLieu = @id;";
+                cmd.Parameters.AddWithValue("@pre", isPreAlarm ? 1 : 0);
+                cmd.Parameters.AddWithValue("@alarm", isAlarm ? 1 : 0);
+                cmd.Parameters.AddWithValue("@id", idLieu);
+                cmd.ExecuteNonQuery();
+            }
+            return true;
+        }
+
         public bool getLieuImmediateRetriggerFlag(int idLieu)
         {
             lock (_lock)
