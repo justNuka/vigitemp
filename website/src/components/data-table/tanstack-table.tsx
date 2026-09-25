@@ -16,7 +16,6 @@ import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react
 import { LazyMotion, domAnimation, m } from 'motion/react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import { exportStyledExcel } from '@/lib/excel-export';
@@ -36,8 +35,9 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { ChevronDown, ChevronUp, ChevronsUpDown, Download, Inbox, X } from 'lucide-react';
+import { ChevronDown, ChevronUp, ChevronsUpDown, Download, Inbox } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { SearchInput } from '@/components/ui/search-input';
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -533,29 +533,16 @@ export function TanStackTable<TData extends Record<string, any>>({
           {toolbarLeft}
           {showSearch && (
             <>
-              <Input
+              <SearchInput
+                value={globalFilter ?? ""}
+                onChange={setGlobalFilter}
                 placeholder={resolvedSearchPlaceholder}
-                value={globalFilter ?? ''}
-                onChange={(e) => setGlobalFilter(e.target.value)}
-                className={cn(
-                  "h-8 max-w-sm border-border bg-[hsl(var(--primary-soft)/0.55)] text-[13px] shadow-sm transition-[border-color,box-shadow,background-color] duration-200 ease-out",
-                  "hover:border-[hsl(var(--border-strong))] focus-visible:border-primary/55 focus-visible:ring-2 focus-visible:ring-primary/15 focus-visible:ring-offset-0",
-                  globalFilter && "border-primary/45 bg-[hsl(var(--primary-soft))]",
-                )}
-                disabled={isLoading}
+                label={resolvedSearchPlaceholder}
+                tone="soft"
+                disabled={isLoading && rows.length === 0}
+                className="w-full min-w-[200px] flex-1 sm:max-w-xs"
               />
-              {globalFilter ? (
-                <>
-                  <Badge variant="secondary" className="border border-[#26A5DA]/35 bg-[#26A5DA]/8 text-[#075776] dark:text-sky-50">
-                    {t('filter_active')}
-                  </Badge>
-                  <Button type="button" size="sm" variant="ghost" className="gap-1" onClick={() => setGlobalFilter("")} disabled={isLoading}>
-                    <X className="h-4 w-4" />
-                    {t('clear_search')}
-                  </Button>
-                </>
-              ) : null}
-              <span className="text-sm text-muted-foreground">
+              <span className="num whitespace-nowrap text-xs text-muted-foreground">
                 {resultsLabel ?? t('results', { count: filteredRowCount })}
               </span>
             </>
