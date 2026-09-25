@@ -44,32 +44,32 @@ export function SensorsTable({ sensors, isLoading, selectedSensorId, onSelectSen
   const statusThemes: Record<string, StatusTheme> = {
     surveillance: {
       label: t('status.surveillance'),
-      className: "border-emerald-500/40 bg-emerald-500/15 text-emerald-700",
+      className: "border-transparent bg-[hsl(var(--status-ok)/0.10)] text-[hsl(var(--status-ok-text))]",
       Icon: Activity,
     },
     calibrage: {
       label: t('status.calibrage'),
-      className: "border-amber-500/40 bg-amber-500/15 text-amber-700",
+      className: "border-transparent bg-[hsl(var(--status-warning)/0.10)] text-[hsl(var(--status-warning-text))]",
       Icon: Wrench,
     },
     etalonnage: {
       label: t('status.etalonnage'),
-      className: "border-sky-500/40 bg-sky-500/15 text-sky-700",
+      className: "border-transparent bg-[hsl(var(--primary-soft))] text-[hsl(var(--primary-strong))]",
       Icon: Ruler,
     },
     test: {
       label: t('status.test'),
-      className: "border-violet-500/40 bg-violet-500/15 text-violet-700",
+      className: "border-transparent bg-[hsl(var(--status-ended)/0.10)] text-[hsl(var(--status-ended))]",
       Icon: FlaskConical,
     },
     desactivee: {
       label: t('status.disabled'),
-      className: "border-red-500/40 bg-red-500/15 text-red-700",
+      className: "border-transparent bg-[hsl(var(--status-critical)/0.10)] text-[hsl(var(--status-critical))]",
       Icon: PowerOff,
     },
     unknown: {
       label: t('status.unknown'),
-      className: "border-slate-400/40 bg-slate-400/10 text-slate-600",
+      className: "border-transparent bg-[hsl(var(--surface-sunken))] text-muted-foreground",
       Icon: PowerOff,
     },
   };
@@ -191,7 +191,7 @@ export function SensorsTable({ sensors, isLoading, selectedSensorId, onSelectSen
 
         if (validity.tone === 'ok') {
           return (
-            <Badge className="border-emerald-500/40 bg-emerald-500/15 text-emerald-700" variant="outline">
+            <Badge className="border-transparent bg-[hsl(var(--status-ok)/0.10)] text-[hsl(var(--status-ok-text))]" variant="outline">
               {text}
             </Badge>
           );
@@ -199,14 +199,14 @@ export function SensorsTable({ sensors, isLoading, selectedSensorId, onSelectSen
 
         if (validity.tone === 'warning') {
           return (
-            <Badge className="border-amber-500/40 bg-amber-500/15 text-amber-700" variant="outline">
+            <Badge className="border-transparent bg-[hsl(var(--status-warning)/0.10)] text-[hsl(var(--status-warning-text))]" variant="outline">
               {text}
             </Badge>
           );
         }
 
         return (
-          <Badge className="border-red-500/40 bg-red-500/15 text-red-700" variant="outline">
+          <Badge className="border-transparent bg-[hsl(var(--status-critical)/0.10)] text-[hsl(var(--status-critical))]" variant="outline">
             {text}
           </Badge>
         );
@@ -237,9 +237,6 @@ export function SensorsTable({ sensors, isLoading, selectedSensorId, onSelectSen
       selectedRowId={selectedSensorId ?? undefined}
       onRowClick={(row: SensorRow) => onSelectSensor(row.Id_Sonde)}
       onRowDoubleClick={(row: SensorRow) => onEditSensor?.(row.Id_Sonde)}
-      headerClassName="!bg-sidebar !text-sidebar-foreground"
-      headerCellClassName="!bg-sidebar !text-sidebar-foreground !border-r !border-white/25 hover:!bg-sidebar-accent/80"
-      tableClassName="border-separate border-spacing-0 [&_thead_th]:!border-r [&_thead_th]:!border-white/25 [&_thead_th:last-child]:!border-r-0"
     />
   );
 }
