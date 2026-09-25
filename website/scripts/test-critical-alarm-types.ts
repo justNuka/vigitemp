@@ -48,9 +48,9 @@ for (const source of [mysqlMigration, mssqlMigration, mysqlSeed, mssqlSeed]) {
   assert.match(source, /0\.91\.2/)
 }
 
-assert.match(mysqlMigration, /ALTER TABLE `t_alarme` MODIFY COLUMN `Type` VARCHAR\(2\)/)
-assert.match(mysqlMigration, /ALTER TABLE `t_alarme_histo` MODIFY COLUMN `Type` VARCHAR\(2\)/)
-assert.match(mysqlMigration, /ALTER TABLE `t_alarme_message` MODIFY COLUMN `Type` VARCHAR\(2\)/)
+assert.match(mysqlMigration, /ALTER TABLE\s+`t_alarme`\s+MODIFY COLUMN\s+`Type`\s+varchar\(2\)/i)
+assert.match(mysqlMigration, /ALTER TABLE\s+`t_alarme_histo`\s+MODIFY COLUMN\s+`Type`\s+varchar\(2\)/i)
+assert.match(mysqlMigration, /ALTER TABLE\s+`t_alarme_message`\s+MODIFY COLUMN\s+`Type`\s+varchar\(2\)/i)
 assert.doesNotMatch(mysqlMigration, /TRG_GSO_BEF_UPD_LIEU_ALARME/)
 assert.doesNotMatch(mysqlMigration, /Seuil_Critique_(?:Bas|Haut)/)
 assert.match(mysqlMigration, /\(20, 'CRITIQUE_BAS', 'CB'/)
