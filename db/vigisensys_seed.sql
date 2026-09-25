@@ -1,4 +1,4 @@
--- Version produit / seed : 0.91.1
+-- Version produit / seed : 0.92.0
 -- DDL synchronise sur le dump schema courant du 2026-08-25.
 -- Les DEFINER et compteurs AUTO_INCREMENT de production sont volontairement retires.
 
@@ -261,7 +261,7 @@ CREATE TABLE `t_alarme` (
   `Id_Alarme` int NOT NULL AUTO_INCREMENT,
   `Date_Heure_Debut` datetime DEFAULT NULL,
   `Valeur` float DEFAULT NULL,
-  `Type` varchar(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `Type` varchar(2) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `Date_Heure_Fin` datetime DEFAULT NULL,
   `Id_Lieu` int DEFAULT NULL,
   `Sonde_Numero_Serie` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
@@ -325,7 +325,7 @@ CREATE TABLE `t_alarme_histo` (
   `Id_Alarme` int NOT NULL,
   `Date_Heure_Debut` datetime DEFAULT NULL,
   `Valeur` float DEFAULT NULL,
-  `Type` varchar(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `Type` varchar(2) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `Date_Heure_Fin` datetime DEFAULT NULL,
   `Est_Alarme_Vrai` tinyint(1) DEFAULT '0',
   `Id_Lieu` int DEFAULT NULL,
@@ -366,12 +366,22 @@ DROP TABLE IF EXISTS `t_alarme_message`;
 CREATE TABLE `t_alarme_message` (
   `Id_Alarme_Message` int NOT NULL AUTO_INCREMENT,
   `Code_Alarme_Message` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `Type` varchar(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `Type` varchar(2) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `Texte_Message` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
   PRIMARY KEY (`Id_Alarme_Message`),
   UNIQUE KEY `CodeAlarmeMessage` (`Code_Alarme_Message`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
+INSERT INTO `t_alarme_message`
+  (`Id_Alarme_Message`, `Code_Alarme_Message`, `Type`, `Texte_Message`)
+VALUES
+  (20, 'CRITIQUE_BAS', 'CB', 'L''alarme a été déclenchée par un dépassement du seuil critique inférieur.'),
+  (21, 'CRITIQUE_HAUT', 'CH', 'L''alarme a été déclenchée par un dépassement du seuil critique supérieur.')
+ON DUPLICATE KEY UPDATE
+  `Code_Alarme_Message` = VALUES(`Code_Alarme_Message`),
+  `Type` = VALUES(`Type`),
+  `Texte_Message` = VALUES(`Texte_Message`);
 
 --
 -- Table structure for table `t_ancien_mot_de_passe`
@@ -854,7 +864,7 @@ DELIMITER ;;
 /*!50003 CREATE*/ /*!50003 TRIGGER `TRG_GSO_BEF_UPD_LIEU_ALARME` BEFORE UPDATE ON `t_lieu` FOR EACH ROW main_block: BEGIN
 
     DECLARE v_Id_Alarme INT DEFAULT NULL;
-    DECLARE v_TypeAlarme CHAR(1);
+    DECLARE v_TypeAlarme VARCHAR(2);
     
     /* =========================================================================================
        0. SKIP DE LA LOGIQUE SI ACQUITTEMENT D'ALARME
@@ -891,10 +901,103 @@ DELIMITER ;;
     INTO v_Id_Alarme, v_TypeAlarme
     FROM t_alarme
     WHERE Id_Lieu = NEW.Id_Lieu AND NEW.Est_Lieu_GSO = 1
-      AND Type IN ('B','H','N')
+      AND Type IN ('B','CB','H','CH','N')
       AND Date_Heure_Fin IS NULL
     LIMIT 1;	
 
+
+    /* ==========================================================
+       2b. SEUILS CRITIQUES : déclenchement immédiat
+       ========================================================== */
+    IF NEW.Lieu_Etat = 'S'
+       AND TIMESTAMPDIFF(SECOND, NEW.Date_Heure_Derniere_Reponse, NOW()) <= NEW.Retard_Non_Reponse * 60
+       AND COALESCE(NEW.Est_Seuil_Critique_Bas_Active, 0) = 1
+       AND NEW.Seuil_Critique_Bas IS NOT NULL
+       AND NEW.Derniere_Valeur < NEW.Seuil_Critique_Bas
+    THEN
+        IF v_Id_Alarme IS NOT NULL AND v_TypeAlarme IN ('B','CB') THEN
+            UPDATE t_alarme
+            SET Valeur = NEW.Derniere_Valeur,
+                Date_Heure_Derniere_Mesure = NEW.Derniere_Date_Heure
+            WHERE Id_Alarme = v_Id_Alarme;
+
+            SET NEW.Id_Alarme = v_Id_Alarme;
+            SET NEW.Est_Lieu_En_Alarme = 1;
+            SET NEW.Est_Lieu_En_Pre_Alarme = 0;
+            SET NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee = 0;
+            SET NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee_T1 = 0;
+            LEAVE main_block;
+        END IF;
+
+        IF v_Id_Alarme IS NOT NULL THEN
+            UPDATE t_alarme
+            SET Date_Heure_Fin = NEW.Derniere_Date_Heure,
+                Valeur = NEW.Derniere_Valeur,
+                Date_Heure_Derniere_Mesure = NEW.Derniere_Date_Heure
+            WHERE Id_Alarme = v_Id_Alarme;
+
+            IF v_TypeAlarme = 'N' AND NEW.Est_Acq_Auto_Alarme_NR = 1 THEN
+                DELETE FROM t_alarme WHERE Id_Alarme = v_Id_Alarme;
+            END IF;
+        END IF;
+
+        INSERT INTO t_alarme
+            (Date_Heure_Debut, Valeur, Type, Id_Lieu, Sonde_Numero_Serie, Date_Heure_Derniere_Mesure, Unite)
+        VALUES
+            (NEW.Derniere_Date_Heure, NEW.Derniere_Valeur, 'CB', NEW.Id_Lieu, NEW.Sonde_Numero_Serie, NEW.Derniere_Date_Heure, NEW.Derniere_Unite);
+
+        SET NEW.Id_Alarme = LAST_INSERT_ID();
+        SET NEW.Est_Lieu_En_Alarme = 1;
+        SET NEW.Est_Lieu_En_Pre_Alarme = 0;
+        SET NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee = 0;
+        SET NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee_T1 = 0;
+        LEAVE main_block;
+    END IF;
+
+    IF NEW.Lieu_Etat = 'S'
+       AND TIMESTAMPDIFF(SECOND, NEW.Date_Heure_Derniere_Reponse, NOW()) <= NEW.Retard_Non_Reponse * 60
+       AND COALESCE(NEW.Est_Seuil_Critique_Haut_Active, 0) = 1
+       AND NEW.Seuil_Critique_Haut IS NOT NULL
+       AND NEW.Derniere_Valeur > NEW.Seuil_Critique_Haut
+    THEN
+        IF v_Id_Alarme IS NOT NULL AND v_TypeAlarme IN ('H','CH') THEN
+            UPDATE t_alarme
+            SET Valeur = NEW.Derniere_Valeur,
+                Date_Heure_Derniere_Mesure = NEW.Derniere_Date_Heure
+            WHERE Id_Alarme = v_Id_Alarme;
+
+            SET NEW.Id_Alarme = v_Id_Alarme;
+            SET NEW.Est_Lieu_En_Alarme = 1;
+            SET NEW.Est_Lieu_En_Pre_Alarme = 0;
+            SET NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee = 0;
+            SET NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee_T1 = 0;
+            LEAVE main_block;
+        END IF;
+
+        IF v_Id_Alarme IS NOT NULL THEN
+            UPDATE t_alarme
+            SET Date_Heure_Fin = NEW.Derniere_Date_Heure,
+                Valeur = NEW.Derniere_Valeur,
+                Date_Heure_Derniere_Mesure = NEW.Derniere_Date_Heure
+            WHERE Id_Alarme = v_Id_Alarme;
+
+            IF v_TypeAlarme = 'N' AND NEW.Est_Acq_Auto_Alarme_NR = 1 THEN
+                DELETE FROM t_alarme WHERE Id_Alarme = v_Id_Alarme;
+            END IF;
+        END IF;
+
+        INSERT INTO t_alarme
+            (Date_Heure_Debut, Valeur, Type, Id_Lieu, Sonde_Numero_Serie, Date_Heure_Derniere_Mesure, Unite)
+        VALUES
+            (NEW.Derniere_Date_Heure, NEW.Derniere_Valeur, 'CH', NEW.Id_Lieu, NEW.Sonde_Numero_Serie, NEW.Derniere_Date_Heure, NEW.Derniere_Unite);
+
+        SET NEW.Id_Alarme = LAST_INSERT_ID();
+        SET NEW.Est_Lieu_En_Alarme = 1;
+        SET NEW.Est_Lieu_En_Pre_Alarme = 0;
+        SET NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee = 0;
+        SET NEW.Est_Lieu_Alarme_Terminee_Non_Acquittee_T1 = 0;
+        LEAVE main_block;
+    END IF;
 
     /* ==========================================================
        3. CAS : AUCUNE ALARME OUVERTE → CREATION
@@ -1127,7 +1230,7 @@ DELIMITER ;;
             LEAVE main_block;            
 		
 		/* --- TRANSITION BAS → N --- */
-		ELSEIF v_TypeAlarme = 'B'
+		ELSEIF v_TypeAlarme IN ('B','CB')
 			AND NEW.Est_Lieu_GSO=1
 			AND NEW.Lieu_Etat = 'S'
 			AND TIMESTAMPDIFF(SECOND, NEW.Date_Heure_Derniere_Reponse, NOW()) >= NEW.Retard_Non_Reponse * 60
@@ -1161,7 +1264,7 @@ DELIMITER ;;
             LEAVE main_block;
 
 		/* --- TRANSITION HAUT → N --- */
-		ELSEIF v_TypeAlarme = 'H'
+		ELSEIF v_TypeAlarme IN ('H','CH')
 			AND NEW.Est_Lieu_GSO=1
 			AND NEW.Lieu_Etat = 'S'
 			AND TIMESTAMPDIFF(SECOND, NEW.Date_Heure_Derniere_Reponse, NOW()) >= NEW.Retard_Non_Reponse * 60
@@ -1196,7 +1299,7 @@ DELIMITER ;;
 			
 		
         /* --- TRANSITION BAS → HAUT --- */
-        ELSEIF v_TypeAlarme = 'B'
+        ELSEIF v_TypeAlarme IN ('B','CB')
 			AND NEW.Est_Lieu_GSO=1
 			AND NEW.Lieu_Etat = 'S'
            AND NEW.Derniere_Valeur > NEW.Tolerance_Surveillance_Sup
@@ -1227,7 +1330,7 @@ DELIMITER ;;
             LEAVE main_block;
 
         /* --- TRANSITION HAUT → BAS --- */
-        ELSEIF v_TypeAlarme = 'H'
+        ELSEIF v_TypeAlarme IN ('H','CH')
 			AND NEW.Est_Lieu_GSO=1
 			AND NEW.Lieu_Etat = 'S'
            AND NEW.Derniere_Valeur < NEW.Tolerance_Surveillance_Inf
@@ -1276,7 +1379,7 @@ DELIMITER ;;
 		LEAVE main_block;
 
         /* --- ALARME TOUJOURS ACTIVE B ou H --- */
-        ELSEIF v_TypeAlarme IN ('B','H')
+        ELSEIF v_TypeAlarme IN ('B','CB','H','CH')
 				AND (NEW.Derniere_Valeur < NEW.Tolerance_Surveillance_Inf
 					OR NEW.Derniere_Valeur > NEW.Tolerance_Surveillance_Sup)
         THEN
@@ -1329,7 +1432,7 @@ DELIMITER ;;
 		LEAVE main_block;
 
 /* --- FIN D’ALARME B/H --- */
-	ELSEIF v_TypeAlarme IN('B','H') THEN 
+	ELSEIF v_TypeAlarme IN ('B','CB','H','CH') THEN
 		UPDATE t_alarme
 		SET Date_Heure_Fin = NEW.Derniere_Date_Heure,
         Valeur = NEW.Derniere_Valeur,
@@ -4602,7 +4705,7 @@ INSERT INTO `t_utilisateur` (Login, Mot_De_Passe, Est_Archive, Profil_Utilisateu
 SET FOREIGN_KEY_CHECKS=1;
 
 INSERT INTO `t_parametre` (`Section`, `Mot_Cle`, `Valeur`, `Commentaire`)
-VALUES ('VERSION', 'SCHEMA_VERSION', '0.91.1', 'Version de schéma VigiSensys')
+VALUES ('VERSION', 'SCHEMA_VERSION', '0.92.0', 'Version de schéma VigiSensys')
 ON DUPLICATE KEY UPDATE
   `Valeur` = VALUES(`Valeur`),
   `Commentaire` = VALUES(`Commentaire`);

@@ -30,6 +30,7 @@ import { MONITORING_CARD_GRAPH_MAX_POINTS } from '@/lib/measurement-downsampling
 import { cn } from '@/lib/utils'
 import { fadeInUp } from '@/lib/motion-variants'
 import type { SensorStatus } from '@/lib/surveillance-status'
+import type { AlarmTypeCode } from '@/lib/alarm-types'
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Filler)
 
@@ -45,7 +46,7 @@ interface MonitoringCardProps {
   siteName: string
   groupName: string
   status: SensorStatus
-  alarmType?: 'H' | 'B' | 'N' | 'S' | 'A' | 'M' | 'T' | null
+  alarmType?: AlarmTypeCode | null
   alarmDisabled: boolean
   alarmDisabledUntil: Date | string | null
   alarmDelayMinutes: number | null

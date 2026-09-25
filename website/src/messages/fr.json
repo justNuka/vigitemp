@@ -4761,7 +4761,9 @@
   "globalAppEffects": {
     "alarm": {
       "type": {
+        "critical_high": "Alarme critique haute",
         "high": "Alarme haute",
+        "critical_low": "Alarme critique basse",
         "low": "Alarme basse",
         "sector": "Secteur / alimentation",
         "module": "Problème module",

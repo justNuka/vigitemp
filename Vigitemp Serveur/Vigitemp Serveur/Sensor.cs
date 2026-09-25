@@ -607,8 +607,23 @@ namespace Vigitemp_Serveur
                 }
                 _lowAlarmStateByLieu[m_idLieu] = lowEval.IsActive;
                 _highAlarmStateByLieu[m_idLieu] = highEval.IsActive;
-                ths.GetDatabase().setThresholdAlarm(m_idLieu, m_sondeSerialNumber, "B", p_valeur, unit, lowEval.IsActive);
-                ths.GetDatabase().setThresholdAlarm(m_idLieu, m_sondeSerialNumber, "H", p_valeur, unit, highEval.IsActive);
+
+                var lowAlarmType = criticalLowNow ? "CB" : "B";
+                var highAlarmType = criticalHighNow ? "CH" : "H";
+                ths.GetDatabase().setThresholdAlarm(
+                    m_idLieu,
+                    m_sondeSerialNumber,
+                    lowAlarmType,
+                    p_valeur,
+                    unit,
+                    lowEval.IsActive);
+                ths.GetDatabase().setThresholdAlarm(
+                    m_idLieu,
+                    m_sondeSerialNumber,
+                    highAlarmType,
+                    p_valeur,
+                    unit,
+                    highEval.IsActive);
 
                 var noResponseActive = _noResponseStateByLieu.TryGetValue(m_idLieu, out var nrActive) && nrActive;
                 var overallAlarmActive = lowEval.IsActive || highEval.IsActive || noResponseActive;

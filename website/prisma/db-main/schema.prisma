@@ -42,7 +42,7 @@ model t_alarme {
   Id_Alarme                  Int              @id @default(autoincrement())
   Date_Heure_Debut           DateTime?        @db.DateTime(0)
   Valeur                     Float?           @db.Float
-  Type                       String?          @db.VarChar(1)
+  Type                       String?          @db.VarChar(2)
   Date_Heure_Fin             DateTime?        @db.DateTime(0)
   Id_Lieu                    Int?
   Sonde_Numero_Serie         String?          @db.VarChar(50)
@@ -71,7 +71,7 @@ model t_alarme_histo {
   Id_Alarme                  Int
   Date_Heure_Debut           DateTime? @db.DateTime(0)
   Valeur                     Float?    @db.Float
-  Type                       String?   @db.VarChar(1)
+  Type                       String?   @db.VarChar(2)
   Date_Heure_Fin             DateTime? @db.DateTime(0)
   Id_Lieu                    Int?
   Sonde_Numero_Serie         String?   @db.VarChar(50)
@@ -101,7 +101,7 @@ model t_alarme_histo {
 model t_alarme_message {
   Id_Alarme_Message   Int     @id @default(autoincrement())
   Code_Alarme_Message String? @unique(map: "CodeAlarmeMessage") @db.VarChar(20)
-  Type                String? @db.VarChar(1)
+  Type                String? @db.VarChar(2)
   Texte_Message       String? @db.LongText
 }
 

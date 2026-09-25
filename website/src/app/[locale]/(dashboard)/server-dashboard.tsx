@@ -27,6 +27,7 @@ import {
 
 import { getServerAuthenticatedUserId } from "@/lib/server-auth"
 import { serializePrismaStoredDbDateTime } from "@/lib/sql-provider"
+import { isTechnicalAlarmType, isThresholdAlarmType, mapAlarmTypeCategory, type AlarmTypeCode } from "@/lib/alarm-types"
 import { getCompatEnv } from "@/lib/vigisensys-compat"
 
 
@@ -545,7 +546,7 @@ export async function ServerActiveAlarms() {
 
 
     const isTechnicalAlarm =
-      alarm.Type === "N" || alarm.Type === "M" || alarm.Type === "S" || alarm.Type === "A"
+      isTechnicalAlarmType(alarm.Type)
 
 
     const hasConfiguredThresholds =
@@ -569,34 +570,7 @@ export async function ServerActiveAlarms() {
     locationId: alarm.Id_Lieu?.toString() || "0",
 
 
-    type:
-
-
-      alarm.Type === "H"
-
-
-        ? ("high" as const)
-
-
-        : alarm.Type === "B"
-
-
-          ? ("low" as const)
-
-
-          : alarm.Type === "N"
-
-
-            ? ("no-response" as const)
-
-
-            : alarm.Type === "M"
-
-
-              ? ("module" as const)
-
-
-            : ("sector" as const),
+    type: (mapAlarmTypeCategory(alarm.Type) ?? "sector") as "high" | "low" | "no-response" | "sector" | "module",
 
 
     status: alarm.Est_Acquittee ? ("acknowledged" as const) : ("active" as const),
@@ -733,21 +707,20 @@ export async function ServerActiveAlarmTypeCounts(): Promise<DashboardAlarmTypeC
   })
 
   return alarms.reduce<DashboardAlarmTypeCounts>((counts, alarm) => {
-    switch (alarm.Type) {
-      case "H":
+    switch (mapAlarmTypeCategory(alarm.Type)) {
+      case "high":
         counts.high += 1
         break
-      case "B":
+      case "low":
         counts.low += 1
         break
-      case "N":
+      case "no-response":
         counts.noResponse += 1
         break
-      case "M":
+      case "module":
         counts.module += 1
         break
-      case "S":
-      case "A":
+      case "sector":
         counts.sector += 1
         break
     }
@@ -895,7 +868,7 @@ export async function ServerSensorOverview() {
 
 
 
-  const overviewAlarmTypeByLieu = new Map<number, "H" | "B" | "N" | "S" | "A" | "M">()
+  const overviewAlarmTypeByLieu = new Map<number, AlarmTypeCode>()
 
 
   for (const alarm of overviewAlarms) {
@@ -904,7 +877,7 @@ export async function ServerSensorOverview() {
     if (!alarm.Id_Lieu) continue
 
 
-    const type = alarm.Type as "H" | "B" | "N" | "S" | "A" | "M" | null
+    const type = alarm.Type as AlarmTypeCode | null
 
 
     if (!type) continue
@@ -934,7 +907,7 @@ export async function ServerSensorOverview() {
     const status = mapSensorStatus({
 
 
-      isCritical: (alarmType === "H" || alarmType === "B") || lieu.Est_Lieu_En_Alarme === 1,
+      isCritical: isThresholdAlarmType(alarmType) || lieu.Est_Lieu_En_Alarme === 1,
 
 
       isWarning: lieu.Est_Lieu_En_Alarme !== 1 && lieu.Est_Lieu_En_Pre_Alarme === 1,
@@ -953,7 +926,7 @@ export async function ServerSensorOverview() {
 
 
       isTechnical:
-        alarmType === "N" || alarmType === "S" || alarmType === "A" || alarmType === "M",
+        isTechnicalAlarmType(alarmType),
 
 
     });

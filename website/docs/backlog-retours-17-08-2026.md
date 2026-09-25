@@ -3664,7 +3664,7 @@ GitHub Actions run `35970788192` : **succès**.
 
 ### R25-001-A — Card sauvegarde Admin : lignes vides et logs FR/EN
 
-**Statut : `PR_OUVERTE` — branche `fix/admin-backup-log-bilingual` — PR #157 — base `dev` `41071cf29bed5378b4fc73b48daee5aca715008b`**
+**Statut : `CORRIGE_DEV` — PR #157 — squash merge `8ae5ba55faabbb38e554b267f9151e460a27e695`**
 
 Retours :
 
@@ -3718,7 +3718,7 @@ Fichiers principaux :
 
 ### R25-001-B — Nouveaux types d'alarmes critiques `CB` / `CH`
 
-**Statut : `A_FAIRE`**
+**Statut : `PR_OUVERTE` — branche `feature/critical-alarm-types` — PR #158 — base `dev` `8ae5ba55faabbb38e554b267f9151e460a27e695`**
 
 Demandes :
 
@@ -3739,6 +3739,89 @@ Demandes :
   - ne pas ajouter de nouvelle couleur ;
 - vérifier emails, acquittements, historiques, filtres, exports et i18n avec les types à 2 caractères ;
 - prévoir migration MySQL + SQL Server en plus des seeds pour les installations existantes.
+
+
+
+#### Diagnostic / contrat retenu
+
+- le schéma courant possède `t_alarme_histo` et non `t_alarme_message_histo` : c'est donc `t_alarme_histo.Type` qui est élargi ;
+- les seuils critiques existaient déjà mais créaient historiquement des alarmes `B/H` ;
+- à partir de ce lot, un déclenchement initial directement critique crée `CB/CH` ;
+- `B/CB` forment une même famille basse et `H/CH` une même famille haute ;
+- une alarme déjà ouverte garde son type initial jusqu'à sa fin : pas de promotion/dégradation en cours d'alarme et pas de doublon actif ;
+- le trigger GSO avait volontairement perdu l'évaluation directe des critiques en BDD 0.91.1 ; la BDD 0.92.0 réintroduit explicitement cette logique afin qu'un déclenchement initial directement critique produise lui aussi `CB/CH` sur les GSO ;
+- le Web regroupe `CH` avec les alarmes hautes et `CB` avec les alarmes basses pour les filtres, graphes, acquittements et statistiques ;
+- sur les cards, la couleur reste celle de H/B ; seul l'indicateur danger distingue le critique ;
+- versions du lot : **Web 1.9.0**, **Serveur/installateur 1.2.0**, **BDD 0.92.0**.
+
+Fichiers principaux :
+
+- `website/src/lib/alarm-types.ts` ;
+- `website/src/components/monitoring-card/monitoring-card-header.tsx` ;
+- `website/src/app/api/alarmes/*` et adaptateurs Dashboard/Surveillance concernés ;
+- `website/src/lib/alarm-email.ts` ;
+- `Vigitemp Serveur/Vigitemp Serveur/Sensor.cs` ;
+- providers MySQL / SQL Server ;
+- `website/prisma/db-main/schema.prisma` ;
+- seeds MySQL / SQL Server ;
+- migrations `db/migrations/0.92.0/*`.
+
+#### Validation automatisée
+
+GitHub Actions run `36117832556` : **succès complet** sur le HEAD fonctionnel final.
+
+Web / BDD :
+
+- [x] `git diff --check origin/dev...HEAD` ;
+- [x] installation `pnpm` avec lockfile figé ;
+- [x] génération Prisma MySQL ;
+- [x] `pnpm test:critical-alarm-types` ;
+- [x] régression seuils critiques `pnpm test:location-critical-thresholds` ;
+- [x] régression emails `pnpm test:alarm-email-notifications` ;
+- [x] régression acquittements `pnpm test:alarm-acknowledgement-context` ;
+- [x] ESLint ciblé sur le contrat alarmes, cards, APIs, dashboard, statistiques et test ;
+- [x] contrôle i18n sans nouvelle dette dans les fichiers du lot ;
+- [x] build production Next.js sur MySQL ;
+- [x] génération Prisma SQL Server ;
+- [x] TypeScript `--noEmit` sur SQL Server ;
+- [x] migrations/seeds vérifiés sur les trois `VARCHAR(2)`, les messages 20/21 et les triggers GSO `CB/CH` ;
+- [x] vérification statique : le trigger de chaque migration correspond au trigger de son seed, après normalisation du whitespace ;
+- [x] vérification de l'ordre de migration : `SCHEMA_VERSION` n'est écrit qu'après installation réussie du trigger.
+
+Serveur :
+
+- [x] restauration NuGet legacy ;
+- [x] build Release VigiSensys Serveur **1.2.0** ;
+- [x] build Release installateur Serveur **1.2.0** ;
+- [x] vérification des versions produit dans les artefacts sources ;
+- [x] workflow temporaire retiré du diff final.
+
+Les runs intermédiaires ont permis de détecter avant finalisation :
+- deux helpers MySQL supprimés accidentellement lors d'une première réécriture du provider ;
+- des assertions trop strictes sur le formatage SQL ;
+- une première construction SQL Server qui positionnait le trigger au mauvais endroit dans le bloc d'erreur ;
+- un flag RegExp de test incompatible avec la cible TypeScript du projet.
+
+Ces points sont corrigés dans le run final ci-dessus.
+
+#### Validation terrain
+
+- [ ] appliquer la migration BDD 0.92.0 sur une copie MySQL 0.91.1 et confirmer `SCHEMA_VERSION = 0.92.0` ;
+- [ ] appliquer la migration SQL Server 0.92.0 sur une copie 0.91.1 ;
+- [ ] vérifier `t_alarme.Type`, `t_alarme_histo.Type` et `t_alarme_message.Type` en deux caractères ;
+- [ ] vérifier les messages 20 `CRITIQUE_BAS / CB` et 21 `CRITIQUE_HAUT / CH` ;
+- [ ] déclencher une alarme basse standard : type `B`, point pulsant présent, panneau danger absent ;
+- [ ] déclencher directement un critique bas : type `CB`, même couleur bleue que B, panneau danger présent ;
+- [ ] déclencher une alarme haute standard : type `H`, point pulsant présent, panneau danger absent ;
+- [ ] déclencher directement un critique haut : type `CH`, même couleur rouge que H, panneau danger présent ;
+- [ ] vérifier qu'une alarme B/H déjà ouverte conserve son type si la mesure franchit ensuite le critique ;
+- [ ] vérifier qu'une alarme CB/CH conserve son type jusqu'à sa fin même si la valeur repasse entre critique et seuil normal ;
+- [ ] vérifier qu'il n'existe jamais deux alarmes ouvertes simultanément B+CB ou H+CH pour le même lieu ;
+- [ ] vérifier l'email critique CB/CH puis les emails de fin/acquittement ;
+- [ ] vérifier page Alarmes, filtres haute/basse, historique d'acquittement, exports/statistiques et dashboard ;
+- [ ] vérifier FR / EN ;
+- [ ] vérifier une GSO : dépassement normal temporisé en B/H et déclenchement initial directement critique en CB/CH ;
+- [ ] vérifier qu'une GSO déjà ouverte en B/H conserve ce type si elle franchit ensuite le critique, sans créer de doublon.
 
 ### R25-001-C — Information fréquence GSP pendant les opérations métrologie
 

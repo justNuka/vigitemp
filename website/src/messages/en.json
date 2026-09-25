@@ -4758,7 +4758,9 @@
   "globalAppEffects": {
     "alarm": {
       "type": {
+        "critical_high": "Critical high alarm",
         "high": "High alarm",
+        "critical_low": "Critical low alarm",
         "low": "Low alarm",
         "sector": "Power / mains",
         "module": "Module issue",

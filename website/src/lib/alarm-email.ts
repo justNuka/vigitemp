@@ -29,6 +29,16 @@ export function resolveCriticalThresholdContext(input: {
   }
 
   const type = input.alarmTypeCode?.trim().toUpperCase();
+  if (type === "CH" && input.highThreshold != null && Number.isFinite(input.highThreshold)) {
+    return { direction: "high", threshold: input.highThreshold };
+  }
+
+  if (type === "CB" && input.lowThreshold != null && Number.isFinite(input.lowThreshold)) {
+    return { direction: "low", threshold: input.lowThreshold };
+  }
+
+  // Compatibilité des alarmes historiques créées avant DB 0.91.2 :
+  // H/B peuvent encore représenter un dépassement critique selon leur valeur.
   if (
     type === "H" &&
     input.highEnabled === true &&
@@ -333,8 +343,12 @@ function formatLastValue(value: string | null | undefined, unit: string | null |
 
 export function mapAlarmTypeLabel(type: string | null | undefined, locale: AppLanguage): string {
   switch ((type ?? "").toUpperCase()) {
+    case "CH":
+      return locale === "en" ? "CRITICAL HIGH ALARM" : "ALARME CRITIQUE HAUTE";
     case "H":
       return locale === "en" ? "HIGH ALARM" : "ALARME HAUTE";
+    case "CB":
+      return locale === "en" ? "CRITICAL LOW ALARM" : "ALARME CRITIQUE BASSE";
     case "B":
       return locale === "en" ? "LOW ALARM" : "ALARME BASSE";
     case "N":

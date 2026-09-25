@@ -131,7 +131,7 @@ export async function loadLocationStatisticsRows({
         COUNT(*) AS alarmCount,
         SUM(
           CASE
-            WHEN src.Type = 'H'
+            WHEN src.Type IN ('H','CH')
             THEN GREATEST(
               0,
               TIMESTAMPDIFF(
@@ -145,7 +145,7 @@ export async function loadLocationStatisticsRows({
         ) AS alarmHighDurationSec,
         SUM(
           CASE
-            WHEN src.Type = 'B'
+            WHEN src.Type IN ('B','CB')
             THEN GREATEST(
               0,
               TIMESTAMPDIFF(
