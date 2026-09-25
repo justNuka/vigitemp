@@ -3749,7 +3749,7 @@ Demandes :
 - à partir de ce lot, un déclenchement initial directement critique crée `CB/CH` ;
 - `B/CB` forment une même famille basse et `H/CH` une même famille haute ;
 - une alarme déjà ouverte garde son type initial jusqu'à sa fin : pas de promotion/dégradation en cours d'alarme et pas de doublon actif ;
-- le trigger GSO avait volontairement perdu l'évaluation directe des critiques en BDD 0.91.1 : 0.91.2 conserve ce comportement et ne recrée pas cette logique ;
+- le trigger GSO avait volontairement perdu l'évaluation directe des critiques en BDD 0.91.1 ; la BDD 0.92.0 réintroduit explicitement cette logique afin qu'un déclenchement initial directement critique produise lui aussi `CB/CH` sur les GSO ;
 - le Web regroupe `CH` avec les alarmes hautes et `CB` avec les alarmes basses pour les filtres, graphes, acquittements et statistiques ;
 - sur les cards, la couleur reste celle de H/B ; seul l'indicateur danger distingue le critique ;
 - versions du lot : **Web 1.9.0**, **Serveur/installateur 1.2.0**, **BDD 0.92.0**.
@@ -3768,7 +3768,7 @@ Fichiers principaux :
 
 #### Validation automatisée
 
-Validation automatisée à relancer après l'ajout final du support GSO et le bump des versions.
+GitHub Actions run `36117832556` : **succès complet** sur le HEAD fonctionnel final.
 
 Web / BDD :
 
@@ -3784,16 +3784,25 @@ Web / BDD :
 - [x] build production Next.js sur MySQL ;
 - [x] génération Prisma SQL Server ;
 - [x] TypeScript `--noEmit` sur SQL Server ;
-- [x] migrations/seeds vérifiés sur les trois `VARCHAR(2)`, les messages 20/21 et l'absence de modification du trigger GSO.
+- [x] migrations/seeds vérifiés sur les trois `VARCHAR(2)`, les messages 20/21 et les triggers GSO `CB/CH` ;
+- [x] vérification statique : le trigger de chaque migration correspond au trigger de son seed, après normalisation du whitespace ;
+- [x] vérification de l'ordre de migration : `SCHEMA_VERSION` n'est écrit qu'après installation réussie du trigger.
 
 Serveur :
 
 - [x] restauration NuGet legacy ;
-- [x] build Release VigiSensys Serveur **1.1.2** ;
-- [x] build Release installateur Serveur **1.1.2** ;
+- [x] build Release VigiSensys Serveur **1.2.0** ;
+- [x] build Release installateur Serveur **1.2.0** ;
+- [x] vérification des versions produit dans les artefacts sources ;
 - [x] workflow temporaire retiré du diff final.
 
-Les premiers runs temporaires ont identifié avant PR deux défauts de préparation : deux helpers MySQL supprimés accidentellement pendant la réécriture du provider et des assertions statiques trop strictes sur le SQL formaté. Les helpers ont été restaurés depuis `dev` et le run final ci-dessus valide le code fonctionnel final.
+Les runs intermédiaires ont permis de détecter avant finalisation :
+- deux helpers MySQL supprimés accidentellement lors d'une première réécriture du provider ;
+- des assertions trop strictes sur le formatage SQL ;
+- une première construction SQL Server qui positionnait le trigger au mauvais endroit dans le bloc d'erreur ;
+- un flag RegExp de test incompatible avec la cible TypeScript du projet.
+
+Ces points sont corrigés dans le run final ci-dessus.
 
 #### Validation terrain
 
