@@ -78,7 +78,7 @@ assert.ok(mysqlTriggerEnd > mysqlTriggerStart, "MySQL GSO trigger end marker mus
 const mysqlTrigger = mysqlSeed.slice(mysqlTriggerStart, mysqlTriggerEnd)
 assert.doesNotMatch(mysqlTrigger, /Seuil_Critique_(?:Bas|Haut)/)
 assert.doesNotMatch(mysqlTrigger, /['"](?:CB|CH)['"]/)
-assert.match(mysqlTrigger, /Type IN\('B','H','N'\)/)
+assert.match(mysqlTrigger, /Type\s+IN\s*\(\s*'B'\s*,\s*'H'\s*,\s*'N'\s*\)/i)
 
 const mssqlTriggerStart = mssqlSeed.indexOf(
   "CREATE OR ALTER TRIGGER dbo.[TRG_GSO_BEF_UPD_LIEU_ALARME]",
@@ -89,7 +89,7 @@ assert.ok(mssqlTriggerEnd > mssqlTriggerStart, "SQL Server GSO trigger end marke
 const mssqlTrigger = mssqlSeed.slice(mssqlTriggerStart, mssqlTriggerEnd)
 assert.doesNotMatch(mssqlTrigger, /Seuil_Critique_(?:Bas|Haut)/)
 assert.doesNotMatch(mssqlTrigger, /['"](?:CB|CH)['"]/)
-assert.match(mssqlTrigger, /\[Type\] IN \('B','H','N'\)/)
+assert.match(mssqlTrigger, /\[Type\]\s+IN\s*\(\s*'B'\s*,\s*'H'\s*,\s*'N'\s*\)/i)
 
 const sensorSource = read("../../Vigitemp Serveur/Vigitemp Serveur/Sensor.cs")
 assert.match(sensorSource, /criticalLowNow \? "CB" : "B"/)
