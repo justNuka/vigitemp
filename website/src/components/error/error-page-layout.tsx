@@ -6,6 +6,7 @@ import type { ReactNode } from "react"
 import { useTranslations } from "next-intl"
 
 import { Button } from "@/components/ui/button"
+import { Logo } from "@/components/logo"
 import { SignalField } from "@/components/error/signal-field"
 import { SystemIllustration, type SystemVariant } from "@/components/error/system-illustration"
 import { usePathname } from "@/i18n/navigation"
@@ -173,6 +174,12 @@ export function ErrorPageLayout({
         toneClassName={tone.field}
         className="absolute inset-0 -z-10 h-full w-full opacity-80 [mask-image:radial-gradient(ellipse_at_center,black_20%,transparent_70%)]"
       />
+
+      {standalone ? (
+        <div className="absolute left-6 top-5 text-foreground">
+          <Logo size="xs" showText />
+        </div>
+      ) : null}
 
       <section className="flex w-full max-w-md flex-col items-center text-center">
         <SystemIllustration variant={resolvedVariant} />
