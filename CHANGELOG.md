@@ -16,7 +16,7 @@ La convention de versioning est décrite dans [`docs/versioning.md`](docs/versio
 
 ## [Unreleased]
 
-- État intégré courant : **Web 1.8.16**, **Serveur / installateur 1.1.2**, **BDD 0.91.2**, **Agent 1.0.1**.
+- État intégré courant : **Web 1.9.0**, **Serveur / installateur 1.2.0**, **BDD 0.92.0**, **Agent 1.0.1**.
 - Le parcours d’acquittement depuis Surveillance ouvre directement l’analyse du lieu : liste des alarmes à gauche, acquittement dans le bandeau sélectionné, dialog commentaire compacte et sélection multiple avec résumés.
 - Une alarme acquittée reste temporairement visible et grisée dans la liste jusqu’au rafraîchissement, afin de conserver le contexte de traitement de l’opérateur.
 - L’analyse d’alarme se limite désormais à la période réelle de l’alarme, sans sélection de période ni Audit ; l’impression et les exports multiples sont remplacés par un XLSX unique avec la courbe intégrée dans la présentation lorsqu’elle existe.
@@ -53,8 +53,8 @@ La convention de versioning est décrite dans [`docs/versioning.md`](docs/versio
 - Le Web 1.8.13 fiabilise la présélection du profil dans l'édition utilisateur, conserve un profil archivé déjà affecté et élargit la modal sur desktop tout en restant responsive.
 - Le Web 1.8.14 remplace le J+15 codé en dur de la card Métrologie Admin par `DASHBOARD / ETALONNAGE_WARNING_DAYS`, avec fallback historique J+15 et affichage identique en Standard / Expert.
 - Le Web 1.8.15 ignore les lignes de sauvegarde sans message et renforce le parsing bilingue FR/EN du journal Admin, notamment les marqueurs de processus, erreurs et succès 7zip.
-- Le Web 1.8.16 et le Serveur 1.1.2 introduisent les types critiques `CB` / `CH` : mêmes couleurs que B/H, indicateur danger réservé aux critiques, compatibilité des APIs/acquittements/statistiques et conservation du type de déclenchement pendant toute l'alarme.
-- La BDD 0.91.2 élargit à deux caractères `t_alarme.Type`, `t_alarme_histo.Type` et `t_alarme_message.Type`, ajoute les messages critiques 20/21 et conserve le trigger GSO de 0.91.1 inchangé.
+- Le Web 1.9.0 et le Serveur 1.2.0 introduisent les types critiques `CB` / `CH` : mêmes couleurs que B/H, indicateur danger réservé aux critiques, compatibilité des APIs/acquittements/statistiques et conservation du type de déclenchement pendant toute l'alarme.
+- La BDD 0.92.0 élargit à deux caractères `t_alarme.Type`, `t_alarme_histo.Type` et `t_alarme_message.Type`, ajoute les messages critiques 20/21 et réactive le déclenchement critique GSO en `CB` / `CH` sur MySQL et SQL Server.
 - Le Serveur 1.1.1 corrige un verrou série imbriqué pouvant bloquer durablement les lectures d'ajustage/étalonnage après une interrogation asynchrone ; l'arbitrage global avec la Surveillance reste inchangé.
 - La BDD 0.91.1 aligne MySQL / SQL Server : les valeurs numériques de `t_lieu_template` utilisent `FLOAT` et le trigger GSO n'applique plus directement les seuils critiques.
 
