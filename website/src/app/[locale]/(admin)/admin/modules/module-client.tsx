@@ -3,7 +3,7 @@
 import { LazyMotion, domAnimation, m } from "motion/react";
 import { fadeInUp } from "@/lib/motion-variants";
 import { useEffect, useRef, useState } from "react";
-import { Archive, Cpu, Pencil, Plus, Thermometer } from "lucide-react";
+import { Archive, Pencil, Plus, Thermometer } from "lucide-react";
 import { useRouter } from '@/i18n/navigation';
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
