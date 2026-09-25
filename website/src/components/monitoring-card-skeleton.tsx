@@ -12,11 +12,8 @@ export function MonitoringCardSkeleton() {
           <Skeleton className="h-4 w-44" />
         </div>
       </div>
-      <div className="space-y-3 px-3 pb-2 pt-2.5">
-        <div className="flex h-7 items-center text-muted-foreground/60">
-          <MonitoringSignalSequence className="h-7 w-[84px]" />
-        </div>
-        <div className="h-[142px]"><MonitoringChartLoading /></div>
+      <div className="space-y-2 px-3 pb-2 pt-2">
+        <div className="h-[64px]"><MonitoringChartLoading /></div>
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <Skeleton className="h-3 w-32" />
