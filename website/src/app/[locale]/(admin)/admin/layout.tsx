@@ -70,12 +70,11 @@ export default function AdminLayout({
   }
 
   return (
-    <div className="flex flex-col h-full min-h-0 w-full">
-      <main className="flex-1 min-h-0 overflow-x-hidden overflow-y-auto bg-background pb-28">
+    <div className="flex h-full min-h-0 w-full flex-col">
+      {showDock ? <AdminNavDock /> : null}
+      <main className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto bg-background">
         <PageTransitionWrapper className="min-h-full">{children}</PageTransitionWrapper>
       </main>
-
-      {showDock ? <AdminNavDock /> : null}
     </div>
   );
 }
