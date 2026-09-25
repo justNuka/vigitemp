@@ -5,24 +5,23 @@ import { cn } from "@/lib/utils"
 
 const badgeVariants = cva(
   // Whitespace-nowrap: Badges should never wrap.
-  "whitespace-nowrap inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2" +
-  " hover-elevate " ,
+  "inline-flex items-center whitespace-nowrap rounded-md border px-2 py-0.5 text-[11px] font-semibold transition-[background-color,border-color,color] duration-150 focus:outline-none focus:ring-2 focus:ring-ring/60" ,
   {
     variants: {
       variant: {
         primary: 'bg-primary text-primary-foreground hover:bg-primary/90 data-[state=open]:bg-primary/90',
         default:
-          "border-transparent bg-primary text-primary-foreground shadow-xs",
-        secondary: "border-transparent bg-secondary text-secondary-foreground",
+          "border-transparent bg-primary text-white shadow-none",
+        secondary: "border-border bg-[hsl(var(--surface-muted))] text-foreground",
         success:
           'bg-[var(--color-success-accent,var(--color-green-500))] text-[var(--color-success-foreground,var(--color-white))]',
         warning:
           'bg-[var(--color-warning-accent,var(--color-yellow-400))] text-[var(--color-warning-foreground,var(--color-yellow-950))] dark:bg-[color:rgba(251,191,36,0.28)] dark:text-[color:rgb(254,243,199)]',
         info: 'bg-[var(--color-info-accent,var(--color-violet-500))] text-[var(--color-info-foreground,var(--color-white))]',
         destructive:
-          "border-transparent bg-destructive text-destructive-foreground shadow-xs",
+          "border-transparent bg-destructive text-destructive-foreground shadow-none",
 
-        outline: " border [border-color:var(--badge-outline)] shadow-xs",
+        outline: "border border-border bg-card text-foreground shadow-none",
       },
       size: {
         lg: 'rounded-md px-[0.5rem] h-7 min-w-7 gap-1.5 text-xs [&_svg]:size-3.5',
