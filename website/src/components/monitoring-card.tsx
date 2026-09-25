@@ -524,26 +524,33 @@ export default function MonitoringCard({
         : batteryState.severity === 'critical' ? t('wireless.battery_state.critical')
           : t('wireless.battery_state.unknown')
 
-  const cardGlowClass = (() => {
-    if (!isSurveillanceActive) return "opacity-75"
-    if (effectiveStatus === "critical" || effectiveStatus === "technical")
-      return "ring-1 ring-red-500/30 shadow-[0_4px_24px_-6px_rgba(239,68,68,0.35)]"
-    if (effectiveStatus === "warning")
-      return "ring-1 ring-amber-500/20 shadow-[0_4px_20px_-6px_rgba(245,158,11,0.25)]"
-    return ""
+  const cardToneClass = (() => {
+    if (!isSurveillanceActive) return "border-slate-300/80 bg-[hsl(var(--surface-muted))] opacity-80 dark:border-slate-700"
+    if (effectiveAlarmType === 'CH' || effectiveAlarmType === 'H') return "border-red-300 dark:border-red-800/80"
+    if (effectiveAlarmType === 'CB' || effectiveAlarmType === 'B') return "border-blue-300 dark:border-blue-800/80"
+    if (effectiveAlarmType === 'N' || effectiveAlarmType === 'S' || effectiveAlarmType === 'A' || effectiveAlarmType === 'M') {
+      return "border-slate-400 dark:border-slate-600"
+    }
+    if (effectiveAlarmType === 'T' || effectiveStatus === 'ended') return "border-violet-300 dark:border-violet-700"
+    if (effectiveStatus === 'warning') return "border-amber-300 dark:border-amber-700"
+    return "border-border"
   })()
+
+  const contextLabel = `${siteName || t('site.unknown')}${groupName ? ` · ${groupName}` : ''}`
+  const typeIconInfo = getTypeIcon(resolvedLieuType, 'h-3 w-3')
+  const hasAlarmDelay =
+    (alarmDelayHighMinutes !== null && alarmDelayHighMinutes !== undefined) ||
+    (alarmDelayLowMinutes !== null && alarmDelayLowMinutes !== undefined) ||
+    (noResponseDelayMinutes !== null && noResponseDelayMinutes !== undefined)
 
   return (
     <>
     <m.div
         variants={fadeInUp}
         className={cn(
-          "relative w-full rounded-lg border overflow-hidden flex flex-col transition-all duration-200",
-          "hover:shadow-lg hover:-translate-y-0.5",
-          isSurveillanceActive
-            ? "bg-card border-border shadow-sm"
-            : "bg-muted/60 dark:bg-muted/40 border-muted-foreground/20",
-          cardGlowClass,
+          "group/card relative flex w-full flex-col overflow-hidden rounded-lg border bg-card shadow-sm",
+          "transition-[border-color,box-shadow] duration-200 ease-out hover:shadow-[0_8px_22px_-16px_hsl(var(--shadow)/0.34)]",
+          cardToneClass,
         )}
       >
         <MonitoringCardHeader
@@ -566,25 +573,102 @@ export default function MonitoringCard({
           tStatus={tStatus}
         />
 
-        <div className="flex flex-1 flex-col px-3 pb-2 pt-2.5">
-          {isAdjustmentInProgress ? (
-            <div className="flex min-h-[188px] flex-1 flex-col items-center justify-center gap-2.5 rounded-md border border-dashed border-sky-300 bg-sky-50/70 px-3 text-center dark:border-sky-700 dark:bg-sky-950/30">
-              <div className="h-2.5 w-2.5 animate-pulse rounded-full bg-sky-500" aria-hidden="true" />
-              <div className="font-semibold text-sky-900 dark:text-sky-100">{t('surveillance.adjustment')}</div>
+        <div className="flex flex-1 flex-col px-3 pb-2 pt-2">
+          <div className="flex items-center gap-1.5">
+            <p className="min-w-0 flex-1 truncate text-[11px] leading-4 text-[hsl(var(--subtle-foreground))]" title={contextLabel}>
+              {contextLabel}
+            </p>
+            <UITooltip>
+              <TooltipTrigger asChild>
+                <button
+                  type="button"
+                  className="shrink-0 rounded-sm text-[hsl(var(--subtle-foreground))] transition-colors duration-150 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60"
+                  aria-label={locationComment || t('observations.empty')}
+                >
+                  <Info className="h-3.5 w-3.5" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="top" className="max-w-xs">
+                <p className="text-xs">{locationComment || t('observations.empty')}</p>
+              </TooltipContent>
+            </UITooltip>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => {
+              if (!isAdjustmentInProgress) setIsModalOpen(true)
+            }}
+            disabled={isAdjustmentInProgress}
+            className="mt-0.5 line-clamp-2 rounded-sm text-left text-[15px] font-semibold leading-5 tracking-[-0.005em] text-foreground decoration-primary/60 decoration-[1.5px] underline-offset-[3px] transition-colors duration-150 hover:text-[hsl(var(--primary-strong))] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60 disabled:hover:text-foreground disabled:hover:no-underline"
+          >
+            {nomLieu}
+          </button>
+
+          <div className="flex min-w-0 items-center gap-1 text-[11px] leading-4 text-[hsl(var(--subtle-foreground))]">
+            <span className="shrink-0" title={typeIconInfo.label}>{typeIconInfo.icon}</span>
+            <span className="num truncate">
+              {sondeNumeroSerie ? tDetails('sensor', { serial: sondeNumeroSerie }) : '—'}
+            </span>
+          </div>
+
+          {(alarmDisabledLabel || lieuEtat === 'E') ? (
+            <div className="mt-1.5 flex flex-wrap gap-1">
+              {alarmDisabledLabel ? (
+                <span className="inline-flex max-w-full items-center gap-1 rounded-md bg-[hsl(var(--surface-sunken))] px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground" title={alarmDisabledLabel}>
+                  <PowerOff className="h-3 w-3 shrink-0" />
+                  <span className="truncate">{alarmDisabledLabel}</span>
+                </span>
+              ) : null}
+              {lieuEtat === 'E' ? (
+                <span className="inline-flex items-center gap-1.5 rounded-md bg-[hsl(var(--status-warning)/0.10)] px-1.5 py-0.5 text-[10px] font-semibold text-[hsl(var(--status-warning-text))]">
+                  <span className="h-1.5 w-1.5 rounded-full bg-current" />
+                  {t('surveillance.calibration')}
+                </span>
+              ) : null}
             </div>
-          ) : isSurveillanceActive ? (
+          ) : null}
+
+          {isAdjustmentInProgress ? (
+            <div className="mt-2.5 flex flex-1 flex-col items-center justify-center gap-2 rounded-md border border-dashed border-primary/35 bg-[hsl(var(--primary-soft)/0.55)] px-3 py-5 text-center">
+              <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-primary motion-reduce:animate-none" aria-hidden="true" />
+              <p className="text-[13px] font-semibold text-[hsl(var(--primary-strong))]">{t('surveillance.adjustment')}</p>
+            </div>
+          ) : !isSurveillanceActive ? (
+            <div className="mt-2.5 space-y-1">
+              <p className="text-xs font-medium text-muted-foreground">{surveillanceDisabledLabel ?? t('surveillance.disabled')}</p>
+              {surveillanceDisabledComment || locationComment ? (
+                <p className="line-clamp-3 text-xs text-muted-foreground">{surveillanceDisabledComment ?? locationComment}</p>
+              ) : null}
+            </div>
+          ) : lastDateTime ? (
             <>
-              <div
-                className="group/chart relative cursor-pointer rounded-md border border-transparent bg-muted/10 px-1 py-1 transition-all duration-150 hover:border-primary/20 hover:bg-muted/30 hover:shadow-sm"
+              <div className="mt-2 flex items-end justify-between gap-2">
+                <div className="min-w-0">
+                  <span className="num text-[23px] font-semibold leading-none tracking-[-0.03em] text-foreground">
+                    {formattedLastValue || '—'}
+                  </span>
+                  {formattedLastValue ? <span className="ml-0.5 text-xs font-medium text-muted-foreground">{unite}</span> : null}
+                </div>
+                <span className="num flex shrink-0 items-center gap-1 pb-0.5 text-[11px] text-muted-foreground">
+                  <Clock className="h-3 w-3" />
+                  {lastDateTime}
+                </span>
+              </div>
+
+              <button
+                type="button"
                 onClick={() => setIsModalOpen(true)}
+                aria-label={t('actions.details')}
                 title={t('actions.details')}
+                className="-mx-1.5 mt-1.5 rounded-md border border-transparent px-1.5 py-1 text-left transition-[background-color,border-color] duration-150 hover:border-border hover:bg-[hsl(var(--surface-muted))] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60"
               >
                 {isMobile ? (
                   <div className="py-2 text-center">
                     <p className="text-xs text-muted-foreground">{t('mobile.small_hint')}</p>
                   </div>
                 ) : backgroundPaused ? (
-                  <div className="flex h-[142px] items-center justify-center rounded-md border border-dashed border-border/60 bg-muted/20 text-xs text-muted-foreground">
+                  <div className="flex h-[64px] items-center justify-center rounded-md border border-dashed border-border/60 bg-muted/20 text-xs text-muted-foreground">
                     {t('details.loading_hint')}
                   </div>
                 ) : (
@@ -605,156 +689,125 @@ export default function MonitoringCard({
                     rangeEndMs={chartRangeEndMs}
                   />
                 )}
-              </div>
+              </button>
 
-              <div className="mt-1.5 space-y-2 text-sm border-t border-border/70 pt-2">
-                {lastDateTime ? (
-                  <>
-                    <div className={`flex flex-col gap-1 text-[12px] font-semibold ${contentTextClassName}`}>
-                      <UITooltip>
-                        <TooltipTrigger asChild>
-                          <span className="min-w-0 truncate cursor-help">
-                            {t('last_measure.label', { value: formattedLastValue ? `${formattedLastValue}${unite}` : lastMeasureText })}
-                          </span>
-                        </TooltipTrigger>
-                        <TooltipContent side="top" className="max-w-xs">
-                          <p className="text-xs">{t('last_measure.label', { value: formattedLastValue ? `${formattedLastValue}${unite}` : lastMeasureText })}</p>
-                          <p className="text-xs text-muted-foreground">{lastDateTime}</p>
-                        </TooltipContent>
-                      </UITooltip>
-                      <span className="text-[11px] font-medium text-muted-foreground">{lastDateTime}</span>
-                    </div>
-                    {hasWirelessMetrics ? (
-                        <div className={`flex flex-wrap items-center justify-center gap-2 text-[11px] ${contentTextClassName}`}>
-                          {gsoRssi ? (
-                            <span className="inline-flex items-center gap-1.5 rounded-full border border-border/70 bg-muted/35 px-2 py-0.5">
-                              <RssiBars value={gsoRssi} label={t('gso.rssi', { value: gsoRssi })} />
-                              <span className="font-medium">{rssiStateLabel}</span>
-                            </span>
-                          ) : null}
-                          {hasBatteryMetric && batteryTooltipLabel ? (
-                            <span className="inline-flex items-center gap-1.5 rounded-full border border-border/70 bg-muted/35 px-2 py-0.5">
-                              <BatteryIndicator
-                                percent={batteryPercent}
-                                voltage={gsoTension}
-                                label={batteryTooltipLabel}
-                              />
-                              <span className="font-medium">{batteryStateLabel}</span>
-                            </span>
-                          ) : null}
-                        </div>
-                    ) : null}
-                    {isOnBatteryPower ? (
-                      <div className="flex items-center justify-center">
-                        <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-1 text-[11px] font-medium text-amber-800 dark:bg-amber-500/15 dark:text-amber-200">
-                          <BatteryWarning className="h-3.5 w-3.5" />
-                          {t('wireless.on_battery')}
-                        </span>
-                      </div>
-                    ) : null}
-                    <div className={`flex items-center justify-center gap-4 text-[11px] ${contentTextClassName}`}>
-                      <span>{t('frequency', { minutes: frequencyMinutes ?? '-' })}</span>
-                      {(alarmDelayHighMinutes !== null && alarmDelayHighMinutes !== undefined) ||
-                      (alarmDelayLowMinutes !== null && alarmDelayLowMinutes !== undefined) ||
-                      (noResponseDelayMinutes !== null && noResponseDelayMinutes !== undefined) ? (
-                        <UITooltip>
-                          <TooltipTrigger asChild>
-                            <span className="cursor-help underline decoration-dotted underline-offset-2">{t('alarm_delay_hover.summary')}</span>
-                          </TooltipTrigger>
-                          <TooltipContent side="top" className="max-w-xs">
-                            <div className="space-y-1 text-xs">
-                              <p>{t('alarm_delay_hover.high', { minutes: alarmDelayHighMinutes ?? '-' })}</p>
-                              <p>{t('alarm_delay_hover.low', { minutes: alarmDelayLowMinutes ?? '-' })}</p>
-                              <p>{t('alarm_delay_hover.no_response', { minutes: noResponseDelayMinutes ?? '-' })}</p>
-                            </div>
-                          </TooltipContent>
-                        </UITooltip>
-                      ) : null}
-                    </div>
-                  </>
-                ) : (
-                  <div className="text-center text-muted-foreground italic py-3">{t('no_measurements')}</div>
-                )}
-              </div>
-            </>
-          ) : (
-            <div className={`space-y-1 text-sm ${contentTextClassName}`}>
-              <div className="font-medium">{surveillanceDisabledLabel ?? t('surveillance.disabled')}</div>
-              {surveillanceDisabledComment || locationComment ? (
-                <p className="line-clamp-3 text-xs text-muted-foreground">{surveillanceDisabledComment ?? locationComment}</p>
-              ) : null}
-            </div>
-          )}
-
-          <div className={`mt-2 border-t border-border/70 pt-2 ${isSurveillanceActive ? '' : 'border-white/20'}`}>
-            <TooltipProvider>
-              <div className="flex justify-end gap-2">
-                {!isSurveillanceActive && !isAdjustmentInProgress ? (
+              <div className="mt-1 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[11px] leading-4 text-muted-foreground">
+                <span className="num">{t('frequency', { minutes: frequencyMinutes ?? '-' })}</span>
+                {hasAlarmDelay ? (
                   <UITooltip>
                     <TooltipTrigger asChild>
-                      <button
-                        type="button"
-                        onClick={(event) => {
-                          event.stopPropagation()
-                          setIsModalOpen(true)
-                        }}
-                        className={`p-1 rounded-md transition-colors ${actionButtonClassName}`}
-                      >
-                        <History className={`w-4 h-4 ${actionIconClassName}`} />
-                      </button>
+                      <span className="cursor-help underline decoration-dotted underline-offset-2">{t('alarm_delay_hover.summary')}</span>
                     </TooltipTrigger>
-                    <TooltipContent>
-                      <p className="text-xs">{t('actions.details')}</p>
+                    <TooltipContent side="top" className="max-w-xs">
+                      <div className="space-y-1 text-xs">
+                        <p>{t('alarm_delay_hover.high', { minutes: alarmDelayHighMinutes ?? '-' })}</p>
+                        <p>{t('alarm_delay_hover.low', { minutes: alarmDelayLowMinutes ?? '-' })}</p>
+                        <p>{t('alarm_delay_hover.no_response', { minutes: noResponseDelayMinutes ?? '-' })}</p>
+                      </div>
                     </TooltipContent>
                   </UITooltip>
                 ) : null}
 
-                <UITooltip>
-                  <TooltipTrigger asChild>
-                    <span>
-                      <button
-                        onClick={(event) => {
-                          event.stopPropagation()
-                          if (!canToggleSurveillance) return
-                          setActionType('surveillance')
-                          setActionComment('')
-                          setActionCommentError(null)
-                          setShowConfirmModal(true)
-                        }}
-                        className={`p-1 rounded-md transition-colors ${actionButtonClassName} ${isSurveillanceActive ? 'text-red-600' : 'text-green-600 dark:text-green-400'} ${canToggleSurveillance ? '' : 'cursor-not-allowed opacity-40'}`}
-                        disabled={!canToggleSurveillance}
-                      >
-                        {isSurveillanceActive ? <PowerOff className="w-4 h-4" /> : <Power className="w-4 h-4" />}
-                      </button>
-                    </span>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p className="text-xs">{canToggleSurveillance ? t('actions.toggle') : t('actions.toggle_forbidden')}</p>
-                  </TooltipContent>
-                </UITooltip>
-
-                <UITooltip>
-                  <TooltipTrigger asChild>
-                    <span>
-                      <button
-                        onClick={(event) => { event.stopPropagation(); onEditLocation?.(idLieu) }}
-                        className={`p-1 rounded-md transition-colors ${actionButtonClassName} ${canEditLocation ? "" : "cursor-not-allowed opacity-40"}`}
-                        disabled={!canEditLocation}
-                      >
-                        <Settings className={`w-4 h-4 ${actionIconClassName}`} />
-                      </button>
-                    </span>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p className="text-xs">
-                      {canEditLocation ? t('actions.settings') : t('actions.settings_forbidden')}
-                    </p>
-                  </TooltipContent>
-                </UITooltip>
+                {hasWirelessMetrics ? (
+                  <span className="ml-auto inline-flex items-center gap-2">
+                    {gsoRssi ? (
+                      <UITooltip>
+                        <TooltipTrigger asChild>
+                          <span className="inline-flex items-center gap-1">
+                            <RssiBars value={gsoRssi} label={t('gso.rssi', { value: gsoRssi })} />
+                            <span className="sr-only">{rssiStateLabel}</span>
+                          </span>
+                        </TooltipTrigger>
+                        <TooltipContent><p className="text-xs">{t('gso.rssi', { value: gsoRssi })} · {rssiStateLabel}</p></TooltipContent>
+                      </UITooltip>
+                    ) : null}
+                    {hasBatteryMetric && batteryTooltipLabel ? (
+                      <UITooltip>
+                        <TooltipTrigger asChild>
+                          <span className="inline-flex items-center gap-1">
+                            <BatteryIndicator percent={batteryPercent} voltage={gsoTension} label={batteryTooltipLabel} />
+                            {gsoTension ? <span className="num text-[10px]">{gsoTension}V</span> : null}
+                            <span className="sr-only">{batteryStateLabel}</span>
+                          </span>
+                        </TooltipTrigger>
+                        <TooltipContent><p className="text-xs">{batteryTooltipLabel} · {batteryStateLabel}</p></TooltipContent>
+                      </UITooltip>
+                    ) : null}
+                  </span>
+                ) : null}
               </div>
-            </TooltipProvider>
-          </div>
+
+              {isOnBatteryPower ? (
+                <span className="mt-1 inline-flex w-fit items-center gap-1 rounded-md bg-[hsl(var(--status-sector)/0.10)] px-1.5 py-0.5 text-[10px] font-medium text-[hsl(var(--status-sector))]">
+                  <BatteryWarning className="h-3.5 w-3.5" />
+                  {t('wireless.on_battery')}
+                </span>
+              ) : null}
+            </>
+          ) : (
+            <p className="mt-3 flex-1 py-3 text-center text-xs italic text-muted-foreground">{t('no_measurements')}</p>
+          )}
         </div>
+
+        <footer className="flex h-7 shrink-0 items-center justify-end gap-0.5 border-t border-border/70 px-1">
+          {!isSurveillanceActive && !isAdjustmentInProgress ? (
+            <UITooltip>
+              <TooltipTrigger asChild>
+                <button
+                  type="button"
+                  onClick={() => setIsModalOpen(true)}
+                  className={`rounded-md p-1 transition-colors ${actionButtonClassName}`}
+                >
+                  <History className={`h-3.5 w-3.5 ${actionIconClassName}`} />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent><p className="text-xs">{t('actions.details')}</p></TooltipContent>
+            </UITooltip>
+          ) : null}
+
+          <UITooltip>
+            <TooltipTrigger asChild>
+              <span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (!canToggleSurveillance) return
+                    setActionType('surveillance')
+                    setActionComment('')
+                    setActionCommentError(null)
+                    setShowConfirmModal(true)
+                  }}
+                  className={cn(
+                    'rounded-md p-1 transition-colors',
+                    actionButtonClassName,
+                    isSurveillanceActive ? 'hover:text-[hsl(var(--status-critical))]' : 'text-[hsl(var(--status-ok-text))]',
+                    !canToggleSurveillance && 'cursor-not-allowed opacity-40',
+                  )}
+                  disabled={!canToggleSurveillance}
+                >
+                  {isSurveillanceActive ? <PowerOff className="h-3.5 w-3.5" /> : <Power className="h-3.5 w-3.5" />}
+                </button>
+              </span>
+            </TooltipTrigger>
+            <TooltipContent><p className="text-xs">{canToggleSurveillance ? t('actions.toggle') : t('actions.toggle_forbidden')}</p></TooltipContent>
+          </UITooltip>
+
+          <UITooltip>
+            <TooltipTrigger asChild>
+              <span>
+                <button
+                  type="button"
+                  onClick={() => onEditLocation?.(idLieu)}
+                  className={cn('rounded-md p-1 transition-colors', actionButtonClassName, !canEditLocation && 'cursor-not-allowed opacity-40')}
+                  disabled={!canEditLocation}
+                >
+                  <Settings className={`h-3.5 w-3.5 ${actionIconClassName}`} />
+                </button>
+              </span>
+            </TooltipTrigger>
+            <TooltipContent><p className="text-xs">{canEditLocation ? t('actions.settings') : t('actions.settings_forbidden')}</p></TooltipContent>
+          </UITooltip>
+        </footer>
       </m.div>
 
       <Dialog
