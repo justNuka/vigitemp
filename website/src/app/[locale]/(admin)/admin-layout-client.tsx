@@ -124,7 +124,7 @@ export function AdminGroupLayoutClient({ children }: { children: React.ReactNode
             </div>
           ) : null}
           <PageTransitionWrapper className="min-h-0">{children}</PageTransitionWrapper>
-          <AppFooter className={showAdminDock ? "mb-24" : undefined} />
+          <AppFooter />
         </main>
       </div>
     </SidebarProvider>
