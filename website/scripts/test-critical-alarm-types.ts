@@ -69,15 +69,23 @@ assert.match(mysqlSeed, /\(21, 'CRITIQUE_HAUT', 'CH'/)
 assert.match(mssqlSeed, /VALUES\(20,N'CRITIQUE_BAS','CB'/)
 assert.match(mssqlSeed, /VALUES\(21,N'CRITIQUE_HAUT','CH'/)
 
-const mysqlTriggerStart = mysqlSeed.indexOf("TRG_GSO_BEF_UPD_LIEU_ALARME")
+const mysqlTriggerStart = mysqlSeed.indexOf(
+  "/*!50003 CREATE*/ /*!50003 TRIGGER `TRG_GSO_BEF_UPD_LIEU_ALARME`",
+)
+assert.ok(mysqlTriggerStart >= 0, "MySQL GSO trigger CREATE block must exist")
 const mysqlTriggerEnd = mysqlSeed.indexOf("DELIMITER ;", mysqlTriggerStart)
+assert.ok(mysqlTriggerEnd > mysqlTriggerStart, "MySQL GSO trigger end marker must exist")
 const mysqlTrigger = mysqlSeed.slice(mysqlTriggerStart, mysqlTriggerEnd)
 assert.doesNotMatch(mysqlTrigger, /Seuil_Critique_(?:Bas|Haut)/)
 assert.doesNotMatch(mysqlTrigger, /['"](?:CB|CH)['"]/)
 assert.match(mysqlTrigger, /Type IN\('B','H','N'\)/)
 
-const mssqlTriggerStart = mssqlSeed.indexOf("CREATE OR ALTER TRIGGER dbo.[TRG_GSO_BEF_UPD_LIEU_ALARME]")
+const mssqlTriggerStart = mssqlSeed.indexOf(
+  "CREATE OR ALTER TRIGGER dbo.[TRG_GSO_BEF_UPD_LIEU_ALARME]",
+)
+assert.ok(mssqlTriggerStart >= 0, "SQL Server GSO trigger block must exist")
 const mssqlTriggerEnd = mssqlSeed.indexOf("USE [vigi_mesures];", mssqlTriggerStart)
+assert.ok(mssqlTriggerEnd > mssqlTriggerStart, "SQL Server GSO trigger end marker must exist")
 const mssqlTrigger = mssqlSeed.slice(mssqlTriggerStart, mssqlTriggerEnd)
 assert.doesNotMatch(mssqlTrigger, /Seuil_Critique_(?:Bas|Haut)/)
 assert.doesNotMatch(mssqlTrigger, /['"](?:CB|CH)['"]/)
