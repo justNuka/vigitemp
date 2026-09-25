@@ -197,14 +197,17 @@ export function SensorModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         key={contentKey}
-        className="max-h-[90vh] overflow-y-auto bg-white dark:bg-popover dark:text-popover-foreground sm:max-w-4xl"
+        className="max-h-[90vh] overflow-hidden rounded-[10px] border-border bg-card p-0 text-card-foreground sm:max-w-3xl"
       >
-        <DialogHeader>
-          <DialogTitle>{isEdit ? t('title_edit') : t('title_create')}</DialogTitle>
+        <DialogHeader className="border-b border-border px-5 py-4 pr-14">
+          <DialogTitle className="text-[15px] font-semibold">{isEdit ? t('title_edit') : t('title_create')}</DialogTitle>
+          {isEdit && sensor?.Sonde_Numero_Serie ? (
+            <p className="num mt-0.5 text-xs text-muted-foreground">{sensor.Sonde_Numero_Serie}</p>
+          ) : null}
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit, (errors) => showFormValidationToast(errors))} className="space-y-6">
+          <form onSubmit={form.handleSubmit(handleSubmit, (errors) => showFormValidationToast(errors))} className="scroll-thin max-h-[calc(90vh-68px)] space-y-5 overflow-y-auto px-5 py-4">
             <TemporaryMemoryControls
               form={form}
               storageKey={memoryKey}
@@ -375,7 +378,7 @@ export function SensorModal({
               />
             ) : null}
 
-            <DialogFooter>
+            <DialogFooter className="-mx-5 -mb-4 border-t border-border bg-card px-5 py-3">
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                 {tCommon('cancel')}
               </Button>
