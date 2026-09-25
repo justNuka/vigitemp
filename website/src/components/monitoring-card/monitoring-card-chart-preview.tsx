@@ -49,7 +49,7 @@ export function MonitoringCardChartPreview({
 }: MonitoringCardChartPreviewProps) {
   if (isLoading) {
     return (
-      <div className="h-[142px]">
+      <div className="h-[64px]">
         <MonitoringChartLoading />
       </div>
     )
@@ -57,7 +57,7 @@ export function MonitoringCardChartPreview({
 
   return (
     <>
-      <div className="h-[142px]">
+      <div className="h-[64px]">
         <Line
           data={{
             datasets: chartDatasets.map((dataset) => {
@@ -86,9 +86,9 @@ export function MonitoringCardChartPreview({
               return {
                 ...dataset,
                 data: points,
-                borderWidth: dataset.label === "" ? 1.35 : 1,
-                pointRadius: dataset.label === "" ? 1.25 : 0,
-                pointHoverRadius: dataset.label === "" ? 1.25 : 0,
+                borderWidth: dataset.label === "" ? 1.6 : 1,
+                pointRadius: dataset.label === "" ? 0 : 0,
+                pointHoverRadius: dataset.label === "" ? 3 : 0,
               }
             }),
           }}
