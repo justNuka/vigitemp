@@ -5,11 +5,11 @@
 -- =====================================================================
 --
 -- Changements :
---   1. élargit les types d'alarme de 1 à 2 caractères ;
+--   1. élargit t_alarme.Type, t_alarme_histo.Type et
+--      t_alarme_message.Type de 1 à 2 caractères ;
 --   2. ajoute les messages CRITIQUE_BAS (CB) et CRITIQUE_HAUT (CH) ;
---   3. réinstalle le trigger GSO avec création immédiate CB/CH lorsqu'un
---      seuil critique est la cause initiale du déclenchement ;
---   4. positionne VERSION/SCHEMA_VERSION à 0.92.0 à la fin.
+--   3. réinstalle le trigger GSO avec déclenchement critique initial CB/CH ;
+--   4. positionne VERSION/SCHEMA_VERSION à 0.92.0 uniquement à la fin.
 --
 
 USE [vigi_main];
@@ -59,26 +59,24 @@ BEGIN TRY
         SET IDENTITY_INSERT dbo.[t_alarme_message] OFF;
     END;
 
-    UPDATE dbo.[t_parametre]
-       SET [Valeur] = N'0.92.0',
-           [Commentaire] = N'Version de schéma VigiSensys'
-     WHERE [Section] = 'VERSION'
-       AND [Mot_Cle] = 'SCHEMA_VERSION';
-
-    IF @@ROWCOUNT = 0
-    BEGIN
-        INSERT INTO dbo.[t_parametre] ([Section], [Mot_Cle], [Valeur], [Commentaire])
-        VALUES ('VERSION', 'SCHEMA_VERSION', N'0.92.0', N'Version de schéma VigiSensys');
-    END;
-
     COMMIT TRANSACTION;
 END TRY
 BEGIN CATCH
     IF @@TRANCOUNT > 0
         ROLLBACK TRANSACTION;
 
-    IF OBJECTPROPERTY(OBJECT_ID(N'dbo.t_alarme_message'), 'TableHasIdentity') = 1
-    CREATE OR ALTER TRIGGER dbo.[TRG_GSO_BEF_UPD_LIEU_ALARME]
+    BEGIN TRY
+        SET IDENTITY_INSERT dbo.[t_alarme_message] OFF;
+    END TRY
+    BEGIN CATCH
+        -- Ignore cleanup error and rethrow the original migration error below.
+    END CATCH;
+
+    THROW;
+END CATCH;
+GO
+
+CREATE OR ALTER TRIGGER dbo.[TRG_GSO_BEF_UPD_LIEU_ALARME]
 ON dbo.[t_lieu]
 AFTER UPDATE
 AS
@@ -515,12 +513,25 @@ END;
 GO
 
 BEGIN TRY
-        SET IDENTITY_INSERT dbo.[t_alarme_message] OFF;
-    END TRY
-    BEGIN CATCH
-        -- Ignore cleanup error and rethrow the original migration error below.
-    END CATCH;
+    BEGIN TRANSACTION;
 
+    UPDATE dbo.[t_parametre]
+       SET [Valeur] = N'0.92.0',
+           [Commentaire] = N'Version de schéma VigiSensys'
+     WHERE [Section] = 'VERSION'
+       AND [Mot_Cle] = 'SCHEMA_VERSION';
+
+    IF @@ROWCOUNT = 0
+    BEGIN
+        INSERT INTO dbo.[t_parametre] ([Section], [Mot_Cle], [Valeur], [Commentaire])
+        VALUES ('VERSION', 'SCHEMA_VERSION', N'0.92.0', N'Version de schéma VigiSensys');
+    END;
+
+    COMMIT TRANSACTION;
+END TRY
+BEGIN CATCH
+    IF @@TRANCOUNT > 0
+        ROLLBACK TRANSACTION;
     THROW;
 END CATCH;
 GO
