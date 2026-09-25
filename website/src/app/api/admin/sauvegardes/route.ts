@@ -6,7 +6,11 @@ import { withAdminLogging } from "@/lib/api-wrappers"
 import { apiError, apiOk } from "@/lib/api-response"
 import {
   buildSecondaryCopySummary,
+  getBackupLogMessage,
   isBackupErrorLine,
+  isBackupProcessEndLine,
+  isBackupProcessStartLine,
+  isMeaningfulBackupLogLine,
   parseBackupLogStatus,
   parseBackupTimestamp,
   type ParsedBackupRun,
@@ -48,17 +52,16 @@ function formatBytes(bytes: number) {
 }
 
 function toBackupLogEntry(line: string): BackupLogEntry {
-  const timestampMatch = line.match(/^\[([^\]]+)\]\s*(.*)$/)
+  const timestampMatch = line.match(/^\[([^\]]+)\]/)
   const timestamp = timestampMatch ? parseBackupTimestamp(timestampMatch[1]) : null
-  const rawMessage = (timestampMatch?.[2] ?? line).trim()
-  const message = rawMessage.replace(/^#+\s*/, "").replace(/\s*#+$/, "").trim() || rawMessage
+  const message = getBackupLogMessage(line)
 
   const level: BackupLogEntry["level"] =
-    /DEBUT PROCESS BACKUP|FIN PROCESS BACKUP/i.test(rawMessage)
+    isBackupProcessStartLine(line) || isBackupProcessEndLine(line)
       ? "section"
-      : isBackupErrorLine(rawMessage)
+      : isBackupErrorLine(message)
         ? "error"
-        : /:\s*(?:OK|SUCCESS)\b/i.test(rawMessage)
+        : /:\s*(?:OK|SUCCESS)\b/i.test(message)
           ? "success"
           : "info"
 
@@ -71,7 +74,7 @@ async function readBackupLog(backupLogPath: string) {
     const meaningfulLines = rawLog
       .split(/\r?\n/)
       .map((line) => line.trim())
-      .filter(Boolean)
+      .filter((line) => line.length > 0 && isMeaningfulBackupLogLine(line))
     const selectedLines = meaningfulLines.slice(-MAX_BACKUP_LOG_ENTRIES)
     const parsedStatus = parseBackupLogStatus(rawLog)
 

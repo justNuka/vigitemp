@@ -8,7 +8,26 @@ Les versions suivent `MAJOR.MINOR.PATCH` sans zéros de tête. La source de vers
 
 ## [Unreleased]
 
-Aucun changement supplémentaire documenté depuis la préparation de la version Web 1.8.14.
+Aucun changement supplémentaire documenté depuis la préparation de la version Web 1.8.15.
+
+## [1.8.15] — 2026-09-25
+
+Cette version fiabilise l'affichage du journal de sauvegarde du Dashboard Admin sur les installations Windows FR et EN.
+
+### Sauvegardes Admin
+
+- Les lignes de log ne contenant qu'un horodatage sont ignorées avant pagination/troncature ; elles ne produisent plus une ligne visuellement vide en fin de journal.
+- Le parsing des débuts/fins de processus reconnaît désormais les marqueurs français et anglais, notamment `DEBUT/FIN PROCESS BACKUP` et `START/END BACKUP PROCESS`.
+- Le succès de l'archive 7zip quotidienne reconnaît les formulations historiques françaises `DUMP JOUR` et anglaises `DAILY DUMP` / variantes proches.
+- La détection d'erreur continue de reconnaître `ERREUR`, `ERROR`, `FAILED`, `FAILURE`, `ECHEC/ÉCHEC` et couvre désormais aussi leurs formes plurielles.
+- Le comptage/troncature du journal repose sur les lignes réellement affichables et n'est plus perturbé par une ligne timestamp seule.
+- Des tests ciblés couvrent un run français, un run anglais et une ligne vide sémantique en fin de fichier.
+
+### Compatibilité
+
+- Version Web : **1.8.15**.
+- Serveur **1.1.1**, Agent **1.0.1** et BDD **0.91.1** restent inchangés.
+- Aucune migration BDD n'est requise.
 
 ## [1.8.14] — 2026-09-24
 
