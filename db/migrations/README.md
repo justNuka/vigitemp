@@ -20,6 +20,9 @@ db/migrations/
   0.91.1/
     mysql.sql
     mssql.sql
+  0.91.2/
+    mysql.sql
+    mssql.sql
   <version-suivante>/
     mysql.sql
     mssql.sql
@@ -92,10 +95,17 @@ La révision `0.91.0` ajoute :
 - la mise à jour initiale du trigger GSO `TRG_GSO_BEF_UPD_LIEU_ALARME` ;
 - le passage de `SCHEMA_VERSION` à `0.91.0`.
 
-La dernière révision de schéma est `0.91.1`. Elle :
+La révision `0.91.1` :
 
 - convertit en `FLOAT` les neuf champs numériques de consigne/tolérance/pré-alarme/seuil critique de `t_lieu_template` ;
 - réaligne `TRG_GSO_BEF_UPD_LIEU_ALARME` sur le comportement courant sans traitement direct des seuils critiques ;
 - porte `SCHEMA_VERSION` à `0.91.1`.
 
-Une installation en `0.91.0` exécute uniquement `0.91.1/<moteur>.sql`. Une installation plus ancienne exécute toutes les révisions manquantes dans l'ordre.
+La dernière révision de schéma est `0.91.2`. Elle :
+
+- élargit `t_alarme.Type`, `t_alarme_histo.Type` et `t_alarme_message.Type` à deux caractères ;
+- ajoute les messages `CRITIQUE_BAS / CB` et `CRITIQUE_HAUT / CH` ;
+- conserve le trigger GSO de 0.91.1 sans modification ;
+- porte `SCHEMA_VERSION` à `0.91.2`.
+
+Une installation en `0.91.1` exécute uniquement `0.91.2/<moteur>.sql`. Une installation plus ancienne exécute toutes les révisions manquantes dans l'ordre.
