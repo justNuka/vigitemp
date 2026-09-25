@@ -3664,7 +3664,7 @@ GitHub Actions run `35970788192` : **succès**.
 
 ### R25-001-A — Card sauvegarde Admin : lignes vides et logs FR/EN
 
-**Statut : `EN_COURS` — branche `fix/admin-backup-log-bilingual` — base `dev` `41071cf29bed5378b4fc73b48daee5aca715008b`**
+**Statut : `PR_OUVERTE` — branche `fix/admin-backup-log-bilingual` — PR #157 — base `dev` `41071cf29bed5378b4fc73b48daee5aca715008b`**
 
 Retours :
 
