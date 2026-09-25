@@ -3718,7 +3718,7 @@ Fichiers principaux :
 
 ### R25-001-B — Nouveaux types d'alarmes critiques `CB` / `CH`
 
-**Statut : `PR_OUVERTE` — branche `feature/critical-alarm-types` — PR #158 — base `dev` `8ae5ba55faabbb38e554b267f9151e460a27e695`**
+**Statut : `CORRIGE_DEV` — PR #158 — squash merge `b7b543623cdbc7ec13f6b5661fa95739b1bafd5b`**
 
 Demandes :
 
@@ -3825,7 +3825,7 @@ Ces points sont corrigés dans le run final ci-dessus.
 
 ### R25-001-C — Information fréquence GSP pendant les opérations métrologie
 
-**Statut : `A_FAIRE`**
+**Statut : `EN_COURS` — branche `fix/metrology-gsp-cadence-info` — base `dev` `b7b543623cdbc7ec13f6b5661fa95739b1bafd5b`**
 
 Demande :
 
@@ -3833,4 +3833,33 @@ Demande :
 - expliquer que la Surveillance reste prioritaire sur le module et peut donc décaler légèrement les interrogations de métrologie ;
 - ajouter l'information de manière claire, non bloquante et traduite FR/EN ;
 - relire `docs/architecture/metrology-refactor.md` avant modification.
+
+#### Vérification
+
+- l'Étalonnage affichait déjà une cadence de **1 min** et indiquait que les GSP étaient interrogées toutes les minutes, sans expliquer l'arbitrage avec la Surveillance ;
+- l'Ajustage expose déjà l'intervalle de lecture dans la card du plateau, mais son texte d'aide n'indiquait pas non plus que cet intervalle peut être légèrement décalé ;
+- le comportement matériel existe déjà : la Surveillance conserve la priorité sur les lectures métrologie partageant le même module. Ce lot ne modifie donc pas le moteur d'acquisition.
+
+#### Correctif
+
+- le texte de cadence de l'Étalonnage précise désormais que **1 minute est une cadence cible** pour les GSP et qu'une Surveillance active sur le même module peut retarder légèrement la lecture ;
+- le texte d'aide de l'Ajustage précise la même règle pour l'intervalle GSP configuré ;
+- traduction FR/EN ;
+- aucune modification du Serveur, des verrous ou de l'ordonnancement matériel ;
+- Web passé en **1.9.1**.
+
+Fichiers principaux :
+
+- `website/src/messages/fr.json` ;
+- `website/src/messages/en.json` ;
+- `website/package.json` ;
+- `website/CHANGELOG.md` ;
+- `CHANGELOG.md`.
+
+#### Validation terrain
+
+- [ ] en Étalonnage avec une GSP, vérifier que la card de cadence explique clairement que la minute est indicative ;
+- [ ] en Ajustage avec une GSP, vérifier que l'aide de l'intervalle rappelle la priorité de la Surveillance ;
+- [ ] vérifier le rendu FR / EN ;
+- [ ] avec plusieurs sondes sur le même module, confirmer que l'information correspond au comportement observé lorsque la Surveillance intercale une interrogation.
 
