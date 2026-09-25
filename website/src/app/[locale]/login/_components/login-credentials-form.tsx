@@ -1,11 +1,13 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { AnimatePresence, m } from "motion/react";
 import { Eye, EyeOff, Keyboard } from "lucide-react";
 import { useState } from "react";
 import type { FieldErrors, UseFormRegister } from "react-hook-form";
+
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 type LoginFormValues = {
   username: string;
@@ -48,37 +50,53 @@ export function LoginCredentialsForm({
     setCapsLockActive(event.getModifierState("CapsLock"));
   };
 
+  const inputClass =
+    "h-9 rounded-md border-border bg-card text-[13px] shadow-sm transition-[border-color,box-shadow,background-color] duration-200 ease-out placeholder:text-muted-foreground hover:border-[hsl(var(--border-strong))] focus-visible:border-primary/55 focus-visible:bg-card focus-visible:ring-2 focus-visible:ring-primary/15 focus-visible:ring-offset-0";
+
   return (
     <form onSubmit={onSubmit} className="space-y-4">
-      <div className="space-y-2">
-        <Label htmlFor="username">{translations.usernameLabel}</Label>
+      <div className="space-y-1.5">
+        <Label htmlFor="username" className="text-xs font-medium text-foreground/85">
+          {translations.usernameLabel}
+        </Label>
         <Input
           id="username"
           type="text"
           {...register("username")}
           placeholder={translations.usernamePlaceholder}
-          className="bg-background text-foreground placeholder:text-muted-foreground"
+          className={inputClass}
           autoFocus
           autoComplete="username"
           aria-invalid={!!usernameError}
           aria-describedby={usernameError ? "username-error" : undefined}
         />
-        {usernameError && (
-          <p id="username-error" className="text-sm text-destructive">
-            {String(usernameError)}
-          </p>
-        )}
+        <AnimatePresence initial={false}>
+          {usernameError ? (
+            <m.p
+              id="username-error"
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.16, ease: [0.23, 1, 0.32, 1] }}
+              className="overflow-hidden text-xs text-destructive"
+            >
+              {String(usernameError)}
+            </m.p>
+          ) : null}
+        </AnimatePresence>
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="password">{translations.passwordLabel}</Label>
+      <div className="space-y-1.5">
+        <Label htmlFor="password" className="text-xs font-medium text-foreground/85">
+          {translations.passwordLabel}
+        </Label>
         <div className="relative">
           <Input
             id="password"
             type={showPassword ? "text" : "password"}
             {...passwordRegistration}
             placeholder={translations.passwordPlaceholder}
-            className="bg-background pr-11 text-foreground placeholder:text-muted-foreground"
+            className={`${inputClass} pr-11`}
             autoComplete="current-password"
             aria-invalid={!!passwordError}
             aria-describedby={[
@@ -95,41 +113,65 @@ export function LoginCredentialsForm({
           <button
             type="button"
             onClick={() => setShowPassword((current) => !current)}
-            className="absolute right-1 top-1/2 inline-flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="absolute right-1 top-1/2 inline-flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-md text-[hsl(var(--subtle-foreground))] transition-colors duration-150 hover:bg-[hsl(var(--surface-sunken))] hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60"
             aria-label={showPassword ? translations.hidePassword : translations.showPassword}
             aria-pressed={showPassword}
           >
             {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
           </button>
         </div>
-        {capsLockActive ? (
-          <p id="password-caps-lock" className="flex items-center gap-1.5 text-xs font-medium text-amber-700 dark:text-amber-300">
-            <Keyboard className="h-3.5 w-3.5" aria-hidden="true" />
-            {translations.capsLockWarning}
-          </p>
-        ) : null}
-        {passwordError && (
-          <p id="password-error" className="text-sm text-destructive">
-            {String(passwordError)}
-          </p>
-        )}
+
+        <AnimatePresence initial={false}>
+          {capsLockActive ? (
+            <m.p
+              id="password-caps-lock"
+              role="status"
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.16, ease: [0.23, 1, 0.32, 1] }}
+              className="flex items-center gap-1.5 overflow-hidden text-xs font-medium text-[hsl(var(--status-warning-text))]"
+            >
+              <Keyboard className="h-3.5 w-3.5" aria-hidden />
+              {translations.capsLockWarning}
+            </m.p>
+          ) : null}
+        </AnimatePresence>
+
+        <AnimatePresence initial={false}>
+          {passwordError ? (
+            <m.p
+              id="password-error"
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.16, ease: [0.23, 1, 0.32, 1] }}
+              className="overflow-hidden text-xs text-destructive"
+            >
+              {String(passwordError)}
+            </m.p>
+          ) : null}
+        </AnimatePresence>
       </div>
 
-      <Button type="submit" className="w-full" disabled={isSubmitting}>
-        {isSubmitting ? translations.signingIn : translations.signIn}
-      </Button>
-
-      <div className="text-center">
+      <div className="flex justify-end">
         <button
           type="button"
           onClick={onForgotPassword}
-          className="text-sm text-blue-600 hover:underline dark:text-blue-400"
+          className="rounded-md px-1.5 py-1 text-xs font-medium text-[hsl(var(--primary-strong))] transition-colors duration-150 hover:bg-[hsl(var(--primary-soft))] hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60"
           disabled={isSubmitting}
         >
           {translations.forgotPassword}
         </button>
       </div>
+
+      <Button
+        type="submit"
+        className="h-9 w-full text-[13px] font-semibold shadow-sm transition-[transform,box-shadow,background-color] duration-150 active:translate-y-px"
+        disabled={isSubmitting}
+      >
+        {isSubmitting ? translations.signingIn : translations.signIn}
+      </Button>
     </form>
   );
 }
-
