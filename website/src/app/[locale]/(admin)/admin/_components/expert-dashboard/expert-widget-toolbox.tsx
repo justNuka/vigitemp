@@ -17,9 +17,9 @@ export function ExpertWidgetToolbox({
   if (widgets.length === 0) return null
 
   return (
-    <Card className="border-dashed border-slate-300/80 bg-white/70 dark:border-slate-700 dark:bg-slate-900/60">
-      <CardHeader className="pb-3">
-        <CardTitle className="text-base">{t("expert.toolbox_title")}</CardTitle>
+    <Card className="rounded-[10px] border-dashed border-primary/30 bg-[hsl(var(--primary-soft)/0.45)] shadow-none">
+      <CardHeader className="pb-2.5">
+        <CardTitle className="text-sm font-semibold">{t("expert.toolbox_title")}</CardTitle>
         <CardDescription>{t("expert.toolbox_description")}</CardDescription>
       </CardHeader>
       <CardContent className="flex flex-wrap gap-2">
@@ -29,7 +29,7 @@ export function ExpertWidgetToolbox({
             type="button"
             draggable
             unselectable="on"
-            className="inline-flex items-center rounded-md border border-slate-300 bg-white px-3 py-2 text-sm hover:bg-slate-100 dark:border-border dark:bg-popover dark:hover:bg-accent"
+            className="inline-flex items-center rounded-md border border-border bg-card px-3 py-2 text-xs font-medium text-foreground shadow-sm transition-[border-color,background-color,color] duration-150 hover:border-primary/35 hover:bg-[hsl(var(--primary-soft))] hover:text-[hsl(var(--primary-strong))] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60"
             onClick={() => onAddWidget(widget.id)}
             onDragStart={(event) => {
               event.dataTransfer.setData("text/plain", widget.id)
