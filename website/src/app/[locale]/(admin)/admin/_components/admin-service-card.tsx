@@ -1,5 +1,4 @@
-import type { ComponentType } from "react"
-import { MailQuestion } from "lucide-react"
+import { MailQuestion, type LucideIcon } from "lucide-react"
 
 import {
   AdminCardLink,
@@ -19,7 +18,7 @@ type Detail = {
 type Props = {
   title: string
   description: string
-  icon: ComponentType<{ className?: string }>
+  icon: LucideIcon
   state: AdminServiceCardState
   stateLabel: string
   details: Detail[]
