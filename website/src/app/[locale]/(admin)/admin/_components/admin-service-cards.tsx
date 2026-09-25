@@ -94,7 +94,7 @@ export function AdminServiceCards() {
         state={mailingState}
         stateLabel={t(`status.${mailingState}`)}
         details={[
-          { label: t("mailing.activation"), value: mailingEnabledLabel, ok: mailing ? mailing.enabled || null : undefined },
+          { label: t("mailing.activation"), value: mailingEnabledLabel, ok: mailing ? mailing.enabled : undefined },
           { label: t("mailing.configuration"), value: mailingConfiguredLabel, ok: mailing ? mailing.configured : undefined },
           { label: t("mailing.confirmation"), value: mailingConfirmedLabel, ok: mailing ? mailing.confirmed : undefined },
         ]}
