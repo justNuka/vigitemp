@@ -8,9 +8,9 @@ La version produit de référence du Serveur est `AssemblyInformationalVersion("
 
 ## [Unreleased]
 
-Aucun changement supplémentaire documenté depuis la préparation de la version Serveur 1.1.2.
+Aucun changement supplémentaire documenté depuis la préparation de la version Serveur 1.2.0.
 
-## [1.1.2] — 2026-09-25
+## [1.2.0] — 2026-09-25
 
 ### Alarmes — types critiques CB / CH
 
@@ -20,13 +20,13 @@ Aucun changement supplémentaire documenté depuis la préparation de la version
 - Lorsqu'une alarme est déjà ouverte dans une famille, sa ligne est réutilisée et son type initial est conservé jusqu'à sa fin : aucun ping-pong B↔CB / H↔CH et aucune seconde alarme concurrente.
 - Une alarme créée directement sur dépassement critique reçoit donc `CB` / `CH` ; une alarme standard déjà ouverte ne change pas rétroactivement de cause de déclenchement.
 - La fermeture d'un canal ferme indifféremment son type standard ou critique.
-- Le trigger GSO reste volontairement sur le comportement B/H de BDD 0.91.1 ; ce lot ne réintroduit pas l'évaluation directe des seuils critiques dans le trigger.
+- Les triggers GSO MySQL / SQL Server évaluent de nouveau les seuils critiques avant le retard normal : un déclenchement initial directement critique crée `CB` / `CH`, tandis qu'une alarme B/H déjà ouverte sur le même côté conserve son type initial.
 
 ### Version / compatibilité
 
-- Version produit Serveur : **1.1.2**.
-- Installateur Serveur : **1.1.2**.
-- **BDD 0.91.2** est requise avant d'exploiter `CB` / `CH`, car les colonnes `Type` passent à deux caractères.
+- Version produit Serveur : **1.2.0**.
+- Installateur Serveur : **1.2.0**.
+- **BDD 0.92.0** est requise avant d'exploiter `CB` / `CH`, car les colonnes `Type` passent à deux caractères.
 - Agent inchangé.
 
 ## [1.1.1] — 2026-09-24
