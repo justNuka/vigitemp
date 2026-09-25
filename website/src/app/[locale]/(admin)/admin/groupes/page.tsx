@@ -22,7 +22,7 @@ export default function GroupesPage() {
         titleKey="groupsPage.title"
         descriptionKey="groupsPage.description"
       />
-      <div className="space-y-6 p-6">
+      <div className="mx-auto w-full max-w-[1680px] space-y-4 p-4 md:p-6">
         <GroupsClient />
       </div>
     </>
