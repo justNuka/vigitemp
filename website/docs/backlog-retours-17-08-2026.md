@@ -3766,6 +3766,53 @@ Fichiers principaux :
 - seeds MySQL / SQL Server ;
 - migrations `db/migrations/0.91.2/*`.
 
+#### Validation automatisée
+
+GitHub Actions run `36115799129` : **succès complet**.
+
+Web / BDD :
+
+- [x] `git diff --check origin/dev...HEAD` ;
+- [x] installation `pnpm` avec lockfile figé ;
+- [x] génération Prisma MySQL ;
+- [x] `pnpm test:critical-alarm-types` ;
+- [x] régression seuils critiques `pnpm test:location-critical-thresholds` ;
+- [x] régression emails `pnpm test:alarm-email-notifications` ;
+- [x] régression acquittements `pnpm test:alarm-acknowledgement-context` ;
+- [x] ESLint ciblé sur le contrat alarmes, cards, APIs, dashboard, statistiques et test ;
+- [x] contrôle i18n sans nouvelle dette dans les fichiers du lot ;
+- [x] build production Next.js sur MySQL ;
+- [x] génération Prisma SQL Server ;
+- [x] TypeScript `--noEmit` sur SQL Server ;
+- [x] migrations/seeds vérifiés sur les trois `VARCHAR(2)`, les messages 20/21 et l'absence de modification du trigger GSO.
+
+Serveur :
+
+- [x] restauration NuGet legacy ;
+- [x] build Release VigiSensys Serveur **1.1.2** ;
+- [x] build Release installateur Serveur **1.1.2** ;
+- [x] workflow temporaire retiré du diff final.
+
+Les premiers runs temporaires ont identifié avant PR deux défauts de préparation : deux helpers MySQL supprimés accidentellement pendant la réécriture du provider et des assertions statiques trop strictes sur le SQL formaté. Les helpers ont été restaurés depuis `dev` et le run final ci-dessus valide le code fonctionnel final.
+
+#### Validation terrain
+
+- [ ] appliquer la migration BDD 0.91.2 sur une copie MySQL 0.91.1 et confirmer `SCHEMA_VERSION = 0.91.2` ;
+- [ ] appliquer la migration SQL Server 0.91.2 sur une copie 0.91.1 ;
+- [ ] vérifier `t_alarme.Type`, `t_alarme_histo.Type` et `t_alarme_message.Type` en deux caractères ;
+- [ ] vérifier les messages 20 `CRITIQUE_BAS / CB` et 21 `CRITIQUE_HAUT / CH` ;
+- [ ] déclencher une alarme basse standard : type `B`, point pulsant présent, panneau danger absent ;
+- [ ] déclencher directement un critique bas : type `CB`, même couleur bleue que B, panneau danger présent ;
+- [ ] déclencher une alarme haute standard : type `H`, point pulsant présent, panneau danger absent ;
+- [ ] déclencher directement un critique haut : type `CH`, même couleur rouge que H, panneau danger présent ;
+- [ ] vérifier qu'une alarme B/H déjà ouverte conserve son type si la mesure franchit ensuite le critique ;
+- [ ] vérifier qu'une alarme CB/CH conserve son type jusqu'à sa fin même si la valeur repasse entre critique et seuil normal ;
+- [ ] vérifier qu'il n'existe jamais deux alarmes ouvertes simultanément B+CB ou H+CH pour le même lieu ;
+- [ ] vérifier l'email critique CB/CH puis les emails de fin/acquittement ;
+- [ ] vérifier page Alarmes, filtres haute/basse, historique d'acquittement, exports/statistiques et dashboard ;
+- [ ] vérifier FR / EN ;
+- [ ] vérifier une GSO : comportement historique B/H inchangé, aucun déclenchement CB/CH ajouté par le trigger.
+
 ### R25-001-C — Information fréquence GSP pendant les opérations métrologie
 
 **Statut : `A_FAIRE`**
