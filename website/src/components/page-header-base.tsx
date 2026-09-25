@@ -9,7 +9,6 @@ import { Bell } from "lucide-react";
 import { Link, usePathname } from "@/i18n/navigation";
 import { stripLocalePrefix } from "@/i18n/pathnames";
 import { useTranslations } from "next-intl";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useMessagingEnabled } from "@/hooks/useMessagingEnabled";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { BellButton } from "@/components/messaging/bell-button";
@@ -40,7 +39,6 @@ export function PageHeaderBase({
   title,
   description,
   activeAlarms = 0,
-  activeAlarmBreakdown,
   children,
   className,
 }: PageHeaderProps) {
