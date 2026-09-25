@@ -79,8 +79,6 @@ export function EditSiteDialog({
   });
   const assignedUsers = assignedUsersQuery.data ?? EMPTY_ASSIGNED_USERS;
   const assignedUserIds = form.watch('assignedUserIds') || [];
-  const allUserIds = users.map((user) => user.id);
-  const allUsersSelected = allUserIds.length > 0 && allUserIds.every((userId) => assignedUserIds.includes(userId));
 
   useEffect(() => {
     if (!open) return;
