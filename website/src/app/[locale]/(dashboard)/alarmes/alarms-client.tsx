@@ -274,10 +274,10 @@ export function AlarmsClient({ alarms, statusFilter, initialLocationId = null, s
     }
     if (type === "sector") {
       return {
-        icon: "bg-[hsl(var(--status-warning)/0.10)] text-[hsl(var(--status-warning-text))]",
-        text: "text-[hsl(var(--status-warning-text))]",
-        dot: "bg-[hsl(var(--status-warning))]",
-        row: "border-l-[hsl(var(--status-warning))]",
+        icon: "bg-[hsl(var(--status-sector)/0.10)] text-[hsl(var(--status-sector))]",
+        text: "text-[hsl(var(--status-sector))]",
+        dot: "bg-[hsl(var(--status-sector))]",
+        row: "border-l-[hsl(var(--status-sector))]",
       };
     }
     return {
@@ -376,7 +376,7 @@ export function AlarmsClient({ alarms, statusFilter, initialLocationId = null, s
       cell: ({ row }) => {
         const alarm = row.original;
         const value = alarm.type === "no-response" || alarm.type === "sector" || alarm.type === "module" ? null : (alarm.value ?? alarm.sensor.currentValue ?? null);
-        return <div className="text-right font-mono font-medium">{value !== null ? `${formatMeasureValue(value)} ${alarm.sensor.unit}` : "-"}</div>;
+        return <div className="num text-right font-semibold">{value !== null ? `${formatMeasureValue(value)} ${alarm.sensor.unit}` : "-"}</div>;
       },
     },
     {
@@ -393,8 +393,8 @@ export function AlarmsClient({ alarms, statusFilter, initialLocationId = null, s
         const showThresholds = hasConfiguredThresholds(alarm);
         const hasSup = showThresholds && sup !== null && sup !== undefined;
         const hasInf = showThresholds && inf !== null && inf !== undefined;
-        if (!hasSup && !hasInf) return <div className="text-right font-mono text-muted-foreground">-</div>;
-        return <div className="text-right font-mono text-muted-foreground"><div>{hasSup ? t("thresholds.sup", { value: formatMeasureValue(sup), unit: alarm.sensor.unit }) : t("thresholds.sup_empty")}</div><div>{hasInf ? t("thresholds.inf", { value: formatMeasureValue(inf), unit: alarm.sensor.unit }) : t("thresholds.inf_empty")}</div></div>;
+        if (!hasSup && !hasInf) return <div className="num text-right text-xs text-muted-foreground">-</div>;
+        return <div className="num text-right text-xs text-muted-foreground"><div>{hasSup ? t("thresholds.sup", { value: formatMeasureValue(sup), unit: alarm.sensor.unit }) : t("thresholds.sup_empty")}</div><div>{hasInf ? t("thresholds.inf", { value: formatMeasureValue(inf), unit: alarm.sensor.unit }) : t("thresholds.inf_empty")}</div></div>;
       },
     },
     {
@@ -585,7 +585,7 @@ export function AlarmsClient({ alarms, statusFilter, initialLocationId = null, s
   }, [selectedAlarm]);
 
   const content = tableData.length === 0 ? (
-    <Card className="overflow-hidden">
+    <Card className="overflow-hidden rounded-[10px] border-border bg-card shadow-[0_1px_2px_hsl(var(--shadow)/0.06)]">
       <CardHeader className="space-y-3 border-b border-border bg-card">
         <CardTitle className="flex items-center gap-2">
           <span className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-border bg-muted/60 text-foreground">
@@ -611,7 +611,7 @@ export function AlarmsClient({ alarms, statusFilter, initialLocationId = null, s
       </CardContent>
     </Card>
   ) : (
-    <Card className="overflow-hidden">
+    <Card className="overflow-hidden rounded-[10px] border-border bg-card shadow-[0_1px_2px_hsl(var(--shadow)/0.06)]">
       <CardHeader className="space-y-3 border-b border-border bg-card">
         <CardTitle className="flex items-center gap-2">
           <span className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-border bg-muted/60 text-foreground">
@@ -668,20 +668,18 @@ export function AlarmsClient({ alarms, statusFilter, initialLocationId = null, s
             toolbarRight={<div className="flex items-center gap-2"><AlarmTypeFilter typeFilters={typeFilters} onToggleType={toggleTypeFilter} onReset={() => setTypeFilters([])} t={t} />{refreshButton}</div>}
             onFilteredRowCountChange={setVisibleRowCount}
             maxHeight="calc(100dvh - 25rem)"
-            headerClassName="!bg-sidebar !text-sidebar-foreground"
-            headerCellClassName="!bg-sidebar !text-sidebar-foreground !border-r !border-white/15 hover:!bg-sidebar-accent/80"
             rowClassName={(row) => {
               if (row.status !== "active") return "border-l-[3px] border-l-transparent";
               return cn("border-l-[3px]", getAlarmTone(row.type).row);
             }}
-            tableClassName="border-separate border-spacing-0 [&_thead_th]:!border-r [&_thead_th]:!border-white/15 [&_thead_th:last-child]:!border-r-0 [&_tbody_tr]:transition-colors [&_tbody_tr]:duration-150 [&_tbody_tr:hover]:bg-muted/30"
+            tableClassName="[&_tbody_tr]:transition-colors [&_tbody_tr]:duration-150"
           />
       </CardContent>
     </Card>
   );
 
   return (
-    <main className="flex-1 p-4 md:p-6 space-y-6 animate-fade-in">
+    <main className="mx-auto w-full max-w-[1680px] flex-1 space-y-4 p-4 md:p-6 animate-fade-in">
       {content}
         <AlarmDetailsDialog
         selectedAlarm={selectedAlarm}
