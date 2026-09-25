@@ -167,18 +167,20 @@ Push-Location $SourcePath
 $buildDistDirName = ".next"
 
 if (-not $SkipInstall) {
-    Write-Log "Running pnpm install..."
-    $installResult = Invoke-Pnpm -Arguments @("install")
-    if ($installResult.ExitCode -ne 0) {
-        Write-Error "pnpm install failed (code $($installResult.ExitCode))."
+    $workspacePolicyPath = Join-Path $SourcePath "pnpm-workspace.yaml"
+    if (-not (Test-Path $workspacePolicyPath)) {
+        Write-Error "pnpm-workspace.yaml not found in SourcePath: $SourcePath"
     }
-}
 
-if (-not $SkipApproveBuilds) {
-    Write-Log "Running pnpm approve-builds (interactive)..."
-    $approveResult = Invoke-Pnpm -Arguments @("approve-builds")
-    if ($approveResult.ExitCode -ne 0) {
-        Write-Error "pnpm approve-builds failed (code $($approveResult.ExitCode))."
+    $workspacePolicy = Get-Content -Path $workspacePolicyPath -Raw
+    if ($workspacePolicy -notmatch "(?m)^allowBuilds:\s*$") {
+        Write-Error "pnpm-workspace.yaml must define allowBuilds before preparing a release build."
+    }
+
+    Write-Log "Running pnpm install --frozen-lockfile (build scripts controlled by allowBuilds)..."
+    $installResult = Invoke-Pnpm -Arguments @("install", "--frozen-lockfile")
+    if ($installResult.ExitCode -ne 0) {
+        Write-Error "pnpm install --frozen-lockfile failed (code $($installResult.ExitCode))."
     }
 }
 
