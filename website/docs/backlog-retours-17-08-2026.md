@@ -3825,7 +3825,7 @@ Ces points sont corrigés dans le run final ci-dessus.
 
 ### R25-001-C — Information fréquence GSP pendant les opérations métrologie
 
-**Statut : `EN_COURS` — branche `fix/metrology-gsp-cadence-info` — base `dev` `b7b543623cdbc7ec13f6b5661fa95739b1bafd5b`**
+**Statut : `PR_OUVERTE` — branche `fix/metrology-gsp-cadence-info` — PR #159 — base `dev` `b7b543623cdbc7ec13f6b5661fa95739b1bafd5b`**
 
 Demande :
 
