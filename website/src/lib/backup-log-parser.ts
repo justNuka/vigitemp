@@ -41,7 +41,47 @@ export function parseBackupTimestamp(value: string): string | null {
 }
 
 export function isBackupErrorLine(line: string) {
-  return /\bERREUR\b|\bERROR\b|\bFAILED\b|\bFAILURE\b|\bECHEC\b|\bÉCHEC\b/i.test(line)
+  return /\bERREURS?\b|\bERRORS?\b|\bFAILED\b|\bFAILURE\b|\bECHECS?\b|\bÉCHECS?\b/i.test(line)
+}
+
+export function getBackupLogMessage(line: string) {
+  const timestampMatch = line.match(/^\[[^\]]+\]\s*(.*)$/)
+  const rawMessage = (timestampMatch?.[1] ?? line).trim()
+  return rawMessage.replace(/^#+\s*/, "").replace(/\s*#+$/, "").trim()
+}
+
+export function isMeaningfulBackupLogLine(line: string) {
+  return getBackupLogMessage(line).length > 0
+}
+
+export function isBackupProcessStartLine(line: string) {
+  const normalized = normalizeForMatch(getBackupLogMessage(line)).replace(/\s+/g, " ")
+  return (
+    /\b(?:debut|start|begin)\b.*\bbackup\b/.test(normalized) ||
+    /\bbackup\b.*\b(?:start|begin|debut)\b/.test(normalized)
+  )
+}
+
+export function isBackupProcessEndLine(line: string) {
+  const normalized = normalizeForMatch(getBackupLogMessage(line)).replace(/\s+/g, " ")
+  return (
+    /\b(?:fin|end|finish|finished)\b.*\bbackup\b/.test(normalized) ||
+    /\bbackup\b.*\b(?:end|finish|finished|fin)\b/.test(normalized)
+  )
+}
+
+export function isDailyArchiveSuccessLine(line: string) {
+  const normalized = normalizeForMatch(line)
+  if (!normalized.includes("7zip")) return false
+  if (!/:\s*(?:ok|success)\b/i.test(line)) return false
+
+  return (
+    normalized.includes("dump jour") ||
+    normalized.includes("daily dump") ||
+    normalized.includes("day dump") ||
+    normalized.includes("daily backup") ||
+    normalized.includes("backup daily")
+  )
 }
 
 export function extractSecondaryBackupPath(rawLog: string): string | null {
@@ -110,7 +150,7 @@ function summarizePrimaryRun(lines: string[]) {
   const firstError = lines.find(isBackupErrorLine)
   if (firstError) return stripTimestamp(firstError)
 
-  const zipLine = lines.find((line) => /7zip\s+.*dump\s+jour.*:\s*(?:OK|SUCCESS)\b/i.test(line))
+  const zipLine = lines.find(isDailyArchiveSuccessLine)
   if (zipLine) return stripTimestamp(zipLine)
 
   const dumpOkCount = lines.filter((line) => /DUMP\s+.*:\s*(?:OK|SUCCESS)\b/i.test(line)).length
@@ -175,10 +215,8 @@ export function parseBackupLogStatus(rawLog: string): ParsedBackupLogStatus {
   const flushCurrentRun = () => {
     if (!startedAt || currentLines.length === 0) return
 
-    const hasFinished = currentLines.some((line) => /##\s*FIN PROCESS BACKUP\s*##/i.test(line))
-    const zipSuccessIndex = currentLines.findIndex((line) =>
-      /7zip\s+.*dump\s+jour.*:\s*(?:OK|SUCCESS)\b/i.test(line),
-    )
+    const hasFinished = currentLines.some(isBackupProcessEndLine)
+    const zipSuccessIndex = currentLines.findIndex(isDailyArchiveSuccessLine)
     const secondaryIndex = currentLines.findIndex(isSecondaryRobocopyLine)
     const primaryStageEnd =
       zipSuccessIndex >= 0
@@ -223,7 +261,7 @@ export function parseBackupLogStatus(rawLog: string): ParsedBackupLogStatus {
     const timestampMatch = line.match(/^\[([^\]]+)\]/)
     const parsedTimestamp = timestampMatch ? parseBackupTimestamp(timestampMatch[1]) : null
 
-    if (/##\s*DEBUT PROCESS BACKUP\s*##/i.test(line)) {
+    if (isBackupProcessStartLine(line)) {
       flushCurrentRun()
       startedAt = parsedTimestamp
       currentLines = [line]
@@ -234,7 +272,7 @@ export function parseBackupLogStatus(rawLog: string): ParsedBackupLogStatus {
     if (!startedAt) continue
 
     currentLines.push(line)
-    if (/##\s*FIN PROCESS BACKUP\s*##/i.test(line) && parsedTimestamp) {
+    if (isBackupProcessEndLine(line) && parsedTimestamp) {
       endedAt = parsedTimestamp
     }
   }

@@ -3512,7 +3512,7 @@ Fichiers principaux :
 
 ### R23-005-G — Card métrologie du Dashboard Admin
 
-**Statut : `PR_OUVERTE` — branche `fix/admin-metrology-warning-window` — PR #156 — base `dev` `1cc012ca9729eb1dbc906bd7b39b73e3f5ab01ef`**
+**Statut : `CORRIGE_DEV` — PR #156 — squash merge `41071cf29bed5378b4fc73b48daee5aca715008b`**
 
 Retour :
 
@@ -3657,4 +3657,209 @@ GitHub Actions run `35970788192` : **succès**.
 - [ ] valider Ajustage et Étalonnage ;
 - [ ] valider plusieurs GSP sur le même module/COM ;
 - [ ] confirmer la reprise normale de la Surveillance après l'opération.
+
+---
+
+## R25-001 — Retours complémentaires du 25/09/2026
+
+### R25-001-A — Card sauvegarde Admin : lignes vides et logs FR/EN
+
+**Statut : `CORRIGE_DEV` — PR #157 — squash merge `8ae5ba55faabbb38e554b267f9151e460a27e695`**
+
+Retours :
+
+- ignorer la ligne vide affichée en fin de journal ;
+- prendre en compte les formulations françaises et anglaises du log : `ERREUR` / `ERROR`, etc.
+
+#### Diagnostic
+
+- les lignes réellement vides étaient déjà filtrées ;
+- une ligne contenant uniquement un timestamp restait toutefois non vide côté fichier puis devenait `message: ""` après retrait de l'horodatage, ce qui créait une ligne vide dans la dialog ;
+- les erreurs FR/EN étaient déjà partiellement reconnues ;
+- les marqueurs de début/fin de processus et la détection du succès 7zip quotidien restaient plus orientés vers les formulations françaises.
+
+#### Correctif
+
+- centralisation de l'extraction du message via `getBackupLogMessage()` ;
+- exclusion des lignes sans contenu métier avec `isMeaningfulBackupLogLine()` avant troncature et transformation en entries ;
+- reconnaissance des marqueurs de processus FR/EN ;
+- reconnaissance du succès 7zip quotidien FR/EN ;
+- maintien et extension de la reconnaissance des erreurs FR/EN ;
+- Web passé en **1.8.15**.
+
+#### Validation automatisée
+
+GitHub Actions run `36106181908` : **succès complet**.
+
+- [x] `git diff --check origin/dev...HEAD` ;
+- [x] installation `pnpm` avec lockfile figé ;
+- [x] génération Prisma MySQL ;
+- [x] `pnpm test:admin-nav-backup-status` avec cas FR, EN et ligne timestamp seule ;
+- [x] ESLint ciblé sur parser, API sauvegardes et test ;
+- [x] build production Next.js sur MySQL ;
+- [x] génération Prisma SQL Server ;
+- [x] TypeScript `--noEmit` sur SQL Server ;
+- [x] workflow temporaire retiré du diff final.
+
+Fichiers principaux :
+
+- `website/src/lib/backup-log-parser.ts` ;
+- `website/src/app/api/admin/sauvegardes/route.ts` ;
+- `website/scripts/test-admin-nav-backup-status.ts`.
+
+#### Validation terrain
+
+- [ ] journal se terminant par une ligne vide réelle : aucune ligne supplémentaire ;
+- [ ] journal se terminant par une ligne contenant uniquement `[date heure]` : aucune ligne vide affichée ;
+- [ ] run FR avec `ERREUR` : état échec correctement détecté ;
+- [ ] run EN avec `ERROR` : état échec correctement détecté ;
+- [ ] run EN avec `START BACKUP PROCESS`, `DAILY DUMP : SUCCESS`, `END BACKUP PROCESS` : run correctement reconnu ;
+- [ ] vérifier la copie secondaire Robocopy sur Windows FR et EN.
+
+### R25-001-B — Nouveaux types d'alarmes critiques `CB` / `CH`
+
+**Statut : `CORRIGE_DEV` — PR #158 — squash merge `b7b543623cdbc7ec13f6b5661fa95739b1bafd5b`**
+
+Demandes :
+
+- passer `t_alarme.Type`, `t_alarme_message.Type` et `t_alarme_message_histo.Type` à **2 caractères** ;
+- créer les types :
+  - `CB` — critique bas ;
+  - `CH` — critique haut ;
+- ajouter dans `t_alarme_message` :
+  - `20 / CRITIQUE_BAS / CB / L'alarme a été déclenchée par un dépassement du seuil critique inférieur.` ;
+  - `21 / CRITIQUE_HAUT / CH / L'alarme a été déclenchée par un dépassement du seuil critique supérieur.` ;
+- mettre à jour les seeds MySQL et SQL Server ;
+- adapter le déclenchement Serveur/BDD pour créer `CB` / `CH` lorsqu'un seuil critique est dépassé ;
+- conserver les alarmes standards `B` / `H` pour les seuils normaux ;
+- sur les cards Surveillance :
+  - conserver le petit point clignotant pour toute alarme ;
+  - retirer le panneau danger pour les alarmes standards ;
+  - afficher ce panneau uniquement pour `CB` / `CH` ;
+  - ne pas ajouter de nouvelle couleur ;
+- vérifier emails, acquittements, historiques, filtres, exports et i18n avec les types à 2 caractères ;
+- prévoir migration MySQL + SQL Server en plus des seeds pour les installations existantes.
+
+
+
+#### Diagnostic / contrat retenu
+
+- le schéma courant possède `t_alarme_histo` et non `t_alarme_message_histo` : c'est donc `t_alarme_histo.Type` qui est élargi ;
+- les seuils critiques existaient déjà mais créaient historiquement des alarmes `B/H` ;
+- à partir de ce lot, un déclenchement initial directement critique crée `CB/CH` ;
+- `B/CB` forment une même famille basse et `H/CH` une même famille haute ;
+- une alarme déjà ouverte garde son type initial jusqu'à sa fin : pas de promotion/dégradation en cours d'alarme et pas de doublon actif ;
+- le trigger GSO avait volontairement perdu l'évaluation directe des critiques en BDD 0.91.1 ; la BDD 0.92.0 réintroduit explicitement cette logique afin qu'un déclenchement initial directement critique produise lui aussi `CB/CH` sur les GSO ;
+- le Web regroupe `CH` avec les alarmes hautes et `CB` avec les alarmes basses pour les filtres, graphes, acquittements et statistiques ;
+- sur les cards, la couleur reste celle de H/B ; seul l'indicateur danger distingue le critique ;
+- versions du lot : **Web 1.9.0**, **Serveur/installateur 1.2.0**, **BDD 0.92.0**.
+
+Fichiers principaux :
+
+- `website/src/lib/alarm-types.ts` ;
+- `website/src/components/monitoring-card/monitoring-card-header.tsx` ;
+- `website/src/app/api/alarmes/*` et adaptateurs Dashboard/Surveillance concernés ;
+- `website/src/lib/alarm-email.ts` ;
+- `Vigitemp Serveur/Vigitemp Serveur/Sensor.cs` ;
+- providers MySQL / SQL Server ;
+- `website/prisma/db-main/schema.prisma` ;
+- seeds MySQL / SQL Server ;
+- migrations `db/migrations/0.92.0/*`.
+
+#### Validation automatisée
+
+GitHub Actions run `36117832556` : **succès complet** sur le HEAD fonctionnel final.
+
+Web / BDD :
+
+- [x] `git diff --check origin/dev...HEAD` ;
+- [x] installation `pnpm` avec lockfile figé ;
+- [x] génération Prisma MySQL ;
+- [x] `pnpm test:critical-alarm-types` ;
+- [x] régression seuils critiques `pnpm test:location-critical-thresholds` ;
+- [x] régression emails `pnpm test:alarm-email-notifications` ;
+- [x] régression acquittements `pnpm test:alarm-acknowledgement-context` ;
+- [x] ESLint ciblé sur le contrat alarmes, cards, APIs, dashboard, statistiques et test ;
+- [x] contrôle i18n sans nouvelle dette dans les fichiers du lot ;
+- [x] build production Next.js sur MySQL ;
+- [x] génération Prisma SQL Server ;
+- [x] TypeScript `--noEmit` sur SQL Server ;
+- [x] migrations/seeds vérifiés sur les trois `VARCHAR(2)`, les messages 20/21 et les triggers GSO `CB/CH` ;
+- [x] vérification statique : le trigger de chaque migration correspond au trigger de son seed, après normalisation du whitespace ;
+- [x] vérification de l'ordre de migration : `SCHEMA_VERSION` n'est écrit qu'après installation réussie du trigger.
+
+Serveur :
+
+- [x] restauration NuGet legacy ;
+- [x] build Release VigiSensys Serveur **1.2.0** ;
+- [x] build Release installateur Serveur **1.2.0** ;
+- [x] vérification des versions produit dans les artefacts sources ;
+- [x] workflow temporaire retiré du diff final.
+
+Les runs intermédiaires ont permis de détecter avant finalisation :
+- deux helpers MySQL supprimés accidentellement lors d'une première réécriture du provider ;
+- des assertions trop strictes sur le formatage SQL ;
+- une première construction SQL Server qui positionnait le trigger au mauvais endroit dans le bloc d'erreur ;
+- un flag RegExp de test incompatible avec la cible TypeScript du projet.
+
+Ces points sont corrigés dans le run final ci-dessus.
+
+#### Validation terrain
+
+- [ ] appliquer la migration BDD 0.92.0 sur une copie MySQL 0.91.1 et confirmer `SCHEMA_VERSION = 0.92.0` ;
+- [ ] appliquer la migration SQL Server 0.92.0 sur une copie 0.91.1 ;
+- [ ] vérifier `t_alarme.Type`, `t_alarme_histo.Type` et `t_alarme_message.Type` en deux caractères ;
+- [ ] vérifier les messages 20 `CRITIQUE_BAS / CB` et 21 `CRITIQUE_HAUT / CH` ;
+- [ ] déclencher une alarme basse standard : type `B`, point pulsant présent, panneau danger absent ;
+- [ ] déclencher directement un critique bas : type `CB`, même couleur bleue que B, panneau danger présent ;
+- [ ] déclencher une alarme haute standard : type `H`, point pulsant présent, panneau danger absent ;
+- [ ] déclencher directement un critique haut : type `CH`, même couleur rouge que H, panneau danger présent ;
+- [ ] vérifier qu'une alarme B/H déjà ouverte conserve son type si la mesure franchit ensuite le critique ;
+- [ ] vérifier qu'une alarme CB/CH conserve son type jusqu'à sa fin même si la valeur repasse entre critique et seuil normal ;
+- [ ] vérifier qu'il n'existe jamais deux alarmes ouvertes simultanément B+CB ou H+CH pour le même lieu ;
+- [ ] vérifier l'email critique CB/CH puis les emails de fin/acquittement ;
+- [ ] vérifier page Alarmes, filtres haute/basse, historique d'acquittement, exports/statistiques et dashboard ;
+- [ ] vérifier FR / EN ;
+- [ ] vérifier une GSO : dépassement normal temporisé en B/H et déclenchement initial directement critique en CB/CH ;
+- [ ] vérifier qu'une GSO déjà ouverte en B/H conserve ce type si elle franchit ensuite le critique, sans créer de doublon.
+
+### R25-001-C — Information fréquence GSP pendant les opérations métrologie
+
+**Statut : `PR_OUVERTE` — branche `fix/metrology-gsp-cadence-info` — PR #159 — base `dev` `b7b543623cdbc7ec13f6b5661fa95739b1bafd5b`**
+
+Demande :
+
+- indiquer dans les parcours Ajustage / Étalonnage que la fréquence de lecture d'une GSP peut ne pas être exactement **1 minute** lorsqu'une ou plusieurs autres sondes du même module sont encore en Surveillance ;
+- expliquer que la Surveillance reste prioritaire sur le module et peut donc décaler légèrement les interrogations de métrologie ;
+- ajouter l'information de manière claire, non bloquante et traduite FR/EN ;
+- relire `docs/architecture/metrology-refactor.md` avant modification.
+
+#### Vérification
+
+- l'Étalonnage affichait déjà une cadence de **1 min** et indiquait que les GSP étaient interrogées toutes les minutes, sans expliquer l'arbitrage avec la Surveillance ;
+- l'Ajustage expose déjà l'intervalle de lecture dans la card du plateau, mais son texte d'aide n'indiquait pas non plus que cet intervalle peut être légèrement décalé ;
+- le comportement matériel existe déjà : la Surveillance conserve la priorité sur les lectures métrologie partageant le même module. Ce lot ne modifie donc pas le moteur d'acquisition.
+
+#### Correctif
+
+- le texte de cadence de l'Étalonnage précise désormais que **1 minute est une cadence cible** pour les GSP et qu'une Surveillance active sur le même module peut retarder légèrement la lecture ;
+- le texte d'aide de l'Ajustage précise la même règle pour l'intervalle GSP configuré ;
+- traduction FR/EN ;
+- aucune modification du Serveur, des verrous ou de l'ordonnancement matériel ;
+- Web passé en **1.9.1**.
+
+Fichiers principaux :
+
+- `website/src/messages/fr.json` ;
+- `website/src/messages/en.json` ;
+- `website/package.json` ;
+- `website/CHANGELOG.md` ;
+- `CHANGELOG.md`.
+
+#### Validation terrain
+
+- [ ] en Étalonnage avec une GSP, vérifier que la card de cadence explique clairement que la minute est indicative ;
+- [ ] en Ajustage avec une GSP, vérifier que l'aide de l'intervalle rappelle la priorité de la Surveillance ;
+- [ ] vérifier le rendu FR / EN ;
+- [ ] avec plusieurs sondes sur le même module, confirmer que l'information correspond au comportement observé lorsque la Surveillance intercale une interrogation.
 

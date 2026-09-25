@@ -3,8 +3,13 @@ import assert from "node:assert/strict"
 import { shouldShowAdminNavDock } from "../src/components/admin-nav-dock"
 import {
   buildSecondaryCopySummary,
+  getBackupLogMessage,
   getRobocopyState,
   isBackupErrorLine,
+  isBackupProcessEndLine,
+  isBackupProcessStartLine,
+  isDailyArchiveSuccessLine,
+  isMeaningfulBackupLogLine,
   parseBackupLogStatus,
 } from "../src/lib/backup-log-parser"
 
@@ -53,8 +58,35 @@ assert.equal(englishError.runs[0].primaryStatus, "success")
 assert.equal(englishError.runs[0].secondaryStatus, "failed")
 assert.equal(englishError.runs[0].secondaryRobocopyCode, 8)
 
+const fullyEnglishLog = parseBackupLogStatus(String.raw`Secondary backup directory (if defined): "Z:\Backup"
+[23/09/2026 10:36:17] ## START BACKUP PROCESS ##
+[23/09/2026 10:36:18] MAIN DATABASE DUMP : SUCCESS
+[23/09/2026 10:37:24] 7zip DAILY DUMP to J : SUCCESS (code=0)
+[23/09/2026 10:37:25] Robocopy Primary backup directory to Secondary backup directory : SUCCESS (code=1)
+[23/09/2026 10:37:25] ## END BACKUP PROCESS ##
+[23/09/2026 10:37:25]
+`)
+assert.equal(fullyEnglishLog.runs.length, 1)
+assert.equal(fullyEnglishLog.runs[0].primaryStatus, "success")
+assert.equal(fullyEnglishLog.runs[0].secondaryStatus, "success")
+assert.equal(fullyEnglishLog.runs[0].secondaryRobocopyCode, 1)
+
+assert.equal(isBackupProcessStartLine("[23/09/2026 10:36:17] ## DEBUT PROCESS BACKUP ##"), true)
+assert.equal(isBackupProcessStartLine("[23/09/2026 10:36:17] ## START BACKUP PROCESS ##"), true)
+assert.equal(isBackupProcessEndLine("[23/09/2026 10:37:25] ## FIN PROCESS BACKUP ##"), true)
+assert.equal(isBackupProcessEndLine("[23/09/2026 10:37:25] ## END BACKUP PROCESS ##"), true)
+assert.equal(isDailyArchiveSuccessLine("[23/09/2026 10:37:24] 7zip DUMP JOUR vers J : OK (code=0)"), true)
+assert.equal(isDailyArchiveSuccessLine("[23/09/2026 10:37:24] 7zip DAILY DUMP to J : SUCCESS (code=0)"), true)
+
+assert.equal(getBackupLogMessage("[23/09/2026 10:37:25]"), "")
+assert.equal(isMeaningfulBackupLogLine("[23/09/2026 10:37:25]"), false)
+assert.equal(isMeaningfulBackupLogLine("   "), false)
+assert.equal(isMeaningfulBackupLogLine("[23/09/2026 10:37:25] ERROR copy failed"), true)
+
 assert.equal(isBackupErrorLine("ERREUR copie impossible"), true)
 assert.equal(isBackupErrorLine("ERROR 5 (0x00000005) Access is denied."), true)
+assert.equal(isBackupErrorLine("ERREURS lors de la copie"), true)
+assert.equal(isBackupErrorLine("ERRORS while copying"), true)
 assert.equal(isBackupErrorLine("FAILED to copy file"), true)
 assert.equal(isBackupErrorLine("DUMP MAIN : OK"), false)
 

@@ -8,7 +8,94 @@ Les versions suivent `MAJOR.MINOR.PATCH` sans zéros de tête. La source de vers
 
 ## [Unreleased]
 
-Aucun changement supplémentaire documenté depuis la préparation de la version Web 1.8.14.
+Aucun changement supplémentaire documenté depuis la préparation de la version Web 1.9.2.
+
+## [1.9.2] — 2026-09-25
+
+Cette version fiabilise la préparation des packages Web avec les versions récentes de pnpm.
+
+### Build / packaging
+
+- La politique d'exécution des scripts de dépendances est désormais déclarative via `allowBuilds` dans `pnpm-workspace.yaml` ; aucune approbation interactive n'est nécessaire pendant une préparation de livraison.
+- `Prepare-StandaloneBuild.ps1` utilise `pnpm install --frozen-lockfile` afin de garantir que le package est construit strictement depuis le lockfile versionné.
+- La préparation vérifie explicitement la présence de la politique `allowBuilds` avant l'installation et échoue avec un message clair si elle manque.
+- L'étape `pnpm approve-builds` est retirée du flux de préparation : elle pouvait être inaccessible lorsque pnpm refusait déjà l'installation à cause de scripts de build non approuvés.
+
+### Compatibilité
+
+- Version Web : **1.9.2**.
+- Serveur **1.2.0**, BDD **0.92.0** et Agent **1.0.1** inchangés.
+- Aucune migration BDD n'est requise.
+
+## [1.9.1] — 2026-09-25
+
+Cette version clarifie la cadence de lecture des GSP pendant les opérations de métrologie.
+
+### Ajustage / Étalonnage
+
+- L'Étalonnage conserve une cadence cible d'une minute pour les GSP, mais précise désormais qu'une sonde peut être interrogée légèrement plus tard lorsque d'autres sondes du même module restent en Surveillance.
+- L'Ajustage précise de la même manière que l'intervalle GSP configuré constitue une cadence cible et peut être décalé par l'arbitrage du module.
+- Dans les deux parcours, l'interface rappelle que la **Surveillance reste prioritaire** sur les lectures de métrologie partageant le même module.
+- Les explications sont disponibles en français et en anglais, sans modifier l'ordonnancement matériel ni le moteur d'acquisition.
+
+### Compatibilité
+
+- Version Web : **1.9.1**.
+- Serveur **1.2.0**, BDD **0.92.0** et Agent **1.0.1** inchangés.
+- Aucune migration BDD n'est requise.
+
+## [1.9.0] — 2026-09-25
+
+Cette version introduit les types d'alarme critiques explicites **CB** et **CH** dans les parcours Web.
+
+### Contrat des types d'alarme
+
+- Nouveau helper canonique `alarm-types.ts` pour normaliser les codes et regrouper :
+  - `H` / `CH` dans la catégorie haute ;
+  - `B` / `CB` dans la catégorie basse ;
+  - les types techniques historiques `N`, `S`, `A`, `M`.
+- Les APIs Alarmes, le dashboard, les candidats d'acquittement, les statistiques et les historiques continuent donc d'exposer les catégories fonctionnelles haute/basse attendues par l'UI.
+- Les durées statistiques incluent `CH` avec les alarmes hautes et `CB` avec les alarmes basses.
+
+### Cards Surveillance
+
+- `CH` conserve exactement la couleur rouge de `H`.
+- `CB` conserve exactement la couleur bleue de `B`.
+- Le point pulsant reste affiché pour toute alarme active.
+- L'indicateur danger du header est masqué pour les alarmes H/B standards et reste affiché pour les nouveaux types critiques `CH` / `CB`.
+- Aucun nouveau code couleur n'est introduit.
+
+### Emails / notifications
+
+- Les libellés FR/EN distinguent désormais **alarme critique haute** et **alarme critique basse**.
+- Un déclenchement `CH` / `CB` utilise directement le template email seuil critique.
+- Le fallback historique reste conservé pour les anciennes alarmes H/B créées avant BDD 0.92.0 et dont la valeur correspondait à un dépassement critique.
+
+### Compatibilité
+
+- Version Web : **1.9.0**.
+- Serveur **1.2.0** requis pour produire les nouveaux types sur les sondes gérées par le moteur C#.
+- BDD **0.92.0** requise pour stocker les codes sur deux caractères.
+- Agent **1.0.1** inchangé.
+
+## [1.8.15] — 2026-09-25
+
+Cette version fiabilise l'affichage du journal de sauvegarde du Dashboard Admin sur les installations Windows FR et EN.
+
+### Sauvegardes Admin
+
+- Les lignes de log ne contenant qu'un horodatage sont ignorées avant pagination/troncature ; elles ne produisent plus une ligne visuellement vide en fin de journal.
+- Le parsing des débuts/fins de processus reconnaît désormais les marqueurs français et anglais, notamment `DEBUT/FIN PROCESS BACKUP` et `START/END BACKUP PROCESS`.
+- Le succès de l'archive 7zip quotidienne reconnaît les formulations historiques françaises `DUMP JOUR` et anglaises `DAILY DUMP` / variantes proches.
+- La détection d'erreur continue de reconnaître `ERREUR`, `ERROR`, `FAILED`, `FAILURE`, `ECHEC/ÉCHEC` et couvre désormais aussi leurs formes plurielles.
+- Le comptage/troncature du journal repose sur les lignes réellement affichables et n'est plus perturbé par une ligne timestamp seule.
+- Des tests ciblés couvrent un run français, un run anglais et une ligne vide sémantique en fin de fichier.
+
+### Compatibilité
+
+- Version Web : **1.8.15**.
+- Serveur **1.1.1**, Agent **1.0.1** et BDD **0.91.1** restent inchangés.
+- Aucune migration BDD n'est requise.
 
 ## [1.8.14] — 2026-09-24
 

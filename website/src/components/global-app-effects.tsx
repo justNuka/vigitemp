@@ -19,6 +19,7 @@ import {
 import { markDisconnectReason } from "@/lib/auth-disconnect-marker"
 import { ALARM_AUDIO_STATE_EVENT, getAlarmAudioMuted } from "@/lib/alarm-audio"
 import { formatMeasureValue } from "@/lib/measurements"
+import { mapAlarmTypeCategory } from "@/lib/alarm-types"
 
 function isPublicRoute(pathname: string) {
   const normalized = stripLocalePrefix(pathname)
@@ -104,16 +105,17 @@ export function GlobalAppEffects() {
         if (seenAlarmIdsRef.current.has(data.id)) return
         seenAlarmIdsRef.current.add(data.id)
 
+        const category = mapAlarmTypeCategory(data.type)
         const labelType =
-          data.type === "H"
+          category === "high"
             ? t("alarm.type.high")
-            : data.type === "B"
+            : category === "low"
               ? t("alarm.type.low")
-              : data.type === "A" || data.type === "S"
+              : category === "sector"
                 ? t("alarm.type.sector")
-                : data.type === "M"
+                : category === "module"
                   ? t("alarm.type.module")
-                : t("alarm.type.default")
+                  : t("alarm.type.default")
         const value =
           data.valeur === null
             ? t("alarm.value.na")

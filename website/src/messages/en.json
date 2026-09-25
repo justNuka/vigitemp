@@ -3393,6 +3393,20 @@
     },
     "wireless": {
       "battery": "Battery: {value}%",
+      "signal_state": {
+        "excellent": "Excellent",
+        "good": "Good",
+        "medium": "Medium",
+        "weak": "Weak",
+        "critical": "Critical",
+        "unknown": "Unknown"
+      },
+      "battery_state": {
+        "ok": "OK",
+        "low": "Low",
+        "critical": "Critical",
+        "unknown": "Unknown"
+      },
       "on_battery": "Running on battery"
     },
     "tabs": {
@@ -4360,21 +4374,7 @@
       }
     },
     "wireless": {
-      "battery": "Battery: {value}%",
-      "signal_state": {
-        "excellent": "Excellent",
-        "good": "Good",
-        "medium": "Medium",
-        "weak": "Weak",
-        "critical": "Critical",
-        "unknown": "Unknown"
-      },
-      "battery_state": {
-        "ok": "OK",
-        "low": "Low",
-        "critical": "Critical",
-        "unknown": "Unknown"
-      }
+      "battery": "Battery: {value}%"
     },
     "frequency": "Freq: {minutes} min",
     "alarm_delay": "Alarm delay: {minutes} min",
@@ -4772,7 +4772,9 @@
   "globalAppEffects": {
     "alarm": {
       "type": {
+        "critical_high": "Critical high alarm",
         "high": "High alarm",
+        "critical_low": "Critical low alarm",
         "low": "Low alarm",
         "sector": "Power / mains",
         "module": "Module issue",
@@ -6144,7 +6146,7 @@
             "durationMinutes": "Duration (min)",
             "maxGap": "Maximum gap",
             "measurementIntervalSeconds": "Time in <strong>seconds</strong> between measurements",
-            "measurementIntervalHelp": "Choose an interval of 15 or 30 seconds.",
+            "measurementIntervalHelp": "Choose an interval of 15 or 30 seconds. For GSP probes, this interval is indicative: if other probes on the same module are still monitored, monitoring has priority and may slightly delay the metrology reading.",
             "gsoFixedInterval": "A GSO probe is selected: the time between measurements is fixed at 60 seconds.",
             "invalidIntervalTitle": "Invalid duration",
             "invalidIntervalDescription": "The time between two measurements must be an integer greater than or equal to 12 seconds.",
@@ -6235,7 +6237,7 @@
           "general": "General information",
           "operator": "Operator",
           "cadence": "Reading interval",
-          "cadenceDescription": "GSP probes are queried every minute. New GSO readings are loaded from the measurements database.",
+          "cadenceDescription": "GSP probes are queried every minute. This interval is indicative: if other probes on the same module are still monitored, monitoring has priority and may slightly delay the metrology reading. New GSO readings are loaded from the measurements database.",
           "session": "Calibration session",
           "startReading": "Start probe reading",
           "stopReading": "Stop probe reading",

@@ -3397,6 +3397,20 @@
     },
     "wireless": {
       "battery": "Batterie : {value}%",
+      "signal_state": {
+        "excellent": "Excellent",
+        "good": "Bon",
+        "medium": "Moyen",
+        "weak": "Faible",
+        "critical": "Critique",
+        "unknown": "Inconnu"
+      },
+      "battery_state": {
+        "ok": "OK",
+        "low": "Faible",
+        "critical": "Critique",
+        "unknown": "Inconnue"
+      },
       "on_battery": "Sur batterie"
     },
     "tabs": {
@@ -4363,21 +4377,7 @@
       }
     },
     "wireless": {
-      "battery": "Batterie : {value}%",
-      "signal_state": {
-        "excellent": "Excellent",
-        "good": "Bon",
-        "medium": "Moyen",
-        "weak": "Faible",
-        "critical": "Critique",
-        "unknown": "Inconnu"
-      },
-      "battery_state": {
-        "ok": "OK",
-        "low": "Faible",
-        "critical": "Critique",
-        "unknown": "Inconnue"
-      }
+      "battery": "Batterie : {value}%"
     },
     "frequency": "Fréq : {minutes} min",
     "alarm_delay": "Retard alarme : {minutes} min",
@@ -4775,7 +4775,9 @@
   "globalAppEffects": {
     "alarm": {
       "type": {
+        "critical_high": "Alarme critique haute",
         "high": "Alarme haute",
+        "critical_low": "Alarme critique basse",
         "low": "Alarme basse",
         "sector": "Secteur / alimentation",
         "module": "Problème module",
@@ -6129,7 +6131,7 @@
             "durationMinutes": "Durée (min)",
             "maxGap": "Écart max",
             "measurementIntervalSeconds": "Durée en <strong>secondes</strong> entre les mesures",
-            "measurementIntervalHelp": "Choisissez une durée de 15 ou 30 secondes.",
+            "measurementIntervalHelp": "Choisissez une durée de 15 ou 30 secondes. Pour les GSP, cette cadence reste indicative : si d'autres sondes du même module sont en Surveillance, celle-ci est prioritaire et peut légèrement décaler la lecture de métrologie.",
             "gsoFixedInterval": "Une sonde GSO est sélectionnée : la durée entre les mesures est fixée a 60 secondes.",
             "invalidIntervalTitle": "Durée invalide",
             "invalidIntervalDescription": "La durée entre deux mesures doit être un nombre entier supérieur ou égal à 12 secondes.",
@@ -6238,7 +6240,7 @@
           "general": "Informations générales",
           "operator": "Opérateur",
           "cadence": "Fréquence de lecture",
-          "cadenceDescription": "Les sondes GSP sont interrogées toutes les minutes. Les nouvelles mesures GSO sont lues depuis la base de mesures.",
+          "cadenceDescription": "Les sondes GSP sont interrogées toutes les minutes. Cette cadence reste indicative : si d'autres sondes du même module sont en Surveillance, celle-ci est prioritaire et peut légèrement décaler la lecture de métrologie. Les nouvelles mesures GSO sont lues depuis la base de mesures.",
           "session": "Session d'étalonnage",
           "startReading": "Lancer la lecture des sondes",
           "stopReading": "Arrêter la lecture des sondes",

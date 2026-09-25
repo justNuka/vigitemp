@@ -11,6 +11,7 @@ import { apiError, apiOk } from "@/lib/api-response"
 import { log } from "@/lib/logger"
 import { serializePrismaStoredDbDateTime, toPrismaStoredDbDateTime } from "@/lib/sql-provider"
 import { serializeDbDateTime } from "@/lib/date-display"
+import { isThresholdAlarmType, mapAlarmTypeCategory, normalizeAlarmTypeCode } from "@/lib/alarm-types"
 
 const alarmsQuerySchema = z.object({
   status: z.enum(["active", "acknowledged", "resolved"]).optional(),
@@ -287,57 +288,27 @@ export const GET = withAuthLogging(async (req: NextRequest, ctx) => {
 
     const formatted = alarms.map((alarm) => {
 
-      const alarmType =
-
-        alarm.Type === "H"
-
-          ? "high"
-
-          : alarm.Type === "B"
-
-            ? "low"
-
-            : alarm.Type === "N"
-
-              ? "no-response"
-
-              : alarm.Type === "M"
-
-                ? "module"
-
-                : isPowerAlarmType(alarm.Type)
-
-                  ? "sector"
-
-                : "temperature"
+      const rawAlarmType = normalizeAlarmTypeCode(alarm.Type)
+      const alarmType = mapAlarmTypeCategory(alarm.Type) ?? "temperature"
 
       const unit = alarm.Unite?.trim() || "Unité inconnue"
 
       const message =
-
-        alarm.Type === "N"
-
+        rawAlarmType === "N"
           ? "Alarme non reponse"
-
-          : alarm.Type === "M"
-
+          : rawAlarmType === "M"
             ? "Probleme module"
-
-            : isPowerAlarmType(alarm.Type)
-
+            : isPowerAlarmType(rawAlarmType)
               ? "Alarme coupure secteur"
-
-              : alarm.Type === "H"
-
-                ? `Alarme haute - ${alarm.Valeur} C`
-
-                : alarm.Type === "B"
-
-                  ? `Alarme basse - ${alarm.Valeur} C`
-
-                  : `Alarme temperature - ${alarm.Valeur} C`
-
-
+              : rawAlarmType === "CH"
+                ? `Alarme critique haute - ${alarm.Valeur} C`
+                : rawAlarmType === "CB"
+                  ? `Alarme critique basse - ${alarm.Valeur} C`
+                  : rawAlarmType === "H"
+                    ? `Alarme haute - ${alarm.Valeur} C`
+                    : rawAlarmType === "B"
+                      ? `Alarme basse - ${alarm.Valeur} C`
+                      : `Alarme temperature - ${alarm.Valeur} C`
 
       const hasConfiguredThresholds =
 
@@ -383,7 +354,7 @@ export const GET = withAuthLogging(async (req: NextRequest, ctx) => {
 
             ? "technical"
 
-            : alarm.Type === "H" || alarm.Type === "B"
+            : isThresholdAlarmType(alarm.Type)
 
               ? "critical"
 

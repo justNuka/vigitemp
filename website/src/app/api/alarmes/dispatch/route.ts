@@ -431,10 +431,14 @@ export const POST = withLogging(async (req: NextRequest) => {
       locationLabel = [siteName, lieuName].filter(Boolean).join(" / ")
       title ??= "Alarme VigiSensys"
       const alarmType =
-        alarm.Type === "H"
-          ? "Alarme haute"
-          : alarm.Type === "B"
-            ? "Alarme basse"
+        alarm.Type === "CH"
+          ? "Alarme critique haute"
+          : alarm.Type === "H"
+            ? "Alarme haute"
+            : alarm.Type === "CB"
+              ? "Alarme critique basse"
+              : alarm.Type === "B"
+                ? "Alarme basse"
             : alarm.Type === "N"
               ? "Non reponse"
               : alarm.Type === "M"
@@ -454,7 +458,7 @@ export const POST = withLogging(async (req: NextRequest) => {
       const emailEventType = isEndedAlarmDispatch ? "ended" : "triggered"
       let displayUnit = normalizeUnit(alarm.Unite)
       let valueLabel =
-        alarm.Type === "H" || alarm.Type === "B"
+        alarm.Type === "H" || alarm.Type === "B" || alarm.Type === "CH" || alarm.Type === "CB"
           ? formatValueWithUnit(alarm.Valeur, alarm.Unite)
           : "N/A"
       let lastMeasurementAt = alarm.Date_Heure_Derniere_Mesure ?? null

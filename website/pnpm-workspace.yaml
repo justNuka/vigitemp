@@ -1,13 +1,12 @@
-ignoredBuiltDependencies:
-  - '@heroui/shared-utils'
-  - '@parcel/watcher'
-  - '@prisma/client'
-  - '@prisma/engines'
-  - '@swc/core'
-  - '@tsparticles/engine'
-  - core-js
-  - esbuild
-  - msw
-  - prisma
-  - sharp
-  - unrs-resolver
+allowBuilds:
+  '@heroui/shared-utils': true
+  '@parcel/watcher': true
+  '@prisma/engines': true
+  '@swc/core': true
+  '@tsparticles/engine': true
+  core-js: true
+  esbuild: true
+  msw: true
+  prisma: true
+  sharp: true
+  unrs-resolver: true

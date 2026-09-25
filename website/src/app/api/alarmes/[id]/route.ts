@@ -7,25 +7,10 @@ import { log } from "@/lib/logger"
 import { applyAccessFilter, buildAlarmAccessFilter, getUserLocationScope } from "@/lib/location-access-scope"
 import { normalizeMeasureNumber } from "@/lib/measurements"
 import { serializePrismaStoredDbDateTime } from "@/lib/sql-provider"
+import { mapAlarmTypeCategory } from "@/lib/alarm-types"
 
 function mapAlarmType(type: string | null | undefined) {
-  switch ((type ?? "").trim().toUpperCase()) {
-    case "H":
-      return "high" as const
-    case "B":
-      return "low" as const
-    case "N":
-      return "no-response" as const
-    case "M":
-      return "module" as const
-    case "A":
-    case "S":
-      return "sector" as const
-    case "T":
-      return "ended" as const
-    default:
-      return undefined
-  }
+  return mapAlarmTypeCategory(type) ?? undefined
 }
 
 export const GET = withAuthLogging(

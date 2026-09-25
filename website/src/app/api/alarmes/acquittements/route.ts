@@ -32,8 +32,10 @@ function extractAlarmId(comment: string | null | undefined): number | null {
 function normalizeAlarmType(type: string | null | undefined) {
   switch ((type ?? "").trim().toUpperCase()) {
     case "H":
+    case "CH":
       return "HIGH"
     case "B":
+    case "CB":
       return "LOW"
     case "A":
     case "S":
