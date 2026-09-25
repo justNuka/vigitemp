@@ -23,7 +23,42 @@ La procédure complète d'upgrade des installations existantes est documentée d
 
 ## [Unreleased]
 
-Aucun changement supplémentaire documenté depuis la préparation du schéma 0.91.1.
+Aucun changement supplémentaire documenté depuis la préparation du schéma 0.91.2.
+
+## [0.91.2] — 2026-09-25
+
+Cette révision ajoute les codes d'alarme critiques explicites `CB` / `CH`.
+
+### Colonnes `Type`
+
+Les trois colonnes suivantes passent de **VARCHAR(1)** à **VARCHAR(2)**, restent `NULL` et ne reçoivent aucune nouvelle valeur par défaut :
+
+- `t_alarme.Type` ;
+- `t_alarme_histo.Type` ;
+- `t_alarme_message.Type`.
+
+> Le retour terrain mentionnait `t_alarme_message_histo`. Cette table n'existe pas dans le schéma courant ; l'historique des alarmes est porté par `t_alarme_histo`.
+
+### Messages critiques
+
+Deux entrées sont ajoutées / mises à jour dans `t_alarme_message` :
+
+- `20 / CRITIQUE_BAS / CB` — « L'alarme a été déclenchée par un dépassement du seuil critique inférieur. »
+- `21 / CRITIQUE_HAUT / CH` — « L'alarme a été déclenchée par un dépassement du seuil critique supérieur. »
+
+### Trigger GSO
+
+- `TRG_GSO_BEF_UPD_LIEU_ALARME` reste **inchangé par rapport à 0.91.1**.
+- La migration 0.91.2 ne recrée pas ce trigger et ne réintroduit pas l'évaluation directe des seuils critiques supprimée en 0.91.1.
+- Les GSO conservent donc leurs alarmes B/H temporisées historiques.
+
+### Seeds / migrations
+
+- Seed MySQL : version **0.91.2**, largeur des trois colonnes + messages 20/21.
+- Seed SQL Server : même contrat.
+- Migration MySQL : `db/migrations/0.91.2/mysql.sql`.
+- Migration SQL Server : `db/migrations/0.91.2/mssql.sql`.
+- `VERSION / SCHEMA_VERSION` passe à `0.91.2` uniquement après les modifications.
 
 ## [0.91.1] — 2026-09-23
 
