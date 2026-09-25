@@ -3023,7 +3023,16 @@
     "server_error_badge": "Incident détecté",
     "server_error_title": "Erreur serveur",
     "server_error_description": "Un problème technique est survenu lors du chargement.",
-    "server_error_helper": "L'erreur a été enregistrée. Vous pouvez réessayer dans un instant. Si cette erreur persiste, contactez le support technique."
+    "server_error_helper": "L'erreur a été enregistrée. Vous pouvez réessayer dans un instant. Si cette erreur persiste, contactez le support technique.",
+    "network_badge": "Réseau",
+    "network_title": "Connexion perdue",
+    "network_description": "VigiSensys ne parvient plus à joindre le serveur. Les données seront de nouveau disponibles dès le retour de la connexion.",
+    "network_helper": "En attente du retour de la connexion…",
+    "network_online_helper": "La connexion réseau est revenue. Vous pouvez réessayer.",
+    "maintenance_badge": "Maintenance",
+    "maintenance_title": "Maintenance en cours",
+    "maintenance_description": "VigiSensys est momentanément indisponible pour une opération de maintenance.",
+    "maintenance_helper": "Revenez dans quelques minutes."
   },
   "login": {
     "title": "Connexion",
