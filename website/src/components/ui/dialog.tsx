@@ -22,7 +22,7 @@ const DialogOverlay = React.forwardRef<
   <DialogPrimitive.Overlay
     ref={ref}
     className={cn(
-      "fixed inset-0 z-50 bg-black/80 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
+      "fixed inset-0 z-50 bg-[hsl(222_40%_6%/0.45)] backdrop-blur-[1px] dark:bg-black/60 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 duration-200",
       className
     )}
     {...props}
@@ -123,7 +123,7 @@ const DialogContent = React.forwardRef<
       <DialogPrimitive.Content
         ref={setRefs}
         className={cn(
-          "fixed left-[50%] top-[50%] z-50 grid w-[calc(100vw-2rem)] max-w-2xl translate-x-[-50%] translate-y-[-50%] gap-4 border bg-white p-6 shadow-lg dark:bg-popover dark:text-popover-foreground duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=open]:slide-in-from-top-1 data-[state=closed]:slide-out-to-top-1 sm:rounded-lg",
+          "fixed left-[50%] top-[50%] z-50 grid w-[calc(100vw-2rem)] max-w-2xl translate-x-[-50%] translate-y-[-50%] gap-4 border border-border bg-card p-6 text-card-foreground shadow-[0_24px_64px_-24px_hsl(var(--shadow)/0.45)] duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=open]:slide-in-from-top-2 data-[state=closed]:slide-out-to-top-1 sm:rounded-xl",
           className
         )}
         style={style}
