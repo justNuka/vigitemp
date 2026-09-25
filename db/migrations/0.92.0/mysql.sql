@@ -687,4 +687,3 @@ ON DUPLICATE KEY UPDATE
   `Commentaire` = VALUES(`Commentaire`);
 
 SELECT 'Migration VigiSensys DB 0.92.0 terminée' AS Migration_Status;
-
