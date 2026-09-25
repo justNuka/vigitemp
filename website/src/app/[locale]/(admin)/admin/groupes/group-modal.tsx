@@ -170,8 +170,6 @@ export function GroupModal({ open, onOpenChange, group, isEditing }: GroupModalP
   const isSubmitting = form.formState.isSubmitting
   const memoryKey = `group-form:${isEditing ? group?.Id_Groupe ?? 'edit' : 'new'}`
   const assignedUserIds = useWatch({ control: form.control, name: 'assignedUserIds' }) || []
-  const allUserIds = users.map((user) => user.id)
-  const allUsersSelected = allUserIds.length > 0 && allUserIds.every((userId) => assignedUserIds.includes(userId))
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
