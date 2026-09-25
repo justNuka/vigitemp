@@ -8,7 +8,41 @@ Les versions suivent `MAJOR.MINOR.PATCH` sans zéros de tête. La source de vers
 
 ## [Unreleased]
 
-Aucun changement supplémentaire documenté depuis la préparation de la version Web 1.8.15.
+Aucun changement supplémentaire documenté depuis la préparation de la version Web 1.8.16.
+
+## [1.8.16] — 2026-09-25
+
+Cette version introduit les types d'alarme critiques explicites **CB** et **CH** dans les parcours Web.
+
+### Contrat des types d'alarme
+
+- Nouveau helper canonique `alarm-types.ts` pour normaliser les codes et regrouper :
+  - `H` / `CH` dans la catégorie haute ;
+  - `B` / `CB` dans la catégorie basse ;
+  - les types techniques historiques `N`, `S`, `A`, `M`.
+- Les APIs Alarmes, le dashboard, les candidats d'acquittement, les statistiques et les historiques continuent donc d'exposer les catégories fonctionnelles haute/basse attendues par l'UI.
+- Les durées statistiques incluent `CH` avec les alarmes hautes et `CB` avec les alarmes basses.
+
+### Cards Surveillance
+
+- `CH` conserve exactement la couleur rouge de `H`.
+- `CB` conserve exactement la couleur bleue de `B`.
+- Le point pulsant reste affiché pour toute alarme active.
+- L'indicateur danger du header est masqué pour les alarmes H/B standards et reste affiché pour les nouveaux types critiques `CH` / `CB`.
+- Aucun nouveau code couleur n'est introduit.
+
+### Emails / notifications
+
+- Les libellés FR/EN distinguent désormais **alarme critique haute** et **alarme critique basse**.
+- Un déclenchement `CH` / `CB` utilise directement le template email seuil critique.
+- Le fallback historique reste conservé pour les anciennes alarmes H/B créées avant BDD 0.91.2 et dont la valeur correspondait à un dépassement critique.
+
+### Compatibilité
+
+- Version Web : **1.8.16**.
+- Serveur **1.1.2** requis pour produire les nouveaux types sur les sondes gérées par le moteur C#.
+- BDD **0.91.2** requise pour stocker les codes sur deux caractères.
+- Agent **1.0.1** inchangé.
 
 ## [1.8.15] — 2026-09-25
 
