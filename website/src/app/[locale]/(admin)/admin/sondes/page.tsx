@@ -23,7 +23,7 @@ export default async function SondesPage() {
         descriptionKey="sensorsPage.description"
       />
 
-      <div className="space-y-6 p-6">
+      <div className="mx-auto w-full max-w-[1680px] space-y-4 p-4 md:p-6">
         <Suspense fallback={<div className="text-sm text-muted-foreground">{tCommon("loading")}</div>}>
           <SensorsClient />
         </Suspense>
