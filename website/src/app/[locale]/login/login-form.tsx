@@ -298,106 +298,76 @@ export function LoginForm() {
 
   return (
     <LazyMotion features={domAnimation}>
-      <div className="relative min-h-screen flex flex-col items-center justify-between p-4 overflow-hidden bg-background">
-        {/* Animated background orbs — CSS only, hidden when reduced motion */}
-        {!shouldReduceMotion && (
-          <div aria-hidden="true" className="pointer-events-none absolute inset-0">
-            <div className="animate-blob absolute top-1/4 left-1/4 h-72 w-72 rounded-full bg-primary/15 blur-3xl opacity-60" />
-            <div className="animate-blob animation-delay-2000 absolute top-1/2 right-1/4 h-64 w-64 rounded-full bg-blue-500/10 blur-3xl opacity-60" />
-            <div className="animate-blob animation-delay-4000 absolute bottom-1/4 left-1/3 h-56 w-56 rounded-full bg-purple-500/10 blur-3xl opacity-60" />
+      <div className="grid min-h-screen w-full bg-background lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
+        <aside className="relative hidden flex-col justify-between overflow-hidden bg-sidebar p-10 text-sidebar-foreground lg:flex">
+          <Logo size="md" showText />
+          <LoginTrace reduced={Boolean(shouldReduceMotion)} />
+          <div>
+            <p className="text-lg font-semibold tracking-[-0.01em]">{t("subtitle")}</p>
+            <p className="mt-1 text-[13px] text-sidebar-foreground/65">{t("footer.tagline")}</p>
           </div>
-        )}
+        </aside>
 
-        <div className="absolute top-4 right-4 flex items-center gap-2 z-10">
-          <LanguageSwitcher />
-          <ThemeToggle />
-        </div>
+        <main className="relative flex items-center justify-center px-6 py-12">
+          <div className="absolute right-4 top-4 z-10 flex items-center gap-2">
+            <LanguageSwitcher />
+            <ThemeToggle />
+          </div>
 
-        <div className="relative z-10 w-full max-w-md space-y-8 flex-1 flex flex-col justify-center">
-          {/* Logo + badge licence */}
           <m.div
-            className="flex flex-col items-center text-center space-y-3"
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 6 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: dur, ease }}
+            transition={{ duration: shouldReduceMotion ? 0 : 0.22, ease }}
+            className="w-full max-w-sm"
           >
-            <Logo size="lg" showText />
-            <m.span
-              className="inline-flex items-center rounded-md bg-primary/10 px-3 py-1 text-xs font-medium text-primary ring-1 ring-inset ring-primary/20"
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: dur, ease, delay: shouldReduceMotion ? 0 : 0.15 }}
-            >
-              {licenseLabel}
-            </m.span>
+            <div className="mb-8 text-foreground lg:hidden">
+              <Logo size="md" showText />
+            </div>
+
+            <div className="mb-6">
+              <div className="mb-3 flex items-center justify-between gap-3">
+                <div>
+                  <h1 className="text-xl font-semibold tracking-[-0.01em] text-foreground">{t("title")}</h1>
+                  <p className="mt-1 text-[13px] text-muted-foreground">{t("card.description")}</p>
+                </div>
+                <span className="inline-flex shrink-0 items-center rounded-md border border-primary/20 bg-[hsl(var(--primary-soft))] px-2 py-1 text-[11px] font-medium text-[hsl(var(--primary-strong))]">
+                  {licenseLabel}
+                </span>
+              </div>
+
+              {loginAlertReason ? (
+                <LoginInactivityAlert
+                  message={
+                    loginAlertReason === "session-expired"
+                      ? t("session_expired_alert")
+                      : t("inactivity_alert")
+                  }
+                  variant={loginAlertReason === "session-expired" ? "info" : "warning"}
+                />
+              ) : null}
+            </div>
+
+            <LoginCredentialsForm
+              register={register}
+              errors={errors}
+              onSubmit={handleSubmit(handleFormSubmit, (errors) => showFormValidationToast(errors))}
+              onForgotPassword={() => setShowForgotPassword(true)}
+              isSubmitting={loginMutation.isPending}
+              translations={{
+                usernameLabel: t("fields.username_label"),
+                usernamePlaceholder: t("fields.username_placeholder"),
+                passwordLabel: t("fields.password_label"),
+                passwordPlaceholder: t("fields.password_placeholder"),
+                signingIn: t("buttons.signing_in"),
+                signIn: t("buttons.sign_in"),
+                forgotPassword: t("buttons.forgot_password"),
+                showPassword: t("fields.show_password"),
+                hidePassword: t("fields.hide_password"),
+                capsLockWarning: t("fields.caps_lock_warning"),
+              }}
+            />
           </m.div>
-
-          {/* Title */}
-          <m.div
-            className="text-center space-y-2"
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: dur, ease, delay: shouldReduceMotion ? 0 : 0.25 }}
-          >
-            <h1 className="text-3xl font-bold tracking-tight">{t("title")}</h1>
-            <p className="text-sm text-muted-foreground">{t("subtitle")}</p>
-          </m.div>
-
-          {/* Card glassmorphism */}
-          <m.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: dur, ease, delay: shouldReduceMotion ? 0 : 0.38 }}
-          >
-            <Card className="border border-border/60 bg-white shadow-2xl dark:bg-card">
-              <CardHeader>
-                <CardTitle>{t("card.title")}</CardTitle>
-                <CardDescription>
-                  {t("card.description")}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <>
-                  {loginAlertReason && (
-                    <LoginInactivityAlert
-                      message={
-                        loginAlertReason === "session-expired"
-                          ? t("session_expired_alert")
-                          : t("inactivity_alert")
-                      }
-                      variant={loginAlertReason === "session-expired" ? "info" : "warning"}
-                    />
-                  )}
-                  <LoginCredentialsForm
-                    register={register}
-                    errors={errors}
-                    onSubmit={handleSubmit(handleFormSubmit, (errors) => showFormValidationToast(errors))}
-                    onForgotPassword={() => setShowForgotPassword(true)}
-                    isSubmitting={loginMutation.isPending}
-                    translations={{
-                      usernameLabel: t("fields.username_label"),
-                      usernamePlaceholder: t("fields.username_placeholder"),
-                      passwordLabel: t("fields.password_label"),
-                      passwordPlaceholder: t("fields.password_placeholder"),
-                      signingIn: t("buttons.signing_in"),
-                      signIn: t("buttons.sign_in"),
-                      forgotPassword: t("buttons.forgot_password"),
-                      showPassword: t("fields.show_password"),
-                      hidePassword: t("fields.hide_password"),
-                      capsLockWarning: t("fields.caps_lock_warning"),
-                    }}
-                  />
-                </>
-              </CardContent>
-            </Card>
-          </m.div>
-
-          <p className="text-center text-sm text-muted-foreground">{t("footer.tagline")}</p>
-        </div>
-
-        <p className="relative z-10 w-full text-center text-xs text-muted-foreground/70 pb-4">
-          Vigi<span className="font-semibold">Sensys</span> - MC2 Lab
-        </p>
+        </main>
 
         <FirstLoginWelcome
           open={showFirstLoginWelcome}
@@ -492,4 +462,26 @@ export function LoginForm() {
       </div>
     </LazyMotion>
   );
+}
+
+function LoginTrace({ reduced }: { reduced: boolean }) {
+  return (
+    <svg viewBox="0 0 400 180" aria-hidden className="w-full max-w-md opacity-90">
+      <rect x={0} y={50} width={400} height={80} fill="hsl(var(--primary) / 0.07)" />
+      <line x1={0} x2={400} y1={50} y2={50} stroke="hsl(var(--status-critical) / 0.5)" strokeDasharray="5 4" />
+      <line x1={0} x2={400} y1={130} y2={130} stroke="hsl(var(--status-critical) / 0.5)" strokeDasharray="5 4" />
+      <line x1={0} x2={400} y1={90} y2={90} stroke="hsl(var(--sidebar-foreground) / 0.25)" />
+      <m.path
+        d="M0 96 L40 90 L80 99 L120 84 L160 92 L200 80 L240 88 L280 76 L320 86 L360 82 L400 88"
+        fill="none"
+        stroke="hsl(var(--primary))"
+        strokeWidth={2}
+        strokeLinejoin="round"
+        initial={reduced ? false : { pathLength: 0 }}
+        animate={{ pathLength: 1 }}
+        transition={{ duration: reduced ? 0 : 0.3, delay: reduced ? 0 : 0.1, ease: [0.23, 1, 0.32, 1] }}
+      />
+      <circle cx={400} cy={88} r={3.5} fill="hsl(var(--primary))" />
+    </svg>
+  )
 }
