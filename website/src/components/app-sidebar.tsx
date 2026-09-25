@@ -154,18 +154,18 @@ export function AppSidebar({ activeAlarms = 0, currentUser, onLogout }: AppSideb
 
   return (
     <Sidebar>
-      <SidebarHeader className="p-4 flex flex-col items-center bg-linear-to-b from-sidebar-accent/30 to-transparent">
-        <Link href="/" className="flex items-center justify-center gap-2">
+      <SidebarHeader className="border-b border-sidebar-border px-4 py-3">
+        <Link href="/" className="flex items-center gap-2">
           <Logo
             size="xs"
             showText
             textClassName="text-sidebar-foreground"
           />
         </Link>
-        <span className="inline-flex items-center rounded-md bg-amber-300/20 px-3 py-1 text-xs font-bold text-amber-200 ring-1 ring-inset ring-amber-300/40 mt-2">
+        <span className="mt-1.5 inline-flex items-center rounded-md border border-sidebar-border bg-sidebar-accent/70 px-2 py-0.5 text-[10px] font-semibold text-sidebar-foreground/80">
           {licenseLabel}
         </span>
-        <span className="mt-2 text-[11px] font-medium text-sidebar-foreground/65">v{WEB_APP_VERSION}</span>
+        <span className="mt-1 text-[10px] font-medium text-sidebar-foreground/50">v{WEB_APP_VERSION}</span>
       </SidebarHeader>
 
       <SidebarSeparator />
@@ -366,7 +366,7 @@ export function AppSidebar({ activeAlarms = 0, currentUser, onLogout }: AppSideb
           </SidebarMenuItem>
         </SidebarMenu>
         {currentUser && (
-          <div className="flex items-center gap-3 p-2 rounded-lg bg-sidebar-accent/50">
+          <div className="flex items-center gap-2.5 rounded-md border border-sidebar-border bg-sidebar-accent/35 p-2">
             <Avatar className="h-9 w-9">
               {(() => {
                 const initials = getInitialsForAvatar(currentUser.Prenom, currentUser.Nom, currentUser.Login)
@@ -381,7 +381,7 @@ export function AppSidebar({ activeAlarms = 0, currentUser, onLogout }: AppSideb
               <p className="text-sm font-medium truncate">
                 {`${currentUser.Prenom || ""} ${currentUser.Nom || ""}`}
               </p>
-              <p className="text-xs text-muted-foreground capitalize">
+              <p className="text-[11px] capitalize text-sidebar-foreground/55">
                 {currentUser.Profil_Utilisateur || tCommon("user")}
               </p>
             </div>
