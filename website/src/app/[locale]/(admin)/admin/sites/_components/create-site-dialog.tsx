@@ -145,7 +145,7 @@ export function CreateSiteDialog({
                   uncheckAllLabel={t('actions.uncheck_all')}
                   searchPlaceholder={tCommon('search')}
                 />
-
+              </TabsContent>
             </Tabs>
             <DialogFooter className="-mx-5 -mb-4 border-t border-border bg-[hsl(var(--surface-muted)/0.45)] px-5 py-3">
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="gap-2">
