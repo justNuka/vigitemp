@@ -3020,7 +3020,16 @@
     "server_error_badge": "Incident detected",
     "server_error_title": "Server error",
     "server_error_description": "A technical issue occurred while loading the page.",
-    "server_error_helper": "The error has been logged. You can try again in a moment. If this error persists, please contact technical support."
+    "server_error_helper": "The error has been logged. You can try again in a moment. If this error persists, please contact technical support.",
+    "network_badge": "Network",
+    "network_title": "Connection lost",
+    "network_description": "VigiSensys can no longer reach the server. Data will be available again when the connection returns.",
+    "network_helper": "Waiting for the connection to return…",
+    "network_online_helper": "The network connection is back. You can try again.",
+    "maintenance_badge": "Maintenance",
+    "maintenance_title": "Maintenance in progress",
+    "maintenance_description": "VigiSensys is temporarily unavailable while maintenance is in progress.",
+    "maintenance_helper": "Please try again in a few minutes."
   },
   "login": {
     "title": "Sign in",
