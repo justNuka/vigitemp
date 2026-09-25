@@ -1,6 +1,6 @@
 "use client"
 
-import { CheckCircle2, CircleDot, Info, ScrollText, XCircle } from "lucide-react"
+import { CheckCircle2, CircleDot, FileText, Info, XCircle } from "lucide-react"
 import { useLocale, useTranslations } from "next-intl"
 
 import { useAppTimezone } from "@/components/timezone-provider"
@@ -15,12 +15,28 @@ import {
 import { cn } from "@/lib/utils"
 import type { BackupLogEntry, BackupSummary } from "@/types/backup-types"
 
-function LogLevelIcon({ level }: { level: BackupLogEntry["level"] }) {
-  if (level === "success") return <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-  if (level === "error") return <XCircle className="h-4 w-4 text-destructive" />
-  if (level === "section") return <CircleDot className="h-4 w-4 text-violet-600" />
-  return <Info className="h-4 w-4 text-muted-foreground" />
-}
+const levelTone = {
+  success: {
+    icon: CheckCircle2,
+    row: "bg-[hsl(var(--status-ok)/0.05)]",
+    iconClass: "text-[hsl(var(--status-ok-text))]",
+  },
+  error: {
+    icon: XCircle,
+    row: "bg-[hsl(var(--status-critical)/0.06)]",
+    iconClass: "text-[hsl(var(--status-critical))]",
+  },
+  section: {
+    icon: CircleDot,
+    row: "bg-[hsl(var(--status-ended)/0.06)]",
+    iconClass: "text-[hsl(var(--status-ended))]",
+  },
+  info: {
+    icon: Info,
+    row: "",
+    iconClass: "text-[hsl(var(--subtle-foreground))]",
+  },
+} as const
 
 export function AdminBackupLogDialog({
   open,
@@ -50,81 +66,72 @@ export function AdminBackupLogDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[88vh] max-w-4xl overflow-hidden p-0">
-        <DialogHeader className="border-b px-6 py-5">
-          <div className="flex items-start gap-3">
-            <span className="mt-0.5 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-violet-500/10 text-violet-600">
-              <ScrollText className="h-4 w-4" />
-            </span>
-            <div className="min-w-0">
-              <DialogTitle>{t("title")}</DialogTitle>
-              <DialogDescription className="mt-1">{t("description")}</DialogDescription>
-            </div>
-          </div>
+      <DialogContent className="flex max-h-[88vh] max-w-3xl flex-col overflow-hidden p-0">
+        <DialogHeader className="border-b border-border px-5 py-4 pr-14">
+          <DialogTitle className="text-[15px] font-semibold">{t("title")}</DialogTitle>
+          <DialogDescription className="mt-0.5 text-xs">{t("description")}</DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4 overflow-hidden px-6 pb-6">
-          <div className="grid gap-3 rounded-lg border bg-muted/20 p-3 text-sm sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
-            <div className="min-w-0">
-              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{t("file")}</p>
-              <p className="mt-1 truncate font-mono text-xs" title={summary?.logFilePath ?? ""}>
-                {summary?.logFilePath || t("unavailable")}
-              </p>
-            </div>
-            <div className="flex flex-wrap items-center gap-2">
-              <Badge variant="outline">{t("lines", { count: summary?.logLineCount ?? 0 })}</Badge>
-              {summary?.logTruncated ? (
-                <Badge variant="secondary">{t("last_lines", { count: entries.length })}</Badge>
-              ) : null}
-            </div>
-          </div>
+        <div className="flex flex-wrap items-center gap-2 border-b border-border bg-[hsl(var(--surface-muted)/0.6)] px-5 py-2 text-xs">
+          <FileText className="h-3.5 w-3.5 text-[hsl(var(--subtle-foreground))]" aria-hidden />
+          <span className="text-muted-foreground">{t("file")}</span>
+          <span className="num min-w-0 flex-1 truncate font-medium text-foreground" title={summary?.logFilePath ?? undefined}>
+            {summary?.logFilePath || t("unavailable")}
+          </span>
+          <Badge variant="outline" className="num rounded-full bg-card text-[11px]">
+            {t("lines", { count: summary?.logLineCount ?? 0 })}
+          </Badge>
+          {summary?.logTruncated ? (
+            <Badge
+              variant="outline"
+              className="num rounded-full border-primary/30 bg-[hsl(var(--primary-soft))] text-[11px] text-[hsl(var(--primary-strong))]"
+            >
+              {t("last_lines", { count: entries.length })}
+            </Badge>
+          ) : null}
+        </div>
 
-          <div className="max-h-[58vh] overflow-y-auto rounded-lg border bg-background">
-            {entries.length === 0 ? (
-              <div className="flex min-h-40 items-center justify-center px-6 py-10 text-center text-sm text-muted-foreground">
-                {t("empty")}
-              </div>
-            ) : (
-              <div className="divide-y">
-                {entries.map((entry, index) => (
-                  <div
+        <div className="scroll-thin min-h-[200px] flex-1 overflow-y-auto">
+          {entries.length === 0 ? (
+            <p className="px-5 py-12 text-center text-[13px] text-muted-foreground">{t("empty")}</p>
+          ) : (
+            <ol className="divide-y divide-border/70">
+              {entries.map((entry, index) => {
+                const tone = levelTone[entry.level] ?? levelTone.info
+                const Icon = tone.icon
+
+                return (
+                  <li
                     key={`${entry.timestamp ?? "no-time"}-${index}`}
                     className={cn(
-                      "grid gap-2 px-4 py-3 text-sm sm:grid-cols-[150px_20px_minmax(0,1fr)] sm:items-start",
-                      entry.level === "error" && "bg-destructive/5",
-                      entry.level === "success" && "bg-emerald-500/5",
-                      entry.level === "section" && "bg-violet-500/5",
+                      "grid grid-cols-[150px_16px_minmax(0,1fr)] items-start gap-3 px-5 py-1.5 text-xs transition-colors duration-150",
+                      tone.row,
                     )}
                   >
-                    <time className="whitespace-nowrap text-xs tabular-nums text-muted-foreground">
+                    <span className="num whitespace-nowrap text-muted-foreground">
                       {formatTimestamp(entry.timestamp)}
-                    </time>
-                    <LogLevelIcon level={entry.level} />
-                    <p
+                    </span>
+                    <Icon className={cn("mt-0.5 h-3.5 w-3.5", tone.iconClass)} aria-hidden />
+                    <span
                       className={cn(
-                        "min-w-0 break-words font-mono text-xs leading-5",
-                        entry.level === "error" && "font-semibold text-destructive",
-                        entry.level === "success" && "text-emerald-700 dark:text-emerald-300",
-                        entry.level === "section" && "font-semibold text-violet-700 dark:text-violet-300",
+                        "break-words leading-5 text-foreground/90",
+                        entry.level === "section" && "font-semibold text-foreground",
                       )}
                     >
                       {entry.message}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {summary?.logTruncated ? (
-            <p className="text-xs text-muted-foreground">
-              {t("truncated", {
-                shown: entries.length,
-                total: summary.logLineCount,
+                    </span>
+                  </li>
+                )
               })}
-            </p>
-          ) : null}
+            </ol>
+          )}
         </div>
+
+        {summary?.logTruncated ? (
+          <footer className="border-t border-border px-5 py-2 text-[11px] text-muted-foreground">
+            {t("truncated", { total: summary.logLineCount ?? 0, shown: entries.length })}
+          </footer>
+        ) : null}
       </DialogContent>
     </Dialog>
   )
