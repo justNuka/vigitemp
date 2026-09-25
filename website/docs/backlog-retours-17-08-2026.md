@@ -3687,6 +3687,20 @@ Retours :
 - maintien et extension de la reconnaissance des erreurs FR/EN ;
 - Web passé en **1.8.15**.
 
+#### Validation automatisée
+
+GitHub Actions run `36106181908` : **succès complet**.
+
+- [x] `git diff --check origin/dev...HEAD` ;
+- [x] installation `pnpm` avec lockfile figé ;
+- [x] génération Prisma MySQL ;
+- [x] `pnpm test:admin-nav-backup-status` avec cas FR, EN et ligne timestamp seule ;
+- [x] ESLint ciblé sur parser, API sauvegardes et test ;
+- [x] build production Next.js sur MySQL ;
+- [x] génération Prisma SQL Server ;
+- [x] TypeScript `--noEmit` sur SQL Server ;
+- [x] workflow temporaire retiré du diff final.
+
 Fichiers principaux :
 
 - `website/src/lib/backup-log-parser.ts` ;
