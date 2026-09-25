@@ -296,8 +296,8 @@ export function CalibrationsPanel({
 
   return (
     <>
-      <Card>
-        <CardHeader className="pb-3">
+      <Card className="overflow-hidden rounded-[10px] border-border bg-card shadow-[0_1px_2px_hsl(var(--shadow)/0.06)]">
+        <CardHeader className="border-b border-border px-3 py-2.5">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <CardTitle className="text-base">{t('panels.calibrations.title')}</CardTitle>
             <div className="flex items-center gap-2">
@@ -321,7 +321,7 @@ export function CalibrationsPanel({
             </div>
           </div>
         </CardHeader>
-        <CardContent className="p-2 md:p-4 xl:p-4">
+        <CardContent className="p-3">
           {isLoading ? (
             <div className="space-y-3">
               {[...Array(3)].map((_, i) => (
@@ -339,9 +339,6 @@ export function CalibrationsPanel({
               maxHeight="16rem"
               selectedRowId={selectedCalibrationId ?? undefined}
               onRowClick={(row: CalibrationRow) => onSelectCalibration(row.Id_Etalonnage)}
-              headerClassName="!bg-sidebar !text-sidebar-foreground"
-              headerCellClassName="!bg-sidebar !text-sidebar-foreground !border-r !border-white/25 hover:!bg-sidebar-accent/80"
-              tableClassName="border-separate border-spacing-0 [&_thead_th]:!border-r [&_thead_th]:!border-white/25 [&_thead_th:last-child]:!border-r-0"
             />
           )}
         </CardContent>
