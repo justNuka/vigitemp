@@ -8,7 +8,7 @@ export default function SitesPage() {
         titleKey="sitesPage.title"
         descriptionKey="sitesPage.description"
       />
-      <div className="p-6">
+      <div className="mx-auto w-full max-w-[1680px] p-4 md:p-6">
         <SitesClient />
       </div>
     </>
