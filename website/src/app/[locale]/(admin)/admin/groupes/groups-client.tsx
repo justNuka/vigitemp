@@ -12,21 +12,9 @@ import { fadeInUp } from "@/lib/motion-variants";
 import { useGroups, type Group } from '@/hooks/useGroups';
 import { useGroupLocations } from '@/hooks/useGroupLocations';
 import { useGroupUsers } from '@/hooks/useGroupUsers';
-import { deleteJson, getJson, HttpError } from "@/lib/http";
+import { deleteJson, getJson } from "@/lib/http";
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Layers } from 'lucide-react';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
-
 import { GroupsActions } from "./_components/groups-actions";
 import { GroupsTable } from './_components/groups-table';
 import { GroupLocationsPanel } from './_components/group-locations-panel';
@@ -41,9 +29,6 @@ export function GroupsClient() {
   const [selectedGroup, setSelectedGroup] = useState<Group | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
-  const [archiveConfirmOpen, setArchiveConfirmOpen] = useState(false);
-  const [archiveBlockedOpen, setArchiveBlockedOpen] = useState(false);
-  const [archiveBlockedMessage, setArchiveBlockedMessage] = useState<string | null>(null);
   const [statusTab, setStatusTab] = useState<'active' | 'archived'>('active');
 
   const { data: groups = [], isLoading } = useGroups(regroupement, true, 'all');
@@ -145,7 +130,7 @@ export function GroupsClient() {
               canArchive={!!selectedDisplayedGroup && statusTab === 'active'}
               onNew={handleNew}
               onEdit={handleEdit}
-              onArchive={() => setArchiveConfirmOpen(true)}
+              onArchive={handleArchive}
             />
           }
         />
