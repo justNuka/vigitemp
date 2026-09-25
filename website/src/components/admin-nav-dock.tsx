@@ -1,21 +1,13 @@
 ﻿"use client";
 
-import type { ReactNode } from "react";
-import Dock from "@/components/ui/dock";
 import { useLicense } from "@/components/license/license-provider";
 import { isPack } from "@/lib/license-access";
-import { usePathname, useRouter } from "@/i18n/navigation";
+import { usePathname } from "@/i18n/navigation";
 import { getLocalizedPathname, stripLocalePrefix } from "@/i18n/pathnames";
+import { Link } from "@/i18n/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { Gauge, Globe, MapPin, Radio, Users, WifiCog, Wrench } from "lucide-react";
-
-type DockItem = {
-  key: string;
-  icon: ReactNode;
-  label: string;
-  onClick: () => void;
-  isActive: boolean;
-};
+import { cn } from "@/lib/utils";
 
 export const ADMIN_NAV_DOCK_PATHS = [
   "/admin/sondes",
@@ -39,7 +31,6 @@ function isAdminNavItemActive(pathname: string, targetPathname: string) {
 }
 
 export function AdminNavDock() {
-  const router = useRouter();
   const pathname = usePathname();
   const locale = useLocale();
   const tDock = useTranslations("dock");
@@ -48,56 +39,14 @@ export function AdminNavDock() {
   const hideOnePlus = isPack(license);
   const normalizedPathname = stripLocalePrefix(pathname);
 
-  const navItems: DockItem[] = [
-    {
-      key: "sondes",
-      icon: <Gauge size={20} />,
-      label: tDock("sondes"),
-      onClick: () => router.push("/admin/sondes"),
-      isActive: isAdminNavItemActive(normalizedPathname, getLocalizedPathname("/admin/sondes", locale as any)),
-    },
-    {
-      key: "modules",
-      icon: <WifiCog size={20} />,
-      label: tDock("modules"),
-      onClick: () => router.push("/admin/modules"),
-      isActive: isAdminNavItemActive(normalizedPathname, getLocalizedPathname("/admin/modules", locale as any)),
-    },
-    {
-      key: "actionneurs",
-      icon: <Radio size={20} />,
-      label: tDock("actionneurs"),
-      onClick: () => router.push("/admin/actionneurs"),
-      isActive: isAdminNavItemActive(normalizedPathname, getLocalizedPathname("/admin/actionneurs", locale as any)),
-    },
-    {
-      key: "groupes",
-      icon: <Users size={20} />,
-      label: tDock("groupes"),
-      onClick: () => router.push("/admin/groupes"),
-      isActive: isAdminNavItemActive(normalizedPathname, getLocalizedPathname("/admin/groupes", locale as any)),
-    },
-    {
-      key: "lieux",
-      icon: <MapPin size={20} />,
-      label: tDock("lieux"),
-      onClick: () => router.push("/admin/lieux"),
-      isActive: isAdminNavItemActive(normalizedPathname, getLocalizedPathname("/admin/lieux", locale as any)),
-    },
-    {
-      key: "sites",
-      icon: <Globe size={20} />,
-      label: tDock("sites"),
-      onClick: () => router.push("/admin/sites"),
-      isActive: isAdminNavItemActive(normalizedPathname, getLocalizedPathname("/admin/sites", locale as any)),
-    },
-    {
-      key: "outils",
-      icon: <Wrench size={20} />,
-      label: tDock("outils"),
-      onClick: () => router.push("/admin/outils"),
-      isActive: isAdminNavItemActive(normalizedPathname, getLocalizedPathname("/admin/outils", locale as any)),
-    },
+  const navItems = [
+    { key: "sondes", icon: Gauge, href: "/admin/sondes" as const },
+    { key: "modules", icon: WifiCog, href: "/admin/modules" as const },
+    { key: "actionneurs", icon: Radio, href: "/admin/actionneurs" as const },
+    { key: "groupes", icon: Users, href: "/admin/groupes" as const },
+    { key: "lieux", icon: MapPin, href: "/admin/lieux" as const },
+    { key: "sites", icon: Globe, href: "/admin/sites" as const },
+    { key: "outils", icon: Wrench, href: "/admin/outils" as const },
   ];
 
   const visibleNavItems = navItems.filter((item) => {
@@ -106,13 +55,44 @@ export function AdminNavDock() {
   });
 
   return (
-    <Dock
-      items={visibleNavItems}
-      panelHeight={68}
-      baseItemSize={50}
-      magnification={60}
-      distance={200}
-      className="rounded-full shadow-lg"
-    />
+    <nav
+      aria-label={tDock("sondes")}
+      className="scroll-thin shrink-0 overflow-x-auto border-b border-border bg-card"
+    >
+      <ul className="mx-auto flex min-w-max items-center gap-0.5 px-4 lg:px-6">
+        {visibleNavItems.map((item) => {
+          const Icon = item.icon;
+          const active = isAdminNavItemActive(
+            normalizedPathname,
+            getLocalizedPathname(item.href, locale as any),
+          );
+
+          return (
+            <li key={item.key}>
+              <Link
+                href={item.href}
+                aria-current={active ? "page" : undefined}
+                className={cn(
+                  "relative inline-flex h-10 items-center gap-1.5 whitespace-nowrap px-2.5 text-[13px] font-medium",
+                  "transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring/60",
+                  active
+                    ? "text-[hsl(var(--primary-strong))]"
+                    : "text-muted-foreground hover:bg-[hsl(var(--surface-muted)/0.55)] hover:text-foreground",
+                )}
+              >
+                <Icon className="h-4 w-4" aria-hidden />
+                <span>{tDock(item.key as never)}</span>
+                {active ? (
+                  <span
+                    aria-hidden
+                    className="absolute inset-x-2 bottom-0 h-0.5 rounded-full bg-primary"
+                  />
+                ) : null}
+              </Link>
+            </li>
+          );
+        })}
+      </ul>
+    </nav>
   );
 }
