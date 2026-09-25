@@ -51,9 +51,6 @@ export function SitesTable({ sites, isLoading, selectedSiteId, onSelectSite, onE
       onRowClick={(row) => onSelectSite(row)}
       onRowDoubleClick={(row) => onEditSite?.(row)}
       selectedRowId={selectedSiteId}
-      headerClassName="!bg-sidebar !text-sidebar-foreground"
-      headerCellClassName="!bg-sidebar !text-sidebar-foreground !border-r !border-white/25 hover:!bg-sidebar-accent/80"
-      tableClassName="border-separate border-spacing-0 [&_thead_th]:!border-r [&_thead_th]:!border-white/25 [&_thead_th:last-child]:!border-r-0"
     />
   );
 }
