@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
 import { Chart as ChartJS, CategoryScale, Filler, Legend, LineElement, LinearScale, PointElement, Title, Tooltip } from 'chart.js'
-import { BatteryWarning, History, Power, PowerOff, Settings } from 'lucide-react'
+import { BatteryWarning, Clock, History, Info, Power, PowerOff, Settings } from 'lucide-react'
 import { m } from 'motion/react'
 
 import { useAppAccess } from '@/components/access/app-access-provider'
@@ -25,7 +25,7 @@ import {
   parseStoredDbDateTime,
   serializeStoredDbDateTime,
 } from '@/lib/date-display'
-import type { LieuTypeValue } from '@/lib/lieu-types'
+import { getTypeIcon, type LieuTypeValue } from '@/lib/lieu-types'
 import { calculateYDomain, formatMeasureValue, getMeasureSummary, sortMeasuresChronologically } from '@/lib/measurements'
 import { MONITORING_CARD_GRAPH_MAX_POINTS } from '@/lib/measurement-downsampling'
 import { cn } from '@/lib/utils'
