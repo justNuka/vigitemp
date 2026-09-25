@@ -33,7 +33,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Combobox } from "@/components/ui/combobox";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useSensorTypes } from "@/hooks/useSensorTypes";
 import { useModules } from "@/hooks/useModules";
 import type { Sensor } from "@/hooks/useSensors";
@@ -219,155 +218,153 @@ export function SensorModal({
                 saved: tCommon('temporary_memory.saved'),
               }}
             />
-            <FormField
-              control={form.control}
-              name="sondeType"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{t('fields.type_label')}</FormLabel>
-                  <Select value={field.value} onValueChange={field.onChange} disabled={isEdit}>
-                    <FormControl>
-                      <SelectTrigger id="sensor-type" disabled={sensorTypesLoading || isEdit}>
-                        <SelectValue placeholder={t('fields.type_placeholder')} />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent position="item-aligned" className="max-h-72">
-                      {availableSensorTypes.map((type) => (
-                        <SelectItem key={type.Sonde_Type} value={type.Sonde_Type}>
-                          {type.Sonde_Type} ({type.Libelle_Sonde_Type || "-"})
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="serieNum"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{t('fields.serial_label')}</FormLabel>
-                  <Alert className="bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800">
-                    <AlertCircle className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                    <AlertDescription className="text-sm text-blue-800 dark:text-blue-300">
-                      {t('fields.serial_hint')}
-                    </AlertDescription>
-                  </Alert>
-                  <FormControl>
-                    <Input
-                      id="serie-num"
-                      placeholder={t('fields.serial_placeholder')}
-                      value={field.value}
-                      onChange={(e) => {
-                        const normalized = e.target.value.toUpperCase();
-                        const cleaned = normalized.replace(/[^A-Z0-9-]/g, "").replace(/-{2,}/g, "-");
-                        field.onChange(cleaned);
-                      }}
-                      readOnly={isEdit}
-                      className={isEdit ? "bg-muted opacity-50" : ""}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {requiresLegacyAddress ? (
+            <div className="grid gap-4 md:grid-cols-2">
               <FormField
                 control={form.control}
-                name="probeAddress"
+                name="sondeType"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t('fields.address_label')}</FormLabel>
-                    <Alert className="bg-amber-50 dark:bg-amber-950 border-amber-200 dark:border-amber-800">
-                      <AlertCircle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
-                      <AlertDescription className="text-sm text-amber-800 dark:text-amber-300">
-                        {t('fields.address_hint')}
-                      </AlertDescription>
-                    </Alert>
-                    <FormControl>
-                      <Input
-                        id="probe-address"
-                        placeholder={t('fields.address_placeholder')}
-                        value={field.value ?? ""}
-                        onChange={(e) => field.onChange(e.target.value.toUpperCase().replace(/[^A-Z0-9-]/g, ""))}
-                      />
-                    </FormControl>
+                    <FormLabel>{t('fields.type_label')}</FormLabel>
+                    <Select value={field.value} onValueChange={field.onChange} disabled={isEdit}>
+                      <FormControl>
+                        <SelectTrigger id="sensor-type" disabled={sensorTypesLoading || isEdit}>
+                          <SelectValue placeholder={t('fields.type_placeholder')} />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent position="item-aligned" className="max-h-72">
+                        {availableSensorTypes.map((type) => (
+                          <SelectItem key={type.Sonde_Type} value={type.Sonde_Type}>
+                            {type.Sonde_Type} ({type.Libelle_Sonde_Type || "-"})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-            ) : null}
 
-            <FormField
-              control={form.control}
-              name="moduleId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{t('fields.module_label')}</FormLabel>
-                  <FormControl>
-                    <Combobox
-                      triggerId="module"
-                      value={field.value || ""}
-                      onValueChange={field.onChange}
-                      disabled={modulesLoading}
-                      placeholder={t('fields.module_placeholder')}
-                      searchPlaceholder={t('fields.module_search_placeholder')}
-                      emptyMessage={t('fields.module_empty')}
-                      options={(modules ?? []).map((mod) => ({
-                        value: mod.Id_Module.toString(),
-                        label: `${mod.Module_Numero_Serie || mod.Libelle_Type_Module || mod.Id_Module} sur port ${
-                          mod.Port_Serie || "N/A"
-                        } (${mod.Emplacement || "-"})`,
-                        searchText: `${mod.Module_Numero_Serie || ""} ${mod.Libelle_Type_Module || ""} ${
-                          mod.Port_Serie || ""
-                        } ${mod.Emplacement || ""} ${mod.Id_Module}`,
-                      }))}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {!moduleOnly ? (
               <FormField
                 control={form.control}
-                name="sondeOffset"
+                name="serieNum"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t('fields.offset_label')}</FormLabel>
-                    <p className="text-xs text-muted-foreground">
-                      {isPack ? t('fields.offset_unavailable_pack') : t('fields.offset_hint')}
-                    </p>
+                    <FormLabel>{t('fields.serial_label')}</FormLabel>
                     <FormControl>
                       <Input
-                        id="sonde-offset"
-                        type="number"
-                        step="0.01"
-                        placeholder={t('fields.offset_placeholder')}
-                        value={field.value ?? ""}
-                        disabled={isPack}
-                        className={isPack ? "bg-muted opacity-70" : undefined}
+                        id="serie-num"
+                        placeholder={t('fields.serial_placeholder')}
+                        value={field.value}
                         onChange={(e) => {
-                          const raw = e.target.value;
-                          if (raw === "") {
-                            field.onChange(undefined);
-                            return;
-                          }
-                          const parsed = Number(raw);
-                          field.onChange(Number.isFinite(parsed) ? parsed : undefined);
+                          const normalized = e.target.value.toUpperCase();
+                          const cleaned = normalized.replace(/[^A-Z0-9-]/g, "").replace(/-{2,}/g, "-");
+                          field.onChange(cleaned);
                         }}
+                        readOnly={isEdit}
+                        className={isEdit ? "bg-[hsl(var(--surface-muted))] text-muted-foreground" : ""}
+                      />
+                    </FormControl>
+                    <p className="flex items-start gap-1.5 text-[11px] leading-4 text-muted-foreground">
+                      <AlertCircle className="mt-0.5 h-3 w-3 shrink-0 text-primary" aria-hidden />
+                      {t('fields.serial_hint')}
+                    </p>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {requiresLegacyAddress ? (
+                <FormField
+                  control={form.control}
+                  name="probeAddress"
+                  render={({ field }) => (
+                    <FormItem className="md:col-span-2">
+                      <FormLabel>{t('fields.address_label')}</FormLabel>
+                      <FormControl>
+                        <Input
+                          id="probe-address"
+                          placeholder={t('fields.address_placeholder')}
+                          value={field.value ?? ""}
+                          onChange={(e) => field.onChange(e.target.value.toUpperCase().replace(/[^A-Z0-9-]/g, ""))}
+                        />
+                      </FormControl>
+                      <p className="flex items-start gap-1.5 text-[11px] leading-4 text-[hsl(var(--status-warning-text))]">
+                        <AlertCircle className="mt-0.5 h-3 w-3 shrink-0" aria-hidden />
+                        {t('fields.address_hint')}
+                      </p>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              ) : null}
+
+              <FormField
+                control={form.control}
+                name="moduleId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t('fields.module_label')}</FormLabel>
+                    <FormControl>
+                      <Combobox
+                        triggerId="module"
+                        value={field.value || ""}
+                        onValueChange={field.onChange}
+                        disabled={modulesLoading}
+                        placeholder={t('fields.module_placeholder')}
+                        searchPlaceholder={t('fields.module_search_placeholder')}
+                        emptyMessage={t('fields.module_empty')}
+                        options={(modules ?? []).map((mod) => ({
+                          value: mod.Id_Module.toString(),
+                          label: `${mod.Module_Numero_Serie || mod.Libelle_Type_Module || mod.Id_Module} sur port ${
+                            mod.Port_Serie || "N/A"
+                          } (${mod.Emplacement || "-"})`,
+                          searchText: `${mod.Module_Numero_Serie || ""} ${mod.Libelle_Type_Module || ""} ${
+                            mod.Port_Serie || ""
+                          } ${mod.Emplacement || ""} ${mod.Id_Module}`,
+                        }))}
                       />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-            ) : null}
+
+              {!moduleOnly ? (
+                <FormField
+                  control={form.control}
+                  name="sondeOffset"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t('fields.offset_label')}</FormLabel>
+                      <FormControl>
+                        <Input
+                          id="sonde-offset"
+                          type="number"
+                          step="0.01"
+                          placeholder={t('fields.offset_placeholder')}
+                          value={field.value ?? ""}
+                          disabled={isPack}
+                          className={isPack ? "bg-[hsl(var(--surface-muted))] text-muted-foreground" : undefined}
+                          onChange={(e) => {
+                            const raw = e.target.value;
+                            if (raw === "") {
+                              field.onChange(undefined);
+                              return;
+                            }
+                            const parsed = Number(raw);
+                            field.onChange(Number.isFinite(parsed) ? parsed : undefined);
+                          }}
+                        />
+                      </FormControl>
+                      <p className="text-[11px] leading-4 text-muted-foreground">
+                        {isPack ? t('fields.offset_unavailable_pack') : t('fields.offset_hint')}
+                      </p>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              ) : null}
+            </div>
 
             {isEdit ? (
               <AdjustmentsPanel
