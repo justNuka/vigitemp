@@ -26,8 +26,8 @@ ALTER TABLE `t_alarme_message`
 INSERT INTO `t_alarme_message`
   (`Id_Alarme_Message`, `Code_Alarme_Message`, `Type`, `Texte_Message`)
 VALUES
-  (20, 'CRITIQUE_BAS', 'CB', 'L\'alarme a été déclenchée par un dépassement du seuil critique inférieur.'),
-  (21, 'CRITIQUE_HAUT', 'CH', 'L\'alarme a été déclenchée par un dépassement du seuil critique supérieur.')
+  (20, 'CRITIQUE_BAS', 'CB', 'L''alarme a été déclenchée par un dépassement du seuil critique inférieur.'),
+  (21, 'CRITIQUE_HAUT', 'CH', 'L''alarme a été déclenchée par un dépassement du seuil critique supérieur.')
 ON DUPLICATE KEY UPDATE
   `Code_Alarme_Message` = VALUES(`Code_Alarme_Message`),
   `Type` = VALUES(`Type`),
