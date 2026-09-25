@@ -136,91 +136,87 @@ export function ModulesClient() {
         initial="hidden"
         animate="visible"
       >
-        <Card className="overflow-hidden rounded-[10px] border-border bg-card shadow-[0_1px_2px_hsl(var(--shadow)/0.06)]">
-          <CardHeader className="border-b border-border px-3 py-2.5">
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle className="flex items-center gap-2 text-base">
-                  <Cpu className="h-4 w-4 text-primary" />
-                  {t('title')}
-                </CardTitle>
-                <p className="mt-1 text-sm text-muted-foreground">{t('count', { count: displayedModules.length })}</p>
-              </div>
-              <div className="flex gap-2">
+        <section className="overflow-hidden rounded-[10px] border border-border bg-card shadow-[0_1px_2px_hsl(var(--shadow)/0.06)]">
+          <ModulesTable
+            modules={modulesTableData}
+            isLoading={modulesLoading}
+            selectedModuleId={selectedModuleId}
+            onSelectModule={(moduleId) => {
+              setSelectedModuleId((current) => (current === moduleId ? null : moduleId));
+              setSelectedSondeId(null);
+            }}
+            onEditModule={(moduleId) => {
+              if (statusTab === "archived") return;
+              setSelectedModuleId(moduleId);
+              setSelectedSondeId(null);
+              setIsEditMode(true);
+              setIsModalOpen(true);
+            }}
+            toolbarLeft={
+              <Tabs
+                value={statusTab}
+                onValueChange={(value) => {
+                  setStatusTab(value as "active" | "archived");
+                  setSelectedModuleId(null);
+                  setSelectedSondeId(null);
+                }}
+              >
+                <TabsList className="grid h-8 w-auto grid-cols-2 gap-0.5 rounded-md border border-border bg-[hsl(var(--surface-muted))] p-0.5 text-muted-foreground">
+                  <TabsTrigger
+                    value="active"
+                    className="h-7 rounded-[5px] px-2.5 text-[13px] font-medium transition-colors duration-150 hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/60 data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-sm data-[state=active]:ring-1 data-[state=active]:ring-border"
+                  >
+                    {t('tabs.active', { count: activeModules.length })}
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="archived"
+                    className="h-7 rounded-[5px] px-2.5 text-[13px] font-medium transition-colors duration-150 hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/60 data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-sm data-[state=active]:ring-1 data-[state=active]:ring-border"
+                  >
+                    {t('tabs.archived', { count: archivedModules.length })}
+                  </TabsTrigger>
+                </TabsList>
+              </Tabs>
+            }
+            toolbarRight={
+              <>
                 <Button
                   size="sm"
-                  className="gap-2"
+                  className="h-8 gap-1.5 text-xs"
                   onClick={() => {
                     setIsEditMode(false);
                     setIsModalOpen(true);
                   }}
                 >
-                  <Plus className="w-4 h-4" />
+                  <Plus className="h-4 w-4" />
                   {t('actions.new')}
                 </Button>
                 <Button
                   size="sm"
                   variant="outline"
                   disabled={!selectedModuleId || statusTab === "archived"}
-                  className="gap-2"
+                  className="h-8 gap-1.5 text-xs"
                   onClick={() => {
                     setIsEditMode(true);
                     setIsModalOpen(true);
                   }}
                 >
-                  <Pencil className="w-4 h-4" />
+                  <Pencil className="h-4 w-4" />
                   {t('actions.edit')}
                 </Button>
-                <Button size="sm" variant="outline" disabled={!selectedModuleId || statusTab === "archived"} className="gap-2" onClick={() => setArchiveConfirmOpen(true)}>
-                  <Archive className="w-4 h-4" />
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={!selectedModuleId || statusTab === "archived"}
+                  className="h-8 gap-1.5 text-xs hover:text-[hsl(var(--status-critical))]"
+                  onClick={() => setArchiveConfirmOpen(true)}
+                >
+                  <Archive className="h-4 w-4" />
                   {t('actions.archive')}
                 </Button>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent className="p-3">
-            <Tabs
-              value={statusTab}
-              onValueChange={(value) => {
-                setStatusTab(value as "active" | "archived");
-                setSelectedModuleId(null);
-                setSelectedSondeId(null);
-              }}
-              className="space-y-4"
-            >
-              <TabsList className="grid h-8 w-auto max-w-md grid-cols-2 gap-0.5 rounded-md border border-border bg-[hsl(var(--surface-muted))] p-0.5 text-muted-foreground">
-                <TabsTrigger
-                  value="active"
-                  className="h-7 rounded-[5px] px-2.5 text-[13px] font-medium transition-colors duration-150 hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/60 data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-sm data-[state=active]:ring-1 data-[state=active]:ring-border"
-                >
-                  {t('tabs.active', { count: activeModules.length })}
-                </TabsTrigger>
-                <TabsTrigger
-                  value="archived"
-                  className="h-7 rounded-[5px] px-2.5 text-[13px] font-medium transition-colors duration-150 hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/60 data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-sm data-[state=active]:ring-1 data-[state=active]:ring-border"
-                >
-                  {t('tabs.archived', { count: archivedModules.length })}
-                </TabsTrigger>
-              </TabsList>
-              <ModulesTable
-                modules={modulesTableData}
-                isLoading={modulesLoading}
-                selectedModuleId={selectedModuleId}
-                onSelectModule={(moduleId) => {
-                  setSelectedModuleId(moduleId);
-                  setSelectedSondeId(null);
-                }}
-                onEditModule={(moduleId) => {
-                  if (statusTab === "archived") return;
-                  setSelectedModuleId(moduleId);
-                  setSelectedSondeId(null);
-                  setIsEditMode(true);
-                  setIsModalOpen(true);
-                }}
-              />
-            </Tabs>
-          </CardContent>
-        </Card>
+              </>
+            }
+          />
+        </section>
 
         {selectedModuleId && (
           <Card className="overflow-hidden rounded-[10px] border-border bg-card shadow-[0_1px_2px_hsl(var(--shadow)/0.06)]">
