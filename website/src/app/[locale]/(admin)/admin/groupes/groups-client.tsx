@@ -35,6 +35,7 @@ export function GroupsClient() {
   const queryClient = useQueryClient();
   const router = useRouter();
   const t = useTranslations('groupsPage');
+  const tCommon = useTranslations('common');
   const [regroupement, setRegroupement] = useState('all');
   const [selectedGroup, setSelectedGroup] = useState<Group | null>(null);
   const [isEditing, setIsEditing] = useState(false);
@@ -190,7 +191,7 @@ export function GroupsClient() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>{useTranslations('common')('cancel')}</AlertDialogCancel>
+            <AlertDialogCancel>{tCommon('cancel')}</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => {
                 void handleArchive().finally(() => setArchiveConfirmOpen(false));
@@ -213,7 +214,7 @@ export function GroupsClient() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogAction onClick={() => setArchiveBlockedOpen(false)}>
-              {useTranslations('common')('confirm')}
+              {tCommon('confirm')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
