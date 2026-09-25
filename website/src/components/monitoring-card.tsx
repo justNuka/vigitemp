@@ -125,6 +125,7 @@ export default function MonitoringCard({
 }: MonitoringCardProps) {
   const t = useTranslations('monitoringCard')
   const tStatus = useTranslations('surveillanceStatus')
+  const tDetails = useTranslations('monitoringDetailsModal')
   const { hasPermission } = useAppAccess()
   const isMobile = useIsMobile()
   const locale = useLocale()
