@@ -100,13 +100,13 @@ export function EditSiteDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-3xl bg-white dark:bg-popover dark:text-popover-foreground">
-        <DialogHeader>
-          <DialogTitle>{t('edit_title')}</DialogTitle>
-          <DialogDescription>{t('edit_description')}</DialogDescription>
+      <DialogContent className="max-h-[90vh] overflow-hidden rounded-[10px] border-border bg-card p-0 text-card-foreground sm:max-w-2xl">
+        <DialogHeader className="border-b border-border px-5 py-4 pr-14">
+          <DialogTitle className="text-[15px] font-semibold">{t('edit_title')}</DialogTitle>
+          <DialogDescription className="mt-0.5 text-xs">{t('edit_description')}</DialogDescription>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit, (errors) => showFormValidationToast(errors))} className="space-y-4">
+          <form onSubmit={form.handleSubmit(onSubmit, (errors) => showFormValidationToast(errors))} className="scroll-thin max-h-[calc(90vh-70px)] space-y-4 overflow-y-auto px-5 py-4">
             <TemporaryMemoryControls
               form={form}
               storageKey={memoryKey}
@@ -119,11 +119,11 @@ export function EditSiteDialog({
               }}
             />
             <Tabs defaultValue="general" className="space-y-4">
-              <TabsList className="grid w-full grid-cols-2 bg-primary/10 text-primary">
-                <TabsTrigger value="general" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+              <TabsList className="grid h-8 w-auto grid-cols-2 gap-0.5 rounded-md border border-border bg-[hsl(var(--surface-muted))] p-0.5 text-muted-foreground">
+                <TabsTrigger value="general" className="h-7 rounded-[5px] px-2.5 text-[13px] font-medium transition-colors duration-150 hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/60 data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-sm data-[state=active]:ring-1 data-[state=active]:ring-border">
                   {t('tabs.general')}
                 </TabsTrigger>
-                <TabsTrigger value="users" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+                <TabsTrigger value="users" className="h-7 rounded-[5px] px-2.5 text-[13px] font-medium transition-colors duration-150 hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/60 data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-sm data-[state=active]:ring-1 data-[state=active]:ring-border">
                   {t('tabs.users')}
                 </TabsTrigger>
               </TabsList>
@@ -175,8 +175,8 @@ export function EditSiteDialog({
                     {allUsersSelected ? t('actions.uncheck_all') : t('actions.check_all')}
                   </Button>
                 </div>
-                <Card>
-                  <CardContent className="max-h-80 space-y-2 overflow-y-auto pt-6">
+                <Card className="overflow-hidden rounded-lg border-border bg-[hsl(var(--surface-muted)/0.45)] shadow-none">
+                  <CardContent className="scroll-thin max-h-72 space-y-1.5 overflow-y-auto p-2">
                     {users.length === 0 ? (
                       <p className="text-sm text-muted-foreground">{t('users.empty')}</p>
                     ) : (
@@ -184,7 +184,7 @@ export function EditSiteDialog({
                         const checked = assignedUserIds.includes(user.id);
                         const initiallyAssigned = assignedUsers.some((assignedUser) => assignedUser.Id_Utilisateur === user.id);
                         return (
-                          <div key={user.id} className="flex items-start gap-3 rounded-md border border-border/60 px-3 py-2">
+                          <div key={user.id} className="flex items-start gap-3 rounded-md border border-transparent px-2.5 py-2 transition-colors duration-150 hover:border-border hover:bg-card">
                             <Checkbox
                               id={`site-edit-user-${user.id}`}
                               checked={checked}
@@ -210,7 +210,7 @@ export function EditSiteDialog({
                 </Card>
               </TabsContent>
             </Tabs>
-            <DialogFooter>
+            <DialogFooter className="-mx-5 -mb-4 border-t border-border bg-[hsl(var(--surface-muted)/0.45)] px-5 py-3">
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="gap-2">
                 <X className="h-4 w-4" />
                 {tCommon('cancel')}
