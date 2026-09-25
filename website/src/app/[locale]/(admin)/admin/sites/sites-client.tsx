@@ -173,77 +173,70 @@ export function SitesClient() {
         initial="hidden"
         animate="visible"
       >
-        <Card className="overflow-hidden rounded-[10px] border-border bg-card shadow-[0_1px_2px_hsl(var(--shadow)/0.06)]">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0">
-            <div>
-              <CardTitle>{t('title')}</CardTitle>
-              <p className="text-sm text-muted-foreground mt-1">
-                {t('count', { count: displayedSites.length })}
-              </p>
-            </div>
-            <div className="flex gap-2">
-              <Button onClick={() => setIsCreateOpen(true)} variant="default" size="sm" className="gap-2">
-                <Plus className="h-4 w-4" />
-                {tCommon('add')}
-              </Button>
-              <Button onClick={handleEdit} variant="outline" size="sm" disabled={!selectedSite} className="gap-2">
-                <Pencil className="h-4 w-4" />
-                {tCommon('edit')}
-              </Button>
-              <Button
-                onClick={() => setIsArchiveAlertOpen(true)}
-                variant="outline"
-                size="sm"
-                disabled={!selectedSite || statusTab === 'archived'}
-                className="gap-2"
-              >
-                <Archive className="h-4 w-4" />
-                {t('actions.archive')}
-              </Button>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <Tabs
-              value={statusTab}
-              onValueChange={(value) => {
-                setStatusTab(value as 'active' | 'archived')
-                setSelectedSite(null)
-              }}
-              className="space-y-4"
-            >
-              <TabsList className="grid h-8 w-auto max-w-md grid-cols-2 gap-0.5 rounded-md border border-border bg-[hsl(var(--surface-muted))] p-0.5 text-muted-foreground">
-                <TabsTrigger
-                  value="active"
-                  className="h-7 rounded-[5px] px-2.5 text-[13px] font-medium transition-colors duration-150 hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/60 data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-sm data-[state=active]:ring-1 data-[state=active]:ring-border"
-                >
-                  {t('tabs.active', { count: activeSites.length })}
-                </TabsTrigger>
-                <TabsTrigger
-                  value="archived"
-                  className="h-7 rounded-[5px] px-2.5 text-[13px] font-medium transition-colors duration-150 hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/60 data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-sm data-[state=active]:ring-1 data-[state=active]:ring-border"
-                >
-                  {t('tabs.archived', { count: archivedSites.length })}
-                </TabsTrigger>
-              </TabsList>
-              <SitesTable
-                sites={displayedSites}
-                isLoading={isLoading}
-                selectedSiteId={selectedSite?.Id_Site}
-                onSelectSite={setSelectedSite}
-                onEditSite={(site) => {
-                  if (statusTab === 'archived') return
-                  setSelectedSite(site)
-                  editForm.reset({
-                    Libelle_Site: site.Libelle_Site || '',
-                    Commentaire: site.Commentaire,
-                    assignedUserIds: [],
-                  })
-                  setIsEditOpen(true)
+        <section className="overflow-hidden rounded-[10px] border border-border bg-card shadow-[0_1px_2px_hsl(var(--shadow)/0.06)]">
+          <SitesTable
+            sites={displayedSites}
+            isLoading={isLoading}
+            selectedSiteId={selectedSite?.Id_Site}
+            onSelectSite={(site) => setSelectedSite((current) => current?.Id_Site === site.Id_Site ? null : site)}
+            onEditSite={(site) => {
+              if (statusTab === 'archived') return
+              setSelectedSite(site)
+              editForm.reset({
+                Libelle_Site: site.Libelle_Site || '',
+                Commentaire: site.Commentaire,
+                assignedUserIds: [],
+              })
+              setIsEditOpen(true)
+            }}
+            toolbarLeft={
+              <Tabs
+                value={statusTab}
+                onValueChange={(value) => {
+                  setStatusTab(value as 'active' | 'archived')
+                  setSelectedSite(null)
                 }}
-              />
-            </Tabs>
-          </CardContent>
-        </Card>
+              >
+                <TabsList className="grid h-8 w-auto grid-cols-2 gap-0.5 rounded-md border border-border bg-[hsl(var(--surface-muted))] p-0.5 text-muted-foreground">
+                  <TabsTrigger
+                    value="active"
+                    className="h-7 rounded-[5px] px-2.5 text-[13px] font-medium transition-colors duration-150 hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/60 data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-sm data-[state=active]:ring-1 data-[state=active]:ring-border"
+                  >
+                    {t('tabs.active', { count: activeSites.length })}
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="archived"
+                    className="h-7 rounded-[5px] px-2.5 text-[13px] font-medium transition-colors duration-150 hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/60 data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-sm data-[state=active]:ring-1 data-[state=active]:ring-border"
+                  >
+                    {t('tabs.archived', { count: archivedSites.length })}
+                  </TabsTrigger>
+                </TabsList>
+              </Tabs>
+            }
+            toolbarRight={
+              <>
+                <Button onClick={() => setIsCreateOpen(true)} size="sm" className="h-8 gap-1.5 text-xs">
+                  <Plus className="h-4 w-4" />
+                  {tCommon('add')}
+                </Button>
+                <Button onClick={handleEdit} variant="outline" size="sm" disabled={!selectedSite} className="h-8 gap-1.5 text-xs">
+                  <Pencil className="h-4 w-4" />
+                  {tCommon('edit')}
+                </Button>
+                <Button
+                  onClick={() => setIsArchiveAlertOpen(true)}
+                  variant="outline"
+                  size="sm"
+                  disabled={!selectedSite || statusTab === 'archived'}
+                  className="h-8 gap-1.5 text-xs hover:text-[hsl(var(--status-critical))]"
+                >
+                  <Archive className="h-4 w-4" />
+                  {t('actions.archive')}
+                </Button>
+              </>
+            }
+          />
+        </section>
 
         <CreateSiteDialog
           open={isCreateOpen}
