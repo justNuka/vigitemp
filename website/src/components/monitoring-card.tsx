@@ -365,9 +365,9 @@ export default function MonitoringCard({
   }, [frequence, isGso])
 
   const measureStrokeColor =
-    effectiveAlarmType === 'H'
+    effectiveAlarmType === 'CH' || effectiveAlarmType === 'H'
       ? '#dc2626'
-      : effectiveAlarmType === 'B'
+      : effectiveAlarmType === 'CB' || effectiveAlarmType === 'B'
         ? '#1d4ed8'
         : effectiveStatus === 'warning'
           ? '#d97706'
@@ -378,9 +378,9 @@ export default function MonitoringCard({
               : '#0ea5e9'
 
   const measureFillColor =
-    effectiveAlarmType === 'H'
+    effectiveAlarmType === 'CH' || effectiveAlarmType === 'H'
       ? 'rgba(220, 38, 38, 0.10)'
-      : effectiveAlarmType === 'B'
+      : effectiveAlarmType === 'CB' || effectiveAlarmType === 'B'
         ? 'rgba(29, 78, 216, 0.10)'
         : effectiveStatus === 'warning'
           ? 'rgba(217, 119, 6, 0.10)'
