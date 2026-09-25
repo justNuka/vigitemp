@@ -1,9 +1,10 @@
 "use client"
 
+import { CopyCheck, FolderOpen, HardDrive } from "lucide-react"
 import { useLocale, useTranslations } from "next-intl"
 
+import { AdminStatusPill, type AdminStatusTone } from "./admin-status-pill"
 import { useAppTimezone } from "@/components/timezone-provider"
-import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
 import type {
   BackupRecord,
@@ -11,25 +12,17 @@ import type {
   BackupSummary,
 } from "@/types/backup-types"
 
-type DisplayState =
-  | BackupRecord["etat"]
-  | BackupSecondaryCopyState
-  | "none"
+type DisplayState = BackupRecord["etat"] | BackupSecondaryCopyState | "none"
 
-function statusBadgeClass(state: DisplayState) {
-  if (state === "success") {
-    return "bg-emerald-600 text-white hover:bg-emerald-600"
-  }
-  if (state === "failed") {
-    return "bg-destructive text-destructive-foreground hover:bg-destructive"
-  }
-  if (state === "in_progress") {
-    return "bg-amber-100 text-amber-800 hover:bg-amber-100 dark:bg-amber-950 dark:text-amber-300"
-  }
-  if (state === "pending") {
-    return "bg-sky-100 text-sky-800 hover:bg-sky-100 dark:bg-sky-950 dark:text-sky-300"
-  }
-  return "bg-muted text-muted-foreground hover:bg-muted"
+const stateTone: Record<DisplayState, AdminStatusTone> = {
+  success: "ok",
+  failed: "critical",
+  in_progress: "warning",
+  pending: "info",
+  not_run: "neutral",
+  not_configured: "neutral",
+  unknown: "neutral",
+  none: "neutral",
 }
 
 export function AdminBackupStatusSummary({
@@ -59,9 +52,7 @@ export function AdminBackupStatusSummary({
     }).format(date)
   }
 
-  const stateLabel = (state: DisplayState) => t(`states.${state}` as never)
-
-  const robocopyMessage = () => {
+  const secondaryMessage = (() => {
     const code = secondary?.robocopyCode
     if (code === null || code === undefined) {
       if (secondaryState === "not_configured") return t("secondary.not_configured_description")
@@ -72,50 +63,63 @@ export function AdminBackupStatusSummary({
       return null
     }
 
-    if (code >= 0 && code <= 16) {
-      return t(`robocopy.codes.${code}` as never)
-    }
+    const text = code >= 0 && code <= 16
+      ? t(`robocopy.codes.${code}` as never)
+      : t("robocopy.codes.other", { code })
 
-    return t("robocopy.codes.other", { code })
-  }
-
-  const secondaryMessage = robocopyMessage()
+    return `${t("robocopy.code", { code })} — ${text}`
+  })()
 
   return (
-    <div className={cn("space-y-2.5", compact && "space-y-2")}>
-      <div className="rounded-md border border-border/60 bg-muted/20 p-2.5">
-        <div className="flex items-center justify-between gap-3">
-          <span className="text-sm font-medium">{t("primary.label")}</span>
-          <Badge className={statusBadgeClass(primaryState)}>{stateLabel(primaryState)}</Badge>
+    <div className={cn("flex flex-col gap-3", compact && "gap-2")}>
+      <div>
+        <div className="flex items-center justify-between gap-2">
+          <p className="flex items-center gap-1.5 text-[11px] font-medium text-muted-foreground">
+            <HardDrive className="h-3.5 w-3.5" aria-hidden />
+            {t("primary.label")}
+          </p>
+          <AdminStatusPill tone={stateTone[primaryState]} pulse={primaryState === "in_progress"}>
+            {t(`states.${primaryState}` as never)}
+          </AdminStatusPill>
         </div>
-        <p className="mt-1 text-xs text-muted-foreground">
-          {t("last.label")}: {formatTimestamp(primary?.dateHeure)}
-        </p>
-        <p
-          className="mt-1 truncate font-mono text-[11px] text-muted-foreground"
-          title={summary?.storagePath ?? ""}
-        >
-          {summary?.storagePath || t("log.unavailable")}
-        </p>
+        <p className="mt-1.5 text-[11px] text-[hsl(var(--subtle-foreground))]">{t("last.label")}</p>
+        <p className="num text-base font-semibold leading-6 text-foreground">{formatTimestamp(primary?.dateHeure)}</p>
+
+        {!compact ? (
+          <p
+            className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground"
+            title={summary?.storagePath ?? undefined}
+          >
+            <FolderOpen className="h-3.5 w-3.5 shrink-0 text-[hsl(var(--subtle-foreground))]" aria-hidden />
+            <span className="num truncate">{summary?.storagePath || t("log.unavailable")}</span>
+          </p>
+        ) : null}
       </div>
 
-      <div className="rounded-md border border-border/60 bg-muted/20 p-2.5">
-        <div className="flex items-center justify-between gap-3">
-          <span className="text-sm font-medium">{t("secondary.label")}</span>
-          <Badge className={statusBadgeClass(secondaryState)}>{stateLabel(secondaryState)}</Badge>
+      <div className="rounded-md border border-border/70 bg-[hsl(var(--surface-muted)/0.65)] px-2.5 py-2">
+        <div className="flex items-center justify-between gap-2">
+          <p className="flex items-center gap-1.5 text-[11px] font-medium text-muted-foreground">
+            <CopyCheck className="h-3.5 w-3.5" aria-hidden />
+            {t("secondary.label")}
+          </p>
+          <AdminStatusPill tone={stateTone[secondaryState]} pulse={secondaryState === "in_progress"}>
+            {t(`states.${secondaryState}` as never)}
+          </AdminStatusPill>
         </div>
 
-        {secondary?.configured && secondary.path ? (
-          <p className="mt-1 truncate font-mono text-[11px] text-muted-foreground" title={secondary.path}>
+        {secondary?.configured && secondary.path && !compact ? (
+          <p className="num mt-1 truncate text-xs text-muted-foreground" title={secondary.path}>
             {secondary.path}
           </p>
         ) : null}
 
         {secondaryMessage ? (
-          <p className={cn("mt-1 text-xs text-muted-foreground", secondaryState === "failed" && "text-destructive")}>
-            {secondary?.robocopyCode !== null && secondary?.robocopyCode !== undefined
-              ? `${t("robocopy.code", { code: secondary.robocopyCode })} — `
-              : ""}
+          <p
+            className={cn(
+              "mt-1 text-xs leading-4 text-muted-foreground",
+              secondaryState === "failed" && "text-[hsl(var(--status-critical))]",
+            )}
+          >
             {secondaryMessage}
           </p>
         ) : null}
