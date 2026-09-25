@@ -8,13 +8,6 @@ import { useRouter } from "@/i18n/navigation";
 import { useMutation } from "@tanstack/react-query";
 import { Logo } from "@/components/logo";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogContent,
@@ -80,7 +73,6 @@ export function LoginForm() {
   const [pendingLoginResponse, setPendingLoginResponse] = useState<LoginResponse | null>(null);
   const shouldReduceMotion = useReducedMotion();
   const ease = [0.22, 1, 0.36, 1] as const;
-  const dur = shouldReduceMotion ? 0 : 0.5;
 
   const reason = searchParams.get("reason");
   const passwordChanged = searchParams.get("passwordChanged");
