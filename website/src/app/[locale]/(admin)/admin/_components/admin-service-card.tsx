@@ -1,4 +1,4 @@
-import type { ReactNode } from "react"
+import type { ComponentType } from "react"
 import { MailQuestion } from "lucide-react"
 
 import {
@@ -19,7 +19,7 @@ type Detail = {
 type Props = {
   title: string
   description: string
-  icon: React.ComponentType<{ className?: string }>
+  icon: ComponentType<{ className?: string }>
   state: AdminServiceCardState
   stateLabel: string
   details: Detail[]
