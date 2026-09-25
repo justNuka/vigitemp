@@ -162,16 +162,16 @@ export function ModuleModal({ open, onOpenChange, module, onSuccess }: ModuleMod
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto bg-white dark:bg-popover dark:text-popover-foreground">
-        <DialogHeader>
-          <DialogTitle>{isEditing ? t('title_edit') : t('title_create')}</DialogTitle>
-          <DialogDescription>
+      <DialogContent className="max-h-[90vh] overflow-hidden rounded-[10px] border-border bg-card p-0 text-card-foreground sm:max-w-lg">
+        <DialogHeader className="border-b border-border px-5 py-4 pr-14">
+          <DialogTitle className="text-[15px] font-semibold">{isEditing ? t('title_edit') : t('title_create')}</DialogTitle>
+          <DialogDescription className="mt-0.5 text-xs">
             {isEditing ? t('description_edit') : t('description_create')}
           </DialogDescription>
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit, (errors) => showFormValidationToast(errors))} className="space-y-4">
+          <form onSubmit={form.handleSubmit(onSubmit, (errors) => showFormValidationToast(errors))} className="scroll-thin max-h-[calc(90vh-68px)] space-y-4 overflow-y-auto px-5 py-4">
             <FormField
               control={form.control}
               name="Module_Numero_Serie"
@@ -215,7 +215,7 @@ export function ModuleModal({ open, onOpenChange, module, onSuccess }: ModuleMod
               control={form.control}
               name="Est_Module_GSO"
               render={({ field }) => (
-                <FormItem className="flex items-center justify-between rounded-lg border p-3">
+                <FormItem className="flex items-center justify-between rounded-md border border-border bg-[hsl(var(--surface-muted)/0.55)] p-3">
                   <div className="space-y-1">
                     <FormLabel>{t('fields.gso_label')}</FormLabel>
                     <FormDescription>{t('fields.gso_help')}</FormDescription>
@@ -266,8 +266,8 @@ export function ModuleModal({ open, onOpenChange, module, onSuccess }: ModuleMod
               )}
             />
 
-            <Card className="border-dashed">
-              <CardHeader className="pb-3 cursor-pointer" onClick={() => setIsAdvancedOpen(!isAdvancedOpen)}>
+            <Card className="overflow-hidden rounded-lg border-dashed border-primary/25 bg-[hsl(var(--primary-soft)/0.28)] shadow-none">
+              <CardHeader className="cursor-pointer px-3 py-2.5" onClick={() => setIsAdvancedOpen(!isAdvancedOpen)}>
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-sm">{t('advanced.title')}</CardTitle>
                   <ChevronDown className={`h-4 w-4 transition-transform ${isAdvancedOpen ? "rotate-180" : ""}`} />
@@ -275,8 +275,8 @@ export function ModuleModal({ open, onOpenChange, module, onSuccess }: ModuleMod
               </CardHeader>
 
               {isAdvancedOpen && (
-                <CardContent className="space-y-4">
-                  <div className="rounded-md border border-sky-200 bg-sky-50 p-3 text-sm text-sky-900">
+                <CardContent className="space-y-4 border-t border-border px-3 py-3">
+                  <div className="rounded-md border border-primary/20 bg-[hsl(var(--primary-soft))] p-3 text-xs text-[hsl(var(--primary-strong))]">
                     {t('advanced.worker_info')}
                     {workerSummary?.workerIds?.length ? (
                       <div className="mt-1 font-medium">
@@ -284,7 +284,7 @@ export function ModuleModal({ open, onOpenChange, module, onSuccess }: ModuleMod
                       </div>
                     ) : null}
                   </div>
-                  <div className="rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+                  <div className="rounded-md border border-[hsl(var(--status-warning)/0.30)] bg-[hsl(var(--status-warning)/0.08)] p-3 text-xs text-[hsl(var(--status-warning-text))]">
                     {t('advanced.worker_warning')}
                   </div>
 
@@ -345,7 +345,7 @@ export function ModuleModal({ open, onOpenChange, module, onSuccess }: ModuleMod
               </div>
             )}
 
-            <DialogFooter className="gap-2">
+            <DialogFooter className="-mx-5 -mb-4 gap-2 border-t border-border bg-[hsl(var(--surface-muted)/0.45)] px-5 py-3">
               <Button variant="outline" onClick={() => handleOpenChange(false)}>{tCommon('cancel')}</Button>
               <Button type="submit" disabled={isSubmitting}>
                 {isSubmitting
