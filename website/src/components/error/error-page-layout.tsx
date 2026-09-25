@@ -1,63 +1,147 @@
-"use client";
+"use client"
 
-import Link from "next/link";
-import { LazyMotion, domAnimation, m, useReducedMotion } from "motion/react";
-import type { ReactNode } from "react";
-import { useTranslations } from "next-intl";
-import { Button } from "@/components/ui/button";
-import { Logo } from "@/components/logo";
-import { usePathname } from "@/i18n/navigation";
-import { cn } from "@/lib/utils";
+import Link from "next/link"
+import { m, useReducedMotion } from "motion/react"
+import type { ReactNode } from "react"
+import { useTranslations } from "next-intl"
+
+import { Button } from "@/components/ui/button"
+import { SignalField } from "@/components/error/signal-field"
+import { SystemIllustration, type SystemVariant } from "@/components/error/system-illustration"
+import { usePathname } from "@/i18n/navigation"
+import { cn } from "@/lib/utils"
 
 type ErrorAction = {
-  label: string;
-  href?: string;
-  onClick?: () => void;
-  icon?: ReactNode;
-  variant?: "default" | "outline" | "secondary" | "ghost";
-};
+  label: string
+  href?: string
+  onClick?: () => void
+  icon?: ReactNode
+  variant?: "default" | "outline" | "secondary" | "ghost"
+}
 
 interface ErrorPageLayoutProps {
-  code: string;
-  title: string;
-  description: string;
-  badge?: string;
-  icon?: ReactNode;
-  helperText?: string;
-  primaryAction: ErrorAction;
-  secondaryAction?: ErrorAction;
+  code: string
+  title: string
+  description: string
+  badge?: string
+  icon?: ReactNode
+  helperText?: string
+  primaryAction: ErrorAction
+  secondaryAction?: ErrorAction
+  variant?: SystemVariant
+  standalone?: boolean
+}
+
+const EASE = [0.23, 1, 0.32, 1] as const
+
+const variantTone: Record<SystemVariant, { badge: string; field: string }> = {
+  "not-found": {
+    badge: "border-primary/30 bg-[hsl(var(--primary-soft))] text-[hsl(var(--primary-strong))]",
+    field: "fill-primary",
+  },
+  forbidden: {
+    badge: "border-[hsl(var(--status-warning)/0.40)] bg-[hsl(var(--status-warning)/0.10)] text-[hsl(var(--status-warning-text))]",
+    field: "fill-[hsl(var(--status-warning))]",
+  },
+  "server-error": {
+    badge: "border-[hsl(var(--status-critical)/0.30)] bg-[hsl(var(--status-critical)/0.10)] text-[hsl(var(--status-critical))]",
+    field: "fill-[hsl(var(--status-critical))]",
+  },
+  network: {
+    badge: "border-[hsl(var(--status-technical)/0.30)] bg-[hsl(var(--status-technical)/0.08)] text-[hsl(var(--status-technical))] dark:text-slate-100",
+    field: "fill-[hsl(var(--status-technical))] dark:fill-slate-100",
+  },
+  maintenance: {
+    badge: "border-[hsl(var(--status-ok)/0.30)] bg-[hsl(var(--status-ok)/0.10)] text-[hsl(var(--status-ok-text))]",
+    field: "fill-[hsl(var(--status-ok))]",
+  },
+}
+
+function resolveVariant(code: string, variant?: SystemVariant): SystemVariant {
+  if (variant) return variant
+  if (code === "403") return "forbidden"
+  if (code === "404") return "not-found"
+  return "server-error"
 }
 
 function ActionButton({
   action,
   fallbackHref,
 }: {
-  action: ErrorAction;
-  fallbackHref: string;
+  action: ErrorAction
+  fallbackHref: string
 }) {
+  const variant = action.variant === "default" || !action.variant ? "primary" : action.variant
+
   if (action.onClick) {
     return (
       <Button
         onClick={action.onClick}
-        variant={action.variant ?? "default"}
-        className="gap-2"
+        variant={variant}
+        size="sm"
+        className="h-8 gap-1.5"
       >
         {action.icon}
         {action.label}
       </Button>
-    );
+    )
   }
 
-  const href = action.href ?? fallbackHref;
-
   return (
-    <Button asChild variant={action.variant ?? "default"} className="gap-2">
-      <Link href={href}>
+    <Button
+      asChild
+      variant={variant}
+      size="sm"
+      className="h-8 gap-1.5"
+    >
+      <Link href={action.href ?? fallbackHref}>
         {action.icon}
         {action.label}
       </Link>
     </Button>
-  );
+  )
+}
+
+function SplitTitle({ text, reduced }: { text: string; reduced: boolean }) {
+  const words = text.split(" ")
+
+  return (
+    <m.h1
+      aria-label={text}
+      className="mt-3 text-xl font-semibold tracking-[-0.01em] text-foreground"
+      initial="hidden"
+      animate="visible"
+      variants={{
+        hidden: {},
+        visible: {
+          transition: {
+            staggerChildren: reduced ? 0 : 0.045,
+            delayChildren: reduced ? 0 : 0.2,
+          },
+        },
+      }}
+    >
+      {words.map((word, index) => (
+        <m.span
+          key={`${word}-${index}`}
+          aria-hidden
+          className="inline-block whitespace-pre"
+          variants={{
+            hidden: reduced ? { opacity: 1 } : { opacity: 0, y: 6, filter: "blur(2px)" },
+            visible: {
+              opacity: 1,
+              y: 0,
+              filter: "blur(0px)",
+              transition: { duration: reduced ? 0 : 0.24, ease: EASE },
+            },
+          }}
+        >
+          {word}
+          {index < words.length - 1 ? " " : ""}
+        </m.span>
+      ))}
+    </m.h1>
+  )
 }
 
 export function ErrorPageLayout({
@@ -65,158 +149,78 @@ export function ErrorPageLayout({
   title,
   description,
   badge,
-  icon,
   helperText,
   primaryAction,
   secondaryAction,
+  variant,
+  standalone = false,
 }: ErrorPageLayoutProps) {
-  const pathname = usePathname();
-  const locale = pathname?.split("/")[1] || "fr";
-  const t = useTranslations("errors");
-  const reduceMotion = useReducedMotion();
-
-  const floatAnimation = reduceMotion
-    ? undefined
-    : { y: [0, -12, 0], opacity: [0.6, 1, 0.6] };
-
-  const shimmerAnimation = reduceMotion
-    ? undefined
-    : { opacity: [0.35, 0.6, 0.35] };
+  const pathname = usePathname()
+  const locale = pathname?.split("/")[1] || "fr"
+  const t = useTranslations("errors")
+  const reduced = Boolean(useReducedMotion())
+  const resolvedVariant = resolveVariant(code, variant)
+  const tone = variantTone[resolvedVariant]
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-linear-to-br from-background via-background to-muted/30">
-      <LazyMotion features={domAnimation}>
+    <div
+      className={cn(
+        "relative isolate flex w-full flex-col items-center justify-center overflow-hidden bg-background px-6",
+        standalone ? "min-h-screen py-10" : "min-h-[72vh] rounded-xl py-12",
+      )}
+    >
+      <SignalField
+        toneClassName={tone.field}
+        className="absolute inset-0 -z-10 h-full w-full opacity-80 [mask-image:radial-gradient(ellipse_at_center,black_20%,transparent_70%)]"
+      />
+
+      <section className="flex w-full max-w-md flex-col items-center text-center">
+        <SystemIllustration variant={resolvedVariant} />
+
         <m.div
-          initial={reduceMotion ? false : { opacity: 0, y: 16 }}
+          initial={{ opacity: 0, y: reduced ? 0 : 4 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, ease: "easeOut" }}
-          className="relative z-10 mx-auto flex min-h-screen max-w-6xl flex-col items-center justify-center px-6 py-12"
+          transition={{ duration: reduced ? 0 : 0.2, delay: reduced ? 0 : 0.15, ease: EASE }}
+          className="mt-5 flex items-center gap-2"
         >
-          <div className="grid w-full items-center gap-10 md:grid-cols-[1.15fr_0.85fr]">
-            <div className="space-y-8">
-              <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                <Logo size="sm" showText={false} />
-                <span className="text-4xl rounded-full border border-muted/60 bg-muted/30 px-3 py-1">
-                  {badge ?? t("default_badge", { code })}
-                </span>
-              </div>
-
-              <div className="space-y-4">
-                <div className="flex items-center gap-4">
-                  {icon ? (
-                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-primary/20 bg-primary/10 text-primary">
-                      {icon}
-                    </div>
-                  ) : null}
-                  <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl">
-                    {title}
-                  </h1>
-                </div>
-                <p className="max-w-xl text-base text-muted-foreground sm:text-lg">
-                  {description}
-                </p>
-                {helperText ? (
-                  <p className="text-sm text-muted-foreground/80">{helperText}</p>
-                ) : null}
-              </div>
-
-              <div className="flex flex-wrap items-center gap-3">
-                <ActionButton action={primaryAction} fallbackHref={`/${locale}`} />
-                {secondaryAction ? (
-                  <ActionButton action={secondaryAction} fallbackHref={`/${locale}`} />
-                ) : null}
-              </div>
-            </div>
-
-            <div className="relative flex items-center justify-center">
-              <m.div
-                className="absolute -top-16 right-6 h-32 w-32 rounded-full bg-primary/15 blur-3xl"
-                animate={shimmerAnimation}
-                transition={{ duration: 4.5, repeat: Infinity, ease: "easeInOut" }}
-              />
-              <m.div
-                className="absolute -bottom-10 left-4 h-28 w-28 rounded-full bg-emerald-400/20 blur-3xl"
-                animate={shimmerAnimation}
-                transition={{ duration: 5.5, repeat: Infinity, ease: "easeInOut" }}
-              />
-
-              <m.div
-                className="relative w-full max-w-md overflow-hidden rounded-3xl border border-muted/50 bg-card/60 p-6 shadow-xl backdrop-blur"
-                initial={reduceMotion ? false : { opacity: 0, scale: 0.96 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.45, ease: "easeOut" }}
-              >
-                <m.div
-                  className="absolute inset-0 bg-linear-to-tr from-primary/10 via-transparent to-emerald-500/10"
-                  animate={shimmerAnimation}
-                  transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-                />
-
-                <div className="relative space-y-6">
-                  <div className="flex items-baseline justify-between">
-                    <div>
-                      <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">
-                        VigiSensys
-                      </p>
-                      <p className="text-4xl font-semibold text-primary">{code}</p>
-                    </div>
-                    <span className="rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs text-primary">
-                      {t("system_status")}
-                    </span>
-                  </div>
-
-                  <m.svg
-                    viewBox="0 0 360 160"
-                    className="h-32 w-full"
-                    aria-hidden="true"
-                  >
-                    <defs>
-                      <linearGradient id="errorWave" x1="0" x2="1" y1="0" y2="1">
-                        <stop offset="0%" stopColor="currentColor" stopOpacity="0.2" />
-                        <stop offset="50%" stopColor="currentColor" stopOpacity="0.6" />
-                        <stop offset="100%" stopColor="currentColor" stopOpacity="0.2" />
-                      </linearGradient>
-                    </defs>
-                    <m.path
-                      d="M10 100 C 50 40, 90 160, 130 100 S 210 40, 250 100 310 160 350 100"
-                      fill="none"
-                      stroke="url(#errorWave)"
-                      strokeWidth="6"
-                      className="text-primary"
-                      animate={floatAnimation}
-                      transition={{ duration: 3.8, repeat: Infinity, ease: "easeInOut" }}
-                    />
-                    <m.circle
-                      cx="80"
-                      cy="60"
-                      r="6"
-                      className="fill-emerald-400/70"
-                      animate={floatAnimation}
-                      transition={{ duration: 4.2, repeat: Infinity, ease: "easeInOut" }}
-                    />
-                    <m.circle
-                      cx="240"
-                      cy="120"
-                      r="8"
-                      className="fill-primary/60"
-                      animate={floatAnimation}
-                      transition={{ duration: 4.8, repeat: Infinity, ease: "easeInOut" }}
-                    />
-                  </m.svg>
-
-                  <div className="flex items-center justify-between text-xs text-muted-foreground">
-                    <span>{t("monitoring_live")}</span>
-                    <span className="flex items-center gap-2">
-                      <span className={cn("h-2 w-2 rounded-full bg-emerald-400", !reduceMotion && "animate-pulse")} />
-                      {t("connected")}
-                    </span>
-                  </div>
-                </div>
-              </m.div>
-            </div>
-          </div>
+          <span className={cn("inline-flex rounded-full border px-2.5 py-0.5 text-[11px] font-semibold", tone.badge)}>
+            {badge ?? t("default_badge", { code })}
+          </span>
+          <span className="num text-[11px] font-semibold text-[hsl(var(--subtle-foreground))]">{code}</span>
         </m.div>
-      </LazyMotion>
+
+        <SplitTitle text={title} reduced={reduced} />
+
+        <m.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: reduced ? 0 : 0.22, delay: reduced ? 0 : 0.38 }}
+          className="mt-1.5 text-[13px] leading-5 text-muted-foreground"
+        >
+          {description}
+        </m.p>
+
+        {helperText ? (
+          <m.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: reduced ? 0 : 0.22, delay: reduced ? 0 : 0.46 }}
+            className="mt-2 text-xs leading-5 text-[hsl(var(--subtle-foreground))]"
+          >
+            {helperText}
+          </m.p>
+        ) : null}
+
+        <m.div
+          initial={{ opacity: 0, y: reduced ? 0 : 4 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: reduced ? 0 : 0.22, delay: reduced ? 0 : 0.52, ease: EASE }}
+          className="mt-6 flex flex-wrap justify-center gap-2"
+        >
+          <ActionButton action={primaryAction} fallbackHref={`/${locale}/surveillance`} />
+          {secondaryAction ? <ActionButton action={secondaryAction} fallbackHref={`/${locale}/surveillance`} /> : null}
+        </m.div>
+      </section>
     </div>
-  );
+  )
 }
