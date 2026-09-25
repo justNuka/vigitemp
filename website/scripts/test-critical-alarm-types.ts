@@ -73,6 +73,19 @@ assert.match(mysqlSeed, /\(21, 'CRITIQUE_HAUT', 'CH'/)
 assert.match(mssqlSeed, /VALUES\(20,N'CRITIQUE_BAS','CB'/)
 assert.match(mssqlSeed, /VALUES\(21,N'CRITIQUE_HAUT','CH'/)
 
+assert.ok(
+  mysqlMigration.lastIndexOf("SCHEMA_VERSION") >
+    mysqlMigration.indexOf("TRG_GSO_BEF_UPD_LIEU_ALARME"),
+  "MySQL schema version must be updated after the GSO trigger is installed",
+)
+const mssqlTriggerIndex = mssqlMigration.indexOf("CREATE OR ALTER TRIGGER")
+const mssqlFirstCatchEnd = mssqlMigration.indexOf("THROW;\nEND CATCH;\nGO")
+assert.ok(mssqlTriggerIndex > mssqlFirstCatchEnd, "SQL Server trigger must not be inside the message CATCH block")
+assert.ok(
+  mssqlMigration.lastIndexOf("SCHEMA_VERSION") > mssqlTriggerIndex,
+  "SQL Server schema version must be updated after the GSO trigger is installed",
+)
+
 const mysqlTriggerStart = mysqlSeed.indexOf(
   "/*!50003 CREATE*/ /*!50003 TRIGGER `TRG_GSO_BEF_UPD_LIEU_ALARME`",
 )
@@ -80,6 +93,7 @@ assert.ok(mysqlTriggerStart >= 0, "MySQL GSO trigger CREATE block must exist")
 const mysqlTriggerEnd = mysqlSeed.indexOf("DELIMITER ;", mysqlTriggerStart)
 assert.ok(mysqlTriggerEnd > mysqlTriggerStart, "MySQL GSO trigger end marker must exist")
 const mysqlTrigger = mysqlSeed.slice(mysqlTriggerStart, mysqlTriggerEnd)
+assert.ok(mysqlMigration.includes(mysqlTrigger), "MySQL migration and seed must share the same GSO trigger body")
 assert.match(mysqlTrigger, /Seuil_Critique_Bas/)
 assert.match(mysqlTrigger, /Seuil_Critique_Haut/)
 assert.match(mysqlTrigger, /Type\s+IN\s*\(\s*'B'\s*,\s*'CB'\s*,\s*'H'\s*,\s*'CH'\s*,\s*'N'\s*\)/i)
@@ -87,6 +101,8 @@ assert.match(mysqlTrigger, /v_TypeAlarme\s+IN\s*\(\s*'B'\s*,\s*'CB'\s*\)/i)
 assert.match(mysqlTrigger, /v_TypeAlarme\s+IN\s*\(\s*'H'\s*,\s*'CH'\s*\)/i)
 assert.match(mysqlTrigger, /NEW\.Derniere_Valeur\s*,\s*'CB'/s)
 assert.match(mysqlTrigger, /NEW\.Derniere_Valeur\s*,\s*'CH'/s)
+assert.doesNotMatch(mysqlTrigger, /v_TypeAlarme\s*=\s*'B'/)
+assert.doesNotMatch(mysqlTrigger, /v_TypeAlarme\s*=\s*'H'/)
 
 const mssqlTriggerStart = mssqlSeed.indexOf(
   "CREATE OR ALTER TRIGGER dbo.[TRG_GSO_BEF_UPD_LIEU_ALARME]",
@@ -95,6 +111,7 @@ assert.ok(mssqlTriggerStart >= 0, "SQL Server GSO trigger block must exist")
 const mssqlTriggerEnd = mssqlSeed.indexOf("USE [vigi_mesures];", mssqlTriggerStart)
 assert.ok(mssqlTriggerEnd > mssqlTriggerStart, "SQL Server GSO trigger end marker must exist")
 const mssqlTrigger = mssqlSeed.slice(mssqlTriggerStart, mssqlTriggerEnd)
+assert.ok(mssqlMigration.includes(mssqlTrigger.trim()), "SQL Server migration and seed must share the same GSO trigger body")
 assert.match(mssqlTrigger, /Seuil_Critique_Bas/)
 assert.match(mssqlTrigger, /Seuil_Critique_Haut/)
 assert.match(mssqlTrigger, /\[Type\]\s+IN\s*\(\s*'B'\s*,\s*'CB'\s*,\s*'H'\s*,\s*'CH'\s*,\s*'N'\s*\)/i)
@@ -102,6 +119,8 @@ assert.match(mssqlTrigger, /@v_TypeAlarme\s+IN\s*\(\s*'B'\s*,\s*'CB'\s*\)/i)
 assert.match(mssqlTrigger, /@v_TypeAlarme\s+IN\s*\(\s*'H'\s*,\s*'CH'\s*\)/i)
 assert.match(mssqlTrigger, /@Derniere_Valeur\s*,\s*'CB'/s)
 assert.match(mssqlTrigger, /@Derniere_Valeur\s*,\s*'CH'/s)
+assert.doesNotMatch(mssqlTrigger, /@v_TypeAlarme\s*=\s*'B'/)
+assert.doesNotMatch(mssqlTrigger, /@v_TypeAlarme\s*=\s*'H'/)
 
 const sensorSource = read("../../Vigitemp Serveur/Vigitemp Serveur/Sensor.cs")
 assert.match(sensorSource, /criticalLowNow \? "CB" : "B"/)
