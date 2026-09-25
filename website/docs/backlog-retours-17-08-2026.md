@@ -3718,7 +3718,7 @@ Fichiers principaux :
 
 ### R25-001-B — Nouveaux types d'alarmes critiques `CB` / `CH`
 
-**Statut : `EN_COURS` — branche `feature/critical-alarm-types` — base `dev` `8ae5ba55faabbb38e554b267f9151e460a27e695`**
+**Statut : `PR_OUVERTE` — branche `feature/critical-alarm-types` — PR #158 — base `dev` `8ae5ba55faabbb38e554b267f9151e460a27e695`**
 
 Demandes :
 
