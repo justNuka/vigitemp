@@ -4,6 +4,7 @@ import { Tooltip as UITooltip, TooltipContent, TooltipProvider, TooltipTrigger }
 import { getTypeIcon } from '@/lib/lieu-types'
 import type { LieuTypeValue } from '@/lib/lieu-types'
 import { getStatusTheme, type SensorStatus } from '@/lib/surveillance-status'
+import { isCriticalThresholdAlarmType, type AlarmTypeCode } from '@/lib/alarm-types'
 
 const HEADER_GRADIENT_MAP: Record<string, string> = {
   // alarmTypeTheme values (clean single tokens)
@@ -21,7 +22,7 @@ const HEADER_GRADIENT_MAP: Record<string, string> = {
 
 interface MonitoringCardHeaderProps {
   status: SensorStatus
-  effectiveAlarmType: 'H' | 'B' | 'N' | 'S' | 'A' | 'M' | 'T' | null
+  effectiveAlarmType: AlarmTypeCode | null
   isSurveillanceActive: boolean
   lieuEtat: string
   siteName: string
@@ -67,17 +68,21 @@ export function MonitoringCardHeader({
   const headerTheme = getStatusTheme(status, isSurveillanceActive, statusLabels)
   const alarmTypeTheme = !effectiveAlarmType || !isSurveillanceActive
     ? null
-    : effectiveAlarmType === 'H'
-      ? { label: t('alarmTypes.high'), headerBgClassName: 'bg-red-700', headerBorderClassName: 'border-red-800', headerTextClassName: 'text-white' }
-      : effectiveAlarmType === 'B'
-        ? { label: t('alarmTypes.low'), headerBgClassName: 'bg-blue-700', headerBorderClassName: 'border-blue-800', headerTextClassName: 'text-white' }
-        : effectiveAlarmType === 'N'
-          ? { label: t('alarmTypes.no_response'), headerBgClassName: 'bg-black', headerBorderClassName: 'border-black', headerTextClassName: 'text-white' }
-          : effectiveAlarmType === 'S' || effectiveAlarmType === 'A'
-            ? { label: t('alarmTypes.sector'), headerBgClassName: 'bg-black', headerBorderClassName: 'border-black', headerTextClassName: 'text-white' }
-            : effectiveAlarmType === 'M'
-              ? { label: t('alarmTypes.module'), headerBgClassName: 'bg-black', headerBorderClassName: 'border-black', headerTextClassName: 'text-white' }
-          : { label: t('alarmTypes.ended'), headerBgClassName: 'bg-violet-600', headerBorderClassName: 'border-violet-700', headerTextClassName: 'text-white' }
+    : effectiveAlarmType === 'CH'
+      ? { label: t('alarmTypes.critical_high'), headerBgClassName: 'bg-red-700', headerBorderClassName: 'border-red-800', headerTextClassName: 'text-white' }
+      : effectiveAlarmType === 'H'
+        ? { label: t('alarmTypes.high'), headerBgClassName: 'bg-red-700', headerBorderClassName: 'border-red-800', headerTextClassName: 'text-white' }
+        : effectiveAlarmType === 'CB'
+          ? { label: t('alarmTypes.critical_low'), headerBgClassName: 'bg-blue-700', headerBorderClassName: 'border-blue-800', headerTextClassName: 'text-white' }
+          : effectiveAlarmType === 'B'
+            ? { label: t('alarmTypes.low'), headerBgClassName: 'bg-blue-700', headerBorderClassName: 'border-blue-800', headerTextClassName: 'text-white' }
+            : effectiveAlarmType === 'N'
+              ? { label: t('alarmTypes.no_response'), headerBgClassName: 'bg-black', headerBorderClassName: 'border-black', headerTextClassName: 'text-white' }
+              : effectiveAlarmType === 'S' || effectiveAlarmType === 'A'
+                ? { label: t('alarmTypes.sector'), headerBgClassName: 'bg-black', headerBorderClassName: 'border-black', headerTextClassName: 'text-white' }
+                : effectiveAlarmType === 'M'
+                  ? { label: t('alarmTypes.module'), headerBgClassName: 'bg-black', headerBorderClassName: 'border-black', headerTextClassName: 'text-white' }
+                  : { label: t('alarmTypes.ended'), headerBgClassName: 'bg-violet-600', headerBorderClassName: 'border-violet-700', headerTextClassName: 'text-white' }
 
   const headerBgClassName = alarmTypeTheme?.headerBgClassName ?? headerTheme.headerBgClassName
   const headerBorderClassName = alarmTypeTheme?.headerBorderClassName ?? headerTheme.headerBorderClassName
@@ -87,6 +92,7 @@ export function MonitoringCardHeader({
   const typeIconInfo = lieuType ? getTypeIcon(lieuType, 'w-4 h-4') : null
   const alarmBadgeClassName = isSurveillanceActive ? 'bg-black/15 text-white ring-1 ring-white/15 backdrop-blur-sm' : 'bg-white/20 text-white ring-1 ring-white/20'
   const hasActiveAlarmCode = isSurveillanceActive && Boolean(effectiveAlarmType)
+  const hasCriticalThresholdAlarm = isCriticalThresholdAlarmType(effectiveAlarmType)
   const alarmCodeLabel = effectiveAlarmType ?? '—'
 
   const operationalState = lieuEtat === 'E'
@@ -209,16 +215,34 @@ export function MonitoringCardHeader({
                   </span>
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p className="text-xs">{hasActiveAlarmCode ? (effectiveAlarmType === 'H' ? t('alarmTypes.high') : effectiveAlarmType === 'B' ? t('alarmTypes.low') : effectiveAlarmType === 'S' ? t('alarmTypes.sector') : effectiveAlarmType === 'M' ? t('alarmTypes.module') : effectiveAlarmType === 'T' ? t('alarmTypes.ended') : t('alarmTypes.no_response')) : t('status.ok')}</p>
+                  <p className="text-xs">{hasActiveAlarmCode
+                    ? effectiveAlarmType === 'CH'
+                      ? t('alarmTypes.critical_high')
+                      : effectiveAlarmType === 'H'
+                        ? t('alarmTypes.high')
+                        : effectiveAlarmType === 'CB'
+                          ? t('alarmTypes.critical_low')
+                          : effectiveAlarmType === 'B'
+                            ? t('alarmTypes.low')
+                            : effectiveAlarmType === 'S' || effectiveAlarmType === 'A'
+                              ? t('alarmTypes.sector')
+                              : effectiveAlarmType === 'M'
+                                ? t('alarmTypes.module')
+                                : effectiveAlarmType === 'T'
+                                  ? t('alarmTypes.ended')
+                                  : t('alarmTypes.no_response')
+                    : t('status.ok')}</p>
                 </TooltipContent>
               </UITooltip>
             </div>
-            <UITooltip>
-              <TooltipTrigger asChild>
-                <div><HeaderIcon className="w-4 h-4" /></div>
-              </TooltipTrigger>
-              <TooltipContent><p className="text-xs">{headerStatusLabel}</p></TooltipContent>
-            </UITooltip>
+            {status !== 'critical' || hasCriticalThresholdAlarm ? (
+              <UITooltip>
+                <TooltipTrigger asChild>
+                  <div><HeaderIcon className="w-4 h-4" /></div>
+                </TooltipTrigger>
+                <TooltipContent><p className="text-xs">{headerStatusLabel}</p></TooltipContent>
+              </UITooltip>
+            ) : null}
             {typeIconInfo?.icon ? (
               <UITooltip>
                 <TooltipTrigger asChild>
