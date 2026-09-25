@@ -97,13 +97,13 @@ export function GroupsClient() {
   return (
     <LazyMotion features={domAnimation}>
       <m.main
-        className="flex-1 p-4 md:p-6 space-y-6"
+        className="flex-1 space-y-4 p-4 md:p-6"
         variants={fadeInUp}
         initial="hidden"
         animate="visible"
       >
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 border-b border-border/50 bg-white/90 dark:bg-card/90">
+      <Card className="overflow-hidden rounded-[10px] border-border bg-card shadow-[0_1px_2px_hsl(var(--shadow)/0.06)]">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 border-b border-border px-3 py-2.5">
           <div>
             <CardTitle className="flex items-center gap-2 text-base">
               <Layers className="h-4 w-4 text-primary" />
@@ -132,11 +132,11 @@ export function GroupsClient() {
             }}
             className="space-y-4"
           >
-            <TabsList className="grid w-full max-w-md grid-cols-2 bg-primary/10 text-primary">
-              <TabsTrigger value="active" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+            <TabsList className="grid h-8 w-auto max-w-md grid-cols-2 gap-0.5 rounded-md border border-border bg-[hsl(var(--surface-muted))] p-0.5 text-muted-foreground">
+              <TabsTrigger value="active" className="h-7 rounded-[5px] px-2.5 text-[13px] font-medium transition-colors duration-150 hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/60 data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-sm data-[state=active]:ring-1 data-[state=active]:ring-border">
                 {t('tabs.active', { count: activeGroups.length })}
               </TabsTrigger>
-              <TabsTrigger value="archived" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+              <TabsTrigger value="archived" className="h-7 rounded-[5px] px-2.5 text-[13px] font-medium transition-colors duration-150 hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/60 data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-sm data-[state=active]:ring-1 data-[state=active]:ring-border">
                 {t('tabs.archived', { count: archivedGroups.length })}
               </TabsTrigger>
             </TabsList>
