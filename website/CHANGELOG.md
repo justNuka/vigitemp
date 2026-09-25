@@ -8,7 +8,24 @@ Les versions suivent `MAJOR.MINOR.PATCH` sans zéros de tête. La source de vers
 
 ## [Unreleased]
 
-Aucun changement supplémentaire documenté depuis la préparation de la version Web 1.9.0.
+Aucun changement supplémentaire documenté depuis la préparation de la version Web 1.9.1.
+
+## [1.9.1] — 2026-09-25
+
+Cette version clarifie la cadence de lecture des GSP pendant les opérations de métrologie.
+
+### Ajustage / Étalonnage
+
+- L'Étalonnage conserve une cadence cible d'une minute pour les GSP, mais précise désormais qu'une sonde peut être interrogée légèrement plus tard lorsque d'autres sondes du même module restent en Surveillance.
+- L'Ajustage précise de la même manière que l'intervalle GSP configuré constitue une cadence cible et peut être décalé par l'arbitrage du module.
+- Dans les deux parcours, l'interface rappelle que la **Surveillance reste prioritaire** sur les lectures de métrologie partageant le même module.
+- Les explications sont disponibles en français et en anglais, sans modifier l'ordonnancement matériel ni le moteur d'acquisition.
+
+### Compatibilité
+
+- Version Web : **1.9.1**.
+- Serveur **1.2.0**, BDD **0.92.0** et Agent **1.0.1** inchangés.
+- Aucune migration BDD n'est requise.
 
 ## [1.9.0] — 2026-09-25
 
