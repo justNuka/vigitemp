@@ -1,24 +1,19 @@
-import { CircleHelp, PowerOff } from 'lucide-react'
+import {
+  ArrowDown,
+  ArrowUp,
+  BellRing,
+  CircleCheck,
+  CircleOff,
+  PowerOff,
+  ShieldAlert,
+  TriangleAlert,
+  WifiOff,
+} from 'lucide-react'
 
-import { Tooltip as UITooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
-import { getTypeIcon } from '@/lib/lieu-types'
 import type { LieuTypeValue } from '@/lib/lieu-types'
-import { getStatusTheme, type SensorStatus } from '@/lib/surveillance-status'
-import { isCriticalThresholdAlarmType, type AlarmTypeCode } from '@/lib/alarm-types'
-
-const HEADER_GRADIENT_MAP: Record<string, string> = {
-  // alarmTypeTheme values (clean single tokens)
-  "bg-red-700":    "bg-linear-to-br from-red-600 to-red-800",
-  "bg-blue-700":   "bg-linear-to-br from-blue-600 to-blue-800",
-  "bg-black":      "bg-linear-to-br from-slate-900 to-black",
-  "bg-violet-600": "bg-linear-to-br from-violet-500 to-violet-700",
-  // getStatusTheme values (exact strings including dark: variants)
-  "bg-slate-600 dark:bg-gray-700":    "bg-linear-to-br from-slate-500 to-slate-700 dark:from-gray-600 dark:to-gray-800",
-  "bg-red-700 dark:bg-red-700":       "bg-linear-to-br from-red-600 to-red-800",
-  "bg-amber-300 dark:bg-amber-300":   "bg-linear-to-br from-amber-200 to-amber-400",
-  "bg-violet-600 dark:bg-violet-700": "bg-linear-to-br from-violet-500 to-violet-700 dark:from-violet-600 dark:to-violet-800",
-  "bg-sky-400 dark:bg-sky-500":        "bg-linear-to-br from-sky-300 via-sky-400 to-sky-500 dark:from-sky-400 dark:via-sky-500 dark:to-sky-600",
-}
+import type { SensorStatus } from '@/lib/surveillance-status'
+import type { AlarmTypeCode } from '@/lib/alarm-types'
+import { cn } from '@/lib/utils'
 
 interface MonitoringCardHeaderProps {
   status: SensorStatus
@@ -40,81 +35,44 @@ interface MonitoringCardHeaderProps {
   tStatus: (key: string) => string
 }
 
+type BandConfig = {
+  label: string
+  className: string
+  dotClassName: string
+  Icon: typeof ArrowUp
+}
+
 export function MonitoringCardHeader({
   status,
   effectiveAlarmType,
   isSurveillanceActive,
-  lieuEtat,
-  siteName,
-  groupName,
-  nomLieu,
-  sondeNumeroSerie,
-  locationComment,
-  lieuType,
-  surveillanceDisabledLabel,
-  alarmDisabledLabel,
   canAcknowledge,
   onAcknowledge,
-  onOpenDetails,
   t,
   tStatus,
 }: MonitoringCardHeaderProps) {
-  const statusLabels = {
-    inactive: tStatus('inactive'),
-    critical: tStatus('critical'),
-    technical: tStatus('technical'),
-    warning: tStatus('warning'),
-    ended: tStatus('ended'),
-    ok: tStatus('ok'),
-  }
-  const headerTheme = getStatusTheme(status, isSurveillanceActive, statusLabels)
-  const alarmTypeTheme = !effectiveAlarmType || !isSurveillanceActive
-    ? null
-    : effectiveAlarmType === 'CH'
-      ? { label: t('alarmTypes.critical_high'), headerBgClassName: 'bg-red-700', headerBorderClassName: 'border-red-800', headerTextClassName: 'text-white' }
-      : effectiveAlarmType === 'H'
-        ? { label: t('alarmTypes.high'), headerBgClassName: 'bg-red-700', headerBorderClassName: 'border-red-800', headerTextClassName: 'text-white' }
-        : effectiveAlarmType === 'CB'
-          ? { label: t('alarmTypes.critical_low'), headerBgClassName: 'bg-blue-700', headerBorderClassName: 'border-blue-800', headerTextClassName: 'text-white' }
-          : effectiveAlarmType === 'B'
-            ? { label: t('alarmTypes.low'), headerBgClassName: 'bg-blue-700', headerBorderClassName: 'border-blue-800', headerTextClassName: 'text-white' }
-            : effectiveAlarmType === 'N'
-              ? { label: t('alarmTypes.no_response'), headerBgClassName: 'bg-black', headerBorderClassName: 'border-black', headerTextClassName: 'text-white' }
-              : effectiveAlarmType === 'S' || effectiveAlarmType === 'A'
-                ? { label: t('alarmTypes.sector'), headerBgClassName: 'bg-black', headerBorderClassName: 'border-black', headerTextClassName: 'text-white' }
-                : effectiveAlarmType === 'M'
-                  ? { label: t('alarmTypes.module'), headerBgClassName: 'bg-black', headerBorderClassName: 'border-black', headerTextClassName: 'text-white' }
-                  : { label: t('alarmTypes.ended'), headerBgClassName: 'bg-violet-600', headerBorderClassName: 'border-violet-700', headerTextClassName: 'text-white' }
+  const config = resolveBandConfig({
+    status,
+    alarmType: effectiveAlarmType,
+    isSurveillanceActive,
+    t,
+    tStatus,
+  })
 
-  const headerBgClassName = alarmTypeTheme?.headerBgClassName ?? headerTheme.headerBgClassName
-  const headerBorderClassName = alarmTypeTheme?.headerBorderClassName ?? headerTheme.headerBorderClassName
-  const headerTextClassName = alarmTypeTheme?.headerTextClassName ?? (isSurveillanceActive ? headerTheme.headerTextClassName : 'text-white')
-  const headerStatusLabel = alarmTypeTheme?.label ?? headerTheme.label
-  const HeaderIcon = headerTheme.Icon
-  const typeIconInfo = lieuType ? getTypeIcon(lieuType, 'w-4 h-4') : null
-  const alarmBadgeClassName = isSurveillanceActive ? 'bg-black/15 text-white ring-1 ring-white/15 backdrop-blur-sm' : 'bg-white/20 text-white ring-1 ring-white/20'
-  const hasActiveAlarmCode = isSurveillanceActive && Boolean(effectiveAlarmType)
-  const hasCriticalThresholdAlarm = isCriticalThresholdAlarmType(effectiveAlarmType)
-
-  const operationalState = lieuEtat === 'E'
-    ? {
-        label: t('surveillance.calibration'),
-        tooltip: t('surveillance.calibration_tooltip'),
-        className: 'bg-amber-50 text-amber-900 ring-1 ring-amber-200',
-      }
-    : lieuEtat === 'A'
-      ? {
-          label: t('surveillance.adjustment'),
-          tooltip: t('surveillance.adjustment_tooltip'),
-          className: 'bg-sky-50 text-sky-900 ring-1 ring-sky-200',
-        }
-      : null
-
-  const resolvedHeaderBg = HEADER_GRADIENT_MAP[headerBgClassName] ?? headerBgClassName
+  const hasAlarmCode = isSurveillanceActive && Boolean(effectiveAlarmType)
+  const Icon = config.Icon
 
   return (
     <div
-      className={`px-3 py-2 relative overflow-hidden ${resolvedHeaderBg} border-b-2 ${headerBorderClassName} ${canAcknowledge ? 'cursor-pointer transition-[filter] hover:brightness-[1.04]' : ''}`}
+      className={cn(
+        'flex h-7 shrink-0 items-center gap-1.5 border-b px-2.5 text-[11px] font-semibold',
+        'transition-[filter,box-shadow] duration-150 ease-out',
+        config.className,
+        canAcknowledge && 'cursor-pointer hover:brightness-[1.04] focus-within:ring-2 focus-within:ring-inset focus-within:ring-white/45',
+      )}
+      role={canAcknowledge ? 'button' : undefined}
+      tabIndex={canAcknowledge ? 0 : undefined}
+      aria-label={canAcknowledge ? t('acknowledge.button') : config.label}
       onClick={() => {
         if (canAcknowledge) onAcknowledge()
       }}
@@ -125,143 +83,154 @@ export function MonitoringCardHeader({
           onAcknowledge()
         }
       }}
-      role={canAcknowledge ? 'button' : undefined}
-      tabIndex={canAcknowledge ? 0 : undefined}
-      aria-label={canAcknowledge ? t('acknowledge.button') : undefined}
     >
-      <span
-        className="pointer-events-none absolute inset-x-0 top-0 h-1/2 bg-linear-to-b from-white/20 via-white/8 to-transparent"
-        aria-hidden="true"
-      />
-      <div className="flex items-start justify-between gap-2">
-        <div className={`${headerTextClassName} min-w-0 flex-1 text-xs font-medium space-y-1`}>
-          <TooltipProvider>
-            <UITooltip>
-              <TooltipTrigger asChild>
-                <div className="max-w-full cursor-help truncate hover:opacity-80 transition-opacity">
-                  {siteName || t('site.unknown')}
-                  {groupName ? <span className="opacity-75"> · {groupName}</span> : null}
-                </div>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p className="max-w-xs">
-                  {lieuEtat === 'S'
-                    ? t('surveillance.active')
-                    : lieuEtat === 'D'
-                      ? t('surveillance.disabled')
-                      : operationalState?.tooltip ?? lieuEtat ?? ''}
-                </p>
-              </TooltipContent>
-            </UITooltip>
-          </TooltipProvider>
-          <div className="min-w-0 space-y-0.5">
-            <button
-              type="button"
-              onClick={(event) => {
-                event.stopPropagation()
-                onOpenDetails()
-              }}
-              className="line-clamp-2 max-w-full wrap-break-word rounded-sm text-left text-[17px] font-bold leading-tight tracking-tight underline-offset-4 transition-opacity hover:opacity-85 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
-              aria-label={t('actions.details')}
-            >
-              {nomLieu}
-            </button>
-            {sondeNumeroSerie ? (
-              <div className="line-clamp-2 wrap-break-word text-[11px] leading-tight font-medium opacity-85">
-                {sondeNumeroSerie}
-              </div>
-            ) : null}
-          </div>
-          {surveillanceDisabledLabel ? (
-            <div className={`inline-flex items-center max-w-full gap-1.5 rounded-full text-[11px] font-medium px-2.5 py-1 ${alarmBadgeClassName}`}>
-              <PowerOff className="h-3 w-3" />
-              <span className="truncate">{surveillanceDisabledLabel}</span>
-            </div>
-          ) : null}
-          {alarmDisabledLabel ? (
-            <UITooltip>
-              <TooltipTrigger asChild>
-                <div className={`inline-flex items-center max-w-full gap-1.5 rounded-full text-[11px] font-medium px-2.5 py-1 cursor-help ${alarmBadgeClassName}`}>
-                  <PowerOff className="h-3 w-3" />
-                  <span className="truncate">{alarmDisabledLabel}</span>
-                </div>
-              </TooltipTrigger>
-              <TooltipContent side="top" className="max-w-xs whitespace-pre-wrap wrap-break-word">
-                <p className="text-xs">{alarmDisabledLabel}</p>
-              </TooltipContent>
-            </UITooltip>
-          ) : null}
-          {operationalState ? (
-            <UITooltip>
-              <TooltipTrigger asChild>
-                <div className={`inline-flex max-w-full items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold ${operationalState.className}`}>
-                  <span className="h-1.5 w-1.5 rounded-full bg-current" aria-hidden="true" />
-                  <span className="truncate">{operationalState.label}</span>
-                </div>
-              </TooltipTrigger>
-              <TooltipContent side="top" className="max-w-xs whitespace-pre-wrap wrap-break-word">
-                <p className="text-xs">{operationalState.tooltip}</p>
-              </TooltipContent>
-            </UITooltip>
-          ) : null}
-        </div>
+      <Icon className="h-3.5 w-3.5 shrink-0" aria-hidden />
+      <span className="min-w-0 flex-1 truncate">{config.label}</span>
 
-        <TooltipProvider>
-          <div className={`${headerTextClassName} shrink-0 mt-0.5 flex flex-col items-center gap-1.5`}>
-            <div className="flex min-h-4 items-center justify-center">
-              <UITooltip>
-                <TooltipTrigger asChild>
-                  <span
-                    className="relative inline-flex h-5 w-5 cursor-help items-center justify-center"
-                    aria-hidden="true"
-                  >
-                    {hasActiveAlarmCode ? (
-                      <>
-                        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white/75 opacity-80 motion-reduce:hidden" />
-                        <span className="absolute inline-flex h-4 w-4 rounded-full border border-white/55" />
-                      </>
-                    ) : null}
-                    <span
-                      className={`relative inline-flex rounded-full ${hasActiveAlarmCode
-                        ? 'h-3 w-3 bg-white shadow-[0_0_0_2px_rgba(255,255,255,0.38),0_0_14px_5px_rgba(255,255,255,0.75)]'
-                        : 'h-2.5 w-2.5 bg-white/45'}`}
-                    />
-                  </span>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p className="text-xs">{hasActiveAlarmCode ? (effectiveAlarmType === 'CH' ? t('alarmTypes.critical_high') : effectiveAlarmType === 'H' ? t('alarmTypes.high') : effectiveAlarmType === 'CB' ? t('alarmTypes.critical_low') : effectiveAlarmType === 'B' ? t('alarmTypes.low') : effectiveAlarmType === 'S' || effectiveAlarmType === 'A' ? t('alarmTypes.sector') : effectiveAlarmType === 'M' ? t('alarmTypes.module') : effectiveAlarmType === 'T' ? t('alarmTypes.ended') : t('alarmTypes.no_response')) : t('status.ok')}</p>
-                </TooltipContent>
-              </UITooltip>
-            </div>
-            {status !== 'critical' || hasCriticalThresholdAlarm ? (
-              <UITooltip>
-                <TooltipTrigger asChild>
-                  <div><HeaderIcon className="w-4 h-4" /></div>
-                </TooltipTrigger>
-                <TooltipContent><p className="text-xs">{headerStatusLabel}</p></TooltipContent>
-              </UITooltip>
-            ) : null}
-            {typeIconInfo?.icon ? (
-              <UITooltip>
-                <TooltipTrigger asChild>
-                  <span className={isSurveillanceActive ? 'text-current' : 'text-white'}>{typeIconInfo.icon}</span>
-                </TooltipTrigger>
-                <TooltipContent><p className="text-xs">{typeIconInfo.label}</p></TooltipContent>
-              </UITooltip>
-            ) : null}
-            <UITooltip>
-              <TooltipTrigger asChild>
-                <div className="cursor-help">
-                  <CircleHelp className="h-3.5 w-3.5" />
-                </div>
-              </TooltipTrigger>
-              <TooltipContent side="left" className="max-w-xs whitespace-pre-wrap wrap-break-word">
-                <p className="text-xs">{locationComment || t('observations.empty')}</p>
-              </TooltipContent>
-            </UITooltip>
-          </div>
-        </TooltipProvider>
-      </div>
+      <span
+        aria-hidden
+        className={cn(
+          'relative inline-flex h-2.5 w-2.5 shrink-0 rounded-full',
+          config.dotClassName,
+        )}
+      >
+        {hasAlarmCode ? (
+          <span
+            className={cn(
+              'absolute inset-0 rounded-full opacity-35 motion-reduce:hidden',
+              config.dotClassName,
+              'alarm-beacon',
+            )}
+          />
+        ) : null}
+        <span className="absolute inset-[2px] rounded-full bg-current ring-1 ring-white/75" />
+      </span>
+
+      {canAcknowledge ? (
+        <span className="ml-0.5 whitespace-nowrap opacity-95">
+          {t('acknowledge.button')} <span aria-hidden>›</span>
+        </span>
+      ) : null}
     </div>
   )
+}
+
+function resolveBandConfig({
+  status,
+  alarmType,
+  isSurveillanceActive,
+  t,
+  tStatus,
+}: {
+  status: SensorStatus
+  alarmType: AlarmTypeCode | null
+  isSurveillanceActive: boolean
+  t: MonitoringCardHeaderProps['t']
+  tStatus: MonitoringCardHeaderProps['tStatus']
+}): BandConfig {
+  if (!isSurveillanceActive) {
+    return {
+      label: tStatus('inactive'),
+      className: 'border-slate-300 bg-slate-100 text-slate-600 dark:border-slate-700 dark:bg-slate-800/70 dark:text-slate-300',
+      dotClassName: 'bg-slate-500 text-slate-500',
+      Icon: CircleOff,
+    }
+  }
+
+  if (alarmType === 'CH') {
+    return {
+      label: t('alarmTypes.critical_high'),
+      className: 'border-red-800 bg-red-700 text-white',
+      dotClassName: 'bg-white text-white',
+      Icon: ShieldAlert,
+    }
+  }
+
+  if (alarmType === 'H') {
+    return {
+      label: t('alarmTypes.high'),
+      className: 'border-red-800 bg-red-700 text-white',
+      dotClassName: 'bg-white text-white',
+      Icon: ArrowUp,
+    }
+  }
+
+  if (alarmType === 'CB') {
+    return {
+      label: t('alarmTypes.critical_low'),
+      className: 'border-blue-800 bg-blue-700 text-white',
+      dotClassName: 'bg-white text-white',
+      Icon: ShieldAlert,
+    }
+  }
+
+  if (alarmType === 'B') {
+    return {
+      label: t('alarmTypes.low'),
+      className: 'border-blue-800 bg-blue-700 text-white',
+      dotClassName: 'bg-white text-white',
+      Icon: ArrowDown,
+    }
+  }
+
+  if (alarmType === 'N' || alarmType === 'M') {
+    return {
+      label: alarmType === 'M' ? t('alarmTypes.module') : t('alarmTypes.no_response'),
+      className: 'border-slate-950 bg-slate-950 text-white dark:border-slate-600 dark:bg-slate-800',
+      dotClassName: 'bg-white text-white',
+      Icon: WifiOff,
+    }
+  }
+
+  if (alarmType === 'S' || alarmType === 'A') {
+    return {
+      label: t('alarmTypes.sector'),
+      className: 'border-slate-950 bg-slate-950 text-white dark:border-slate-600 dark:bg-slate-800',
+      dotClassName: 'bg-white text-white',
+      Icon: PowerOff,
+    }
+  }
+
+  if (alarmType === 'T' || status === 'ended') {
+    return {
+      label: t('alarmTypes.ended'),
+      className: 'border-violet-500/40 bg-violet-500/12 text-violet-700 dark:border-violet-500/30 dark:bg-violet-500/15 dark:text-violet-200',
+      dotClassName: 'bg-violet-600 text-violet-600',
+      Icon: BellRing,
+    }
+  }
+
+  if (status === 'warning') {
+    return {
+      label: tStatus('warning'),
+      className: 'border-amber-400/55 bg-amber-100/80 text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/15 dark:text-amber-200',
+      dotClassName: 'bg-amber-500 text-amber-500',
+      Icon: TriangleAlert,
+    }
+  }
+
+  if (status === 'critical') {
+    return {
+      label: tStatus('critical'),
+      className: 'border-red-700/45 bg-red-600/10 text-red-700 dark:border-red-500/30 dark:bg-red-500/12 dark:text-red-200',
+      dotClassName: 'bg-red-600 text-red-600',
+      Icon: TriangleAlert,
+    }
+  }
+
+  if (status === 'technical') {
+    return {
+      label: tStatus('technical'),
+      className: 'border-slate-400 bg-slate-100 text-slate-700 dark:border-slate-600 dark:bg-slate-800/70 dark:text-slate-200',
+      dotClassName: 'bg-slate-700 text-slate-700 dark:bg-slate-200 dark:text-slate-200',
+      Icon: WifiOff,
+    }
+  }
+
+  return {
+    label: tStatus('ok'),
+    className: 'border-border bg-[hsl(var(--surface-muted))] text-muted-foreground',
+    dotClassName: 'bg-[hsl(var(--status-ok))] text-[hsl(var(--status-ok))]',
+    Icon: CircleCheck,
+  }
 }
