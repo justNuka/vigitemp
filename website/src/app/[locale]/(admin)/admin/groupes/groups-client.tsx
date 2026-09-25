@@ -102,61 +102,56 @@ export function GroupsClient() {
         initial="hidden"
         animate="visible"
       >
-      <Card className="overflow-hidden rounded-[10px] border-border bg-card shadow-[0_1px_2px_hsl(var(--shadow)/0.06)]">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 border-b border-border px-3 py-2.5">
-          <div>
-            <CardTitle className="flex items-center gap-2 text-base">
-              <Layers className="h-4 w-4 text-primary" />
-              {t('title')}
-            </CardTitle>
-            <p className="text-sm text-muted-foreground mt-1">
-              {t('count', { count: displayedGroups.length })}
-            </p>
-          </div>
-          <GroupsActions
-            regroupement={regroupement}
-            onRegroupementChange={setRegroupement}
-            canEdit={!!selectedDisplayedGroup && statusTab === 'active'}
-            canArchive={!!selectedDisplayedGroup && statusTab === 'active'}
-            onNew={handleNew}
-            onEdit={handleEdit}
-            onArchive={() => setArchiveConfirmOpen(true)}
-          />
-        </CardHeader>
-        <CardContent>
-          <Tabs
-            value={statusTab}
-            onValueChange={(value) => {
-              setStatusTab(value as 'active' | 'archived');
-              setSelectedGroup(null);
-            }}
-            className="space-y-4"
-          >
-            <TabsList className="grid h-8 w-auto max-w-md grid-cols-2 gap-0.5 rounded-md border border-border bg-[hsl(var(--surface-muted))] p-0.5 text-muted-foreground">
-              <TabsTrigger value="active" className="h-7 rounded-[5px] px-2.5 text-[13px] font-medium transition-colors duration-150 hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/60 data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-sm data-[state=active]:ring-1 data-[state=active]:ring-border">
-                {t('tabs.active', { count: activeGroups.length })}
-              </TabsTrigger>
-              <TabsTrigger value="archived" className="h-7 rounded-[5px] px-2.5 text-[13px] font-medium transition-colors duration-150 hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/60 data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-sm data-[state=active]:ring-1 data-[state=active]:ring-border">
-                {t('tabs.archived', { count: archivedGroups.length })}
-              </TabsTrigger>
-            </TabsList>
-          <GroupsTable
-            groups={displayedGroups}
-            isLoading={isLoading}
-            selectedGroupId={selectedDisplayedGroup?.Id_Groupe ?? null}
-            onSelectGroup={setSelectedGroup}
-            onEditGroup={(group) => {
-              if (statusTab === 'archived') return;
-              setSelectedGroup(group);
-              setIsEditing(true);
-              setModalOpen(true);
-            }}
-          />
-          </Tabs>
-        </CardContent>
-      </Card>
+      <section className="overflow-hidden rounded-[10px] border border-border bg-card shadow-[0_1px_2px_hsl(var(--shadow)/0.06)]">
+        <GroupsTable
+          groups={displayedGroups}
+          isLoading={isLoading}
+          selectedGroupId={selectedDisplayedGroup?.Id_Groupe ?? null}
+          onSelectGroup={(group) =>
+            setSelectedGroup((current) => current?.Id_Groupe === group.Id_Groupe ? null : group)
+          }
+          onEditGroup={(group) => {
+            if (statusTab === 'archived') return;
+            setSelectedGroup(group);
+            setIsEditing(true);
+            setModalOpen(true);
+          }}
+          toolbarLeft={
+            <Tabs
+              value={statusTab}
+              onValueChange={(value) => {
+                setStatusTab(value as 'active' | 'archived');
+                setSelectedGroup(null);
+              }}
+            >
+              <TabsList className="grid h-8 w-auto grid-cols-2 gap-0.5 rounded-md border border-border bg-[hsl(var(--surface-muted))] p-0.5 text-muted-foreground">
+                <TabsTrigger value="active" className="h-7 rounded-[5px] px-2.5 text-[13px] font-medium transition-colors duration-150 hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/60 data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-sm data-[state=active]:ring-1 data-[state=active]:ring-border">
+                  {t('tabs.active', { count: activeGroups.length })}
+                </TabsTrigger>
+                <TabsTrigger value="archived" className="h-7 rounded-[5px] px-2.5 text-[13px] font-medium transition-colors duration-150 hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/60 data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-sm data-[state=active]:ring-1 data-[state=active]:ring-border">
+                  {t('tabs.archived', { count: archivedGroups.length })}
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
+          }
+          toolbarRight={
+            <GroupsActions
+              regroupement={regroupement}
+              onRegroupementChange={(value) => {
+                setRegroupement(value);
+                setSelectedGroup(null);
+              }}
+              canEdit={!!selectedDisplayedGroup && statusTab === 'active'}
+              canArchive={!!selectedDisplayedGroup && statusTab === 'active'}
+              onNew={handleNew}
+              onEdit={handleEdit}
+              onArchive={() => setArchiveConfirmOpen(true)}
+            />
+          }
+        />
+      </section>
 
-      <div className="grid grid-cols-2 gap-6 mb-12">
+      <div className="mb-6 grid gap-4 lg:grid-cols-2">
         <GroupLocationsPanel groupSelected={!!selectedDisplayedGroup} locations={locations} />
         <GroupUsersPanel groupSelected={!!selectedDisplayedGroup} users={users} />
       </div>
