@@ -13,6 +13,8 @@ import {
 const read = (relative: string) =>
   readFileSync(fileURLToPath(new URL(relative, import.meta.url)), "utf8")
 
+const normalizeSql = (value: string) => value.replace(/\s+/g, " ").trim()
+
 assert.equal(isCriticalThresholdAlarmType("CH"), true)
 assert.equal(isCriticalThresholdAlarmType("CB"), true)
 assert.equal(isCriticalThresholdAlarmType("H"), false)
@@ -93,7 +95,10 @@ assert.ok(mysqlTriggerStart >= 0, "MySQL GSO trigger CREATE block must exist")
 const mysqlTriggerEnd = mysqlSeed.indexOf("DELIMITER ;", mysqlTriggerStart)
 assert.ok(mysqlTriggerEnd > mysqlTriggerStart, "MySQL GSO trigger end marker must exist")
 const mysqlTrigger = mysqlSeed.slice(mysqlTriggerStart, mysqlTriggerEnd)
-assert.ok(mysqlMigration.includes(mysqlTrigger), "MySQL migration and seed must share the same GSO trigger body")
+assert.ok(
+  normalizeSql(mysqlMigration).includes(normalizeSql(mysqlTrigger)),
+  "MySQL migration and seed must share the same GSO trigger body",
+)
 assert.match(mysqlTrigger, /Seuil_Critique_Bas/)
 assert.match(mysqlTrigger, /Seuil_Critique_Haut/)
 assert.match(mysqlTrigger, /Type\s+IN\s*\(\s*'B'\s*,\s*'CB'\s*,\s*'H'\s*,\s*'CH'\s*,\s*'N'\s*\)/i)
@@ -111,7 +116,10 @@ assert.ok(mssqlTriggerStart >= 0, "SQL Server GSO trigger block must exist")
 const mssqlTriggerEnd = mssqlSeed.indexOf("USE [vigi_mesures];", mssqlTriggerStart)
 assert.ok(mssqlTriggerEnd > mssqlTriggerStart, "SQL Server GSO trigger end marker must exist")
 const mssqlTrigger = mssqlSeed.slice(mssqlTriggerStart, mssqlTriggerEnd)
-assert.ok(mssqlMigration.includes(mssqlTrigger.trim()), "SQL Server migration and seed must share the same GSO trigger body")
+assert.ok(
+  normalizeSql(mssqlMigration).includes(normalizeSql(mssqlTrigger)),
+  "SQL Server migration and seed must share the same GSO trigger body",
+)
 assert.match(mssqlTrigger, /Seuil_Critique_Bas/)
 assert.match(mssqlTrigger, /Seuil_Critique_Haut/)
 assert.match(mssqlTrigger, /\[Type\]\s+IN\s*\(\s*'B'\s*,\s*'CB'\s*,\s*'H'\s*,\s*'CH'\s*,\s*'N'\s*\)/i)
